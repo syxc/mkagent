@@ -27,7 +27,7 @@ import {
   type HarnessSettings,
   type ToolRegistration,
 } from '@earendil-works/pi-durable';
-import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
+import { openDurableStorage } from './storage/durable-storage.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import type { AssistantMessage, Models, ToolCall } from '@earendil-works/pi-ai';
 import type { AgentSessionEvent } from '@earendil-works/pi-coding-agent';
@@ -217,7 +217,7 @@ export class DurableKernel {
   }
 
   private async openStore(): Promise<void> {
-    const storage = await openNodeJsonlStorage(this.storeDir, BACKGROUND_CONTEXT);
+    const storage = await openDurableStorage(this.storeDir, BACKGROUND_CONTEXT);
 
     const registry = createRegistry<ToolRegistration>();
 

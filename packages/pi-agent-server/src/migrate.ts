@@ -11,7 +11,7 @@
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Harness, createRegistry, ROOT_CONVERSATION_ID, type EntryDraft, type EntryId, type ToolRegistration } from '@earendil-works/pi-durable';
-import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
+import { openDurableStorage } from './storage/durable-storage.ts';
 import type { Message, UserMessage } from '@earendil-works/pi-ai';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 
@@ -44,7 +44,7 @@ export async function migrateParentStore(sessionPath: string, debugLog: (message
   const storeDir = join(sessionPath, 'durable-store');
   if (existsSync(join(storeDir, 'id-map.json'))) return;
   if (!findMostRecentSessionFile(join(sessionPath, '.pi-sessions'))) return;
-  const storage = await openNodeJsonlStorage(storeDir, BACKGROUND_CONTEXT);
+  const storage = await openDurableStorage(storeDir, BACKGROUND_CONTEXT);
   const harness = await Harness.open(storage, {
     models: () => { throw new Error('Model access is not expected during migration'); },
     registry: createRegistry<ToolRegistration>(),
