@@ -47,39 +47,39 @@ describe('normalizeCustomEndpointModelEntry', () => {
 
 describe('buildCustomEndpointModelDef', () => {
   it('defaults custom endpoint models to text-only input', () => {
-    const model = buildCustomEndpointModelDef('my-model')
+    const model = buildCustomEndpointModelDef('my-model', 'openai-completions', 'http://localhost:8000/v1')
     expect(model.input).toEqual(['text'])
   })
 
   it('enables image input when the connection explicitly opts in', () => {
-    const model = buildCustomEndpointModelDef('vision-model', { supportsImages: true })
+    const model = buildCustomEndpointModelDef('vision-model', 'openai-completions', 'http://localhost:8000/v1', { supportsImages: true })
     expect(model.input).toEqual(['text', 'image'])
   })
 
   it('lets per-model overrides disable image input even when the connection default is enabled', () => {
-    const model = buildCustomEndpointModelDef('text-only-model', { supportsImages: true }, { supportsImages: false })
+    const model = buildCustomEndpointModelDef('text-only-model', 'openai-completions', 'http://localhost:8000/v1', { supportsImages: true }, { supportsImages: false })
     expect(model.input).toEqual(['text'])
   })
 
   it('lets per-model overrides enable image input and custom context window', () => {
-    const model = buildCustomEndpointModelDef('vision-model', undefined, { supportsImages: true, contextWindow: 262_144 })
+    const model = buildCustomEndpointModelDef('vision-model', 'openai-completions', 'http://localhost:8000/v1', undefined, { supportsImages: true, contextWindow: 262_144 })
     expect(model.input).toEqual(['text', 'image'])
     expect(model.contextWindow).toBe(262_144)
   })
 
   it('disables the store parameter for OpenAI-compatible endpoints', () => {
-    const model = buildCustomEndpointModelDef('gpt-model', undefined, undefined, 'openai-completions')
+    const model = buildCustomEndpointModelDef('gpt-model', 'openai-completions', 'http://localhost:8000/v1')
     expect((model as { compat?: { supportsStore?: boolean } }).compat)
       .toEqual({ supportsStore: false })
   })
 
   it('does not set store compatibility for Anthropic-compatible endpoints', () => {
-    const model = buildCustomEndpointModelDef('claude-model', undefined, undefined, 'anthropic-messages')
+    const model = buildCustomEndpointModelDef('claude-model', 'anthropic-messages', 'http://localhost:8000/v1')
     expect((model as { compat?: unknown }).compat).toBeUndefined()
   })
 
-  it('does not set store compatibility when the API is unspecified', () => {
-    const model = buildCustomEndpointModelDef('some-model')
+  it('does not set store compatibility for Anthropic-compatible endpoints', () => {
+    const model = buildCustomEndpointModelDef('some-model', 'anthropic-messages', 'http://localhost:8000/v1')
     expect((model as { compat?: unknown }).compat).toBeUndefined()
   })
 })
@@ -87,15 +87,15 @@ describe('buildCustomEndpointModelDef', () => {
   // Regression: craft-agents-oss#1100 — Pi caps compaction summaries at model.maxTokens,
   // so a fixed 8192 made long-session compaction fail on custom endpoints.
   it('caps output at the conservative default when the connection sets no maxTokens', () => {
-    expect(buildCustomEndpointModelDef('my-model').maxTokens).toBe(DEFAULT_CUSTOM_ENDPOINT_MAX_TOKENS)
+    expect(buildCustomEndpointModelDef('my-model', 'openai-completions', 'http://localhost:8000/v1').maxTokens).toBe(DEFAULT_CUSTOM_ENDPOINT_MAX_TOKENS)
   })
 
   it('honors the connection-level maxTokens override', () => {
-    expect(buildCustomEndpointModelDef('my-model', { maxTokens: 32_768 }).maxTokens).toBe(32_768)
+    expect(buildCustomEndpointModelDef('my-model', 'openai-completions', 'http://localhost:8000/v1', { maxTokens: 32_768 }).maxTokens).toBe(32_768)
   })
 
   it('ignores maxTokens values that are not positive integers', () => {
     for (const maxTokens of [0, -1, 1.5, Number.NaN, '32768' as unknown as number]) {
-      expect(buildCustomEndpointModelDef('my-model', { maxTokens }).maxTokens).toBe(DEFAULT_CUSTOM_ENDPOINT_MAX_TOKENS)
+      expect(buildCustomEndpointModelDef('my-model', 'openai-completions', 'http://localhost:8000/v1', { maxTokens }).maxTokens).toBe(DEFAULT_CUSTOM_ENDPOINT_MAX_TOKENS)
     }
   })

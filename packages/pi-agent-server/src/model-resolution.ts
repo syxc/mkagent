@@ -1,42 +1,40 @@
-import type { ModelRegistry as PiModelRegistry } from '@earendil-works/pi-coding-agent';
+import type { Api, Model, MutableModels } from '@earendil-works/pi-ai';
 
 // Re-export from shared so the auth-aware mini-model denylist has a single
 // source of truth (also used by `getMiniModel()` at selection time).
 export { isDeniedMiniModelId } from '../../shared/src/config/llm-connections.ts';
 
-// Re-export the PiModel type used by callers
-type PiModel<T = any> = ReturnType<PiModelRegistry['find']>;
-
 /**
- * Resolve a Pi SDK model from the registry, with optional custom-endpoint precedence.
+ * Resolve a chat model from the pi-ai `Models` collection, with optional
+ * custom-endpoint precedence.
  *
  * Resolution order:
  * 1. If `preferCustomEndpoint` is true, try `'custom-endpoint'` provider first
  * 2. Exact provider+model lookup via `piAuthProvider`
- * 3. Full `getAll()` scan by id/name
+ * 3. Full catalog scan by id/name (restricted to the auth provider)
  * 4. Common provider fallback list (includes 'custom-endpoint')
  */
 export function resolvePiModel(
-  modelRegistry: PiModelRegistry,
+  models: MutableModels,
   modelId: string,
   piAuthProvider?: string,
   preferCustomEndpoint?: boolean,
-): PiModel | undefined {
+): Model<Api> | undefined {
   // Strip MkAgent's pi/ prefix — Pi SDK uses bare model IDs.
   const bareId = modelId.startsWith('pi/') ? modelId.slice(3) : modelId;
 
   // Custom-endpoint takes precedence when configured
   if (preferCustomEndpoint) {
-    const custom = modelRegistry.find('custom-endpoint', bareId);
+    const custom = models.getModel('custom-endpoint', bareId);
     if (custom) return custom;
   }
 
   // If we know the auth provider, do an exact provider+model lookup first.
-  // This avoids the getAll() ambiguity where the same model ID exists under
+  // This avoids the catalog-scan ambiguity where the same model ID exists under
   // multiple providers (e.g., "gpt-5.2" under both "openai" and
   // "azure") and the wrong one matches first.
   if (piAuthProvider) {
-    const exact = modelRegistry.find(piAuthProvider, bareId);
+    const exact = models.getModel(piAuthProvider, bareId);
     if (exact) {
       // MiniMax CN API rejects model IDs with the 'MiniMax-' prefix (e.g. 500 for
       // 'MiniMax-M2.5-highspeed') but accepts bare names ('M2.5-highspeed').
@@ -47,16 +45,15 @@ export function resolvePiModel(
     }
   }
 
-  // Fallback: search all available models.
+  // Fallback: search all known chat models.
   // When piAuthProvider is set, only return models from the same provider
   // (or 'custom-endpoint'). Without this guard, a model that exists under
   // a different provider (e.g. "gpt-5.4" under "azure"
-  // when authed as "github-copilot") would be returned, and the Pi SDK
-  // would fail with "No API key found for <wrong-provider>".
-  const allModels = modelRegistry.getAll();
-  const match = allModels.find(m =>
+  // when authed as "github-copilot") would be returned, and requests would
+  // fail with "No API key found for <wrong-provider>".
+  const match = models.getModels().find(m =>
     (m.id === bareId || m.name === bareId) &&
-    (!piAuthProvider || (m as any).provider === piAuthProvider || (m as any).provider === 'custom-endpoint'),
+    (!piAuthProvider || m.provider === piAuthProvider || m.provider === 'custom-endpoint'),
   );
   if (match) return match;
 
@@ -65,7 +62,7 @@ export function resolvePiModel(
   for (const provider of providers) {
     // Skip providers incompatible with the authenticated provider
     if (piAuthProvider && provider !== piAuthProvider && provider !== 'custom-endpoint') continue;
-    const model = modelRegistry.find(provider, bareId);
+    const model = models.getModel(provider, bareId);
     if (model) return model;
   }
 

@@ -1,4 +1,4 @@
-import type { ModelRegistry as PiModelRegistry } from '@earendil-works/pi-coding-agent';
+import type { MutableModels } from '@earendil-works/pi-ai';
 import type { LLMQueryResult } from '../../shared/src/agent/llm-tool.ts';
 import { getDefaultSummarizationModel } from '../../shared/src/config/models.ts';
 import { PI_PREFERRED_DEFAULTS } from '../../shared/src/config/llm-connections.ts';
@@ -10,7 +10,7 @@ interface MiniModelQueryOptions {
   miniModel?: string;
   sessionModel?: string;
   authProvider?: string;
-  modelRegistry: PiModelRegistry;
+  models: MutableModels;
   preferCustomEndpoint: boolean;
   onFallback?: (rejectedModel: string, retryModel: string) => void;
 }
@@ -48,7 +48,7 @@ export async function queryMiniModel(
 
       const retryModel = fallbackCandidates.find(candidate => {
         if (triedModels.has(stripPiPrefix(candidate))) return false;
-        const resolved = resolvePiModel(options.modelRegistry, candidate, options.authProvider, options.preferCustomEndpoint);
+        const resolved = resolvePiModel(options.models, candidate, options.authProvider, options.preferCustomEndpoint);
         if (!resolved) return false;
         return !options.authProvider || resolved.provider === options.authProvider || resolved.provider === 'custom-endpoint';
       });

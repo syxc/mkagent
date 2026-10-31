@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { resolvePiModel, isDeniedMiniModelId, isModelNotFoundError, isModelRejectionError } from './model-resolution.ts';
 
 /**
- * Minimal mock of PiModelRegistry.
+ * Minimal mock of pi-ai `MutableModels`.
  * Maps provider → modelId → model object.
  */
 function createMockRegistry(
@@ -13,12 +13,12 @@ function createMockRegistry(
   );
 
   return {
-    find(provider: string, modelId: string) {
+    getModel(provider: string, modelId: string) {
       const models = providers[provider];
       if (!models) return undefined;
       return models.find(m => m.id === modelId || m.name === modelId) ?? undefined;
     },
-    getAll() {
+    getModels() {
       return allModels;
     },
   } as any;
@@ -109,13 +109,13 @@ describe('resolvePiModel', () => {
     it('tries common providers in fallback list (custom-endpoint first)', () => {
       // Model not in getAll by id/name match, but findable via provider lookup
       const registry = {
-        find(provider: string, modelId: string) {
+        getModel(provider: string, modelId: string) {
           if (provider === 'custom-endpoint' && modelId === 'my-model') {
             return { id: 'my-model', name: 'My Model', provider: 'custom-endpoint' };
           }
           return undefined;
         },
-        getAll() {
+        getModels() {
           return [];
         },
       } as any;
@@ -150,10 +150,10 @@ describe('resolvePiModel', () => {
 
     it('returns same-provider model from getAll fallback when exact lookup misses', () => {
       const registry = {
-        find() {
+        getModel() {
           return undefined;
         },
-        getAll() {
+        getModels() {
           return [{ id: 'gpt-5.4', name: 'GPT-5.4', provider: 'provider-a' }];
         },
       } as any;
@@ -187,13 +187,13 @@ describe('resolvePiModel', () => {
     it('skips incompatible providers in the common-provider fallback loop', () => {
       // Model is findable via a common provider, but the active provider differs.
       const registry = {
-        find(provider: string, modelId: string) {
+        getModel(provider: string, modelId: string) {
           if (provider === 'openai' && modelId === 'gpt-5.4') {
             return { id: 'gpt-5.4', name: 'GPT-5.4', provider: 'openai' };
           }
           return undefined;
         },
-        getAll() { return []; },
+        getModels() { return []; },
       } as any;
 
       const result = resolvePiModel(registry, 'gpt-5.4', 'provider-a');

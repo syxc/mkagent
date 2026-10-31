@@ -43,7 +43,7 @@ export function stripPiPrefix(id: string): string {
 }
 
 /**
- * Normalize a user-configured custom endpoint model for Pi SDK registration.
+ * Normalize a user-configured custom endpoint model for registration.
  *
  * Keep explicit per-model capability overrides intact. In particular,
  * `supportsImages: false` is meaningful because it can override a global
@@ -67,16 +67,17 @@ function resolveMaxTokens(configured: number | undefined): number {
 }
 
 /**
- * Build a synthetic model definition for a custom endpoint.
- * Uses reasonable defaults for context window and max tokens since we can't
- * query the endpoint for its actual capabilities. Image support must be
- * explicitly enabled either at the connection level or per-model.
+ * Build a synthetic pi-ai 1.4.0 model definition for a custom endpoint.
+ * The full `Model` shape is required: `createProvider` does not fill in
+ * `api`/`provider`/`baseUrl`, and generation dispatches on `model.api`.
+ * Image support must be explicitly enabled at the connection level or per-model.
  */
 export function buildCustomEndpointModelDef(
   id: string,
+  api: CustomEndpointApi,
+  baseUrl: string,
   defaults?: CustomEndpointModelDefaults,
   overrides?: CustomEndpointModelOverrides,
-  api?: CustomEndpointApi,
 ) {
   const supportsImages = overrides?.supportsImages ?? defaults?.supportsImages ?? false
   const input: CustomEndpointInput[] = supportsImages ? ['text', 'image'] : ['text']
@@ -84,6 +85,9 @@ export function buildCustomEndpointModelDef(
   return {
     id,
     name: id,
+    api,
+    provider: 'custom-endpoint',
+    baseUrl,
     reasoning: false,
     input,
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },

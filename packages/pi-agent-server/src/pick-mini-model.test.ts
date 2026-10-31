@@ -12,12 +12,12 @@ function createMockRegistry(
   );
 
   return {
-    find(provider: string, modelId: string) {
+    getModel(provider: string, modelId: string) {
       const models = providers[provider];
       if (!models) return undefined;
       return models.find(m => m.id === modelId || m.name === modelId) ?? undefined;
     },
-    getAll() {
+    getModels() {
       return allModels;
     },
   } as any;

@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'bun:test';
-import type { ModelRegistry } from '@earendil-works/pi-coding-agent';
+import type { MutableModels } from '@earendil-works/pi-ai';
 import { validateTitle } from '../../shared/src/utils/title-generator.ts';
 import { queryMiniModel } from './mini-model-query.ts';
 
-function registry(providers: Record<string, string[]>): ModelRegistry {
+function registry(providers: Record<string, string[]>): MutableModels {
   const models = Object.entries(providers).flatMap(([provider, ids]) =>
     ids.map(id => ({ id, name: id, provider })),
   );
   return {
-    find: (provider: string, id: string) => models.find(m => m.provider === provider && m.id === id),
-    getAll: () => models,
-  } as unknown as ModelRegistry;
+    getModel: (provider: string, id: string) => models.find(m => m.provider === provider && m.id === id),
+    getModels: () => models,
+  } as unknown as MutableModels;
 }
 
 function rejection(model: string): Error {
@@ -22,7 +22,7 @@ const codexOptions = {
   miniModel: 'pi/gpt-5.4-mini',
   sessionModel: 'pi/gpt-5.4',
   authProvider: 'openai-codex',
-  modelRegistry: registry({
+  models: registry({
     'openai-codex': ['gpt-5.4-mini', 'gpt-5.4', 'gpt-5.5'],
     openai: ['gpt-5-mini'],
     anthropic: ['claude-haiku-4-5'],
@@ -70,7 +70,7 @@ describe('queryMiniModel', () => {
     const result = await queryMiniModel({
       ...codexOptions,
       sessionModel: undefined,
-      modelRegistry: registry({ 'openai-codex': ['gpt-5.4-mini', 'gpt-6-astra', 'gpt-5.5'] }),
+      models: registry({ 'openai-codex': ['gpt-5.4-mini', 'gpt-6-astra', 'gpt-5.5'] }),
     }, async model => {
       tried.push(model);
       if (model !== 'gpt-5.5') throw rejection(model);
@@ -88,7 +88,7 @@ describe('queryMiniModel', () => {
       model: 'pi/gpt-5.5',
       miniModel: 'gpt-5.5',
       sessionModel: 'pi/gpt-5.5',
-      modelRegistry: registry({ 'openai-codex': ['gpt-5.5'] }),
+      models: registry({ 'openai-codex': ['gpt-5.5'] }),
     }, async model => {
       tried.push(model);
       throw error;
@@ -117,7 +117,7 @@ describe('queryMiniModel', () => {
     await expect(queryMiniModel({
       ...codexOptions,
       sessionModel: 'pi/gpt-5.5',
-      modelRegistry: registry({
+      models: registry({
         'openai-codex': ['gpt-5.4-mini'],
         openai: ['gpt-5-mini', 'gpt-5.5', 'gpt-6-astra'],
         anthropic: ['claude-haiku-4-5'],
@@ -134,7 +134,7 @@ describe('queryMiniModel', () => {
     const result = await queryMiniModel({
       ...codexOptions,
       sessionModel: 'pi/gpt-5.1-codex-mini',
-      modelRegistry: registry({ 'openai-codex': ['gpt-5.4-mini', 'gpt-5.1-codex-mini', 'gpt-5.5'] }),
+      models: registry({ 'openai-codex': ['gpt-5.4-mini', 'gpt-5.1-codex-mini', 'gpt-5.5'] }),
     }, async model => {
       tried.push(model);
       if (model === 'pi/gpt-5.4-mini') throw rejection(model);
@@ -149,7 +149,7 @@ describe('queryMiniModel', () => {
     const result = await queryMiniModel({
       ...codexOptions,
       authProvider: 'openai',
-      modelRegistry: registry({ openai: ['gpt-5.4-mini', 'gpt-5-mini', 'gpt-5.4'] }),
+      models: registry({ openai: ['gpt-5.4-mini', 'gpt-5-mini', 'gpt-5.4'] }),
     }, async model => {
       tried.push(model);
       if (model === 'pi/gpt-5.4-mini') throw new Error('model_not_found');
@@ -163,7 +163,7 @@ describe('queryMiniModel', () => {
     const result = await queryMiniModel({
       ...codexOptions,
       sessionModel: 'private-model',
-      modelRegistry: registry({ 'custom-endpoint': ['private-model'] }),
+      models: registry({ 'custom-endpoint': ['private-model'] }),
       preferCustomEndpoint: true,
     }, async model => {
       if (model === 'pi/gpt-5.4-mini') throw rejection(model);
