@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'bun:test'
+import { LOCALE_REGISTRY, setupI18n } from '@mkagent/shared/i18n'
 import { pickCustomSuggestions, newChatSuggestionMentions, pickNewChatSuggestions, newChatSuggestionLabel, newChatSuggestionMessage, NEW_CHAT_SUGGESTION_COUNT } from '../new-chat-suggestions'
 
 describe('Lite new chat suggestions', () => {
@@ -8,6 +9,19 @@ describe('Lite new chat suggestions', () => {
     expect(new Set(suggestions.map(item => item.kind)).size).toBe(3)
     expect(suggestions.map(item => Object.keys(item))).toEqual([['kind'], ['kind'], ['kind']])
   })
+  for (const [language, { messages }] of Object.entries(LOCALE_REGISTRY)) {
+    it(`sends a translated prompt for every starter in ${language}`, () => {
+      const t = setupI18n().getFixedT(language)
+      for (const suggestion of pickNewChatSuggestions()) {
+        const key = `chat.suggestions.${suggestion.kind}Prompt`
+        const message = newChatSuggestionMessage(suggestion, t)
+        expect(messages[key as keyof typeof messages]).toBeTruthy()
+        expect(message.trim()).not.toBe('')
+        expect(message).not.toBe(key)
+        expect(message).toBe(t(key))
+      }
+    })
+  }
   it('uses distinct label and prompt keys for every starter', () => {
     const t = (key: string) => key
     for (const suggestion of pickNewChatSuggestions()) {

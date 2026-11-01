@@ -26,7 +26,8 @@
     "typecheck:shared": "cd packages/shared && bun run tsc --noEmit",
     "typecheck:all": "cd packages/core && bun run tsc --noEmit && cd ../shared && bun run tsc --noEmit && cd ../server-core && bun run tsc --noEmit && cd ../server && bun run tsc --noEmit && cd ../session-tools-core && bun run tsc --noEmit && cd ../pi-agent-server && bun run typecheck && cd ../../apps/electron && bun run typecheck && cd ../webui && bun run typecheck && cd ../cli && bun run typecheck && cd ../../packages/ui && bun run tsc --noEmit",
     "server:start": "bun run packages/server/src/index.ts",
-    "server:dev": "bun run server:build:subprocess && MKAGENT_SERVER_TOKEN=${MKAGENT_SERVER_TOKEN:-mkagent-local-dev-token} MKAGENT_DEBUG=true MKAGENT_BUNDLED_ASSETS_ROOT=$PWD/apps/electron bun run packages/server/src/index.ts",
+    "server:dev": "bun run server:build:subprocess && bun run server:dev:start",
+    "server:dev:start": "MKAGENT_SERVER_TOKEN=${MKAGENT_SERVER_TOKEN:-mkagent-local-dev-token} MKAGENT_DEBUG=true MKAGENT_BUNDLED_ASSETS_ROOT=$PWD/apps/electron bun run packages/server/src/index.ts",
     "server:build": "bun run scripts/build-server.ts",
     "server:build:linux-x64": "bun run scripts/build-server.ts --platform=linux --arch=x64 --compress",
     "server:build:linux-arm64": "bun run scripts/build-server.ts --platform=linux --arch=arm64 --compress",
@@ -77,14 +78,14 @@
     "electron:dist:dev:mac": "CSC_IDENTITY_AUTO_DISCOVERY=false MKAGENT_DEV_RUNTIME=1 MKAGENT_AUTO_UPDATE_ENABLED=false bun run electron:build && cd apps/electron && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --config electron-builder.yml --mac -c.mac.identity=- -c.mac.hardenedRuntime=false",
     "electron:dist:dev:win": "MKAGENT_DEV_RUNTIME=1 bun run electron:build && cd apps/electron && electron-builder --config electron-builder.yml --win",
     "electron:dist:dev:linux": "MKAGENT_DEV_RUNTIME=1 bun run electron:build && cd apps/electron && electron-builder --config electron-builder.yml --linux",
-    "webui:dev": "lsof -ti:5175 | xargs kill -9 2>/dev/null; vite dev --config apps/webui/vite.config.ts",
+    "webui:dev": "bun run webui:build && bun run server:build:subprocess && concurrently --kill-others --names server,webui \"MKAGENT_WEBUI_DIR=apps/webui/dist bun run server:dev:start\" \"vite dev --config apps/webui/vite.config.ts --strictPort\"",
     "webui:clean": "rm -rf apps/webui/dist",
     "webui:build": "vite build --config apps/webui/vite.config.ts",
     "webui:typecheck": "cd apps/webui && bun run typecheck",
     "cli:build": "cd apps/cli && bun run build",
     "server:build:subprocess": "cd packages/pi-agent-server && bun run build",
     "server:prod": "bun run server:build:subprocess && bun run webui:build && MKAGENT_WEBUI_DIR=apps/webui/dist MKAGENT_BUNDLED_ASSETS_ROOT=$PWD/apps/electron bun run packages/server/src/index.ts",
-    "server:dev:webui": "bun run webui:build && MKAGENT_RPC_PORT=3100 MKAGENT_WEBUI_DIR=apps/webui/dist bun run server:dev"
+    "server:dev:webui": "bun run webui:build && MKAGENT_WEBUI_DIR=apps/webui/dist bun run server:dev"
   },
   "devDependencies": {
     "@electron/packager": "^19.0.1",

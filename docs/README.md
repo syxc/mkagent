@@ -9,6 +9,7 @@ This directory is the English-language user documentation. A Chinese translation
 | Topic | Document |
 | --- | --- |
 | Overall architecture | [architecture.md](./architecture.md) |
+| Pi-durable kernel specifications and validation | [pi-durable/README.md](./pi-durable/README.md) |
 | Attachments | [attachments.md](./attachments.md) |
 | Browser pane | [browser.md](./browser.md) |
 | Command-line interface | [cli.md](./cli.md) |

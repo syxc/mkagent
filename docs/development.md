@@ -56,7 +56,8 @@ migration/             # Migration plan, audit, UI history
 | Quick offline install | `bun install --force` (rare, recovers a broken lockfile) |
 | Run Electron in dev (vite + electron) | `bun run electron:dev` |
 | Run Electron from a prebuilt `apps/electron/dist/` | `bun run electron:start` |
-| Start the headless server with the WebUI dev bundle | `bun run server:dev:webui` |
+| Start the WebUI and backend with hot module replacement | `bun run webui:dev` |
+| Start the headless server with the built WebUI | `bun run server:dev:webui` |
 | Production headless server (WebUI bundled, Pi built) | `bun run server:prod` |
 | Build the CLI binary | `bun run cli:build` (output: `apps/cli/dist/mkagent`) |
 | Build the Pi subprocess | `bun run server:build:subprocess` |
@@ -67,6 +68,22 @@ migration/             # Migration plan, audit, UI history
 | Audit Craft test coverage | `bun run lint:craft-test-coverage` |
 | Lint English/Chinese locale parity | `bun run lint:i18n:parity` |
 | Sort locales | `bun run sort-locales` (check-only: `bun run lint:i18n:sorted`) |
+
+## Web development
+
+Start the WebUI and backend together:
+
+```bash
+bun run webui:dev
+```
+
+This command builds the WebUI and Pi subprocess, then starts the backend and Vite. Wait until the backend is ready, then open `http://localhost:5175`. API and WebSocket requests go to the backend on port `9100` by default. Both processes inherit `MKAGENT_RPC_PORT` when you set it. If either process exits, the command stops the other process too.
+
+Stop any earlier WebUI development command with `Ctrl+C` before you run this command. If port `5175` is occupied, startup fails instead of stopping the process that owns it.
+
+To use the built WebUI without Vite or hot module replacement, run `bun run server:dev:webui` and open `http://localhost:9100` after the server is ready.
+
+A Vite error such as `connect ECONNREFUSED 127.0.0.1:9100` means that the backend is not accepting connections. Check the `[server]` output for a startup error and confirm the backend port.
 
 ## Isolate the config directory
 

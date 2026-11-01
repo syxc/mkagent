@@ -109,7 +109,7 @@
 - 问题描述：中英文 README 仍将图片生成列为缺失能力，与已暴露的 codemode `models.generateImages()` 及 architecture 文档不符。
 - 修复目标：中英文明确同一能力边界，不声称已有独立图片生成 UI。
 - 具体修改方案：调整两处 README 的否定表述，说明启用 codemode 且有兼容图片模型及凭据时可调用图片生成；核对 architecture 和 comparison 的相关表述。同时校正 R2 复核发现的 kernel 顶部迁移时机注释，更新原迁移规格中受 R1、R2、R5、R6 改动影响的落地说明，不改历史设计段落。
-- 影响范围：`docs/README.md`、`docs/zh/README.md`、`docs/kernel-durable-switch-spec.md` 的落地说明，以及 `kernel.ts` 顶部注释。此补充只同步本次修复直接涉及的事实，不扩展功能。
+- 影响范围：`docs/README.md`、`docs/zh/README.md`、`docs/pi-durable/kernel-durable-switch-spec.md` 的落地说明，以及 `kernel.ts` 顶部注释。此补充只同步本次修复直接涉及的事实，不扩展功能。
 - 验收标准：R8-A：中英文语义一致，与注册代码及 architecture 说明一致，不保留本次涉及的相互矛盾描述。
 
 ## 10. 最终验收

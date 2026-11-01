@@ -7,6 +7,7 @@
 | 主题 | 文档 |
 | --- | --- |
 | 整体架构 | [architecture.md](./architecture.md) |
+| Pi-durable 内核规格与验收 | [pi-durable/README.md](../pi-durable/README.md) |
 | 附件 | [attachments.md](./attachments.md) |
 | Browser 面板 | [browser.md](./browser.md) |
 | 命令行 | [cli.md](./cli.md) |

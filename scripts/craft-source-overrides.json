@@ -539,8 +539,8 @@
       "reason": "v0.15 starter-prompt chips limited to local files, news and Skills; unavailable Sources/mail setup removed; v0.15.2: Adapt custom labels/prompts, maximum three, unique chip keys and qualified/unqualified Skill mentions. Preserve Lite automatic news/files/skills suggestions. Exclude only Sources ranking/enablement tests and paths; empty config restores automatic prompts."
     },
     "apps/electron/src/renderer/components/app-shell/chat-display/__tests__/new-chat-suggestions.test.ts": {
-      "sha256": "459403deeedafec1a6ed285084f92c87e025ea20afb95c616ed11e5c217de65f",
-      "reason": "Tests three source-free Lite suggestions and localized label versus sent-prompt routing instead of removed Sources ranking; v0.15.2: Adapt custom labels/prompts, maximum three, unique chip keys and qualified/unqualified Skill mentions. Preserve Lite automatic news/files/skills suggestions. Exclude only Sources ranking/enablement tests and paths; empty config restores automatic prompts."
+      "sha256": "467ac8eb315ff3c731a16da19778c5c9d44d0a75a4830c81586f18aa714d3ce3",
+      "reason": "Tests three source-free Lite suggestions and localized label versus sent-prompt routing instead of removed Sources ranking; v0.15.2: Adapt custom labels/prompts, maximum three, unique chip keys and qualified/unqualified Skill mentions. Preserve Lite automatic news/files/skills suggestions. Exclude only Sources ranking/enablement tests and paths; empty config restores automatic prompts. Check real i18next resources for every registered locale so starter messages cannot become missing translation keys."
     },
     "apps/electron/src/renderer/components/app-shell/chat-display/new-chat-suggestions.ts": {
       "sha256": "cbc7f3977174800434b2d6c68309048510b157adbd3b1ed09914afc8bf7388e7",
@@ -955,8 +955,8 @@
       "reason": "Retain MkAgent workspace versions and Lite dependency removals; resolve the server durable, pi-ai, chord and codemode packages at 1.4.0 with Photon WASM, while retaining shared Pi 1.1.0 event compatibility and removing coding-agent dependencies."
     },
     "package.json": {
-      "sha256": "38d71d4cef49418d517bab653006b9bc5d33757b6b7e48afe53c58ce1fc4f623",
-      "reason": "Retain MkAgent versions, client scripts and Lite dependency boundaries; remove the root coding-agent dependency and Pi-wide 1.1.0 overrides so the durable server can use 1.4.0 beside the shared compatibility packages."
+      "sha256": "7e50a02766d5eed5ee0a89a8216267c39e63c7f4d212ccfa2bb824e72bdf3ee1",
+      "reason": "Retain MkAgent versions, client scripts and Lite dependency boundaries; remove the root coding-agent dependency and Pi-wide 1.1.0 overrides so the durable server can use 1.4.0 beside the shared compatibility packages. Start the WebUI backend and Vite together with shared port settings and coordinated shutdown; fail on an occupied frontend port without stopping its owner."
     },
     "packages/core/README.md": {
       "sha256": "cac1ded695383920e62457a566c3ececed3acc5568a733f7eff4ab78c69ba2cd",
@@ -1871,12 +1871,12 @@
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "packages/shared/src/i18n/locales/en.json": {
-      "sha256": "e0076f5cb5bf5e72502e7971e57245a2d7e81ae28b421a218117055cf42384e6",
-      "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization."
+      "sha256": "0233a13fbd7341015b052a05f67aa2198fa78699df7180724091ea3a872cf898",
+      "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization. Restore missing news and working-folder starter prompts used by the shared renderer."
     },
     "packages/shared/src/i18n/locales/zh-Hans.json": {
-      "sha256": "0c5267d6b151cbc4edc4f3ab5a35c5775dda62b80c5967926b4315db77c663c5",
-      "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization."
+      "sha256": "f9ca846ac2dbef0157f0705a0036be8b6bb82f03e24744b0658ee3ae55567862",
+      "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization. Restore missing news and working-folder starter prompts used by the shared renderer."
     },
     "packages/shared/src/i18n/registry.ts": {
       "sha256": "4bded553ab0c1689cb38e3c6cb25c155855e048a27123d0a953658ef65c6c16a",

@@ -1,6 +1,6 @@
 # mkagent MVP 开发计划
 
-> 2026-07-30 边界修订：本文保留最初 MVP 决策的历史记录。当时的实现已恢复 ChatGPT Plus 与 Claude Pro/Max 两种 Craft LLM OAuth 流程，但 agent backend 仍仅注册 Pi；Claude Agent SDK、GitHub Copilot 与 Sources/MCP 继续排除。后续 durable 内核另行加入了 MCP 客户端，当前实现见 [`kernel-durable-switch-spec.md`](../kernel-durable-switch-spec.md)。
+> 2026-07-30 边界修订：本文保留最初 MVP 决策的历史记录。当时的实现已恢复 ChatGPT Plus 与 Claude Pro/Max 两种 Craft LLM OAuth 流程，但 agent backend 仍仅注册 Pi；Claude Agent SDK、GitHub Copilot 与 Sources/MCP 继续排除。后续 durable 内核另行加入了 MCP 客户端，当前实现见 [`kernel-durable-switch-spec.md`](../pi-durable/kernel-durable-switch-spec.md)。
 
 > 状态：第三版，产品边界已确认，可按阶段进入实施
 > 上游基线：`craft-agents-oss` `v0.11.2` / `a60ebc1a5a7c`
