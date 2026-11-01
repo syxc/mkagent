@@ -137,14 +137,13 @@ export class CacheWarmer {
       const message = await run.models.streamSimple(run.model, run.context, {
         ...run.options, maxTokens: 1, maxRetries: 0, signal: run.controller.signal,
       }).result();
-      if (message.stopReason === 'error' || message.stopReason === 'aborted') return;
       const conversation = run.conversation;
       await conversation.commit(async tx => {
         const totals = (await tx.doc(UsageDoc, conversation.id)).models;
         const key = `${message.provider}/${message.model}`;
         const usage = JSON.parse(JSON.stringify(message.usage)) as Usage;
         const total = Object.hasOwn(totals, key) ? totals[key] : undefined;
-        if (!total) Object.defineProperty(totals, key, { value: usage, enumerable: true, writable: true, configurable: true });
+        if (!total) totals[key] = usage;
         else {
           total.input += usage.input;
           total.output += usage.output;

@@ -2613,8 +2613,12 @@
       "reason": "Build the durable subprocess and codemode worker, and copy QuickJS and Photon WASM assets beside the bundles."
     },
     "packages/pi-agent-server/src/cache-warmer.ts": {
-      "sha256": "6ebbc040638c3931f78c39295f93d30cef9a73da5183c847adefd54ca44de62d",
-      "reason": "Port pi-coding-agent 1.1.0 core/cache-warmer.js replay, TTL, scheduling and cost policies to durable request hooks and persisted usage."
+      "sha256": "2241e0edfa594adbea67afe301c745d980fafaf124e2226dcd83748c92af92de",
+      "reason": "Port pi-coding-agent 1.1.0 core/cache-warmer.js replay, TTL, scheduling and cost policies to durable request hooks; persist actual returned usage for every stop reason."
+    },
+    "packages/pi-agent-server/src/cache-warmer.test.ts": {
+      "sha256": "6d855da0bda8620328629586656e1237d560066e70bcc77871b90e40f213d6a2",
+      "reason": "Verify actual cache-warm usage, terminal responses, cumulative persistence, no fabricated cost with real SQLite and JSONL ledgers and local model fixtures."
     },
     "packages/pi-agent-server/src/mcp/visibility.test.ts": {
       "sha256": "626b6aa806fd2dc909cb2c41eeb3f365ea1861dad4c9e3f4a3b5de3454bb89c2",
