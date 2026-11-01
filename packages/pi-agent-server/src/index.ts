@@ -667,6 +667,10 @@ async function ensureKernel(): Promise<DurableKernel> {
   const sessionPath = getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId);
 
   // MCP servers connect once at kernel open; tools register statically (see mcp/extension.ts).
+  // projectTrusted stays unset: project-scope `.mkagent/mcp.json` is implemented but not
+  // loaded until mkagent grows a project-trust concept (global mcp.json always loads).
+  // Kernel recreation paths (re-init, tools-changed) leave the previous load behind — close it.
+  if (mcpLoad) await closeMcpConnections(mcpLoad.connections);
   mcpLoad = await loadMcpTools({
     agentDir: resolveCraftAgentDir(initConfig),
     cwd,
@@ -785,6 +789,12 @@ async function handleInit(msg: Extract<InboundMessage, { type: 'init' }>): Promi
     }
     kernel = null;
     debugLog('Cleaned up existing session for re-init');
+  }
+
+  // Re-init invalidates the old MCP connections; a new kernel opens lazily below.
+  if (mcpLoad) {
+    await closeMcpConnections(mcpLoad.connections);
+    mcpLoad = null;
   }
 
   // Provider/custom-endpoint settings may have changed across re-init.

@@ -3,11 +3,13 @@
  *
  * pi-coding-agent 1.1.0 auto-downloaded rg/fd from GitHub on first use; that
  * download is deliberately not carried over (supply-chain surface). Binaries
- * resolve from PATH instead, with the Debian `fdfind` fallback for fd. A
+ * resolve from PATH instead, with the Debian `fdfind` fallback for fd. rg
+ * additionally falls back to the vendored copy from the root @vscode/ripgrep
+ * dependency, so packaged environments without a system rg still work. A
  * missing binary surfaces as the tool's normal error.
  */
 import { accessSync, constants } from 'node:fs';
-import { delimiter, join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 
 const EXECUTABLE_CACHE = new Map<string, string | undefined>();
 
@@ -40,9 +42,23 @@ export function findOnPath(name: string): string | undefined {
   return resolved;
 }
 
+/** Vendored `rg` from the root @vscode/ripgrep dependency, walking up from this file. */
+function vendoredRipgrep(): string | undefined {
+  const binary = process.platform === 'win32' ? 'rg.exe' : 'rg';
+  let dir = import.meta.dir;
+  for (let depth = 0; depth < 8; depth++) {
+    const candidate = join(dir, 'node_modules', '@vscode', 'ripgrep', 'bin', binary);
+    if (isExecutable(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) return undefined;
+    dir = parent;
+  }
+  return undefined;
+}
+
 /** Absolute path of ripgrep (`rg`), or undefined when not installed. */
 export function resolveRipgrep(): string | undefined {
-  return findOnPath('rg');
+  return findOnPath('rg') ?? vendoredRipgrep();
 }
 
 /** Absolute path of fd (`fd`, Debian fallback `fdfind`), or undefined when not installed. */

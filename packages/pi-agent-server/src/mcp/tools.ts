@@ -226,7 +226,8 @@ export interface McpToolDefinitionOptions {
 
 export function createMcpToolDefinition(options: McpToolDefinitionOptions): ToolRegistration {
   const { server, tool } = options;
-  const description = tool.description?.trim() || tool.title || `MCP tool ${tool.name} from server ${server}`;
+  const title = tool.title ?? tool.annotations?.title;
+  const description = tool.description?.trim() || title || `MCP tool ${tool.name} from server ${server}`;
   const registration: ToolRegistration = {
     name: options.name,
     description,

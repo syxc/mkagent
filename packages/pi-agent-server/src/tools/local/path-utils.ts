@@ -23,9 +23,12 @@ function normalizeWindowsShellPath(filePath: string): string {
   return `${match[1]!.toUpperCase()}:\\${suffix ?? ''}`;
 }
 
-function normalizePath(input: string): string {
-  let normalized = input.replace(UNICODE_SPACES, ' ');
-  if (normalized.startsWith('@')) {
+function normalizePath(input: string, options: { normalizeUnicodeSpaces?: boolean; stripAtPrefix?: boolean } = {}): string {
+  let normalized = input;
+  if (options.normalizeUnicodeSpaces) {
+    normalized = normalized.replace(UNICODE_SPACES, ' ');
+  }
+  if (options.stripAtPrefix && normalized.startsWith('@')) {
     normalized = normalized.slice(1);
   }
   if (process.platform === 'win32') {
@@ -62,7 +65,7 @@ function fileExists(filePath: string): boolean {
 
 /** Resolve a path relative to the given cwd; handles ~ expansion and absolute paths. */
 export function resolveToCwd(filePath: string, cwd: string): string {
-  const normalized = normalizePath(filePath);
+  const normalized = normalizePath(filePath, { normalizeUnicodeSpaces: true, stripAtPrefix: true });
   const normalizedBaseDir = normalizePath(cwd);
   return isAbsolute(normalized) ? pathResolve(normalized) : pathResolve(normalizedBaseDir, normalized);
 }

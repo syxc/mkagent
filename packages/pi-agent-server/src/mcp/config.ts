@@ -89,6 +89,11 @@ function readConfigFile(path: string, scope: McpServerScope, state: ConfigLoadSt
       errors.push(`${path}: server "${name}" conflicts with "${clash}"`);
       continue;
     }
+    // A project config must not route a host credential to a project-chosen URL.
+    if (scope === 'project' && 'url' in config && config.auth) {
+      errors.push(`${path}: server "${name}": auth is only allowed in the global mcp.json`);
+      continue;
+    }
     servers.set(name, { name, config, source: path, scope });
   }
 }
