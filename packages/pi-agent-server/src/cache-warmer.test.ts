@@ -72,15 +72,16 @@ afterEach(async () => {
   }
 });
 
-async function setup(backend: 'sqlite' | 'jsonl', responses: Array<AssistantMessage | Error | Promise<AssistantMessage>>, initial?: Usage) {
+async function setup(backend: 'sqlite' | 'jsonl', responses: Array<AssistantMessage | Error | Promise<AssistantMessage>>, initial?: Usage, retention: 'short' | 'long' | 'none' = 'short') {
   const dir = mkdtempSync(join(tmpdir(), 'cache-warmer-usage-'));
   const storeDir = join(dir, 'durable-store');
   const calls: ModelsSimpleStreamOptions[] = [];
   const started = Promise.withResolvers<void>();
   const done = Promise.withResolvers<void>();
   let checks = 0;
+  const model = { ...MODEL, promptCache: retention === 'long' ? { long: 10.05 } : { short: 10.05, long: 10.05 } };
   const models = {
-    getModel: () => MODEL,
+    getModel: () => model,
     streamSimple: (_model: unknown, _context: unknown, options: ModelsSimpleStreamOptions) => {
       const next = responses[calls.length];
       calls.push(options);
@@ -100,7 +101,7 @@ async function setup(backend: 'sqlite' | 'jsonl', responses: Array<AssistantMess
     name: 'cache-request-fixture', version: 1,
     initial: () => ({
       phase: 'request', model: { provider: MODEL.provider, modelId: MODEL.id }, thinkingLevel: 'off',
-      streamOptions: { cacheRetention: 'short' as const },
+      streamOptions: { cacheRetention: retention },
     }),
     phases: { request: async () => { throw new Error('The fixture request must not be scheduled'); } },
     abort: async () => { throw new Error('The fixture request must not be scheduled'); },
@@ -201,6 +202,27 @@ for (const backend of ['sqlite', 'jsonl'] as const) describe(`CacheWarmer ${back
     } finally {
       await reopened.close(BACKGROUND_CONTEXT);
     }
+  });
+
+  it('warms with explicit long retention when only the long TTL is supported', async () => {
+    const fixture = await setup(backend, [response('stop')], BASE, 'long');
+    await fixture.start();
+    await bounded(fixture.done);
+    fixture.warmer.stop();
+    expect(fixture.calls).toHaveLength(1);
+    expect(fixture.calls[0]!.cacheRetention).toBe('long');
+    expect((await fixture.ledger()).models).toEqual({ [KEY]: expectedUsage(1, BASE) });
+    expect(await fixture.entries()).toHaveLength(1);
+  });
+
+  it('does not warm with explicit none retention even when both TTLs are supported', async () => {
+    const fixture = await setup(backend, [response('stop')], BASE, 'none');
+    await fixture.start();
+    await Bun.sleep(150);
+    expect(fixture.calls).toEqual([]);
+    expect(fixture.checks()).toBe(0);
+    expect((await fixture.ledger()).models).toEqual({ [KEY]: BASE });
+    expect(await fixture.entries()).toEqual([]);
   });
 
   it('records returned usage after cancellation without scheduling another warm', async () => {

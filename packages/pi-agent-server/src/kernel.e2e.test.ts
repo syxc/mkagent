@@ -1040,7 +1040,7 @@ describe('DurableKernel end-to-end', () => {
       id: 'faux-1', name: 'faux-1', api: 'faux', provider: 'faux',
       baseUrl: 'http://faux.test', reasoning: false, input: ['text'],
       cost: { input: 20, output: 2, cacheRead: 0.1, cacheWrite: 25 },
-      promptCache: { short: 10.3 }, contextWindow: 100_000, maxTokens: 4_096,
+      promptCache: { short: 10.3, long: 10.3 }, contextWindow: 100_000, maxTokens: 4_096,
     };
     const modelUsage: Usage = {
       input: 20_000, output: 1, cacheRead: 0, cacheWrite: 0, totalTokens: 20_001,
@@ -1139,7 +1139,7 @@ describe('DurableKernel end-to-end', () => {
       id: 'faux-1', name: 'faux-1', api: 'faux', provider: 'faux',
       baseUrl: 'http://faux.test', reasoning: false, input: ['text'],
       cost: { input: 20, output: 2, cacheRead: 0.1, cacheWrite: 25 },
-      promptCache: { short: 10.3 }, contextWindow: 100_000, maxTokens: 4_096,
+      promptCache: { short: 10.3, long: 10.3 }, contextWindow: 100_000, maxTokens: 4_096,
     };
     const usage: Usage = {
       input: 20_000, output: 1, cacheRead: 0, cacheWrite: 0, totalTokens: 20_001,

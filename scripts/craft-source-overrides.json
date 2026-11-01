@@ -2621,8 +2621,8 @@
       "reason": "Verify kernel shutdown drains current and replaced cache refreshes through validation and accounting; check cancellation, rejection handling and ledger reopen with real storage and local providers."
     },
     "packages/pi-agent-server/src/cache-warmer.test.ts": {
-      "sha256": "6d855da0bda8620328629586656e1237d560066e70bcc77871b90e40f213d6a2",
-      "reason": "Verify actual cache-warm usage, terminal responses, cumulative persistence, no fabricated cost with real SQLite and JSONL ledgers and local model fixtures."
+      "sha256": "51c345dca9d7b897ce52e2a94563af76c10be738458c3a15a29e395055ecd2f3",
+      "reason": "Verify actual cache-warm usage, terminal responses, cumulative persistence, retention selection and no fabricated cost with real SQLite and JSONL ledgers and local model fixtures."
     },
     "packages/pi-agent-server/src/mcp/visibility.test.ts": {
       "sha256": "626b6aa806fd2dc909cb2c41eeb3f365ea1861dad4c9e3f4a3b5de3454bb89c2",
@@ -2689,7 +2689,7 @@
       "reason": "Migrate local main index.ts queryLlm behavior from temporary AgentSessions to pi-ai completeSimple while retaining mini-model recovery and cancellation."
     },
     "packages/pi-agent-server/src/kernel.e2e.test.ts": {
-      "sha256": "1d1370acb603e2aa3df0f7109f239ec5a5d8d072787c09cac41dc2c6a7a49a96",
+      "sha256": "67182c5aa9d8ecb9c2d487bedb9d054c5ef76cac72339d9aa2dcd6d24ebdc1f1",
       "reason": "Move retained Pi session contracts to a real durable Harness; add persistence, branch migration, tools, cache warming and compaction races, direct and nested proxy export checks across SQLite and JSONL, and subprocess reinitialization, EOF, shutdown and SIGTERM assertions with opening kernels or pending approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
