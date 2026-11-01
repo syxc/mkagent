@@ -3,11 +3,12 @@
  * through the id map, tail model/thinking recovery, and crash-safe idempotency.
  */
 import { afterAll, describe, expect, it } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRegistry, Harness, ROOT_CONVERSATION_ID, type EntryRecord, type TaskId, type TaskRecord, type ToolRegistration } from '@earendil-works/pi-durable';
-import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
+import { JsonlStorage, openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
+import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { migrateLegacySession, migrateParentStore, readLegacyBranchConversation } from './migrate.ts';
 import { openDurableStorage } from './storage/durable-storage.ts';
@@ -56,6 +57,10 @@ async function scanRootEntries(harness: Harness): Promise<EntryRecord[]> {
     const page = await tx.scanEntries({ conversationId: ROOT_CONVERSATION_ID }, 100);
     return page.items;
   }, BACKGROUND_CONTEXT) as unknown as Promise<EntryRecord[]>;
+}
+
+function storeFiles(storeDir: string): Record<string, Buffer> {
+  return Object.fromEntries(readdirSync(storeDir).sort().map(name => [name, readFileSync(join(storeDir, name))]));
 }
 
 describe('migrateLegacySession', () => {
@@ -364,6 +369,7 @@ describe('migrateLegacySession', () => {
     await migrateParentStore(sessionPath, () => {});
     const retried = await openMigrationHarness(join(sessionPath, 'durable-store'));
     try {
+      await migrateLegacySession(retried, sessionPath, () => {});
       expect((await scanRootEntries(retried)).length).toBeGreaterThan(0);
     } finally {
       await retried.close(BACKGROUND_CONTEXT);
@@ -401,6 +407,7 @@ describe('migrateLegacySession', () => {
 
     const resumed = await openMigrationHarness(storeDir);
     try {
+      await migrateLegacySession(resumed, sessionPath, () => {});
       expect(Object.keys(JSON.parse(readFileSync(join(storeDir, 'id-map.json'), 'utf8'))).sort()).toEqual(['active', 'inactive', 'root']);
       const branch = await readLegacyBranchConversation(resumed, 'inactive');
       expect(branch).toBeDefined();
@@ -410,9 +417,73 @@ describe('migrateLegacySession', () => {
     }
   });
 
+  it('leaves an in-flight JSONL sidecar intact before its commit marker', async () => {
+    const sessionPath = scratch();
+    const storeDir = join(sessionPath, 'durable-store');
+    mkdirSync(join(sessionPath, '.pi-sessions'));
+    writeFileSync(join(sessionPath, '.pi-sessions', 'legacy.jsonl'), LEGACY_LINES.map(line => JSON.stringify(line)).join('\n') + '\n');
+    const migrated = await openMigrationHarness(storeDir);
+    try {
+      await migrateLegacySession(migrated, sessionPath, () => {});
+    } finally {
+      await migrated.close(BACKGROUND_CONTEXT);
+    }
+
+    const fs = new NodeExecutionEnv({ cwd: sessionPath });
+    const storage = await JsonlStorage.open(storeDir, fs, BACKGROUND_CONTEXT);
+    const release = Promise.withResolvers<void>();
+    let committing: Promise<unknown> | undefined;
+    let before: Buffer | undefined;
+    let after: Buffer | undefined;
+    let updated: TaskRecord<null, { progress: number }, null> | undefined;
+    try {
+      const task: TaskRecord<null, { progress: number }, null> = {
+        id: await storage.mintId<TaskId<null>>(), conversationId: ROOT_CONVERSATION_ID,
+        kind: 'migration-preflight-test', version: 1, input: null, background: false,
+        abortRequested: false, state: { status: 'running', checkpoint: null },
+      };
+      await storage.commit([{ type: 'task', value: task }], BACKGROUND_CONTEXT);
+      const sidecar = join(storeDir, `task-${task.id}.jsonl`);
+      const committed = readFileSync(sidecar);
+      const mainBefore = readFileSync(join(storeDir, 'main.jsonl'));
+      const reached = Promise.withResolvers<void>();
+      const append = fs.appendFile.bind(fs);
+      // Pause the real writer after sidecar append, before the main commit marker.
+      fs.appendFile = async (path, ...args) => {
+        if (path === join(storeDir, 'main.jsonl')) {
+          reached.resolve();
+          await release.promise;
+        }
+        return append(path, ...args);
+      };
+      updated = { ...task, state: { status: 'running', checkpoint: { progress: 1 } } };
+      committing = storage.commit([{ type: 'task', value: updated }], BACKGROUND_CONTEXT);
+      await reached.promise;
+      before = readFileSync(sidecar);
+      expect(before.length).toBeGreaterThan(committed.length);
+      expect(readFileSync(join(storeDir, 'main.jsonl')).equals(mainBefore)).toBe(true);
+      await migrateParentStore(sessionPath, () => {});
+      after = readFileSync(sidecar);
+    } finally {
+      release.resolve();
+      try {
+        await committing;
+      } finally {
+        await storage.close(BACKGROUND_CONTEXT);
+      }
+    }
+    expect(after!.equals(before!)).toBe(true);
+    const reopened = await openNodeJsonlStorage(storeDir, BACKGROUND_CONTEXT);
+    try {
+      expect(await reopened.task(updated!.id, BACKGROUND_CONTEXT)).toEqual(updated);
+    } finally {
+      await reopened.close(BACKGROUND_CONTEXT);
+    }
+  });
+
   for (const backend of ['jsonl', 'sqlite'] as const) {
-    for (const partial of [false, true]) for (const missingSidecar of [false, true]) {
-      it(`does not rewrite a ${partial ? 'partially ' : ''}migrated ${backend} parent's running task${missingSidecar ? ' when restoring its id map' : ''}`, async () => {
+    for (const partial of [false, true]) for (const missingSidecar of [false, true]) for (const running of [false, true]) {
+      it(`does not rewrite a ${partial ? 'partially ' : ''}migrated ${backend} parent (${running ? 'running' : 'idle'}, ${missingSidecar ? 'missing' : 'present'} id map)`, async () => {
         const sessionPath = scratch();
         const storeDir = join(sessionPath, 'durable-store');
         mkdirSync(join(sessionPath, '.pi-sessions'), { recursive: true });
@@ -441,7 +512,6 @@ describe('migrateLegacySession', () => {
         } finally {
           await harness.close(BACKGROUND_CONTEXT);
         }
-        const expectedMap = readFileSync(join(storeDir, 'id-map.json'), 'utf8');
         const storage = await openDurableStorage(storeDir, BACKGROUND_CONTEXT);
         try {
           const task: TaskRecord<null, null, null> = {
@@ -449,20 +519,20 @@ describe('migrateLegacySession', () => {
             kind: 'migration-preflight-test', version: 1, input: null, background: false,
             abortRequested: false, restarts: 2, state: { status: 'running', checkpoint: null },
           };
-          await storage.commit([{ type: 'task', value: task }], BACKGROUND_CONTEXT);
+          if (running) await storage.commit([{ type: 'task', value: task }], BACKGROUND_CONTEXT);
           const migration = await storage.findDocument({ kind: 'mkagent.legacy-id-map', scope: { kind: 'session' } }, 'current', BACKGROUND_CONTEXT);
           const before = await storage.document(migration!.id, 'current', BACKGROUND_CONTEXT);
           if (partial) expect(before?.value.branches).not.toHaveProperty('inactive');
           else expect(before?.value.branches).toHaveProperty('inactive');
-          const mainBefore = backend === 'jsonl' ? readFileSync(join(storeDir, 'main.jsonl'), 'utf8') : undefined;
           if (missingSidecar) unlinkSync(join(storeDir, 'id-map.json'));
+          const filesBefore = storeFiles(storeDir);
 
           await migrateParentStore(sessionPath, () => {});
 
-          expect(await storage.task(task.id, BACKGROUND_CONTEXT)).toEqual(task);
+          expect(storeFiles(storeDir)).toEqual(filesBefore);
+          expect(existsSync(join(storeDir, 'id-map.json'))).toBe(!missingSidecar);
+          if (running) expect(await storage.task(task.id, BACKGROUND_CONTEXT)).toEqual(task);
           expect(await storage.document(migration!.id, 'current', BACKGROUND_CONTEXT)).toEqual(before);
-          expect(readFileSync(join(storeDir, 'id-map.json'), 'utf8')).toBe(expectedMap);
-          if (backend === 'jsonl') expect(readFileSync(join(storeDir, 'main.jsonl'), 'utf8')).toBe(mainBefore);
         } finally {
           await storage.close(BACKGROUND_CONTEXT);
         }

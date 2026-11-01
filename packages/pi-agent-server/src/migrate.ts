@@ -44,43 +44,17 @@ export function findMostRecentSessionFile(sessionDir: string): string | null {
 /**
  * Branch preflight: a parent that has never opened under the durable kernel
  * gets its legacy transcript converted in place, so the branch copy carries
- * full context. No-op when the parent already has a migrated store. No models
- * are touched — migration only commits entries. Live parents defer any remaining
- * conversion to the branch copy.
+ * full context. Any existing backend is left unopened: JSONL recovery could
+ * truncate another writer's uncommitted sidecars. Remaining conversion and
+ * id-map recovery run in the branch copy. No models are touched.
  */
 export async function migrateParentStore(sessionPath: string, debugLog: (message: string) => void): Promise<void> {
-  const legacyFile = findMostRecentSessionFile(join(sessionPath, '.pi-sessions'));
-  if (!legacyFile) return;
   const storeDir = join(sessionPath, 'durable-store');
+  if (existsSync(join(storeDir, 'main.jsonl')) || existsSync(join(storeDir, 'store.db'))) return;
+  if (!findMostRecentSessionFile(join(sessionPath, '.pi-sessions'))) return;
   const storage = await openDurableStorage(storeDir, BACKGROUND_CONTEXT);
   let harness: Harness | undefined;
   try {
-    // Harness.open recovers running tasks; inspect committed migration state without it.
-    const record = await storage.findDocument({ kind: LegacyIdMapDoc.definition.kind, scope: { kind: 'session' } }, 'current', BACKGROUND_CONTEXT);
-    const migration = record && await storage.document(record.id, 'current', BACKGROUND_CONTEXT);
-    const idMap = migration?.value.entries as Record<string, EntryId> | null | undefined;
-    for (const status of ['pending', 'running', 'waiting', 'sleeping', 'completing'] as const) {
-      const tasks = await storage.scanTasks({ status }, 1, undefined, BACKGROUND_CONTEXT);
-      if (tasks.items.length > 0) {
-        // Finish migration in the branch copy so the live parent is never recovered here.
-        if (idMap) writeFileSync(join(storeDir, 'id-map.json'), JSON.stringify(idMap));
-        return;
-      }
-    }
-    if (idMap) {
-      const entries = readLegacyEntries(legacyFile);
-      const entriesById = new Map(entries.map(entry => [entry.id, entry]));
-      // A crash between branch commits must still finish importing unmapped entries.
-      const incomplete = entries.some(entry => idMap[entry.id] === undefined
-        && (entry.type === 'context_edit' || toDurableDraft(entry, idMap, entriesById)));
-      if (!incomplete) {
-        writeFileSync(join(storeDir, 'id-map.json'), JSON.stringify(idMap));
-        return;
-      }
-    } else if (await storage.conversation(ROOT_CONVERSATION_ID, BACKGROUND_CONTEXT)) {
-      const existing = await storage.scanEntries({ conversationId: ROOT_CONVERSATION_ID }, 1, undefined, BACKGROUND_CONTEXT);
-      if (existing.items.length > 0) return;
-    }
     harness = await Harness.open(storage, {
       models: () => { throw new Error('Model access is not expected during migration'); },
       registry: createRegistry<ToolRegistration>(),

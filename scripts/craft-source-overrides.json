@@ -2681,7 +2681,7 @@
       "reason": "Migrate local main index.ts queryLlm behavior from temporary AgentSessions to pi-ai completeSimple while retaining mini-model recovery and cancellation."
     },
     "packages/pi-agent-server/src/kernel.e2e.test.ts": {
-      "sha256": "754c1c09db1a9770c61fbf31a9c1febebb5de9c4c7ea93e03b0c51e97490de5a",
+      "sha256": "e116fea1cc1f3473b2b1ded351500f869cffe57c18f1374315ded49fa717efac",
       "reason": "Move retained Pi session contracts to a real durable Harness; add persistence, branch migration, tools, cache warming and compaction races, direct and nested proxy export checks across SQLite and JSONL, and subprocess reinitialization, EOF, shutdown and SIGTERM assertions with opening kernels or pending approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
@@ -2725,12 +2725,12 @@
       "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/tools.js naming, content conversion and truncation to durable registrations without TUI renderers."
     },
     "packages/pi-agent-server/src/migrate.test.ts": {
-      "sha256": "8cf39873dc3a13bf0f3791c9b99c2757fa9a02950073eb4ec4e62ba2d8db0a95",
+      "sha256": "4bcda77af62aa16784d878aaae760d73cd9dc6f4f8dc88c0d586386262177f0d",
       "reason": "Verify legacy transcript conversion, active and inactive branches, context edits, compaction mapping, interrupted migration recovery, and unchanged running parent tasks with present or missing id-map sidecars on SQLite and JSONL."
     },
     "packages/pi-agent-server/src/migrate.ts": {
-      "sha256": "e061f1fc88617cb15c1d1eebd78acf77e80b5331ddb8463351014319e1abe953",
-      "reason": "Convert legacy pi-coding-agent 1.1.0 JSONL histories to durable conversations and persist recoverable entry and branch anchor mappings; inspect committed migration state through storage before opening a Harness so branch preflight preserves running parent tasks."
+      "sha256": "015f364a37a77085c1e4fe796ccfaa49738ed7be49c17e010887d22e5e24709a",
+      "reason": "Convert legacy pi-coding-agent 1.1.0 JSONL histories to durable conversations and persist recoverable entry and branch anchor mappings; skip existing parent backends without opening them, migrate only legacy-only parents in place, and complete deferred migration in the child copy."
     },
     "packages/pi-agent-server/src/model-runtime.ts": {
       "sha256": "0119c65e7f4716beb03d1d3459429b9bd9ecd5ee66cd237f4f1fd2fa338ea68a",

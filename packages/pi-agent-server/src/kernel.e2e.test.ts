@@ -7,7 +7,7 @@
 import { afterAll, describe, expect, it } from 'bun:test';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { Database } from 'bun:sqlite';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -2635,7 +2635,7 @@ describe('DurableKernel end-to-end', () => {
     });
   }
 
-  for (const backend of ['sqlite', 'jsonl'] as const) it(`completes a live partially migrated ${backend} parent in the child before forking an inactive anchor`, async () => {
+  for (const backend of ['sqlite', 'jsonl'] as const) for (const partial of [false, true]) for (const missingSidecar of [false, true]) it(`completes a live ${partial ? 'partially' : 'fully'} migrated ${backend} parent in the child (${missingSidecar ? 'missing' : 'present'} id map) before forking an inactive anchor`, async () => {
     const parent = scratch();
     const parentStore = join(parent, 'durable-store');
     mkdirSync(join(parent, '.pi-sessions'), { recursive: true });
@@ -2655,23 +2655,28 @@ describe('DurableKernel end-to-end', () => {
       registry: createRegistry<ToolRegistration>(),
     }, BACKGROUND_CONTEXT);
     try {
-      await harness.root(BACKGROUND_CONTEXT);
-      const commit = harness.commit.bind(harness);
-      let commits = 0;
-      harness.commit = (async (change, context) => commit(async tx => {
-        const result = await change(tx);
-        if (++commits === 2) throw new Error('injected branch commit failure');
-        return result;
-      }, context)) as typeof harness.commit;
-      await expect(migrateLegacySession(harness, parent, () => {})).rejects.toThrow('injected branch commit failure');
+      if (partial) {
+        await harness.root(BACKGROUND_CONTEXT);
+        const commit = harness.commit.bind(harness);
+        let commits = 0;
+        harness.commit = (async (change, context) => commit(async tx => {
+          const result = await change(tx);
+          if (++commits === 2) throw new Error('injected branch commit failure');
+          return result;
+        }, context)) as typeof harness.commit;
+        await expect(migrateLegacySession(harness, parent, () => {})).rejects.toThrow('injected branch commit failure');
+      } else {
+        await migrateLegacySession(harness, parent, () => {});
+      }
     } finally {
       await harness.close(BACKGROUND_CONTEXT);
     }
     const expectedMap = readFileSync(join(parentStore, 'id-map.json'), 'utf8');
-    expect(JSON.parse(expectedMap)).not.toHaveProperty('old');
-    unlinkSync(join(parentStore, 'id-map.json'));
+    expect(Object.hasOwn(JSON.parse(expectedMap), 'old')).toBe(!partial);
+    if (missingSidecar) unlinkSync(join(parentStore, 'id-map.json'));
     const storage = await openDurableStorage(parentStore, BACKGROUND_CONTEXT);
-    const setup = createKernel({ sessionPath: scratch(), script: [textEvents('child reply')] });
+    const childPath = scratch();
+    const setup = createKernel({ sessionPath: childPath, script: [textEvents('child reply')] });
     try {
       const task: TaskRecord<null, null, null> = {
         id: await storage.mintId<TaskId<null>>(), conversationId: ROOT_CONVERSATION_ID,
@@ -2681,9 +2686,11 @@ describe('DurableKernel end-to-end', () => {
       await storage.commit([{ type: 'task', value: task }], BACKGROUND_CONTEXT);
       const record = await storage.findDocument({ kind: 'mkagent.legacy-id-map', scope: { kind: 'session' } }, 'current', BACKGROUND_CONTEXT);
       const migration = await storage.document(record!.id, 'current', BACKGROUND_CONTEXT);
-      const mainBefore = backend === 'jsonl' ? readFileSync(join(parentStore, 'main.jsonl'), 'utf8') : undefined;
+      const filesBefore = Object.fromEntries(readdirSync(parentStore).sort().map(name => [name, readFileSync(join(parentStore, name))]));
 
       await setup.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 }, branchFromSessionPath: parent, branchFromSdkTurnId: 'old' });
+      expect(Object.keys(JSON.parse(readFileSync(join(childPath, 'durable-store', 'id-map.json'), 'utf8'))).sort()).toEqual(['new', 'old', 'old-next', 'root']);
+      expect(Object.fromEntries(readdirSync(parentStore).sort().map(name => [name, readFileSync(join(parentStore, name))]))).toEqual(filesBefore);
       await setup.kernel.submitPrompt('child question');
       await setup.waitFor('agent_end');
 
@@ -2694,8 +2701,8 @@ describe('DurableKernel end-to-end', () => {
       expect(messages).not.toContain('active branch');
       expect(await storage.task(task.id, BACKGROUND_CONTEXT)).toEqual(task);
       expect(await storage.document(record!.id, 'current', BACKGROUND_CONTEXT)).toEqual(migration);
-      expect(readFileSync(join(parentStore, 'id-map.json'), 'utf8')).toBe(expectedMap);
-      if (backend === 'jsonl') expect(readFileSync(join(parentStore, 'main.jsonl'), 'utf8')).toBe(mainBefore);
+      expect(existsSync(join(parentStore, 'id-map.json'))).toBe(!missingSidecar);
+      expect(Object.fromEntries(readdirSync(parentStore).sort().map(name => [name, readFileSync(join(parentStore, name))]))).toEqual(filesBefore);
     } finally {
       await setup.kernel.close();
       await storage.close(BACKGROUND_CONTEXT);
