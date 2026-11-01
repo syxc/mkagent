@@ -227,6 +227,8 @@ message_end 的 `message` 字段按 pi-ai 1.1.0 `AssistantMessage` 结构化形�
 
 分支 `dev/pi-durable`，规格（b77c4a2）之后的提交：e4b75c2（内核切换）、1341518（e2e 与迁移测试）、1e69596（SQLite 存储）、369244d（shared 类型 vendor）、436b789（工具链补齐）、d5bd7c9（独立审查修复）。宿主协议保持兼容；`packages/shared` 增加 vendored 类型与 exports 子路径，并调整事件适配和会话导出。
 
+以下迁移、分支与缓存说明已按本次修复更新并集成主工作区（2026-11-02）。逐项结果见 [内核迁移修复验收记录](kernel-migration-review-fix-spec.md#12-最终集成验收2026-11-02)。
+
 ### 8.1 与规格的差异
 
 | 项 | 规格 | 实际 |
@@ -236,9 +238,10 @@ message_end 的 `message` 字段按 pi-ai 1.1.0 `AssistantMessage` 结构化形�
 | 会话标识 | 使用 durable conversation id（§4.2） | 对外 session id 存于 `durable-store/session-id.txt`；fork 后的 conversation id 存于 `durable-store/conversation-id.txt`，供恢复及后续分支使用 |
 | 权限与图片 | 使用 `beforeTool`；图片不经 Photon（§4.5） | 工具 `execute` 包装负责权限握手；图片通过 durable 的 Photon 处理器转换和缩放。codemode 模型调用也经过宿主权限握手 |
 | 上下文与压缩 | 根据最近 usage 和压缩 entry 投影（§4.4、§4.7） | 根据当前会话视图计算最近有效 assistant usage 和后续消息；压缩后没有新 usage 时占用为未知。手动压缩检查任务结果并按压缩后的消息估算；摘要排队时，结束事件等待摘要写入或提交失败 |
-| 分支 | 只读父存储并逐条复制；锚点不可用时回退（§5.3） | 使用复制后的 durable store 创建 fork，SQLite 通过快照复制；锚点不可解析时报错，不回退父会话末尾。`.durable-branch-pending` 标记未完成的复制，残留标记会阻止直接打开 |
+| 分支 | 只读父存储并逐条复制；锚点不可用时回退（§5.3） | 使用 durable store 副本创建 fork，SQLite 通过快照复制。首次副本在 `Harness.open()` 前通过 Storage 原子终结继承的非终态任务，将 queued/placed submissions 结算为 `unanswered`，并清理运行态文档。迁移、锚点 fork、watch 附着和配置完成后才调用 `resume()`；普通恢复仍调用 `resume()`。锚点不可解析时报错，不回退父会话末尾。`.durable-branch-pending` 标记未完成的复制，残留标记会阻止直接打开 |
+| 旧会话迁移 | 打开存储前转换；旧父会话只转换到子存储（§5.1、§5.3） | 普通会话在打开 Harness 后调用 `migrateLegacySession()`。迁移预检 `migrateParentStore()` 不打开或补写已有 SQLite/JSONL 父库，只有无 durable backend 的纯 legacy 父会话才原地转换。子副本在打开 Harness 后补全所需迁移与 `id-map.json`，再解析锚点 |
 | 系统提示词 | 通过 `section` 替代旧的强制覆盖（§4.2） | 保留 `section`；宿主提供提示词时，`GenerationTask.beforeRequest` 将请求中的系统消息投影为一条当前宿主提示词，并保留当前工具声明。历史记录不变，缓存预热使用同一份投影后的消息 |
-| 缓存预热 | main 聊天使用 `streaming`，临时查询关闭 | 主会话通过 generation hook 保留最新请求，在运行未结束时按缓存寿命和预计费用预热；预热用量写入 durable 账本。临时查询不启用 |
+| 缓存预热 | main 聊天使用 `streaming`，临时查询关闭 | 主会话通过 generation hook 保留最新请求，在运行未结束时按缓存寿命和预计费用预热。所有已返回响应（含 `error`、`aborted`）的实际 usage 在同一提交写入 `UsageDoc` 和 `mkagent.usage`，无响应异常不虚构用量。关闭立即停止接收和调度、取消当前预热，等待全部在途 refresh（含被替换请求及校验、入账阶段）收尾后再关闭 Harness。普通 `stop()`/`capture()` 不等待旧请求。临时查询不启用 |
 | 会话导出 | 未规划 | SQLite 以 `VACUUM INTO` 生成快照，在副本中脱敏后再次 `VACUUM`；JSONL 检查文件变化、提交标记及 sidecar 引用后在副本中脱敏。无法识别格式或无法确认安全时拒绝导出；原数据库的 WAL 和 SHM 文件不打包。Bun 和 Electron 分别加载各自的 SQLite 模块 |
 | `agent-dir.ts` | 删除（§4.1） | 保留（MCP 配置定位需要） |
 | 依赖矩阵（§3） | pi-durable + pi-ai 1.4.0 | 另加 `pi-codemode` 1.4.0（codemode sandbox）与 `pi-mcp` 1.1.0（MCP 客户端），均为 pi-agent-server 直接依赖 |
@@ -248,12 +251,14 @@ message_end 的 `message` 字段按 pi-ai 1.1.0 `AssistantMessage` 结构化形�
 
 ### 8.2 实际文件面（对 §4.1 的修正）
 
-- 新增：`src/mcp/`（9 文件）、`src/tools/local/`（grep/find/ls/path-utils/truncate/tool-binaries）、`src/tools/codemode.ts`、`src/storage/durable-storage.ts`；shared 侧 `agent-session-events.ts`（AgentSessionEvent 及 SessionEntry 闭包 1:1 vendor，经 `@mkagent/shared/agent/pi-events` 导出）。
+- 新增：`src/mcp/`（9 文件）、`src/tools/local/`（grep/find/ls/path-utils/truncate/tool-binaries）、`src/tools/codemode.ts`、`src/cache-warmer.ts`、`src/storage/durable-storage.ts`、`src/storage/branch-storage.ts`；shared 侧 `agent-session-events.ts`（AgentSessionEvent 及 SessionEntry 闭包 1:1 vendor，经 `@mkagent/shared/agent/pi-events` 导出）。
 - 改 durable 工具契约（`execute(args, api, context)` → `{output, structuredOutput?, isError?, details?}`）：web-fetch、search、background-shell、builtin；kernel 增加扩展槽位。
 - 删除：`session-settings.ts`、`system-prompt-override.ts`、`context-usage.ts`、`compaction-wait.ts`（按 §4.1 计划），以及 shared 的 `pi-retry-sdk-integration.test.ts`（被测对象已不存在）。
 
 ### 8.3 验证与遗留
 
-本次复核仍在进行；尚不能把先前提交时的测试与独立审查当作当前工作树的验收结果。复核完成后应记录当前工作树实际执行的命令、结果及未验证项。
+本次完整修复通过一轮联合独立复核。集成后的 `bun run typecheck:all`、`bun run test:shared:all`、pi-agent-server 全部普通测试及取消隔离测试、受影响 shared 与宿主集成测试通过，最终运行时门禁共 558 项；来源审计、保留测试覆盖及 diff 检查通过。命令和证据见上述验收记录。未验证真实 provider、真实 Electron 或跨平台最终发布包；本地 bundle 烟测不替代这些层级。
+
+预热关闭等待 provider、校验和存储 Promise 结束。永久不结束的依赖仍可能阻塞关闭。
 
 升级 durable 版本时：§4.4 事件合成映射表与 §8.1 差异表共同构成回归清单。

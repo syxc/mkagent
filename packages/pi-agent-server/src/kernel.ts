@@ -5,7 +5,7 @@
  * `watchEvents` batches to the pi-coding-agent 1.1.0 `AgentSessionEvent` shapes
  * the host's `PiEventAdapter` already consumes. Storage lives at
  * `<sessionPath>/durable-store/`; a legacy `<sessionPath>/.pi-sessions/`
- * transcript is converted once by `migrate.ts` before the store opens, and
+ * transcript is converted by `migrate.ts` through an open `Harness`, and
  * `id-map.json` records old → new entry ids for branch anchors.
  */
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';

@@ -2693,7 +2693,7 @@
       "reason": "Move retained Pi session contracts to a real durable Harness; add persistence, branch migration, tools, cache warming and compaction races, direct and nested proxy export checks across SQLite and JSONL, and subprocess reinitialization, EOF, shutdown and SIGTERM assertions with opening kernels or pending approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "1f6bee0ca7a7afee258cd1beef36e5df250aebe9bc155c000070fb675118a899",
+      "sha256": "7ee12e71f94ab6371d933c51dcf6f6777310e64d51f9bfb301170833180f06a0",
       "reason": "Replace local main AgentSession lifecycle wiring with a durable Harness; retain host-compatible events and prompt replacement, derive context usage from committed history, preserve branch snapshots and anchors, update tool registrations live, and settle or cancel compaction tasks and queued summaries before shutdown. Retire inherited work before opening a copied branch and drain cache warming before closing Harness."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
