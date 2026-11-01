@@ -22,6 +22,8 @@ type Request = {
 /** Keep the latest main-session prompt cache alive until the run settles. */
 export class CacheWarmer {
   private current: Request | undefined;
+  private readonly inFlight = new Set<Promise<void>>();
+  private closed = false;
   private latestPromptTokens = 0;
   private revision = 0;
 
@@ -32,6 +34,7 @@ export class CacheWarmer {
   ) {}
 
   async capture(request: { readonly messages: readonly Message[] }, api: HookApi, context: Context): Promise<void> {
+    if (this.closed) return;
     const conversation = this.conversation();
     const harness = this.harness();
     if (!conversation || !harness || conversation.id !== api.conversationId) return;
@@ -97,6 +100,13 @@ export class CacheWarmer {
     run.controller.abort();
   }
 
+  /** Stop admission synchronously, then join every refresh, including replaced requests. */
+  async close(): Promise<void> {
+    this.closed = true;
+    this.stop();
+    await Promise.allSettled([...this.inFlight]);
+  }
+
   private schedule(run: Request): void {
     const now = Date.now();
     const next = now + run.delay;
@@ -105,7 +115,14 @@ export class CacheWarmer {
       return;
     }
     run.deadline = next + Math.floor((run.ttl - run.delay) / 2);
-    run.timer = setTimeout(() => void this.refresh(run), run.delay);
+    run.timer = setTimeout(() => {
+      if (this.current !== run) return;
+      // Register before validation runs, and observe rejection even when nobody is closing.
+      const refresh = Promise.resolve().then(() => this.refresh(run));
+      this.inFlight.add(refresh);
+      const done = () => { this.inFlight.delete(refresh); };
+      void refresh.then(done, done);
+    }, run.delay);
     run.timer.unref?.();
   }
 

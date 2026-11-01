@@ -2613,8 +2613,12 @@
       "reason": "Build the durable subprocess and codemode worker, and copy QuickJS and Photon WASM assets beside the bundles."
     },
     "packages/pi-agent-server/src/cache-warmer.ts": {
-      "sha256": "2241e0edfa594adbea67afe301c745d980fafaf124e2226dcd83748c92af92de",
-      "reason": "Port pi-coding-agent 1.1.0 core/cache-warmer.js replay, TTL, scheduling and cost policies to durable request hooks; persist actual returned usage for every stop reason."
+      "sha256": "7d1ca54d32dc242776a6fe34cce44810554fe5d4243ee0d42f135619f048d8af",
+      "reason": "Port pi-coding-agent 1.1.0 core/cache-warmer.js replay, TTL, scheduling and cost policies to durable request hooks; persist actual returned usage for every stop reason and drain all refreshes before storage shutdown."
+    },
+    "packages/pi-agent-server/src/cache-warmer-lifecycle.test.ts": {
+      "sha256": "a26772f329e3535e449a04fdf62fb034ece2c2810794b898ed980d9825294ed5",
+      "reason": "Verify kernel shutdown drains current and replaced cache refreshes through validation and accounting; check cancellation, rejection handling and ledger reopen with real storage and local providers."
     },
     "packages/pi-agent-server/src/cache-warmer.test.ts": {
       "sha256": "6d855da0bda8620328629586656e1237d560066e70bcc77871b90e40f213d6a2",
@@ -2689,8 +2693,8 @@
       "reason": "Move retained Pi session contracts to a real durable Harness; add persistence, branch migration, tools, cache warming and compaction races, direct and nested proxy export checks across SQLite and JSONL, and subprocess reinitialization, EOF, shutdown and SIGTERM assertions with opening kernels or pending approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "02e779688277c387808541944acd00b22280e3217f4b055bec7f548e702f7ee8",
-      "reason": "Replace local main AgentSession lifecycle wiring with a durable Harness; retain host-compatible events and prompt replacement, derive context usage from committed history, preserve branch snapshots and anchors, update tool registrations live, and settle or cancel compaction tasks and queued summaries before shutdown. Retire inherited work before opening a copied branch."
+      "sha256": "1f6bee0ca7a7afee258cd1beef36e5df250aebe9bc155c000070fb675118a899",
+      "reason": "Replace local main AgentSession lifecycle wiring with a durable Harness; retain host-compatible events and prompt replacement, derive context usage from committed history, preserve branch snapshots and anchors, update tool registrations live, and settle or cancel compaction tasks and queued summaries before shutdown. Retire inherited work before opening a copied branch and drain cache warming before closing Harness."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
       "sha256": "2b2ee30b4478fabc39101535c97668c64a526632849f6e76446d91794360af0e",

@@ -713,10 +713,10 @@ export class DurableKernel {
   }
 
   async close(): Promise<void> {
-    this.cacheWarmer.stop();
+    const warming = this.cacheWarmer.close();
     const compactions = [...this.manualCompactions];
     for (const compaction of compactions) compaction.controller.abort();
-    await Promise.all(compactions.map(compaction => compaction.done));
+    await Promise.all([warming, ...compactions.map(compaction => compaction.done)]);
     this.registry = null;
     this.detachWatch?.();
     this.detachWatch = null;
