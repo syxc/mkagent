@@ -1,6 +1,6 @@
 # 架构
 
-MkAgent 是一个 Bun monorepo，三种客户端共用同一套经过鉴权的 WebSocket RPC 协议。唯一注册的 backend 是 `pi`。直接集成的是 `@earendil-works/pi-coding-agent`；`pi-agent-core` 与 `pi-ai` 是更底层的依赖，不是应用层会话 API。
+MkAgent 是一个 Bun monorepo，三种客户端共用同一套经过鉴权的 WebSocket RPC 协议。唯一注册的 backend 是 `pi`。直接集成的是 `@earendil-works/pi-durable`，agent 内核（编码工具、codemode、MCP）运行在其子进程中；`pi-ai` 与 `chord` 是更底层的依赖，不是应用层会话 API。
 
 ## 分层拓扑
 
@@ -62,7 +62,7 @@ MkAgent 是一个 Bun monorepo，三种客户端共用同一套经过鉴权的 W
 
 - `packages/server-core` 负责 transport、handler、`SessionManager` 与跨平台服务,内含子目录: `bootstrap/`、`domain/`、`handlers/`、`model-fetchers/`、`runtime/`、`services/`、`sessions/`、`transport/`、`utils/`、`webui/`。
 - `packages/shared` 负责协议 DTO(`@mkagent/shared/protocol`)、配置、凭证、Skills、提示词、backend registry、workspace 存储与 Pi 客户端。
-- `packages/pi-agent-server` 在独立 Bun 子进程(`packages/pi-agent-server/dist/index.js`)中调用 `@earendil-works/pi-coding-agent` 的 `createAgentSession(...)`,通过 JSONL 通信。开发与打包产物共用同一 SDK 边界;`bun run server:build:subprocess` 负责打包。
+- `packages/pi-agent-server` 在独立 Bun 子进程(`packages/pi-agent-server/dist/index.js`)中运行基于 `@earendil-works/pi-durable` 的 agent 内核,通过 JSONL 通信。内核内嵌官方 pi-mcp 客户端(经全局 `mcp.json` 配置 MCP 服务器)、pi-codemode 沙箱(codemode),以及自 pi-coding-agent 1.1.0 1:1 vendor 的 grep/find/ls。开发与打包产物共用同一 SDK 边界;`bun run server:build:subprocess` 负责打包。
 - `packages/ui` 与 `packages/session-tools-core` 提供共享渲染与会话级工具。Electron、WebUI、CLI 都复用它们,和平台无关。
 
 ## Backend registry

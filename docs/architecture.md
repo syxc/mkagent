@@ -1,6 +1,6 @@
 # Architecture
 
-MkAgent is a Bun monorepo with three clients sharing one authenticated WebSocket RPC protocol. Only the `pi` agent backend is registered. The direct Pi integration is `@earendil-works/pi-coding-agent`; `pi-agent-core` and `pi-ai` are lower-level dependencies, not the application-facing session API.
+MkAgent is a Bun monorepo with three clients sharing one authenticated WebSocket RPC protocol. Only the `pi` agent backend is registered. The direct Pi integration is `@earendil-works/pi-durable`, which runs the agent kernel (coding tools, code mode, MCP) in its subprocess; `pi-ai` and `chord` are lower-level dependencies, not the application-facing session API.
 
 ## Layered topology
 
@@ -62,7 +62,7 @@ All three clients operate the same workspace and JSONL sessions; there is no cli
 
 - `packages/server-core` owns transport, handlers, `SessionManager`, and platform-neutral services. Subpackages: `bootstrap/`, `domain/`, `handlers/`, `model-fetchers/`, `runtime/`, `services/`, `sessions/`, `transport/`, `utils/`, `webui/`.
 - `packages/shared` owns protocol DTOs (`@mkagent/shared/protocol`), config, credentials, Skills, prompts, the backend registry, workspace storage, and the Pi client.
-- `packages/pi-agent-server` runs `createAgentSession(...)` from `@earendil-works/pi-coding-agent` in a separate Bun subprocess (`packages/pi-agent-server/dist/index.js`) and communicates through JSONL. The same SDK boundary is used in development and packaged builds; `bun run server:build:subprocess` produces the bundle.
+- `packages/pi-agent-server` runs the agent kernel on `@earendil-works/pi-durable` in a separate Bun subprocess (`packages/pi-agent-server/dist/index.js`) and communicates through JSONL. The kernel embeds the official pi-mcp client (user-configured MCP servers via a global `mcp.json`), the pi-codemode sandbox (code mode), and grep/find/ls vendored 1:1 from pi-coding-agent 1.1.0. The same SDK boundary is used in development and packaged builds; `bun run server:build:subprocess` produces the bundle.
 - `packages/ui` and `packages/session-tools-core` provide shared rendering and session-level tools. They are platform-neutral: Electron, WebUI, and CLI reuse them.
 
 ## Backend registry

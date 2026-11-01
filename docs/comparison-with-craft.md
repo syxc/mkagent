@@ -61,6 +61,8 @@ Both products expose tools to the LLM through three channels: (a) Pi SDK built-i
 
 Both repositories import the same helpers from `@earendil-works/pi-coding-agent` and instantiate them in the same order:
 
+> Note: since the pi-durable kernel switch (`dev/pi-durable`), MkAgent no longer imports `@earendil-works/pi-coding-agent` — read/edit/write/bash come from pi-durable's built-in coding tools, and grep/find/ls are a 1:1 vendor of its 1.1.0 dist. The tool surface described below is unchanged.
+
 | Tool | Purpose |
 |---|---|
 | `read` | Read file contents |

@@ -65,6 +65,8 @@
 
 两份仓库都从 `@earendil-works/pi-coding-agent` 导入同一组 helper，按相同顺序实例化：
 
+> 注：pi-durable 内核切换（`dev/pi-durable`）后，MkAgent 不再导入 `@earendil-works/pi-coding-agent`——read/edit/write/bash 来自 pi-durable 内建 CodingTools，grep/find/ls 为其 1.1.0 dist 的 1:1 vendor。下表描述的工具面不变。
+
 | Tool | 用途 |
 |---|---|
 | `read` | 读文件内容 |

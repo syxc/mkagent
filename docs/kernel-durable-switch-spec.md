@@ -1,6 +1,6 @@
 # 内核切换执行规格：pi-coding-agent → pi-durable
 
-状态：执行中（2026-11-01）
+状态：已完成（2026-11-01，分支 `dev/pi-durable`）。落地结果见 §8；与规格的差异以 §8 为准。
 范围：`packages/pi-agent-server` 子进程内核替换；宿主协议与宿主侧代码零改动。
 
 ## 1. 目标与验收条件
@@ -218,3 +218,33 @@ message_end 的 `message` 字段按 pi-ai 1.1.0 `AssistantMessage` 结构化形�
 9. 全量验证：`typecheck:all`、`test:shared:all`、pi-agent-server 测试、`server:build:subprocess`。
 
 每步的完成判据即该模块单测 + typecheck 局部通过；步骤 8 是验收条件 5 的落点。
+
+## 8. 落地记录（as-built，2026-11-01）
+
+分支 `dev/pi-durable`，规格（b77c4a2）之后的提交：e4b75c2（内核切换）、1341518（e2e 与迁移测试）、1e69596（SQLite 存储）、369244d（shared 类型 vendor）、436b789（工具链补齐）、d5bd7c9（独立审查修复）。宿主协议不变；`packages/shared` 仅新增 vendored 类型与 exports 子路径。
+
+### 8.1 与规格的差异
+
+| 项 | 规格 | 实际 |
+|---|---|---|
+| 存储 | 统一 `openNodeJsonlStorage`（§5.1） | 新会话与迁移会话默认 SQLite（`bun:sqlite` facade，`src/storage/durable-storage.ts`，upstream README 推荐长会话用 SQLite）；已存在 JSONL store 的会话保持 JSONL（sidecar 不可机械转换） |
+| 会话重建 | 删除 `toolsChanged` 重建，改运行中 install（§6.4） | 保留 `toolsChanged` 整体重建路径（`register_tools` 变化后下一次 prompt 前重建内核） |
+| `agent-dir.ts` | 删除（§4.1） | 保留（MCP 配置定位需要） |
+| 依赖矩阵（§3） | pi-durable + pi-ai 1.4.0 | 另加 `pi-codemode` 1.4.0（codemode sandbox）与 `pi-mcp` 1.1.0（MCP 客户端），均为 pi-agent-server 直接依赖 |
+| MCP | 未规划 | 新增：官方 pi-mcp 客户端 + 自 pi-coding-agent 1.1.0 `extensions/mcp` 1:1 vendor 的纯逻辑粘合层（`src/mcp/`，9 文件）。全局 `<agentDir>/mcp.json`，默认启用，exposure 直接映射 durable 的 `callers`/`deferred`。OAuth 登录未搬（401 服务器明确报错）；项目级 `.mkagent/mcp.json` 已实现但未接线（待 project-trust 概念）；TUI/CLI 渲染层未搬 |
+| codemode | 未规划 | 新增：durable 官方 `createCodemodeExtension` + pi-codemode Node sandbox，默认启用（mcp.json `autoEnableCodemode: false` 可关）；kernel 新增扩展槽位，同时安装 `tool_search`（deferred 工具发现） |
+| rg/fd 获取 | 随 1.1.0 自动下载 | 不自动下载（供应链考量）。rg 从 PATH 或应用内 `@vscode/ripgrep` 解析；fd 仅 PATH（含 Debian `fdfind` 回退） |
+
+### 8.2 实际文件面（对 §4.1 的修正）
+
+- 新增：`src/mcp/`（9 文件）、`src/tools/local/`（grep/find/ls/path-utils/truncate/tool-binaries）、`src/tools/codemode.ts`、`src/storage/durable-storage.ts`；shared 侧 `agent-session-events.ts`（AgentSessionEvent 及 SessionEntry 闭包 1:1 vendor，经 `@mkagent/shared/agent/pi-events` 导出）。
+- 改 durable 工具契约（`execute(args, api, context)` → `{output, structuredOutput?, isError?, details?}`）：web-fetch、search、background-shell、builtin；kernel 增加扩展槽位。
+- 删除：`session-settings.ts`、`system-prompt-override.ts`、`context-usage.ts`、`compaction-wait.ts`（按 §4.1 计划），以及 shared 的 `pi-retry-sdk-integration.test.ts`（被测对象已不存在）。
+
+### 8.3 验证与遗留
+
+通过：全仓 9 包 typecheck、pi-agent-server 147 测试、kernel e2e、子进程 bundle 构建、子进程握手冒烟（init → 内核开启（含 codemode/tool_search 扩展）→ re-init → 关停）；独立 fresh reviewer 复核（13 个 vendor 文件与上游逐字对照，5 项不变量成立；2 P1 / 1 P2 修复于 d5bd7c9）。
+
+未验证：MCP 实连、OAuth 流程、真实 LLM 全链路、打包环境的 rg 回退与 quickjs wasm 路径解析。
+
+升级 durable 版本时：§4.4 事件合成映射表与 §8.1 差异表共同构成回归清单。
