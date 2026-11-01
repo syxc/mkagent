@@ -1939,7 +1939,7 @@
       "reason": "Craft v0.13.3 semver-only release-note discovery is retained so MkAgent ignores pending templates"
     },
     "packages/shared/src/sessions/__tests__/bundle.test.ts": {
-      "sha256": "789cb47f06376f10662780c72fe50f7390e72766f94f964dc7bb923b903b0395",
+      "sha256": "2790657150009ea76d74884ff71be166a1b4bc0e04bbc2adfe28711353d51c31",
       "reason": "Extend Craft session-bundle regressions for durable history validation and browser secret removal: legacy field uncertainty, marker-shaped and multiword array inputs, retained copies in session data, metadata and attachments, command association, JSONL sidecar integrity and nested attachment directories."
     },
     "packages/shared/src/sessions/__tests__/persistence-queue.test.ts": {
@@ -2255,7 +2255,7 @@
       "reason": "Extend Craft's browser-command redactor with optional processing of existing password markers, configurable replacement text and callbacks that report removed values for durable export checks; preserve default idempotent session redaction."
     },
     "packages/shared/src/sessions/bundle.ts": {
-      "sha256": "8c1c83a3d11fca63f23af1efd04e6a0d348e0b589dab9e55d5e1c81d3acdadf5",
+      "sha256": "bc8d3507f2a316c379e656a3d52a50c9829d7a3b54e911c30b0729e94c4ef730",
       "reason": "Extend Craft session export with a validated, redacted durable snapshot and exclude the raw root store; reject secret copies in session data, metadata, attachment contents and file paths, returning null when safe export cannot be established."
     },
     "packages/shared/src/utils/bundle-files.ts": {
@@ -2665,7 +2665,7 @@
       "reason": "Extend durable tool approval regressions with host path rewrites and conflicting-path rejection; retain denied codemode model-call checks and background Bash timeout assertions."
     },
     "packages/shared/src/sessions/durable-bundle.ts": {
-      "sha256": "fed2a7ca1a070164c3af244d60bf7493851d945dd1b365b17fcaf77a0b328700",
+      "sha256": "72419c89ff35e9d27268dcb4ea48e8914f9953e9bc55b3db7cb5871806dac056",
       "reason": "Extend Craft-derived session bundles with validated SQLite and JSONL snapshots; associate browser classifications and nested results with their durable task, conversation and call, remove secrets only from matching browser arguments, reject unresolved inputs and retained copies, and preserve branch metadata."
     },
     "packages/pi-agent-server/src/compaction-reserve.ts": {

@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
+import { lstatSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { redactBrowserPasswordFills } from '../agent/browser-tool-redaction.ts'
@@ -276,6 +276,9 @@ function bundleFile(name: string, content: Buffer): BundleFile {
 
 /** Snapshot durable history with browser password inputs removed; reject unknown storage formats. */
 export function collectDurableBundle(storeDir: string, secrets: Set<string> = new Set()): BundleFile[] {
+  const root = lstatSync(storeDir, { throwIfNoEntry: false })
+  if (!root) return []
+  if (root.isSymbolicLink() || !root.isDirectory()) throw new Error('Durable store root must be a directory, not a symlink')
   const entries = readdirSync(storeDir, { withFileTypes: true })
   if (entries.some(entry => !entry.isFile())) throw new Error('Unknown durable store item')
   const names = entries.map(entry => entry.name)

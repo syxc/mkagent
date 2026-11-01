@@ -112,13 +112,11 @@ export function serializeSession(
     skipRelativePaths: new Set(['durable-store']),
   })
   const secrets = new Set<string>()
-  if (existsSync(storeDir)) {
-    try {
-      files.push(...collectDurableBundle(storeDir, secrets))
-    } catch (error) {
-      debug('[bundle] Cannot safely export durable history:', error)
-      return null
-    }
+  try {
+    files.push(...collectDurableBundle(storeDir, secrets))
+  } catch (error) {
+    debug('[bundle] Cannot safely export durable history:', error)
+    return null
   }
 
   // Validate total bundle size

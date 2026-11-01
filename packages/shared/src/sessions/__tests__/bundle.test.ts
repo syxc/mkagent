@@ -1,10 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from 'fs'
+import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync, readdirSync, renameSync, symlinkSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { serializeSession, validateBundle, MAX_BUNDLE_SIZE_BYTES } from '../bundle'
 import { writeSessionJsonl } from '../jsonl'
 import type { StoredSession, SessionHeader } from '../types'
+import { collectDurableBundle } from '../durable-bundle'
+import { Harness, createRegistry } from '@earendil-works/pi-durable'
+import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node'
+import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context'
+import { openDurableStorage } from '../../../../pi-agent-server/src/storage/durable-storage.ts'
 
 // ============================================================
 // Helpers
@@ -59,6 +64,22 @@ function setupSessionDir(workspaceRoot: string, session: StoredSession): string 
   return sessionsDir
 }
 
+async function setupDurableStore(storeDir: string, backend: 'jsonl' | 'sqlite', marker: string): Promise<void> {
+  const storage = await (backend === 'jsonl'
+    ? openNodeJsonlStorage(storeDir, BACKGROUND_CONTEXT)
+    : openDurableStorage(storeDir, BACKGROUND_CONTEXT))
+  const harness = await Harness.open(storage, {
+    models: () => { throw new Error('Model access is not expected in bundle fixtures') },
+    registry: createRegistry(),
+  }, BACKGROUND_CONTEXT)
+  try {
+    const root = await harness.root(BACKGROUND_CONTEXT)
+    await root.commit(tx => tx.appendEntry(root.id, { kind: 'pi.user', model: [{ role: 'user', content: marker, timestamp: 1 }] }), BACKGROUND_CONTEXT)
+  } finally {
+    await harness.close(BACKGROUND_CONTEXT)
+  }
+}
+
 // ============================================================
 // Tests
 // ============================================================
@@ -101,6 +122,75 @@ describe('serializeSession', () => {
       expect(serializeSession(tmpDir, session.id)).toBeNull()
     })
   }
+
+  for (const backend of ['jsonl', 'sqlite'] as const) {
+    it(`rejects a durable-store root symlink to an external ${backend} store`, async () => {
+      const session = makeStoredSession()
+      const sessionDir = setupSessionDir(tmpDir, session)
+      const external = join(tmpDir, 'external-store')
+      const marker = `external-${backend}-history-marker`
+      await setupDurableStore(external, backend, marker)
+      // Prove the target is valid and exportable before testing the forbidden alias.
+      const ordinary = collectDurableBundle(external)
+      expect(ordinary.some(file => Buffer.from(file.contentBase64, 'base64').includes(marker))).toBe(true)
+      const before = Object.fromEntries(readdirSync(external).map(name => [name, readFileSync(join(external, name))]))
+      const storeDir = join(sessionDir, 'durable-store')
+      symlinkSync(external, storeDir, 'dir')
+
+      expect(serializeSession(tmpDir, session.id)).toBeNull()
+      expect(() => collectDurableBundle(storeDir)).toThrow()
+      expect(Object.fromEntries(readdirSync(external).map(name => [name, readFileSync(join(external, name))]))).toEqual(before)
+    })
+
+    for (const dangling of [false, true]) {
+      it(`rejects an internal ${dangling ? 'dangling ' : ''}symlink in a durable ${backend} store`, async () => {
+        const session = makeStoredSession()
+        const storeDir = join(setupSessionDir(tmpDir, session), 'durable-store')
+        const marker = `ordinary-${backend}-history-marker`
+        await setupDurableStore(storeDir, backend, marker)
+        expect(serializeSession(tmpDir, session.id)).not.toBeNull()
+        const name = backend === 'jsonl' ? 'main.jsonl' : 'store.db'
+        const external = join(tmpDir, name)
+        renameSync(join(storeDir, name), external)
+        symlinkSync(dangling ? join(tmpDir, 'missing-file') : external, join(storeDir, name), 'file')
+
+        expect(serializeSession(tmpDir, session.id)).toBeNull()
+        expect(() => collectDurableBundle(storeDir)).toThrow()
+      })
+    }
+  }
+
+  it('rejects a dangling durable-store root symlink instead of exporting partial history', () => {
+    const session = makeStoredSession()
+    const storeDir = join(setupSessionDir(tmpDir, session), 'durable-store')
+    symlinkSync(join(tmpDir, 'missing-store'), storeDir, 'dir')
+    expect(existsSync(storeDir)).toBe(false)
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+    expect(() => collectDurableBundle(storeDir)).toThrow()
+  })
+
+  it('rejects a non-directory durable-store root', () => {
+    const session = makeStoredSession()
+    const storeDir = join(setupSessionDir(tmpDir, session), 'durable-store')
+    writeFileSync(storeDir, 'not a durable directory')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+    expect(() => collectDurableBundle(storeDir)).toThrow()
+  })
+
+  it('exports an ordinary legacy session without a durable-store root', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    mkdirSync(join(sessionDir, '.pi-sessions'))
+    writeFileSync(join(sessionDir, '.pi-sessions', 'legacy.jsonl'), JSON.stringify({ type: 'session', id: 'legacy-session', version: 3 }) + '\n')
+    writeFileSync(join(sessionDir, 'notes.md'), 'legacy attachment')
+
+    const bundle = serializeSession(tmpDir, session.id)
+    expect(bundle).not.toBeNull()
+    expect(bundle!.session.messages).toEqual(session.messages)
+    expect(bundle!.files.map(file => file.relativePath)).toEqual(['notes.md'])
+  })
 
   it('includes attachment files in bundle', () => {
     const session = makeStoredSession()
