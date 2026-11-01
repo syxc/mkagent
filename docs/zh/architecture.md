@@ -62,7 +62,7 @@ MkAgent 是一个 Bun monorepo，三种客户端共用同一套经过鉴权的 W
 
 - `packages/server-core` 负责 transport、handler、`SessionManager` 与跨平台服务,内含子目录: `bootstrap/`、`domain/`、`handlers/`、`model-fetchers/`、`runtime/`、`services/`、`sessions/`、`transport/`、`utils/`、`webui/`。
 - `packages/shared` 负责协议 DTO(`@mkagent/shared/protocol`)、配置、凭证、Skills、提示词、backend registry、workspace 存储与 Pi 客户端。
-- `packages/pi-agent-server` 在独立 Bun 子进程(`packages/pi-agent-server/dist/index.js`)中运行基于 `@earendil-works/pi-durable` 的 agent 内核,通过 JSONL 通信。内核内嵌官方 pi-mcp 客户端(经全局 `mcp.json` 配置 MCP 服务器)、pi-codemode 沙箱(codemode),以及自 pi-coding-agent 1.1.0 1:1 vendor 的 grep/find/ls。开发与打包产物共用同一 SDK 边界;`bun run server:build:subprocess` 负责打包。
+- `packages/pi-agent-server` 在独立 Bun 子进程(`packages/pi-agent-server/dist/index.js`)中运行基于 `@earendil-works/pi-durable` 的 agent 内核,通过 JSONL 通信。内核使用官方 pi-mcp 客户端（通过 agent 目录中的 `mcp.json` 配置 MCP 服务器）、pi-codemode 沙箱（codemode），以及从 pi-coding-agent 1.1.0 适配的 grep/find/ls。开发与打包产物共用同一 SDK 边界;`bun run server:build:subprocess` 负责打包。
 - `packages/ui` 与 `packages/session-tools-core` 提供共享渲染与会话级工具。Electron、WebUI、CLI 都复用它们,和平台无关。
 
 ## Backend registry
@@ -101,4 +101,4 @@ Pi 子进程与主进程隔离:
 
 ## 刻意不存在的部分
 
-Craft Agents 自带广泛的 OAuth 与 Sources 集成、Slack/Teams/Lark messaging gateway、基于 Baileys 的 WhatsApp worker、session MCP server、bridge MCP server 和独立 `apps/viewer` Electron 应用。MkAgent 在这一范围内仅保留 ChatGPT 与 Claude 的 LLM OAuth 流程，其余组件仍不打包。Craft 使用的底层 `pi-ai` 依赖虽然包含 OpenRouter 图片生成 API，但 Craft 和 MkAgent 都没有把它注册为 Agent 工具。具体证据与安装包体积差异见 [`comparison-with-craft.md`](./comparison-with-craft.md)。
+Craft Agents 自带广泛的 OAuth 与 Sources 集成、Slack/Teams/Lark messaging gateway、基于 Baileys 的 WhatsApp worker、session MCP server、bridge MCP server 和独立 `apps/viewer` Electron 应用。MkAgent 在这一范围内仅保留 ChatGPT 与 Claude 的 LLM OAuth 流程，其余组件仍不打包。配置图片模型和凭据后，MkAgent 可通过 codemode 的 `models.generateImages()` 调用图片生成。具体证据与安装包体积差异见 [`comparison-with-craft.md`](./comparison-with-craft.md)。

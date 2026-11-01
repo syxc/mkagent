@@ -63,6 +63,16 @@ describe('RemoteBrowserPaneManager — wire packaging', () => {
     expect(req.args).toEqual(['inst-1', 'https://example.com'])
   })
 
+  it('preserves input evidence from the desktop through the remote bridge', async () => {
+    const { server } = createFakeServer({ invokeImpl: () => ({ browserInput: 'password' }) })
+    const bridge = new RemoteBrowserPaneManager({
+      sessionId: 'sess-1', workspaceId: 'ws-1', rpcServer: server, getHostClient: () => 'client-A',
+    })
+    expect(await bridge.fillElement('inst-1', '@e1', 'fixture')).toEqual({ browserInput: 'password' })
+    expect(await bridge.typeText('inst-1', 'fixture')).toEqual({ browserInput: 'password' })
+    expect(await bridge.sendKey('inst-1', { key: 'v', modifiers: ['meta'] })).toEqual({ browserInput: 'password' })
+  })
+
   it('createForSessionAsync awaits the WS round-trip and returns the resolved id', async () => {
     const { server } = createFakeServer({ invokeImpl: () => 'browser-7' })
     const bridge = new RemoteBrowserPaneManager({

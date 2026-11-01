@@ -9,6 +9,7 @@
  */
 
 import type { BrowserInstanceInfo, BrowserSecurityChallenge } from '@mkagent/shared/protocol'
+import type { BrowserInputResult } from '@mkagent/shared/agent'
 
 // ---------------------------------------------------------------------------
 // Supporting types — minimal subsets of BPM's internal types
@@ -241,13 +242,13 @@ export interface IBrowserPaneManager {
   clickElement(id: string, ref: string, options?: { waitFor?: 'none' | 'navigation' | 'network-idle'; timeoutMs?: number }): Promise<BrowserClickResult | void>
   clickAtCoordinates(id: string, x: number, y: number): Promise<void>
   drag(id: string, x1: number, y1: number, x2: number, y2: number): Promise<void>
-  fillElement(id: string, ref: string, value: string): Promise<void>
-  typeText(id: string, text: string): Promise<void>
+  fillElement(id: string, ref: string, value: string): Promise<BrowserInputResult | void>
+  typeText(id: string, text: string): Promise<BrowserInputResult | void>
   selectOption(id: string, ref: string, value: string): Promise<void>
   setClipboard(id: string, text: string): Promise<void>
   getClipboard(id: string): Promise<string>
   scroll(id: string, direction: 'up' | 'down' | 'left' | 'right', amount?: number): Promise<void>
-  sendKey(id: string, args: BrowserKeyArgs): Promise<void>
+  sendKey(id: string, args: BrowserKeyArgs): Promise<BrowserInputResult | void>
   uploadFile(id: string, ref: string, filePaths: string[]): Promise<unknown>
   evaluate(id: string, expression: string): Promise<unknown>
 

@@ -197,19 +197,23 @@ function toParameters(schema: Record<string, unknown>): Record<string, unknown> 
 
 /**
  * Model visibility of an MCP exposure, as durable's `ToolRegistration` expresses it: `direct` tools
- * are offered to the model, `codemode` and `hidden` tools are callable but never offered (scripts
- * reach them; only `codemode` ones are declared in the namespace section), and `deferred` tools
- * additionally wait for `tool_search` to load them.
+ * are offered to the model; `codemode` tools are callable by scripts but never offered, and only
+ * they are declared in the namespace section; `hidden` tools are unreachable, and the loader does
+ * not register them (the empty `callers` keeps one built directly unreachable too); `deferred`
+ * tools are callable by scripts and become model-visible only after `tool_search` loads them. The
+ * harness builds that search list from model-callable tools, so `deferred` must not restrict
+ * `callers`.
  */
 export function toDurableVisibility(exposure: McpExposure): Pick<ToolRegistration, 'callers' | 'deferred'> {
   switch (exposure) {
     case 'direct':
       return {};
     case 'deferred':
-      return { callers: ['tools'], deferred: true };
+      return { deferred: true };
     case 'codemode':
-    case 'hidden':
       return { callers: ['tools'] };
+    case 'hidden':
+      return { callers: [] };
   }
 }
 

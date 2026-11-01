@@ -238,6 +238,8 @@ mock.module('../logger', () => {
 mock.module('../browser-cdp', () => ({
   BrowserCDP: class MockBrowserCDP {
     detach = mock(() => {})
+    prepareInputTracking = mock(async () => {})
+    typeText = mock(async () => ({ browserInput: 'ordinary' }))
     getAccessibilitySnapshot = mock(async () => ({
       url: 'https://example.com',
       title: 'Example',
@@ -1634,6 +1636,17 @@ describe('BrowserPaneManager', () => {
       expect(await manager.detectSecurityChallenge('sc-script-error')).toEqual(NONE)
       expect(await manager.detectSecurityChallenge('sc-missing')).toEqual(NONE)
     })
+  })
+
+  it('returns input evidence without losing action tracking', async () => {
+    manager.createInstance('input-evidence')
+    const instance = (manager as any).instances.get('input-evidence')
+    instance.cdp.fillElement = mock(async () => ({ browserInput: 'password', ref: '@e1' }))
+    instance.cdp.typeText = mock(async () => ({ browserInput: 'ordinary' }))
+    expect(await manager.fillElement('input-evidence', '@e1', 'fixture')).toEqual({ browserInput: 'password' })
+    expect(instance.lastAction).toMatchObject({ tool: 'browser_fill', status: 'succeeded' })
+    expect(await manager.typeText('input-evidence', 'fixture')).toEqual({ browserInput: 'ordinary' })
+    expect(instance.lastAction).toMatchObject({ tool: 'browser_type', status: 'succeeded' })
   })
 
   describe('failed interaction tracking', () => {

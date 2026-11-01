@@ -575,6 +575,11 @@ export class PiEventAdapter extends BaseEventAdapter {
           // agent_end { willRetry } tells us which. Park the error instead of
           // showing it now; agent_end either releases it or holds the queue
           // open for the retried run.
+          // Durable can announce the retry before publishing the failed message.
+          if (this.retryState === 'backoff' && isRetryableAssistantError(event.message as AssistantMessage)) {
+            this.heldRetryError = errorEvent;
+            break;
+          }
           if (
             (this.retryState === 'none' || this.retryState === 'recovering') &&
             isRetryableAssistantError(event.message as AssistantMessage)

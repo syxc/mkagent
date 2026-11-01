@@ -129,6 +129,10 @@ export interface BrowserLifecycleActionResult {
   reason?: string
 }
 
+export interface BrowserInputResult {
+  browserInput: 'ordinary' | 'password' | 'unknown';
+}
+
 export interface BrowserPaneFns {
   openPanel: (options?: { background?: boolean }) => Promise<{ instanceId: string }>;
   navigate: (url: string) => Promise<{ url: string; title: string }>;
@@ -136,8 +140,8 @@ export interface BrowserPaneFns {
   click: (ref: string, options?: { waitFor?: 'none' | 'navigation' | 'network-idle'; timeoutMs?: number }) => Promise<BrowserClickResult | void>;
   clickAt: (x: number, y: number) => Promise<void>;
   drag: (x1: number, y1: number, x2: number, y2: number) => Promise<void>;
-  fill: (ref: string, value: string) => Promise<void>;
-  type: (text: string) => Promise<void>;
+  fill: (ref: string, value: string) => Promise<BrowserInputResult | void>;
+  type: (text: string) => Promise<BrowserInputResult | void>;
   select: (ref: string, value: string) => Promise<void>;
   setClipboard: (text: string) => Promise<void>;
   getClipboard: () => Promise<string>;
@@ -147,7 +151,7 @@ export interface BrowserPaneFns {
   windowResize: (args: BrowserWindowResizeArgs) => Promise<{ width: number; height: number }>;
   getNetworkLogs: (args?: BrowserNetworkArgs) => Promise<Array<{ timestamp: number; method: string; url: string; status: number; resourceType: string; ok: boolean }>>;
   waitFor: (args: BrowserWaitArgs) => Promise<{ ok: true; kind: string; elapsedMs: number; detail: string }>;
-  sendKey: (args: BrowserKeyArgs) => Promise<void>;
+  sendKey: (args: BrowserKeyArgs) => Promise<BrowserInputResult | void>;
   getDownloads: (args?: BrowserDownloadsArgs) => Promise<Array<{ id: string; timestamp: number; url: string; filename: string; state: string; bytesReceived: number; totalBytes: number; mimeType: string; savePath?: string }>>;
   upload: (ref: string, filePaths: string[]) => Promise<void>;
   scroll: (direction: 'up' | 'down' | 'left' | 'right', amount?: number) => Promise<void>;

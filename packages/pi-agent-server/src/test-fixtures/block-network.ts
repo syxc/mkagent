@@ -18,3 +18,6 @@ const blockedFetch = Object.assign(
 ) satisfies typeof globalThis.fetch;
 
 globalThis.fetch = blockedFetch;
+globalThis.WebSocket = class {
+  constructor(url: string | URL) { blockedNetworkTarget(url); }
+} as unknown as typeof WebSocket;

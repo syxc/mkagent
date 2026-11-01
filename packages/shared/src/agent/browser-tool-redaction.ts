@@ -30,13 +30,16 @@ export function passwordFillRefs(result: string): string[] {
 interface SecretEntries {
   refs: ReadonlySet<string>;
   typedText: boolean;
+  redactPlaceholders: boolean;
+  placeholder?: string;
+  onRedact?: (value: string | readonly unknown[]) => void;
 }
 
 /**
  * For a command that put a secret into a field (`fill <ref> <value>` into one of the refs, or any
  * `type`/`paste` when a typed text went into a password field): how many words precede the value
- * and the value's placeholder. Undefined for any other command, and for a value that is already a
- * placeholder (results can arrive twice).
+ * and the value's placeholder. Undefined for any other command, or an existing placeholder when
+ * idempotent redaction is requested (results can arrive twice).
  */
 function secretValue(parts: readonly unknown[], secrets: SecretEntries): { headWords: number; placeholder: string } | undefined {
   const verb = typeof parts[0] === 'string' ? parts[0].toLowerCase() : undefined;
@@ -53,7 +56,9 @@ function secretValue(parts: readonly unknown[], secrets: SecretEntries): { headW
   }
   // The runtime enters the remaining parts joined by spaces.
   const value = parts.slice(headWords).join(' ');
-  return PASSWORD_PLACEHOLDER.test(value) ? undefined : { headWords, placeholder: passwordPlaceholder(value.length) };
+  return !secrets.redactPlaceholders && PASSWORD_PLACEHOLDER.test(value)
+    ? undefined
+    : { headWords, placeholder: secrets.placeholder ?? passwordPlaceholder(value.length) };
 }
 
 /**
@@ -73,12 +78,12 @@ function commandHead(command: string, tokens: readonly string[], headWords: numb
   return `${tokens.slice(0, headWords).join(' ')} `;
 }
 
-function redactCommandString(command: string, secrets: SecretEntries): string {
+function redactCommandString(command: string, secrets: SecretEntries): string | undefined {
   let commands: string[];
   try {
     commands = splitBatchCommands(command.trim());
   } catch {
-    return command; // The runtime rejects it too, so nothing was filled.
+    return undefined; // The runtime rejects it too, so nothing was filled.
   }
 
   let redacted = '';
@@ -96,10 +101,12 @@ function redactCommandString(command: string, secrets: SecretEntries): string {
     }
     const secret = secretValue(tokens, secrets);
     if (secret === undefined) continue;
-    redacted += command.slice(copied, start) + commandHead(part, tokens, secret.headWords) + secret.placeholder;
+    const head = commandHead(part, tokens, secret.headWords);
+    secrets.onRedact?.(part.slice(head.length));
+    redacted += command.slice(copied, start) + head + secret.placeholder;
     copied = searchFrom;
   }
-  return copied === 0 ? command : redacted + command.slice(copied);
+  return copied === 0 ? undefined : redacted + command.slice(copied);
 }
 
 /**
@@ -111,19 +118,28 @@ function redactCommandString(command: string, secrets: SecretEntries): string {
 export function redactBrowserToolInput(
   input: Record<string, unknown>,
   refs: readonly string[],
-  options: { typedText?: boolean } = {},
+  options: { typedText?: boolean; redactPlaceholders?: boolean; placeholder?: string; onRedact?: (value: string | readonly unknown[]) => void } = {},
 ): Record<string, unknown> {
-  const secrets: SecretEntries = { refs: new Set(refs), typedText: !!options.typedText };
+  const secrets: SecretEntries = {
+    refs: new Set(refs),
+    typedText: !!options.typedText,
+    redactPlaceholders: !!options.redactPlaceholders,
+    placeholder: options.placeholder,
+    onRedact: options.onRedact,
+  };
   const { command } = input;
   if (secrets.refs.size === 0 && !secrets.typedText) return input;
   if (typeof command === 'string') {
     const redacted = redactCommandString(command, secrets);
-    return redacted === command ? input : { ...input, command: redacted };
+    if (redacted === undefined || (redacted === command && !secrets.onRedact)) return input;
+    return { ...input, command: redacted };
   }
   if (Array.isArray(command)) {
     // Array mode runs as one command, without batch splitting or tokenizing.
     const secret = secretValue(command, secrets);
-    return secret === undefined ? input : { ...input, command: [...command.slice(0, secret.headWords), secret.placeholder] };
+    if (secret === undefined) return input;
+    secrets.onRedact?.(command.slice(secret.headWords));
+    return { ...input, command: [...command.slice(0, secret.headWords), secret.placeholder] };
   }
   return input;
 }
@@ -146,11 +162,12 @@ export function redactBrowserPasswordFills(
   toolName: string,
   input: Record<string, unknown> | undefined,
   result: string | undefined,
+  options: { redactPlaceholders?: boolean; placeholder?: string; onRedact?: (value: string | readonly unknown[]) => void } = {},
 ): Record<string, unknown> | undefined {
   if (!input || !result || !isCanonicalBrowserToolName(toolName)) return undefined;
   const refs = passwordFillRefs(result);
   const typedText = result.includes(PASSWORD_TEXT_MARKER);
   if (refs.length === 0 && !typedText) return undefined;
-  const redacted = redactBrowserToolInput(input, refs, { typedText });
+  const redacted = redactBrowserToolInput(input, refs, { typedText, ...options });
   return redacted === input ? undefined : redacted;
 }

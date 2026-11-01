@@ -201,7 +201,7 @@ function getElectronCommand(): string[] {
   return [ELECTRON_BIN, ...userDataArg, ...remoteDebuggingArg, "apps/electron"];
 }
 
-const MAIN_BUNDLE_EXTERNALS = ["electron", "@aws-sdk/client-s3"];
+const MAIN_BUNDLE_EXTERNALS = ["electron", "@aws-sdk/client-s3", "bun:sqlite"];
 
 // Run a one-shot esbuild using the JavaScript API
 async function runEsbuild(
@@ -228,14 +228,11 @@ async function runEsbuild(
   }
 }
 
-// Build Pi agent server using bun instead of esbuild.
-// The Pi SDK (@earendil-works/pi-coding-agent) is ESM-only, and esbuild with
-// packages:external leaves ESM imports as require() calls that fail at runtime.
-// Bun's bundler handles ESM→ESM bundling correctly.
+// Use the package build so the codemode worker and wasm are available in development too.
 async function buildPiAgentServer(): Promise<{ success: boolean; error?: string }> {
   try {
     const proc = spawn({
-      cmd: ["bun", "build", "src/index.ts", "--outdir=dist", "--target=bun", "--format=esm"],
+      cmd: ["bun", "run", "build"],
       cwd: PI_AGENT_SERVER_DIR,
       stdout: "pipe",
       stderr: "pipe",

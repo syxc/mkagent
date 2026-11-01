@@ -1,6 +1,6 @@
 # 内核切换执行规格：pi-coding-agent → pi-durable
 
-状态：已完成（2026-11-01，分支 `dev/pi-durable`）。落地结果见 §8；与规格的差异以 §8 为准。
+状态：内核切换已落地，正在对照本地 `main` 复核功能兼容性（2026-11-01，分支 `dev/pi-durable`）。落地结果见 §8；与规格的差异以 §8 为准。
 范围：`packages/pi-agent-server` 子进程内核替换；宿主协议与宿主侧代码零改动。
 
 ## 1. 目标与验收条件
@@ -16,7 +16,9 @@
 5. 新内核事件流在单元层覆盖：用 stub provider + 内存存储驱动一次「输入 → 助手回复 → 工具调用 → 结束」运行，断言合成出的 `AgentSessionEvent` 序列与旧内核语义一致（message_update 增量、message_end、tool_execution_start/end、turn_end、agent_end、context_usage）。
 6. 宿主侧（`packages/shared/src/agent/`、`packages/server-core`、`packages/server`、apps）diff 为零。
 
-## 2. 现状分析
+## 2. 切换前现状与原始设计
+
+§2 描述切换前的 `main`，§3–§7 保留切换时的原始设计与实施计划，不代表当前实现。当前实现及仍待核验的差异见 §8。
 
 ### 2.1 内核边界
 
@@ -104,7 +106,7 @@ src/tools/wrap.ts       新增：工具包装（权限握手、mkagent 元数据
     - `progress` 取默认（100ms 部分提交即流式粒度）。
   - `env`: `NodeExecutionEnv`，`cwd` 跟随会话 agent 的 cwd。
 - `harness.root(context)` 惰性建根会话；会话 id = durable conversation id（UUIDv7，重开不变）→ `session_id_update`。
-- 系统提示词：`section('mkagent-system-prompt', () => hostPrompt)`，`hostPrompt` 存内存并由 `prompt`/`init` 消息更新（替代 before_agent_start 覆盖；section 每次请求前渲染，语义等价）。
+- 系统提示词：原计划通过 `section('mkagent-system-prompt', () => hostPrompt)` 替代 `before_agent_start` 覆盖；单独使用 section 无法替换迁移历史中的系统消息，实际实现见 §8.1。
 
 ### 4.3 模型运行时（pi-ai 1.4.0）
 
@@ -196,11 +198,13 @@ message_end 的 `message` 字段按 pi-ai 1.1.0 `AssistantMessage` 结构化形�
 - `branchFromSdkTurnId`（宿主持有的旧锚点）经 id-map 解析；查不到 → 回退父末尾。
 - 分支后的锚点一律发 durable entry id，宿主从此积累新锚点。
 
-## 6. 已知行为差异（接受并记录）
+## 6. 原设计中记录的行为差异
+
+本节保留原设计记录，不视为接受这些差异；实际状态见 §8。
 
 1. 流式粒度从 token 级 delta 变为 durable 100ms 部分提交的文本增量（UI 观感差异极小；`progress.partialIntervalMs` 可调）。
-2. 重试由 durable generation 任务内部执行：`auto_retry_*` 事件按 §4.4 合成，UI 的「重试中」状态保留；SDK 的 `cacheWarming:'streaming'`（1-token 预热请求）无 durable 对应物，放弃。
-3. `abort` 在 durable 下同时撤回排队输入（旧 SDK abort 保留其队列语义——待实现时按宿主 `stop` 行为核对，如需保留排队以 followUp 提交而非 abort 实现）。
+2. 本节原记录的缓存预热缺失属于待修复的 `main` 功能差异；durable generation 任务内部负责重试，`auto_retry_*` 事件由内核合成。
+3. `abort` 在 durable 下同时撤回排队输入；与旧 SDK 的队列语义仍需核对。
 4. `register_tools` 不再重建会话，改为运行中 install 扩展（下一次请求生效，语义等价且更平滑）。
 5. 上游 durable 为 Experimental（README 明示 API 可能无通知变更）。
 6. durable JSONL 存储把历史全量驻留内存（与旧 SessionManager 行为一致，长会话内存特征不变；后续可切 SQLite）。
@@ -221,19 +225,26 @@ message_end 的 `message` 字段按 pi-ai 1.1.0 `AssistantMessage` 结构化形�
 
 ## 8. 落地记录（as-built，2026-11-01）
 
-分支 `dev/pi-durable`，规格（b77c4a2）之后的提交：e4b75c2（内核切换）、1341518（e2e 与迁移测试）、1e69596（SQLite 存储）、369244d（shared 类型 vendor）、436b789（工具链补齐）、d5bd7c9（独立审查修复）。宿主协议不变；`packages/shared` 仅新增 vendored 类型与 exports 子路径。
+分支 `dev/pi-durable`，规格（b77c4a2）之后的提交：e4b75c2（内核切换）、1341518（e2e 与迁移测试）、1e69596（SQLite 存储）、369244d（shared 类型 vendor）、436b789（工具链补齐）、d5bd7c9（独立审查修复）。宿主协议保持兼容；`packages/shared` 增加 vendored 类型与 exports 子路径，并调整事件适配和会话导出。
 
 ### 8.1 与规格的差异
 
 | 项 | 规格 | 实际 |
 |---|---|---|
 | 存储 | 统一 `openNodeJsonlStorage`（§5.1） | 新会话与迁移会话默认 SQLite（`bun:sqlite` facade，`src/storage/durable-storage.ts`，upstream README 推荐长会话用 SQLite）；已存在 JSONL store 的会话保持 JSONL（sidecar 不可机械转换） |
-| 会话重建 | 删除 `toolsChanged` 重建，改运行中 install（§6.4） | 保留 `toolsChanged` 整体重建路径（`register_tools` 变化后下一次 prompt 前重建内核） |
+| 会话重建 | 删除 `toolsChanged` 重建，改运行中 install（§6.4） | `register_tools` 和 MCP 工具变化通过替换当前注册表发布，不重新打开会话 |
+| 会话标识 | 使用 durable conversation id（§4.2） | 对外 session id 存于 `durable-store/session-id.txt`；fork 后的 conversation id 存于 `durable-store/conversation-id.txt`，供恢复及后续分支使用 |
+| 权限与图片 | 使用 `beforeTool`；图片不经 Photon（§4.5） | 工具 `execute` 包装负责权限握手；图片通过 durable 的 Photon 处理器转换和缩放。codemode 模型调用也经过宿主权限握手 |
+| 上下文与压缩 | 根据最近 usage 和压缩 entry 投影（§4.4、§4.7） | 根据当前会话视图计算最近有效 assistant usage 和后续消息；压缩后没有新 usage 时占用为未知。手动压缩检查任务结果并按压缩后的消息估算；摘要排队时，结束事件等待摘要写入或提交失败 |
+| 分支 | 只读父存储并逐条复制；锚点不可用时回退（§5.3） | 使用复制后的 durable store 创建 fork，SQLite 通过快照复制；锚点不可解析时报错，不回退父会话末尾。`.durable-branch-pending` 标记未完成的复制，残留标记会阻止直接打开 |
+| 系统提示词 | 通过 `section` 替代旧的强制覆盖（§4.2） | 保留 `section`；宿主提供提示词时，`GenerationTask.beforeRequest` 将请求中的系统消息投影为一条当前宿主提示词，并保留当前工具声明。历史记录不变，缓存预热使用同一份投影后的消息 |
+| 缓存预热 | main 聊天使用 `streaming`，临时查询关闭 | 主会话通过 generation hook 保留最新请求，在运行未结束时按缓存寿命和预计费用预热；预热用量写入 durable 账本。临时查询不启用 |
+| 会话导出 | 未规划 | SQLite 以 `VACUUM INTO` 生成快照，在副本中脱敏后再次 `VACUUM`；JSONL 检查文件变化、提交标记及 sidecar 引用后在副本中脱敏。无法识别格式或无法确认安全时拒绝导出；原数据库的 WAL 和 SHM 文件不打包。Bun 和 Electron 分别加载各自的 SQLite 模块 |
 | `agent-dir.ts` | 删除（§4.1） | 保留（MCP 配置定位需要） |
 | 依赖矩阵（§3） | pi-durable + pi-ai 1.4.0 | 另加 `pi-codemode` 1.4.0（codemode sandbox）与 `pi-mcp` 1.1.0（MCP 客户端），均为 pi-agent-server 直接依赖 |
-| MCP | 未规划 | 新增：官方 pi-mcp 客户端 + 自 pi-coding-agent 1.1.0 `extensions/mcp` 1:1 vendor 的纯逻辑粘合层（`src/mcp/`，9 文件）。全局 `<agentDir>/mcp.json`，默认启用，exposure 直接映射 durable 的 `callers`/`deferred`。OAuth 登录未搬（401 服务器明确报错）；项目级 `.mkagent/mcp.json` 已实现但未接线（待 project-trust 概念）；TUI/CLI 渲染层未搬 |
+| MCP | 未规划 | 新增：官方 pi-mcp 客户端 + 根据 pi-coding-agent 1.1.0 `extensions/mcp` 适配的粘合层（`src/mcp/`）。加载 `<agentDir>/mcp.json`，默认启用；宿主未提供 agentDir 时使用会话目录下的 `.pi-agent`。OAuth 登录未搬；项目级 `.mkagent/mcp.json` 未接线；服务器通知工具列表变更时替换当前注册表。TUI/CLI 渲染层未搬 |
 | codemode | 未规划 | 新增：durable 官方 `createCodemodeExtension` + pi-codemode Node sandbox，默认启用（mcp.json `autoEnableCodemode: false` 可关）；kernel 新增扩展槽位，同时安装 `tool_search`（deferred 工具发现） |
-| rg/fd 获取 | 随 1.1.0 自动下载 | 不自动下载（供应链考量）。rg 从 PATH 或应用内 `@vscode/ripgrep` 解析；fd 仅 PATH（含 Debian `fdfind` 回退） |
+| rg/fd 获取 | Pi bin 缓存、PATH、官方二进制下载 | 两者均保留缓存、PATH 与下载；rg 在下载前额外检查应用内 `@vscode/ripgrep`，`PI_OFFLINE` 阻止下载 |
 
 ### 8.2 实际文件面（对 §4.1 的修正）
 
@@ -243,8 +254,6 @@ message_end 的 `message` 字段按 pi-ai 1.1.0 `AssistantMessage` 结构化形�
 
 ### 8.3 验证与遗留
 
-通过：全仓 9 包 typecheck、pi-agent-server 147 测试、kernel e2e、子进程 bundle 构建、子进程握手冒烟（init → 内核开启（含 codemode/tool_search 扩展）→ re-init → 关停）；独立 fresh reviewer 复核（13 个 vendor 文件与上游逐字对照，5 项不变量成立；2 P1 / 1 P2 修复于 d5bd7c9）。
-
-未验证：MCP 实连、OAuth 流程、真实 LLM 全链路、打包环境的 rg 回退与 quickjs wasm 路径解析。
+本次复核仍在进行；尚不能把先前提交时的测试与独立审查当作当前工作树的验收结果。复核完成后应记录当前工作树实际执行的命令、结果及未验证项。
 
 升级 durable 版本时：§4.4 事件合成映射表与 §8.1 差异表共同构成回归清单。

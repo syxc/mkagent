@@ -516,7 +516,7 @@ export interface BackendConfig extends CoreBackendConfig {
   /**
    * Provider/SDK to use for this backend.
    * Determines which agent class is instantiated:
-   * - 'pi' → PiAgent (Pi via @earendil-works/pi-coding-agent)
+   * - 'pi' → PiAgent (Pi via @earendil-works/pi-durable)
    */
   provider: AgentProvider;
 

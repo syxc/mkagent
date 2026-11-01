@@ -1252,6 +1252,20 @@ describe('PiEventAdapter', () => {
       message: { role: 'assistant', stopReason: 'error', errorMessage },
     });
 
+    it('keeps a durable failure quiet when retry starts before message_end', () => {
+      collect(adapter.adaptEvent({ type: 'turn_start' } as any));
+      collect(adapter.adaptEvent({ type: 'agent_end', messages: [], willRetry: true } as any));
+      collect(adapter.adaptEvent({
+        type: 'auto_retry_start', attempt: 1, maxAttempts: 4, delayMs: 2_000, errorMessage: 'fetch failed',
+      } as any));
+      const error = collect(adapter.adaptEvent(transientError('fetch failed') as any));
+      expect(error.filter(event => event.type === 'error' || event.type === 'typed_error')).toEqual([]);
+      collect(adapter.adaptEvent({ type: 'agent_start' } as any));
+      collect(adapter.adaptEvent({ type: 'message_end', message: { role: 'assistant', stopReason: 'stop', content: 'Recovered' } } as any));
+      collect(adapter.adaptEvent({ type: 'auto_retry_end', success: true, attempt: 1 } as any));
+      expect(collect(adapter.adaptEvent({ type: 'agent_end', messages: [], willRetry: false } as any))).toMatchObject([{ type: 'complete' }]);
+    });
+
     it('success path: emits backoff/active/end around one recovered answer', () => {
       collect(adapter.adaptEvent({ type: 'turn_start' } as any));
 

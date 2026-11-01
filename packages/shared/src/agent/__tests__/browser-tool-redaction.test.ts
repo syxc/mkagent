@@ -158,6 +158,30 @@ describe('redaction of real runtime output', () => {
 // into a password field were not marked, and Claude's media summary of a screenshot batch dropped
 // the line.
 describe('redaction beyond a plain fill', () => {
+  it('redacts entered text when the browser cannot report the field type', async () => {
+    const fns = {
+      fill: async () => {},
+      type: async () => {},
+      setClipboard: async () => {},
+      sendKey: async () => {},
+      evaluate: async () => { throw new Error('Page unavailable') },
+    } as unknown as BrowserPaneFns
+
+    const inputs = [
+      { command: 'fill @e2 fake-secret', value: 'fake-secret' },
+      { command: 'type fake-secret', value: 'fake-secret' },
+      { command: 'paste fake-secret', value: 'fake-secret' },
+      { command: 'paste fake-secret2; fill @e2 ordinary', value: 'fake-secret2' },
+    ]
+    for (const { command, value } of inputs) {
+      const { output } = await executeBrowserToolCommand({ command, fns, sessionId: 'test-session' })
+      expect(output).not.toContain(value)
+      const redacted = redactBrowserPasswordFills('browser_tool', { command }, output)
+      expect(redacted).toBeDefined()
+      expect(redacted!.command).not.toContain(value)
+    }
+  })
+
   it('keeps a fill\'s line when a later command of the batch fails', async () => {
     const command = 'fill @e2 hunter2-secret; click @e404'
     const error = await executeBrowserToolCommand({ command, fns: loginPage('@e2'), sessionId: 'test-session' }).then(() => undefined, (e: unknown) => e) as Error
@@ -182,12 +206,13 @@ describe('redaction beyond a plain fill', () => {
       .toEqual({ command: ['type', '[password: 7 characters]'] })
   })
 
-  it('leaves type into an ordinary field alone', async () => {
+  it('leaves type and paste into an ordinary field alone', async () => {
     const fns = loginPage('@e2')
     await executeBrowserToolCommand({ command: 'click @e1', fns, sessionId: 'test-session' })
-    const command = 'type hello world'
-    const { output } = await executeBrowserToolCommand({ command, fns, sessionId: 'test-session' })
-    expect(redactBrowserPasswordFills('browser_tool', { command }, output)).toBeUndefined()
+    for (const command of ['type hello world', 'paste hello world']) {
+      const { output } = await executeBrowserToolCommand({ command, fns, sessionId: 'test-session' })
+      expect(redactBrowserPasswordFills('browser_tool', { command }, output)).toBeUndefined()
+    }
   })
 
   it('keeps password-entry lines when a result is replaced by a summary', () => {

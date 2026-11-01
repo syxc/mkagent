@@ -11,6 +11,8 @@
 
 import type { WebContents } from 'electron'
 import { mainLog } from './logger'
+import { BrowserInputTracker } from './browser-input-tracker'
+import type { BrowserInputResult } from '@mkagent/shared/agent'
 
 export interface AccessibilityNode {
   ref: string           // "@e1", "@e2", etc.
@@ -396,9 +398,25 @@ export class BrowserCDP {
   // Stable mapping for backend DOM nodes across snapshots.
   private backendNodeRefMap: Map<number, string> = new Map()
   private nextRefCounter = 0
+  private inputTracker: BrowserInputTracker
+  private inputTracking = false
 
   constructor(webContents: WebContents) {
     this.webContents = webContents
+    this.inputTracker = new BrowserInputTracker(webContents, (method, params) => this.send(method, params))
+  }
+
+  async prepareInputTracking(): Promise<void> {
+    await this.inputTracker.prepare()
+    this.inputTracking = true
+    if (this.idleDetachTimer) {
+      clearTimeout(this.idleDetachTimer)
+      this.idleDetachTimer = null
+    }
+  }
+
+  async recordInput<T>(expectedInputs: number, action: () => Promise<T>): Promise<{ value: T; browserInput: BrowserInputResult['browserInput'] }> {
+    return this.inputTracker.record(expectedInputs, action)
   }
 
   private async ensureAttached(): Promise<void> {
@@ -419,6 +437,8 @@ export class BrowserCDP {
       this.detachListenerRegistered = true
       this.webContents.debugger.on('detach', () => {
         this.attached = false
+        this.inputTracking = false
+        this.inputTracker.invalidate()
       })
     }
   }
@@ -427,6 +447,7 @@ export class BrowserCDP {
     if (this.idleDetachTimer) {
       clearTimeout(this.idleDetachTimer)
     }
+    if (this.inputTracking) return
     this.idleDetachTimer = setTimeout(() => {
       if (this.attached) {
         mainLog.info('[browser-cdp] idle detach — detaching debugger after inactivity')
@@ -1060,24 +1081,29 @@ export class BrowserCDP {
     else await this.dragNative(x1, y1, x2, y2)
   }
 
-  async typeText(text: string): Promise<void> {
-    for (const char of text) {
-      await this.send('Input.dispatchKeyEvent', { type: 'keyDown', text: char })
-      await this.send('Input.dispatchKeyEvent', { type: 'keyUp', text: char })
-    }
+  async typeText(text: string): Promise<{ browserInput: BrowserInputResult['browserInput'] }> {
+    const result = await this.recordInput([...text].length, async () => {
+      for (const char of text) {
+        await this.send('Input.dispatchKeyEvent', { type: 'keyDown', text: char })
+        await this.send('Input.dispatchKeyEvent', { type: 'keyUp', text: char })
+      }
+    })
+    return { browserInput: result.browserInput }
   }
 
   /**
    * Press a key through CDP. Returns false for keys left to the native path: unknown names,
-   * Ctrl/Cmd shortcuts (on macOS editing commands such as Cmd+A run through the app menu, which
-   * CDP key events bypass), and a debugger that won't attach.
+   * Ctrl/Cmd shortcuts other than paste (which need the app menu), and an unavailable debugger.
    */
   async pressKey(name: string, modifiers: ReadonlyArray<'shift' | 'control' | 'alt' | 'meta'> = []): Promise<boolean> {
     const definition = resolveCdpKey(name, modifiers.includes('shift'))
-    if (!definition || modifiers.includes('control') || modifiers.includes('meta')) return false
+    const paste = name.trim().toLowerCase() === 'v' && modifiers.length === 1
+      && modifiers[0] === (process.platform === 'darwin' ? 'meta' : 'control')
+    if (!definition || (!paste && (modifiers.includes('control') || modifiers.includes('meta')))) return false
     if (!(await this.canUseCdpInput())) return false
-    const mask = (modifiers.includes('alt') ? 1 : 0) | (modifiers.includes('shift') ? 8 : 0)
-    const text = modifiers.includes('alt') ? undefined : definition.text
+    const mask = (modifiers.includes('alt') ? 1 : 0) | (modifiers.includes('control') ? 2 : 0)
+      | (modifiers.includes('meta') ? 4 : 0) | (modifiers.includes('shift') ? 8 : 0)
+    const text = paste || modifiers.includes('alt') ? undefined : definition.text
     const base = {
       key: definition.key,
       code: definition.code,
@@ -1089,6 +1115,8 @@ export class BrowserCDP {
       ...base,
       type: text ? 'keyDown' : 'rawKeyDown',
       ...(text ? { text, unmodifiedText: text } : {}),
+      // Keep trusted key events and page cancellation while pasting in a hidden view.
+      ...(paste ? { commands: ['paste'] } : {}),
     })
     await this.send('Input.dispatchKeyEvent', { ...base, type: 'keyUp' })
     return true
@@ -1266,25 +1294,26 @@ export class BrowserCDP {
     }
   }
 
-  async fillElement(ref: string, value: string): Promise<ElementGeometry & { isPassword: boolean }> {
+  async fillElement(ref: string, value: string): Promise<ElementGeometry & { isPassword: boolean; browserInput: BrowserInputResult['browserInput'] }> {
     const backendNodeId = this.requireBackendNodeId(ref)
 
     let objectId: string | undefined
     try {
-      await this.send('DOM.focus', { backendNodeId })
-      const { object } = await this.send('DOM.resolveNode', { backendNodeId })
-      objectId = object.objectId as string
-      await this.callValue(objectId, CLEAR_VALUE_FN)
+      const result = await this.recordInput([...value].length, async () => {
+        await this.send('DOM.focus', { backendNodeId })
+        const { object } = await this.send('DOM.resolveNode', { backendNodeId })
+        objectId = object.objectId as string
+        await this.callValue(objectId, CLEAR_VALUE_FN)
 
-      // Type the new value character by character for realistic input
-      for (const char of value) {
-        await this.send('Input.dispatchKeyEvent', { type: 'keyDown', text: char })
-        await this.send('Input.dispatchKeyEvent', { type: 'keyUp', text: char })
-      }
-
-      const settled = await this.callValue<{ isPassword?: boolean }>(objectId, SETTLE_VALUE_FN, [{ value }])
+        // Keep the original trusted keystrokes and value-settling behavior.
+        for (const char of value) {
+          await this.send('Input.dispatchKeyEvent', { type: 'keyDown', text: char })
+          await this.send('Input.dispatchKeyEvent', { type: 'keyUp', text: char })
+        }
+        return await this.callValue<{ isPassword?: boolean }>(objectId, SETTLE_VALUE_FN, [{ value }])
+      })
       const geometry = await this.getElementGeometry(ref)
-      return { ...geometry, isPassword: !!settled?.isPassword }
+      return { ...geometry, isPassword: !!result.value?.isPassword, browserInput: result.value?.isPassword ? 'password' : result.browserInput }
     } catch (err) {
       mainLog.error(`[browser-cdp] Fill failed for ${ref}:`, err)
       throw new Error(`Failed to fill ${ref}: ${err}`)

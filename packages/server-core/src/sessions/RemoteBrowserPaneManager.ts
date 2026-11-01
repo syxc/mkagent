@@ -15,6 +15,7 @@
 
 import { CodedError } from '@mkagent/shared/protocol'
 import type { BrowserInstanceInfo, BrowserSecurityChallenge } from '@mkagent/shared/protocol'
+import type { BrowserInputResult } from '@mkagent/shared/agent'
 import type {
   IBrowserPaneManager,
   BrowserClickResult,
@@ -255,11 +256,11 @@ export class RemoteBrowserPaneManager implements IBrowserPaneManager {
   async drag(id: string, x1: number, y1: number, x2: number, y2: number): Promise<void> {
     await this.invoke('drag', [id, x1, y1, x2, y2])
   }
-  async fillElement(id: string, ref: string, value: string): Promise<void> {
-    await this.invoke('fillElement', [id, ref, value])
+  async fillElement(id: string, ref: string, value: string): Promise<BrowserInputResult | void> {
+    return this.invoke('fillElement', [id, ref, value])
   }
-  async typeText(id: string, text: string): Promise<void> {
-    await this.invoke('typeText', [id, text])
+  async typeText(id: string, text: string): Promise<BrowserInputResult | void> {
+    return this.invoke('typeText', [id, text])
   }
   async selectOption(id: string, ref: string, value: string): Promise<void> {
     await this.invoke('selectOption', [id, ref, value])
@@ -273,8 +274,8 @@ export class RemoteBrowserPaneManager implements IBrowserPaneManager {
   async scroll(id: string, direction: 'up' | 'down' | 'left' | 'right', amount?: number): Promise<void> {
     await this.invoke('scroll', [id, direction, amount])
   }
-  async sendKey(id: string, args: BrowserKeyArgs): Promise<void> {
-    await this.invoke('sendKey', [id, args])
+  async sendKey(id: string, args: BrowserKeyArgs): Promise<BrowserInputResult | void> {
+    return this.invoke('sendKey', [id, args])
   }
   async uploadFile(_id: string, _ref: string, _filePaths: string[]): Promise<unknown> {
     throw new CodedError(

@@ -8,10 +8,12 @@
  */
 
 import { existsSync, readFileSync } from 'fs'
+import { join } from 'path'
 import type { SessionHeader, StoredMessage, SessionConfig } from './types.ts'
 import type { StoredSession } from './types.ts'
 import { readSessionJsonl } from './jsonl.ts'
 import { getSessionPath, getSessionFilePath } from './storage.ts'
+import { collectDurableBundle } from './durable-bundle.ts'
 import { debug } from '../utils/debug.ts'
 import {
   type BundleFile,
@@ -81,7 +83,7 @@ export interface SessionBundle {
  *
  * @param workspaceRootPath - Root path of the workspace containing the session
  * @param sessionId - ID of the session to serialize
- * @returns SessionBundle or null if session doesn't exist or exceeds size limit
+ * @returns SessionBundle, or null if the session cannot be read or safely exported, or exceeds the size limit
  */
 export function serializeSession(
   workspaceRootPath: string,
@@ -103,10 +105,21 @@ export function serializeSession(
   }
 
   // Collect all files from session directory (except session.jsonl and tmp/)
+  const storeDir = join(sessionDir, 'durable-store')
   const files = collectDirectoryFiles(sessionDir, {
     skipDirs: SKIP_DIRS,
     skipFiles: SKIP_SESSION_FILES,
+    skipRelativePaths: new Set(['durable-store']),
   })
+  const secrets = new Set<string>()
+  if (existsSync(storeDir)) {
+    try {
+      files.push(...collectDurableBundle(storeDir, secrets))
+    } catch (error) {
+      debug('[bundle] Cannot safely export durable history:', error)
+      return null
+    }
+  }
 
   // Validate total bundle size
   const totalSize = files.reduce((sum, f) => sum + f.size, 0)
@@ -125,6 +138,34 @@ export function serializeSession(
   const header: SessionHeader = {
     ...JSON.parse(firstLine) as SessionHeader,
     // workspaceRootPath will be set by the importing server
+  }
+
+  const containsSecret = (value: unknown): boolean => {
+    if (typeof value === 'string') return [...secrets].some(secret => value.includes(secret))
+    if (Array.isArray(value)) return value.some(containsSecret)
+    if (value && typeof value === 'object') return Object.entries(value).some(([key, item]) => containsSecret(key) || containsSecret(item))
+    return false
+  }
+  if (containsSecret({ header, messages: stored.messages })) {
+    debug('[bundle] Cannot safely export a browser password copy')
+    return null
+  }
+  for (const file of files) {
+    if (containsSecret(file.relativePath)) {
+      debug('[bundle] Cannot safely export a browser password copy')
+      return null
+    }
+    const contents = Buffer.from(file.contentBase64, 'base64')
+    const structuredHistory = /^durable-store\/(?:main|(?:doc|task)-\d+)\.jsonl$/.test(file.relativePath)
+    if (structuredHistory) continue
+    for (const secret of secrets) {
+      const raw = Buffer.from(secret)
+      const escaped = Buffer.from(JSON.stringify(secret).slice(1, -1))
+      if (contents.includes(raw) || contents.includes(escaped)) {
+        debug('[bundle] Cannot safely export a browser password copy')
+        return null
+      }
+    }
   }
 
   return {

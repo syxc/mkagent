@@ -106,6 +106,8 @@ export interface CollectOptions {
   skipFiles?: Set<string>
   /** Directory names to skip (exact match, e.g., 'tmp') */
   skipDirs?: Set<string>
+  /** Portable relative file or directory paths to skip */
+  skipRelativePaths?: Set<string>
 }
 
 /**
@@ -131,6 +133,8 @@ export function collectDirectoryFiles(dir: string, options?: CollectOptions): Bu
       if (entry.name.startsWith('.')) continue
 
       const fullPath = join(currentDir, entry.name)
+      const relPath = toPortableRelPath(relative(dir, fullPath))
+      if (options?.skipRelativePaths?.has(relPath)) continue
 
       if (entry.isDirectory()) {
         if (skipDirs.has(entry.name)) continue
@@ -141,10 +145,9 @@ export function collectDirectoryFiles(dir: string, options?: CollectOptions): Bu
         try {
           const content = readFileSync(fullPath)
           const stat = statSync(fullPath)
-          const relPath = relative(dir, fullPath)
 
           files.push({
-            relativePath: toPortableRelPath(relPath),
+            relativePath: relPath,
             contentBase64: content.toString('base64'),
             size: stat.size,
           })

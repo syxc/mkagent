@@ -3,10 +3,8 @@
  * servers, and turn each server's tools into durable `ToolRegistration`s plus the codemode
  * namespaces scripts see them through.
  *
- * Mirrors the startup path of pi-coding-agent 1.1.0 extensions/mcp/index.js, reduced to a one-shot
- * load: tools are registered once at kernel open, so `notifications/tools/list_changed` refreshes
- * the connection's tool list (visible to `getClient` availability checks) but does not re-register
- * tools. OAuth exposure is deferred — those servers fail loudly in the runtime.
+ * Server tool-list changes rebuild the registrations and notify the owning kernel. OAuth exposure
+ * is deferred — those servers fail loudly in the runtime.
  */
 import { join } from 'node:path';
 import type { ToolRegistration } from '@earendil-works/pi-durable';
@@ -27,6 +25,7 @@ export interface McpToolsLoadOptions {
   /** Client version reported to servers at `initialize`. */
   version: string;
   debugLog: (message: string) => void;
+  onUpdate?: (tools: ToolRegistration[], namespaces: CodemodeNamespace[]) => void;
 }
 
 export interface McpToolsLoadResult {
@@ -57,13 +56,14 @@ export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToo
 
   const connections: McpServerConnection[] = [];
   const errors: string[] = [];
+  let update: (() => void) | undefined;
   await Promise.all(
     enabled.map(async entry => {
       const connection = new McpServerConnection({
         entry,
         cwd: options.cwd,
         createTransport: createDefaultTransport,
-        onTools: () => {},
+        onTools: () => update?.(),
         onChange: () => {},
         log,
         version: options.version,
@@ -81,6 +81,33 @@ export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToo
   );
   connections.sort((a, b) => a.name.localeCompare(b.name));
 
+  const tools: ToolRegistration[] = [];
+  const namespaces: CodemodeNamespace[] = [];
+  update = () => {
+    try {
+      const registrations = buildMcpRegistrations(connections, config.autoEnableCodemode ?? true);
+      options.onUpdate?.(registrations.tools, registrations.namespaces);
+      tools.splice(0, tools.length, ...registrations.tools);
+      namespaces.splice(0, namespaces.length, ...registrations.namespaces);
+    } catch (error) {
+      options.debugLog(`MCP registration update failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+  update();
+
+  return {
+    tools,
+    namespaces,
+    connections,
+    autoEnableCodemode: config.autoEnableCodemode ?? true,
+    errors,
+  };
+}
+
+function buildMcpRegistrations(connections: McpServerConnection[], codemodeEnabled: boolean): {
+  tools: ToolRegistration[];
+  namespaces: CodemodeNamespace[];
+} {
   const connectionsByName = new Map(connections.map(connection => [connection.name, connection]));
   /** pi tool name to the `<server>\0<tool>` it was assigned to, so names stay unique and stable. */
   const toolOwners = new Map<string, string>();
@@ -116,12 +143,15 @@ export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToo
       current.add(name);
       const exposure = getMcpToolExposure(entry.config, tool.name);
       if (exposure === 'codemode') codemodeToolCount++;
+      // Hidden tools are unreachable, as in the coding agent: not registering them keeps the
+      // model, tool_search, and codemode discovery from seeing them.
+      if (exposure === 'hidden') continue;
       tools.push(
         createMcpToolDefinition({
           server,
           tool,
           name,
-          exposure,
+          exposure: exposure === 'codemode' && !codemodeEnabled ? 'deferred' : exposure,
           timeoutMs: connection.timeoutMs,
           getClient: async () => {
             // Resolve the live connection at execution time, so reconnects apply.
@@ -153,17 +183,11 @@ export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToo
     const exposure = (['direct', 'codemode', 'deferred'] as const).find(candidate => exposures.has(candidate));
     if (exposure) {
       const resourceConnections = () => [...serversWithResources];
-      tools.push(...createMcpResourceToolDefinitions({ exposure, servers: resourceConnections }));
+      tools.push(...createMcpResourceToolDefinitions({ exposure: exposure === 'codemode' && !codemodeEnabled ? 'deferred' : exposure, servers: resourceConnections }));
     }
   }
 
-  return {
-    tools,
-    namespaces,
-    connections,
-    autoEnableCodemode: config.autoEnableCodemode ?? true,
-    errors,
-  };
+  return { tools, namespaces };
 }
 
 /** Close every connection; used at kernel shutdown. */

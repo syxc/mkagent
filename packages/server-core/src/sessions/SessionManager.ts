@@ -2115,6 +2115,9 @@ export class SessionManager implements ISessionManager {
     const stored = loadStoredSession(workspace.rootPath, created.id)
     if (!stored) throw new Error('Failed to create imported session')
     stored.codingMode = bundle.session.header.codingMode
+    if (bundle.files.some(file => file.relativePath === 'durable-store/session-id.txt')) {
+      stored.sdkSessionId = bundle.session.header.sdkSessionId
+    }
     stored.transferredSessionSummary = bundle.session.header.transferredSessionSummary
     stored.transferredSessionSummaryApplied = bundle.session.header.transferredSessionSummaryApplied
     stored.messages = bundle.session.messages

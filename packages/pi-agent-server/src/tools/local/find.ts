@@ -4,8 +4,8 @@
  * Vendored 1:1 from @earendil-works/pi-coding-agent 1.1.0 core/tools/find.js —
  * behavior must stay identical. Adapted to the durable `ToolRegistration`
  * shape: TUI renderers and the operations injection (used only by upstream's
- * own tests) are dropped, and the binary resolves from PATH instead of
- * ensureTool's GitHub download.
+ * own tests) are dropped, and the binary resolves through the fd manager
+ * (managed bin cache, PATH, then the upstream GitHub download).
  */
 import { createInterface } from 'node:readline';
 import { spawn } from 'node:child_process';
@@ -72,7 +72,7 @@ export function createFindTool(cwd: string): ToolRegistration<typeof findSchema>
               return;
             }
             if (!fdPath) {
-              settle(() => reject(new Error('fd is not available on PATH')));
+              settle(() => reject(new Error('fd is not available and could not be downloaded')));
               return;
             }
             const args = ['--glob', '--color=never', '--hidden'];

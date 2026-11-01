@@ -40,6 +40,7 @@ registerBunOAuthFlows();
 // Model resolution (extracted for testability + custom-endpoint precedence)
 import { resolvePiModel } from './model-resolution.ts';
 import { queryLlm } from './ephemeral.ts';
+import { createProxyTool, type ProxyToolResult } from './tools/proxy.ts';
 import {
   EphemeralQueryCancelledError,
   EphemeralQueryCoordinator,
@@ -123,7 +124,7 @@ type InboundMessage =
   | InitMessage
   | { type: 'prompt'; id: string; message: string; systemPrompt: string; images?: Array<{ type: 'image'; data: string; mimeType: string }> }
   | { type: 'register_tools'; tools: ProxyToolDef[] }
-  | { type: 'tool_execute_response'; requestId: string; result: { content: string; isError: boolean } }
+  | { type: 'tool_execute_response'; requestId: string; result: ProxyToolResult }
   | { type: 'pre_tool_use_response'; requestId: string; action: 'allow' | 'block' | 'modify'; input?: Record<string, unknown>; reason?: string }
   | { type: 'abort' }
   | { type: 'mini_completion'; id: string; prompt: string }
@@ -133,6 +134,7 @@ type InboundMessage =
   | { type: 'set_model'; model: string }
   | { type: 'set_thinking_level'; level: string }
   | { type: 'compact'; id: string; customInstructions?: string }
+  | { type: 'cancel_compact'; id: string }
   | { type: 'set_auto_compaction'; id: string; enabled: boolean }
   | RuntimeConfigUpdateMessage
   | { type: 'steer'; message: string }
@@ -237,6 +239,10 @@ type OutboundMessage =
 // ============================================================
 
 let kernel: DurableKernel | null = null;
+let kernelPromise: Promise<DurableKernel> | null = null;
+let initialization: Promise<void> = Promise.resolve();
+let reinitializing = false;
+let shuttingDown: Promise<void> | undefined;
 let mcpLoad: McpToolsLoadResult | null = null;
 let modelRuntime: ModelRuntime | null = null;
 let modelRuntimePromise: Promise<ModelRuntime> | null = null;
@@ -251,6 +257,8 @@ function nextLocalEphemeralQueryId(source: string): string {
 
 // Init config (set on 'init' message)
 let initConfig: Extract<InboundMessage, { type: 'init' }> | null = null;
+let credentialGeneration = 0;
+let runtimeConfigGeneration = 0;
 
 // Mutable state
 let currentUserMessage = '';
@@ -258,7 +266,8 @@ const backgroundShells = new BackgroundShells(event => send({ type: 'background_
 
 // Pending promises for async handshakes
 const pendingPreToolUse = new Map<string, { resolve: (response: { action: string; input?: Record<string, unknown>; reason?: string }) => void }>();
-const pendingToolExecutions = new Map<string, { resolve: (result: { content: string; isError: boolean }) => void }>();
+const pendingToolExecutions = new Map<string, { resolve: (result: ProxyToolResult) => void }>();
+const pendingCompactions = new Map<string, AbortController>();
 
 // Proxy tool definitions from main process
 let proxyToolDefs: ProxyToolDef[] = [];
@@ -275,10 +284,6 @@ function isPrefetchableTool(toolName: string): boolean {
   const stripped = toolName.replace(/^(mcp__session__|session__)/, '');
   return PREFETCHABLE_TOOLS.has(stripped);
 }
-
-// Flag: proxy tools changed since last session open — the tool registry is
-// fixed at store open, so the kernel needs recreation on the next prompt.
-let toolsChanged = false;
 
 // Callback server for call_llm
 let callbackServer: http.Server | null = null;
@@ -418,7 +423,9 @@ async function ensureModelRuntime(): Promise<ModelRuntime> {
   if (!modelRuntimePromise) {
     if (!initConfig) throw new Error('Cannot create session: init not received');
     const config = initConfig;
-    modelRuntimePromise = (async () => {
+    const credentialOwner = credentialGeneration;
+    let promise!: Promise<ModelRuntime>;
+    promise = (async () => {
       const runtime = await createModelRuntime({
         apiKey: config.apiKey,
         piAuth: config.piAuth,
@@ -426,7 +433,13 @@ async function ensureModelRuntime(): Promise<ModelRuntime> {
         customEndpoint: config.customEndpoint,
         customModels: config.customModels,
         model: config.model,
-      }, update => send({ type: 'oauth_credential_update', ...update }));
+      }, update => {
+        if (credentialOwner === credentialGeneration && initConfig?.piAuth?.provider === update.provider
+            && initConfig.piAuth.credential.type === 'oauth' && initConfig.piAuth.credential.refresh === update.previousRefresh) {
+          initConfig.piAuth = { provider: update.provider, credential: update.credential };
+          send({ type: 'oauth_credential_update', ...update });
+        }
+      });
 
       if (config.piAuth) {
         const { provider, credential } = config.piAuth;
@@ -443,12 +456,13 @@ async function ensureModelRuntime(): Promise<ModelRuntime> {
         debugLog('Injected API key into credential store (legacy fallback)');
       }
 
-      modelRuntime = runtime;
+      if (modelRuntimePromise === promise) modelRuntime = runtime;
       return runtime;
     })().catch((error) => {
-      modelRuntimePromise = null;
+      if (modelRuntimePromise === promise) modelRuntimePromise = null;
       throw error;
     });
+    modelRuntimePromise = promise;
   }
   return modelRuntimePromise;
 }
@@ -496,6 +510,8 @@ async function requestPreToolUseApproval(
   input: Record<string, unknown>,
   toolCallId?: string,
 ): Promise<Record<string, unknown>> {
+  if (shuttingDown) throw new Error('Server shutting down');
+  if (reinitializing) throw new Error('Pi server reinitialized');
   const requestId = `pi-ptu-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   send({
@@ -545,42 +561,22 @@ const searchProvider = {
 function buildProxyTools(): ToolRegistration[] {
   debugLog(`Building proxy tools from ${proxyToolDefs.length} definitions: ${proxyToolDefs.map(t => t.name).join(', ')}`);
 
-  return proxyToolDefs.map(def => defineTool({
-    name: def.name,
-    description: def.description,
-    parameters: def.inputSchema as never,
-    execute: async (args, api) => {
-      // Check speculative prefetch cache first (parallel call_llm optimization).
-      // If this tool was prefetched on message_end, the request is already in-flight —
-      // just await the result instead of sending a duplicate request.
-      const prefetched = prefetchCache.get(api.callId);
-      if (prefetched) {
-        prefetchCache.delete(api.callId);
-        debugLog(`Prefetch cache hit for ${def.name} (toolCallId: ${api.callId})`);
-        const result = await prefetched;
-        return { output: [{ type: 'text' as const, text: result.content }], ...(result.isError ? { isError: true } : {}) };
+  return proxyToolDefs.map(def => createProxyTool(def, {
+    prefetched(callId) {
+      const result = prefetchCache.get(callId);
+      if (result) {
+        prefetchCache.delete(callId);
+        debugLog(`Prefetch cache hit for ${def.name} (toolCallId: ${callId})`);
       }
-
-      const inputObj = (args ?? {}) as Record<string, unknown>;
-
-      // Permission checking via main process
-      const approvedInput = await requestPreToolUseApproval(def.name, inputObj, api.callId);
-
-      // Execute via main process
+      return result;
+    },
+    approve: requestPreToolUseApproval,
+    async execute(toolName, args) {
+      if (shuttingDown) throw new Error('Server shutting down');
+      if (reinitializing) throw new Error('Pi server reinitialized');
       const requestId = `proxy-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-      send({
-        type: 'tool_execute_request',
-        requestId,
-        toolName: def.name,
-        args: approvedInput,
-      });
-
-      const result = await new Promise<{ content: string; isError: boolean }>((resolve) => {
-        pendingToolExecutions.set(requestId, { resolve });
-      });
-
-      return { output: [{ type: 'text' as const, text: result.content }], ...(result.isError ? { isError: true } : {}) };
+      send({ type: 'tool_execute_request', requestId, toolName, args });
+      return new Promise<ProxyToolResult>(resolve => { pendingToolExecutions.set(requestId, { resolve }); });
     },
   }));
 }
@@ -643,6 +639,7 @@ const kernelHooks: KernelHooks = {
   emitEvent: (event) => send({ type: 'event', event: event as OutboundAgentEvent }),
   sessionToolCompleted: (toolName, args, isError) => send({ type: 'session_tool_completed', toolName, args, isError }),
   prefetchToolCall: (toolCallId, toolName, args) => {
+    if (reinitializing || shuttingDown) return;
     const requestId = `prefetch-${toolCallId}`;
     const promise = new Promise<{ content: string; isError: boolean }>((resolve) => {
       pendingToolExecutions.set(requestId, { resolve });
@@ -661,21 +658,31 @@ const kernelHooks: KernelHooks = {
 
 async function ensureKernel(): Promise<DurableKernel> {
   if (kernel) return kernel;
+  if (!kernelPromise) {
+    kernelPromise = openKernel().finally(() => { kernelPromise = null; });
+  }
+  return kernelPromise;
+}
+
+async function openKernel(): Promise<DurableKernel> {
   if (!initConfig) throw new Error('Cannot create session: init not received');
 
   const cwd = resolvedCwd();
   const sessionPath = getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId);
 
-  // MCP servers connect once at kernel open; tools register statically (see mcp/extension.ts).
+  const initGeneration = credentialGeneration;
+  // MCP list changes publish a replacement tool set on the existing kernel.
   // projectTrusted stays unset: project-scope `.mkagent/mcp.json` is implemented but not
   // loaded until mkagent grows a project-trust concept (global mcp.json always loads).
-  // Kernel recreation paths (re-init, tools-changed) leave the previous load behind — close it.
+  // Kernel recreation on re-init leaves the previous load behind — close it.
   if (mcpLoad) await closeMcpConnections(mcpLoad.connections);
+  let openingKernel: DurableKernel | undefined;
   mcpLoad = await loadMcpTools({
     agentDir: resolveCraftAgentDir(initConfig),
     cwd,
     version: CLIENT_VERSION,
     debugLog,
+    onUpdate: tools => openingKernel?.updateTools(buildToolsExtension(cwd, tools)),
   });
   for (const error of mcpLoad.errors) debugLog(`MCP: ${error}`);
 
@@ -692,30 +699,48 @@ async function ensureKernel(): Promise<DurableKernel> {
     toolsExtension: buildToolsExtension(cwd, mcpLoad.tools),
     extensions: [
       // Codemode + tool_search default on (mcp.json autoEnableCodemode: false opts out of codemode).
-      ...(mcpLoad.autoEnableCodemode ? [createCodemodeExtensionFor(mcpLoad.namespaces)] : []),
+      ...(mcpLoad.autoEnableCodemode ? [createCodemodeExtensionFor(mcpLoad.namespaces, requestPreToolUseApproval)] : []),
       createToolSearchExtension(),
     ],
   });
+  openingKernel = k;
 
   let model: KernelModelRef | undefined;
-  if (initConfig.model) {
+  let modelGeneration = runtimeConfigGeneration;
+  let requestedModel = initConfig.model;
+  if (requestedModel) {
     try {
-      model = await resolveModelRef(initConfig.model);
+      model = await resolveModelRef(requestedModel);
     } catch {
       debugLog(`Could not resolve Pi model: ${initConfig.model}`);
     }
   }
   if (!model) setInterceptorApiHints(undefined);
 
-  await k.open({
-    ...(model ? { model } : {}),
-    thinkingLevel: THINKING_TO_PI[initConfig.thinkingLevel as keyof typeof THINKING_TO_PI],
-    ...(initConfig.branchFromSessionPath ? { branchFromSessionPath: initConfig.branchFromSessionPath } : {}),
-    ...(initConfig.branchFromSdkTurnId ? { branchFromSdkTurnId: initConfig.branchFromSdkTurnId } : {}),
-  });
+  try {
+    await k.open({
+      ...(model ? { model } : {}),
+      thinkingLevel: THINKING_TO_PI[initConfig.thinkingLevel as keyof typeof THINKING_TO_PI],
+      ...(initConfig.branchFromSessionPath ? { branchFromSessionPath: initConfig.branchFromSessionPath } : {}),
+      ...(initConfig.branchFromSdkTurnId ? { branchFromSdkTurnId: initConfig.branchFromSdkTurnId } : {}),
+    });
+    k.updateTools(buildToolsExtension(cwd, mcpLoad.tools));
+    while (initGeneration === credentialGeneration && initConfig.model && modelGeneration !== runtimeConfigGeneration) {
+      modelGeneration = runtimeConfigGeneration;
+      requestedModel = initConfig.model;
+      const updatedModel = await resolveModelRef(requestedModel);
+      if (!updatedModel) throw new Error(`Could not resolve model after runtime update: ${requestedModel}`);
+      await k.setModel(updatedModel);
+    }
+  } catch (error) {
+    openingKernel = undefined;
+    await k.close().catch(() => {});
+    await closeMcpConnections(mcpLoad.connections);
+    mcpLoad = null;
+    throw error;
+  }
 
   kernel = k;
-  toolsChanged = false;
   debugLog(`Created durable kernel session: ${k.sessionId}`);
 
   // Notify main process of session ID
@@ -777,10 +802,31 @@ async function runMiniCompletion(prompt: string): Promise<string | null> {
 // ============================================================
 
 async function handleInit(msg: Extract<InboundMessage, { type: 'init' }>): Promise<void> {
+  reinitializing = true;
+  try {
+    await initialize(msg);
+  } finally {
+    reinitializing = false;
+  }
+}
+
+async function initialize(msg: Extract<InboundMessage, { type: 'init' }>): Promise<void> {
   // A re-init invalidates every utility query created under the old credentials.
+  credentialGeneration++;
   ephemeralQueries.cancelAll(new EphemeralQueryCancelledError('Pi server reinitialized'));
 
-  // Clean up any existing session from a previous init
+  // Reject old host waits before open or close; the admission guard rejects later requests.
+  for (const [, pending] of pendingPreToolUse) {
+    pending.resolve({ action: 'block', reason: 'Pi server reinitialized' });
+  }
+  pendingPreToolUse.clear();
+  for (const [, pending] of pendingToolExecutions) {
+    pending.resolve({ content: 'Pi server reinitialized', isError: true });
+  }
+  pendingToolExecutions.clear();
+  prefetchCache.clear();
+
+  if (kernelPromise) await kernelPromise.catch(() => undefined);
   if (kernel) {
     try {
       await kernel.close();
@@ -820,14 +866,6 @@ async function handlePrompt(msg: Extract<InboundMessage, { type: 'prompt' }>): P
   currentUserMessage = msg.message;
 
   try {
-    // If proxy tools changed since last session open, close and reopen the
-    // kernel — the tool registry is fixed at store open.
-    if (toolsChanged && kernel) {
-      debugLog('Recreating session due to tool changes');
-      await kernel.close();
-      kernel = null;
-    }
-
     const k = await ensureKernel();
 
     // Force the Craft-built system prompt onto the conversation; the prompt
@@ -864,11 +902,9 @@ function handleRegisterTools(msg: Extract<InboundMessage, { type: 'register_tool
   ];
   debugLog(`Registered ${msg.tools.length} proxy tools (total: ${proxyToolDefs.length}): ${msg.tools.map(t => t.name).join(', ')}`);
 
-  // If the session exists, mark for recreation on next prompt.
-  // Don't close mid-generation — the flag is checked in handlePrompt().
-  if (kernel) {
-    toolsChanged = true;
-    debugLog('Proxy tools changed — session will be recreated on next prompt');
+  if (kernel && mcpLoad) {
+    kernel.updateTools(buildToolsExtension(resolvedCwd(), mcpLoad.tools));
+    debugLog('Published updated proxy tools for the next request');
   }
 }
 
@@ -903,6 +939,19 @@ function handleCancelEphemeralQuery(
 }
 
 async function handleAbort(): Promise<void> {
+  for (const controller of pendingCompactions.values()) controller.abort();
+
+  // Release host callbacks before waiting for SDK tasks that depend on them.
+  for (const [, pending] of pendingPreToolUse) {
+    pending.resolve({ action: 'block', reason: 'Aborted' });
+  }
+  pendingPreToolUse.clear();
+  for (const [, pending] of pendingToolExecutions) {
+    pending.resolve({ content: 'Aborted', isError: true });
+  }
+  pendingToolExecutions.clear();
+  prefetchCache.clear();
+
   if (kernel) {
     try {
       await kernel.abort();
@@ -910,15 +959,6 @@ async function handleAbort(): Promise<void> {
       debugLog(`Abort failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
-
-  // Reject all pending pre-tool-use requests
-  for (const [, pending] of pendingPreToolUse) {
-    pending.resolve({ action: 'block', reason: 'Aborted' });
-  }
-  pendingPreToolUse.clear();
-
-  // Clear speculative prefetch cache — in-flight prefetches will resolve but never be consumed
-  prefetchCache.clear();
 }
 
 async function handleMiniCompletion(msg: Extract<InboundMessage, { type: 'mini_completion' }>): Promise<void> {
@@ -968,11 +1008,13 @@ async function handleEnsureSessionReady(msg: Extract<InboundMessage, { type: 'en
   });
 }
 
-async function handleCompact(msg: Extract<InboundMessage, { type: 'compact' }>): Promise<void> {
+async function handleCompact(msg: Extract<InboundMessage, { type: 'compact' }>, controller: AbortController): Promise<void> {
   const startedAt = Date.now();
   try {
+    if (controller.signal.aborted) throw new Error('Compaction aborted');
     const k = await ensureKernel();
-    const result = await k.compact(msg.customInstructions);
+    if (controller.signal.aborted) throw new Error('Compaction aborted');
+    const result = await k.compact(msg.customInstructions, controller.signal);
     debugLog(`[compact] Done in ${Date.now() - startedAt}ms: ${result.tokensBefore} -> ~${result.estimatedTokensAfter} tokens`);
     send({
       type: 'compact_result',
@@ -983,7 +1025,7 @@ async function handleCompact(msg: Extract<InboundMessage, { type: 'compact' }>):
         firstKeptEntryId: result.firstKeptEntryId,
         tokensBefore: result.tokensBefore,
         estimatedTokensAfter: result.estimatedTokensAfter,
-        ...k.contextUsagePayload(),
+        ...(await k.contextUsagePayload()),
       },
     });
   } catch (error) {
@@ -995,6 +1037,8 @@ async function handleCompact(msg: Extract<InboundMessage, { type: 'compact' }>):
       success: false,
       errorMessage: errorMsg,
     });
+  } finally {
+    if (pendingCompactions.get(msg.id) === controller) pendingCompactions.delete(msg.id);
   }
 }
 
@@ -1027,6 +1071,8 @@ async function handleUpdateRuntimeConfig(msg: RuntimeConfigUpdateMessage): Promi
       throw new Error('Runtime config update received before init');
     }
 
+    const updateGeneration = ++runtimeConfigGeneration;
+    const initGeneration = credentialGeneration;
     initConfig = {
       ...initConfig,
       model: msg.model,
@@ -1038,17 +1084,29 @@ async function handleUpdateRuntimeConfig(msg: RuntimeConfigUpdateMessage): Promi
     };
     applyProviderEndpointEnv(initConfig);
 
-    // Rebuild the model runtime so edited endpoint settings take effect; the
-    // kernel picks up the new catalog live through modelsSource().
+    // Keep the current catalog available until its replacement has been built.
     modelRuntimePromise = null;
-    modelRuntime = null;
+    const openingKernel = kernelPromise;
+    if (openingKernel) {
+      try { await openingKernel; } catch { /* The update still applies to the next session. */ }
+    }
 
-    if (kernel) {
+    const activeKernel = kernel;
+    if (initGeneration !== credentialGeneration || updateGeneration !== runtimeConfigGeneration) {
+      throw new Error('Runtime config update superseded');
+    }
+    if (activeKernel) {
       const ref = await resolveModelRef(msg.model);
+      if (initGeneration !== credentialGeneration || updateGeneration !== runtimeConfigGeneration || activeKernel !== kernel) {
+        throw new Error('Runtime config update superseded');
+      }
       if (!ref) {
         throw new Error(`Could not resolve model after runtime update: ${msg.model}`);
       }
-      await kernel.setModel(ref);
+      await activeKernel.setModel(ref);
+      if (initGeneration !== credentialGeneration || updateGeneration !== runtimeConfigGeneration || activeKernel !== kernel) {
+        throw new Error('Runtime config update superseded');
+      }
       debugLog(`[runtime_config] Updated runtime config and active model: ${ref.provider}/${ref.modelId}`);
     } else {
       debugLog('[runtime_config] Stored update; no active session yet');
@@ -1107,14 +1165,31 @@ async function handleSetThinkingLevel(msg: Extract<InboundMessage, { type: 'set_
   }
 }
 
-async function handleShutdown(): Promise<void> {
-  await backgroundShells.dispose();
+function handleShutdown(): Promise<void> {
+  return shuttingDown ??= shutdown();
+}
+
+async function shutdown(): Promise<void> {
   debugLog('Shutdown requested');
+  for (const controller of pendingCompactions.values()) controller.abort();
+
+  // Release host callbacks before waiting for SDK tasks that depend on them.
+  for (const [, pending] of pendingPreToolUse) {
+    pending.resolve({ action: 'block', reason: 'Server shutting down' });
+  }
+  pendingPreToolUse.clear();
+  for (const [, pending] of pendingToolExecutions) {
+    pending.resolve({ content: 'Server shutting down', isError: true });
+  }
+  pendingToolExecutions.clear();
+  prefetchCache.clear();
+  await backgroundShells.dispose();
 
   // Abort utility queries independently from the main session.
   ephemeralQueries.cancelAll(new EphemeralQueryCancelledError('Pi server shutting down'));
 
   // Close the kernel session
+  if (kernelPromise) await kernelPromise.catch(() => undefined);
   if (kernel) {
     try {
       await kernel.close();
@@ -1133,17 +1208,6 @@ async function handleShutdown(): Promise<void> {
   // Stop callback server
   stopCallbackServer();
 
-  // Reject pending promises
-  for (const [, pending] of pendingPreToolUse) {
-    pending.resolve({ action: 'block', reason: 'Server shutting down' });
-  }
-  pendingPreToolUse.clear();
-
-  for (const [, pending] of pendingToolExecutions) {
-    pending.resolve({ content: 'Server shutting down', isError: true });
-  }
-  pendingToolExecutions.clear();
-
   process.exit(0);
 }
 
@@ -1151,7 +1215,7 @@ async function handleShutdown(): Promise<void> {
 // Main JSONL Reader Loop
 // ============================================================
 
-async function processMessage(msg: InboundMessage): Promise<void> {
+async function processMessage(msg: InboundMessage, compactController?: AbortController): Promise<void> {
   switch (msg.type) {
     case 'stop_background_task':
       send({ type: 'stop_background_task_result', id: msg.id, stopped: await backgroundShells.stop(msg.taskId) });
@@ -1205,7 +1269,11 @@ async function processMessage(msg: InboundMessage): Promise<void> {
       break;
 
     case 'compact':
-      await handleCompact(msg);
+      await handleCompact(msg, compactController!);
+      break;
+
+    case 'cancel_compact':
+      pendingCompactions.get(msg.id)?.abort();
       break;
 
     case 'set_auto_compaction':
@@ -1226,6 +1294,8 @@ async function processMessage(msg: InboundMessage): Promise<void> {
       break;
 
     case 'token_update': {
+      const piAuth = toPiAuth(msg.piAuth);
+      if (initConfig) initConfig.piAuth = piAuth;
       let runtime: ModelRuntime | null = null;
       try {
         runtime = modelRuntimePromise ? await modelRuntimePromise : null;
@@ -1233,16 +1303,12 @@ async function processMessage(msg: InboundMessage): Promise<void> {
         runtime = null;
       }
       if (runtime) {
-        const piAuth = toPiAuth(msg.piAuth);
         const { provider, credential } = piAuth;
         const adapted = adaptCredentialForPiSdk(provider, credential);
         if (adapted) await runtime.credentials.seed(provider, adapted);
-        if (initConfig) {
-          initConfig.piAuth = piAuth;
-        }
         debugLog(`Updated ${credential.type} credential for provider: ${provider}`);
       } else {
-        debugLog('token_update received but no model runtime initialized');
+        debugLog(`Stored ${piAuth.credential.type} credential for provider: ${piAuth.provider}`);
       }
       break;
     }
@@ -1257,6 +1323,7 @@ async function processMessage(msg: InboundMessage): Promise<void> {
 }
 
 function main(): void {
+  process.on('SIGTERM', () => { void handleShutdown(); });
   debugLog('Pi agent server starting');
 
   const rl = createInterface({ input: process.stdin });
@@ -1265,7 +1332,24 @@ function main(): void {
     if (!line.trim()) return;
     try {
       const msg = JSON.parse(line) as InboundMessage;
-      processMessage(msg).catch((error) => {
+      if (msg.type === 'init') {
+        // Later compact requests belong to the new initialization and must remain active.
+        for (const controller of pendingCompactions.values()) controller.abort();
+      }
+      let compactController: AbortController | undefined;
+      if (msg.type === 'compact') {
+        if (pendingCompactions.has(msg.id)) throw new Error(`Duplicate compact request: ${msg.id}`);
+        compactController = new AbortController();
+        pendingCompactions.set(msg.id, compactController);
+      }
+      const operation = msg.type === 'init'
+        ? initialization.catch(() => undefined).then(() => processMessage(msg))
+        : ['tool_execute_response', 'pre_tool_use_response', 'abort', 'cancel_compact', 'shutdown'].includes(msg.type)
+          ? processMessage(msg)
+          : initialization.then(() => processMessage(msg, compactController));
+      if (msg.type === 'init') initialization = operation;
+      operation.catch((error) => {
+        if (msg.type === 'compact' && pendingCompactions.get(msg.id) === compactController) pendingCompactions.delete(msg.id);
         const errorMsg = error instanceof Error ? error.message : String(error);
         debugLog(`Error processing message: ${errorMsg}`);
         send({ type: 'error', message: errorMsg });

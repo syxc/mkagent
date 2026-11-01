@@ -53,19 +53,17 @@
 | 鉴权模型 | API key + 自定义端点 + Ollama + **ChatGPT/Claude 订阅 OAuth**，全部通过 Pi | API key + 自定义 + **OAuth（Anthropic、OpenAI、GitHub Copilot、Google Workspace、Slack、Microsoft）** + 订阅流程 + gateway |
 | 子进程模型 | `packages/pi-agent-server` 作为 Bun 子进程运行；通过 JSONL on stdio 通信 | Pi 子进程（同）**外加** SDK 子进程（`@anthropic-ai/claude-agent-sdk-binary`，每个平台架构约 217 MB 的 native `claude` 二进制）**外加** bridge/session MCP server **外加** WhatsApp worker 子进程 |
 | 内置传输 | OpenAI-兼容、Anthropic-兼容、Ollama（Pi `0.81.1`） | 同上，外加 Anthropic SDK 直连模式与 Copilot SDK 模式 |
-| 图片生成 | ❌（未接入生图工具；图片附件仍支持） | ❌（未注册生图工具；底层 `pi-ai` 依赖包含未接入的 OpenRouter 图片生成 API） |
+| 图片生成 | 配置图片模型后可通过 codemode 调用；也支持图片附件 | 对照资料对 `gen_image` 的描述相互矛盾，尚未重新核实 |
 
-这里的“图片生成”指 Agent 可调用的产品能力，而不是依赖包是否包含相关 API。MkAgent 与当前对照的 Craft 源码都没有 `gen_image` 的实现或工具注册；两者使用的 `@earendil-works/pi-ai` 依赖虽然提供独立的 `ImagesModel` / `generateImages()` 抽象及 OpenRouter provider，但 Craft 只接入了普通模型目录和对话调用链。`supportsImages` 则表示对话模型能否接收图片附件，属于图片输入/视觉能力，也不代表能够生成图片。
+这里的“图片生成”指 Agent 可调用的产品能力。MkAgent 当前通过 codemode 的 `models.generateImages()` 暴露图片生成，能否执行取决于可用的图片模型与凭据。`supportsImages` 表示对话模型能否接收图片附件，属于图片输入能力。
 
 ## 4. Agent tools —— 模型实际能调用的工具
 
-两边都通过三个通道把工具暴露给 LLM：(a) Pi SDK 自带的工具，在 `packages/pi-agent-server/src/index.ts` 的 `builtinDefs` 里实例化；(b) Web 工具，同一文件里通过 `createSearchTool` + `createWebFetchTool` 声明；(c) 会话级工具，由主进程通过 `register_tools` 消息注册到 Pi 子进程，模型侧以 `mcp__session__<name>` 前缀看到（详见 `packages/session-tools-core/src/tool-defs.ts`）。Craft 还额外从 `mcpPool`（Sources / bridge / session MCP）暴露工具；MkAgent 没有 `mcpPool`，`registerPoolToolsWithSubprocess()` 在代码上物理删除（`packages/shared/src/agent/pi-agent.ts`）。
+两边都向 LLM 提供内置、Web 和会话级工具。MkAgent 在 `packages/pi-agent-server/src/index.ts` 组装这些工具；主进程通过 `register_tools` 注册会话工具，模型侧使用 `mcp__session__<name>` 前缀（详见 `packages/session-tools-core/src/tool-defs.ts`）。Craft 还通过 `mcpPool`（Sources / bridge / session MCP）暴露工具；MkAgent 没有该 pool，其 durable 内核另行从 `mcp.json` 加载 MCP 服务器，并默认启用 codemode。
 
-### 4.1 Pi SDK 内置工具（两边完全一致）
+### 4.1 Pi 内置工具
 
-两份仓库都从 `@earendil-works/pi-coding-agent` 导入同一组 helper，按相同顺序实例化：
-
-> 注：pi-durable 内核切换（`dev/pi-durable`）后，MkAgent 不再导入 `@earendil-works/pi-coding-agent`——read/edit/write/bash 来自 pi-durable 内建 CodingTools，grep/find/ls 为其 1.1.0 dist 的 1:1 vendor。下表描述的工具面不变。
+MkAgent 使用 pi-durable 的 read/edit/write/bash，并从 pi-coding-agent 1.1.0 适配 grep/find/ls；Craft 使用 pi-coding-agent。两边提供以下工具：
 
 | Tool | 用途 |
 |---|---|
@@ -77,7 +75,7 @@
 | `find` | 按名称模式定位文件 |
 | `ls` | 列目录内容 |
 
-`packages/pi-agent-server/src/index.ts:30–36` 导入 `createReadToolDefinition`、`createBashToolDefinition`、`createEditToolDefinition`、`createWriteToolDefinition`、`createGrepToolDefinition`、`createFindToolDefinition`、`createLsToolDefinition`；607–614 用 `cwd` 实例化。Craft 中同样 offset 的位置导出的是同一组 import。
+MkAgent 在 `packages/pi-agent-server/src/tools/builtin.ts` 构造内置工具，在 `packages/pi-agent-server/src/index.ts` 与其他工具一起组装。
 
 ### 4.2 Web 工具（两边完全一致）
 
@@ -243,7 +241,7 @@ Craft 注册的第二个 backend 是 `claude-agent-sdk`，自带的 Claude Code 
 | Projects / Kanban | ❌ | ✅ |
 | LLM 订阅 OAuth callback | ✅（ChatGPT Desktop callback；Claude code flow） | ✅ |
 | 通用 / Sources / gateway OAuth | ❌ | ✅ |
-| 产品级图片生成工具 | ❌ | ❌（底层依赖有未接入的图片生成 API） |
+| 产品级图片生成工具 | ✅（通过 codemode，取决于可用图片模型与凭据） | 对照资料相互矛盾，尚未重新核实 |
 
 ## 7. 测试 / typecheck / lint 覆盖率差异
 

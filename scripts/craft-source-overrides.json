@@ -11,8 +11,8 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "NOTICE": {
-      "sha256": "37f21a9767a49dfe2d2ca3f12db03571475c99f7f0858218a0c22291fa6dbc0d",
-      "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
+      "sha256": "e33efd481fc42a15ae09186a273ac72a67a7ea973c4121ca1c0f43034634e285",
+      "reason": "Retain MkAgent branding and Craft origin notices, and add the MIT notice for server code and event declarations adapted from pi-coding-agent."
     },
     "README.md": {
       "sha256": "3c26e4f467f627bfe1319abe10370d8323b426397fb8658ff138cdef408e2fbe",
@@ -243,19 +243,19 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "apps/electron/scripts/copy-assets.ts": {
-      "sha256": "1d3497135a4328383d32ea7f84e06c011cd76f19b360fc1015224c317f8b1fd6",
-      "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
+      "sha256": "ef1ed7da3c43291c96b93a9d58928d6958ea226f6c1be2b13883c35726a18b9a",
+      "reason": "Adapt Craft resource copying to the Lite document and tool set, target Bun and uv binaries, and ship the durable server with its codemode worker, QuickJS WASM and Photon WASM."
     },
     "apps/electron/src/__tests__/transport.test.ts": {
       "sha256": "4ed2a7275236f0f8d631d4a27bac86891b1fbd533e21605e8e28c627484b3711",
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "apps/electron/src/main/__tests__/browser-cdp.test.ts": {
-      "sha256": "68a6479dc6c1e967b3023d3c40e7e403e6e40be487f2d270b792f8e58a1b45cf",
+      "sha256": "7d9059dd89de2ceeda248ea01464f78a576fac3f222da27c78afc641fa9aa34d",
       "reason": "Retain all upstream CDP regressions and add wrong-native-key-code and pending-command idle-detach cases."
     },
     "apps/electron/src/main/__tests__/browser-pane-manager.test.ts": {
-      "sha256": "11395f560c1a65e6544562a6fa96cb1a40fec0856743bba41294d8b14b1ead11",
+      "sha256": "a412024513d6ed67e96c4bf2533f6466413f6d11f74d5b01071f4e4af2a9f1bd",
       "reason": "Craft browser tests strengthened to cover app-theme hydration and live theme updates that the upstream system-theme-only implementation misses; v0.15.1: Retain all upstream browser/window regressions, MkAgent app-theme cases, and add stalled capture recovery-state regression."
     },
     "apps/electron/src/main/__tests__/connection-setup-logic.test.ts": {
@@ -303,11 +303,11 @@
       "reason": "Craft Electron runtime adapted for the retained Lite runtime and removed product channels"
     },
     "apps/electron/src/main/browser-cdp.ts": {
-      "sha256": "6aeac045dd69a843a5854496c60fb2ff4cbc4b0df96ae62b987c59969d2672d2",
-      "reason": "Craft Electron runtime adapted for the retained Lite runtime and removed product channels; v0.15.1: Retain hidden-window CDP input, direct click fallback, native/custom selects, password-aware fill. Correct macOS native key codes and defer idle detach while commands are pending."
+      "sha256": "d0aca39e9788000bee8103481cbf633073039116ca9b7b5643b63a218c29edfd",
+      "reason": "Retain hidden-window CDP input, direct click fallback, native/custom selects and password-aware fill. Add execution-time input evidence, preserve trusted paste key events and page cancellation, and keep the recorder attached while tracking is active."
     },
     "apps/electron/src/main/browser-pane-manager.ts": {
-      "sha256": "1f04d3941c2d3e23086ea93e1093c1e27077bdacc18503e1f0ebf69827330a99",
+      "sha256": "6082fbd4b1f7fa656648c13e31a3bcdcb60f5f429bce08856a32bf74d5230077",
       "reason": "Craft browser runtime adapted to honor the explicit app light, dark, or system preference for first paint and live updates; v0.15.1: Retain fresh-frame/invisible/Linux capture, challenge reconfirmation, current-site logs, sign-in popup dedupe; keep MkAgent theme/deeplink seams and bound stalled capture."
     },
     "apps/electron/src/main/deep-link.ts": {
@@ -951,12 +951,12 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "6be125b574f6b47fd17ef7db6ed25c05a481bde6e0dccf0ff511f6ef536a79fb",
-      "reason": "MkAgent 0.2.6 versions/lock and shared pr-watch export; upstream only changes versions/exports, Pi remains pinned to 1.1.0."
+      "sha256": "a4882a8f1fb22681dd5cbdf5aeafd5ff1c0013f38414afdcc84cd50d410af4e3",
+      "reason": "Retain MkAgent workspace versions and Lite dependency removals; resolve the server durable, pi-ai, chord and codemode packages at 1.4.0 with Photon WASM, while retaining shared Pi 1.1.0 event compatibility and removing coding-agent dependencies."
     },
     "package.json": {
-      "sha256": "b85759da307efc20ee6e1ea7a8872a1b55db3fc9fba46b8c6263f7eea0f476fa",
-      "reason": "MkAgent 0.2.6 versions/lock and shared pr-watch export; upstream only changes versions/exports, Pi remains pinned to 1.1.0."
+      "sha256": "38d71d4cef49418d517bab653006b9bc5d33757b6b7e48afe53c58ce1fc4f623",
+      "reason": "Retain MkAgent versions, client scripts and Lite dependency boundaries; remove the root coding-agent dependency and Pi-wide 1.1.0 overrides so the durable server can use 1.4.0 beside the shared compatibility packages."
     },
     "packages/core/README.md": {
       "sha256": "cac1ded695383920e62457a566c3ececed3acc5568a733f7eff4ab78c69ba2cd",
@@ -991,60 +991,40 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "packages/pi-agent-server/package.json": {
-      "sha256": "a7c9ea7118baf476ac02c604cd546d6bbf9b284ddbb5b6c5f64ad5740b0dbdf6",
-      "reason": "MkAgent 0.2.6 versions/lock and shared pr-watch export; upstream only changes versions/exports, Pi remains pinned to 1.1.0."
+      "sha256": "e47c14ffb815bdb1d2d032cb85a81d97015783ada434d5955bfa1246336df6cf",
+      "reason": "Replace Craft's coding-agent runtime with pi-durable, pi-ai, chord and codemode 1.4.0, retain pi-mcp 1.1.0, and use the package build script to produce the subprocess and its worker and WASM assets."
     },
     "packages/pi-agent-server/src/adapt-credential.test.ts": {
-      "sha256": "708f1d8771ed4b8e833a4de4675cc480e227a88b236be12c39e3bb25cd59dc90",
-      "reason": "Craft ModelRuntime credential adapter test retains MkAgent API-key and OAuth subscription compatibility"
+      "sha256": "d1333c4dba8dc86ef234d5f0a69cc0b47d79d5242f6a50671d008f2023b64216",
+      "reason": "Adapt Craft credential regressions from ModelRuntime to the real pi-ai builtinModels catalog, retaining Codex bearer adaptation, canonical OAuth credentials and ambient Bedrock IAM resolution."
     },
     "packages/pi-agent-server/src/adapt-credential.ts": {
       "sha256": "78ab18322cbcb7d7d3c7a3d710132be0dd797b10d82b1ffcb4e49ce1405a4f93",
       "reason": "Craft ModelRuntime credential adapter retains MkAgent API-key and OAuth subscription compatibility"
     },
     "packages/pi-agent-server/src/custom-endpoint-models.test.ts": {
-      "sha256": "8547ddb5d354eb1e73d7ab8d6d00d47e6884f01ddc7dbc23ed5019d8bdcc0622",
-      "reason": "Craft custom endpoint regression test retains MkAgent naming while covering strict OpenAI-compatible gateways; v0.15.3: forward compaction window and endpoint cap into actual Pi runtime, preserve SDK-owned model-aware context occupancy including post-turn compaction events; retain MkAgent lifecycle, tools and billing fixes."
+      "sha256": "51b7adc2f2748c670ec5c127e15f29c2d464c671fbdb0b2e12333db97dd1e1ba",
+      "reason": "Adapt Craft custom-endpoint regressions to explicit pi-ai api and baseUrl fields, retaining image opt-in, context windows, validated output caps and omission of store for strict OpenAI-compatible gateways."
     },
     "packages/pi-agent-server/src/custom-endpoint-models.ts": {
-      "sha256": "2ef89239c82508c96f7fd78fa0a7cc8d820b9c78ce2fc48f2fc3912d3bc8153b",
-      "reason": "Craft custom endpoint model definition is adapted to MkAgent connection types and Pi-only runtime; v0.15.3: forward compaction window and endpoint cap into actual Pi runtime, preserve SDK-owned model-aware context occupancy including post-turn compaction events; retain MkAgent lifecycle, tools and billing fixes."
+      "sha256": "a6bd4d7b04db21f2f504347d4e860059463f1f10a4b32f684b15bd72b780f938",
+      "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.4.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "914f8483b248dcb3fae253c89fe495f435093e78c04f6da9e056ef1ba9b50b4b",
-      "reason": "Pi 1.1 tool allowlists, isolated resources, proper tool failures and provider endpoints plus MkAgent permission-gated owned background Bash bridge; v0.15.2: Actual Pi 1.1 SDK assistant messages can omit id. Generate an app correlation id before forwarding and persist the post-append leaf, so selected-message forks do not include later parent messages; actual fork runtime failed before fix and passes after.; v0.15.3: forward compaction window and endpoint cap into actual Pi runtime, preserve SDK-owned model-aware context occupancy including post-turn compaction events; retain MkAgent lifecycle, tools and billing fixes."
+      "sha256": "440dbc628d687a11f267887c88fb79b614b971cd50d714e0e1334a9ba8c676d6",
+      "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining JSONL host messages and Pi 1.1.0 event shapes; register approved tools through the extracted proxy adapter, serialize initialization and live runtime updates, cancel compactions by request ID, and release old host waits before reinitialization, shutdown or SIGTERM closes the kernel."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
-      "sha256": "84e8b9e7d928aa5b613e01820e085c1cb896621cba736c4e90ed5e3f921552d6",
-      "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
+      "sha256": "506ecf537e22c8e027f2e4940ef03a23975d5d88a0dc9cb26b2c4f8a2d53b381",
+      "reason": "Migrate Craft model-resolution mocks to MutableModels getModel/getModels while retaining custom-endpoint priority, authenticated-provider isolation and model-versus-tool rejection cases."
     },
     "packages/pi-agent-server/src/model-resolution.ts": {
-      "sha256": "6e6b46afac467b0afe6bd1b88bb006fef929c62ae7eb162ece8e83cf02b8e077",
-      "reason": "Craft Pi subprocess adapted to the retained provider and session-tool contract"
-    },
-    "packages/pi-agent-server/src/session-settings.test.ts": {
-      "sha256": "d24b242b916dea85c031036d8949ef476d311b5120b3bb2a7c9d4b3b5ec786c8",
-      "reason": "Preserve MkAgent isolated Pi retry policy and streaming regression coverage; v0.15.3: restore applicable Pi compaction-window settings/config/RPC/UI/runtime chain and endpoint output cap; use model-aware SDK reserves, lazy restart with journal restore, validated legacy defaults; no excluded backend/product restored."
-    },
-    "packages/pi-agent-server/src/session-settings.ts": {
-      "sha256": "29d0a909ea96c6613d02ed13dd35aa954170f6bc5697d6432d4e8420c09b8f22",
-      "reason": "Preserve MkAgent isolated Pi retry policy and streaming regression coverage; v0.15.3: restore applicable Pi compaction-window settings/config/RPC/UI/runtime chain and endpoint output cap; use model-aware SDK reserves, lazy restart with journal restore, validated legacy defaults; no excluded backend/product restored."
-    },
-    "packages/pi-agent-server/src/session-tool-registration.test.ts": {
-      "sha256": "1e0ff3e8ddf36ebcaf8f53b01d7d2c53ddbee587fb2c17ee71be2a975575292f",
-      "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
-    },
-    "packages/pi-agent-server/src/steering-sdk.test.ts": {
-      "sha256": "8a195c3634e0454b0f9d4628781e01e0023b11fe088c338c2bf35198bf7b1bbd",
-      "reason": "Exercise retained Pi steering integration without decision-mode routing"
-    },
-    "packages/pi-agent-server/src/system-prompt-override.test.ts": {
-      "sha256": "6782731750269b22902b3b3307fd267e64ec7d4e84416ff790b5ab3c6ce6d882",
-      "reason": "Retains extension-isolation regressions and references the MkAgent-named settings manager"
+      "sha256": "c792bcca80a9ac5c23a974439f99956919172595ab19991d064b04da2b6f5ed6",
+      "reason": "Adapt Craft model resolution from ModelRegistry find/getAll to pi-ai MutableModels getModel/getModels; retain pi prefix handling, custom-endpoint priority, provider isolation, MiniMax CN IDs and model rejection classification."
     },
     "packages/pi-agent-server/src/tools/search/create-search-tool.test.ts": {
-      "sha256": "53bd280b605b8342e964568c32752a65274290f5e7a5f55487ad0d067d301e50",
-      "reason": "Craft v0.13.3 Pi 0.85.1 runtime behavior is retained with MkAgent OAuth and Lite tool seams"
+      "sha256": "b63ed7d9eea268db4d28e80723039384902eb945bf1ace150162185c0e2cd880",
+      "reason": "Adapt Craft search-tool tests to durable execute parameters and output results, retaining count limits, DuckDuckGo recovery, error flags and bounded error messages."
     },
     "packages/pi-agent-server/src/tools/search/providers/ddg.ts": {
       "sha256": "2efe3e4c6beaa02c7da6f2de46b13e3a50a1a92888fb3100505c323e41047165",
@@ -1055,8 +1035,8 @@
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "packages/pi-agent-server/src/tools/web-fetch.ts": {
-      "sha256": "3ee6ffdfa943913d3e809cef2080d2d170978d35ef64b23f32997b2594805b9f",
-      "reason": "Craft v0.13.3 Pi 0.85.1 runtime behavior is retained with MkAgent OAuth and Lite tool seams"
+      "sha256": "ac5c42a19aefc63dc9a85886d25fecba6757c09234f41e272780bc366c7304da",
+      "reason": "Adapt Craft web_fetch to durable defineTool and output results instead of ToolDefinition and content; retain HTML, PDF, image, JSON and text handling, output limits, session downloads and isError propagation."
     },
     "packages/pi-agent-server/tsconfig.typecheck.json": {
       "sha256": "74782cf3fa68384ff08bd6d633a2dfa0e0e137d6c19fa52180fb44faa413c783",
@@ -1247,12 +1227,12 @@
       "reason": "Craft privileged-execution audit logging follows the configurable MkAgent data directory"
     },
     "packages/server-core/src/sessions/RemoteBrowserPaneManager.ts": {
-      "sha256": "5cda977bd0ff1e0918e46ea8e08b8469435c1de12efd542dfbb9ca5af7377722",
+      "sha256": "404a9211528e51250b02e28e9641500a52bb323d9a9c10ef9fd4f04ffc6c3d2e",
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/server-core/src/sessions/SessionManager.ts": {
-      "sha256": "b07b975b25717e276e899edf694429a95085d70d024facebefda3a76311a62c8",
-      "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions."
+      "sha256": "fb2a8b3d16478b634f72c57bc277b21b96e96fe5602201cd437ff81fab5e2692",
+      "reason": "Retain the Craft-derived Pi/Lite session lifecycle, permissions, context, persistence and PR handoffs; preserve sdkSessionId when importing a bundle with durable session metadata so restored history retains its host correlation."
     },
     "packages/server-core/src/sessions/background-task-stop.test.ts": {
       "sha256": "342eb29a494100b86413319250f10d587b041bd6d6aa0640d4c56333f995b872",
@@ -1443,8 +1423,8 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/package.json": {
-      "sha256": "2e39c2dc96a917d8a8f0a02c302902c4714fcf3eecb793f3516443e375f543b8",
-      "reason": "MkAgent 0.2.6 versions/lock and shared pr-watch export; upstream only changes versions/exports, Pi remains pinned to 1.1.0."
+      "sha256": "0ddfddcee78a4ea330a1685f11f4bac6a3c50f4a25b517d9885d4826c3d148b6",
+      "reason": "Retain MkAgent versions, Lite exports and pr-watch; export the vendored Pi event contract at agent/pi-events and remove coding-agent while keeping pi-agent-core and pi-ai 1.1.0 for host event compatibility."
     },
     "packages/shared/src/__tests__/feature-flags.test.ts": {
       "sha256": "68eeef24a8f1a3f32eec273ba35a72359d0fd9a1a4207d272195b0ef048312b0",
@@ -1519,16 +1499,12 @@
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "packages/shared/src/agent/__tests__/pi-event-adapter.test.ts": {
-      "sha256": "48f6dda7f307595db0f5c52e4fe29eff2437a697ac8b17e3e7091742dcda15fc",
-      "reason": "Craft v0.13.3 retry, failed-text discard, and bounded query contracts are adapted to the MkAgent Pi-only agent path; v0.15.2: Retain upstream multi-API billing regression and add duplicate-id, usage-free next-turn and partial retry cases; real Pi SDK/runtime complements mocked event coverage."
+      "sha256": "76f02f7f3cbbb2039af3dd5c335d8435f8eebb92301864444bbb92339387133f",
+      "reason": "Retain Craft retry, discard and billing regressions, including duplicate messages and partial retries; cover durable retry notifications arriving before the failed assistant message without an early UI error."
     },
     "packages/shared/src/agent/__tests__/pi-query-llm.test.ts": {
       "sha256": "bfacf97bd1f63740f1c94aac0456f52535bfa4d749880189e9a9321968c89b5c",
       "reason": "Craft v0.13.3 retry, failed-text discard, and bounded query contracts are adapted to the MkAgent Pi-only agent path"
-    },
-    "packages/shared/src/agent/__tests__/pi-retry-sdk-integration.test.ts": {
-      "sha256": "ef2b599cca8f8d875cbef4c10005ee00751f953d61eadc410ffc776af7bf3d11",
-      "reason": "Preserve MkAgent isolated Pi retry policy and streaming regression coverage"
     },
     "packages/shared/src/agent/__tests__/pin-created-pr.test.ts": {
       "sha256": "6bee65931c2b84d359e366b925b8bff6b86c4d4dec3c8403db613510eba6264d",
@@ -1611,8 +1587,8 @@
       "reason": "Craft v0.13.3 retry, failed-text discard, and bounded query contracts are adapted to the MkAgent Pi-only agent path"
     },
     "packages/shared/src/agent/backend/pi/event-adapter.ts": {
-      "sha256": "df6a08d563fe114b74c9d898ac00e79f5a5e2964fc72ef67932d3ef4ae9b1a14",
-      "reason": "Craft v0.13.3 retry, failed-text discard, and bounded query contracts are adapted to the MkAgent Pi-only agent path; v0.15.2: Sum every assistant API completion output/cost for the app turn; final input/cache stay latest. Also reset stale lastUsage, deduplicate SDK ids, count billable partial retries, retain recovery queue and independent occupancy semantics."
+      "sha256": "964285a8a979ec5266b5b66c3be4ddfad0d10b63794a3b618937b7de12bb2903",
+      "reason": "Retain Craft event conversion with MkAgent turn billing, message deduplication and retry queue handling; import the vendored host event contract and hold retryable failures when durable announces backoff before message_end."
     },
     "packages/shared/src/agent/backend/pi/protocol.ts": {
       "sha256": "e0015c625f38e1e6c03c5ecfca79fbf498f0420bbbd08bbe90baf37e02a8f9d5",
@@ -1627,19 +1603,19 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/backend/types.ts": {
-      "sha256": "7c32b7386ef3418de76db113fecdae9bb3f5e29e42cde8c0b8ea7886f0b0e947",
-      "reason": "Retain shared/Pi coding profile, lean prompt, context/preferences and canonical tool filtering. Excluded Source/Project/Guarded/Claude cases adapted individually."
+      "sha256": "16f73325d9a92714613dc457072df2a98278628066fa8a8f41c532a8c77dbc02",
+      "reason": "Retain the Craft-derived Pi/Lite coding profile, prompt, context and tool configuration without excluded backends; identify pi-durable as the PiAgent subprocess runtime."
     },
     "packages/shared/src/agent/base-agent.ts": {
       "sha256": "1e83a71da6fb9494c72f456ca4ec4164cf5e7d20d951d26fe623b6741e3ca588",
       "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions."
     },
     "packages/shared/src/agent/browser-tool-runtime.ts": {
-      "sha256": "7527484be95105773ff41abe7fd0f06c323b4c4606f466c40ece124b7a65bb86",
-      "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
+      "sha256": "fdbae203932a7c479aaf88c6887505a8be134da78398507df70eafeaf7d914d6",
+      "reason": "Retain Craft browser commands with MkAgent settle variables and unknown-field redaction markers; use execution-time input classifications for fill, type and paste, preserve ordinary input, redact passwords even after focus moves, and reject uncertain classifications during durable export."
     },
     "packages/shared/src/agent/browser-tools.ts": {
-      "sha256": "1b21cfc1b03bb76ab46b2c331550b24e5e5f191f3009341f3309bb47dd60fe57",
+      "sha256": "09b1f5a2378ce9644aad601c42b4e3927f16410cc8d62ac1df64fe7660a2a4ba",
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/shared/src/agent/core/__tests__/pre-tool-use-checks.isolated.ts": {
@@ -1703,7 +1679,7 @@
       "reason": "Craft v0.13.3 retry, failed-text discard, and bounded query contracts are adapted to the MkAgent Pi-only agent path"
     },
     "packages/shared/src/agent/index.ts": {
-      "sha256": "bbb328703102c3dc8d6b5105ba236e97cac2224d714770504c0fce59284721d4",
+      "sha256": "0187ca1a3907e1ed3ba0e0b87c7e15b812310713b9268ea561f4ab9b7ab237c4",
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained.; v0.15.2: Reviewed every changed hunk: only Claude autoCompactWindow and Claude-only decision subagentModelPicker type/property/export. Retained Pi/BaseAgent contract does not consume either; omit these inert settings and exports."
     },
     "packages/shared/src/agent/llm-tool.ts": {
@@ -1723,8 +1699,8 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/pi-agent.ts": {
-      "sha256": "fa1d74cad9b97293fdce528599f1a99c0e392d56853129985abef5bcb3c36500",
-      "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions."
+      "sha256": "fc17e0e152e893b8cc11a2aca8aab92d87dcbbf4b734ad967d6369f45c5de79e",
+      "reason": "Retain the Craft-derived Pi/Lite subprocess client and PR handoffs; share startup through credential loading, reject stale child callbacks and late requests, forward browser input classifications, cancel compactions by request ID, block replacement startup until the previous child exits, and reopen the event queue during failed-resume recovery without losing replacement events or user cancellation."
     },
     "packages/shared/src/agent/plan-types.ts": {
       "sha256": "529cc7377490361bef7e742729c31f9adffdadb5b77a8eb0d5eda3ccfa2d9aaf",
@@ -1963,8 +1939,8 @@
       "reason": "Craft v0.13.3 semver-only release-note discovery is retained so MkAgent ignores pending templates"
     },
     "packages/shared/src/sessions/__tests__/bundle.test.ts": {
-      "sha256": "4ec477ba9d4586cd0a96ae5143d0a10751dc93354ce6a4cb9c228e0332a86998",
-      "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
+      "sha256": "789cb47f06376f10662780c72fe50f7390e72766f94f964dc7bb923b903b0395",
+      "reason": "Extend Craft session-bundle regressions for durable history validation and browser secret removal: legacy field uncertainty, marker-shaped and multiword array inputs, retained copies in session data, metadata and attachments, command association, JSONL sidecar integrity and nested attachment directories."
     },
     "packages/shared/src/sessions/__tests__/persistence-queue.test.ts": {
       "sha256": "96ce5895637b0801639a9042f1e05fe5c3c11fc9e019dce49cce4675cd3b3f30",
@@ -2211,28 +2187,88 @@
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "scripts/build-server.ts": {
-      "sha256": "2274a8658c38275d245426c8d22d8e6a869ab65e11519234b033930577b4f9c2",
-      "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
+      "sha256": "0698a5ab5dfca4a02a1b9ec709f30fd26398f36ff0617217667cb168e66c8ac8",
+      "reason": "Adapt Craft server packaging to MkAgent's portable Lite distribution and require the durable codemode worker, QuickJS WASM and Photon WASM beside the Pi server bundle."
     },
     "scripts/check-i18n-parity.ts": {
       "sha256": "1c2d2bc8d2c6154d7cad20af822e4f7413192f47c0d3f46e6a39a7e36026805c",
       "reason": "Craft quality automation adapted for MkAgent localization validation"
     },
     "scripts/electron-build-main.ts": {
-      "sha256": "11e27dea2fedc7c894225d9406bba284296e4016a8a3d6917c2f7258ff3e4694",
-      "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
+      "sha256": "537db92c5eecf4be448e8487142be1f1f95841defea976beb8e0c17a1f652a43",
+      "reason": "Retain Craft-derived MkAgent Electron build targets; use the Pi package build to emit durable worker and WASM assets, and externalize bun:sqlite for the shared export module's runtime selection."
     },
     "scripts/electron-build-resources.ts": {
       "sha256": "aaff2bbe4f243da821e4b719628a87b136c70d08c97add4a455c7c112533843d",
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "scripts/electron-dev.ts": {
-      "sha256": "359cefcfb43d2c944d1290949ecf138877c38bff579c6559e5e9b23707877a1a",
-      "reason": "Retain v0.15.4 shared transport/runtime/style/CLI lifecycle hunk with existing MkAgent Pi/Lite seams."
+      "sha256": "80177aae792b4686beb4205e9c44e71e82c5fc23844da106ea63ca76825c4999",
+      "reason": "Retain Craft-derived development lifecycle with MkAgent instance isolation and Pi/Lite targets; build durable worker and WASM assets through the package script and externalize bun:sqlite in the Electron main bundle."
     },
     "scripts/install-app.ps1": {
       "sha256": "ddf42ed1a68081f657f3ce37ee308e4f45f53fd3ebf5e8f24ba01036a9635e57",
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
+    },
+    "packages/pi-agent-server/src/bundle-smoke.test.ts": {
+      "sha256": "1371ecf22a9506f865e7b472855e438533e8383c302ea0241103a023061affbf",
+      "reason": "Extend Craft's offline bundle authentication test for durable worker and image assets, codemode and MCP defaults, initialization races, live tools, runtime updates, approval cancellation and OAuth credential ownership."
+    },
+    "packages/pi-agent-server/src/mini-model-query.test.ts": {
+      "sha256": "949aca864489239e0e589e1feb080a22b438934d0dff3c5915b75bb1802388b2",
+      "reason": "Adapt Craft mini-model query tests from ModelRegistry to MutableModels while retaining provider-scoped model recovery, rejection checks, duplicate suppression and custom-endpoint cases."
+    },
+    "packages/pi-agent-server/src/mini-model-query.ts": {
+      "sha256": "37a4a0ea91f53c73195c64865e8181ecc32ae877fa97682e17d6563871cdeac4",
+      "reason": "Adapt Craft utility model recovery to the pi-ai MutableModels catalog; retain candidate order, authenticated-provider limits and the caller's shared deadline and cancellation scope."
+    },
+    "packages/pi-agent-server/src/pick-mini-model.test.ts": {
+      "sha256": "5749badbd34da7a6521d6d3e9f0c20899a19582ccd2dc12c58f693faddd9a05d",
+      "reason": "Adapt Craft provider mini-model selection tests to MutableModels getModel/getModels without changing the retained selection assertions."
+    },
+    "packages/pi-agent-server/src/pick-mini-model.ts": {
+      "sha256": "4c04123e229fcde655376fdb12b9a1368e4cad2545d836cca85b34bf8db13485",
+      "reason": "Adapt Craft provider-specific utility model selection to MutableModels while retaining preferred mini-model order, denied IDs and provider defaults."
+    },
+    "packages/pi-agent-server/src/provider-endpoint-env.test.ts": {
+      "sha256": "dfe2b296db2bdd90fdd5cd8baa98e4e9add4b2b9f182e11be979e32171025895",
+      "reason": "Adapt Craft Cloudflare endpoint environment tests from ModelRuntime to builtinModels streamSimple with a model available in the pi-ai 1.4.0 catalog."
+    },
+    "packages/pi-agent-server/src/test-fixtures/block-network.ts": {
+      "sha256": "7e0fe526fb678705043cfe591258130666a8977ab744cf2708dfcd7394f08189",
+      "reason": "Extend Craft's offline bundle network guard to block WebSocket construction as well as fetch so newer provider transports cannot bypass the fixture."
+    },
+    "packages/pi-agent-server/src/tools/search/create-search-tool.ts": {
+      "sha256": "38cd7dad8287d6544d9b5bde21bf52bf9253ae1f8a4fd1052fecd9f08b972ad8",
+      "reason": "Adapt Craft web_search from ToolDefinition to durable defineTool and output results; retain search schemas, count limits, DuckDuckGo recovery, error flags and bounded error messages."
+    },
+    "packages/shared/src/agent/__tests__/browser-tool-redaction.test.ts": {
+      "sha256": "21e692c3cd51534d3df5510361d22f2bbee1045533e8304ebe45b0035537597a",
+      "reason": "Extend Craft browser password regressions for fill, type, paste and mixed batches when field type is unavailable, while retaining ordinary-field input behavior."
+    },
+    "packages/shared/src/agent/__tests__/pi-compaction.test.ts": {
+      "sha256": "3f4af07d242d0f2de2974b164b94ac2a912b5ac2f6454b5846f203f1cb439807",
+      "reason": "Adapt Craft compaction timeout coverage to cancel_compact with the original request ID; add durable subprocess regressions for shared startup, real spawn failures, stale permission and tool responses, credential cancellation, signal failures, blocked restarts and session retention during shutdown."
+    },
+    "packages/shared/src/agent/browser-tool-redaction.ts": {
+      "sha256": "5a3c340c0fa171e8dfce4c333c989174e1ff660a83b08683ee499853d1076385",
+      "reason": "Extend Craft's browser-command redactor with optional processing of existing password markers, configurable replacement text and callbacks that report removed values for durable export checks; preserve default idempotent session redaction."
+    },
+    "packages/shared/src/sessions/bundle.ts": {
+      "sha256": "8c1c83a3d11fca63f23af1efd04e6a0d348e0b589dab9e55d5e1c81d3acdadf5",
+      "reason": "Extend Craft session export with a validated, redacted durable snapshot and exclude the raw root store; reject secret copies in session data, metadata, attachment contents and file paths, returning null when safe export cannot be established."
+    },
+    "packages/shared/src/utils/bundle-files.ts": {
+      "sha256": "a34556457c460b3cb9cb0b04c3c8e011e7ee7ebda921bdecf706074935c53b4b",
+      "reason": "Extend Craft file collection with portable relative-path exclusions so export omits the root durable store without dropping same-named attachment directories."
+    },
+    "packages/server-core/src/handlers/browser-pane-manager-interface.ts": {
+      "sha256": "6c102a10954f8562196c4bc0c3c4aa6948c05b928984f8a34976d6aaed1af6ef",
+      "reason": "Extend the retained browser host contract with optional execution-time classifications for fill, type and key input."
+    },
+    "packages/server-core/src/sessions/__tests__/RemoteBrowserPaneManager.test.ts": {
+      "sha256": "d4cc84f1af356c514696ea4a02ee2759e28a0d016b5554899362d0c92210b457",
+      "reason": "Retain upstream remote browser tests and verify input classifications survive the desktop RPC bridge."
     },
     "scripts/install-app.sh": {
       "sha256": "1c6ed682d47531005d81d3d24473bbae20739f4acf8add9c70adec86e4334b9d",
@@ -2365,16 +2401,16 @@
       "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path"
     },
     "packages/pi-agent-server/src/background-shell.test.ts": {
-      "sha256": "394727bea1c79f5e6266063fd0eeecb93f5bab0c832e955b18406eb3a11bb080",
-      "reason": "Real Pi Bash regression tests cover live output in paths with spaces, cancellation ownership across identical commands and failed command output"
+      "sha256": "9f5e40613f819c035c765b6d3360cb4c0de9746417600223d8631b5326a2bda0",
+      "reason": "Adapt local main background-shell regressions to durable Bash execution, retaining live output, task-specific cancellation and failed-command output checks."
     },
     "packages/pi-agent-server/src/background-shell.ts": {
-      "sha256": "b23d2f888f4d6f620daa632df63c833f6bc1cf8f064125a19874f4fa0b483f3a",
-      "reason": "Permission-gated Pi background Bash adapter owns each AbortController/output file and stops tasks through the existing Pi shell implementation"
+      "sha256": "e2cafa03608330a3759a00646a4b9bf4723c797c4741ec93a83031dc5a196287",
+      "reason": "Retain the local main permission-gated background shell owner and replace the pi-coding-agent result type dependency with its compatible local shape."
     },
     "packages/pi-agent-server/src/mkagent-metadata-schema.test.ts": {
-      "sha256": "9679181ecd266c5aaa6ac73e2a5f5138cc662cf4a7203be531632d2b4652b53b",
-      "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path"
+      "sha256": "cc019512931c282297c5d35019b64ac73023ace7ecbe55b7a01a41efeabc3b4f",
+      "reason": "Retain local main metadata schema regressions and exercise the actual durable Edit tool schema after the kernel switch."
     },
     "packages/pi-agent-server/src/mkagent-metadata-schema.ts": {
       "sha256": "04fe4e7df50fb4ed8660bfa9165e1907f66c37e4c530e10067ff0b02bcb0e8e7",
@@ -2401,8 +2437,8 @@
       "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path"
     },
     "packages/server-core/src/sessions/coding-runtime.isolated.ts": {
-      "sha256": "71a9510a3e21a12882d8b744cedbc7949128cf62df537bd827601b7ce9cb2207",
-      "reason": "Actual Pi Coding tool exposure, background handoff, one-shot summary history, mode freezing and restart validation."
+      "sha256": "77cb9aff125971825aa64a1dc8eb1c5a06a70148670602e9717393aab208bc32",
+      "reason": "Extend the retained local main Coding subprocess test with durable export, import, resumed history and imported branch-anchor checks."
     },
     "packages/server-core/src/sessions/native-endpoint-refresh.isolated.ts": {
       "sha256": "130f53c0a3bab5e659b296f2ac6d800f2adf1fb28500f01b89e221ebfbbec675",
@@ -2533,8 +2569,8 @@
       "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path"
     },
     "scripts/check-craft-test-coverage.ts": {
-      "sha256": "c1cc720dbde160cf320050c4d84e3d740333c464a5f1cf4e75996f2e2d1cefde",
-      "reason": "Update precise factory case counts for retained Pi whole-config regression; all new PR/handoff tests retained, no broader ignore patterns."
+      "sha256": "da449d156c03ccbfe9ffbc4e924669b10f1dd8664167532453e09fdfc6d4d7dc",
+      "reason": "Retain the Craft test coverage audit and map seven replaced Pi SDK test files to durable kernel.e2e.test.ts coverage; the mapping does not assert that every retired assertion has an equivalent test."
     },
     "scripts/check-craft-ui-sync.ts": {
       "sha256": "43403aab630df37ea15c59f84a9f65311b0d7412a4cdf2c2d2d3ffb633947819",
@@ -2571,9 +2607,216 @@
     "scripts/run-with-retry.ts": {
       "sha256": "7ee5e77b7f6f9194cfd70a209d6d6e56bb1942de4d81fff79a5c05bc88accdc3",
       "reason": "Cross-platform bounded retry runner hardens dependency installation and Electron packaging downloads"
+    },
+    "packages/pi-agent-server/scripts/build.ts": {
+      "sha256": "6eadc2e0e97e13d4fe778179fe4116d15b852e161a1129d4e9c22ae216ff5043",
+      "reason": "Build the durable subprocess and codemode worker, and copy QuickJS and Photon WASM assets beside the bundles."
+    },
+    "packages/pi-agent-server/src/cache-warmer.ts": {
+      "sha256": "6ebbc040638c3931f78c39295f93d30cef9a73da5183c847adefd54ca44de62d",
+      "reason": "Port pi-coding-agent 1.1.0 core/cache-warmer.js replay, TTL, scheduling and cost policies to durable request hooks and persisted usage."
+    },
+    "packages/pi-agent-server/src/mcp/visibility.test.ts": {
+      "sha256": "626b6aa806fd2dc909cb2c41eeb3f365ea1861dad4c9e3f4a3b5de3454bb89c2",
+      "reason": "Verify durable MCP exposure, tool_search discovery, codemode access and registration updates after server tool-list changes."
+    },
+    "packages/pi-agent-server/src/model-runtime.test.ts": {
+      "sha256": "14de5130f7f3d73608055763e0664a2b9ed0e86a935c850ed99a68fc122860c1",
+      "reason": "Verify queued OAuth refresh notifications and isolation of custom endpoint catalogs between durable model runtimes."
+    },
+    "packages/pi-agent-server/src/test-fixtures/mcp-server-dynamic.ts": {
+      "sha256": "efa1313ac0fedccceb350c4052708af64fd7ce2cc6db8ff849732988266bf549",
+      "reason": "Provide a local stdio MCP server that changes its tool list and emits list_changed for registration-update tests."
+    },
+    "packages/pi-agent-server/src/test-fixtures/mcp-server-resources.ts": {
+      "sha256": "6c97cd9ab43ec6bc55b3c3fb3facff875de6f56d263fbfa9bf01cf70355bbdaf",
+      "reason": "Provide a local stdio MCP server with tool and resource capabilities for hidden-server exposure tests."
+    },
+    "packages/pi-agent-server/src/test-fixtures/mcp-server.ts": {
+      "sha256": "3dd8e2a10ecd08013da71105691b518ec63855354bbc9cb3a8ccaf33a681996f",
+      "reason": "Provide a local stdio MCP greeting tool and optional delayed initialization for kernel, bundle and initialization-race tests."
+    },
+    "packages/pi-agent-server/src/test-fixtures/mock-provider.ts": {
+      "sha256": "d506b49daebf44e0ccd282f672c18de321e382a3ede0c1e0f74ee680b960b24a",
+      "reason": "Provide offline provider streaming and OAuth refresh responses for bundled codemode, MCP and authentication tests."
+    },
+    "packages/pi-agent-server/src/test-fixtures/read-image.ts": {
+      "sha256": "0241c94bbee4c471b5c54d54f1c62e7e9df81809041d14f6c0c1092a6249bf63",
+      "reason": "Exercise the bundled durable read tool without node_modules to verify adjacent Photon WASM loading and inline image output."
+    },
+    "packages/pi-agent-server/src/tools/builtin.test.ts": {
+      "sha256": "182a0c2ad406e63a175e71d0a6fe5e280cff606ef040356ab8cc3ce47403f1af",
+      "reason": "Verify durable read-tool image resizing and BMP conversion through the builtin tool set."
+    },
+    "packages/pi-agent-server/src/tools/codemode-worker.ts": {
+      "sha256": "76c44903cd194028200bdbbb63924ef19592dca199143b79b72b32f02251000a",
+      "reason": "Expose the installed pi-codemode worker as a separate bundle entrypoint for packaged execution."
+    },
+    "packages/pi-agent-server/src/tools/local/management-http.ts": {
+      "sha256": "53a9ddb9b1abf1d000a7955f793ef27c102e6ab2a33158b8b3cffc9ed97bd8aa",
+      "reason": "Port pi-coding-agent 1.1.0 utils/management-http.js retry and cancellation behavior for binary management requests."
+    },
+    "packages/pi-agent-server/src/tools/local/tool-binaries.test.ts": {
+      "sha256": "3828227a845db98e86c0276d0a1d75aea0398750cb04784be7a84623586b207d",
+      "reason": "Verify Pi-compatible fd and ripgrep cache, PATH, offline, download, extraction and cleanup behavior with injected dependencies."
+    },
+    "packages/pi-agent-server/src/tools/wrap.test.ts": {
+      "sha256": "76d3e5c84be351ce64557152e1270666821bfcff1c6d52edd8e75ffab1d34cfc",
+      "reason": "Extend durable tool approval regressions with host path rewrites and conflicting-path rejection; retain denied codemode model-call checks and background Bash timeout assertions."
+    },
+    "packages/shared/src/sessions/durable-bundle.ts": {
+      "sha256": "fed2a7ca1a070164c3af244d60bf7493851d945dd1b365b17fcaf77a0b328700",
+      "reason": "Extend Craft-derived session bundles with validated SQLite and JSONL snapshots; associate browser classifications and nested results with their durable task, conversation and call, remove secrets only from matching browser arguments, reject unresolved inputs and retained copies, and preserve branch metadata."
+    },
+    "packages/pi-agent-server/src/compaction-reserve.ts": {
+      "sha256": "9451ea475cdaef619b074dc24080f0051c9ee3e8d1e780900e8f64b33b1b0aa1",
+      "reason": "Extract compactionReserveFor from local main session-settings.ts to preserve the host autoCompactWindow threshold in the durable kernel."
+    },
+    "packages/pi-agent-server/src/durable-storage.test.ts": {
+      "sha256": "a3cf96b99b10d3320f06ebf610febcbdb3ab9ad66b97c1e88db7979b5c8718ac",
+      "reason": "Verify SQLite selection for new durable stores and retention of existing JSONL stores."
+    },
+    "packages/pi-agent-server/src/ephemeral.ts": {
+      "sha256": "73db37385849eddc5aa25b1915df84e919af19e6316fb97a082de45f80c5cd2b",
+      "reason": "Migrate local main index.ts queryLlm behavior from temporary AgentSessions to pi-ai completeSimple while retaining mini-model recovery and cancellation."
+    },
+    "packages/pi-agent-server/src/kernel.e2e.test.ts": {
+      "sha256": "754c1c09db1a9770c61fbf31a9c1febebb5de9c4c7ea93e03b0c51e97490de5a",
+      "reason": "Move retained Pi session contracts to a real durable Harness; add persistence, branch migration, tools, cache warming and compaction races, direct and nested proxy export checks across SQLite and JSONL, and subprocess reinitialization, EOF, shutdown and SIGTERM assertions with opening kernels or pending approvals."
+    },
+    "packages/pi-agent-server/src/kernel.ts": {
+      "sha256": "34c3113cbe2eefac519e8f9b7f074ed71ad89c2e4830bc8d7afdd95251931079",
+      "reason": "Replace local main AgentSession lifecycle wiring with a durable Harness; retain host-compatible events and prompt replacement, derive context usage from committed history, preserve branch snapshots and anchors, update tool registrations live, and settle or cancel compaction tasks and queued summaries before shutdown."
+    },
+    "packages/pi-agent-server/src/mcp/config.ts": {
+      "sha256": "2b2ee30b4478fabc39101535c97668c64a526632849f6e76446d91794360af0e",
+      "reason": "Vendor pi-coding-agent 1.1.0 extensions/mcp/config.js loading and override rules with a configurable .mkagent project directory; omit CLI config writers."
+    },
+    "packages/pi-agent-server/src/mcp/extension.ts": {
+      "sha256": "f5c14e89f9937bbd244e0245eea9afa890cb1567a762d946055c2de8b54a908d",
+      "reason": "Adapt pi-coding-agent 1.1.0 MCP startup and exposure behavior to durable registrations, codemode namespaces, live updates and connection cleanup."
+    },
+    "packages/pi-agent-server/src/mcp/log.ts": {
+      "sha256": "d2c4f1e25fe42b995a695da6f5a950c76195e7f35dcc3cee9280852c43b36747",
+      "reason": "Vendor pi-coding-agent 1.1.0 extensions/mcp/log.js formatting, synchronous append and log rotation behavior."
+    },
+    "packages/pi-agent-server/src/mcp/mcp-servers.ts": {
+      "sha256": "54c26e42cb517d35bf9b0e8e7f9d4bff59d4366ae6d3f4d3b92de41ee4462277",
+      "reason": "Vendor pi-coding-agent 1.1.0 core/mcp-servers.js validation, exposure matching, namespaces and extension registration types."
+    },
+    "packages/pi-agent-server/src/mcp/output-files.ts": {
+      "sha256": "caafbe3e0102eeab9215ed4f33c17e87ccbdb79cfab6798e811e6847cd28a626",
+      "reason": "Vendor pi-coding-agent 1.1.0 utils/output-files.js helpers for private temporary MCP output files."
+    },
+    "packages/pi-agent-server/src/mcp/resolve-config-value.ts": {
+      "sha256": "931ad2799563076208ebfb8da8574ace101fdff715bff6d9216cbbdca690fca7",
+      "reason": "Port pi-coding-agent 1.1.0 core/resolve-config-value.js environment, template and command resolution using the platform default shell."
+    },
+    "packages/pi-agent-server/src/mcp/resources.ts": {
+      "sha256": "710afc1e911019e1fe0ffa8717d288f369f7b003f314576b257c0f5b7f271398",
+      "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/resources.js resource listing and reading to durable tool registration and visibility."
+    },
+    "packages/pi-agent-server/src/mcp/runtime.ts": {
+      "sha256": "8112d959496661a66f3af3f9f137376919464c5baa399e0ea4b8cb7fb5722a70",
+      "reason": "Port pi-coding-agent 1.1.0 extensions/mcp/runtime.js transport, reconnect, retry and logging behavior; report unsupported OAuth sign-in explicitly."
+    },
+    "packages/pi-agent-server/src/mcp/tools.ts": {
+      "sha256": "9b54751f1500c4a23807149804facd53b9e24b6a09b2dfc86141c45b182834b9",
+      "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/tools.js naming, content conversion and truncation to durable registrations without TUI renderers."
+    },
+    "packages/pi-agent-server/src/migrate.test.ts": {
+      "sha256": "8cf39873dc3a13bf0f3791c9b99c2757fa9a02950073eb4ec4e62ba2d8db0a95",
+      "reason": "Verify legacy transcript conversion, active and inactive branches, context edits, compaction mapping, interrupted migration recovery, and unchanged running parent tasks with present or missing id-map sidecars on SQLite and JSONL."
+    },
+    "packages/pi-agent-server/src/migrate.ts": {
+      "sha256": "e061f1fc88617cb15c1d1eebd78acf77e80b5331ddb8463351014319e1abe953",
+      "reason": "Convert legacy pi-coding-agent 1.1.0 JSONL histories to durable conversations and persist recoverable entry and branch anchor mappings; inspect committed migration state through storage before opening a Harness so branch preflight preserves running parent tasks."
+    },
+    "packages/pi-agent-server/src/model-runtime.ts": {
+      "sha256": "0119c65e7f4716beb03d1d3459429b9bd9ecd5ee66cd237f4f1fd2fa338ea68a",
+      "reason": "Migrate local main index.ts credential synchronization and custom endpoint registration to the pi-ai 1.4.0 MutableModels runtime."
+    },
+    "packages/pi-agent-server/src/storage/durable-storage.ts": {
+      "sha256": "b85448b29d4529d0293bfcdf676b8c3f3c9eaa59352414ac1e4d58fd69313c2a",
+      "reason": "Adapt chord 1.4.0 NodeSqliteDatabase queue and transaction semantics to bun:sqlite, using pi-durable SQLite storage while retaining existing JSONL stores."
+    },
+    "packages/pi-agent-server/src/tools/builtin.ts": {
+      "sha256": "b80a2c8856a215e311a8b59356898b0b05d3798690fe3d015abea018ee9e5d08",
+      "reason": "Combine pi-durable coding tools and Photon image processing with adapted pi-coding-agent 1.1.0 find, grep and ls tools."
+    },
+    "packages/pi-agent-server/src/tools/codemode.ts": {
+      "sha256": "a6066d75853ab6887e7380e245b359585e87567502a23870b6664275bb1721d1",
+      "reason": "Bind pi-durable codemode to the installed pi-codemode sandbox, packaged worker and WASM assets, with host approval for model calls."
+    },
+    "packages/pi-agent-server/src/tools/local/find.ts": {
+      "sha256": "0b9469d7e224d865505bd0e551f9214beafc467bf0bcd0ffa88a05849f99ba4e",
+      "reason": "Adapt pi-coding-agent 1.1.0 core/tools/find.js to durable registration and the local fd manager while retaining path and truncation behavior."
+    },
+    "packages/pi-agent-server/src/tools/local/grep.ts": {
+      "sha256": "7166189552a11f6995ed1c2ef44f4532e1245bee52b49245d56b55e1b25ace93",
+      "reason": "Adapt pi-coding-agent 1.1.0 core/tools/grep.js search behavior to durable registration and local ripgrep resolution."
+    },
+    "packages/pi-agent-server/src/tools/local/ls.ts": {
+      "sha256": "bf85e9120673d537d83d629bd79fb32ec36998a82154a6d66879866eb2ad055b",
+      "reason": "Adapt pi-coding-agent 1.1.0 core/tools/ls.js listing and truncation behavior to durable registration without TUI renderers."
+    },
+    "packages/pi-agent-server/src/tools/local/path-utils.ts": {
+      "sha256": "6a876a57bccd018d276857f6dded4a786ca32b8af45221fdf931719e0d7be9a2",
+      "reason": "Port the required pi-coding-agent 1.1.0 core/tools/path-utils.js and utils/paths.js normalization and read-path compatibility branches."
+    },
+    "packages/pi-agent-server/src/tools/local/tool-binaries.ts": {
+      "sha256": "4d1db65233aad8cbd6e48d7638d715270276fef2c953762b4c0d7d5b89623243",
+      "reason": "Adapt pi-coding-agent 1.1.0 utils/tools-manager.js fd and ripgrep resolution and downloads, adding bundled ripgrep lookup and isolated temporary downloads."
+    },
+    "packages/pi-agent-server/src/tools/local/truncate.ts": {
+      "sha256": "b2645d95d4c3c78069ebb0609c3edb7263a3020d51a697a1a7982f8f318cb505",
+      "reason": "Vendor the required pi-coding-agent 1.1.0 core/tools/truncate.js size, head, line and middle truncation helpers."
+    },
+    "packages/pi-agent-server/src/tools/wrap.ts": {
+      "sha256": "0a81fdbf589848e6cbc1316e8680726cebe9434203fe0baeed215147f935aed9",
+      "reason": "Migrate local main index.ts wrapSingleTool to durable registrations; resolve file paths before host approval, apply approved path changes and reject conflicts, and retain metadata stripping, independent background Bash execution and response summarization."
+    },
+    "packages/shared/src/agent/backend/pi/agent-session-events.ts": {
+      "sha256": "aeccdca39baa015f68c07b42982b2ca700a44123874a0b6748ea88797eea238d",
+      "reason": "Vendor pi-coding-agent 1.1.0 event and payload declarations from agent-session, session-manager, messages and compaction to retain the host event contract."
+    },
+    "packages/pi-agent-server/src/test-fixtures/browser-proxy-host.ts": {
+      "sha256": "a9f05257b193a64d6b521bf83b44209d26d54eeee0b7ef96c6a027db2a2bc0d0",
+      "reason": "Exercise the retained PiAgent tool RPC adapter with session-scoped browser callbacks while bypassing constructor configuration, credentials and subprocess setup for durable proxy export tests."
+    },
+    "packages/pi-agent-server/src/tools/proxy.ts": {
+      "sha256": "08e0f9b1cf9c1e1f64bac3d38c21efc1e105f779b710f656960c941c205c215a",
+      "reason": "Extract local main index.ts buildProxyTools approval, execution and prefetch behavior into a durable registration; persist browser classifications against the original task input and record unknown when execution cannot establish that association."
+    },
+    "packages/shared/src/agent/__tests__/browser-input-evidence.test.ts": {
+      "sha256": "a55c02d82899331fcca501029f3b6f2810fcd5b7fe50dbbb99272799123e13e1",
+      "reason": "Add regressions for the Craft-derived browser runtime's ordered input classifications, uncertain final focus and failed batches, plus command-span redaction and classification validation used by durable export."
+    },
+    "apps/electron/src/main/browser-input-tracker.ts": {
+      "sha256": "4414f494252ded06762478187d40e683314952d5c83550885378a0e4820d313e",
+      "reason": "Observe browser input classifications in a preloaded isolated world without reading values; retain password and uncertainty evidence across focus changes and require complete trusted event counts for ordinary input."
+    },
+    "apps/electron/src/main/__tests__/browser-input.electron.cjs": {
+      "sha256": "42fd45c127ecdad761bd0654cc4061c9dfae29833cbc8327aa96911a759ac5a0",
+      "reason": "Verify production BrowserCDP fill, type and paste in real Electron with an isolated profile; cover password focus changes, native setters, empty fill, synthetic events, prevented paste and navigation."
+    },
+    "packages/shared/src/agent/browser-input-evidence.ts": {
+      "sha256": "a81a7298173a4b652b33ecc20ab174332161240e6b944ee861988e81bd9cb7ba",
+      "reason": "Build durable browser input classification validation and selective command-span redaction on the retained Craft-derived tokenizer and redactor; keep classifications free of input values and remove only spans classified as secret."
     }
   },
   "deleted": {
+    "packages/pi-agent-server/src/compaction-wait.ts": "The durable kernel uses conversation submissions and cancellable compaction tasks instead of polling AgentSession.isCompacting.",
+    "packages/pi-agent-server/src/compaction-wait.test.ts": "Remove tests of the retired Craft-derived polling helper; durable kernel integration tests exercise compaction concurrency and cancellation, without equivalent assertions for the old 120s and 300s polling budgets.",
+    "packages/pi-agent-server/src/context-usage.ts": "The durable kernel computes context usage from committed conversation entries and publishes it with host events.",
+    "packages/pi-agent-server/src/context-usage.test.ts": "Replace Craft-derived context usage unit tests with durable kernel integration assertions for usage, model reserves, read failures and suppression of events after close.",
+    "packages/pi-agent-server/src/session-settings.ts": "Durable harness settings, the extracted compaction-reserve.ts helper and direct utility requests replace the Craft-derived AgentSession SettingsManager.",
+    "packages/pi-agent-server/src/session-settings.test.ts": "Replace Craft-derived settings tests with durable kernel integration assertions for settings isolation, retry policy, steering, cache warming and model reserves; not every retired reserve boundary has an equivalent assertion.",
+    "packages/pi-agent-server/src/session-tool-registration.test.ts": "Durable registry tests inspect model-visible builtin and web tools; the Craft-derived AgentSession allowlists and promptSnippet registration path no longer exist.",
+    "packages/pi-agent-server/src/steering-sdk.test.ts": "Replace Craft-derived AgentSession steering tests with durable kernel assertions for queued delivery at successive model boundaries; the retired strict call-count and ordering assertions are not all retained.",
+    "packages/pi-agent-server/src/system-prompt-override.ts": "A durable prompt section and request hook replace the Craft-derived AgentSession system-prompt extension and resource loader.",
+    "packages/pi-agent-server/src/system-prompt-override.test.ts": "Replace Craft-derived prompt tests with durable kernel assertions for replacement on each request, retained tools and project prompt isolation; exact prompt text and all extension isolation cases are not asserted.",
+    "packages/shared/src/agent/__tests__/pi-retry-sdk-integration.test.ts": "Replace Craft-derived AgentSession retry integration tests with durable kernel and PiEventAdapter assertions; not every retired event-order, payload and turnId assertion is retained.",
     ".dockerignore": "Craft file reviewed and removed because it is outside the locked MkAgent Lite product, build, and test boundary",
     ".github/ISSUE_TEMPLATE/bug_report.yml": "Upstream workflow or template is replaced by the MkAgent derivative workflow",
     ".github/ISSUE_TEMPLATE/feature_request.yml": "Upstream workflow or template is replaced by the MkAgent derivative workflow",

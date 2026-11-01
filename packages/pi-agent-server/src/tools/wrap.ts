@@ -16,6 +16,7 @@ import { getSessionPath } from '../../../shared/src/sessions/storage.ts';
 import { PI_TOOL_NAME_MAP } from '../../../shared/src/agent/backend/pi/constants.ts';
 import { allowMkAgentMetadataProperties, stripMkAgentMetadata } from '../mkagent-metadata-schema.ts';
 import type { BackgroundShells } from '../background-shell.ts';
+import { resolveReadPath, resolveToCwd } from './local/path-utils.ts';
 
 export interface ToolWrapDeps {
   /** Main-process permission check; resolves the (possibly modified) input, throws on block. */
@@ -71,14 +72,25 @@ export function wrapToolForKernel(tool: AnyTool, deps: ToolWrapDeps): AnyTool {
     // Extract intent before main process strips metadata (used for summarization)
     const intent = typeof inputObj._intent === 'string' ? inputObj._intent : undefined;
 
-    // Normalize Pi SDK parameter names: path → file_path
-    if ((sdkToolName === 'Write' || sdkToolName === 'Edit' || sdkToolName === 'MultiEdit' || sdkToolName === 'NotebookEdit')
-        && typeof inputObj.path === 'string' && !inputObj.file_path) {
-      inputObj = { ...inputObj, file_path: inputObj.path };
+    const fileTool = tool.name === 'read' || tool.name === 'write' || tool.name === 'edit';
+    if (fileTool && typeof inputObj.path === 'string') {
+      const path = tool.name === 'read'
+        ? resolveReadPath(inputObj.path, deps.shellEnv.cwd)
+        : resolveToCwd(inputObj.path, deps.shellEnv.cwd);
+      inputObj = { ...inputObj, path, file_path: path };
     }
 
     // Send to main process for permission checking + transforms
+    const checkedPath = fileTool ? inputObj.path : undefined;
     inputObj = await deps.requestApproval(sdkToolName, inputObj, api.callId);
+    if (fileTool && typeof inputObj.file_path === 'string') {
+      const filePathChanged = inputObj.file_path !== checkedPath;
+      const pathChanged = typeof inputObj.path === 'string' && inputObj.path !== checkedPath;
+      if (filePathChanged && pathChanged && inputObj.file_path !== inputObj.path) {
+        throw new Error('Conflicting approved file paths');
+      }
+      if (filePathChanged || !pathChanged) inputObj = { ...inputObj, path: inputObj.file_path };
+    }
 
     // Metadata is for MkAgent UI only. Keep a final defensive strip here so the
     // upstream tool implementation always receives clean executable args,
@@ -88,6 +100,7 @@ export function wrapToolForKernel(tool: AnyTool, deps: ToolWrapDeps): AnyTool {
     if (tool.name === 'bash' && inputObj.run_in_background === true) {
       const { run_in_background: _background, ...bashArgs } = inputObj;
       const command = String(bashArgs.command ?? '');
+      const timeout = typeof bashArgs.timeout === 'number' ? bashArgs.timeout : undefined;
       let outputBuffer = '';
       const started = deps.backgroundShells.start({
         directory: deps.tasksDirectory,
@@ -95,6 +108,7 @@ export function wrapToolForKernel(tool: AnyTool, deps: ToolWrapDeps): AnyTool {
         command,
         execute: async (taskSignal, update) => {
           const result = await deps.shellEnv.exec(command, {
+            ...(timeout === undefined ? {} : { timeout }),
             onOutput: (text, _context, info) => {
               outputBuffer += text;
               update({ content: [{ type: 'text', text: outputBuffer }], details: undefined });

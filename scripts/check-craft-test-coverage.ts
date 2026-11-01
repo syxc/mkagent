@@ -85,6 +85,13 @@ const replacements: Record<string, string> = {
   'apps/electron/src/main/handlers/__tests__/registration.test.ts': 'apps/electron/src/main/handlers/__tests__/registration-profiles.test.ts',
   'apps/electron/src/shared/__tests__/ipc-channels.test.ts': 'apps/electron/src/transport/__tests__/channel-map-parity.test.ts',
   'packages/pi-agent-server/src/craft-metadata-schema.test.ts': 'packages/pi-agent-server/src/mkagent-metadata-schema.test.ts',
+  'packages/pi-agent-server/src/context-usage.test.ts': 'packages/pi-agent-server/src/kernel.e2e.test.ts',
+  'packages/pi-agent-server/src/compaction-wait.test.ts': 'packages/pi-agent-server/src/kernel.e2e.test.ts',
+  'packages/pi-agent-server/src/steering-sdk.test.ts': 'packages/pi-agent-server/src/kernel.e2e.test.ts',
+  'packages/pi-agent-server/src/session-settings.test.ts': 'packages/pi-agent-server/src/kernel.e2e.test.ts',
+  'packages/pi-agent-server/src/session-tool-registration.test.ts': 'packages/pi-agent-server/src/kernel.e2e.test.ts',
+  'packages/pi-agent-server/src/system-prompt-override.test.ts': 'packages/pi-agent-server/src/kernel.e2e.test.ts',
+  'packages/shared/src/agent/__tests__/pi-retry-sdk-integration.test.ts': 'packages/pi-agent-server/src/kernel.e2e.test.ts',
   'packages/shared/src/mentions/__tests__/resolve-skill-source-mentions.test.ts': 'packages/shared/src/mentions/__tests__/resolve-skill-mentions.test.ts',
   'packages/shared/tests/permissions-craft-agent-sync.test.ts': 'packages/shared/tests/permissions-mkagent-sync.test.ts',
 }

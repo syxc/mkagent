@@ -7,6 +7,7 @@ import type {
   BrowserScreenshotRegionArgs,
   BrowserWaitArgs,
 } from './browser-tools.ts';
+import type { BrowserInputClassification } from './browser-input-evidence.ts';
 
 export interface BrowserCommandImage {
   data: string;
@@ -18,6 +19,7 @@ export interface BrowserCommandResult {
   output: string;
   appendReleaseHint: boolean;
   image?: BrowserCommandImage;
+  browserInput?: BrowserInputClassification[];
 }
 
 interface BrowserPageMetrics {
@@ -750,7 +752,8 @@ export async function executeBrowserToolCommand(args: {
     if (args.command.length === 0) {
       throw new Error('Missing command. Use "--help" to see supported browser_tool commands.');
     }
-    return executeSingleCommand(args);
+    const result = await executeSingleCommand(args);
+    return { ...result, browserInput: result.browserInput ?? ['none'] };
   }
 
   // String mode: existing behavior unchanged
@@ -768,7 +771,8 @@ export async function executeBrowserToolCommand(args: {
   }
 
   // Run the split command so a stray separator (`click @e1;`) never reaches the tokenizer.
-  return executeSingleCommand({ ...args, command: commands[0]! });
+  const result = await executeSingleCommand({ ...args, command: commands[0]! });
+  return { ...result, browserInput: result.browserInput ?? ['none'] };
 }
 
 async function executeBatchCommands(args: {
@@ -778,6 +782,7 @@ async function executeBatchCommands(args: {
   platform?: NodeJS.Platform;
 }): Promise<BrowserCommandResult> {
   const outputs: string[] = [];
+  const browserInput: BrowserInputClassification[] = args.commands.map(() => 'unknown');
   let lastImage: BrowserCommandImage | undefined;
   let appendReleaseHint = false;
 
@@ -796,6 +801,7 @@ async function executeBatchCommands(args: {
     }
 
     outputs.push(result.output);
+    browserInput[i] = result.browserInput?.[0] ?? 'none';
     if (result.image) lastImage = result.image;
     if (result.appendReleaseHint) appendReleaseHint = true;
 
@@ -810,6 +816,7 @@ async function executeBatchCommands(args: {
     output: outputs.join('\n'),
     appendReleaseHint,
     image: lastImage,
+    browserInput,
   };
 }
 
@@ -1179,14 +1186,15 @@ async function executeSingleCommand(args: {
     if (!ref || value === undefined) throw new Error('fill requires ref and value. Example: fill @e5 hello world');
 
     const before = await getPageMetrics(fns);
-    await fns.fill(ref, value);
+    const input = await fns.fill(ref, value);
+    const classification = input?.browserInput ?? 'unknown';
     const after = await getPageMetrics(fns);
 
-    // fill focuses its target, so the focused field afterwards is the one filled. Echo the
-    // value only when that field is known not to be a password, so secrets stay out of transcripts.
-    const summary = after?.activeElementIsPassword
+    // Runtime evidence covers the whole action; final focus is only an output fallback for older hosts.
+    const password = classification === 'password' || after?.activeElementIsPassword;
+    const summary = password
       ? [`${PASSWORD_FILL_MARKER} ${ref} (${value.length} characters)`]
-      : after
+      : classification === 'ordinary' || (!input && after?.activeElementIsPassword === false)
         ? [`Filled element ${ref} with "${value}"`, `Value length: ${value.length} characters`]
         : [`Filled element ${ref} (${value.length} characters)`];
 
@@ -1195,7 +1203,9 @@ async function executeSingleCommand(args: {
         ...summary,
         `Active element before: ${describeActive(before)}`,
         `Active element after: ${describeActive(after)}`,
+        ...(after?.activeElementIsPassword === undefined ? [`${PASSWORD_FILL_MARKER} ${ref}`] : []),
       ].join('\n'),
+      browserInput: [classification],
       appendReleaseHint: true,
     };
   }
@@ -1205,17 +1215,20 @@ async function executeSingleCommand(args: {
     if (!text) throw new Error('type requires text. Example: type Hello World');
 
     const before = await getPageMetrics(fns);
-    await fns.type(text);
+    const input = await fns.type(text);
+    const classification = input?.browserInput ?? 'unknown';
     const after = await getPageMetrics(fns);
 
     return {
       output: [
-        after?.activeElementIsPassword
+        classification === 'password' || after?.activeElementIsPassword
           ? `${PASSWORD_TEXT_MARKER} (${text.length} characters)`
           : `Typed ${text.length} characters into focused element`,
         `Active element before: ${describeActive(before)}`,
         `Active element after: ${describeActive(after)}`,
+        ...(after?.activeElementIsPassword === undefined ? [PASSWORD_TEXT_MARKER] : []),
       ].join('\n'),
+      browserInput: [classification],
       appendReleaseHint: true,
     };
   }
@@ -1331,7 +1344,8 @@ async function executeSingleCommand(args: {
     await fns.setClipboard(text);
     const platform = args.platform ?? process.platform;
     const isMac = platform === 'darwin';
-    await fns.sendKey({ key: 'v', modifiers: [isMac ? 'meta' : 'control'] });
+    const input = await fns.sendKey({ key: 'v', modifiers: [isMac ? 'meta' : 'control'] });
+    const classification = input?.browserInput ?? 'unknown';
     const after = await getPageMetrics(fns);
 
     const lineCount = text.length === 0 ? 0 : text.split(/\r?\n/).length;
@@ -1339,10 +1353,12 @@ async function executeSingleCommand(args: {
 
     return {
       output: [
-        after?.activeElementIsPassword ? `${PASSWORD_TEXT_MARKER} (${text.length} characters)` : `Pasted ${text.length} characters`,
+        classification === 'password' || after?.activeElementIsPassword ? `${PASSWORD_TEXT_MARKER} (${text.length} characters)` : `Pasted ${text.length} characters`,
         `Shortcut used: ${isMac ? 'Cmd+V' : 'Ctrl+V'}`,
         `Lines: ${lineCount}, tabs: ${tabCount}`,
+        ...(after?.activeElementIsPassword === undefined ? [PASSWORD_TEXT_MARKER] : []),
       ].join('\n'),
+      browserInput: [classification],
       appendReleaseHint: true,
     };
   }

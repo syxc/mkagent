@@ -87,6 +87,8 @@ export {
   normalizeCanonicalBrowserToolName,
 } from './browser-tool-names.ts';
 
+export type { BrowserInputResult } from './browser-tools.ts';
+
 // Keep passwords typed with browser_tool fill out of stored tool inputs
 export {
   passwordFillRefs,

@@ -435,6 +435,22 @@ describe('BrowserCDP', () => {
       expect(page.keys()).toHaveLength(0)
     })
 
+    it('pastes with trusted key events while leaving modified shortcuts on the native path', async () => {
+      const page = createPage()
+      const cdp = new BrowserCDP(page.wc as any)
+      const modifier = process.platform === 'darwin' ? 'meta' : 'control'
+      expect(await cdp.pressKey('v', [modifier])).toBe(true)
+      expect(page.keys()).toEqual([
+        expect.objectContaining({ type: 'rawKeyDown', key: 'v', commands: ['paste'], modifiers: process.platform === 'darwin' ? 4 : 2 }),
+        expect.objectContaining({ type: 'keyUp', key: 'v' }),
+      ])
+      expect(page.keys()[0].text).toBeUndefined()
+      expect(await cdp.pressKey('v', [modifier, 'shift'])).toBe(false)
+      expect(await cdp.pressKey('v', [modifier, 'alt'])).toBe(false)
+      expect(await cdp.pressKey('v', [modifier === 'meta' ? 'control' : 'meta'])).toBe(false)
+      expect(page.keys()).toHaveLength(2)
+    })
+
     it('maps accelerator names, letters with shift, and function keys', () => {
       expect(resolveCdpKey('Up')).toMatchObject({ key: 'ArrowUp', keyCode: 38 })
       expect(resolveCdpKey('page_down')).toMatchObject({ key: 'PageDown', keyCode: 34 })

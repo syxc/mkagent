@@ -51,17 +51,15 @@ Both repositories are Bun monorepos with the same workspace layout (`apps/{elect
 | Auth model | API key + custom endpoints + Ollama + **ChatGPT/Claude subscription OAuth**, all through Pi | API-key + custom + **OAuth (Anthropic, OpenAI, GitHub Copilot, Google Workspace, Slack, Microsoft)** + subscription flows + gateway |
 | Subprocess model | `packages/pi-agent-server` runs as a Bun subprocess; communicates over JSONL on stdio | Pi subprocess (same) **plus** SDK subprocess (`@anthropic-ai/claude-agent-sdk-binary`, ~217 MB native `claude` binary per platform arch) **plus** bridge/session MCP servers **plus** WhatsApp worker subprocess |
 | Built-in transports | OpenAI-compatible, Anthropic-compatible, Ollama (Pi `0.81.1`) | Same, plus Anthropic SDK direct mode and Copilot SDK mode |
-| Image generation | ❌ (deleted; image attachments still supported) | ✅ (`gen_image` model + tool) |
+| Image generation | Available through codemode when an image model is configured; image attachments are also supported | The comparison source has conflicting reports about `gen_image`; this capability has not been reverified |
 
 ## 4. Agent tools (what the model can actually call)
 
-Both products expose tools to the LLM through three channels: (a) Pi SDK built-ins wired in `packages/pi-agent-server/src/index.ts` `builtinDefs`, (b) web tools declared in the same file (`createSearchTool` + `createWebFetchTool`), and (c) session-level tools registered through the main process via `register_tools` and exposed to the model with the `mcp__session__<name>` prefix (see `packages/session-tools-core/src/tool-defs.ts`). Craft additionally surfaces tools from its `mcpPool` (Sources / bridge / session MCP). MkAgent has no `mcpPool` — the `registerPoolToolsWithSubprocess()` call is physically removed (`packages/shared/src/agent/pi-agent.ts`).
+Both products expose built-in, web, and session-level tools to the LLM. MkAgent assembles these in `packages/pi-agent-server/src/index.ts`; the main process registers session tools through `register_tools` with the `mcp__session__<name>` prefix (see `packages/session-tools-core/src/tool-defs.ts`). Craft also exposes tools through its `mcpPool` (Sources / bridge / session MCP). MkAgent does not have that pool; its durable kernel separately loads MCP servers from `mcp.json` and enables codemode by default.
 
-### 4.1 Pi SDK built-in tools (identical)
+### 4.1 Pi built-in tools
 
-Both repositories import the same helpers from `@earendil-works/pi-coding-agent` and instantiate them in the same order:
-
-> Note: since the pi-durable kernel switch (`dev/pi-durable`), MkAgent no longer imports `@earendil-works/pi-coding-agent` — read/edit/write/bash come from pi-durable's built-in coding tools, and grep/find/ls are a 1:1 vendor of its 1.1.0 dist. The tool surface described below is unchanged.
+MkAgent uses pi-durable's coding tools for read/edit/write/bash and adapts grep/find/ls from pi-coding-agent 1.1.0. Craft uses pi-coding-agent. Both expose the tools below:
 
 | Tool | Purpose |
 |---|---|
@@ -73,7 +71,7 @@ Both repositories import the same helpers from `@earendil-works/pi-coding-agent`
 | `find` | Locate files by name pattern |
 | `ls` | List directory contents |
 
-`packages/pi-agent-server/src/index.ts` lines 30–36 import `createReadToolDefinition`, `createBashToolDefinition`, `createEditToolDefinition`, `createWriteToolDefinition`, `createGrepToolDefinition`, `createFindToolDefinition`, `createLsToolDefinition`; lines 607–614 instantiate them with `cwd`. The same imports appear at the same offsets in Craft.
+MkAgent constructs the built-in tools in `packages/pi-agent-server/src/tools/builtin.ts` and assembles them with other tools in `packages/pi-agent-server/src/index.ts`.
 
 ### 4.2 Web tools (identical)
 
@@ -241,7 +239,7 @@ The matrix below extends [`docs/featues.md`](./featues.md) with explicit numbers
 | Projects / Kanban | ❌ | ✅ |
 | LLM subscription OAuth callback | ✅ (ChatGPT Desktop callback; Claude code flow) | ✅ |
 | Generic / Sources / gateway OAuth | ❌ | ✅ |
-| Image generation (`gen_image` tool + provider routing) | ❌ | ✅ |
+| Image generation | Available through codemode when an image model is configured | The comparison source has conflicting reports about `gen_image`; this capability has not been reverified |
 
 ## 7. Test, typecheck and lint coverage delta
 

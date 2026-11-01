@@ -8,32 +8,44 @@
  * transcript is converted once by `migrate.ts` before the store opens, and
  * `id-map.json` records old → new entry ids for branch anchors.
  */
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { Database } from 'bun:sqlite';
 import { randomUUID } from 'node:crypto';
 import {
+  CompactionTask,
   DEFAULT_COMPACTION_POLICY,
+  GenerationTask,
   Harness,
+  LiveDoc,
+  ProviderDoc,
   createRegistry,
   defineExtension,
+  hook,
   section,
   watchEvents,
   type AgentEvent,
+  type CompactionResult,
   type Conversation,
   type ConversationId,
   type EntryId,
   type EntryRecord,
   type Extension,
   type HarnessSettings,
+  type Registry,
+  type TaskId,
   type ToolRegistration,
 } from '@earendil-works/pi-durable';
 import { openDurableStorage } from './storage/durable-storage.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import type { AssistantMessage, Models, ToolCall } from '@earendil-works/pi-ai';
+import { calculateContextTokens, estimateMessageTokens } from '@earendil-works/pi-ai/utils/estimate';
+import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
 import type { AgentSessionEvent } from '@mkagent/shared/agent/pi-events';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
-import { migrateParentStore, migrateLegacySession, readEntryIdMap } from './migrate.ts';
+import { findMostRecentSessionFile, migrateParentStore, migrateLegacySession, readEntryIdMap, readLegacyBranchConversation } from './migrate.ts';
 import { compactionReserveFor } from './compaction-reserve.ts';
+import { CacheWarmer } from './cache-warmer.ts';
 
 /**
  * Main-chat retry/stream policy, mirroring the old 1.1.0 main-chat settings
@@ -109,7 +121,35 @@ export class DurableKernel {
   private autoCompactionEnabled = true;
 
   private harness: Harness | null = null;
+  private registry: Registry<ToolRegistration> | null = null;
   private conversation: Conversation | null = null;
+  private readonly manualCompactions = new Set<{ controller: AbortController; done: Promise<void> }>();
+  private readonly cacheWarmer = new CacheWarmer(
+    () => this.conversation,
+    () => this.harness,
+    async (taskId, model, options) => {
+      if (!this.harness || !this.conversation) return false;
+      const conversation = this.conversation;
+      const [live, task, agent, provider] = await Promise.all([
+        this.harness.snapshot(LiveDoc, conversation.id, BACKGROUND_CONTEXT),
+        this.harness.getTask(taskId, BACKGROUND_CONTEXT),
+        conversation.agent(BACKGROUND_CONTEXT),
+        this.harness.snapshot(ProviderDoc, conversation.id, BACKGROUND_CONTEXT),
+      ]);
+      if (live?.run?.taskId !== taskId || agent.model?.provider !== model.provider
+        || agent.model?.modelId !== model.id || provider?.sessionId !== options.sessionId) return false;
+      const checkpoint = task?.state.checkpoint;
+      if (!checkpoint || typeof checkpoint !== 'object' || Array.isArray(checkpoint)) return false;
+      const view = await conversation.context(BACKGROUND_CONTEXT);
+      if (checkpoint.phase === 'request' && typeof checkpoint.cutoff === 'number') {
+        return !view.head || view.head.id <= checkpoint.cutoff;
+      }
+      if (checkpoint.phase === 'tools' && typeof checkpoint.assistant === 'number') {
+        return !view.head || view.head.id <= checkpoint.assistant;
+      }
+      return false;
+    },
+  );
   private readonly options: DurableKernelOptions;
   private detachWatch: (() => void) | null = null;
   private readonly retry: RetrySynthState = { pending: false, active: false, attempt: 0, errorMessage: undefined };
@@ -118,7 +158,7 @@ export class DurableKernel {
   private partial: AssistantMessage | undefined;
   /** Final assistant message of the most recent turn. */
   private lastAssistant: AssistantMessage | undefined;
-  /** session__ tool calls awaiting their result to report completion. */
+  /** Session tool calls (`session__` / `mcp__session__`) awaiting their result. */
   private pendingSessionTools = new Map<string, { toolName: string; args: Record<string, unknown> }>();
   /** Retained output window per running tool call (append/trimStart semantics). */
   private toolOutputBuffers = new Map<string, string>();
@@ -137,57 +177,123 @@ export class DurableKernel {
    */
   async open(config: KernelOpenOptions): Promise<void> {
     const branchFrom = config.branchFromSessionPath;
-    if (branchFrom) {
-      // A parent that has never opened under this kernel gets its legacy
-      // transcript converted in place first, so the copy carries full context.
-      await migrateParentStore(branchFrom, this.options.hooks.debugLog);
-      const parentStore = join(branchFrom, 'durable-store');
-      if (!existsSync(parentStore) || !existsSync(join(parentStore, 'id-map.json'))) {
-        throw new Error(`Pi branch preflight failed: no parent session transcript found in ${branchFrom}`);
-      }
-      if (!existsSync(this.storeDir)) {
+    const legacyChild = findMostRecentSessionFile(join(this.options.sessionPath, '.pi-sessions'));
+    const pendingBranch = join(this.options.sessionPath, '.durable-branch-pending');
+    if (existsSync(pendingBranch)) {
+      throw new Error('Pi branch preflight failed: an incomplete branch store requires recovery');
+    }
+    let copiedParent = false;
+    let ownsPendingBranch = false;
+    try {
+      if (branchFrom && !existsSync(this.storeDir) && !legacyChild) {
+        // A parent that has never opened under this kernel gets its legacy
+        // transcript converted in place first, so the copy carries full context.
+        await migrateParentStore(branchFrom, this.options.hooks.debugLog);
+        const parentStore = join(branchFrom, 'durable-store');
+        if (!existsSync(join(parentStore, 'store.db')) && !existsSync(join(parentStore, 'main.jsonl'))) {
+          throw new Error(`Pi branch preflight failed: no parent session transcript found in ${branchFrom}`);
+        }
         mkdirSync(this.options.sessionPath, { recursive: true });
-        cpSync(parentStore, this.storeDir, { recursive: true });
+        writeFileSync(pendingBranch, 'pending', { flag: 'wx' });
+        ownsPendingBranch = true;
+        mkdirSync(this.storeDir);
+        copiedParent = true;
+        const parentDb = join(parentStore, 'store.db');
+        const parentMain = join(parentStore, 'main.jsonl');
+        // A torn JSONL copy can look recoverable while silently losing newer commits.
+        const mainBefore = existsSync(parentMain) ? readFileSync(parentMain) : undefined;
+        cpSync(parentStore, this.storeDir, {
+          recursive: true,
+          filter: source => !['store.db', 'store.db-wal', 'store.db-shm', 'session-id.txt'].includes(source.split(/[\\/]/).at(-1)!),
+        });
+        if (mainBefore) {
+          const mainCopied = readFileSync(join(this.storeDir, 'main.jsonl'));
+          const mainAfter = readFileSync(parentMain);
+          if ((mainBefore.length > 0 && mainBefore.at(-1) !== 10)
+            || !mainBefore.equals(mainCopied) || !mainBefore.equals(mainAfter)) {
+            throw new Error('Pi branch preflight failed: parent JSONL store changed during copy');
+          }
+          for (const name of readdirSync(this.storeDir)) {
+            if (!/^(?:doc|task)-\d+\.jsonl$/.test(name)) continue;
+            const copied = readFileSync(join(this.storeDir, name));
+            if ((copied.length > 0 && copied.at(-1) !== 10) || !copied.equals(readFileSync(join(parentStore, name)))) {
+              throw new Error('Pi branch preflight failed: parent JSONL store changed during copy');
+            }
+          }
+        }
+        if (existsSync(parentDb)) {
+          const database = new Database(parentDb, { readonly: true });
+          try {
+            database.query('VACUUM INTO ?').run(join(this.storeDir, 'store.db'));
+          } finally {
+            database.close();
+          }
+        }
       }
-    }
 
-    await this.openStore();
+      await this.openStore();
 
-    // Idempotent: a store that already has entries (resume, or a branch copy)
-    // is left untouched. The converted legacy entries and the last stored
-    // model/thinking level feed the defaults below.
-    const legacy = await migrateLegacySession(this.harness!, this.options.sessionPath, this.options.hooks.debugLog);
+      // Complete any deferred parent migration in the copy before resolving its branch anchor.
+      // Existing root entries remain intact; the transcript also restores model/thinking defaults.
+      const legacy = await migrateLegacySession(this.harness!, this.options.sessionPath, this.options.hooks.debugLog,
+        copiedParent ? branchFrom : undefined);
 
-    // Branch cutoff: fork the copied conversation at the anchor entry, dropping
-    // everything after it. Without an anchor the copied conversation continues
-    // as-is (old continueRecent behavior). Branches must not silently degrade
-    // to fresh sessions, so an unresolvable anchor is a hard error.
-    if (branchFrom) {
-      const anchor = config.branchFromSdkTurnId ? this.resolveBranchAnchor(config.branchFromSdkTurnId) : undefined;
-      if (config.branchFromSdkTurnId && anchor === undefined) {
-        throw new Error(`Pi branch preflight failed: branch anchor not found: ${config.branchFromSdkTurnId}`);
+      // Branch cutoff: fork the copied conversation at the anchor entry, dropping
+      // everything after it. Without an anchor the copied conversation continues
+      // as-is (old continueRecent behavior). Branches must not silently degrade
+      // to fresh sessions, so an unresolvable anchor is a hard error.
+      if (copiedParent) {
+        const anchor = config.branchFromSdkTurnId ? this.resolveBranchAnchor(config.branchFromSdkTurnId) : undefined;
+        if (config.branchFromSdkTurnId && anchor === undefined) {
+          throw new Error(`Pi branch preflight failed: branch anchor not found: ${config.branchFromSdkTurnId}`);
+        }
+        if (anchor !== undefined && this.conversation) {
+          const branchConversation = config.branchFromSdkTurnId
+            ? await readLegacyBranchConversation(this.harness!, config.branchFromSdkTurnId)
+            : undefined;
+          let source = this.conversation;
+          if (branchConversation !== undefined && !existsSync(join(branchFrom!, 'durable-store', 'conversation-id.txt'))) {
+            const migrated = await this.harness!.conversation(branchConversation, BACKGROUND_CONTEXT);
+            if (!migrated) throw new Error('Pi branch preflight failed: migrated conversation not found');
+            source = migrated;
+          }
+          const forked = await source.fork(anchor, { ownership: { kind: 'ownerless' } }, BACKGROUND_CONTEXT);
+          this.conversation = forked;
+          writeFileSync(join(this.storeDir, 'conversation-id.txt'), String(forked.id));
+          this.detachWatch?.();
+          await this.attachWatch(forked.id);
+          this.options.hooks.debugLog(`Applied branch cutoff at durable entry ${anchor}`);
+        }
       }
-      if (anchor !== undefined && this.conversation) {
-        const forked = await this.conversation.fork(anchor, { ownership: { kind: 'ownerless' } }, BACKGROUND_CONTEXT);
-        this.conversation = forked;
-        await this.attachWatch(forked.id);
-        this.options.hooks.debugLog(`Applied branch cutoff at durable entry ${anchor}`);
-      }
-    }
 
-    this.sessionId = this.loadOrCreateSessionId();
-    const model = config.model ?? legacy?.model;
-    const thinkingLevel = config.thinkingLevel ?? legacy?.thinkingLevel;
-    if (model) this.currentModel = model;
-    if (model || thinkingLevel) {
-      // Re-assert on resume, or after a fork copied the parent's agent doc.
-      await this.conversation?.configure(
-        {
-          ...(model ? { model: { provider: model.provider, modelId: model.modelId } } : {}),
-          ...(thinkingLevel ? { thinkingLevel: thinkingLevel as never } : {}),
-        },
-        BACKGROUND_CONTEXT,
-      );
+      this.sessionId = this.loadOrCreateSessionId();
+      const model = config.model ?? legacy?.model;
+      const thinkingLevel = config.thinkingLevel ?? legacy?.thinkingLevel;
+      if (model) this.currentModel = model;
+      if (model || thinkingLevel) {
+        // Re-assert on resume, or after a fork copied the parent's agent doc.
+        await this.conversation?.configure(
+          {
+            ...(model ? { model: { provider: model.provider, modelId: model.modelId } } : {}),
+            ...(thinkingLevel ? { thinkingLevel: thinkingLevel as never } : {}),
+          },
+          BACKGROUND_CONTEXT,
+        );
+      }
+      if (copiedParent) unlinkSync(pendingBranch);
+    } catch (error) {
+      if (ownsPendingBranch) {
+        try {
+          if (copiedParent) {
+            await this.close();
+            rmSync(this.storeDir, { recursive: true });
+          }
+          unlinkSync(pendingBranch);
+        } catch (cleanupError) {
+          this.options.hooks.debugLog(`Failed to clean incomplete branch store: ${String(cleanupError)}`);
+        }
+      }
+      throw error;
     }
   }
 
@@ -206,22 +312,133 @@ export class DurableKernel {
   /** Attach the event synthesizer to a conversation's watch stream. */
   private async attachWatch(conversationId: ConversationId): Promise<void> {
     const stream = await watchEvents(this.harness!, conversationId, BACKGROUND_CONTEXT);
-    stream.start(async events => {
-      for (const event of events) {
-        for (const synthesized of this.synthesizeEvent(event)) {
-          this.options.hooks.emitEvent(synthesized);
+    const pendingCompactions = new Map<number, { reason: 'manual' | 'threshold' | 'overflow'; tokensBefore: number }>();
+    let delivery = Promise.resolve();
+    let watching = true;
+    const deliver = async (events: readonly AgentEvent[]): Promise<void> => {
+      if (!watching) return;
+      // Durable publishes retry and the failed entry in one commit, with retry first.
+      const retryIndex = events.findIndex(event => event.type === 'auto_retry_start');
+      const failureIndex = retryIndex < 0 ? -1 : events.findIndex((event, index) => {
+        const message = event.type === 'message_end' ? event.entry.model?.[0] : undefined;
+        return index > retryIndex && message?.role === 'assistant' && message.stopReason === 'error';
+      });
+      const ordered = failureIndex < 0 ? events : [
+        ...events.slice(0, retryIndex), ...events.slice(retryIndex + 1, failureIndex + 1),
+        events[retryIndex]!, ...events.slice(failureIndex + 1),
+      ];
+      for (const event of ordered) {
+        if (!watching) return;
+        const retrying = this.retry.pending || this.retry.active;
+        let synthesizedEvents = this.synthesizeEvent(event);
+        let settledCompaction = false;
+        if (event.type === 'submission' && event.record.status !== 'queued') {
+          const pending = pendingCompactions.get(event.record.id);
+          if (pending) {
+            pendingCompactions.delete(event.record.id);
+            settledCompaction = true;
+            synthesizedEvents = event.record.status === 'done'
+              ? [{ type: 'compaction_end', reason: pending.reason, result: { summary: '', firstKeptEntryId: '', tokensBefore: pending.tokensBefore }, aborted: false, willRetry: false }]
+              : [{ type: 'compaction_end', reason: pending.reason, result: undefined, aborted: false, willRetry: false, errorMessage: `Compaction summary was not placed: ${event.record.reason}` }];
+          }
+        }
+        if (event.type === 'compaction_end' && !event.error && this.harness) {
+          try {
+            const task = await this.harness.waitForTask(event.taskId as TaskId<CompactionResult>, BACKGROUND_CONTEXT);
+            const outcome = task.state.outcome;
+            if (outcome.status !== 'completed') {
+              synthesizedEvents = [{ type: 'compaction_end', reason: event.reason, result: undefined, aborted: outcome.status === 'aborted', willRetry: false, errorMessage: outcome.error?.message ?? outcome.reason ?? `Compaction ${outcome.status}` }];
+            } else if (outcome.result.submissionId !== undefined) {
+              const submission = await this.harness.submission(outcome.result.submissionId, BACKGROUND_CONTEXT);
+              if (!submission) throw new Error('Compaction summary submission not found');
+              const record = await submission.status(BACKGROUND_CONTEXT);
+              if (record.status === 'queued') {
+                pendingCompactions.set(record.id, { reason: event.reason, tokensBefore: this.lastUsage?.totalTokens ?? 0 });
+                synthesizedEvents = [];
+              } else if (record.status !== 'done') {
+                synthesizedEvents = [{ type: 'compaction_end', reason: event.reason, result: undefined, aborted: false, willRetry: false, errorMessage: `Compaction summary was not placed: ${record.reason}` }];
+              }
+            } else if (outcome.result.entryId === undefined) {
+              synthesizedEvents = [{ type: 'compaction_end', reason: event.reason, result: undefined, aborted: false, willRetry: false, errorMessage: 'Nothing to compact (session too small)' }];
+            }
+          } catch (error) {
+            synthesizedEvents = [{ type: 'compaction_end', reason: event.reason, result: undefined, aborted: false, willRetry: false, errorMessage: error instanceof Error ? error.message : String(error) }];
+          }
+        }
+        if (event.type === 'entry_appended' && event.entry.kind === 'pi.compaction') this.cacheWarmer.stop();
+        if (event.type === 'run_end' && this.harness) {
+          try {
+            const live = await this.harness.snapshot(LiveDoc, conversationId, BACKGROUND_CONTEXT);
+            if (!live?.run) this.cacheWarmer.stop();
+          } catch (error) {
+            this.options.hooks.debugLog(`Could not reconcile cache warming: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        }
+        if (event.type === 'run_end' && this.autoCompactionEnabled && !retrying) {
+          try {
+            await this.scheduleThresholdCompaction();
+          } catch (error) {
+            this.options.hooks.debugLog(`Could not schedule automatic compaction: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        }
+        const needsContext = event.type === 'message_end' || event.type === 'turn_end'
+          || event.type === 'run_end' || event.type === 'compaction_start' || event.type === 'compaction_end' || settledCompaction;
+        let usage: Awaited<ReturnType<DurableKernel['contextUsagePayload']>> | undefined;
+        if (needsContext) {
+          try {
+            usage = await this.contextUsagePayload();
+          } catch (error) {
+            this.options.hooks.debugLog(`Could not read context usage: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        }
+        if (!watching) return;
+        for (const synthesized of synthesizedEvents) {
+          this.options.hooks.emitEvent(usage ? { ...synthesized, ...usage } : synthesized);
         }
       }
+    };
+    stream.start(async events => {
+      // Drain the SDK watch immediately so it retains exact frames while host-side work awaits.
+      delivery = delivery.then(() => deliver(events)).catch(error => {
+        this.options.hooks.debugLog(`Could not deliver durable events: ${error instanceof Error ? error.message : String(error)}`);
+      });
     });
     this.detachWatch = () => {
+      watching = false;
       void stream.stop();
     };
+  }
+
+  private async scheduleThresholdCompaction(): Promise<void> {
+    if (!this.lastAssistant || this.lastAssistant.stopReason === 'aborted') return;
+    const conversation = this.conversation;
+    const contextWindow = this.currentModel?.contextWindow;
+    if (!conversation || !contextWindow) return;
+    const { contextUsage, compactionSettings } = await this.contextUsagePayload();
+    if (contextUsage?.tokens == null || contextUsage.tokens <= contextWindow - compactionSettings.reserveTokens) return;
+    const view = await conversation.context(BACKGROUND_CONTEXT);
+    // Upstream retains conversation messages, not system prompt and tool definitions.
+    const retainedTokens = view.contributions
+      .slice(view.head ? 1 : 0)
+      .flat()
+      .reduce((total, message) => total + (message.role === 'system' ? 0 : estimateMessageTokens(message)), 0);
+    if (retainedTokens < DEFAULT_COMPACTION_POLICY.keepRecentTokens) return;
+
+    await conversation.commit(async tx => {
+      const live = await tx.doc(LiveDoc, conversation.id);
+      if (live.run || live.compactions?.length) return;
+      const taskId = await tx.createTask(CompactionTask, { reason: 'threshold' }, {
+        ownership: { kind: 'conversation' }, background: true,
+      });
+      live.compactions = [{ taskId, reason: 'threshold', blocking: false, attempt: 1 }];
+    }, BACKGROUND_CONTEXT);
   }
 
   private async openStore(): Promise<void> {
     const storage = await openDurableStorage(this.storeDir, BACKGROUND_CONTEXT);
 
     const registry = createRegistry<ToolRegistration>();
+    this.registry = registry;
 
     // Craft replaces the entire system prompt: tag:false keeps the text
     // verbatim, and no other extension contributes sections.
@@ -231,6 +448,24 @@ export class DurableKernel {
     }));
     registry.install(this.options.toolsExtension);
     for (const extension of this.options.extensions ?? []) registry.install(extension);
+    registry.install(defineExtension({
+      name: 'mkagent-cache-warmer',
+      hooks: [hook(GenerationTask, {
+        beforeRequest: async (request, api, context) => {
+          const messages = this.systemPrompt !== undefined ? [
+            { role: 'system' as const, content: this.systemPrompt, toolsAdded: getCurrentTools(request.messages), timestamp: Date.now() },
+            ...request.messages.filter(message => message.role !== 'system'),
+          ] : request.messages;
+          try {
+            await this.cacheWarmer.capture({ messages }, api, context);
+          } catch (error) {
+            this.options.hooks.debugLog(`Could not schedule cache warming: ${error instanceof Error ? error.message : String(error)}`);
+          }
+          return messages === request.messages ? undefined : { messages };
+        },
+        afterResponse: message => this.cacheWarmer.observe(message.usage),
+      })],
+    }));
 
     this.harness = await Harness.open(storage, {
       models: () => this.options.modelsSource(),
@@ -246,11 +481,22 @@ export class DurableKernel {
     }, BACKGROUND_CONTEXT);
     this.harness.resume();
 
-    this.conversation = await this.harness.root(BACKGROUND_CONTEXT, {
-      agent: this.currentModel
-        ? { model: { provider: this.currentModel.provider, modelId: this.currentModel.modelId } }
-        : undefined,
-    });
+    const marker = join(this.storeDir, 'conversation-id.txt');
+    if (existsSync(marker)) {
+      const rawId = readFileSync(marker, 'utf-8').trim();
+      const parsedId = Number(rawId);
+      if (!Number.isSafeInteger(parsedId) || String(parsedId) !== rawId) throw new Error('Invalid durable branch conversation id');
+      const conversationId = parsedId as ConversationId;
+      const existing = await this.harness.conversation(conversationId, BACKGROUND_CONTEXT);
+      if (!existing) throw new Error(`Durable branch conversation not found: ${conversationId}`);
+      this.conversation = existing;
+    } else {
+      this.conversation = await this.harness.root(BACKGROUND_CONTEXT, {
+        agent: this.currentModel
+          ? { model: { provider: this.currentModel.provider, modelId: this.currentModel.modelId } }
+          : undefined,
+      });
+    }
     await this.attachWatch(this.conversation.id);
   }
 
@@ -277,6 +523,7 @@ export class DurableKernel {
       },
       compaction: {
         enabled: this.autoCompactionEnabled,
+        backgroundTokens: 0,
         modelOverrides,
       },
       // Deliver every queued steer at a turn boundary in one model call.
@@ -320,16 +567,24 @@ export class DurableKernel {
   }
 
   async abort(): Promise<void> {
-    if (!this.conversation) return;
-    await this.conversation.abort(BACKGROUND_CONTEXT);
+    this.cacheWarmer.stop();
+    const conversation = this.conversation;
+    if (!conversation || !this.harness) return;
+
+    const compactions = [...this.manualCompactions];
+    for (const compaction of compactions) compaction.controller.abort();
+    await conversation.abort(BACKGROUND_CONTEXT);
+    await Promise.all(compactions.map(compaction => compaction.done));
   }
 
   async setModel(model: KernelModelRef): Promise<void> {
+    this.cacheWarmer.stop();
     this.currentModel = model;
     await this.conversation?.configure({ model: { provider: model.provider, modelId: model.modelId } }, BACKGROUND_CONTEXT);
   }
 
   async setThinkingLevel(level: string): Promise<void> {
+    this.cacheWarmer.stop();
     await this.conversation?.configure({ thinkingLevel: level as never }, BACKGROUND_CONTEXT);
   }
 
@@ -341,38 +596,84 @@ export class DurableKernel {
     return this.autoCompactionEnabled;
   }
 
-  /**
-   * Manual compaction, resolved in the host's PiCompactResult shape. Durable's
-   * receipt carries no token estimate, so tracked usage stands in for
-   * tokensBefore/estimatedTokensAfter (known difference: can be stale).
-   */
-  async compact(customInstructions?: string): Promise<{
+  /** Manual compaction in the host's PiCompactResult shape. */
+  async compact(customInstructions?: string, signal?: AbortSignal): Promise<{
     summary: string;
     firstKeptEntryId: string;
     tokensBefore: number;
-    estimatedTokensAfter: number;
+    estimatedTokensAfter?: number;
   }> {
-    if (!this.conversation || !this.harness) throw new Error('Kernel not open');
-    const before = await this.getLatestEntryId();
-    const taskId = await this.conversation.compact(customInstructions, BACKGROUND_CONTEXT);
-    await this.harness.waitForTask(taskId, BACKGROUND_CONTEXT);
-    const after = await this.getLatestEntryId();
-    const tokens = this.lastUsage?.totalTokens ?? 0;
-    const entry = after && after !== before ? await this.getEntry(after) : undefined;
-    // The compaction entry holds the wrapped summary as a user message; its
-    // head is the first entry kept in the new context.
-    const message = entry?.kind === 'pi.compaction' ? entry.model?.[0] : undefined;
-    const summary = message?.role === 'user'
-      ? (typeof message.content === 'string'
-        ? message.content
-        : message.content.filter(c => c.type === 'text').map(c => c.text).join(''))
-      : '';
-    return {
-      summary,
-      firstKeptEntryId: entry?.head !== undefined ? String(entry.head) : '',
-      tokensBefore: tokens,
-      estimatedTokensAfter: tokens,
+    const conversation = this.conversation;
+    const harness = this.harness;
+    if (!conversation || !harness) throw new Error('Kernel not open');
+    const finished = Promise.withResolvers<void>();
+    const controller = new AbortController();
+    const compaction = { controller, done: finished.promise };
+    let taskId: TaskId<CompactionResult> | undefined;
+    let submissionId: CompactionResult['submissionId'];
+    let cancellation: Promise<unknown> = Promise.resolve();
+    const cancel = (): void => {
+      // Queue cancellation on the SDK's session line; repeat after admission or receipt if needed.
+      if (submissionId !== undefined) cancellation = harness.abortSubmission(submissionId, BACKGROUND_CONTEXT, conversation.id);
+      else if (taskId !== undefined) cancellation = harness.abortTask(taskId, BACKGROUND_CONTEXT);
+      void cancellation.catch(() => {});
     };
+    controller.signal.addEventListener('abort', cancel);
+    const forwardAbort = (): void => controller.abort();
+    signal?.addEventListener('abort', forwardAbort);
+    if (signal?.aborted) controller.abort();
+    this.manualCompactions.add(compaction);
+    try {
+      const tokensBefore = (await this.contextUsagePayload()).contextUsage?.tokens ?? 0;
+      if (controller.signal.aborted) throw new Error('Compaction aborted');
+      taskId = await conversation.compact(customInstructions, BACKGROUND_CONTEXT);
+      if (controller.signal.aborted) cancel();
+      const task = await harness.waitForTask(taskId, BACKGROUND_CONTEXT);
+      const outcome = task.state.outcome;
+      if (outcome.status !== 'completed') {
+        throw new Error(outcome.error?.message ?? outcome.reason ?? `Compaction ${outcome.status}`);
+      }
+      let entryId = outcome.result.entryId;
+      if (outcome.result.submissionId !== undefined) {
+        submissionId = outcome.result.submissionId;
+        if (controller.signal.aborted) cancel();
+        const submission = await harness.submission(submissionId, BACKGROUND_CONTEXT);
+        if (!submission) throw new Error('Compaction summary submission not found');
+        const settled = await submission.wait(BACKGROUND_CONTEXT);
+        if (settled.status !== 'done') throw new Error(`Compaction summary was not placed: ${settled.reason}`);
+        entryId = settled.entry;
+      }
+      if (controller.signal.aborted) throw new Error('Compaction aborted');
+      if (entryId === undefined) throw new Error('Nothing to compact (session too small)');
+      const entry = await this.getEntry(entryId);
+      // The compaction entry holds the wrapped summary as a user message; its
+      // head is the first entry kept in the new context.
+      const message = entry?.kind === 'pi.compaction' ? entry.model?.[0] : undefined;
+      const summary = message?.role === 'user'
+        ? (typeof message.content === 'string'
+          ? message.content
+          : message.content.filter(c => c.type === 'text').map(c => c.text).join(''))
+        : '';
+      const view = await conversation.context(BACKGROUND_CONTEXT);
+      const estimatedTokensAfter = entry?.kind === 'pi.compaction'
+        ? view.messages.reduce((total, item) => total + estimateMessageTokens(item), 0)
+        : undefined;
+      return {
+        summary,
+        firstKeptEntryId: entry?.head !== undefined ? String(entry.head) : '',
+        tokensBefore,
+        estimatedTokensAfter,
+      };
+    } finally {
+      signal?.removeEventListener('abort', forwardAbort);
+      controller.signal.removeEventListener('abort', cancel);
+      try {
+        await cancellation;
+      } finally {
+        this.manualCompactions.delete(compaction);
+        finished.resolve();
+      }
+    }
   }
 
   async getLatestEntryId(): Promise<EntryId | undefined> {
@@ -393,7 +694,17 @@ export class DurableKernel {
     return page.items[0];
   }
 
+  /** Publish a new tool set for subsequent requests without closing the conversation. */
+  updateTools(extension: Extension): void {
+    this.registry?.install(extension);
+  }
+
   async close(): Promise<void> {
+    this.cacheWarmer.stop();
+    const compactions = [...this.manualCompactions];
+    for (const compaction of compactions) compaction.controller.abort();
+    await Promise.all(compactions.map(compaction => compaction.done));
+    this.registry = null;
     this.detachWatch?.();
     this.detachWatch = null;
     if (this.harness) {
@@ -407,34 +718,54 @@ export class DurableKernel {
   // Context usage payload (PiContextUsagePayload contract)
   // ============================================================
 
-  /** Attached to outbound events; the adapter reads it on every event type. */
-  contextUsagePayload(): {
-    contextUsage?: { tokens: number | null; contextWindow: number; percent?: number };
-    compactionSettings?: { enabled: boolean; reserveTokens: number };
-  } {
-    const payload: {
-      contextUsage?: { tokens: number | null; contextWindow: number; percent?: number };
-      compactionSettings?: { enabled: boolean; reserveTokens: number };
-    } = {
-      compactionSettings: {
-        enabled: this.autoCompactionEnabled,
-        reserveTokens: compactionReserveFor(
-          this.currentModel?.contextWindow,
-          DEFAULT_COMPACTION_POLICY.reserveTokens,
-          this.options.autoCompactWindow,
-        ),
-      },
+  /** Attached to outbound events; derive occupancy from the active conversation. */
+  async contextUsagePayload(): Promise<{
+    contextUsage?: { tokens: number | null; contextWindow: number; percent: number | null };
+    compactionSettings: { enabled: boolean; reserveTokens: number };
+  }> {
+    const compactionSettings = {
+      enabled: this.autoCompactionEnabled,
+      reserveTokens: compactionReserveFor(
+        this.currentModel?.contextWindow,
+        DEFAULT_COMPACTION_POLICY.reserveTokens,
+        this.options.autoCompactWindow,
+      ),
     };
-    const usage = this.lastUsage;
     const contextWindow = this.currentModel?.contextWindow;
-    if (usage && contextWindow) {
-      payload.contextUsage = {
-        tokens: usage.totalTokens,
-        contextWindow,
-        percent: Math.round((usage.totalTokens / contextWindow) * 100),
-      };
+    if (!contextWindow || !this.conversation) return { compactionSettings };
+
+    let view: Awaited<ReturnType<Conversation['context']>>;
+    try {
+      view = await this.conversation.context(BACKGROUND_CONTEXT);
+    } catch (error) {
+      this.options.hooks.debugLog(`Could not read context usage: ${error instanceof Error ? error.message : String(error)}`);
+      return { compactionSettings };
     }
-    return payload;
+    const messages = view.messages;
+    const head = view.head;
+    let usageMessage: AssistantMessage | undefined;
+    for (let index = view.entries.length - 1; index >= 0 && !usageMessage; index--) {
+      const entry = view.entries[index]!;
+      if (head?.kind === 'pi.compaction' && entry.id <= head.id) continue;
+      const messagesInEntry = view.contributions[index] ?? [];
+      for (let offset = messagesInEntry.length - 1; offset >= 0; offset--) {
+        const message = messagesInEntry[offset]!;
+        if (message.role === 'assistant' && message.stopReason !== 'error' && message.stopReason !== 'aborted'
+          && calculateContextTokens(message.usage) > 0) {
+          usageMessage = message;
+          break;
+        }
+      }
+    }
+    const tokens = !usageMessage && head?.kind === 'pi.compaction'
+      ? null
+      : (usageMessage ? calculateContextTokens(usageMessage.usage) : 0)
+        + messages.slice(usageMessage ? messages.indexOf(usageMessage) + 1 : 0)
+          .reduce((total, message) => total + estimateMessageTokens(message), 0);
+    return {
+      contextUsage: { tokens, contextWindow, percent: tokens === null ? null : (tokens / contextWindow) * 100 },
+      compactionSettings,
+    };
   }
 
   // ============================================================
@@ -455,6 +786,7 @@ export class DurableKernel {
 
       case 'run_start':
         this.busy = true;
+        this.lastAssistant = undefined;
         return [{ type: 'agent_start' }];
 
       case 'run_end': {
@@ -542,21 +874,25 @@ export class DurableKernel {
         this.lastAssistant = message;
         this.partial = undefined;
 
-        const out: (AgentSessionEvent | Record<string, unknown>)[] = [{ type: 'message_end', message }];
-
-        // The durable entry id is committed with the message, so the anchor is
-        // synchronous here — no microtask race like the 1.1.0 leafId read.
         const sdkMessageId = (message as { id?: string }).id ?? randomUUID();
-        out.push({ type: 'pi_turn_anchor', sdkMessageId, sdkTurnAnchor: event.entry.id });
+        const messageEnd: Record<string, unknown> = { type: 'message_end', message, sdkMessageId };
+        const out: (AgentSessionEvent | Record<string, unknown>)[] = [messageEnd];
+
+        // Use the same message id for the host's stored message and its durable anchor.
+        out.push({ type: 'pi_turn_anchor', sdkMessageId, sdkTurnAnchor: String(event.entry.id) });
 
         // Speculative prefetch: 2+ prefetchable tool calls in one message fire
         // in parallel before the (possibly sequential) tool round starts.
-        const toolCalls = message.content.filter(c => c.type === 'toolCall') as ToolCall[];
-        const prefetchable = toolCalls.filter(tc => this.options.hooks.isPrefetchableTool(tc.name));
-        if (prefetchable.length >= 2) {
-          for (const tc of prefetchable) {
-            this.options.hooks.prefetchToolCall(tc.id, tc.name, (tc.arguments ?? {}) as Record<string, unknown>);
+        try {
+          const toolCalls = message.content.filter(c => c.type === 'toolCall') as ToolCall[];
+          const prefetchable = toolCalls.filter(tc => this.options.hooks.isPrefetchableTool(tc.name));
+          if (prefetchable.length >= 2) {
+            for (const tc of prefetchable) {
+              this.options.hooks.prefetchToolCall(tc.id, tc.name, (tc.arguments ?? {}) as Record<string, unknown>);
+            }
           }
+        } catch (error) {
+          this.options.hooks.debugLog(`Could not prefetch tool calls: ${error instanceof Error ? error.message : String(error)}`);
         }
 
         // Retry recovered: announce success before the run's agent_end.
@@ -565,7 +901,7 @@ export class DurableKernel {
           out.push({ type: 'auto_retry_end', success: true, attempt: this.retry.attempt });
         }
 
-        out.push({ type: 'context_usage', ...this.contextUsagePayload() });
+        out.push({ type: 'context_usage' });
         return out;
       }
 
@@ -575,14 +911,15 @@ export class DurableKernel {
           // A turn_end follows this run's assistant message_end.
           message: this.lastAssistant!,
           toolResults: [],
-          ...this.contextUsagePayload(),
         }];
 
       case 'tool_execution_start': {
         const args = (event.args ?? {}) as Record<string, unknown>;
-        if (event.toolName.startsWith('session__')) {
+        // The host registers session tools as mcp__session__<name>; older paths use session__<name>.
+        const sessionToolName = event.toolName.replace(/^(mcp__session__|session__)/, '');
+        if (sessionToolName !== event.toolName) {
           this.pendingSessionTools.set(event.toolCallId, {
-            toolName: event.toolName.replace(/^session__/, ''),
+            toolName: sessionToolName,
             args,
           });
         }
@@ -668,17 +1005,14 @@ export class DurableKernel {
         return [{
           type: 'compaction_start',
           reason: event.reason,
-          ...this.contextUsagePayload(),
         }];
 
       case 'compaction_end': {
-        // `result` truthiness drives the adapter's success path. Durable's
-        // receipt has no token estimate, so tracked usage stands in (known
-        // difference: the estimate can be stale).
+        // No post-compaction estimate is present in the durable event.
         const tokens = this.lastUsage?.totalTokens ?? 0;
         const result = event.error
           ? undefined
-          : { summary: '', firstKeptEntryId: '', tokensBefore: tokens, estimatedTokensAfter: tokens };
+          : { summary: '', firstKeptEntryId: '', tokensBefore: tokens };
         return [{
           type: 'compaction_end',
           reason: event.reason,

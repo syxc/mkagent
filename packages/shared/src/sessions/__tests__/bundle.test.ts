@@ -91,6 +91,17 @@ describe('serializeSession', () => {
     expect(Array.isArray(bundle!.files)).toBe(true)
   })
 
+  for (const file of ['store.db', 'main.jsonl']) {
+    it(`does not export unredacted durable history from ${file}`, () => {
+      const session = makeStoredSession()
+      const sessionDir = setupSessionDir(tmpDir, session)
+      const storeDir = join(sessionDir, 'durable-store')
+      mkdirSync(storeDir)
+      writeFileSync(join(storeDir, file), 'unredacted durable history')
+      expect(serializeSession(tmpDir, session.id)).toBeNull()
+    })
+  }
+
   it('includes attachment files in bundle', () => {
     const session = makeStoredSession()
     const sessionDir = setupSessionDir(tmpDir, session)
@@ -109,6 +120,348 @@ describe('serializeSession', () => {
     // Verify base64 round-trips correctly
     const decoded = Buffer.from(bundle!.files[0]!.contentBase64, 'base64').toString()
     expect(decoded).toBe('fake-png-data')
+  })
+
+  it('includes attachments in a nested durable-store directory', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const attachmentDir = join(sessionDir, 'attachments', 'durable-store')
+    mkdirSync(attachmentDir, { recursive: true })
+    writeFileSync(join(attachmentDir, 'note.txt'), 'attachment')
+
+    const bundle = serializeSession(tmpDir, session.id)
+
+    expect(bundle?.files.map(file => file.relativePath)).toContain('attachments/durable-store/note.txt')
+  })
+
+  for (const [command, output, secret] of [
+    ['fill @e2 fake-secret', 'Filled element @e2 (11 characters)\nActive element after: unknown', 'fake-secret'],
+    ['type fake-secret', 'Typed 11 characters into focused element\nActive element after: unknown', 'fake-secret'],
+    ['paste fake-secret', 'Pasted 11 characters\nShortcut used: Cmd+V', 'fake-secret'],
+    ['fill @e2 fake-secret', 'Error: input could not finish', 'fake-secret'],
+    ['paste fake-secret2; fill @e2 ordinary', 'Pasted 12 characters\nShortcut used: Cmd+V\nFilled element @e2 with "ordinary"', 'fake-secret2'],
+  ]) {
+    it(`redacts older ${command!.split(' ')[0]} history when the field type was not reported`, () => {
+      const session = makeStoredSession()
+      const sessionDir = setupSessionDir(tmpDir, session)
+      const storeDir = join(sessionDir, 'durable-store')
+      mkdirSync(storeDir)
+      const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command } }
+      const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: output }], ...(output!.startsWith('Error:') ? { isError: true } : {}) }
+      writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+
+      const bundle = serializeSession(tmpDir, session.id)
+      if (output!.includes('with "ordinary"')) {
+        expect(bundle).toBeNull()
+      } else {
+        expect(bundle).not.toBeNull()
+        const contents = bundle!.files.map(file => Buffer.from(file.contentBase64, 'base64').toString()).join('')
+        expect(contents).not.toContain(secret!)
+      }
+    })
+  }
+
+  it('redacts a legacy input whose final focus cannot prove its target', () => {
+    const session = makeStoredSession()
+    const storeDir = join(setupSessionDir(tmpDir, session), 'durable-store')
+    mkdirSync(storeDir)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: 'type fixture-secret' } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Typed 14 characters into focused element\nActive element after: input' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+
+    const bundle = serializeSession(tmpDir, session.id)
+    expect(bundle).not.toBeNull()
+    const contents = bundle!.files.map(file => Buffer.from(file.contentBase64, 'base64').toString()).join('')
+    expect(contents).not.toContain('fixture-secret')
+  })
+
+  it('rejects a short password that appears in retained session content', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: ['fill', '@e2', 'h'] } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('preserves unrelated placeholder text in a batch containing a password', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    const command = 'fill @e2 unrelated-secret-123; click "[password: 2 characters]"'
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+
+    const bundle = serializeSession(tmpDir, session.id)
+    expect(bundle).not.toBeNull()
+    const contents = Buffer.from(bundle!.files.find(file => file.relativePath === 'durable-store/main.jsonl')!.contentBase64, 'base64').toString()
+    expect(contents).toContain('fill @e2 ; click \\\"[password: 2 characters]\\\"')
+  })
+
+  it.each([
+    { command: ['fill', '@e2', '[password: 2 characters]'] },
+    { command: 'fill @e2 "[password: 2 characters]"' },
+  ])('rejects a password shaped like a redaction placeholder', ({ command }) => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result, copy: '[password: 2 characters]' }] }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('rejects a known browser password in other exported session content', () => {
+    const secret = 'export-test-password-9w7q'
+    const session = makeStoredSession({ name: secret })
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: ['fill', '@e2', secret] } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  for (const location of ['message', 'attachment content', 'attachment path', 'durable metadata'] as const) {
+    it(`rejects a known browser password in ${location}`, () => {
+      const secret = 'fake-browser-secret-in-export'
+      const session = makeStoredSession(location === 'message' ? {
+        messages: [{ id: 'msg-secret', type: 'user', content: secret, timestamp: 1000 }],
+      } : {})
+      const sessionDir = setupSessionDir(tmpDir, session)
+      const storeDir = join(sessionDir, 'durable-store')
+      mkdirSync(storeDir)
+      const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: ['fill', '@e2', secret] } }
+      const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+      writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+      if (location === 'attachment content') writeFileSync(join(sessionDir, 'copy.txt'), secret)
+      if (location === 'attachment path') writeFileSync(join(sessionDir, `${secret}.txt`), 'ordinary content')
+      if (location === 'durable metadata') writeFileSync(join(storeDir, 'id-map.json'), JSON.stringify({ value: secret }))
+
+      expect(serializeSession(tmpDir, session.id)).toBeNull()
+    })
+  }
+
+  it('exports and re-exports a placeholder-shaped password without retaining it', () => {
+    const session = makeStoredSession()
+    const storeDir = join(setupSessionDir(tmpDir, session), 'durable-store')
+    mkdirSync(storeDir)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: 'fill @e2 "[password: 2 characters]"' } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+
+    for (let i = 0; i < 2; i++) {
+      const bundle = serializeSession(tmpDir, session.id)
+      expect(bundle).not.toBeNull()
+      const contents = Buffer.from(bundle!.files.find(file => file.relativePath === 'durable-store/main.jsonl')!.contentBase64, 'base64').toString()
+      expect(contents).not.toContain('[password: 2 characters]')
+      writeFileSync(join(storeDir, 'main.jsonl'), contents)
+    }
+  })
+
+  it('never regenerates a password-shaped placeholder across repeated exports', () => {
+    const session = makeStoredSession()
+    const storeDir = join(setupSessionDir(tmpDir, session), 'durable-store')
+    mkdirSync(storeDir)
+    const secret = '[password: 25 characters]'
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: ['fill', '@e2', secret] } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+
+    for (let i = 0; i < 6; i++) {
+      const bundle = serializeSession(tmpDir, session.id)
+      expect(bundle).not.toBeNull()
+      const contents = Buffer.from(bundle!.files.find(file => file.relativePath === 'durable-store/main.jsonl')!.contentBase64, 'base64').toString()
+      expect(contents).not.toContain(secret)
+      writeFileSync(join(storeDir, 'main.jsonl'), contents)
+    }
+  })
+
+  it('rejects copies when a placeholder-shaped password matches its generated placeholder', () => {
+    const session = makeStoredSession()
+    const storeDir = join(setupSessionDir(tmpDir, session), 'durable-store')
+    mkdirSync(storeDir)
+    const secret = '[password: 25 characters]'
+    expect(secret.length).toBe(25)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: `fill @e2 ${secret}` } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result, copy: secret }] }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('rejects a short password that also appears in a dynamic key', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: ['fill', '@e2', 'h'] } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result, data: { h: 'copy' } }] }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('preserves an ordinary browser call that matches a separate password fill', () => {
+    const session = makeStoredSession()
+    const storeDir = join(setupSessionDir(tmpDir, session), 'durable-store')
+    mkdirSync(storeDir)
+    const command = 'fill @e2 input-in-two-fields'
+    const passwordCall = { type: 'toolCall', id: 'password', name: 'browser_tool', arguments: { command } }
+    const passwordResult = { role: 'toolResult', toolCallId: 'password', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    const ordinaryCall = { type: 'toolCall', id: 'ordinary', name: 'browser_tool', arguments: { command } }
+    const ordinaryResult = { role: 'toolResult', toolCallId: 'ordinary', toolName: 'browser_tool', content: [{ type: 'text', text: 'ordinary input filled' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', passwordCall, passwordResult, ordinaryCall, ordinaryResult }] }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('preserves a non-browser command that matches a browser password fill', () => {
+    const session = makeStoredSession()
+    const storeDir = join(setupSessionDir(tmpDir, session), 'durable-store')
+    mkdirSync(storeDir)
+    const command = 'fill @e2 ordinary-then-secret'
+    const passwordCall = { type: 'toolCall', id: 'browser', name: 'browser_tool', arguments: { command } }
+    const result = { role: 'toolResult', toolCallId: 'browser', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    const otherCall = { type: 'toolCall', id: 'shell', name: 'bash', arguments: { command } }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', passwordCall, result, otherCall }] }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('rejects an attachment containing a password joined from array-mode arguments', () => {
+    const words = ['arrayalpha', 'betavalue']
+    const secret = words.join(' ')
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: ['fill', '@e2', ...words] } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+    writeFileSync(join(sessionDir, 'copy.txt'), secret)
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('exports array-mode passwords with their complete value removed', () => {
+    const words = ['arrayalpha', 'betavalue']
+    const secret = words.join(' ')
+    const session = makeStoredSession()
+    const storeDir = join(setupSessionDir(tmpDir, session), 'durable-store')
+    mkdirSync(storeDir)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: ['fill', '@e2', ...words] } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+
+    const bundle = serializeSession(tmpDir, session.id)
+    expect(bundle).not.toBeNull()
+    const text = Buffer.from(bundle!.files[0]!.contentBase64, 'base64').toString()
+    expect(text).not.toContain(secret)
+    for (const word of words) expect(text).not.toContain(word)
+  })
+
+  it('rejects a password also present in the retained browser command', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: ['fill', '@e2', '@e2'] } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2 (3 characters)' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('redacts a browser password when the result ends with the password marker', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    const call = { type: 'toolCall', id: 'call', name: 'browser_tool', arguments: { command: 'fill @e2 fake-password-marker-test' } }
+    const result = { role: 'toolResult', toolCallId: 'call', toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2' }] }
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'entry', call, result }] }) + '\n')
+
+    const bundle = serializeSession(tmpDir, session.id)
+    expect(bundle).not.toBeNull()
+    const contents = bundle!.files.map(file => Buffer.from(file.contentBase64, 'base64').toString()).join('')
+    expect(contents).toContain('"command":"fill @e2 "')
+    expect(contents).not.toContain('fake-password-marker-test')
+  })
+
+  it('rejects JSONL history with a non-increasing commit sequence', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    const marker = JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [] })
+    writeFileSync(join(storeDir, 'main.jsonl'), `${marker}\n${marker}\n`)
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('rejects duplicate JSONL sidecar records', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'task.sidecar', id: 2, ordinal: 0 }] }) + '\n')
+    const record = JSON.stringify({ format: 1, seq: 1, ordinal: 0, type: 'record', payload: { type: 'task', value: { id: 2, state: { status: 'running' } } } })
+    writeFileSync(join(storeDir, 'task-2.jsonl'), `${record}\n${record}\n`)
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('rejects a JSONL sidecar whose payload does not match its commit', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'task.sidecar', id: 2, ordinal: 0 }] }) + '\n')
+    writeFileSync(join(storeDir, 'task-2.jsonl'), JSON.stringify({ format: 1, seq: 1, ordinal: 0, type: 'record', payload: { type: 'task', value: { id: 3, state: { status: 'running' } } } }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('rejects an unfinished JSONL commit whose sidecar contains a password', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [] }) + '\n')
+    writeFileSync(join(storeDir, 'task-2.jsonl'), JSON.stringify({ format: 1, seq: 2, ordinal: 0, type: 'record', payload: { type: 'task', value: { state: { secret: 'fixture-password' } } } }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('rejects an unreferenced sidecar record from a committed JSONL sequence', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [] }) + '\n')
+    writeFileSync(join(storeDir, 'task-2.jsonl'), JSON.stringify({ format: 1, seq: 1, ordinal: 0, type: 'record', payload: { type: 'task', value: { id: 2, state: { status: 'running', secret: 'test-secret' } } } }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  it('rejects a JSONL commit that refers to a missing sidecar record', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const storeDir = join(sessionDir, 'durable-store')
+    mkdirSync(storeDir)
+    writeFileSync(join(storeDir, 'main.jsonl'), JSON.stringify({ format: 1, seq: 1, type: 'commit', writes: [{ type: 'task.sidecar', id: 2, ordinal: 0 }] }) + '\n')
+
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
   })
 
   it('includes plan and data files in bundle', () => {

@@ -173,19 +173,10 @@ async function buildPiAgentServer(): Promise<void> {
     mkdirSync(distDir, { recursive: true });
   }
 
-  // Use --target=bun --format=esm because the Pi SDK (@earendil-works/pi-coding-agent)
-  // is ESM-only. --target=node --format=cjs leaves ESM deps as external require()
-  // calls that fail at runtime since there are no node_modules relative to dist/.
+  // Use the package build so the codemode worker and wasm ship beside the bundle.
   const proc = spawn({
-    cmd: [
-      "bun", "build",
-      join(PI_AGENT_SERVER_DIR, "src/index.ts"),
-      "--outfile", PI_AGENT_SERVER_OUTPUT,
-      "--target", "bun",
-      "--format", "esm",
-      "--external", "koffi",
-    ],
-    cwd: ROOT_DIR,
+    cmd: ["bun", "run", "build"],
+    cwd: PI_AGENT_SERVER_DIR,
     stdout: "inherit",
     stderr: "inherit",
   });
@@ -237,6 +228,7 @@ async function main(): Promise<void> {
       "--outfile=apps/electron/dist/main.cjs",
       "--external:electron",
       "--external:@aws-sdk/client-s3",
+      "--external:bun:sqlite",
       ...buildDefines,
     ],
     cwd: ROOT_DIR,

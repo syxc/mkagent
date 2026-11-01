@@ -51,8 +51,11 @@ export class OAuthSyncCredentialStore extends InMemoryCredentialStore {
     provider: string,
     fn: (current: Credential | undefined) => Promise<Credential | undefined>,
   ): Promise<Credential | undefined> {
-    const previous = await this.read(provider);
-    const next = await super.modify(provider, fn);
+    let previous: Credential | undefined;
+    const next = await super.modify(provider, async current => {
+      previous = current;
+      return fn(current);
+    });
     if (
       previous?.type === 'oauth'
       && next?.type === 'oauth'
@@ -64,9 +67,7 @@ export class OAuthSyncCredentialStore extends InMemoryCredentialStore {
   }
 }
 
-/** Model IDs currently registered under the custom-endpoint provider. */
-const customEndpointModelIds = new Set<string>();
-const customModelOverrides = new Map<string, CustomEndpointModelOverrides>();
+const customEndpointModels = new WeakMap<MutableModels, Map<string, CustomEndpointModelOverrides>>();
 
 export interface RegisterCustomEndpointOptions {
   models: MutableModels;
@@ -84,13 +85,19 @@ export interface RegisterCustomEndpointOptions {
  */
 export function registerCustomEndpointModels(options: RegisterCustomEndpointOptions): void {
   const { models, api, baseUrl, apiKey, endpointDefaults, entries } = options;
+  let registered = customEndpointModels.get(models);
+  if (!registered) {
+    registered = new Map();
+    customEndpointModels.set(models, registered);
+  }
   for (const entry of entries) {
-    customEndpointModelIds.add(entry.id);
     if (entry.contextWindow || entry.supportsImages !== undefined) {
-      customModelOverrides.set(entry.id, {
+      registered.set(entry.id, {
         ...(entry.contextWindow ? { contextWindow: entry.contextWindow } : {}),
         ...(entry.supportsImages !== undefined ? { supportsImages: entry.supportsImages } : {}),
       });
+    } else if (!registered.has(entry.id)) {
+      registered.set(entry.id, {});
     }
   }
 
@@ -104,12 +111,12 @@ export function registerCustomEndpointModels(options: RegisterCustomEndpointOpti
         resolve: async () => (apiKey ? { auth: { apiKey } } : undefined),
       },
     },
-    models: [...customEndpointModelIds].map(id => buildCustomEndpointModelDef(
+    models: [...registered].map(([id, overrides]) => buildCustomEndpointModelDef(
       id,
       api,
       baseUrl,
       endpointDefaults,
-      customModelOverrides.get(id),
+      overrides,
     )),
     api: { [api]: CUSTOM_ENDPOINT_APIS[api]() },
   });
@@ -178,8 +185,6 @@ export async function createModelRuntime(
       ? config.customModels
       : [config.model || 'default']
     ).map(normalizeCustomEndpointModelEntry);
-    customEndpointModelIds.clear();
-    customModelOverrides.clear();
     registerCustomEndpointModels({
       models,
       api: config.customEndpoint.api,

@@ -28,6 +28,7 @@ import {
   type BrowserInstanceInfo,
 } from '../shared/types'
 import { DEFAULT_THEME, loadAppTheme } from '@mkagent/shared/config'
+import type { BrowserInputResult } from '@mkagent/shared/agent'
 import { CodedError } from '@mkagent/shared/protocol'
 import { getBrowserLiveFxCornerRadii } from '../shared/browser-live-fx'
 import type {
@@ -645,9 +646,10 @@ export class BrowserPaneManager implements IBrowserPaneManager {
           this.markToolbarReady(instance, 'toolbar-load-finalized')
         }
       })
+    const pageContents = pageView.webContents
     void this.loadEmptyStatePage(instance).catch((error) => {
       mainLog.warn(`[browser-pane] empty-state load failed id=${instance.id}: ${error instanceof Error ? error.message : String(error)}`)
-      void pageView.webContents.loadURL('about:blank')
+      if (!pageContents.isDestroyed()) void pageContents.loadURL('about:blank')
     })
 
     return instanceId
@@ -872,6 +874,7 @@ export class BrowserPaneManager implements IBrowserPaneManager {
     let timeoutHandle: ReturnType<typeof setTimeout> | null = null
 
     try {
+      await instance.cdp.prepareInputTracking().catch(() => undefined)
       const loaded = instance.pageView.webContents.loadURL(normalizedUrl)
       const timeout = new Promise<never>((_, reject) => {
         timeoutHandle = setTimeout(() => reject(new Error(`Navigation to "${normalizedUrl}" timed out after ${timeoutMs / 1000}s`)), timeoutMs)
@@ -1029,16 +1032,17 @@ export class BrowserPaneManager implements IBrowserPaneManager {
     }
   }
 
-  async typeText(id: string, text: string): Promise<void> {
+  async typeText(id: string, text: string): Promise<BrowserInputResult> {
     const instance = this.requireAliveInstance(id)
 
     try {
-      await instance.cdp.typeText(text)
+      const result = await instance.cdp.typeText(text)
       instance.lastAction = {
         tool: 'browser_type',
         status: 'succeeded',
         timestamp: Date.now(),
       }
+      return result
     } catch (error) {
       instance.lastAction = {
         tool: 'browser_type',
@@ -1120,7 +1124,7 @@ export class BrowserPaneManager implements IBrowserPaneManager {
     }
   }
 
-  async fillElement(id: string, ref: string, value: string): Promise<void> {
+  async fillElement(id: string, ref: string, value: string): Promise<BrowserInputResult> {
     const instance = this.requireAliveInstance(id)
 
     try {
@@ -1132,6 +1136,7 @@ export class BrowserPaneManager implements IBrowserPaneManager {
         geometry,
         timestamp: Date.now(),
       }
+      return { browserInput: geometry.browserInput }
     } catch (error) {
       instance.lastAction = {
         tool: 'browser_fill',
@@ -1818,7 +1823,21 @@ export class BrowserPaneManager implements IBrowserPaneManager {
     throw new Error(`Unknown wait kind: ${args.kind}`)
   }
 
-  async sendKey(id: string, args: BrowserKeyArgs): Promise<void> {
+  async sendKey(id: string, args: BrowserKeyArgs): Promise<BrowserInputResult | void> {
+    const instance = this.requireAliveInstance(id)
+    const key = args.key?.trim()
+    if (!key) throw new Error('browser_key requires key')
+    const modifiers = args.modifiers ?? []
+    if (key.toLowerCase() === 'v' && (modifiers.includes('meta') || modifiers.includes('control'))) {
+      const result = await instance.cdp.recordInput(1, async () => {
+        await this.sendKeyInput(id, args)
+      })
+      return { browserInput: result.browserInput }
+    }
+    return this.sendKeyInput(id, args)
+  }
+
+  private async sendKeyInput(id: string, args: BrowserKeyArgs): Promise<void> {
     const instance = this.requireAliveInstance(id)
 
     const key = args.key?.trim()
@@ -2408,6 +2427,8 @@ export class BrowserPaneManager implements IBrowserPaneManager {
   }
 
   private async loadEmptyStatePage(instance: BrowserInstance): Promise<void> {
+    await instance.cdp.prepareInputTracking().catch(() => undefined)
+    if (instance.window.isDestroyed()) return
     const query = { themeMode: this.themeMode }
     if (VITE_DEV_SERVER_URL) {
       await instance.pageView.webContents.loadURL(

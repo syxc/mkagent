@@ -1,11 +1,8 @@
 /**
  * grep tool.
  *
- * Vendored 1:1 from @earendil-works/pi-coding-agent 1.1.0 core/tools/grep.js —
- * behavior must stay identical. Adapted to the durable `ToolRegistration`
- * shape: TUI renderers and the operations injection (used only by upstream's
- * own tests) are dropped, and the binary resolves from PATH instead of
- * ensureTool's GitHub download.
+ * behavior follows the original implementation, adapted to the durable
+ * `ToolRegistration` shape. TUI renderers and upstream test injection are omitted.
  */
 import { readFile as fsReadFile, stat as fsStat } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
@@ -59,9 +56,13 @@ export function createGrepTool(cwd: string): ToolRegistration<typeof grepSchema>
         };
         (async () => {
           try {
-            const rgPath = resolveRipgrep();
+            const rgPath = await resolveRipgrep();
+            if (signal?.aborted) {
+              settle(() => reject(new Error('Operation aborted')));
+              return;
+            }
             if (!rgPath) {
-              settle(() => reject(new Error('ripgrep (rg) is not available on PATH')));
+              settle(() => reject(new Error('ripgrep (rg) is not available and could not be downloaded')));
               return;
             }
             const searchPath = resolveToCwd(searchDir || '.', cwd);

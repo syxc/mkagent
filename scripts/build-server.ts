@@ -111,6 +111,9 @@ The bundled WebUI is served on the RPC port. Non-localhost deployments must conf
 for (const path of [
   join(output, 'server.js'),
   join(output, 'resources', 'pi-agent-server', 'index.js'),
+  join(output, 'resources', 'pi-agent-server', 'codemode-worker.js'),
+  join(output, 'resources', 'pi-agent-server', 'quickjs.wasm'),
+  join(output, 'resources', 'pi-agent-server', 'photon_rs_bg.wasm'),
   runtime,
   rgDestination,
   join(output, 'webui', 'index.html'),
