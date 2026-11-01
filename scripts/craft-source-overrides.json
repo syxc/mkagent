@@ -2657,7 +2657,7 @@
       "reason": "Port pi-coding-agent 1.1.0 utils/management-http.js retry and cancellation behavior for binary management requests."
     },
     "packages/pi-agent-server/src/tools/local/tool-binaries.test.ts": {
-      "sha256": "3828227a845db98e86c0276d0a1d75aea0398750cb04784be7a84623586b207d",
+      "sha256": "6e61784be685cedc2fb678803ffb4426a50080e2156023c7e558a609cc7e51d5",
       "reason": "Verify Pi-compatible fd and ripgrep cache, PATH, offline, download, extraction and cleanup behavior with injected dependencies."
     },
     "packages/pi-agent-server/src/tools/wrap.test.ts": {
@@ -2753,11 +2753,11 @@
       "reason": "Bind pi-durable codemode to the installed pi-codemode sandbox, packaged worker and WASM assets, with host approval for model calls."
     },
     "packages/pi-agent-server/src/tools/local/find.ts": {
-      "sha256": "0b9469d7e224d865505bd0e551f9214beafc467bf0bcd0ffa88a05849f99ba4e",
+      "sha256": "7f07e39f3ef6697eff04947152b48c6a42faf759a6b45beab8f8a2259ea23aeb",
       "reason": "Adapt pi-coding-agent 1.1.0 core/tools/find.js to durable registration and the local fd manager while retaining path and truncation behavior."
     },
     "packages/pi-agent-server/src/tools/local/grep.ts": {
-      "sha256": "7166189552a11f6995ed1c2ef44f4532e1245bee52b49245d56b55e1b25ace93",
+      "sha256": "ae3060b8527ec64e9adc5f4f5b4fdc680ad597565d18b2bf3f0890157b448a66",
       "reason": "Adapt pi-coding-agent 1.1.0 core/tools/grep.js search behavior to durable registration and local ripgrep resolution."
     },
     "packages/pi-agent-server/src/tools/local/ls.ts": {
@@ -2769,8 +2769,12 @@
       "reason": "Port the required pi-coding-agent 1.1.0 core/tools/path-utils.js and utils/paths.js normalization and read-path compatibility branches."
     },
     "packages/pi-agent-server/src/tools/local/tool-binaries.ts": {
-      "sha256": "4d1db65233aad8cbd6e48d7638d715270276fef2c953762b4c0d7d5b89623243",
-      "reason": "Adapt pi-coding-agent 1.1.0 utils/tools-manager.js fd and ripgrep resolution and downloads, adding bundled ripgrep lookup and isolated temporary downloads."
+      "sha256": "9f4e8445cb342c1d9066fe00a8c5481a0cf528b4a6e4f9e6a6aecef40be3e1ce",
+      "reason": "Adapt pi-coding-agent 1.1.0 utils/tools-manager.js fd and ripgrep resolution and downloads, adding bundled ripgrep lookup and isolated temporary downloads. Propagate cancellation through version and archive requests, bound body reads, and prevent publication after cancellation."
+    },
+    "packages/pi-agent-server/src/tools/local/tool-binaries-cancellation.isolated.ts": {
+      "sha256": "e416ad902969b9f90f1c91b3faa4a197903e82c6fe49621e51391dc578042815",
+      "reason": "Verify find and grep binary acquisition cancellation across requests, streaming bodies and archive publication with isolated module spies and fake downloads."
     },
     "packages/pi-agent-server/src/tools/local/truncate.ts": {
       "sha256": "b2645d95d4c3c78069ebb0609c3edb7263a3020d51a697a1a7982f8f318cb505",

@@ -108,6 +108,12 @@ describe('ensureRipgrep', () => {
     ]);
   });
 
+  it('uses PATH before a bundled ripgrep, and the bundle before the network', async () => {
+    expect(await ensureRipgrep(undefined, createDeps({ findOnPath: () => '/usr/bin/rg' }), '/bundle/rg')).toBe('/usr/bin/rg');
+    expect(await ensureRipgrep(undefined, createDeps(), '/bundle/rg')).toBe('/bundle/rg');
+    expect(await ensureRipgrep(undefined, createDeps({ offline: true }), '/bundle/rg')).toBe('/bundle/rg');
+  });
+
   it('does not download ripgrep in offline mode', async () => {
     expect(await ensureRipgrep(undefined, createDeps({ offline: true }))).toBeUndefined();
   });
@@ -208,6 +214,23 @@ describe('ensureFd', () => {
 
     expect(await ensureFd(undefined, deps)).toBe(join(scratchDir, 'bin', 'fd'));
     expect(requests).toEqual([`https://github.com/sharkdp/fd/releases/download/v10.3.0/${assetName}`]);
+  });
+
+  for (const tarWorks of [true, false]) it(`extracts a Windows zip with ${tarWorks ? 'tar.exe' : 'the PowerShell fallback'}`, async () => {
+    const { fetch } = fakeDownloadFetch('10.2.0');
+    const calls: string[] = [];
+    const deps = createDeps({ platform: 'win32', fetch, runCommand: (command, args) => {
+      calls.push(command);
+      if (calls.length === 1 && !tarWorks) return { status: 1, stderr: Buffer.from('fixture tar failure') };
+      const dir = command === 'powershell.exe' ? args.at(-1)! : args[args.indexOf('-C') + 1]!;
+      writeFileSync(join(dir, 'fd.exe'), 'fake Windows binary');
+      return { status: 0 };
+    } });
+    expect(await ensureFd(undefined, deps)).toBe(join(deps.binDir, 'fd.exe'));
+    expect(calls[0]).toMatch(/tar\.exe$/);
+    expect(calls).toHaveLength(tarWorks ? 1 : 2);
+    if (!tarWorks) expect(calls[1]).toBe('powershell.exe');
+    expect(readdirSync(deps.binDir)).toEqual(['fd.exe']);
   });
 
   it('cleans up the archive when extraction fails', async () => {

@@ -16,7 +16,7 @@ import {
   renameSync,
   rmSync,
 } from 'node:fs';
-import { open } from 'node:fs/promises';
+import { open, type FileHandle } from 'node:fs/promises';
 import { arch as osArch, homedir, platform as osPlatform } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
 import { fetchWithRetry } from './management-http.ts';
@@ -67,8 +67,8 @@ function vendoredRipgrep(): string | undefined {
 }
 
 /** Resolve ripgrep from the Pi cache, PATH, bundled binary, or official release. */
-export async function resolveRipgrep(): Promise<string | undefined> {
-  return ensureRipgrep(undefined, defaultFdManagerDeps(), vendoredRipgrep());
+export async function resolveRipgrep(signal?: AbortSignal): Promise<string | undefined> {
+  return ensureRipgrep(undefined, defaultFdManagerDeps(), vendoredRipgrep(), signal);
 }
 
 // =============================================================================
@@ -238,12 +238,13 @@ function extractZipArchive(deps: FdManagerDeps, archivePath: string, extractDir:
 }
 
 /** Resolve the latest release version from the release page redirect (no GitHub API quota). */
-async function getLatestVersion(deps: FdManagerDeps, repo: string): Promise<string> {
+async function getLatestVersion(deps: FdManagerDeps, repo: string, signal?: AbortSignal): Promise<string> {
   const response = await fetchWithRetry(
     `https://github.com/${repo}/releases/latest`,
     {
       headers: { 'User-Agent': `${APP_NAME}-coding-agent` },
       redirect: 'manual',
+      signal,
     },
     { timeoutMs: NETWORK_TIMEOUT_MS, fetch: deps.fetch },
   );
@@ -254,6 +255,7 @@ async function getLatestVersion(deps: FdManagerDeps, repo: string): Promise<stri
   } catch {
     // Discarding the body is best-effort.
   }
+  signal?.throwIfAborted();
   const location = response.status >= 300 && response.status < 400 ? response.headers.get('location') : null;
   if (!location) {
     throw new Error(`Failed to resolve latest ${repo} release: HTTP ${response.status} without redirect`);
@@ -265,36 +267,46 @@ async function getLatestVersion(deps: FdManagerDeps, repo: string): Promise<stri
   return decodeURIComponent(tag).replace(/^v/, '');
 }
 
-async function downloadFile(deps: FdManagerDeps, url: string, dest: string): Promise<void> {
-  const response = await fetchWithRetry(url, undefined, {
-    timeoutMs: DOWNLOAD_TIMEOUT_MS,
-    fetch: deps.fetch,
-  });
+async function downloadFile(deps: FdManagerDeps, url: string, dest: string, signal?: AbortSignal): Promise<void> {
+  // The same deadline owns both response headers and the streaming body, not just fetch().
+  const timeout = AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS);
+  const lifetime = signal ? AbortSignal.any([signal, timeout]) : timeout;
+  const response = await fetchWithRetry(url, { signal: lifetime }, { timeoutMs: DOWNLOAD_TIMEOUT_MS, fetch: deps.fetch });
   if (!response.ok) {
+    await response.body?.cancel().catch(() => {});
     throw new Error(`Download failed with HTTP ${response.status}: ${url}`);
   }
   if (!response.body) {
     throw new Error('No response body');
   }
-  const file = await open(dest, 'w');
   const reader = response.body.getReader();
+  const onAbort = () => { void reader.cancel(lifetime.reason).catch(() => {}); };
+  lifetime.addEventListener('abort', onAbort, { once: true });
+  let file: FileHandle | undefined;
   try {
+    lifetime.throwIfAborted();
+    file = await open(dest, 'w');
+    lifetime.throwIfAborted();
     while (true) {
       const { done, value } = await reader.read();
+      lifetime.throwIfAborted();
       if (done) break;
       await file.writeFile(value);
     }
   } finally {
+    lifetime.removeEventListener('abort', onAbort);
+    await reader.cancel().catch(() => {});
     reader.releaseLock();
-    await file.close();
+    await file?.close();
   }
 }
 
-async function downloadTool(deps: FdManagerDeps, tool: 'fd' | 'rg'): Promise<string> {
+async function downloadTool(deps: FdManagerDeps, tool: 'fd' | 'rg', signal?: AbortSignal): Promise<string> {
   const repo = tool === 'fd' ? FD_REPO : RG_REPO;
   const version = tool === 'fd' && deps.platform === 'darwin' && deps.arch === 'x64'
     ? FD_PINNED_DARWIN_X64_VERSION
-    : await getLatestVersion(deps, repo);
+    : await getLatestVersion(deps, repo, signal);
+  signal?.throwIfAborted();
   const fdAsset = fdAssetName(version, deps.platform, deps.arch);
   const assetName = tool === 'fd' ? fdAsset : fdAsset?.replace(`fd-v${version}`, `ripgrep-${version}`);
   if (!assetName) {
@@ -314,7 +326,8 @@ async function downloadTool(deps: FdManagerDeps, tool: 'fd' | 'rg'): Promise<str
   mkdirSync(extractDir, { recursive: true });
   const archivePath = join(extractDir, assetName);
   try {
-    await downloadFile(deps, downloadUrl, archivePath);
+    await downloadFile(deps, downloadUrl, archivePath, signal);
+    signal?.throwIfAborted();
     if (assetName.endsWith('.tar.gz')) {
       extractTarGzArchive(deps, archivePath, extractDir, assetName);
     } else if (assetName.endsWith('.zip')) {
@@ -333,6 +346,7 @@ async function downloadTool(deps: FdManagerDeps, tool: 'fd' | 'rg'): Promise<str
       extractedBinary = findBinaryRecursively(extractDir, binaryFileName) ?? undefined;
     }
     if (extractedBinary) {
+      signal?.throwIfAborted();
       renameSync(extractedBinary, binaryPath);
     } else {
       throw new Error(`Binary not found in archive: expected ${binaryFileName} under ${extractDir}`);
@@ -354,7 +368,9 @@ async function downloadTool(deps: FdManagerDeps, tool: 'fd' | 'rg'): Promise<str
 export async function ensureFd(
   onStatus?: (status: FdStatus) => void,
   deps: FdManagerDeps = defaultFdManagerDeps(),
+  signal?: AbortSignal,
 ): Promise<string | undefined> {
+  signal?.throwIfAborted();
   const cachedPath = join(deps.binDir, deps.platform === 'win32' ? 'fd.exe' : 'fd');
   if (existsSync(cachedPath)) return cachedPath;
 
@@ -375,10 +391,11 @@ export async function ensureFd(
 
   onStatus?.({ type: 'info', message: 'fd not found. Downloading...' });
   try {
-    const installedPath = await downloadTool(deps, 'fd');
+    const installedPath = await downloadTool(deps, 'fd', signal);
     onStatus?.({ type: 'info', message: `fd installed to ${installedPath}` });
     return installedPath;
   } catch (error) {
+    signal?.throwIfAborted();
     // Include the error cause chain: fetch failures surface as a bare
     // "fetch failed" TypeError with the actionable detail (DNS, TLS,
     // timeout) hidden in the cause. Depth-capped against circular chains.
@@ -398,7 +415,9 @@ export async function ensureRipgrep(
   onStatus?: (status: FdStatus) => void,
   deps: FdManagerDeps = defaultFdManagerDeps(),
   bundledPath?: string,
+  signal?: AbortSignal,
 ): Promise<string | undefined> {
+  signal?.throwIfAborted();
   const cachedPath = join(deps.binDir, deps.platform === 'win32' ? 'rg.exe' : 'rg');
   if (existsSync(cachedPath)) return cachedPath;
   const available = deps.findOnPath('rg') ?? bundledPath;
@@ -414,16 +433,17 @@ export async function ensureRipgrep(
 
   onStatus?.({ type: 'info', message: 'ripgrep not found. Downloading...' });
   try {
-    const path = await downloadTool(deps, 'rg');
+    const path = await downloadTool(deps, 'rg', signal);
     onStatus?.({ type: 'info', message: `ripgrep installed to ${path}` });
     return path;
   } catch (error) {
+    signal?.throwIfAborted();
     onStatus?.({ type: 'warning', message: `Failed to download ripgrep: ${error instanceof Error ? error.message : String(error)}` });
     return undefined;
   }
 }
 
 /** Absolute path of fd (`fd`, Debian fallback `fdfind`), or undefined when unavailable. */
-export async function resolveFd(onStatus?: (status: FdStatus) => void): Promise<string | undefined> {
-  return ensureFd(onStatus);
+export async function resolveFd(onStatus?: (status: FdStatus) => void, signal?: AbortSignal): Promise<string | undefined> {
+  return ensureFd(onStatus, undefined, signal);
 }

@@ -66,7 +66,7 @@ export function createFindTool(cwd: string): ToolRegistration<typeof findSchema>
             const searchPath = resolveToCwd(searchDir || '.', cwd);
             const effectiveLimit = limit ?? DEFAULT_LIMIT;
             // Default implementation uses fd.
-            const fdPath = await resolveFd();
+            const fdPath = await resolveFd(undefined, signal);
             if (signal?.aborted) {
               settle(() => reject(new Error('Operation aborted')));
               return;

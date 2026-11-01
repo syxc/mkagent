@@ -56,7 +56,7 @@ export function createGrepTool(cwd: string): ToolRegistration<typeof grepSchema>
         };
         (async () => {
           try {
-            const rgPath = await resolveRipgrep();
+            const rgPath = await resolveRipgrep(signal);
             if (signal?.aborted) {
               settle(() => reject(new Error('Operation aborted')));
               return;
