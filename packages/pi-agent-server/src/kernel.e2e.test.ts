@@ -7,7 +7,7 @@
 import { afterAll, describe, expect, it } from 'bun:test';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { Database } from 'bun:sqlite';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -29,7 +29,7 @@ import {
 import { builtinModels } from '@earendil-works/pi-ai/providers/all';
 import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
-import { CompactionTask, DEFAULT_COMPACTION_POLICY, LiveDoc, UsageDoc, ROOT_CONVERSATION_ID, createRegistry, defineExtension, defineTool, hook, type Extension, Harness, type TaskId, type TaskRecord, type ToolRegistration } from '@earendil-works/pi-durable';
+import { CompactionTask, DEFAULT_COMPACTION_POLICY, InboxDoc, LiveDoc, UsageDoc, ROOT_CONVERSATION_ID, createRegistry, defineDoc, defineExtension, defineTask, defineTool, hook, type Extension, Harness, type StorageWrite, type SubmissionId, type TaskId, type TaskRecord, type ToolRegistration } from '@earendil-works/pi-durable';
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
 import { CacheWarmer } from './cache-warmer.ts';
 import { DurableKernel } from './kernel.ts';
@@ -102,16 +102,18 @@ function errorEvents(errorMessage: string, text = ''): AssistantMessageEvent[] {
   ] : [{ type: 'error', reason: 'error', error: message }];
 }
 
+type FauxScript = Array<AssistantMessageEvent[] | Promise<AssistantMessageEvent[]>>;
+
 interface FauxSetup {
   models: MutableModels;
   /** TranscriptContext of each model invocation, in order. */
   calls: TranscriptContext[];
   /** One event-script per expected model invocation. */
-  script: AssistantMessageEvent[][];
+  script: FauxScript;
 }
 
 /** Register the scripted 'faux' provider on a fresh in-memory model catalog. */
-function createFauxModels(script: AssistantMessageEvent[][]): FauxSetup {
+function createFauxModels(script: FauxScript): FauxSetup {
   const calls: TranscriptContext[] = [];
   const queue = [...script];
   const fauxApi: ProviderStreams = {
@@ -128,7 +130,7 @@ function createFauxModels(script: AssistantMessageEvent[][]): FauxSetup {
       // (progress.partialIntervalMs, default 100ms), so events must be spaced
       // wider than that for an intermediate partial to be observed.
       void (async () => {
-        for (const event of events) {
+        for (const event of await events) {
           await new Promise(resolve => setTimeout(resolve, 120));
           stream.push(event);
         }
@@ -167,7 +169,7 @@ interface KernelSetup {
 
 function createKernel(options: {
   sessionPath: string;
-  script: AssistantMessageEvent[][];
+  script: FauxScript;
   systemPrompt?: string;
   autoCompactWindow?: number;
   shellPath?: string;
@@ -2399,6 +2401,305 @@ describe('DurableKernel end-to-end', () => {
       await setup.kernel.close();
     }
   });
+
+  function branchTools(onExecute: () => void | Promise<void>): Extension {
+    return defineExtension({ name: 'branch-probe', tools: [defineTool({
+      name: 'branch_probe', description: 'Count local fixture tool executions.',
+      parameters: { type: 'object', properties: {} } as never,
+      replay: 'safe', executionMode: 'sequential',
+      execute: async () => {
+        await onExecute();
+        return { output: [{ type: 'text' as const, text: 'branch probe result' }] };
+      },
+    })] });
+  }
+
+  const branchProbe: ToolCall = { type: 'toolCall', id: 'branch-probe', name: 'branch_probe', arguments: {} };
+  const branchModel = { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 };
+
+  for (const backend of ['sqlite', 'jsonl'] as const) for (const cutoff of [true, false]) {
+    it(`isolates inherited running work and queued submissions in a new ${backend} branch${cutoff ? ' at an anchor' : ' without an anchor'}`, async () => {
+      const parentPath = scratch();
+      if (backend === 'jsonl') {
+        mkdirSync(join(parentPath, 'durable-store'));
+        writeFileSync(join(parentPath, 'durable-store', 'main.jsonl'), '');
+      }
+      const release = Promise.withResolvers<AssistantMessageEvent[]>();
+      const parent = createKernel({ sessionPath: parentPath, script: [textEvents('first answer'), release.promise, textEvents('queued answer')], extensions: [branchTools(() => {})] });
+      const childPath = scratch();
+      let executions = 0;
+      const childOptions = () => ({ sessionPath: childPath, script: [toolCallEvents(branchProbe), textEvents('child answer')], extensions: [branchTools(() => { executions++; })] });
+      let child: KernelSetup | undefined;
+      let reopened: KernelSetup | undefined;
+      try {
+        await parent.kernel.open({ model: branchModel });
+        await parent.kernel.submitPrompt('first parent input');
+        await parent.waitFor('agent_end');
+        const anchor = String(parent.events.find(event => event.type === 'pi_turn_anchor')!.sdkTurnAnchor);
+        await parent.kernel.submitPrompt('parent input after cutoff');
+        await parent.waitForWhere(() => parent.calls.length === 2);
+        await parent.kernel.submitPrompt('queued parent followup');
+        const parentHarness = (parent.kernel as unknown as { harness: Harness }).harness;
+        const root = await parentHarness.root(BACKGROUND_CONTEXT);
+        const queuedWrite = await root.submit({ type: 'write', entry: { kind: 'pi.user', model: [{ role: 'user', content: 'queued parent write', timestamp: 1 }] } }, BACKGROUND_CONTEXT);
+        const inspection = await parentHarness.inspect(BACKGROUND_CONTEXT);
+        expect(inspection.tasks.length).toBeGreaterThan(0);
+        expect(inspection.submissions.filter(item => item.status === 'queued')).toHaveLength(2);
+        expect((await queuedWrite.status(BACKGROUND_CONTEXT)).status).toBe('queued');
+        const inbox = await parentHarness.snapshot(InboxDoc, root.id, BACKGROUND_CONTEXT);
+        const branch = { model: branchModel, branchFromSessionPath: parentPath, ...(cutoff ? { branchFromSdkTurnId: anchor } : {}) };
+        if (cutoff) {
+          const failed = createKernel(childOptions());
+          try {
+            await expect(failed.kernel.open({ ...branch, branchFromSdkTurnId: 'invalid-active-anchor' })).rejects.toThrow('branch anchor not found');
+            expect(failed.calls).toHaveLength(0);
+            expect(executions).toBe(0);
+            expect(existsSync(join(childPath, 'durable-store'))).toBe(false);
+            expect(existsSync(join(childPath, '.durable-branch-pending'))).toBe(false);
+          } finally {
+            await failed.kernel.close();
+          }
+        }
+        child = createKernel(childOptions());
+        await child.kernel.open(branch);
+        await Bun.sleep(800);
+        expect(child.calls).toHaveLength(0);
+        expect(executions).toBe(0);
+        const childHarness = (child.kernel as unknown as { harness: Harness }).harness;
+        expect((await childHarness.inspect(BACKGROUND_CONTEXT)).tasks).toEqual([]);
+        expect((await childHarness.inspect(BACKGROUND_CONTEXT)).submissions).toEqual([]);
+        expect(await childHarness.snapshot(LiveDoc, root.id, BACKGROUND_CONTEXT) ?? {}).toEqual({});
+        expect((await childHarness.snapshot(InboxDoc, root.id, BACKGROUND_CONTEXT))?.items ?? []).toEqual([]);
+        expect(await parentHarness.inspect(BACKGROUND_CONTEXT)).toEqual(inspection);
+        expect(await parentHarness.snapshot(InboxDoc, root.id, BACKGROUND_CONTEXT)).toEqual(inbox);
+        await child.kernel.close();
+
+        reopened = createKernel(childOptions());
+        await reopened.kernel.open(branch);
+        await Bun.sleep(800);
+        expect(reopened.calls).toHaveLength(0);
+        expect(executions).toBe(0);
+        await reopened.kernel.submitPrompt('fresh child input');
+        await reopened.waitFor('agent_end');
+        expect(reopened.calls).toHaveLength(2);
+        expect(executions).toBe(1);
+        for (const call of reopened.calls) {
+          const context = JSON.stringify(call.messages);
+          expect(context).toContain('first parent input');
+          expect(context.includes('parent input after cutoff')).toBe(!cutoff);
+          expect(context).not.toContain('queued parent followup');
+          expect(context).not.toContain('queued parent write');
+          expect(context).toContain('fresh child input');
+        }
+        expect(JSON.stringify(reopened.calls[1]!.messages)).toContain('branch probe result');
+        release.resolve(textEvents('second parent answer'));
+        await parent.waitForWhere(() => parent.events.filter(event => event.type === 'agent_end').length === 2);
+        expect(parent.calls).toHaveLength(3);
+        expect(JSON.stringify(parent.calls[2]!.messages)).toContain('queued parent followup');
+        expect(JSON.stringify(parent.calls[2]!.messages)).toContain('queued parent write');
+        expect((await queuedWrite.status(BACKGROUND_CONTEXT)).status).toBe('done');
+      } finally {
+        release.resolve(textEvents('second parent answer'));
+        await reopened?.kernel.close();
+        await child?.kernel.close();
+        await parent.kernel.close();
+      }
+    }, 20_000);
+  }
+
+  for (const backend of ['sqlite', 'jsonl'] as const) {
+    it(`does not replay inherited running or pending tools in a ${backend} branch or on reopen`, async () => {
+      const parentPath = scratch();
+      if (backend === 'jsonl') {
+        mkdirSync(join(parentPath, 'durable-store'));
+        writeFileSync(join(parentPath, 'durable-store', 'main.jsonl'), '');
+      }
+      const reached = Promise.withResolvers<void>();
+      const release = Promise.withResolvers<void>();
+      let parentExecutions = 0;
+      let childExecutions = 0;
+      const response = assistantMessage([branchProbe, { ...branchProbe, id: 'pending-probe' }], 'toolUse');
+      const parent = createKernel({ sessionPath: parentPath, script: [textEvents('first answer'), [{ type: 'done', reason: 'toolUse', message: response }], textEvents('parent tools done')], extensions: [branchTools(async () => {
+        parentExecutions++;
+        reached.resolve();
+        await release.promise;
+      })] });
+      const childPath = scratch();
+      const childOptions = () => ({ sessionPath: childPath, script: [textEvents('unexpected inherited tool continuation')], extensions: [branchTools(() => { childExecutions++; })] });
+      let child: KernelSetup | undefined;
+      let reopened: KernelSetup | undefined;
+      try {
+        await parent.kernel.open({ model: branchModel });
+        await parent.kernel.submitPrompt('first parent input');
+        await parent.waitFor('agent_end');
+        const anchor = String(parent.events.find(event => event.type === 'pi_turn_anchor')!.sdkTurnAnchor);
+        await parent.kernel.submitPrompt('tool work after cutoff');
+        await reached.promise;
+        const parentHarness = (parent.kernel as unknown as { harness: Harness }).harness;
+        const before = await parentHarness.inspect(BACKGROUND_CONTEXT);
+        expect(before.tasks.find(item => item.record.kind === 'pi.generation')?.record.state.checkpoint).toMatchObject({ phase: 'tools', pending: ['pending-probe'] });
+        expect(before.tasks.filter(item => item.record.kind === 'pi.tool' && item.record.state.status === 'running')).toHaveLength(1);
+        const branch = { model: branchModel, branchFromSessionPath: parentPath, branchFromSdkTurnId: anchor };
+        expect(parentExecutions).toBe(1);
+        child = createKernel(childOptions());
+        await child.kernel.open(branch);
+        await Bun.sleep(800);
+        expect(childExecutions).toBe(0);
+        expect(child.calls).toHaveLength(0);
+        expect((await (child.kernel as unknown as { harness: Harness }).harness.inspect(BACKGROUND_CONTEXT)).tasks).toEqual([]);
+        expect(await parentHarness.inspect(BACKGROUND_CONTEXT)).toEqual(before);
+        await child.kernel.close();
+        reopened = createKernel(childOptions());
+        await reopened.kernel.open(branch);
+        await Bun.sleep(800);
+        expect(childExecutions).toBe(0);
+        expect(reopened.calls).toHaveLength(0);
+        release.resolve();
+        await parent.waitForWhere(() => parent.events.filter(event => event.type === 'agent_end').length === 2);
+        expect(parentExecutions).toBe(2);
+        expect(parent.calls).toHaveLength(3);
+      } finally {
+        release.resolve();
+        await reopened?.kernel.close();
+        await child?.kernel.close();
+        await parent.kernel.close();
+      }
+    }, 20_000);
+
+    it(`settles all inherited task states and paginated queues across ${backend} conversations without handlers`, async () => {
+      const parentPath = scratch();
+      const parentStore = join(parentPath, 'durable-store');
+      if (backend === 'jsonl') {
+        mkdirSync(parentStore);
+        writeFileSync(join(parentStore, 'main.jsonl'), '');
+      }
+      let handlers = 0;
+      const probe = defineTask({
+        name: 'branch-state-probe', version: 1, initial: () => ({ phase: 'run' }),
+        phases: { run: async (_task, runtime, context) => {
+          handlers++;
+          await runtime.commit(() => ({ status: 'terminal', outcome: { status: 'completed', result: null } }), context);
+        } },
+        abort: async (_task, runtime, context) => {
+          handlers++;
+          await runtime.commit(() => ({ status: 'terminal', outcome: { status: 'aborted' } }), context);
+        },
+      });
+      const taskDoc = defineDoc({ kind: 'branch-task-state', version: 1, scope: 'task', initial: () => ({ transient: true }) });
+      const extension = defineExtension({ name: 'branch-states', tasks: [probe] });
+      const registry = createRegistry<ToolRegistration>();
+      registry.install(extension);
+      const storage = await openDurableStorage(parentStore, BACKGROUND_CONTEXT);
+      const harness = await Harness.open(storage, { models: () => { throw new Error('No fixture models'); }, registry }, BACKGROUND_CONTEXT);
+      const ids: TaskId[] = [];
+      const submissions: SubmissionId[] = [];
+      let anchor = '';
+      let completed: Awaited<ReturnType<typeof storage.task>>;
+      try {
+        const root = await harness.root(BACKGROUND_CONTEXT);
+        const other = await harness.createConversation({ ownership: { kind: 'ownerless' } }, BACKGROUND_CONTEXT);
+        await harness.commit(async tx => {
+          const entry = await tx.appendEntry(root.id, { kind: 'pi.user', model: [{ role: 'user', content: 'retained fixture history', timestamp: 1 }] });
+          anchor = String(entry.id);
+          for (let index = 0; index < 262; index++) {
+            ids.push(await tx.createTask(probe, {}, { ownership: { kind: 'conversation' }, conversationId: index === 260 ? other.id : root.id, background: index % 2 === 0 }));
+          }
+          await tx.doc(taskDoc, ids[0]!);
+          const inbox = await tx.doc(InboxDoc, root.id);
+          for (let index = 0; index < 260; index++) {
+            const submission = await tx.createSubmission({ type: 'input', conversationId: root.id, status: 'queued' });
+            submissions.push(submission.id);
+            inbox.items.push({ id: submission.id, mode: 'followUp', content: `queued fixture ${index}` });
+          }
+          const placed = await tx.createSubmission({ type: 'input', conversationId: root.id, status: 'placed', entry: entry.id });
+          submissions.push(placed.id);
+          (await tx.doc(LiveDoc, root.id)).run = { taskId: ids[0]!, inputs: [placed.id] };
+        }, BACKGROUND_CONTEXT);
+      } finally {
+        await harness.close(BACKGROUND_CONTEXT);
+      }
+      const seeded = await openDurableStorage(parentStore, BACKGROUND_CONTEXT);
+      try {
+        const writes: StorageWrite[] = [];
+        for (const [index, id] of ids.entries()) {
+          const task = (await seeded.task(id, BACKGROUND_CONTEXT))!;
+          const checkpoint = { phase: 'run' };
+          const states = [
+            { status: 'pending' as const, checkpoint },
+            { status: 'running' as const, checkpoint },
+            { status: 'waiting' as const, checkpoint, on: [ids[3]!], policy: 'allSettled' as const },
+            { status: 'sleeping' as const, checkpoint, until: Date.now() + 60_000 },
+            { status: 'completing' as const, outcome: { status: 'completed' as const, result: null } },
+          ];
+          writes.push({ type: 'task', value: { ...task, abortRequested: index === 0, state: index === 261
+            ? { status: 'terminal', outcome: { status: 'completed', result: { preserved: true } } }
+            : states[index < 257 ? 0 : index - 256]! } });
+        }
+        await seeded.commit(writes, BACKGROUND_CONTEXT);
+        completed = await seeded.task(ids.at(-1)!, BACKGROUND_CONTEXT);
+      } finally {
+        await seeded.close(BACKGROUND_CONTEXT);
+      }
+      const before = Object.fromEntries(readdirSync(parentStore).map(name => [name, readFileSync(join(parentStore, name))]));
+      const child = createKernel({ sessionPath: scratch(), script: [], extensions: [extension] });
+      try {
+        await child.kernel.open({ branchFromSessionPath: parentPath, branchFromSdkTurnId: anchor });
+        await Bun.sleep(100);
+        const inherited = (child.kernel as unknown as { harness: Harness }).harness;
+        expect(handlers).toBe(0);
+        expect(child.calls).toHaveLength(0);
+        expect((await inherited.inspect(BACKGROUND_CONTEXT)).tasks).toEqual([]);
+        expect((await inherited.inspect(BACKGROUND_CONTEXT)).submissions).toEqual([]);
+        for (const id of ids) expect((await inherited.getTask(id, BACKGROUND_CONTEXT))?.state.status).toBe('terminal');
+        expect(await inherited.getTask(ids.at(-1)!, BACKGROUND_CONTEXT)).toEqual(completed);
+        expect((await inherited.getTask(ids[260]!, BACKGROUND_CONTEXT))?.state.outcome).toEqual({ status: 'completed', result: null });
+        for (const id of submissions) {
+          const submission = await inherited.submission(id, BACKGROUND_CONTEXT);
+          expect((await submission.status(BACKGROUND_CONTEXT)).status).toBe('unanswered');
+        }
+        expect(await inherited.snapshot(taskDoc, ids[0]!, BACKGROUND_CONTEXT)).toBeUndefined();
+        expect(Object.fromEntries(readdirSync(parentStore).map(name => [name, readFileSync(join(parentStore, name))]))).toEqual(before);
+      } finally {
+        await child.kernel.close();
+      }
+    }, 20_000);
+
+    it(`still resumes an interrupted non-branch ${backend} generation`, async () => {
+      const parentPath = scratch();
+      const parentStore = join(parentPath, 'durable-store');
+      if (backend === 'jsonl') {
+        mkdirSync(parentStore);
+        writeFileSync(join(parentStore, 'main.jsonl'), '');
+      }
+      const release = Promise.withResolvers<AssistantMessageEvent[]>();
+      const parent = createKernel({ sessionPath: parentPath, script: [release.promise], extensions: [branchTools(() => {})] });
+      const restoredPath = scratch();
+      let executions = 0;
+      const restored = createKernel({ sessionPath: restoredPath, script: [toolCallEvents(branchProbe), textEvents('recovered answer')], extensions: [branchTools(() => { executions++; })] });
+      try {
+        await parent.kernel.open({ model: branchModel });
+        await parent.kernel.submitPrompt('interrupted ordinary input');
+        await parent.waitForWhere(() => parent.calls.length === 1);
+        const restoredStore = join(restoredPath, 'durable-store');
+        cpSync(parentStore, restoredStore, { recursive: true, filter: source => !['store.db', 'store.db-wal', 'store.db-shm'].includes(source.split(/[\\/]/).at(-1)!) });
+        if (backend === 'sqlite') {
+          const database = new Database(join(parentStore, 'store.db'), { readonly: true });
+          try { database.query('VACUUM INTO ?').run(join(restoredStore, 'store.db')); }
+          finally { database.close(); }
+        }
+        await restored.kernel.open({ model: branchModel });
+        await restored.waitFor('agent_end');
+        expect(restored.kernel.sessionId).toBe(parent.kernel.sessionId);
+        expect(restored.calls).toHaveLength(2);
+        expect(executions).toBe(1);
+        expect(JSON.stringify(restored.calls[0]!.messages)).toContain('interrupted ordinary input');
+      } finally {
+        release.resolve(textEvents('original parent answer'));
+        await restored.kernel.close();
+        await parent.kernel.close();
+      }
+    }, 15_000);
+  }
 
   it('resumes the existing branch without reapplying the parent cutoff', async () => {
     const parentPath = scratch();

@@ -37,6 +37,7 @@ import {
   type ToolRegistration,
 } from '@earendil-works/pi-durable';
 import { openDurableStorage } from './storage/durable-storage.ts';
+import { discardInheritedWork } from './storage/branch-storage.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import type { AssistantMessage, Models, ToolCall } from '@earendil-works/pi-ai';
 import { calculateContextTokens, estimateMessageTokens } from '@earendil-works/pi-ai/utils/estimate';
@@ -231,7 +232,7 @@ export class DurableKernel {
         }
       }
 
-      await this.openStore();
+      await this.openStore(copiedParent);
 
       // Complete any deferred parent migration in the copy before resolving its branch anchor.
       // Existing root entries remain intact; the transcript also restores model/thinking defaults.
@@ -280,7 +281,10 @@ export class DurableKernel {
           BACKGROUND_CONTEXT,
         );
       }
-      if (copiedParent) unlinkSync(pendingBranch);
+      if (copiedParent) {
+        this.harness!.resume();
+        unlinkSync(pendingBranch);
+      }
     } catch (error) {
       if (ownsPendingBranch) {
         try {
@@ -434,8 +438,17 @@ export class DurableKernel {
     }, BACKGROUND_CONTEXT);
   }
 
-  private async openStore(): Promise<void> {
+  private async openStore(copiedParent: boolean): Promise<void> {
     const storage = await openDurableStorage(this.storeDir, BACKGROUND_CONTEXT);
+    if (copiedParent) {
+      try {
+        // Clear inherited work before Harness.open can reconcile it; abort/wait APIs can schedule it.
+        await discardInheritedWork(storage);
+      } catch (error) {
+        await storage.close(BACKGROUND_CONTEXT).catch(() => {});
+        throw error;
+      }
+    }
 
     const registry = createRegistry<ToolRegistration>();
     this.registry = registry;
@@ -479,7 +492,7 @@ export class DurableKernel {
         this.options.hooks.debugLog(`[kernel] ${info?.type ?? 'report'}: ${error instanceof Error ? error.message : String(error)}`);
       },
     }, BACKGROUND_CONTEXT);
-    this.harness.resume();
+    if (!copiedParent) this.harness.resume();
 
     const marker = join(this.storeDir, 'conversation-id.txt');
     if (existsSync(marker)) {

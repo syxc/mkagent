@@ -2681,12 +2681,12 @@
       "reason": "Migrate local main index.ts queryLlm behavior from temporary AgentSessions to pi-ai completeSimple while retaining mini-model recovery and cancellation."
     },
     "packages/pi-agent-server/src/kernel.e2e.test.ts": {
-      "sha256": "e116fea1cc1f3473b2b1ded351500f869cffe57c18f1374315ded49fa717efac",
+      "sha256": "1d1370acb603e2aa3df0f7109f239ec5a5d8d072787c09cac41dc2c6a7a49a96",
       "reason": "Move retained Pi session contracts to a real durable Harness; add persistence, branch migration, tools, cache warming and compaction races, direct and nested proxy export checks across SQLite and JSONL, and subprocess reinitialization, EOF, shutdown and SIGTERM assertions with opening kernels or pending approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "34c3113cbe2eefac519e8f9b7f074ed71ad89c2e4830bc8d7afdd95251931079",
-      "reason": "Replace local main AgentSession lifecycle wiring with a durable Harness; retain host-compatible events and prompt replacement, derive context usage from committed history, preserve branch snapshots and anchors, update tool registrations live, and settle or cancel compaction tasks and queued summaries before shutdown."
+      "sha256": "02e779688277c387808541944acd00b22280e3217f4b055bec7f548e702f7ee8",
+      "reason": "Replace local main AgentSession lifecycle wiring with a durable Harness; retain host-compatible events and prompt replacement, derive context usage from committed history, preserve branch snapshots and anchors, update tool registrations live, and settle or cancel compaction tasks and queued summaries before shutdown. Retire inherited work before opening a copied branch."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
       "sha256": "2b2ee30b4478fabc39101535c97668c64a526632849f6e76446d91794360af0e",
@@ -2739,6 +2739,10 @@
     "packages/pi-agent-server/src/storage/durable-storage.ts": {
       "sha256": "b85448b29d4529d0293bfcdf676b8c3f3c9eaa59352414ac1e4d58fd69313c2a",
       "reason": "Adapt chord 1.4.0 NodeSqliteDatabase queue and transaction semantics to bun:sqlite, using pi-durable SQLite storage while retaining existing JSONL stores."
+    },
+    "packages/pi-agent-server/src/storage/branch-storage.ts": {
+      "sha256": "988aa1b3f6e7a0a5ed9798dc77741aca6b95d94b3a71ceb11db03e1114dd14e7",
+      "reason": "Retire inherited tasks, submissions and runtime documents atomically through Storage before opening a copied branch; preserve committed history and usage without scheduling inherited work."
     },
     "packages/pi-agent-server/src/tools/builtin.ts": {
       "sha256": "b80a2c8856a215e311a8b59356898b0b05d3798690fe3d015abea018ee9e5d08",
