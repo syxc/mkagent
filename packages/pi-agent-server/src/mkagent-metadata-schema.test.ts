@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { createEditToolDefinition } from '@earendil-works/pi-coding-agent';
+import { createEditTool } from '@earendil-works/pi-durable/tools';
 import { allowMkAgentMetadataProperties, stripMkAgentMetadata } from './mkagent-metadata-schema.ts';
 
 describe('MkAgent metadata schema compatibility for Pi tools', () => {
@@ -39,7 +39,7 @@ describe('MkAgent metadata schema compatibility for Pi tools', () => {
   });
 
   it('widens the actual Pi Edit tool schema without making metadata required', () => {
-    const editTool = createEditToolDefinition('/tmp');
+    const editTool = createEditTool();
     const widened = allowMkAgentMetadataProperties(editTool.parameters);
     const widenedSchema = widened as {
       additionalProperties?: unknown;

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { ModelRegistry, ModelRuntime } from '@earendil-works/pi-coding-agent';
-import { InMemoryCredentialStore, InMemoryModelsStore } from '@earendil-works/pi-ai';
+import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
+import { builtinModels } from '@earendil-works/pi-ai/providers/all';
 import { parseCloudflareGatewayUrl } from '../../shared/src/config/cloudflare-gateway.ts';
 import { providerEndpointEnv } from './provider-endpoint-env.ts';
 
@@ -58,12 +58,10 @@ describe('Cloudflare AI Gateway through the Pi SDK', () => {
 
     const credentials = new InMemoryCredentialStore();
     await credentials.modify('cloudflare-ai-gateway', async () => ({ type: 'api_key', key: 'cf-token' }) as never);
-    const runtime = await ModelRuntime.create({ credentials, modelsPath: null, modelsStore: new InMemoryModelsStore() } as never);
-    const model = new ModelRegistry(runtime).find('cloudflare-ai-gateway', 'claude-sonnet-5-5');
+    const models = builtinModels({ credentials });
+    const model = models.getModel('cloudflare-ai-gateway', 'claude-haiku-4-5');
     expect(model).toBeDefined();
-    await (runtime as unknown as { streamSimple: Function })
-      .streamSimple(model, { messages: [{ role: 'user', content: 'hi', timestamp: Date.now() }] }, { maxRetries: 0 })
-      .result();
+    await models.streamSimple(model!, { messages: [{ role: 'user', content: 'hi', timestamp: Date.now() }] }, { maxRetries: 0 }).result();
 
     expect(seen[0]?.url.startsWith('https://gateway.ai.cloudflare.com/v1/acc123/gw456/anthropic/')).toBe(true);
     expect(seen[0]?.auth).toBe('Bearer cf-token');

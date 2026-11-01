@@ -15,7 +15,6 @@ describe('createSearchTool', () => {
     const tool = createSearchTool(provider);
 
     expect(tool.name).toBe('web_search');
-    expect(tool.label).toBe('Web Search');
     expect(tool.description).toContain('Search the web');
   });
 
@@ -49,12 +48,12 @@ describe('createSearchTool', () => {
     };
 
     const tool = createSearchTool(provider);
-    const result = await tool.execute('tool-1', { query: 'mkagent', count: 99 });
+    const result = await tool.execute({ query: 'mkagent', count: 99 });
 
     expect(capturedCount).toBe(10);
     expect(result.isError).toBeUndefined();
-    expect(result.content[0]?.type).toBe('text');
-    expect((result.content[0] as any).text).toContain('(via MockProvider)');
+    expect(result.output[0]?.type).toBe('text');
+    expect((result.output[0] as any).text).toContain('(via MockProvider)');
   });
 
   it('automatically falls back when primary provider fails', async () => {
@@ -73,12 +72,12 @@ describe('createSearchTool', () => {
     };
 
     const tool = createSearchTool(provider, fallbackProvider);
-    const result = await tool.execute('tool-2', { query: 'mkagent', count: 5 });
+    const result = await tool.execute({ query: 'mkagent', count: 5 });
 
     expect(result.isError).toBeUndefined();
-    expect((result.content[0] as any).text).toContain('automatically fell back to DuckDuckGo');
-    expect((result.content[0] as any).text).toContain('401 missing scope');
-    expect((result.content[0] as any).text).toContain('https://fallback.example');
+    expect((result.output[0] as any).text).toContain('automatically fell back to DuckDuckGo');
+    expect((result.output[0] as any).text).toContain('401 missing scope');
+    expect((result.output[0] as any).text).toContain('https://fallback.example');
   });
 
   it('marks failures as errors when primary and fallback both fail', async () => {
@@ -97,11 +96,11 @@ describe('createSearchTool', () => {
     };
 
     const tool = createSearchTool(provider, fallbackProvider);
-    const result = await tool.execute('tool-3', { query: 'mkagent', count: -1 });
+    const result = await tool.execute({ query: 'mkagent', count: -1 });
 
     expect(result.isError).toBe(true);
-    expect((result.content[0] as any).text).toContain('primary (OpenAI) failed');
-    expect((result.content[0] as any).text).toContain('fallback (DuckDuckGo) failed');
+    expect((result.output[0] as any).text).toContain('primary (OpenAI) failed');
+    expect((result.output[0] as any).text).toContain('fallback (DuckDuckGo) failed');
   });
 
   it('truncates oversized provider errors in the tool result', async () => {
@@ -119,8 +118,8 @@ describe('createSearchTool', () => {
     };
 
     const tool = createSearchTool(provider, fallbackProvider);
-    const result = await tool.execute('tool-5', { query: 'mkagent' });
-    const text = (result.content[0] as any).text as string;
+    const result = await tool.execute({ query: 'mkagent' });
+    const text = (result.output[0] as any).text as string;
     expect(result.isError).toBe(true);
     expect(text).toContain('primary detail');
     expect(text).toContain('fallback detail');
@@ -137,10 +136,10 @@ describe('createSearchTool', () => {
     };
 
     const tool = createSearchTool(ddgProvider, ddgProvider);
-    const result = await tool.execute('tool-4', { query: 'mkagent' });
+    const result = await tool.execute({ query: 'mkagent' });
 
     expect(result.isError).toBe(true);
-    expect((result.content[0] as any).text).toContain('Search failed');
-    expect((result.content[0] as any).text).toContain('ddg boom');
+    expect((result.output[0] as any).text).toContain('Search failed');
+    expect((result.output[0] as any).text).toContain('ddg boom');
   });
 });

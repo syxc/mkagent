@@ -1,12 +1,12 @@
 /**
- * Creates a `web_search` ToolDefinition backed by the given search provider.
+ * Creates a `web_search` durable tool registration backed by the given search provider.
  *
  * The tool name is always `web_search` regardless of the underlying provider,
  * so the model doesn't need to know which backend is used.
  */
 
 import { Type } from '@earendil-works/pi-ai';
-import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { defineTool } from '@earendil-works/pi-durable';
 import type { WebSearchProvider, WebSearchResult } from './types.ts';
 import { DDGSearchProvider } from './providers/ddg.ts';
 
@@ -37,7 +37,7 @@ function formatResults(
   const noteText = note ? `${note}\n\n` : '';
 
   return {
-    content: [
+    output: [
       {
         type: 'text' as const,
         text: `${noteText}Search results for "${query}" (via ${providerName}):\n\n${formatted}`,
@@ -56,16 +56,13 @@ function formatErrorSnippet(message: string, max = 180): string {
 export function createSearchTool(
   provider: WebSearchProvider,
   fallbackProvider: WebSearchProvider = new DDGSearchProvider(),
-): ToolDefinition<typeof schema> {
-  return {
+) {
+  return defineTool({
     name: 'web_search',
-    label: 'Web Search',
     description:
       'Search the web for current information. Returns titles, URLs, and snippets. Use for current information, documentation lookups, or fact-checking.',
-    promptSnippet:
-      'Use web_search for up-to-date information, documentation lookups, or fact-checking. Returns titles, URLs, and snippets. Accepts a query string and optional count (1-10).',
     parameters: schema,
-    async execute(toolCallId, params) {
+    async execute(params) {
       const { query } = params;
       const count = Math.max(1, Math.min(10, params.count ?? 5));
 
@@ -88,7 +85,7 @@ export function createSearchTool(
           } catch (fallbackErr) {
             const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
             return {
-              content: [
+              output: [
                 {
                   type: 'text' as const,
                   text: `Search failed for "${query}": primary (${provider.name}) failed with "${formatErrorSnippet(primaryMsg, 400)}"; fallback (${fallbackProvider.name}) failed with "${formatErrorSnippet(fallbackMsg, 400)}"`,
@@ -101,7 +98,7 @@ export function createSearchTool(
         }
 
         return {
-          content: [
+          output: [
             {
               type: 'text' as const,
               text: `Search failed for "${query}": ${formatErrorSnippet(primaryMsg, 400)}`,
@@ -112,5 +109,5 @@ export function createSearchTool(
         };
       }
     },
-  };
+  });
 }

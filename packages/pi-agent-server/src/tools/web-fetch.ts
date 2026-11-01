@@ -1,6 +1,5 @@
 import { Type } from '@earendil-works/pi-ai';
-import type { AgentToolResult } from '@earendil-works/pi-agent-core';
-import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { defineTool, type ToolRegistration } from '@earendil-works/pi-durable';
 import TurndownService from 'turndown';
 import { parse as parseHtml } from 'node-html-parser';
 import { join } from 'node:path';
@@ -151,11 +150,18 @@ async function readResponseText(response: Response, maxSize: number): Promise<st
 // Helpers
 // ============================================================
 
-function result(text: string, isError = false): AgentToolResult<Record<string, never>> {
+/** Durable tool result of this tool: model-facing output text plus details. */
+type WebFetchResult = {
+  output: Array<{ type: 'text'; text: string }>;
+  details: Record<string, never>;
+  isError?: boolean;
+};
+
+function result(text: string, isError = false): WebFetchResult {
   return {
-    content: [{ type: 'text', text }],
+    output: [{ type: 'text', text }],
     details: {},
-    // Pi >=0.99: an error result for the model and the UI, without throwing.
+    // An error result for the model and the UI, without throwing.
     ...(isError ? { isError: true } : {}),
   };
 }
@@ -229,7 +235,7 @@ async function handlePdf(
   buffer: Buffer,
   url: string,
   saveBinary: (buffer: Buffer, url: string, ext: string) => Promise<string>,
-): Promise<AgentToolResult<{ isError?: boolean }>> {
+): Promise<WebFetchResult> {
   let savedPath: string;
   try {
     savedPath = await saveBinary(buffer, url, '.pdf');
@@ -258,7 +264,7 @@ async function handleImage(
   url: string,
   contentType: string,
   saveBinary: (buffer: Buffer, url: string, ext: string) => Promise<string>,
-): Promise<AgentToolResult<{ isError?: boolean }>> {
+): Promise<WebFetchResult> {
   const ext = MIME_TO_EXT[contentType] || '.bin';
   const savedPath = await saveBinary(buffer, url, ext);
   const sizeKb = Math.round(buffer.length / 1024);
@@ -273,7 +279,7 @@ function handleHtml(
   html: string,
   url: string,
   prompt: string | undefined,
-): AgentToolResult<{ isError?: boolean }> {
+): WebFetchResult {
   const root = parseHtml(html);
   // Strip noise elements from the DOM before selecting mainContent.
   root
@@ -297,7 +303,7 @@ function handleHtml(
 function handleJson(
   raw: string,
   url: string,
-): AgentToolResult<{ isError?: boolean }> {
+): WebFetchResult {
   let formatted: string;
   try {
     formatted = JSON.stringify(JSON.parse(raw), null, 2);
@@ -310,7 +316,7 @@ function handleJson(
 function handleText(
   raw: string,
   url: string,
-): AgentToolResult<{ isError?: boolean }> {
+): WebFetchResult {
   return result(`Content from ${url}:\n\n${truncate(raw)}`);
 }
 
@@ -320,7 +326,7 @@ function handleText(
 
 export function createWebFetchTool(
   getSessionPath: () => string | null,
-): ToolDefinition<typeof schema> {
+): ToolRegistration<typeof schema> {
   async function saveBinary(buffer: Buffer, url: string, ext: string): Promise<string> {
     const sessionPath = getSessionPath();
     if (!sessionPath) throw new Error('No active session — cannot save file to disk');
@@ -336,15 +342,12 @@ export function createWebFetchTool(
     return abs;
   }
 
-  return {
+  return defineTool({
     name: 'web_fetch',
-    label: 'Web Fetch',
     description:
       'Fetch a URL and extract its content. Handles HTML (→ markdown), PDF (→ extracted text), images (→ saved to disk), JSON (→ pretty-printed), and plain text.',
-    promptSnippet:
-      'Use web_fetch to retrieve and extract content from a URL. Supports HTML (converted to markdown), PDF (text extraction), images (saved to disk), JSON (pretty-printed), and plain text. Pass url (required) and optional prompt to focus extraction.',
     parameters: schema,
-    async execute(toolCallId, params) {
+    async execute(params) {
       const { url, prompt } = params;
 
       // SSRF protection: block non-HTTP schemes and private/reserved IPs
@@ -417,5 +420,5 @@ export function createWebFetchTool(
 
       return handleText(text, finalUrl);
     },
-  };
+  });
 }

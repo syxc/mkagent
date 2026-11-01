@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'bun:test';
-import { InMemoryCredentialStore, InMemoryModelsStore } from '@earendil-works/pi-ai';
-import { ModelRuntime } from '@earendil-works/pi-coding-agent';
+import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
+import { builtinModels } from '@earendil-works/pi-ai/providers/all';
 import { adaptCredentialForPiSdk } from './adapt-credential.ts';
 
-/** Runtime backed by a store holding the adapted credential (null adaptations store nothing). */
-async function runtimeWithAdaptedCredential(
+/** Models collection backed by a store holding the adapted credential (null adaptations store nothing). */
+async function modelsWithAdaptedCredential(
   provider: string,
   credential: Parameters<typeof adaptCredentialForPiSdk>[1],
-): Promise<ModelRuntime> {
+) {
   const credentials = new InMemoryCredentialStore();
   const adapted = adaptCredentialForPiSdk(provider, credential);
   if (adapted) {
     await credentials.modify(provider, async () => adapted);
   }
-  return ModelRuntime.create({ credentials, modelsPath: null, modelsStore: new InMemoryModelsStore() });
+  return builtinModels({ credentials });
 }
 
 /**
@@ -83,18 +83,17 @@ describe('adaptCredentialForPiSdk', () => {
 });
 
 /**
- * End-to-end resolution through the real SDK runtime — the exact checks the
- * agent-session prompt preflight and request-auth paths perform. These are the
- * assertions that would have caught the 0.81.1 breakage before release.
+ * End-to-end resolution through the real SDK Models collection — the exact
+ * checks the agent-session prompt preflight and request-auth paths perform.
+ * These are the assertions that would have caught the 0.81.1 breakage before release.
  */
-describe('adapted credentials resolve through ModelRuntime', () => {
+describe('adapted credentials resolve through the Pi SDK Models collection', () => {
   it('openai-codex: adapted bearer token authenticates and models become available', async () => {
-    const runtime = await runtimeWithAdaptedCredential('openai-codex', { type: 'api_key', key: 'chatgpt-jwt' });
-    const auth = await runtime.getAuth('openai-codex');
+    const models = await modelsWithAdaptedCredential('openai-codex', { type: 'api_key', key: 'chatgpt-jwt' });
+    const auth = await models.getAuth('openai-codex');
     expect(auth?.auth.apiKey).toBe('chatgpt-jwt');
-    expect(runtime.hasConfiguredAuth('openai-codex')).toBe(true);
-    expect(runtime.isUsingOAuth('openai-codex')).toBe(true);
-    expect(runtime.getAvailableSnapshot().some(m => m.provider === 'openai-codex')).toBe(true);
+    expect(await models.checkAuth('openai-codex')).toMatchObject({ type: 'oauth' });
+    expect((await models.getAvailable('openai-codex')).length).toBeGreaterThan(0);
   });
 
   it('amazon-bedrock: iam credential is not stored, so ambient AWS env vars keep resolving', async () => {
@@ -103,16 +102,16 @@ describe('adapted credentials resolve through ModelRuntime', () => {
     process.env.AWS_ACCESS_KEY_ID = 'AKIA_TEST';
     process.env.AWS_SECRET_ACCESS_KEY = 'test-secret';
     try {
-      const runtime = await runtimeWithAdaptedCredential('amazon-bedrock', {
+      const models = await modelsWithAdaptedCredential('amazon-bedrock', {
         type: 'iam',
         accessKeyId: 'AKIA_TEST',
         secretAccessKey: 'test-secret',
         region: 'eu-west-1',
       });
-      // Storing the iam credential verbatim flips both of these to false/empty
+      // Storing the iam credential verbatim would flip these to undefined/empty
       // (a stored credential shadows ambient resolution in pi SDK ≥0.81).
-      expect(runtime.hasConfiguredAuth('amazon-bedrock')).toBe(true);
-      expect(runtime.getAvailableSnapshot().some(m => m.provider === 'amazon-bedrock')).toBe(true);
+      expect(await models.checkAuth('amazon-bedrock')).toBeDefined();
+      expect((await models.getAvailable('amazon-bedrock')).length).toBeGreaterThan(0);
     } finally {
       if (priorAccessKey === undefined) delete process.env.AWS_ACCESS_KEY_ID;
       else process.env.AWS_ACCESS_KEY_ID = priorAccessKey;

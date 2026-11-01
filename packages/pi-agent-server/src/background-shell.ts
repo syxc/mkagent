@@ -2,10 +2,15 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { AgentEvent } from '@mkagent/core/types';
-import type { AgentToolResult } from '@earendil-works/pi-coding-agent';
 
-type Result = AgentToolResult<unknown>;
-type Execute = (signal: AbortSignal, update: (result: Result) => void) => Promise<Result>;
+/** Model-facing result of a background shell task (old pi-coding-agent AgentToolResult shape). */
+interface ShellToolResult {
+  content: Array<{ type: 'text'; text: string }>;
+  details?: unknown;
+  isError?: boolean;
+}
+
+type Execute = (signal: AbortSignal, update: (result: ShellToolResult) => void) => Promise<ShellToolResult>;
 
 /** Owns only commands launched by this Pi subprocess. Permission checking happens before start. */
 export class BackgroundShells {
@@ -13,13 +18,13 @@ export class BackgroundShells {
 
   constructor(private emit: (event: AgentEvent) => void) {}
 
-  start(options: { directory: string; toolUseId: string; command: string; execute: Execute }): Result {
+  start(options: { directory: string; toolUseId: string; command: string; execute: Execute }): ShellToolResult {
     const taskId = `shell-${randomUUID()}`;
     mkdirSync(options.directory, { recursive: true });
     const outputFile = join(options.directory, `${taskId}.output`);
     writeFileSync(outputFile, '');
     const controller = new AbortController();
-    const update = (result: Result) => {
+    const update = (result: ShellToolResult) => {
       const text = result.content.filter(part => part.type === 'text').map(part => part.text).join('\n');
       writeFileSync(outputFile, text);
     };

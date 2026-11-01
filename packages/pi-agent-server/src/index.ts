@@ -24,7 +24,7 @@ import { homedir } from 'node:os';
 
 // Durable kernel
 import { defineExtension, defineTool, type Extension, type ToolRegistration } from '@earendil-works/pi-durable';
-import type { AgentSessionEvent } from '@earendil-works/pi-coding-agent';
+import type { AgentSessionEvent } from '@mkagent/shared/agent/pi-events';
 
 // Pre-register the Bedrock provider module so the SDK doesn't attempt a
 // dynamic import of "./amazon-bedrock.js" — which fails in the bundled output
@@ -61,8 +61,12 @@ import { THINKING_TO_PI } from '../../shared/src/agent/backend/pi/constants.ts';
 import { createWebFetchTool } from './tools/web-fetch.ts';
 import { resolveSearchProvider } from './tools/search/resolve-provider.ts';
 import { createSearchTool } from './tools/search/create-search-tool.ts';
-import { adaptToolDefinition, createBuiltinTools } from './tools/builtin.ts';
+import { createBuiltinTools } from './tools/builtin.ts';
 import { wrapToolForKernel, type ToolWrapDeps } from './tools/wrap.ts';
+import { createCodemodeExtensionFor } from './tools/codemode.ts';
+import { loadMcpTools, closeMcpConnections, type McpToolsLoadResult } from './mcp/extension.ts';
+import { createToolSearchExtension } from '@earendil-works/pi-durable/tool-search';
+import { version as CLIENT_VERSION } from '../package.json';
 import type { PiCompactResult, PiContextUsagePayload } from '../../shared/src/agent/backend/pi/protocol.ts';
 import { adaptCredentialForPiSdk, type PiCredential } from './adapt-credential.ts';
 import { resolveCraftAgentDir } from './agent-dir.ts';
@@ -233,6 +237,7 @@ type OutboundMessage =
 // ============================================================
 
 let kernel: DurableKernel | null = null;
+let mcpLoad: McpToolsLoadResult | null = null;
 let modelRuntime: ModelRuntime | null = null;
 let modelRuntimePromise: Promise<ModelRuntime> | null = null;
 
@@ -587,7 +592,7 @@ function buildProxyTools(): ToolRegistration[] {
  * `isError` so the model gets an error tool result and the UI marks the call
  * failed, as a thrown error would.
  */
-function buildToolsExtension(cwd: string): Extension {
+function buildToolsExtension(cwd: string, mcpTools: readonly ToolRegistration[]): Extension {
   if (!initConfig) throw new Error('Cannot build tools: init not received');
   const builtinTools = createBuiltinTools(cwd);
   const searchTool = createSearchTool(searchProvider);
@@ -618,10 +623,14 @@ function buildToolsExtension(cwd: string): Extension {
 
   const wrapped = [
     ...builtinTools,
-    ...[searchTool, webFetchTool].map(tool => adaptToolDefinition(tool, cwd)),
+    searchTool,
+    webFetchTool,
+    // MCP tools go through the same permission + summarization wrap as the
+    // rest; their callers/deferred/structuredOutputSchema fields survive the spread.
+    ...mcpTools,
     ...proxyTools,
   ].map(tool => wrapToolForKernel(tool, wrapDeps));
-  debugLog(`Session tools: ${builtinTools.length} builtin + ${proxyTools.length + 2} web/proxy = ${wrapped.length} total`);
+  debugLog(`Session tools: ${builtinTools.length} builtin + ${mcpTools.length} mcp + ${proxyTools.length + 2} web/proxy = ${wrapped.length} total`);
 
   return defineExtension({ name: 'mkagent-tools', tools: wrapped });
 }
@@ -657,6 +666,15 @@ async function ensureKernel(): Promise<DurableKernel> {
   const cwd = resolvedCwd();
   const sessionPath = getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId);
 
+  // MCP servers connect once at kernel open; tools register statically (see mcp/extension.ts).
+  mcpLoad = await loadMcpTools({
+    agentDir: resolveCraftAgentDir(initConfig),
+    cwd,
+    version: CLIENT_VERSION,
+    debugLog,
+  });
+  for (const error of mcpLoad.errors) debugLog(`MCP: ${error}`);
+
   const k = new DurableKernel({
     sessionPath,
     cwd,
@@ -667,7 +685,12 @@ async function ensureKernel(): Promise<DurableKernel> {
       return modelRuntime.models;
     },
     hooks: kernelHooks,
-    toolsExtension: buildToolsExtension(cwd),
+    toolsExtension: buildToolsExtension(cwd, mcpLoad.tools),
+    extensions: [
+      // Codemode + tool_search default on (mcp.json autoEnableCodemode: false opts out of codemode).
+      ...(mcpLoad.autoEnableCodemode ? [createCodemodeExtensionFor(mcpLoad.namespaces)] : []),
+      createToolSearchExtension(),
+    ],
   });
 
   let model: KernelModelRef | undefined;
@@ -1089,6 +1112,12 @@ async function handleShutdown(): Promise<void> {
       // Best-effort during shutdown.
     }
     kernel = null;
+  }
+
+  // Disconnect MCP servers
+  if (mcpLoad) {
+    await closeMcpConnections(mcpLoad.connections);
+    mcpLoad = null;
   }
 
   // Stop callback server

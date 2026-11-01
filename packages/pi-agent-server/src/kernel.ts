@@ -30,7 +30,7 @@ import {
 import { openDurableStorage } from './storage/durable-storage.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import type { AssistantMessage, Models, ToolCall } from '@earendil-works/pi-ai';
-import type { AgentSessionEvent } from '@earendil-works/pi-coding-agent';
+import type { AgentSessionEvent } from '@mkagent/shared/agent/pi-events';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { migrateParentStore, migrateLegacySession, readEntryIdMap } from './migrate.ts';
 import { compactionReserveFor } from './compaction-reserve.ts';
@@ -76,6 +76,8 @@ export interface DurableKernelOptions {
   hooks: KernelHooks;
   /** Tools extension installed on the registry (wrapped builtin + session + MCP tools). */
   toolsExtension: Extension;
+  /** Extra extensions installed beside the tools extension (codemode, tool_search). */
+  extensions?: readonly Extension[];
 }
 
 export interface KernelOpenOptions {
@@ -228,6 +230,7 @@ export class DurableKernel {
       sections: [section('mkagent-system-prompt', () => this.systemPrompt, { tag: false })],
     }));
     registry.install(this.options.toolsExtension);
+    for (const extension of this.options.extensions ?? []) registry.install(extension);
 
     this.harness = await Harness.open(storage, {
       models: () => this.options.modelsSource(),

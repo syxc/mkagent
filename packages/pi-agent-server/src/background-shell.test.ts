@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { createBashToolDefinition } from '@earendil-works/pi-coding-agent';
+import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
+import { BACKGROUND_CONTEXT, type Context } from '@earendil-works/chord/context';
 import type { AgentEvent } from '@mkagent/core/types';
 import { BackgroundShells } from './background-shell';
 
@@ -13,15 +14,42 @@ afterEach(async () => {
   for (const dir of directories.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
+/** Same isolated-context construction the kernel's bash wrapper uses (wrap.ts). */
+function backgroundContext(signal: AbortSignal): Context {
+  return {
+    abortSignal: signal,
+    telemetry: BACKGROUND_CONTEXT.telemetry,
+    value: () => undefined,
+    toString: () => 'background-shell',
+  };
+}
+
 function fixture() {
   const directory = mkdtempSync(join(tmpdir(), 'mkagent task output '));
   directories.push(directory);
   const events: AgentEvent[] = [];
   const registry = new BackgroundShells(event => events.push(event));
   registries.push(registry);
-  const tool = createBashToolDefinition(directory, { exposeSessionEnvironment: false });
+  const env = new NodeExecutionEnv({ cwd: directory });
   const start = (command: string) => registry.start({ directory, toolUseId: crypto.randomUUID(), command,
-    execute: (signal, update) => tool.execute('test', { command }, signal, update, undefined as never),
+    // Same executor path the kernel's bash wrapper takes for run_in_background.
+    execute: async (signal, update) => {
+      let outputBuffer = '';
+      const result = await env.exec(command, {
+        onOutput: (text) => {
+          outputBuffer += text;
+          update({ content: [{ type: 'text', text: outputBuffer }], details: undefined });
+        },
+      }, backgroundContext(signal));
+      const text = result.ok
+        ? outputBuffer
+        : (outputBuffer ? `${outputBuffer}\n${result.error.message}` : result.error.message);
+      return {
+        content: [{ type: 'text', text }],
+        details: undefined,
+        ...(!result.ok || result.value.exitCode !== 0 ? { isError: true } : {}),
+      };
+    },
   });
   return { registry, events, start };
 }
