@@ -17,7 +17,7 @@ import type {
 } from '@earendil-works/pi-agent-core';
 import type {
   AgentSessionEvent,
-} from '@earendil-works/pi-coding-agent';
+} from './agent-session-events.ts';
 import type { AssistantMessage, AssistantMessageEvent } from '@earendil-works/pi-ai';
 import { isContextOverflow, isRetryableAssistantError } from '@earendil-works/pi-ai';
 import { BaseEventAdapter } from '../base-event-adapter.ts';

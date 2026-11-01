@@ -16,6 +16,7 @@
     "./agent": "./src/agent/index.ts",
     "./agent/modes": "./src/agent/mode-types.ts",
     "./agent/mode-types": "./src/agent/mode-types.ts",
+    "./agent/pi-events": "./src/agent/backend/pi/agent-session-events.ts",
     "./agent/thinking-levels": "./src/agent/thinking-levels.ts",
     "./config": "./src/config/index.ts",
     "./docs": "./src/docs/index.ts",
@@ -63,8 +64,7 @@
     "shell-quote": "^1.8.3",
     "yaml": "^2.8.2",
     "@earendil-works/pi-agent-core": "1.1.0",
-    "@earendil-works/pi-ai": "1.1.0",
-    "@earendil-works/pi-coding-agent": "1.1.0"
+    "@earendil-works/pi-ai": "1.1.0"
   },
   "peerDependencies": {
     "zod": ">=4.0.0"
