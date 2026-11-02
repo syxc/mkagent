@@ -48,6 +48,7 @@ import { writeSessionJsonl } from '../../shared/src/sessions/jsonl.ts';
 import type { StoredSession } from '../../shared/src/sessions/types.ts';
 import { restoreFiles } from '../../shared/src/utils/bundle-files.ts';
 import { PiEventAdapter } from '../../shared/src/agent/backend/pi/event-adapter.ts';
+import { EventQueue } from '../../shared/src/agent/backend/event-queue.ts';
 import { closeMcpConnections, loadMcpTools, type McpToolsLoadResult } from './mcp/extension.ts';
 
 const USAGE: Usage = {
@@ -606,6 +607,139 @@ describe('DurableKernel end-to-end', () => {
       await setup.waitFor('agent_end');
       expect(setup.calls).toHaveLength(3);
     } finally {
+      await setup.kernel.close();
+    }
+  }, 10_000);
+
+  for (const mode of ['steer', 'followUp'] as const) for (const response of ['text', 'tool'] as const) for (const ending of ['complete', 'abort'] as const) {
+    it(`keeps the host queue open across ${mode} ${response} successors until ${ending}`, async () => {
+      let release!: (events: AssistantMessageEvent[]) => void;
+      const successor = new Promise<AssistantMessageEvent[]>(resolve => { release = resolve; });
+      const setup = createKernel({
+        sessionPath: scratch(), tools: response === 'tool',
+        script: [response === 'text' ? textEvents('first') : toolCallEvents({ type: 'toolCall', id: 'queued-tool', name: 'echo', arguments: {} }), successor],
+      });
+      const adapter = new PiEventAdapter();
+      adapter.startTurn();
+      const queue = new EventQueue();
+      let consumed = 0;
+      const completions: string[] = [];
+      const consume = () => {
+        for (const event of setup.events.slice(consumed)) {
+          for (const adapted of adapter.adaptEvent(event as never)) queue.enqueue(adapted);
+          if (adapter.shouldCompleteQueue(event.type === 'agent_end')) {
+            queue.complete();
+            completions.push(String(event.type));
+          }
+        }
+        consumed = setup.events.length;
+      };
+      try {
+        await setup.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
+        await setup.kernel.submitPrompt('initial');
+        await setup.waitForWhere(() => setup.calls.length === 1);
+        if (mode === 'steer') await setup.kernel.steer('successor');
+        else await setup.kernel.submitPrompt('successor');
+        await setup.waitForWhere(() => setup.calls.length === 2);
+        consume();
+        expect(completions).toEqual([]);
+        expect(queue.isComplete).toBe(false);
+        if (ending === 'abort') {
+          const abort = setup.kernel.abort();
+          release([{ type: 'error', reason: 'aborted', error: assistantMessage([], 'aborted') }]);
+          await abort;
+        } else {
+          release(textEvents('final successor'));
+          await setup.waitForWhere(event => event.type === 'message_end' && JSON.stringify(event).includes('final successor'));
+        }
+        await setup.waitFor('agent_end');
+        consume();
+        expect(completions).toEqual(['agent_end']);
+        expect(queue.isComplete).toBe(true);
+        const drained = [];
+        for await (const event of queue.drain()) drained.push(event);
+        if (ending === 'complete') expect(JSON.stringify(drained)).toContain('final successor');
+        expect(setup.events.filter(event => event.type === 'agent_start')).toHaveLength(1);
+      } finally {
+        release(textEvents('final successor'));
+        await setup.kernel.close();
+      }
+    }, 10_000);
+  }
+
+  for (const timing of ['committed', 'pending'] as const) it(`keeps a late followUp in the host interaction while predecessor run_end awaits (${timing})`, async () => {
+    let releaseEnd!: () => void;
+    let reachedEnd!: () => void;
+    const endGate = new Promise<void>(resolve => { releaseEnd = resolve; });
+    const atEnd = new Promise<void>(resolve => { reachedEnd = resolve; });
+    let releaseSuccessor!: (events: AssistantMessageEvent[]) => void;
+    const successor = new Promise<AssistantMessageEvent[]>(resolve => { releaseSuccessor = resolve; });
+    const setup = createKernel({ sessionPath: scratch(), script: [textEvents('predecessor'), successor] });
+    const internals = setup.kernel as unknown as { scheduleThresholdCompaction(): Promise<void> };
+    const schedule = internals.scheduleThresholdCompaction.bind(setup.kernel);
+    let firstEnd = true;
+    internals.scheduleThresholdCompaction = async () => {
+      if (firstEnd) {
+        firstEnd = false;
+        reachedEnd();
+        await endGate;
+      }
+      await schedule();
+    };
+    const adapter = new PiEventAdapter();
+    adapter.startTurn();
+    const queue = new EventQueue();
+    const completions: number[] = [];
+    const hooks = (setup.kernel as unknown as { options: { hooks: { emitEvent(event: Record<string, unknown>): void } } }).options.hooks;
+    const emit = hooks.emitEvent;
+    hooks.emitEvent = event => {
+      emit(event);
+      for (const adapted of adapter.adaptEvent(event as never)) queue.enqueue(adapted);
+      if (adapter.shouldCompleteQueue(event.type === 'agent_end')) {
+        queue.complete();
+        completions.push(setup.calls.length);
+      }
+    };
+    try {
+      await setup.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
+      await setup.kernel.submitPrompt('initial');
+      await atEnd;
+      if (timing === 'pending') {
+        const conversation = (setup.kernel as unknown as { conversation: { submit(...args: unknown[]): Promise<unknown> } }).conversation;
+        const submit = conversation.submit.bind(conversation);
+        let releaseSubmit!: () => void;
+        const submitGate = new Promise<void>(resolve => { releaseSubmit = resolve; });
+        conversation.submit = async (...args) => { await submitGate; return submit(...args); };
+        let reachedUsage!: () => void;
+        const atUsage = new Promise<void>(resolve => { reachedUsage = resolve; });
+        const usage = setup.kernel.contextUsagePayload.bind(setup.kernel);
+        setup.kernel.contextUsagePayload = async () => {
+          const result = await usage();
+          reachedUsage();
+          return result;
+        };
+        const submission = setup.kernel.submitPrompt('late followUp');
+        releaseEnd();
+        await atUsage;
+        expect(queue.isComplete).toBe(false);
+        releaseSubmit();
+        await submission;
+      } else {
+        await setup.kernel.submitPrompt('late followUp');
+      }
+      await setup.waitForWhere(() => setup.calls.length === 2);
+      releaseEnd();
+      await setup.waitForWhere(() => setup.events.filter(event => event.type === 'message_end' && (event.message as { role?: string })?.role === 'user').length === 2);
+      expect(completions).toEqual([]);
+      expect(queue.isComplete).toBe(false);
+      releaseSuccessor(textEvents('late final'));
+      await setup.waitFor('agent_end');
+      expect(completions).toEqual([2]);
+      expect(queue.isComplete).toBe(true);
+      expect(setup.events.filter(event => event.type === 'agent_start')).toHaveLength(1);
+    } finally {
+      releaseEnd();
+      releaseSuccessor(textEvents('late final'));
       await setup.kernel.close();
     }
   }, 10_000);

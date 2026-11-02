@@ -163,6 +163,9 @@ export class DurableKernel {
   private pendingSessionTools = new Map<string, { toolName: string; args: Record<string, unknown> }>();
   /** Retained output window per running tool call (append/trimStart semantics). */
   private toolOutputBuffers = new Map<string, string>();
+  private pendingInputs = new Set<Promise<void>>();
+  private acceptedInputs = new Set<number>();
+  private startedInputs = new Set<number>();
 
   constructor(options: DurableKernelOptions) {
     this.options = options;
@@ -319,7 +322,9 @@ export class DurableKernel {
     const pendingCompactions = new Map<number, { reason: 'manual' | 'threshold' | 'overflow'; tokensBefore: number }>();
     let delivery = Promise.resolve();
     let watching = true;
-    const deliver = async (events: readonly AgentEvent[]): Promise<void> => {
+    let frame = 0;
+    let latestRunStart = 0;
+    const deliver = async (events: readonly AgentEvent[], frame: number): Promise<void> => {
       if (!watching) return;
       // Durable publishes retry and the failed entry in one commit, with retry first.
       const retryIndex = events.findIndex(event => event.type === 'auto_retry_start');
@@ -331,10 +336,13 @@ export class DurableKernel {
         ...events.slice(0, retryIndex), ...events.slice(retryIndex + 1, failureIndex + 1),
         events[retryIndex]!, ...events.slice(failureIndex + 1),
       ];
+      // A durable frame can replace a completed run with queued input atomically.
+      const successor = events.some(event => event.type === 'run_start');
       for (const event of ordered) {
         if (!watching) return;
+        if (event.type === 'run_end' && successor) continue;
         const retrying = this.retry.pending || this.retry.active;
-        let synthesizedEvents = this.synthesizeEvent(event);
+        let synthesizedEvents = event.type === 'run_end' ? [] : this.synthesizeEvent(event);
         let settledCompaction = false;
         if (event.type === 'submission' && event.record.status !== 'queued') {
           const pending = pendingCompactions.get(event.record.id);
@@ -396,6 +404,13 @@ export class DurableKernel {
           }
         }
         if (!watching) return;
+        if (event.type === 'run_end') {
+          // Input committed while host reconciliation awaited belongs to this interaction.
+          while (this.pendingInputs.size) await Promise.allSettled([...this.pendingInputs]);
+          if (!watching) return;
+          if (latestRunStart > frame || this.acceptedInputs.size) continue;
+          synthesizedEvents = this.synthesizeEvent(event);
+        }
         for (const synthesized of synthesizedEvents) {
           this.options.hooks.emitEvent(usage ? { ...synthesized, ...usage } : synthesized);
         }
@@ -403,7 +418,18 @@ export class DurableKernel {
     };
     stream.start(async events => {
       // Drain the SDK watch immediately so it retains exact frames while host-side work awaits.
-      delivery = delivery.then(() => deliver(events)).catch(error => {
+      const currentFrame = ++frame;
+      for (const event of events) {
+        if (event.type === 'submission' && event.record.status !== 'queued') {
+          if (!this.acceptedInputs.delete(event.record.id) && this.pendingInputs.size) this.startedInputs.add(event.record.id);
+        }
+        if (event.type !== 'run_start') continue;
+        latestRunStart = currentFrame;
+        for (const id of event.inputs) {
+          if (!this.acceptedInputs.delete(id) && this.pendingInputs.size) this.startedInputs.add(id);
+        }
+      }
+      delivery = delivery.then(() => deliver(events, currentFrame)).catch(error => {
         this.options.hooks.debugLog(`Could not deliver durable events: ${error instanceof Error ? error.message : String(error)}`);
       });
     });
@@ -572,13 +598,26 @@ export class DurableKernel {
     const content = images && images.length > 0
       ? [{ type: 'text' as const, text: message }, ...images.map(img => ({ type: 'image' as const, data: img.data, mimeType: img.mimeType }))]
       : message;
-    await this.conversation.submit({ type: 'input', content, whenBusy: 'followUp' }, BACKGROUND_CONTEXT);
+    await this.submitInput({ type: 'input', content, whenBusy: 'followUp' });
   }
 
   async steer(message: string): Promise<void> {
     if (!this.conversation) throw new Error('Kernel not open');
     this.requireModel(this.currentModel);
-    await this.conversation.submit({ type: 'input', content: message, whenBusy: 'steer' }, BACKGROUND_CONTEXT);
+    await this.submitInput({ type: 'input', content: message, whenBusy: 'steer' });
+  }
+
+  private async submitInput(request: Parameters<Conversation['submit']>[0]): Promise<void> {
+    const pending = this.conversation!.submit(request, BACKGROUND_CONTEXT).then(submission => {
+      if (!this.startedInputs.delete(submission.id)) this.acceptedInputs.add(submission.id);
+    });
+    this.pendingInputs.add(pending);
+    try {
+      await pending;
+    } finally {
+      this.pendingInputs.delete(pending);
+      if (!this.pendingInputs.size) this.startedInputs.clear();
+    }
   }
 
   async abort(): Promise<void> {
@@ -806,10 +845,12 @@ export class DurableKernel {
       case 'entry_appended':
         return [];
 
-      case 'run_start':
+      case 'run_start': {
+        const wasBusy = this.busy;
         this.busy = true;
         this.lastAssistant = undefined;
-        return [{ type: 'agent_start' }];
+        return wasBusy ? [] : [{ type: 'agent_start' }];
+      }
 
       case 'run_end': {
         this.busy = false;

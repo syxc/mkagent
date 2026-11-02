@@ -2693,12 +2693,12 @@
       "reason": "Migrate local main index.ts queryLlm behavior from temporary AgentSessions to pi-ai completeSimple while retaining mini-model recovery and cancellation."
     },
     "packages/pi-agent-server/src/kernel.e2e.test.ts": {
-      "sha256": "ba4c4e702069b7077a0af663a64e37a3d8d419f54b4b581638e5c6471a2a7db4",
-      "reason": "Test retained Pi contracts through a real durable Harness. Verify canonical MiniMax identity and missing-model errors across initialization, model switching, runtime replacement and ephemeral protocol calls."
+      "sha256": "3ab641506335c7765771e9575ac1e0f2aabb066228f5a4949f6947e5fd8a34b5",
+      "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "c797dbd5756d01f5b3921b24666cf45b7ddbab736e6ccffef0248d4d61fd5825",
-      "reason": "Replace AgentSession with a durable Harness while retaining host events, tools, branches, compaction and shutdown cleanup. Validate model catalog availability before input or model changes."
+      "sha256": "4b9162e799a61d2e0391e0af77de28835b4d1edd4f95542e7187ef25305d8c11",
+      "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
       "sha256": "2b2ee30b4478fabc39101535c97668c64a526632849f6e76446d91794360af0e",
