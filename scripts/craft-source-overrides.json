@@ -2281,7 +2281,7 @@
   },
   "mkOnly": {
     ".github/workflows/ci.yml": {
-      "sha256": "1c481334b9dd9a51474a6d7d2ccf29baf30d373e13d038a254538d45dc743a5e",
+      "sha256": "f42a6325a26770a557971e4ce6f44fe49f5659e813666312eff06dfdb1c8edda",
       "reason": "Pin CI to the reviewed v0.15.6 baseline; retain all validation/build jobs."
     },
     ".github/workflows/release.yml": {

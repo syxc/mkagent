@@ -5,7 +5,7 @@
 ## 发布流水线
 
 ```text
-  main ──▶ release:prepare ──▶ 审核版本提交 ──▶ 带注释的 v* tag
+  master ──▶ release:prepare ──▶ 审核版本提交 ──▶ 带注释的 v* tag
                                                    │
                                                    ▼
                                           校验 + 多平台构建
@@ -23,13 +23,13 @@
 
 安装包、manifest（如 `latest-mac.yml`、`latest.yml`、`latest-linux.yml`）、blockmap、checksum 和版本说明统一放在主仓库的 GitHub Releases 中，不提交进 Git；不再使用单独的 release-only 仓库。
 
-Pull Request 和推送到 `main` 的提交会运行未签名打包矩阵，覆盖 macOS arm64、Windows x64 和 Linux x64。对应的验证安装包与 headless server 压缩包会作为 GitHub Actions artifacts 保留 7 天。只有经过审核的 `v*` tag 才会将完整且校验通过的产物矩阵长期发布到 GitHub Release；配置某个平台的完整凭证后会自动升级为签名构建。
+Pull Request 和推送到 `master` 的提交会运行未签名打包矩阵，覆盖 macOS arm64、Windows x64 和 Linux x64。对应的验证安装包与 headless server 压缩包会作为 GitHub Actions artifacts 保留 7 天。只有经过审核的 `v*` tag 才会将完整且校验通过的产物矩阵长期发布到 GitHub Release；配置某个平台的完整凭证后会自动升级为签名构建。
 
 ## 版本与 Changelog 规范
 
 MkAgent 使用语义化版本和 `v<major>.<minor>.<patch>` tag。[`CHANGELOG.md`](../../CHANGELOG.md) 是累计变更记录的唯一来源；`apps/electron/resources/release-notes/<version>.md` 是随应用内置、并原样发布到公开 GitHub Release 的用户版说明。
 
-只从干净的 `main` 分支准备版本：
+只从干净的 `master` 分支准备版本：
 
 ```bash
 # 先把 CHANGELOG.md 中 Unreleased 的占位文字替换为真实变更。
@@ -40,7 +40,7 @@ git add CHANGELOG.md package.json bun.lock apps/*/package.json packages/*/packag
   apps/electron/resources/release-notes/0.2.0.md scripts/craft-source-overrides.json
 git commit -m "chore(release): prepare v0.2.0"
 git tag -a v0.2.0 -m "MkAgent v0.2.0"
-git push origin main v0.2.0
+git push origin master v0.2.0
 ```
 
 `release:prepare` 会同步所有 workspace package 版本、刷新 `bun.lock`、把 Unreleased 内容移入带日期的版本段，并创建应用内置的 release notes。tag workflow 会再次独立检查这些元数据是否一致。

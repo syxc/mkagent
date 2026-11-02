@@ -5,7 +5,7 @@ Tagged releases in the open-source repository build macOS DMG/ZIP, Windows NSIS,
 ## Release pipeline
 
 ```text
-  main ──▶ release:prepare ──▶ reviewed version commit ──▶ annotated v* tag
+  master ──▶ release:prepare ──▶ reviewed version commit ──▶ annotated v* tag
                                                           │
                                                           ▼
                                               validation + multi-platform builds
@@ -24,13 +24,13 @@ Tagged releases in the open-source repository build macOS DMG/ZIP, Windows NSIS,
 
 Installers, manifest files (for example `latest-mac.yml`, `latest.yml`, and `latest-linux.yml`), blockmaps, checksums, and release notes live in the main repository's GitHub Releases rather than being committed to Git. A separate release-only repository is no longer used.
 
-Pull requests and pushes to `main` run the unsigned packaging matrix for macOS arm64, Windows x64, and Linux x64. Those validation packages and matching headless-server archives are retained as GitHub Actions artifacts for 7 days. Only a reviewed `v*` tag promotes the verified asset matrix to a durable GitHub Release; signing is upgraded automatically when the complete credentials for a platform are configured.
+Pull requests and pushes to `master` run the unsigned packaging matrix for macOS arm64, Windows x64, and Linux x64. Those validation packages and matching headless-server archives are retained as GitHub Actions artifacts for 7 days. Only a reviewed `v*` tag promotes the verified asset matrix to a durable GitHub Release; signing is upgraded automatically when the complete credentials for a platform are configured.
 
 ## Version and changelog policy
 
 MkAgent uses semantic versions and `v<major>.<minor>.<patch>` Git tags. [`CHANGELOG.md`](../CHANGELOG.md) is the canonical cumulative changelog; `apps/electron/resources/release-notes/<version>.md` is the user-facing note bundled into the app and copied verbatim to the public GitHub Release.
 
-Prepare a release only from a clean `main` branch:
+Prepare a release only from a clean `master` branch:
 
 ```bash
 # First replace the Unreleased placeholder in CHANGELOG.md with real entries.
@@ -41,7 +41,7 @@ git add CHANGELOG.md package.json bun.lock apps/*/package.json packages/*/packag
   apps/electron/resources/release-notes/0.2.0.md scripts/craft-source-overrides.json
 git commit -m "chore(release): prepare v0.2.0"
 git tag -a v0.2.0 -m "MkAgent v0.2.0"
-git push origin main v0.2.0
+git push origin master v0.2.0
 ```
 
 `release:prepare` updates every workspace package version, refreshes `bun.lock`, moves the Unreleased changelog entries into a dated version section, and creates the bundled release-note file. The tag workflow independently rejects missing or inconsistent metadata.
