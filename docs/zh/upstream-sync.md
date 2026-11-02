@@ -113,7 +113,7 @@ MkAgent 工作期间,参考 checkout(`../craft-agents-oss`、`../echo`、`../xag
 两份源真值文件记录哪些 MkAgent 文件相对 Craft 偏离:
 
 - `scripts/craft-source-overrides.json`(跟踪所有 `apps/`、`packages/` 源文件)
-- `scripts/craft-ui-overrides.json`(renderer 范围内的子集,112 条)
+- `scripts/craft-ui-overrides.json`（renderer 范围内已审阅的子集）
 
 每次同步后,**必须**重新生成并审阅。`audit:craft-reuse` 通过的前提是偏离合理,而**不是**只为了通过检查去 bump 哈希。
 

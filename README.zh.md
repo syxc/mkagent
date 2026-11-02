@@ -80,7 +80,7 @@ MkAgent 会在 `~/.mkagent/workspaces/default` 创建默认工作区。开发或
 | `bun run server:prod` | 构建并启动带 WebUI 的 headless server |
 | `bun run cli:build` | 构建 CLI bundle |
 | `bun run test` | 运行单元测试和隔离测试 |
-| `bun run validate:ci` | 运行完整的类型、测试、文档工具和本地化检查 |
+| `bun run validate:ci` | 检查所有类型、指定 shared 测试、文档工具和本地化 |
 
 更多命令和环境变量请参阅[开发指南](./docs/zh/development.md)。
 

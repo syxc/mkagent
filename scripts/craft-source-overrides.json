@@ -15,7 +15,7 @@
       "reason": "Retain MkAgent branding and Craft origin notices, and add the MIT notice for server code and event declarations adapted from pi-coding-agent."
     },
     "README.md": {
-      "sha256": "c2c1ebb946458d031152827d8ad6df83b74292176d8400e9e968e64950b045ce",
+      "sha256": "4cee9e0ac623faf263fd245fa023ea3422c47d98dd418e4ab5542ea955c8a218",
       "reason": "Craft documentation adapted to the retained MkAgent feature set and product identifiers; distinguish initial v0.12.1 lineage from the current pinned v0.15.6 sync baseline."
     },
     "apps/cli/package.json": {
@@ -2325,7 +2325,7 @@
       "reason": "MkAgent-specific release metadata required by the release workflow; v0.15.3 sync: MkAgent 0.2.3 release metadata and HEIC dependencies; Pi remains pinned at 1.1.0 and dynamic release audit baseline is preserved."
     },
     "README.zh.md": {
-      "sha256": "8db58a14b8f7c0536151f7bb339b576c4504c4fa5b4b248b7d3a4a1e0c240ebe",
+      "sha256": "1aec6a944888f42cc6a6373ba90f83c62250f72823ae2b440c87176f37d1ef35",
       "reason": "Simplified Chinese MkAgent project overview maintained alongside the English README, with separate initial lineage and current v0.15.6 sync baseline."
     },
     "apps/electron/resources/generate-brand-icons.sh": {

@@ -94,7 +94,7 @@ be isolated for development or testing with `CONFIG_DIR=/path/to/directory`.
 | `bun run server:prod` | Build and start the headless server with WebUI |
 | `bun run cli:build` | Build the CLI bundle |
 | `bun run test` | Run unit and isolated tests |
-| `bun run validate:ci` | Run the full type, test, document-tool, and localization gate |
+| `bun run validate:ci` | Check all types, selected shared tests, document tools, and localization |
 
 More commands and environment variables are documented in the
 [development guide](./docs/development.md).
