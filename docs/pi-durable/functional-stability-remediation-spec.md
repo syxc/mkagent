@@ -78,8 +78,8 @@
 
 | 分组 | 状态 | 红 → 绿 / 运行证据 | 提交 |
 |---|---|---|---|
-| C0 | ready | 规格覆盖 FS-01–FS-13；导航已登记 | 待提交 |
-| C1 | pending | — | — |
+| C0 | completed | 规格覆盖 FS-01–FS-13；导航已登记 | `61ec6ed` |
+| C1 | completed | 新增 3 个冷启动回归在修复前均失败；修复后 bundle smoke 18 pass、0 fail；子进程 typecheck 通过。接收时取消代际覆盖初始化排队，打开内核后再次校验；steer 等待已有打开操作。 | `fix(kernel): retain controls across lazy startup` |
 | C2 | pending | — | — |
 | C3 | pending | — | — |
 | C4 | pending | — | — |

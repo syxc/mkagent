@@ -191,6 +191,64 @@ describe('pi-agent-server bundle', () => {
     expect(output).not.toContain('OFFLINE_FETCH_BLOCKED');
   }, RUN_TIMEOUT_MS + 10_000);
 
+  it('retains cold-start steering until the kernel accepts it', async () => {
+    let steered = false;
+    let finished = false;
+    const output = await driveBundle([{
+      type: 'init', apiKey: 'fixture', model: 'pi/fake-model', cwd: scratchDir,
+      thinkingLevel: 'off', workspaceRootPath: scratchDir, sessionId: 'cold-steer',
+      sessionPath: scratchDir, workingDirectory: scratchDir, plansFolderPath: join(scratchDir, 'plans'),
+      baseUrl: 'http://fake-provider.test/v1', customEndpoint: { api: 'openai-completions' },
+    }], () => finished, {
+      preload: mockProviderPreloadPath, approveTools: true,
+      onMessage(message) {
+        if (message.type === 'ready') return [
+          { type: 'prompt', id: 'first', message: 'COLD_FIRST', systemPrompt: 'test' },
+          { type: 'steer', message: 'COLD_STEER' },
+        ];
+        if (message.event?.type === 'message_end' && message.event.message?.content === 'COLD_STEER') steered = true;
+        if (steered && message.event?.type === 'agent_end' && !message.event.willRetry) finished = true;
+      },
+    });
+    expect(steered).toBe(true);
+    expect(output).toContain('"text":"done"');
+    expect(output).not.toContain('Steer ignored');
+  }, RUN_TIMEOUT_MS + 10_000);
+
+  for (const duringInit of [false, true]) {
+    it(`discards stopped cold-start controls ${duringInit ? 'during initialization' : 'after readiness'} and accepts fresh input`, async () => {
+      let fresh = false;
+      let finished = false;
+      const init = {
+        type: 'init', apiKey: 'fixture', model: 'pi/fake-model', cwd: scratchDir,
+        thinkingLevel: 'off', workspaceRootPath: scratchDir, sessionId: `cold-abort-${duringInit}`,
+        sessionPath: scratchDir, workingDirectory: scratchDir, plansFolderPath: join(scratchDir, 'plans'),
+        baseUrl: 'http://fake-provider.test/v1', customEndpoint: { api: 'openai-completions' },
+      };
+      const controls = [
+        { type: 'prompt', id: 'cancelled', message: 'COLD_CANCELLED_PROMPT', systemPrompt: 'test' },
+        { type: 'steer', message: 'COLD_CANCELLED_STEER' },
+        { type: 'abort' },
+        { type: 'ensure_session_ready', id: 'after-cancel' },
+      ];
+      const output = await driveBundle(duringInit ? [init, ...controls] : [init], () => finished, {
+        preload: mockProviderPreloadPath, approveTools: true,
+        onMessage(message) {
+          if (!duringInit && message.type === 'ready') return controls;
+          if (message.type === 'ensure_session_ready_result') return [
+            { type: 'prompt', id: 'fresh', message: 'COLD_FRESH_INPUT', systemPrompt: 'test' },
+          ];
+          if (message.event?.type === 'message_end' && message.event.message?.content === 'COLD_FRESH_INPUT') fresh = true;
+          if (fresh && message.event?.type === 'agent_end' && !message.event.willRetry) finished = true;
+        },
+      });
+      expect(fresh).toBe(true);
+      expect(output).toContain('"text":"done"');
+      expect(output).not.toContain('"content":"COLD_CANCELLED_PROMPT"');
+      expect(output).not.toContain('"content":"COLD_CANCELLED_STEER"');
+    }, RUN_TIMEOUT_MS + 10_000);
+  }
+
   it('opens one kernel for concurrent session-ready requests', async () => {
     const output = await driveBundle([
       {

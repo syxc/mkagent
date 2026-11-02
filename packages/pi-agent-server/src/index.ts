@@ -241,6 +241,8 @@ type OutboundMessage =
 let kernel: DurableKernel | null = null;
 let kernelPromise: Promise<DurableKernel> | null = null;
 let initialization: Promise<void> = Promise.resolve();
+// Invalidated at receipt, before commands waiting on initialization can run.
+let inputGeneration = 0;
 let reinitializing = false;
 let shuttingDown: Promise<void> | undefined;
 let mcpLoad: McpToolsLoadResult | null = null;
@@ -859,10 +861,12 @@ async function initialize(msg: Extract<InboundMessage, { type: 'init' }>): Promi
 }
 
 async function handlePrompt(msg: Extract<InboundMessage, { type: 'prompt' }>): Promise<void> {
+  const generation = inputGeneration;
   currentUserMessage = msg.message;
 
   try {
     const k = await ensureKernel();
+    if (generation !== inputGeneration) return;
 
     // Force the Craft-built system prompt onto the conversation; the prompt
     // section renders it at request preparation.
@@ -874,6 +878,7 @@ async function handlePrompt(msg: Extract<InboundMessage, { type: 'prompt' }>): P
     // streamingBehavior contract.
     await k.submitPrompt(msg.message, msg.images);
   } catch (error) {
+    if (generation !== inputGeneration) return;
     const errorMsg = error instanceof Error ? error.message : String(error);
 
     // No wrapper-side overflow recovery here. The durable kernel's compaction
@@ -1277,14 +1282,18 @@ async function processMessage(msg: InboundMessage, compactController?: AbortCont
       await handleUpdateRuntimeConfig(msg);
       break;
 
-    case 'steer':
-      if (kernel) {
+    case 'steer': {
+      const generation = inputGeneration;
+      const active = kernel ?? await kernelPromise;
+      if (generation !== inputGeneration) break;
+      if (active && active === kernel) {
         debugLog(`Steering with: "${msg.message.slice(0, 100)}"`);
-        await kernel.steer(msg.message);
+        await active.steer(msg.message);
       } else {
         debugLog('Steer ignored — no active session');
       }
       break;
+    }
 
     case 'token_update': {
       const piAuth = toPiAuth(msg.piAuth);
@@ -1325,6 +1334,8 @@ function main(): void {
     if (!line.trim()) return;
     try {
       const msg = JSON.parse(line) as InboundMessage;
+      if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') inputGeneration++;
+      const generation = inputGeneration;
       if (msg.type === 'init') {
         // Later compact requests belong to the new initialization and must remain active.
         for (const controller of pendingCompactions.values()) controller.abort();
@@ -1339,7 +1350,10 @@ function main(): void {
         ? initialization.catch(() => undefined).then(() => processMessage(msg))
         : ['tool_execute_response', 'pre_tool_use_response', 'abort', 'cancel_compact', 'shutdown'].includes(msg.type)
           ? processMessage(msg)
-          : initialization.then(() => processMessage(msg, compactController));
+          : initialization.then(() => {
+              if ((msg.type === 'prompt' || msg.type === 'steer') && generation !== inputGeneration) return;
+              return processMessage(msg, compactController);
+            });
       if (msg.type === 'init') initialization = operation;
       operation.catch((error) => {
         if (msg.type === 'compact' && pendingCompactions.get(msg.id) === compactController) pendingCompactions.delete(msg.id);
