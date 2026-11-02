@@ -53,9 +53,21 @@ function validateRecords(values: Json[]): void {
     if (value.type === 'custom_message' && !content(value.content)) throw new Error('Invalid legacy custom message')
     if (value.type === 'context_edit') {
       const target = typeof value.targetId === 'string' ? entries.get(value.targetId) : undefined
-      const role = target && object(target.message) ? String(target.message.role) : 'user'
-      if (!target || (value.replacement !== null && (!object(value.replacement)
+      const role = target?.type === 'message' && object(target.message) ? String(target.message.role) : 'user'
+      const modelTarget = target && (target.type === 'message' && ['user', 'assistant', 'system', 'toolResult'].includes(role)
+        || target.type === 'custom_message' || target.type === 'compaction'
+        || target.type === 'branch_summary' && !!target.summary)
+      if (!modelTarget || (value.replacement !== null && (!object(value.replacement)
         || !content(value.replacement.content, role, true)))) throw new Error('Invalid legacy context edit')
+      if (Object.hasOwn(value, 'parentId')) {
+        const seen = new Set<string>()
+        let parent = value.parentId
+        while (typeof parent === 'string' && parent !== value.targetId && !seen.has(parent)) {
+          seen.add(parent)
+          parent = entries.get(parent)?.parentId
+        }
+        if (parent !== value.targetId) throw new Error('Legacy context edit target is outside its branch')
+      }
     }
     entries.set(value.id, value)
   }

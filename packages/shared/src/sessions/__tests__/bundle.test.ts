@@ -224,7 +224,8 @@ describe('serializeSession', () => {
   })
 
   for (const kind of ['invalid-json', 'missing-parent', 'cycle', 'duplicate-id', 'invalid-message', 'null-block', 'missing-text',
-    'bad-image', 'invalid-custom-message', 'invalid-context-edit', 'symlink', 'linked-root'] as const) {
+    'bad-image', 'invalid-custom-message', 'invalid-context-edit', 'non-model-edit', 'tui-edit',
+    'edit-of-edit', 'off-branch-edit', 'symlink', 'linked-root'] as const) {
     it(`rejects unsafe legacy export: ${kind}`, () => {
       const session = makeStoredSession()
       const sessionDir = setupSessionDir(tmpDir, session)
@@ -246,6 +247,12 @@ describe('serializeSession', () => {
             : kind === 'bad-image' ? [{ ...message, message: { role: 'user', content: [{ type: 'image', data: 'fixture' }] } }]
             : kind === 'invalid-custom-message' ? [{ type: 'custom_message', id: 'm1', content: [null] }]
             : kind === 'invalid-context-edit' ? [message, { type: 'context_edit', id: 'edit', targetId: 'm1', replacement: { content: [null] } }]
+            : kind === 'non-model-edit' ? [{ type: 'usage', id: 'm1' }, { type: 'context_edit', id: 'edit', targetId: 'm1', replacement: null }]
+            : kind === 'tui-edit' ? [{ ...message, message: { role: 'bashExecution' } }, { type: 'context_edit', id: 'edit', targetId: 'm1', replacement: null }]
+            : kind === 'edit-of-edit' ? [message, { type: 'context_edit', id: 'edit', targetId: 'm1', replacement: null },
+              { type: 'context_edit', id: 'edit2', targetId: 'edit', replacement: null }]
+            : kind === 'off-branch-edit' ? [{ ...message, parentId: null }, { ...message, id: 'other', parentId: 'm1' },
+              { ...message, id: 'active', parentId: 'm1' }, { type: 'context_edit', id: 'edit', parentId: 'active', targetId: 'other', replacement: null }]
             : [message]),
         ]
         if (kind === 'symlink') symlinkSync(join(tmpDir, 'missing-history.jsonl'), join(legacy, 'original.jsonl'))
