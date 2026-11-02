@@ -1,6 +1,6 @@
 # 功能与稳定性修复执行规格
 
-状态：FS-01–FS-13 修复已提交；C10 验收部分受阻，详见第 8 节。
+状态：FS-01–FS-13 与 watcher 追加修复已完成；C10 仍因固定 Craft 来源 checkout 缺失受阻，最新结果见 8.1。
 初稿日期：2026-11-02。最后验收：2026-11-03。
 基线：`416835e`，`dev/pi-durable`。
 
@@ -88,7 +88,7 @@
 | C7 | completed | 初始 10 项及内容块复核补充的 5 项回归均已观察失败；修复后 legacy 迁移/导出/真实内核 32 pass、0 fail。全差异复核另发现 edit 目标只有存在性校验，补充 usage、TUI、edit-of-edit、跨分支目标 4 项红测后收紧规则，legacy/附件模型上下文 40 pass、0 fail；最终 bundle 78 pass、0 fail，validate:ci 通过。正常替换和省略仍可迁移。同步导出只收集最新普通 transcript，复用浏览器密码脱敏和最终残留秘密检查，不写源文件或提前创建 durable store。真实 provider 请求保留原用户/助手上下文，inactive anchor 仍可分支；较旧 transcript 不混入。拒绝坏 JSON、非法树/消息块及链接；按角色校验 text/image/thinking/toolCall，也覆盖 custom_message 和 context_edit。Windows 旧包跨目录源根识别的路径/transport 10 pass；模型历史附件验证见 C6。 | `9aec364`；`a28621b`；`6dc5cd9` |
 | C8 | completed | 实际 Bun bundle 红测显示源码目录被识别为 source、产物路径被丢弃；改用运行文件的 import.meta.url，CommonJS 保留 __dirname 兼容路径。修复后 runtime/resolver/launcher 20 pass、0 fail，最终 typecheck:all 通过。完整 headless 构建成功，真实产物 launcher 在仓库外、源码仍存在时完成登录及配置读取，无源码回退；删除 fixture 的 Pi 资源后不再解析到任何源码替身。C9 的端口 0 问题在此产物中仍可复现，单独修复。 | `b66e7a2` |
 | C9 | completed | 真实端口 0 服务的认证 /api/config 回归先失败（返回 ws://127.0.0.1:0）；修复后与实际绑定端口一致，并使用返回地址成功完成 WebSocket 握手。绑定回调在监听后同步发布端口，WebUI 每次请求读取当前值。server smoke + WebUI HTTP 15 pass、0 fail，typecheck:all 通过；固定端口、public URL、TLS 协议及代理头对照保持通过。 | `e300585` |
-| C10 | blocked | 检查已执行并记录：validate:ci、最终构建、WebUI/CLI 产物验收、17 个隔离测试文件和独立 lint 通过。普通测试组 4399 pass、11 skip、1 watcher fail；Craft 外部 checkout 缺失，组合 lint 与来源审计失败。47 个本轮代码/测试文件哈希一致，固定来源基线未变。分支回滚夹具补足 C2 的必要锚点，单独及隔离组均通过。详细命令、证据和剩余边界见第 8 节，不能宣称整体验收全绿。 | `74c756e`；`docs(kernel): record remediation validation` |
+| C10 | blocked | watcher 追加修复后，普通组 4400 pass、11 skip、0 fail，18 个隔离文件 231 pass、0 fail；validate:ci、最终构建和真实产物 RPC 通过。原 WebUI/CLI 验收记录保留。52 个本轮代码/测试路径哈希一致，固定来源基线未变。Craft 外部 checkout 仍缺失，组合 lint 与来源审计失败，不能宣称整体验收全绿。详情见 8.1，原失败历史保留于第 8 节。 | `74c756e`；`2c68ffd`；watcher 修复随本文提交 |
 
 ## 7. 已知阻塞与交付限制
 
@@ -102,7 +102,7 @@
 
 ## 8. 最终验收记录
 
-最后生产源码提交为 `6dc5cd9`。本机临时证据目录为 `/tmp/mkagent-remediation-20261102-q7r4`，日志与测试产物不提交到仓库。构建、自动测试、lint 和测试服务经过 `run-checks.py`，隔离 HOME、CONFIG_DIR、真实凭据和代理；模型请求仅发送到本地 fixture。浏览器仅操作同名专用空间并连接该隔离服务。
+原 C10 验收的最后生产源码提交为 `6dc5cd9`。下表保留该次验收结果；基于 `2c68ffd` 的 watcher 追加修复与最新结果见 8.1。本机临时证据目录为 `/tmp/mkagent-remediation-20261102-q7r4`，日志与测试产物不提交到仓库。构建、自动测试、lint 和测试服务经过 `run-checks.py`，隔离 HOME、CONFIG_DIR、真实凭据和代理；模型请求仅发送到本地 fixture。浏览器仅操作同名专用空间并连接该隔离服务。
 
 | 检查 | 实际结果 | 本机证据 |
 |---|---|---|
@@ -118,7 +118,7 @@
 | `bun run lint` / `bun run audit:craft-reuse` | 均失败于缺失的 `/Users/syxc/projects/vendor/craft-agents-oss`，未完成 Craft UI/source 审计。没有下载参考仓库或改写来源基线。 | `c10-lint-final.log`、`c10-craft-audit-final.log` |
 | 来源清单局部一致性 | 47 个本轮代码/测试文件的 SHA-256 一致；只更新本轮路径，保留全部旧条目及 pinned baseline。modified 新增 7、更新 21；mkOnly 新增 9、更新 10；deleted 不变。分类仍须由固定上游实测核验，哈希一致不表示来源审计通过。 | `scripts/craft-source-overrides.json`；本轮 scoped hash consistency 检查 |
 
-全量失败位置为 `apps/electron/src/main/handlers/__tests__/session-watcher.test.ts:154`，client A 停止监听后，client B 在已有 2 秒条件等待内未收到通知。另一份 `sessions-watchers.test.ts` 曾单独失败，之后原样复跑 2 pass。两份测试和 `packages/server-core/src/handlers/rpc/sessions.ts` 相对 `416835e` 的差异为零；原生观察探针可收到事件，但未确定全量失败的根因，未把探针通过视作该测试通过。
+原 C10 全量失败位置为 `apps/electron/src/main/handlers/__tests__/session-watcher.test.ts:154`，client A 停止监听后，client B 在已有 2 秒条件等待内未收到通知。另一份 `sessions-watchers.test.ts` 曾单独失败，之后原样复跑 2 pass。当时两份测试和 `packages/server-core/src/handlers/rpc/sessions.ts` 相对 `416835e` 的差异为零；单次原生观察探针可收到事件，尚未定位漏事件条件。后续原生重复探针及修复证据见 8.1。
 
 原内核参考 `main` 确认于 `6e8ebc4`；其隔离目录的覆盖路径检查通过（`c10-main-reference-coverage.log`）。把该目录作为 Craft 来源输入会失败，包括固定基线不匹配（`c10-main-reference-audit.log`），不作为来源审计通过。本轮创建的参考 worktree 已移除。
 
@@ -127,3 +127,30 @@
 浏览器空间 9 已在中断后消失；用户明确批准后以同名重建为 10，仅操作此任务空间，并在验收完成后调用一次 `finish({keep:[]})`。用户空间 7 与原有 9100 服务未操作。
 
 最终测试服务、provider 与 Pi 子进程组已关闭，独立连接检查确认该测试端口拒绝连接（`c10-service-cleanup-final.log`）。保留临时日志与产物供复核，未保留运行中的验收服务。
+
+### 8.1 Session file watcher 追加修复
+
+原生最小探针只创建两个临时目录及两个 `fs.watch`，写 A、关闭 A、写 B，不加载 Pi、RPC 或测试 mock。递归监听 30 轮中 1 轮、非递归监听 100 轮中 3 轮，B 在 2.2 秒观察窗内完全没有原生回调（`watcher-native-repeat.log`、`watcher-native-nonrecursive.log`）。这证明底层事件存在漏报，旧 RPC 仅靠原生回调没有补偿。未定位 Bun/macOS 内部实现，也未在原 C10 失败时捕获原始回调，因此不把每次历史失败都归为同一内部原因。
+
+`watchSessionFiles` 保留原生事件通知，另对活跃会话目录每秒检查可见文件的路径、大小、mtime、ctime 和 inode，不读取文件内容；递归排除隐藏项和 `session.jsonl`，普通 symlink 只读取链接自身元数据。扫描不重入，扫描错误保留上次状态并重试，不能阻断原生通知。两条路径共用 100ms 去抖；原生事件未到达时，由元数据变化补发刷新。没有新增依赖、协议字段或用户配置。
+
+RPC 在异步初始化前登记订阅身份；UNWATCH、断连或新 WATCH 使旧身份失效，晚完成的旧 watcher 立即关闭。关闭同时停止原生 watcher、轮询和去抖，正在扫描的旧订阅不能再发送通知。原有测试改为条件等待，负例观察超过一次轮询周期，断言失败也执行客户端清理。
+
+独立复核覆盖全部 5 个生产/测试文件，发现补偿扫描错误会吞掉正常原生通知；主线程实际复现红测后将通知与扫描解耦，并补测首次扫描失败仍可监听、扫描恢复后继续补偿。没有将静态复核结论扩大为修正后整棵树独立复核通过。
+
+| 检查 | 实际结果 | 本机证据 |
+|---|---|---|
+| 故障回归先红后绿 | 屏蔽原生回调时创建/嵌套变化两项旧实现失败；启动期间取消、原生 error、扫描错误与首次扫描错误均有实际红测。最终隔离文件 7 pass、0 fail，另覆盖同大小覆盖、删除、隐藏项、并发替换与断连清理。 | `watcher-recovery-red.log`、`watcher-startup-red.log`、`watcher-native-error-red.log`、`watcher-scan-error-red.log`、`watcher-initial-scan-red.log`、`watcher-recovery-accepted.log` |
+| watcher 重复测试 | 最终源码的原有两份测试连续 5 轮，25 pass、0 fail；新增 7 项恢复回归连续 3 轮，21 pass、0 fail。 | `watcher-existing-accepted.log`、`watcher-recovery-repeat-accepted.log` |
+| 最终全量 `bun run test` | 最终源码通过：360 个普通文件 4400 pass、11 skip、0 fail；18 个隔离文件 231 pass、0 fail。合计 4631 pass、11 skip、0 fail，脚本退出 0。早于首次扫描错误保护的前轮结果不代替此轮验收。 | `watcher-full-accepted.log` |
+| `bun run validate:ci` | 最终源码检查通过，含全仓类型、共享配置/模型测试、文档工具和 i18n 校验。 | `watcher-validate-accepted.log` |
+| 最终构建 | Electron main 与完整 headless 构建通过，保留现有构建 warnings。 | `watcher-build-main-accepted.log`、`watcher-build-headless-accepted.log` |
+| 最终产物 RPC | 从仓库外启动最终 binary，两个真实 WebSocket 客户端完成 A 正控、A 停止后 B 继续、同大小编辑、嵌套创建/删除、隐藏项忽略、停止后不再通知，6 个报告条件均为真。没有据此宣称原生层不再漏事件。 | `watcher-artifact-accepted.log`、`acceptance/watcher-artifact-report.json` |
+| lint / 来源审计 | Electron 独立 lint 0 error、94 warning；shared/UI 未修改，复用原 C10 的 0 error / 12 warning 证据。组合 lint 与 Craft 审计仍因固定来源 checkout 缺失失败，不能把局部哈希一致称为来源审计通过。 | `watcher-electron-lint-reviewed.log`、`watcher-lint-reviewed.log`、`watcher-craft-reviewed.log` |
+| 来源清单 | 仅更新本次 3 个既有条目的哈希及新增 2 个本地文件条目；原 47 个路径和追加 5 个路径共 52 个哈希核对一致。固定 baseline、旧条目分类与无关条目保留。新文件来源分类仍待固定上游实测。 | `scripts/craft-source-overrides.json`、`watcher-provenance-accepted.log` |
+
+补偿检查适用于会话文件列表监听。其他生产 `watch` 调用两处：PR refs 已有独立轮询；ConfigWatcher 使用原生事件及显式 `notifyFileChange`，其外部编辑漏事件未在本次复现或修复。不能将本次结果扩大为全仓 watcher 的可靠性保证。
+
+检查元数据可能与原生事件形成重复刷新，不提供逐条事件或 exactly-once 保证；两次检查之间发生且已恢复的瞬时状态可能不可见。大目录吞吐、跨平台和长期 soak 未实测。
+
+本次没有使用浏览器或操作原有 9100 服务。最终 fixture 的 RPC、provider 与进程组均已关闭；从持久配置恢复真实 provider 端口后，连接检查确认两个监听均拒绝连接，所属进程组为空（`watcher-cleanup-confirmed.log`）。保留临时日志与产物供复核。

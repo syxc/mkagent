@@ -94,12 +94,15 @@ function makeCtx(clientId: string, workspaceId = 'ws-1'): RequestContext {
 // ---------------------------------------------------------------------------
 
 async function waitForNotification(check: () => boolean): Promise<void> {
-  const deadline = Date.now() + 2000
-  while (!check() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20))
+  const deadline = performance.now() + 2300
+  while (!check() && performance.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20))
 }
 
 describe('session file watcher isolation', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    const { cleanupSessionFileWatchForClient } = await import('@mkagent/server-core/handlers/rpc')
+    cleanupSessionFileWatchForClient('client-a')
+    cleanupSessionFileWatchForClient('client-b')
     for (const dir of tempDirs) {
       try { rmSync(dir, { recursive: true, force: true }) } catch {}
     }
@@ -125,8 +128,7 @@ describe('session file watcher isolation', () => {
     // Trigger a change in s1
     writeFileSync(join(dir1, 'output.txt'), 'hello')
 
-    // Wait for debounce + fs.watch delay
-    await new Promise(r => setTimeout(r, 300))
+    await waitForNotification(() => pushCalls.some(p => p.target?.clientId === 'client-a'))
 
     // Only client-a should have received the notification
     const clientAPushes = pushCalls.filter(p => p.target?.clientId === 'client-a')
@@ -179,7 +181,8 @@ describe('session file watcher isolation', () => {
 
     // Write to s1 — should NOT trigger notification (old watcher closed)
     writeFileSync(join(dir1, 'old.txt'), 'stale')
-    await new Promise(r => setTimeout(r, 300))
+    // Observe beyond one reconciliation interval to detect leaked subscriptions.
+    await new Promise(r => setTimeout(r, 1200))
 
     const s1Pushes = pushCalls.filter(p =>
       p.args[0] === 's1' && p.channel === RPC_CHANNELS.sessions.FILES_CHANGED
@@ -188,7 +191,7 @@ describe('session file watcher isolation', () => {
 
     // Write to s2 — should trigger notification
     writeFileSync(join(dir2, 'new.txt'), 'fresh')
-    await new Promise(r => setTimeout(r, 300))
+    await waitForNotification(() => pushCalls.some(p => p.args[0] === 's2'))
 
     const s2Pushes = pushCalls.filter(p =>
       p.args[0] === 's2' && p.channel === RPC_CHANNELS.sessions.FILES_CHANGED
@@ -212,13 +215,13 @@ describe('session file watcher isolation', () => {
     // Write internal files — should be ignored
     writeFileSync(join(dir, 'session.jsonl'), 'log entry')
     writeFileSync(join(dir, '.hidden'), 'secret')
-    await new Promise(r => setTimeout(r, 300))
+    await new Promise(r => setTimeout(r, 1200))
 
     expect(pushCalls.length).toBe(0)
 
     // Write a normal file — should trigger notification
     writeFileSync(join(dir, 'result.txt'), 'output')
-    await new Promise(r => setTimeout(r, 300))
+    await waitForNotification(() => pushCalls.length > 0)
 
     expect(pushCalls.length).toBeGreaterThanOrEqual(1)
 

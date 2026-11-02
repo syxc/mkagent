@@ -13,6 +13,11 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+async function waitForNotification(check: () => boolean): Promise<void> {
+  const deadline = performance.now() + 2300
+  while (!check() && performance.now() < deadline) await wait(20)
+}
+
 describe('sessions file watchers', () => {
   const handlers = new Map<string, HandlerFn>()
   const pushed: Array<{ channel: string; target: any; args: any[] }> = []
@@ -95,7 +100,8 @@ describe('sessions file watchers', () => {
 
     writeFileSync(join(sessionDirA, 'a.txt'), `a-${Date.now()}`)
     writeFileSync(join(sessionDirB, 'b.txt'), `b-${Date.now()}`)
-    await wait(300)
+    await waitForNotification(() => pushed.some(evt => evt.target?.clientId === 'client-a')
+      && pushed.some(evt => evt.target?.clientId === 'client-b'))
 
     const aEvents = pushed.filter((evt) => evt.target?.to === 'client' && evt.target?.clientId === 'client-a')
     const bEvents = pushed.filter((evt) => evt.target?.to === 'client' && evt.target?.clientId === 'client-b')
@@ -108,7 +114,7 @@ describe('sessions file watchers', () => {
 
     writeFileSync(join(sessionDirA, 'a.txt'), `a2-${Date.now()}`)
     writeFileSync(join(sessionDirB, 'b.txt'), `b2-${Date.now()}`)
-    await wait(300)
+    await waitForNotification(() => pushed.some(evt => evt.target?.clientId === 'client-b'))
 
     const aEventsAfter = pushed.filter((evt) => evt.target?.clientId === 'client-a')
     const bEventsAfter = pushed.filter((evt) => evt.target?.clientId === 'client-b')
@@ -128,7 +134,7 @@ describe('sessions file watchers', () => {
     pushed.length = 0
 
     writeFileSync(join(sessionDirA, 'after-cleanup.txt'), `x-${Date.now()}`)
-    await wait(300)
+    await wait(1200)
 
     expect(pushed.length).toBe(0)
   })

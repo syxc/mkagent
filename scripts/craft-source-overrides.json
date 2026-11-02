@@ -323,11 +323,11 @@
       "reason": "Retain v0.15.4 shared transport/runtime/style/CLI lifecycle hunk with existing MkAgent Pi/Lite seams."
     },
     "apps/electron/src/main/handlers/__tests__/session-watcher.test.ts": {
-      "sha256": "dfc53b2f69e7b3060893751040faba01945d228a04d26830f3d583e23143cb46",
+      "sha256": "ea80cfa50e222a87157df172f92a7d544d687c1d628390d02866f6d79e538394",
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "apps/electron/src/main/handlers/__tests__/sessions-watchers.test.ts": {
-      "sha256": "3f8ad267d1e10f1c03d2b57c03789989a9ecb7b9d12c53098defb7a74298f83a",
+      "sha256": "f9627c1294ed264ad09bd1f93ae99eb795d040b39b1da7bb867d04ec558b00df",
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "apps/electron/src/main/handlers/__tests__/settings-default-thinking.test.ts": {
@@ -1115,8 +1115,8 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior"
     },
     "packages/server-core/src/handlers/rpc/sessions.ts": {
-      "sha256": "4c124767062d1d2d4c8f006fb684d11da4793dd2c80f21f6d934ff1c0be14b9b",
-      "reason": "Retain v0.15.4 shared transport/runtime/style/CLI lifecycle hunk with existing MkAgent Pi/Lite seams."
+      "sha256": "3b5a6c6210bc35c05dcb6bd9e6ee992aba7a6d76fd646edd7d03cf91cb3f6957",
+      "reason": "Retain v0.15.4 shared transport/runtime/style/CLI lifecycle hunk with existing MkAgent Pi/Lite seams; add per-client watcher reconciliation and cancellation-safe subscription ownership."
     },
     "packages/server-core/src/handlers/rpc/settings.ts": {
       "sha256": "9b8845ed5da4010153f0806768e38b1ab360cad27641b2cfe28b88f5ff4a5787",
@@ -2867,6 +2867,14 @@
     "packages/server-core/src/sessions/session-file-transport.test.ts": {
       "sha256": "1291d1a08a1017a617bbfa8e3ae19f725d04b7dbc1942c14efbc47d73fc1bfe9",
       "reason": "Verify file remapping, source independence, and rollback for branches and imports."
+    },
+    "packages/server-core/src/sessions/session-file-watcher.isolated.ts": {
+      "sha256": "b6c9e8368f410c203c18a309667b239f2e9a7df8b602d232126af97cd59ded67",
+      "reason": "Verify lost native event recovery, scan failures, and per-client watcher cancellation with isolated filesystem mocks."
+    },
+    "packages/server-core/src/sessions/session-file-watcher.ts": {
+      "sha256": "f8d26e8be175b1844a4b690713e939d4fefdb59aee550f26608a530cb097d06a",
+      "reason": "Reconcile visible session file metadata when native events are lost while retaining independent native notifications."
     },
     "packages/shared/src/agent/__tests__/pi-runtime-config.test.ts": {
       "sha256": "cf3f4965236ec98a059199484bc73a0c6e5638559712634ecedf8e0698e67486",
