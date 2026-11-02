@@ -190,6 +190,9 @@ export class DurableKernel {
     let ownsPendingBranch = false;
     try {
       if (branchFrom && !existsSync(this.storeDir) && !legacyChild) {
+        if (!config.branchFromSdkTurnId) {
+          throw new Error('Pi branch preflight failed: a branch turn anchor is required');
+        }
         // A parent that has never opened under this kernel gets its legacy
         // transcript converted in place first, so the copy carries full context.
         await migrateParentStore(branchFrom, this.options.hooks.debugLog);
@@ -243,9 +246,8 @@ export class DurableKernel {
         copiedParent ? branchFrom : undefined);
 
       // Branch cutoff: fork the copied conversation at the anchor entry, dropping
-      // everything after it. Without an anchor the copied conversation continues
-      // as-is (old continueRecent behavior). Branches must not silently degrade
-      // to fresh sessions, so an unresolvable anchor is a hard error.
+      // everything after it. Missing and unresolvable cutoffs must not silently
+      // resume the parent's later context.
       if (copiedParent) {
         const anchor = config.branchFromSdkTurnId ? this.resolveBranchAnchor(config.branchFromSdkTurnId) : undefined;
         if (config.branchFromSdkTurnId && anchor === undefined) {

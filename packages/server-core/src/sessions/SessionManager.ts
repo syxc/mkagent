@@ -558,6 +558,9 @@ export class SessionManager implements ISessionManager {
 
       const sourcePath = getSessionStoragePath(workspace.rootPath, options.branchFromSessionId)
       branchFromSdkTurnId = (await loadPiTurnAnchors(sourcePath)).anchors[options.branchFromMessageId]
+      if (!branchFromSdkTurnId) {
+        throw new Error('Cannot create branch: the selected message has no Pi turn anchor. Choose a completed turn in the parent session.')
+      }
     }
 
     const stored = await createStoredSession(workspace.rootPath, {

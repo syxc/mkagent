@@ -79,8 +79,8 @@
 | 分组 | 状态 | 红 → 绿 / 运行证据 | 提交 |
 |---|---|---|---|
 | C0 | completed | 规格覆盖 FS-01–FS-13；导航已登记 | `61ec6ed` |
-| C1 | completed | 新增 3 个冷启动回归在修复前均失败；修复后 bundle smoke 18 pass、0 fail；子进程 typecheck 通过。接收时取消代际覆盖初始化排队，打开内核后再次校验；steer 等待已有打开操作。 | `fix(kernel): retain controls across lazy startup` |
-| C2 | pending | — | — |
+| C1 | completed | 新增 3 个冷启动回归在修复前均失败；修复后 bundle smoke 18 pass、0 fail；子进程 typecheck 通过。接收时取消代际覆盖初始化排队，打开内核后再次校验；steer 等待已有打开操作。 | `57e950f` |
+| C2 | completed | 宿主及真实内核缺锚点回归修复前均失败；修复后 branching + kernel e2e 147 pass、0 fail。宿主在创建会话前拒绝缺锚点，内核在复制父库前拒绝；SQLite/JSONL 父库不变，正常及 legacy 截断、无效锚点重试通过。旧的无锚点全量复制用例已改为明确拒绝，已有子库恢复仍可用。 | `fix(sessions): reject branches without a cutoff` |
 | C3 | pending | — | — |
 | C4 | pending | — | — |
 | C5 | pending | — | — |

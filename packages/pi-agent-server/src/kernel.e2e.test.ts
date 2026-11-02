@@ -2703,7 +2703,7 @@ describe('DurableKernel end-to-end', () => {
   const branchModel = { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 };
 
   for (const backend of ['sqlite', 'jsonl'] as const) for (const cutoff of [true, false]) {
-    it(`isolates inherited running work and queued submissions in a new ${backend} branch${cutoff ? ' at an anchor' : ' without an anchor'}`, async () => {
+    it(cutoff ? `isolates inherited running work and queued submissions in a new ${backend} branch at an anchor` : `rejects an unanchored ${backend} branch before copying running work`, async () => {
       const parentPath = scratch();
       if (backend === 'jsonl') {
         mkdirSync(join(parentPath, 'durable-store'));
@@ -2733,6 +2733,17 @@ describe('DurableKernel end-to-end', () => {
         expect((await queuedWrite.status(BACKGROUND_CONTEXT)).status).toBe('queued');
         const inbox = await parentHarness.snapshot(InboxDoc, root.id, BACKGROUND_CONTEXT);
         const branch = { model: branchModel, branchFromSessionPath: parentPath, ...(cutoff ? { branchFromSdkTurnId: anchor } : {}) };
+        if (!cutoff) {
+          child = createKernel(childOptions());
+          await expect(child.kernel.open(branch)).rejects.toThrow('turn anchor is required');
+          expect(child.calls).toHaveLength(0);
+          expect(executions).toBe(0);
+          expect(existsSync(join(childPath, 'durable-store'))).toBe(false);
+          expect(existsSync(join(childPath, '.durable-branch-pending'))).toBe(false);
+          expect(await parentHarness.inspect(BACKGROUND_CONTEXT)).toEqual(inspection);
+          expect(await parentHarness.snapshot(InboxDoc, root.id, BACKGROUND_CONTEXT)).toEqual(inbox);
+          return;
+        }
         if (cutoff) {
           const failed = createKernel(childOptions());
           try {
@@ -3079,7 +3090,7 @@ describe('DurableKernel end-to-end', () => {
       await parent.kernel.submitPrompt('later question');
       await parent.waitForWhere(() => parent.events.filter(event => event.type === 'agent_end').length === 2);
 
-      for (const invalidAnchor of ['missing-anchor', '99999999']) {
+      for (const invalidAnchor of [undefined, 'missing-anchor', '99999999']) {
         const childPath = join(scratch(), 'child');
         const failed = createKernel({ sessionPath: childPath, script: [] });
         try {
