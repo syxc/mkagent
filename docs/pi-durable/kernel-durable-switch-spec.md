@@ -236,6 +236,8 @@ message_end 的 `message` 字段按 pi-ai 1.1.0 `AssistantMessage` 结构化形�
 | 存储 | 统一 `openNodeJsonlStorage`（§5.1） | 新会话与迁移会话默认 SQLite（`bun:sqlite` facade，`src/storage/durable-storage.ts`，upstream README 推荐长会话用 SQLite）；已存在 JSONL store 的会话保持 JSONL（sidecar 不可机械转换） |
 | 会话重建 | 删除 `toolsChanged` 重建，改运行中 install（§6.4） | `register_tools` 和 MCP 工具变化通过替换当前注册表发布，不重新打开会话 |
 | 会话标识 | 使用 durable conversation id（§4.2） | 对外 session id 存于 `durable-store/session-id.txt`；fork 后的 conversation id 存于 `durable-store/conversation-id.txt`，供恢复及后续分支使用 |
+| 交互结束 | `run_end` 直接对应 `agent_end`（§4.4） | durable 可在输入身份变化时同帧结束旧 run 并启动后继 run。宿主交互需等后继及在途输入结算后再结束；根据提交状态与 watch 帧判断，保留 retry/abort 语义。见 [遗留修复验收](kernel-legacy-fix-spec.md) |
+| 模型身份 | 解析后传递 provider/modelId | 目录引用保留 MiniMax CN 的完整目录 ID，durable 据此取得完整模型定义；只在 provider 的 `stream`/`streamSimple` 请求分发时转换裸 ID。不可解析的初始模型、切换模型或提交输入明确失败 |
 | 权限与图片 | 使用 `beforeTool`；图片不经 Photon（§4.5） | 工具 `execute` 包装负责权限握手；图片通过 durable 的 Photon 处理器转换和缩放。codemode 模型调用也经过宿主权限握手 |
 | 上下文与压缩 | 根据最近 usage 和压缩 entry 投影（§4.4、§4.7） | 根据当前会话视图计算最近有效 assistant usage 和后续消息；压缩后没有新 usage 时占用为未知。手动压缩检查任务结果并按压缩后的消息估算；摘要排队时，结束事件等待摘要写入或提交失败 |
 | 分支 | 只读父存储并逐条复制；锚点不可用时回退（§5.3） | 使用 durable store 副本创建 fork，SQLite 通过快照复制。首次副本在 `Harness.open()` 前通过 Storage 原子终结继承的非终态任务，将 queued/placed submissions 结算为 `unanswered`，并清理运行态文档。迁移、锚点 fork、watch 附着和配置完成后才调用 `resume()`；普通恢复仍调用 `resume()`。锚点不可解析时报错，不回退父会话末尾。`.durable-branch-pending` 标记未完成的复制，残留标记会阻止直接打开 |

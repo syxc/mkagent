@@ -1815,8 +1815,8 @@
       "reason": "Craft v0.13.3 Pi model catalog and default ranking are adapted to the Pi-only MkAgent connection model"
     },
     "packages/shared/src/config/paths.ts": {
-      "sha256": "5440f76d6d30e24e837eab6bf22a799c76d159fde22acaaa6b94a1a9c16be991",
-      "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
+      "sha256": "e2057e5661c0393a259c479833b0e5d8538f1a34c779c958249d2c37bea06275",
+      "reason": "Retain shared configuration paths; correct the header to describe the CONFIG_DIR variable read by the implementation and explicit paths for separate instances."
     },
     "packages/shared/src/config/provider-metadata.ts": {
       "sha256": "f324eaeeadac6f5d29f291a4942d577183175f98e49f4267c025246c3f404e3c",

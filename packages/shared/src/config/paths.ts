@@ -5,14 +5,9 @@
  * (`~/.mkagent` by default). Every other module joins onto it; never join
  * `homedir()` with `.mkagent` directly (OSS #1062).
  *
- * Supports multi-instance development via the MKAGENT_CONFIG_DIR environment
- * variable. When running from a numbered folder (e.g., craft-tui-agent-1), the
- * detect-instance.sh script sets MKAGENT_CONFIG_DIR to ~/.mkagent-1, allowing
- * multiple instances to run simultaneously with separate configurations.
- *
- * Default (non-numbered folders): ~/.mkagent/
- * Instance 1 (-1 suffix): ~/.mkagent-1/
- * Instance 2 (-2 suffix): ~/.mkagent-2/
+ * Supports multi-instance development via the CONFIG_DIR environment variable.
+ * Set a separate path for each instance, such as ~/.mkagent-1 or ~/.mkagent-2.
+ * Without an override, all instances use ~/.mkagent/.
  *
  * Two modules re-derive this from the environment on purpose because they must
  * stay import-free: `interceptor-common.ts` (preloaded into the Pi subprocess)

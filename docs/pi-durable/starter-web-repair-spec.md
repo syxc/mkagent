@@ -33,7 +33,7 @@
 
 这不等于完整聊天验收通过。尚须用只监听 loopback 的模型替身检查聊天回复、实际子进程和持久化路径；若发现失败，先补充本节的具体触发条件和根因，再修复对应边界，不猜测改动 Web 架构。
 
-所有配置通过当前代码实际读取的 `CONFIG_DIR` 隔离。`config/paths.ts` 顶部说明仍称 `MKAGENT_CONFIG_DIR`，与实际读取项不一致；本次不据此更改配置契约。
+所有配置通过当前代码实际读取的 `CONFIG_DIR` 隔离。当时发现 `config/paths.ts` 顶部说明仍称 `MKAGENT_CONFIG_DIR`，与实际读取项不一致；后续 [遗留修复](kernel-legacy-fix-spec.md) 已更正注释，没有更改配置契约。
 
 ## 3. 实施方案
 
