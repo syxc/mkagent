@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, afterEach } from 'bun:test'
-import { rmSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { Subprocess } from 'bun'
@@ -161,6 +161,32 @@ describe('headless server smoke test', () => {
     const ws = await connectWs(server.url, server.token)
     expect(ws.readyState).toBe(WebSocket.OPEN)
     ws.close()
+  }, TEST_TIMEOUT)
+
+  it('advertises the bound RPC port to authenticated WebUI clients', async () => {
+    const webui = mkdtempSync(join(tmpdir(), 'mkagent-webui-port-'))
+    try {
+      writeFileSync(join(webui, 'index.html'), '<html>fixture</html>')
+      writeFileSync(join(webui, 'login.html'), '<html>login</html>')
+      server = await spawnTestServer({ MKAGENT_WEBUI_DIR: webui })
+      const baseUrl = server.url.replace(/^ws/, 'http')
+      const auth = await fetch(baseUrl + '/api/auth', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ password: server.token }),
+      })
+      expect(auth.status).toBe(200)
+      const cookie = auth.headers.get('set-cookie')!.split(';')[0]!
+      const response = await fetch(baseUrl + '/api/config', { headers: { cookie } })
+      expect(response.status).toBe(200)
+      const config = await response.json() as { wsUrl: string }
+      expect(config.wsUrl).toBe(server.url)
+      const ws = await connectWs(config.wsUrl, server.token)
+      expect(ws.readyState).toBe(WebSocket.OPEN)
+      ws.close()
+    } finally {
+      rmSync(webui, { recursive: true, force: true })
+    }
   }, TEST_TIMEOUT)
 
   it('persists notification preferences used by the retained settings UI', async () => {

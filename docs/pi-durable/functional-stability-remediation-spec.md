@@ -86,8 +86,8 @@
 | C5 | completed | 初始 6 项红测及复核补充的 2 项红测均已运行失败；修复后 runtime/bundle/endpoint/host/compaction 92 pass、0 fail，完整 kernel e2e 146 pass、0 fail，最终 typecheck:all 通过。独立候选目录复用本次 init 的凭据存储，验收后串行发布；新输入等候提交，工具响应、取消和辅助查询不受阻。旧候选不能覆盖新提交，较新的用户模型选择保持顺序；无效更新保留主/辅助模型及宿主实例。mini 必须仍属于有效自定义目录，端点仅清除已管理键。首次打开、OAuth 轮换、SAVE 队列、前缀及有无 auth 对照通过。 | `32a5fba` |
 | C6 | completed | 原版 3 项附件/导入/符号链接回归均失败；修复后 session transport/persistence/bundle 81 pass、0 fail，既有 session-branching 另 1 pass，typecheck:all 通过。分支只复制保留消息引用的普通文件，附件三种路径及长响应可独立读取；后续专属文件不复制。导出将 UI 消息路径转成可移植 token，导入展开到新会话；旧 v1 的绝对引用兼容自有 header 或已打包附件证明的源目录。源文件保持不变，移除源目录后仍可读；链接、遍历、失败导入回滚通过。路径边界、Markdown、Windows JSON 反斜杠、引号和替换字符对照通过。 | `73aedea` |
 | C7 | pending | — | — |
-| C8 | completed | 实际 Bun bundle 红测显示源码目录被识别为 source、产物路径被丢弃；改用运行文件的 import.meta.url，CommonJS 保留运行时 __dirname 对照。修复后 runtime/resolver/launcher 20 pass、0 fail，最终 typecheck:all 通过。完整 headless 构建成功，真实产物 launcher 在仓库外、源码仍存在时完成登录及配置读取，无源码回退；删除 fixture 的 Pi 资源后不再解析到任何源码替身。C9 的端口 0 问题在此产物中仍可复现，单独修复。 | `fix(server): detect bundled runtime paths correctly` |
-| C9 | pending | — | — |
+| C8 | completed | 实际 Bun bundle 红测显示源码目录被识别为 source、产物路径被丢弃；改用运行文件的 import.meta.url，CommonJS 保留 __dirname 兼容路径。修复后 runtime/resolver/launcher 20 pass、0 fail，最终 typecheck:all 通过。完整 headless 构建成功，真实产物 launcher 在仓库外、源码仍存在时完成登录及配置读取，无源码回退；删除 fixture 的 Pi 资源后不再解析到任何源码替身。C9 的端口 0 问题在此产物中仍可复现，单独修复。 | `b66e7a2` |
+| C9 | completed | 真实端口 0 服务的认证 /api/config 回归先失败（返回 ws://127.0.0.1:0）；修复后与实际绑定端口一致，并使用返回地址成功完成 WebSocket 握手。绑定回调在监听后同步发布端口，WebUI 每次请求读取当前值。server smoke + WebUI HTTP 15 pass、0 fail，typecheck:all 通过；固定端口、public URL、TLS 协议及代理头对照保持通过。 | `fix(webui): advertise the bound RPC port` |
 | C10 | pending | — | — |
 
 ## 7. 已知阻塞与交付限制

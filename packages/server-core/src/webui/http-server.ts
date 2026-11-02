@@ -131,8 +131,8 @@ export interface WebuiHandlerOptions {
   publicWsUrl?: string
   /** RPC WebSocket protocol used when building a browser-facing fallback URL. */
   wsProtocol: 'ws' | 'wss'
-  /** RPC WebSocket port used when building a browser-facing fallback URL. */
-  wsPort: number
+  /** RPC WebSocket port, or a getter for the port assigned after binding. */
+  wsPort: number | (() => number)
   /** Health check function (injected from existing server handler). */
   getHealthCheck: () => { status: string }
   /** Logger. */
@@ -296,7 +296,7 @@ export function createWebuiHandler(options: WebuiHandlerOptions): WebuiHandler {
         return Response.json({ error: 'Unauthorized' }, { status: 401 })
       }
       return Response.json({
-        wsUrl: resolveWebSocketUrl(req, { publicWsUrl, wsProtocol, wsPort }),
+        wsUrl: resolveWebSocketUrl(req, { publicWsUrl, wsProtocol, wsPort: typeof wsPort === 'function' ? wsPort() : wsPort }),
       })
     }
 

@@ -148,9 +148,9 @@ let webuiNodeHandler: ReturnType<typeof nodeHttpAdapter> | undefined
 // Health check is injected lazily — the session manager isn't ready until
 // after bootstrap completes, but the handler captures the closure.
 let healthCheckFn: (() => { status: string }) | null = null
+let webuiRpcPort = parseInt(process.env.MKAGENT_RPC_PORT ?? '9100', 10)
 
 if (webuiEnabled && serverToken) {
-  const rpcPort = parseInt(process.env.MKAGENT_RPC_PORT ?? '9100', 10)
   const rpcProtocol = tls ? 'wss' as const : 'ws' as const
 
   webuiHandler = createWebuiHandler({
@@ -160,8 +160,8 @@ if (webuiEnabled && serverToken) {
     secureCookies: webuiSecureCookies,
     publicWsUrl: webuiWsUrl,
     wsProtocol: rpcProtocol,
-    // WebUI is served on the same port as WS — wsPort matches the RPC port
-    wsPort: rpcPort,
+    // Resolve after binding so port 0 advertises the assigned port.
+    wsPort: () => webuiRpcPort,
     getHealthCheck: () => healthCheckFn?.() ?? { status: 'starting' },
     logger: { info: console.log, warn: console.warn, error: console.error } as any,
   })
@@ -217,7 +217,10 @@ const instance = await (async () => {
         }
         return new SessionManager()
       },
-      bindRpcServer: (sm, server) => sm.setRpcServer(server),
+      bindRpcServer: (sm, server) => {
+        webuiRpcPort = server.port
+        sm.setRpcServer(server)
+      },
       createHandlerDeps: ({ sessionManager, platform }) => ({ sessionManager, platform }),
       registerAllRpcHandlers: (server, deps, serverCtx) => {
         registerCoreRpcHandlers(server, deps, serverCtx)

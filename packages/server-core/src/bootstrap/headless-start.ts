@@ -36,7 +36,7 @@ export interface ServerBootstrapOptions<TSessionManager, THandlerDeps> {
    * this to plumb the server into the SessionManager (e.g. `sm.setRpcServer(server)`)
    * so the remote-bridge code path for `client:browser:invoke` activates.
    */
-  bindRpcServer?: (sessionManager: TSessionManager, server: RpcServer) => void
+  bindRpcServer?: (sessionManager: TSessionManager, server: WsRpcServer) => void
   initModelRefreshService: () => ModelRefreshServiceLike
   cleanupSessionManager?: (sessionManager: TSessionManager) => Promise<void> | void
   cleanupClientResources?: (clientId: string) => void
