@@ -19,7 +19,11 @@ export function remapSessionFileReferences<T>(value: T, sourcePath: string, targ
 
 export function importSessionMessages(bundle: SessionBundle, targetPath: string): StoredMessage[] {
   const roots = new Set<string>()
-  if (bundle.session.header.workspaceRootPath) roots.add(normalizePath(bundle.session.header.workspaceRootPath) + '/sessions/' + bundle.session.header.id)
+  if (bundle.session.header.workspaceRootPath) {
+    const workspace = bundle.session.header.workspaceRootPath.replace(/[\\/]+$/, '')
+    const separator = workspace.includes('\\') ? '\\' : '/'
+    roots.add(workspace + separator + 'sessions' + separator + bundle.session.header.id)
+  }
   const files = new Set(bundle.files.map(file => file.relativePath))
   // Old v1 packages stored absolute paths, sometimes alongside a "~" header.
   // Infer those source roots only from structured references proven by bundled files.
@@ -32,7 +36,7 @@ export function importSessionMessages(bundle: SessionBundle, targetPath: string)
       const normalized = normalizePath(path)
       const offset = normalized.lastIndexOf(marker)
       if (offset >= 0 && files.has(normalized.slice(offset + marker.length))) {
-        roots.add(normalized.slice(0, offset + marker.length - 1))
+        roots.add(path.slice(0, offset + marker.length - 1))
       }
     }
   }

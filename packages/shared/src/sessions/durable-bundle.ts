@@ -7,7 +7,7 @@ import { BROWSER_INPUT_EVIDENCE, browserInputClassifications, redactBrowserInput
 import { PASSWORD_FILL_MARKER, PASSWORD_TEXT_MARKER, splitBatchCommands, tokenizeCommand } from '../agent/browser-tool-runtime.ts'
 import type { BundleFile } from '../utils/bundle-files.ts'
 
-type Json = null | boolean | number | string | Json[] | { [key: string]: Json }
+export type Json = null | boolean | number | string | Json[] | { [key: string]: Json }
 type ObjectValue = { [key: string]: Json }
 type SqliteDatabase = {
   exec(sql: string): void
@@ -40,7 +40,7 @@ function addSecret(secrets: Set<string>, raw: string): void {
 }
 
 /** Redact known browser calls and reject records whose other copies cannot be proven safe. */
-function redactHistory(values: Json[], secrets: Set<string>): Json[] {
+export function redactHistory(values: Json[], secrets: Set<string>): Json[] {
   const results = new Map<string, string[]>()
   const failed = new Set<string>()
   const add = <K>(map: Map<K, string[]>, key: K, value: Json): void => {

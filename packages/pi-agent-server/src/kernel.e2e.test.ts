@@ -7,7 +7,7 @@
 import { afterAll, describe, expect, it } from 'bun:test';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync, utimesSync, writeFileSync } from 'node:fs';
 import { Database } from 'bun:sqlite';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -844,6 +844,65 @@ describe('DurableKernel end-to-end', () => {
       await setup.kernel.close();
     }
   });
+
+  it('restores uninitialized legacy SDK context and branches from a portable bundle', async () => {
+    const workspace = scratch();
+    const sessionId = 'legacy-export';
+    const source = join(workspace, 'sessions', sessionId);
+    mkdirSync(join(source, '.pi-sessions'), { recursive: true });
+    writeSessionJsonl(join(source, 'session.jsonl'), {
+      id: sessionId, workspaceRootPath: workspace, createdAt: 1, lastUsedAt: 1, sdkSessionId: 'old-sdk',
+      tokenUsage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, contextTokens: 0, costUsd: 0 },
+      messages: [{ id: 'display', type: 'user', content: 'DISPLAY-ONLY', timestamp: 1 }],
+    } as StoredSession);
+    const legacy = [
+      { type: 'session', version: 3, id: 'old-sdk' },
+      { type: 'message', id: 'user', parentId: null, message: { role: 'user', content: 'SDK-ONLY-USER', timestamp: 1 } },
+      { type: 'message', id: 'inactive', parentId: 'user', message: { role: 'user', content: 'INACTIVE-LEGACY-BRANCH', timestamp: 2 } },
+      { type: 'message', id: 'answer', parentId: 'user', message: assistantMessage([{ type: 'text', text: 'SDK-ONLY-ANSWER' }], 'stop') },
+    ].map(record => JSON.stringify(record)).join('\n') + '\n';
+    const older = join(source, '.pi-sessions', 'older.jsonl');
+    writeFileSync(older, JSON.stringify({ type: 'session', version: 3, id: 'older-sdk' }) + '\n'
+      + JSON.stringify({ type: 'message', id: 'old', message: { role: 'user', content: 'NOT-THE-LATEST', timestamp: 1 } }) + '\n');
+    utimesSync(older, 1, 1);
+    writeFileSync(join(source, '.pi-sessions', 'original.jsonl'), legacy);
+    const bundle = serializeSession(workspace, sessionId);
+    expect(bundle).not.toBeNull();
+    expect(readFileSync(join(source, '.pi-sessions', 'original.jsonl'), 'utf8')).toBe(legacy);
+    expect(existsSync(join(source, 'durable-store'))).toBe(false);
+    const restoredPath = join(scratch(), 'restored');
+    mkdirSync(restoredPath);
+    restoreFiles(restoredPath, bundle!.files);
+    rmSync(source, { recursive: true });
+    const resumed = createKernel({ sessionPath: restoredPath, script: [textEvents('continued')] });
+    try {
+      await resumed.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
+      await resumed.kernel.submitPrompt('continue');
+      await resumed.waitFor('agent_end');
+      const context = JSON.stringify(resumed.calls[0]!.messages);
+      expect(context).toContain('SDK-ONLY-USER');
+      expect(context).toContain('SDK-ONLY-ANSWER');
+      expect(context.indexOf('SDK-ONLY-USER')).toBeLessThan(context.indexOf('SDK-ONLY-ANSWER'));
+      expect(context).not.toContain('DISPLAY-ONLY');
+      expect(context).not.toContain('INACTIVE-LEGACY-BRANCH');
+      expect(context).not.toContain('NOT-THE-LATEST');
+    } finally {
+      await resumed.kernel.close();
+    }
+    const child = createKernel({ sessionPath: join(scratch(), 'child'), script: [textEvents('branched')] });
+    try {
+      await child.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 },
+        branchFromSessionPath: restoredPath, branchFromSdkTurnId: 'inactive' });
+      await child.kernel.submitPrompt('branch');
+      await child.waitFor('agent_end');
+      const context = JSON.stringify(child.calls[0]!.messages);
+      expect(context).toContain('SDK-ONLY-USER');
+      expect(context).toContain('INACTIVE-LEGACY-BRANCH');
+      expect(context).not.toContain('SDK-ONLY-ANSWER');
+    } finally {
+      await child.kernel.close();
+    }
+  }, 10_000);
 
   for (const storage of ['sqlite', 'jsonl'] as const) it(`does not export a browser password from the durable ${storage} store`, async () => {
     const workspace = scratch();

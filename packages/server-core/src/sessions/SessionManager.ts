@@ -2121,7 +2121,7 @@ export class SessionManager implements ISessionManager {
       if (!loaded) throw new Error('Failed to create imported session')
       stored = loaded
       stored.codingMode = bundle.session.header.codingMode
-      if (bundle.files.some(file => file.relativePath === 'durable-store/session-id.txt')) {
+      if (bundle.files.some(file => file.relativePath === 'durable-store/session-id.txt' || file.relativePath === '.pi-sessions/legacy.jsonl')) {
         stored.sdkSessionId = bundle.session.header.sdkSessionId
       }
       stored.transferredSessionSummary = bundle.session.header.transferredSessionSummary
