@@ -160,7 +160,9 @@ Use [GitHub Issues](https://github.com/MkThingsHQ/mkagent/issues) for bugs and f
 
 MkAgent started from selected architecture and code in
 [Craft Agents OSS](https://github.com/craft-ai-agents/craft-agents-oss) `v0.12.1`
-(`d7592c481216`) and continues with an independent Git history and product boundary. MkAgent is not
+(`d7592c481216`) and continues with an independent Git history and product boundary.
+The current selective-sync baseline is `v0.15.6` (`8df01c5d0ac7`); see
+[upstream synchronization](./docs/upstream-sync.md). MkAgent is not
 affiliated with or endorsed by the upstream project. See [NOTICE](./NOTICE) for attribution and the
 [comparison guide](./docs/comparison-with-craft.md) for the current differences.
 

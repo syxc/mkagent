@@ -6,16 +6,11 @@ import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
+import { requireCraftSource } from './craft-source'
 
 const repoRoot = resolve(import.meta.dir, '..')
-const craftRoot = process.env.CRAFT_AGENT_SOURCE
-  ?? [
-    resolve(repoRoot, '..', 'craft-agents-oss'),
-    resolve(repoRoot, '..', '..', 'agents', 'craft-agents-oss'),
-  ].find(candidate => existsSync(candidate))
-  ?? resolve(repoRoot, '..', 'craft-agents-oss')
+const { root: craftRoot, baseline } = requireCraftSource(repoRoot)
 const jsonOutput = process.argv.includes('--json')
-const baseline = Bun.spawnSync(['git', '-C', craftRoot, 'rev-parse', 'HEAD'], { stdout: 'pipe' }).stdout.toString().trim()
 
 function trackedFiles(root: string): string[] {
   const proc = Bun.spawnSync(

@@ -1,6 +1,6 @@
 # MkAgent 文档（中文）
 
-本目录是 MkAgent 用户文档的中文译本，与 [`docs/`](../) 下的英文文档一一对应。MkAgent 基于 [Craft Agents OSS](https://github.com/craft-ai-agents/craft-agents-oss) 派生，当前选择性同步基线为 `v0.12.1`。当前运行时只有 Pi：agent 内核（`@earendil-works/pi-durable`）在独立 Bun 子进程中运行，Electron、WebUI、CLI 与 headless server 共用同一套 RPC 合约。内核从 agent 目录中的 `mcp.json` 加载 MCP 服务器配置。MkAgent 支持 API key、OpenAI/Anthropic 兼容端点、Ollama，以及保留的 ChatGPT Plus / Claude Pro/Max 订阅流程。不包含 Claude Agent SDK、GitHub Copilot、外部消息、产品 Automations、Projects/Kanban、Craft 的 Sources 界面或 Viewer/公开分享。启用 codemode 且有兼容的图片模型和凭据时，MkAgent 可调用 `models.generateImages()` 生成图片。没有独立的图片生成界面。
+本目录是 MkAgent 用户文档的中文译本，与 [`docs/`](../) 下的英文文档一一对应。MkAgent 基于 [Craft Agents OSS](https://github.com/craft-ai-agents/craft-agents-oss) 派生，当前选择性同步基线为 [`v0.15.6`](./upstream-sync.md)。当前运行时只有 Pi：agent 内核（`@earendil-works/pi-durable`）在独立 Bun 子进程中运行，Electron、WebUI、CLI 与 headless server 共用同一套 RPC 合约。内核从 agent 目录中的 `mcp.json` 加载 MCP 服务器配置。MkAgent 支持 API key、OpenAI/Anthropic 兼容端点、Ollama，以及保留的 ChatGPT Plus / Claude Pro/Max 订阅流程。不包含 Claude Agent SDK、GitHub Copilot、外部消息、产品 Automations、Projects/Kanban、Craft 的 Sources 界面或 Viewer/公开分享。启用 codemode 且有兼容的图片模型和凭据时，MkAgent 可调用 `models.generateImages()` 生成图片。没有独立的图片生成界面。
 
 ## 文档导航
 

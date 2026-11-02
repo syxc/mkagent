@@ -7,7 +7,7 @@
 | 工具 | 版本 | 用途 |
 |---|---|---|
 | Bun | 1.3.14+ | workspace、runtime、构建(`bun.lock`) |
-| Node | ≥ 18(Bun 自带 fallback) | TypeScript 工具链 |
+| Node | ≥ 18 | Node 工具的备用运行时 |
 | Python | 3.12 | 文档工具 smoke 测试 |
 | `uv` | 开发期使用兼容的最新版本；Desktop release 内置 `0.10.6` | 运行文档工具 smoke test 和准备构建资源；打包产物会内置目标平台二进制 |
 | Git | 任意现代版本 | 可选启用 husky pre-commit |
@@ -43,7 +43,7 @@ packages/
 docs/                  # 英文文档
 docs/zh/               # 中文翻译
 scripts/               # dev / build / lint / audit
-migration/             # 迁移计划、audit、UI 历史
+docs/migration/        # 迁移计划、audit、UI 历史
 ```
 
 `apps/online-docs` 被刻意排除在 workspace glob 之外。
@@ -53,9 +53,9 @@ migration/             # 迁移计划、audit、UI 历史
 | 目标 | 命令 |
 |---|---|
 | 安装依赖(CI 模式) | `bun install --frozen-lockfile` |
-| 快速离线安装 | `bun install --force`(少见,用于损坏的 lockfile 恢复) |
+| 重新安装依赖 | `bun install --force` |
 | 在 dev 模式运行 Electron(vite + electron) | `bun run electron:dev` |
-| 从已构建的 `apps/electron/dist/` 启动 Electron | `bun run electron:start` |
+| 构建并启动 Electron | `bun run electron:start` |
 | 同时启动 WebUI 热更新开发服务与后端 | `bun run webui:dev` |
 | 启动带已构建 WebUI 的 headless server | `bun run server:dev:webui` |
 | 生产 headless server(WebUI 已打包、Pi 已构建) | `bun run server:prod` |
@@ -63,11 +63,18 @@ migration/             # 迁移计划、audit、UI 历史
 | 构建 Pi 子进程 | `bun run server:build:subprocess` |
 | 构建 macOS arm64 dev 签名的 .app | `bun run electron:dist:dev:mac` |
 | 跑全部 unit + isolated 测试 | `bun run test` |
-| 校验(typecheck + 测试 + shared 套件 + 文档工具 smoke + lint) | `bun run validate:ci` |
+| 校验所有 package 的类型、指定 shared 测试和文档工具 smoke 测试 | `bun run validate:dev` |
+| 运行 validate:dev 与 i18n parity、usage、排序检查 | `bun run validate:ci` |
+| 运行 Craft 检查与 Electron/shared/UI ESLint | `bun run lint` |
 | 审计 MkAgent ↔ Craft 复用关系 | `bun run audit:craft-reuse` |
+| 审计 Craft renderer 复用与 Lite 边界 | `bun run lint:craft-ui-sync` |
 | 审计 Craft 测试覆盖率 | `bun run lint:craft-test-coverage` |
 | 校验中/英文 locale parity | `bun run lint:i18n:parity` |
 | 排序 locales | `bun run sort-locales`(只检查:`bun run lint:i18n:sorted`) |
+
+`validate:ci` 不运行完整的 `bun run test` 套件、ESLint 或 Craft 审计，这些命令需要单独运行。
+
+运行 `bun run lint` 或任一 Craft 审计前，先准备固定提交的独立参考 checkout，并将 `CRAFT_AGENT_SOURCE` 设置为其根目录。克隆命令、当前基线和参考副本检查见[上游同步](./upstream-sync.md)。
 
 ## Web 开发
 
@@ -100,6 +107,7 @@ CONFIG_DIR=/tmp/mkagent-dev bun run server:dev:webui
 | 变量 | 默认值 | 作用 |
 |---|---|---|
 | `CONFIG_DIR` | `~/.mkagent` | 配置根(也叫数据目录)覆盖入口 |
+| `CRAFT_AGENT_SOURCE` | 依次查找 `../craft-agents-oss`、`../../agents/craft-agents-oss` | lint 和审计使用的 Craft 参考 checkout 根目录；HEAD 必须匹配 `scripts/craft-source-overrides.json#baselineCommit` |
 | `MKAGENT_SERVER_TOKEN` | — | headless server RPC 鉴权必需的 bearer token |
 | `MKAGENT_RPC_HOST` / `MKAGENT_RPC_PORT` | `127.0.0.1` / `9100` | server 绑定地址 / 端口 |
 | `MKAGENT_RPC_TLS_CERT` / `_KEY` / `_CA` | — | 启用 `wss://`,使用 PEM 编码的 cert/key;CA 可选 |
@@ -136,4 +144,4 @@ bun install --force --frozen-lockfile
 bun run validate:ci
 ```
 
-这一组合在全新 checkout 上通过了 MkAgent 完整门禁(见 `migration/migration-features.md` "最终验证结果")。该门禁不启动 GUI,不需要录音/截屏权限。
+这一组合运行当前的 `validate:ci` 检查，不启动 GUI。`bun run test`、`bun run lint` 与 `bun run audit:craft-reuse` 需要单独运行。[迁移归档](../migration/migration-features.md)记录了此前的验证结果。

@@ -9,17 +9,12 @@
  */
 
 import { readFile, readdir } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
+import { requireCraftSource } from './craft-source'
 
 const repoRoot = resolve(import.meta.dir, '..')
-const craftRoot = process.env.CRAFT_AGENT_SOURCE
-  ?? [
-    resolve(repoRoot, '..', 'craft-agents-oss'),
-    resolve(repoRoot, '..', '..', 'agents', 'craft-agents-oss'),
-  ].find(candidate => existsSync(candidate))
-  ?? resolve(repoRoot, '..', 'craft-agents-oss')
+const { root: craftRoot } = requireCraftSource(repoRoot)
 const rendererRoot = 'apps/electron/src/renderer'
 const manifest = JSON.parse(
   await readFile(resolve(import.meta.dir, 'craft-ui-overrides.json'), 'utf8'),

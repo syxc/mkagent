@@ -7,16 +7,16 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     ".gitignore": {
-      "sha256": "95828ade5f446080721e3e1e669d700443fe724498e73f0cf364e0d3b9867db1",
-      "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
+      "sha256": "668d560f250dc7747e5a780de07645e7efc2c9fc737454a06e74d661c565558c",
+      "reason": "Craft ignore rules adapted for MkAgent local config and credentials; includes the generated Alma snapshots ignore rule added in 57ad06c."
     },
     "NOTICE": {
       "sha256": "e33efd481fc42a15ae09186a273ac72a67a7ea973c4121ca1c0f43034634e285",
       "reason": "Retain MkAgent branding and Craft origin notices, and add the MIT notice for server code and event declarations adapted from pi-coding-agent."
     },
     "README.md": {
-      "sha256": "3c26e4f467f627bfe1319abe10370d8323b426397fb8658ff138cdef408e2fbe",
-      "reason": "Craft documentation adapted to the retained MkAgent feature set and product identifiers"
+      "sha256": "c2c1ebb946458d031152827d8ad6df83b74292176d8400e9e968e64950b045ce",
+      "reason": "Craft documentation adapted to the retained MkAgent feature set and product identifiers; distinguish initial v0.12.1 lineage from the current pinned v0.15.6 sync baseline."
     },
     "apps/cli/package.json": {
       "sha256": "c1cb4530b4aaaef3527e80fe23ed50c7ce4c494ac89f24b1693dd7fa5907f27d",
@@ -2325,8 +2325,8 @@
       "reason": "MkAgent-specific release metadata required by the release workflow; v0.15.3 sync: MkAgent 0.2.3 release metadata and HEIC dependencies; Pi remains pinned at 1.1.0 and dynamic release audit baseline is preserved."
     },
     "README.zh.md": {
-      "sha256": "d8a0463130fe5c1062fa7ca141b86ae5d4af1eeba84394a1731eeaf68c4ac3e3",
-      "reason": "Simplified Chinese MkAgent project overview maintained alongside the English README"
+      "sha256": "8db58a14b8f7c0536151f7bb339b576c4504c4fa5b4b248b7d3a4a1e0c240ebe",
+      "reason": "Simplified Chinese MkAgent project overview maintained alongside the English README, with separate initial lineage and current v0.15.6 sync baseline."
     },
     "apps/electron/resources/generate-brand-icons.sh": {
       "sha256": "b3b1484bafbb3a6c135791b854f49c53e4ece9ab610b7edf80681ed16e305f64",
@@ -2593,20 +2593,20 @@
       "reason": "MkAgent chat utility isolates user-message timestamp formatting from renderer-only dependencies"
     },
     "scripts/audit-craft-reuse.ts": {
-      "sha256": "1fdf34bb746b9d09e8a458da69575a4d0047371c29acfd9092fb9fdefb05477c",
-      "reason": "MkAgent lineage audit script excludes independently maintained product documentation from Craft source-reuse checks"
+      "sha256": "fbae0746d1613b55c75d5948edcd171896cdbad1106ff36cbbc6b494ed1b2b9e",
+      "reason": "MkAgent lineage audit excludes independently maintained product documentation and uses the shared pinned-reference preflight with actionable setup errors."
     },
     "scripts/build-server.test.ts": {
       "sha256": "b29b0cdfd4bd24c9beb3318e93bd892b0754649512e61414d3f8e0c017aed2fa",
       "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path"
     },
     "scripts/check-craft-test-coverage.ts": {
-      "sha256": "da449d156c03ccbfe9ffbc4e924669b10f1dd8664167532453e09fdfc6d4d7dc",
-      "reason": "Retain the Craft test coverage audit and map seven replaced Pi SDK test files to durable kernel.e2e.test.ts coverage; the mapping does not assert that every retired assertion has an equivalent test."
+      "sha256": "60c7ec9df6a4cd11415bb24ce510233b4537cdd78e4b013d874e6b19e80d4eb1",
+      "reason": "Retain Craft test classification and map seven replaced Pi SDK test files to durable kernel.e2e.test.ts coverage without asserting equivalent coverage of every retired assertion. Validate the pinned reference first and register the added translated-prompt regression in the static test-declaration count."
     },
     "scripts/check-craft-ui-sync.ts": {
-      "sha256": "43403aab630df37ea15c59f84a9f65311b0d7412a4cdf2c2d2d3ffb633947819",
-      "reason": "MkAgent lineage, build, or validation guard required by the derivative release workflow"
+      "sha256": "884624db03f05aebc889ad2182851377fb569d44557f521b6e70c79fb3929ad1",
+      "reason": "MkAgent renderer lineage and Lite-boundary guard uses the same pinned-reference preflight as the coverage and source audits."
     },
     "scripts/check-i18n-usage.ts": {
       "sha256": "993af14ce3836b7a66bc30fa196aacf726dd3e1bd32088bdd9a2925f7016b9ac",
@@ -2616,9 +2616,17 @@
       "sha256": "edc5a8d6a7e0e1600690f3dde42664a768c1ac6dc9ec008fbd9237b4404bb64b",
       "reason": "MkAgent lineage, build, or validation guard required by the derivative release workflow"
     },
+    "scripts/craft-source.test.ts": {
+      "sha256": "63dab26d27f2293086454c66480d6eabceea67728d1474931119484564612bcd",
+      "reason": "Regression tests cover all three CLI setup errors and shared reference validation for pinned HEAD, explicit and default paths, spaces, nested roots, empty settings and non-Git directories."
+    },
+    "scripts/craft-source.ts": {
+      "sha256": "d3a630a87b22d178a9a08713b3bd0ad59dcde0f22e22b7c5f04fc2f6fdcd6220",
+      "reason": "Shared MkAgent audit preflight resolves the Craft reference, validates the checkout root and pinned HEAD, and reports setup instructions before comparisons."
+    },
     "scripts/craft-ui-overrides.json": {
-      "sha256": "8706a32c88ccc2bf412d48552eee233f1a2e5b6df6c99f4eefa0c544e03320af",
-      "reason": "MkAgent renderer lineage ledger records the selective Craft v0.13.3 retry synchronization; v0.15.3: apply applicable retained feature changes; preserve documented MkAgent Pi/Lite seams (see docs/sync/0.15.3-inventory.json and validation)."
+      "sha256": "ad02050478df4c133b1d2625a211b3743905ade63d788eea252e653f1fbd0bf2",
+      "reason": "MkAgent renderer lineage ledger records the selective Craft v0.13.3 retry synchronization; v0.15.3: apply applicable retained feature changes and preserve Pi/Lite seams (see docs/sync/0.15.3-inventory.json and validation). Register the per-locale starter-prompt regression added in 20fb16d."
     },
     "scripts/release-workflow.test.ts": {
       "sha256": "afc777f27d5bcc4116375878695d241b8fd5aa13b0867fe67f0674c254bb698f",

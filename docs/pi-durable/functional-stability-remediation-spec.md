@@ -1,6 +1,6 @@
 # 功能与稳定性修复执行规格
 
-状态：FS-01–FS-13 与 watcher 追加修复已完成；C10 仍因固定 Craft 来源 checkout 缺失受阻，最新结果见 8.1。
+状态：FS-01 至 FS-13、watcher 追加修复与 C10 已完成；固定 Craft 来源阻塞已解除，最新结果见 8.2。
 初稿日期：2026-11-02。最后验收：2026-11-03。
 基线：`416835e`，`dev/pi-durable`。
 
@@ -88,11 +88,11 @@
 | C7 | completed | 初始 10 项及内容块复核补充的 5 项回归均已观察失败；修复后 legacy 迁移/导出/真实内核 32 pass、0 fail。全差异复核另发现 edit 目标只有存在性校验，补充 usage、TUI、edit-of-edit、跨分支目标 4 项红测后收紧规则，legacy/附件模型上下文 40 pass、0 fail；最终 bundle 78 pass、0 fail，validate:ci 通过。正常替换和省略仍可迁移。同步导出只收集最新普通 transcript，复用浏览器密码脱敏和最终残留秘密检查，不写源文件或提前创建 durable store。真实 provider 请求保留原用户/助手上下文，inactive anchor 仍可分支；较旧 transcript 不混入。拒绝坏 JSON、非法树/消息块及链接；按角色校验 text/image/thinking/toolCall，也覆盖 custom_message 和 context_edit。Windows 旧包跨目录源根识别的路径/transport 10 pass；模型历史附件验证见 C6。 | `9aec364`；`a28621b`；`6dc5cd9` |
 | C8 | completed | 实际 Bun bundle 红测显示源码目录被识别为 source、产物路径被丢弃；改用运行文件的 import.meta.url，CommonJS 保留 __dirname 兼容路径。修复后 runtime/resolver/launcher 20 pass、0 fail，最终 typecheck:all 通过。完整 headless 构建成功，真实产物 launcher 在仓库外、源码仍存在时完成登录及配置读取，无源码回退；删除 fixture 的 Pi 资源后不再解析到任何源码替身。C9 的端口 0 问题在此产物中仍可复现，单独修复。 | `b66e7a2` |
 | C9 | completed | 真实端口 0 服务的认证 /api/config 回归先失败（返回 ws://127.0.0.1:0）；修复后与实际绑定端口一致，并使用返回地址成功完成 WebSocket 握手。绑定回调在监听后同步发布端口，WebUI 每次请求读取当前值。server smoke + WebUI HTTP 15 pass、0 fail，typecheck:all 通过；固定端口、public URL、TLS 协议及代理头对照保持通过。 | `e300585` |
-| C10 | blocked | watcher 追加修复后，普通组 4400 pass、11 skip、0 fail，18 个隔离文件 231 pass、0 fail；validate:ci、最终构建和真实产物 RPC 通过。原 WebUI/CLI 验收记录保留。52 个本轮代码/测试路径哈希一致，固定来源基线未变。Craft 外部 checkout 仍缺失，组合 lint 与来源审计失败，不能宣称整体验收全绿。详情见 8.1，原失败历史保留于第 8 节。 | `74c756e`；`2c68ffd`；watcher 修复随本文提交 |
+| C10 | completed | 固定 Craft 副本已核验，组合 lint 与完整来源审计通过。审计工具修复后，全量 4639 pass、11 skip、0 fail；validate:ci 与脚本严格类型检查通过。当前来源、文档和审计结果见 8.2；构建与真实产物 RPC 证据保留于 8.1，原失败历史保留于第 8 节。 | `74c756e`；`2c68ffd`；`4cbb99b`；本轮审计修复 |
 
 ## 7. 已知阻塞与交付限制
 
-- 用户已指出本仓库 `main` 是未切换内核的版本；本轮已确认该分支存在，不再将原内核参考描述为缺失。来源审计脚本的默认外部路径不存在，且固定的 Craft 上游对象不在当前 Git 对象库；C10 分别记录原内核对照与来源审计的实际结果。当前独立 lint 基线为 0 error、106 warning，不借本轮清理无关警告。
+- 原内核对照使用本仓库 `main`；Craft 来源审计使用后续授权取得的独立临时副本，通过 `CRAFT_AGENT_SOURCE` 显式指定，固定提交与完整来源审计均已核验，详见 8.2。当前组合 lint 为 0 error、106 warning，保留原有警告。
 - 真实模型、OAuth、外部 MCP、跨平台发布及长期 soak 需要对应环境和授权；本轮不使用真实凭据或付费配额。
 - CommonJS 兼容路径未单独运行验收；Windows 仅执行格式与路径夹具，未进行真实 Windows 安装验收。
 - 旧 v1 包若只记录 `~`，且显示层没有任何附件引用可证明源会话目录，模型独有绝对路径无法可靠重定位；不能保证此类历史包删除源后仍可读取。新导出包对模型路径使用会话令牌，不依赖此推断。
@@ -102,7 +102,7 @@
 
 ## 8. 最终验收记录
 
-原 C10 验收的最后生产源码提交为 `6dc5cd9`。下表保留该次验收结果；基于 `2c68ffd` 的 watcher 追加修复与最新结果见 8.1。本机临时证据目录为 `/tmp/mkagent-remediation-20261102-q7r4`，日志与测试产物不提交到仓库。构建、自动测试、lint 和测试服务经过 `run-checks.py`，隔离 HOME、CONFIG_DIR、真实凭据和代理；模型请求仅发送到本地 fixture。浏览器仅操作同名专用空间并连接该隔离服务。
+原 C10 验收的最后生产源码提交为 `6dc5cd9`。下表保留该次验收结果；基于 `2c68ffd` 的 watcher 追加修复见 8.1，后续 Craft 来源审计修复与最新结果见 8.2。本机临时证据目录为 `/tmp/mkagent-remediation-20261102-q7r4`，日志与测试产物不提交到仓库。构建、自动测试、lint 和测试服务经过 `run-checks.py`，隔离 HOME、CONFIG_DIR、真实凭据和代理；模型请求仅发送到本地 fixture。浏览器仅操作同名专用空间并连接该隔离服务。
 
 | 检查 | 实际结果 | 本机证据 |
 |---|---|---|
@@ -154,3 +154,28 @@ RPC 在异步初始化前登记订阅身份；UNWATCH、断连或新 WATCH 使�
 检查元数据可能与原生事件形成重复刷新，不提供逐条事件或 exactly-once 保证；两次检查之间发生且已恢复的瞬时状态可能不可见。大目录吞吐、跨平台和长期 soak 未实测。
 
 本次没有使用浏览器或操作原有 9100 服务。最终 fixture 的 RPC、provider 与进程组均已关闭；从持久配置恢复真实 provider 端口后，连接检查确认两个监听均拒绝连接，所属进程组为空（`watcher-cleanup-confirmed.log`）。保留临时日志与产物供复核。
+
+### 8.2 Craft 来源审计与文档修复
+
+后续用户要求逐一处理来源阻塞、审计报错和过时文档，并授权本地提交、不推送。本次基于 `4cbb99b`，继续使用 `run-checks.py` 隔离 HOME、CONFIG_DIR、凭据和代理，不操作原有 WebUI 或浏览器空间。
+
+官方 Git 下载先发生 HTTP/2 传输错误，再于 HTTP/1.1 连接超时。通过公开 Git 下载镜像 `ghfast.top` 取得独立临时副本 `craft-v0156-mirror`，核对 `v0.15.6` 的提交为 `8df01c5d0ac73c35add5954e6f190ce038d35845`，执行 `git fsck --full`、detached checkout 和干净工作树检查后，将其作为只读参考。固定来源基线未变。下载失败和成功证据分别保留于 `craft-fetch-pinned.log`、`craft-fetch-http1.log`、`craft-fetch-mirror.log` 与 `craft-reference-verify.log`。
+
+三个入口原先各自解析参考路径，缺失目录后直接进入文件遍历或 Git 命令，输出底层错误。现共用 `scripts/craft-source.ts`：校验显式变量、默认路径、Git 根目录、固定 HEAD 与 renderer 目录，失败时说明 `CRAFT_AGENT_SOURCE` 和准备文档。三个真实 CLI 的旧实现均已观察到红测，修复后八项回归覆盖缺失输入、固定提交、含空格路径、默认目录、嵌套目录、空值和非 Git 目录。
+
+真实比对另发现三处旧登记未同步：`20fb16d` 新增逐语言 starter-prompt 回归后，UI 哈希和静态测试声明数仍为旧值；`57ad06c` 新增 Alma 快照忽略规则后，来源哈希仍为旧值。已对照原提交和固定上游核实，更新对应登记并保留移除 Sources 的理由。测试声明数由 7 更新为 8，不把语言循环次数当作声明数；路径和声明数检查不代表所有已移除断言都有等价覆盖。
+
+中英文 README 区分最初 `v0.12.1` 来源与当前 `v0.15.6` 同步基线。开发文档明确 `validate:ci` 包含全仓类型、指定 shared 测试、文档工具和 i18n 检查，全量测试、ESLint 与 Craft 审计需单独运行，并修正迁移目录和验收链接。另修正 Node 自带于 Bun、`--force` 表示离线安装、`electron:start` 只启动预构建产物的错误描述。上游同步文档补全参考目录优先级、固定提交要求、本地命令和错误处理，中英文一致。
+
+| 检查 | 实际结果 | 本机证据 |
+|---|---|---|
+| 前置检查回归 | 旧实现三个 CLI 均失败；修复后八项通过，且纳入全量测试。 | `craft-preflight-red-confirmed.log`、`craft-preflight-green.log`、`craft-remediation-tests.log` |
+| 审计脚本类型 | helper、回归测试和三个生产入口均通过严格 TypeScript 检查。 | `craft-audit-entry-types.log` |
+| UI 同步与测试分类 | renderer 共 453 个文件，其中 323 个归一化复用、130 个已登记差异；547 个上游测试中，同路径 320、替代 14、随功能移除 213，无未登记缺失或测试缩减。 | `craft-remediation-lint.log` |
+| 完整来源审计 | 1604 个 MkAgent 文件：同路径 1455，其中归一化复用 879、已登记修改 576；MkAgent 专有 149，已审阅上游删除 858。整个来源审计退出 0。 | `craft-remediation-audit.log` |
+| 组合 `bun run lint` | Craft 两项检查和 Electron/shared/UI ESLint 全部执行成功；0 error、106 warning，与既有警告基线一致。 | `craft-remediation-lint.log` |
+| 全量 `bun run test` | 361 个普通文件 4408 pass、11 skip、0 fail；18 个隔离文件 231 pass、0 fail。合计 4639 pass、11 skip、0 fail，退出 0。 | `craft-remediation-tests.log` |
+| `bun run validate:ci` | 全仓类型、指定 shared 测试、20 项文档工具测试与 i18n 检查通过，退出 0。 | `craft-remediation-validate.log` |
+| 文档核对 | 八份中英文文档新增段落的标点和相对链接检查通过；最终开发说明和本节补充记录再次检查通过。 | `craft-doc-checks.log`、`craft-ledger-doc-check.log`、`craft-doc-final-check.log` |
+
+本轮仅修改审计工具、登记清单与说明。应用构建及真实产物 RPC 的结果继续对应 8.1，不将它们描述为本轮重新执行。
