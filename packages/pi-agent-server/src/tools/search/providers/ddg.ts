@@ -8,6 +8,7 @@
  */
 
 import * as DDG from 'duck-duck-scrape';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { parse as parseHtml } from 'node-html-parser';
 import type { WebSearchProvider, WebSearchResult } from '../types.ts';
 
@@ -16,10 +17,6 @@ const DEFAULT_HEADERS = {
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
   Accept: 'text/html',
 } as const;
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function isTransientDdgError(error: unknown): boolean {
   const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
@@ -35,13 +32,15 @@ function isTransientDdgError(error: unknown): boolean {
   );
 }
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 2, signal?: AbortSignal): Promise<T> {
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
+    signal?.throwIfAborted();
     try {
       return await fn();
     } catch (error) {
+      signal?.throwIfAborted();
       lastError = error;
 
       const canRetry = attempt < retries && isTransientDdgError(error);
@@ -51,7 +50,7 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
 
       const backoff = 250 * 2 ** attempt;
       const jitter = Math.floor(Math.random() * 120);
-      await sleep(backoff + jitter);
+      await sleep(backoff + jitter, undefined, { signal });
     }
   }
 
@@ -145,10 +144,11 @@ function extractResultsFromDuckDuckGoHtml(
   return results;
 }
 
-async function fetchDuckDuckGoHtml(url: string, endpointName: string): Promise<string> {
+async function fetchDuckDuckGoHtml(url: string, endpointName: string, signal?: AbortSignal): Promise<string> {
+  signal?.throwIfAborted();
   const response = await fetch(url, {
     headers: DEFAULT_HEADERS,
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(15_000)]),
   });
 
   if (!response.ok) {
@@ -158,10 +158,11 @@ async function fetchDuckDuckGoHtml(url: string, endpointName: string): Promise<s
   return response.text();
 }
 
-async function searchDDGApi(query: string, count: number): Promise<WebSearchResult[]> {
+async function searchDDGApi(query: string, count: number, signal?: AbortSignal): Promise<WebSearchResult[]> {
   const response = await withRetry(
-    () => DDG.search(query, { safeSearch: DDG.SafeSearchType.MODERATE }),
+    () => DDG.search(query, { safeSearch: DDG.SafeSearchType.MODERATE }, { signal }),
     2,
+    signal,
   );
 
   if (response.noResults || !response.results?.length) {
@@ -175,9 +176,9 @@ async function searchDDGApi(query: string, count: number): Promise<WebSearchResu
   }));
 }
 
-async function searchDDGHtml(query: string, count: number): Promise<WebSearchResult[]> {
+async function searchDDGHtml(query: string, count: number, signal?: AbortSignal): Promise<WebSearchResult[]> {
   const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-  const html = await fetchDuckDuckGoHtml(url, 'DDG HTML');
+  const html = await fetchDuckDuckGoHtml(url, 'DDG HTML', signal);
   const results = extractResultsFromDuckDuckGoHtml(html, count);
 
   if (results.length === 0) {
@@ -187,9 +188,9 @@ async function searchDDGHtml(query: string, count: number): Promise<WebSearchRes
   return results;
 }
 
-async function searchDDGLite(query: string, count: number): Promise<WebSearchResult[]> {
+async function searchDDGLite(query: string, count: number, signal?: AbortSignal): Promise<WebSearchResult[]> {
   const url = `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}`;
-  const html = await fetchDuckDuckGoHtml(url, 'DDG Lite');
+  const html = await fetchDuckDuckGoHtml(url, 'DDG Lite', signal);
   const results = extractResultsFromDuckDuckGoHtml(html, count);
 
   if (results.length === 0) {
@@ -202,24 +203,27 @@ async function searchDDGLite(query: string, count: number): Promise<WebSearchRes
 export class DDGSearchProvider implements WebSearchProvider {
   name = 'DuckDuckGo';
 
-  async search(query: string, count: number): Promise<WebSearchResult[]> {
+  async search(query: string, count: number, signal?: AbortSignal): Promise<WebSearchResult[]> {
     const failurePath: string[] = [];
 
     try {
-      return await searchDDGApi(query, count);
+      return await searchDDGApi(query, count, signal);
     } catch (err) {
+      signal?.throwIfAborted();
       failurePath.push(`ddg_primary:${err instanceof Error ? err.message : String(err)}`);
     }
 
     try {
-      return await searchDDGHtml(query, count);
+      return await searchDDGHtml(query, count, signal);
     } catch (err) {
+      signal?.throwIfAborted();
       failurePath.push(`ddg_html:${err instanceof Error ? err.message : String(err)}`);
     }
 
     try {
-      return await searchDDGLite(query, count);
+      return await searchDDGLite(query, count, signal);
     } catch (err) {
+      signal?.throwIfAborted();
       failurePath.push(`ddg_lite:${err instanceof Error ? err.message : String(err)}`);
     }
 

@@ -33,7 +33,8 @@ export class ResponsesApiSearchProvider implements WebSearchProvider {
     this.name = config.displayName || deriveDisplayName(config.apiBase);
   }
 
-  async search(query: string, count: number): Promise<WebSearchResult[]> {
+  async search(query: string, count: number, signal?: AbortSignal): Promise<WebSearchResult[]> {
+    signal?.throwIfAborted();
     const response = await fetch(`${this.config.apiBase}/responses`, {
       method: 'POST',
       headers: {
@@ -46,7 +47,7 @@ export class ResponsesApiSearchProvider implements WebSearchProvider {
         tools: [{ type: 'web_search' }],
         input: `Search the web for: ${query}\n\nReturn the top ${count} results with title, URL, and a brief description.`,
       }),
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(30_000)]),
     });
 
     if (!response.ok) {

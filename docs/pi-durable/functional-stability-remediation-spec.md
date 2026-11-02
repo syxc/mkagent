@@ -80,8 +80,8 @@
 |---|---|---|---|
 | C0 | completed | 规格覆盖 FS-01–FS-13；导航已登记 | `61ec6ed` |
 | C1 | completed | 新增 3 个冷启动回归在修复前均失败；修复后 bundle smoke 18 pass、0 fail；子进程 typecheck 通过。接收时取消代际覆盖初始化排队，打开内核后再次校验；steer 等待已有打开操作。 | `57e950f` |
-| C2 | completed | 宿主及真实内核缺锚点回归修复前均失败；修复后 branching + kernel e2e 147 pass、0 fail。宿主在创建会话前拒绝缺锚点，内核在复制父库前拒绝；SQLite/JSONL 父库不变，正常及 legacy 截断、无效锚点重试通过。旧的无锚点全量复制用例已改为明确拒绝，已有子库恢复仍可用。 | `fix(sessions): reject branches without a cutoff` |
-| C3 | pending | — | — |
+| C2 | completed | 宿主及真实内核缺锚点回归修复前均失败；修复后 branching + kernel e2e 147 pass、0 fail。宿主在创建会话前拒绝缺锚点，内核在复制父库前拒绝；SQLite/JSONL 父库不变，正常及 legacy 截断、无效锚点重试通过。旧的无锚点全量复制用例已改为明确拒绝，已有子库恢复仍可用。 | `9242bad` |
+| C3 | completed | 红测记录 5 项失败，旧版挂起读流不响应取消，红测由 15 秒命令上限终止。修复后 fetch + search 52 pass、0 fail；子进程 typecheck 通过。逐跳校验且最多 5 次跳转；请求、读流、保存边界取消及 50MB 上限已覆盖。搜索 4 个 provider 均传递信号，重试、模型切换及 DDG 降级在取消后停止；正常降级仍通过。DNS 校验与连接之间原有 TOCTOU 限制仍存在。 | `fix(tools): validate redirects and propagate cancellation` |
 | C4 | pending | — | — |
 | C5 | pending | — | — |
 | C6 | pending | — | — |

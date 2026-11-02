@@ -26,7 +26,8 @@ export class GoogleSearchProvider implements WebSearchProvider {
 
   constructor(private apiKey: string) {}
 
-  async search(query: string, count: number): Promise<WebSearchResult[]> {
+  async search(query: string, count: number, signal?: AbortSignal): Promise<WebSearchResult[]> {
+    signal?.throwIfAborted();
     const url = `${API_BASE}/${GROUNDING_MODEL}:generateContent`;
     const response = await fetch(url, {
       method: 'POST',
@@ -38,7 +39,7 @@ export class GoogleSearchProvider implements WebSearchProvider {
         contents: [{ role: 'user', parts: [{ text: query }] }],
         tools: [{ googleSearch: {} }],
       }),
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(30_000)]),
     });
 
     if (!response.ok) {
