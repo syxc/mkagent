@@ -530,8 +530,8 @@ const searchProvider = {
   get name() {
     return resolveSearchProvider(initConfig?.piAuth, initConfig?.model ? stripPiPrefix(initConfig.model) : undefined).name;
   },
-  async search(query: string, count: number) {
-    return resolveSearchProvider(initConfig?.piAuth, initConfig?.model ? stripPiPrefix(initConfig.model) : undefined).search(query, count);
+  async search(query: string, count: number, signal?: AbortSignal) {
+    return resolveSearchProvider(initConfig?.piAuth, initConfig?.model ? stripPiPrefix(initConfig.model) : undefined).search(query, count, signal);
   },
 };
 

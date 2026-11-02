@@ -191,6 +191,27 @@ describe('pi-agent-server bundle', () => {
     expect(output).not.toContain('OFFLINE_FETCH_BLOCKED');
   }, RUN_TIMEOUT_MS + 10_000);
 
+  it('forwards cancellation through the production dynamic search provider', async () => {
+    const sessionPath = join(scratchDir, 'search-cancel');
+    mkdirSync(sessionPath);
+    const output = await driveBundle([{
+      type: 'init', apiKey: 'fixture', model: 'pi/fake-model', cwd: scratchDir,
+      piAuth: { provider: 'openai', credential: { type: 'api_key', key: 'fixture' } },
+      thinkingLevel: 'off', workspaceRootPath: scratchDir, sessionId: 'search-cancel',
+      sessionPath, workingDirectory: scratchDir, plansFolderPath: join(scratchDir, 'plans'),
+      baseUrl: 'http://fake-provider.test/v1', customEndpoint: { api: 'openai-completions' },
+    }, { type: 'prompt', id: 'search', message: 'search fixture', systemPrompt: 'test' }],
+    out => out.includes('TEST_SEARCH_ABORTED') || out.includes('TEST_SEARCH_NOT_ABORTED'), {
+      preload: mockProviderPreloadPath, approveTools: true, env: { TEST_SEARCH_CANCEL: '1' },
+      onStderr(line) {
+        if (line.includes('TEST_SEARCH_STARTED')) return [{ type: 'abort' }];
+      },
+    });
+    expect(output).toContain('TEST_SEARCH_STARTED');
+    expect(output).toContain('TEST_SEARCH_ABORTED');
+    expect(output).not.toContain('TEST_SEARCH_NOT_ABORTED');
+  }, RUN_TIMEOUT_MS + 10_000);
+
   it('retains cold-start steering until the kernel accepts it', async () => {
     let steered = false;
     let finished = false;
