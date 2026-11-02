@@ -68,6 +68,9 @@ import {
   saveSession as saveStoredSession,
   sessionPersistenceQueue,
   serializeSession,
+  copyReferencedSessionFiles,
+  importSessionMessages,
+  remapSessionFileReferences,
   setPendingPlanExecution as setStoredPendingPlanExecution,
   validateBundle,
   type DispatchMode,
@@ -579,28 +582,27 @@ export class SessionManager implements ISessionManager {
     })
 
     if (branchSource && options.branchFromSessionId && options.branchFromMessageId) {
-      const branchPath = getSessionStoragePath(workspace.rootPath, stored.id)
-      const sourcePath = getSessionStoragePath(workspace.rootPath, options.branchFromSessionId)
-      const branched = loadStoredSession(workspace.rootPath, stored.id)
-      if (!branched) throw new Error(`Failed to load newly created session ${stored.id} for branch copy`)
+      try {
+        const branchPath = getSessionStoragePath(workspace.rootPath, stored.id)
+        const sourcePath = getSessionStoragePath(workspace.rootPath, options.branchFromSessionId)
+        const branched = loadStoredSession(workspace.rootPath, stored.id)
+        if (!branched) throw new Error(`Failed to load newly created session ${stored.id} for branch copy`)
 
-      const sourceMessages = branchSource.messages.slice(0, branchIndex + 1)
-      branched.messages = sourcePath === branchPath
-        ? sourceMessages
-        : sourceMessages.map(message => {
-            const serialized = JSON.stringify(message)
-            return serialized.includes(sourcePath)
-              ? JSON.parse(serialized.replaceAll(sourcePath, branchPath)) as StoredSession['messages'][number]
-              : message
-          })
-      branched.branchFromMessageId = options.branchFromMessageId
-      branched.branchFromSdkSessionId = branchSource.sdkSessionId
-      branched.branchFromSessionPath = sourcePath
-      branched.branchFromSdkCwd = branchSource.sdkCwd
-      branched.branchFromSdkTurnId = branchFromSdkTurnId
-      await saveStoredSession(branched)
-      await copyPiTurnAnchorsForBranch(sourcePath, branchPath, branched.messages.map(message => message.id))
-      Object.assign(stored, branched)
+        const sourceMessages = branchSource.messages.slice(0, branchIndex + 1)
+        copyReferencedSessionFiles(sourceMessages, sourcePath, branchPath)
+        branched.messages = remapSessionFileReferences(sourceMessages, sourcePath, branchPath)
+        branched.branchFromMessageId = options.branchFromMessageId
+        branched.branchFromSdkSessionId = branchSource.sdkSessionId
+        branched.branchFromSessionPath = sourcePath
+        branched.branchFromSdkCwd = branchSource.sdkCwd
+        branched.branchFromSdkTurnId = branchFromSdkTurnId
+        await saveStoredSession(branched)
+        await copyPiTurnAnchorsForBranch(sourcePath, branchPath, branched.messages.map(message => message.id))
+        Object.assign(stored, branched)
+      } catch (error) {
+        if (!deleteStoredSession(workspace.rootPath, stored.id)) log.error('Failed to roll back branch files', stored.id)
+        throw new Error(`Could not create branch: ${error instanceof Error ? error.message : String(error)}`)
+      }
     }
 
     stored.codingMode = (branchSource ? branchSource.codingMode : options.codingMode ?? workspaceConfig?.defaults?.codingMode) || undefined
@@ -2113,18 +2115,26 @@ export class SessionManager implements ISessionManager {
       isFlagged: bundle.session.header.isFlagged,
       parentSessionId: mode === 'fork' ? bundle.session.header.id : bundle.session.header.parentSessionId,
     })
-    const stored = loadStoredSession(workspace.rootPath, created.id)
-    if (!stored) throw new Error('Failed to create imported session')
-    stored.codingMode = bundle.session.header.codingMode
-    if (bundle.files.some(file => file.relativePath === 'durable-store/session-id.txt')) {
-      stored.sdkSessionId = bundle.session.header.sdkSessionId
+    let stored: StoredSession
+    try {
+      const loaded = loadStoredSession(workspace.rootPath, created.id)
+      if (!loaded) throw new Error('Failed to create imported session')
+      stored = loaded
+      stored.codingMode = bundle.session.header.codingMode
+      if (bundle.files.some(file => file.relativePath === 'durable-store/session-id.txt')) {
+        stored.sdkSessionId = bundle.session.header.sdkSessionId
+      }
+      stored.transferredSessionSummary = bundle.session.header.transferredSessionSummary
+      stored.transferredSessionSummaryApplied = bundle.session.header.transferredSessionSummaryApplied
+      const targetPath = getSessionStoragePath(workspace.rootPath, created.id)
+      stored.messages = importSessionMessages(bundle, targetPath)
+      stored.tokenUsage = bundle.session.header.tokenUsage
+      restoreFiles(targetPath, bundle.files)
+      await saveStoredSession(stored)
+    } catch (error) {
+      if (!deleteStoredSession(workspace.rootPath, created.id)) log.error('Failed to roll back imported files', created.id)
+      throw error
     }
-    stored.transferredSessionSummary = bundle.session.header.transferredSessionSummary
-    stored.transferredSessionSummaryApplied = bundle.session.header.transferredSessionSummaryApplied
-    stored.messages = bundle.session.messages
-    stored.tokenUsage = bundle.session.header.tokenUsage
-    await saveStoredSession(stored)
-    restoreFiles(getSessionStoragePath(workspace.rootPath, created.id), bundle.files)
     const managed = createManagedSession(stored, workspace, { messagesLoaded: true })
     this.sessions.set(managed.id, managed)
     this.notifySessionCreated(workspace.id, managed.id)

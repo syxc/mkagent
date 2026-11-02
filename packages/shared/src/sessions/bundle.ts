@@ -11,7 +11,7 @@ import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import type { SessionHeader, StoredMessage, SessionConfig } from './types.ts'
 import type { StoredSession } from './types.ts'
-import { readSessionJsonl } from './jsonl.ts'
+import { readSessionJsonl, makeSessionPathPortable } from './jsonl.ts'
 import { getSessionPath, getSessionFilePath } from './storage.ts'
 import { collectDurableBundle } from './durable-bundle.ts'
 import { debug } from '../utils/debug.ts'
@@ -170,7 +170,7 @@ export function serializeSession(
     version: 1,
     session: {
       header,
-      messages: stored.messages,
+      messages: JSON.parse(makeSessionPathPortable(JSON.stringify(stored.messages), sessionDir)) as StoredMessage[],
     },
     files,
   }

@@ -83,8 +83,8 @@
 | C2 | completed | 宿主及真实内核缺锚点回归修复前均失败；修复后 branching + kernel e2e 147 pass、0 fail。宿主在创建会话前拒绝缺锚点，内核在复制父库前拒绝；SQLite/JSONL 父库不变，正常及 legacy 截断、无效锚点重试通过。旧的无锚点全量复制用例已改为明确拒绝，已有子库恢复仍可用。 | `9242bad` |
 | C3 | completed | 红测记录 5 项失败，旧版挂起读流不响应取消，红测由 15 秒命令上限终止。修复后 fetch + search 52 pass、0 fail；子进程 typecheck 通过。逐跳校验且最多 5 次跳转；请求、读流、保存边界取消及 50MB 上限已覆盖。搜索 4 个 provider 均传递信号，重试、模型切换及 DDG 降级在取消后停止；正常降级仍通过。DNS 校验与连接之间原有 TOCTOU 限制仍存在。 | `0c7c25c` |
 | C4 | completed | 函数策略和真实 MCP fixture 两项回归先失败，后 visibility 7 pass、0 fail，typecheck 通过。特殊名不再继承 Object 原型；自有精确/通配覆盖仍生效，无效 exposure 关闭曝光；hidden 工具不注册，正常工具可调用，direct/deferred/codemode 对照通过。同类 alias 读取随后经过合法 exposure 校验，不会注册非法可见性。 | `020dcc8` |
-| C5 | completed | 初始 6 项红测及复核补充的 2 项红测均已运行失败；修复后 runtime/bundle/endpoint/host/compaction 92 pass、0 fail，完整 kernel e2e 146 pass、0 fail，最终 typecheck:all 通过。独立候选目录复用本次 init 的凭据存储，验收后串行发布；新输入等候提交，工具响应、取消和辅助查询不受阻。旧候选不能覆盖新提交，较新的用户模型选择保持顺序；无效更新保留主/辅助模型及宿主实例。mini 必须仍属于有效自定义目录，端点仅清除已管理键。首次打开、OAuth 轮换、SAVE 队列、前缀及有无 auth 对照通过。 | `fix(models): publish runtime updates transactionally` |
-| C6 | pending | — | — |
+| C5 | completed | 初始 6 项红测及复核补充的 2 项红测均已运行失败；修复后 runtime/bundle/endpoint/host/compaction 92 pass、0 fail，完整 kernel e2e 146 pass、0 fail，最终 typecheck:all 通过。独立候选目录复用本次 init 的凭据存储，验收后串行发布；新输入等候提交，工具响应、取消和辅助查询不受阻。旧候选不能覆盖新提交，较新的用户模型选择保持顺序；无效更新保留主/辅助模型及宿主实例。mini 必须仍属于有效自定义目录，端点仅清除已管理键。首次打开、OAuth 轮换、SAVE 队列、前缀及有无 auth 对照通过。 | `32a5fba` |
+| C6 | completed | 原版 3 项附件/导入/符号链接回归均失败；修复后 session transport/persistence/bundle 81 pass、0 fail，既有 session-branching 另 1 pass，typecheck:all 通过。分支只复制保留消息引用的普通文件，附件三种路径及长响应可独立读取；后续专属文件不复制。导出将 UI 消息路径转成可移植 token，导入展开到新会话；旧 v1 的绝对引用兼容自有 header 或已打包附件证明的源目录。源文件保持不变，移除源目录后仍可读；链接、遍历、失败导入回滚通过。路径边界、Markdown、Windows JSON 反斜杠、引号和替换字符对照通过。 | `fix(sessions): preserve portable session file references` |
 | C7 | pending | — | — |
 | C8 | pending | — | — |
 | C9 | pending | — | — |
