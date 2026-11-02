@@ -33,6 +33,8 @@ import { CompactionTask, DEFAULT_COMPACTION_POLICY, InboxDoc, LiveDoc, UsageDoc,
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
 import { CacheWarmer } from './cache-warmer.ts';
 import { DurableKernel } from './kernel.ts';
+import { withModelRequestCompatibility } from './model-runtime.ts';
+import { resolvePiModel } from './model-resolution.ts';
 import { migrateLegacySession } from './migrate.ts';
 import { openDurableStorage } from './storage/durable-storage.ts';
 import { queryLlm } from './ephemeral.ts';
@@ -251,6 +253,155 @@ describe('DurableKernel end-to-end', () => {
   };
   afterAll(() => {
     for (const dir of scratchDirs) rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('resolves MiniMax and reports missing models through the JSONL protocol', async () => {
+    const dir = scratch();
+    const agentDir = join(dir, 'agent');
+    mkdirSync(agentDir);
+    writeFileSync(join(agentDir, 'mcp.json'), '{}');
+    const env: NodeJS.ProcessEnv = { CONFIG_DIR: dir, TMPDIR: dir, XDG_CONFIG_HOME: dir, PI_CODING_AGENT_DIR: dir, PI_OFFLINE: '1' };
+    if (process.env.PATH) env.PATH = process.env.PATH;
+    const bootstrap = `
+      import { mock } from 'bun:test';
+      import { builtinModels as original } from '@earendil-works/pi-ai/providers/all';
+      import { createProvider, createAssistantMessageEventStream } from '@earendil-works/pi-ai';
+      const makeBuiltinModels = original;
+      mock.module('@earendil-works/pi-ai/providers/all', () => ({ builtinModels: (options) => {
+        const models = makeBuiltinModels(options);
+        models.setProvider(createProvider({
+          id: 'minimax-cn', name: 'Local MiniMax',
+          auth: { apiKey: { name: 'Fake', resolve: async () => ({ auth: { apiKey: 'fake' } }) } },
+          models: [{ id: 'MiniMax-local', name: 'Local', provider: 'minimax-cn', api: 'faux',
+            baseUrl: 'http://local.test', reasoning: false, input: ['text'],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 100000, maxTokens: 4096 }],
+          api: { faux: { stream() { throw new Error('Unexpected raw stream'); }, streamSimple(model) {
+            if (model.id !== 'local' || model.contextWindow !== 100000) throw new Error('Incorrect model dispatch');
+            process.stderr.write('TEST_MINIMAX_DISPATCH\\n');
+            const stream = createAssistantMessageEventStream();
+            queueMicrotask(() => { for (const event of ${JSON.stringify(textEvents('protocol answer'))}) stream.push(event); });
+            return stream;
+          } } },
+        }));
+        return models;
+      } }));
+      globalThis.fetch = async () => { throw new Error('OFFLINE_FETCH_BLOCKED'); };
+      await import(${JSON.stringify(join(import.meta.dir, 'index.ts'))});
+    `;
+    const child = spawn(process.execPath, ['--eval', bootstrap], { cwd: import.meta.dir, env, stdio: ['pipe', 'pipe', 'pipe'] });
+    const messages: Array<Record<string, any>> = [];
+    let stderr = '';
+    let stdout = '';
+    child.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString(); });
+    child.stdout.on('data', (chunk: Buffer) => {
+      stdout += chunk.toString();
+      const lines = stdout.split('\n');
+      stdout = lines.pop() ?? '';
+      for (const line of lines) messages.push(JSON.parse(line));
+    });
+    const exited = new Promise<number | null>(resolve => child.once('exit', code => resolve(code)));
+    const send = (message: Record<string, unknown>) => child.stdin.write(`${JSON.stringify(message)}\n`);
+    const wait = async (predicate: (message: Record<string, any>) => boolean) => {
+      for (let attempt = 0; attempt < 250; attempt++) {
+        const index = messages.findIndex(predicate);
+        if (index >= 0) return messages.splice(index, 1)[0]!;
+        if (child.exitCode !== null) break;
+        await Bun.sleep(20);
+      }
+      throw new Error(`Protocol timeout: ${JSON.stringify(messages)} ${stderr}`);
+    };
+    const initialize = (model: string) => send({
+      type: 'init', model, cwd: dir, thinkingLevel: 'off', workspaceRootPath: dir,
+      sessionId: 'model-protocol', agentDir, sessionPath: dir, workingDirectory: dir,
+      plansFolderPath: join(dir, 'plans'), piAuth: { provider: 'minimax-cn', credential: { type: 'api_key', key: 'fake' } },
+    });
+    try {
+      initialize('pi/missing');
+      await wait(message => message.type === 'ready');
+      send({ type: 'prompt', id: 'missing-init', message: 'hello', systemPrompt: 'test' });
+      expect((await wait(message => message.type === 'error' && message.code === 'prompt_error')).message).toContain('Could not resolve model');
+      initialize('pi/MiniMax-local');
+      await wait(message => message.type === 'ready');
+      send({ type: 'ensure_session_ready', id: 'open' });
+      await wait(message => message.type === 'ensure_session_ready_result' && message.id === 'open');
+      send({ type: 'set_model', model: 'pi/missing' });
+      expect((await wait(message => message.type === 'error' && message.code === 'set_model_error')).message).toContain('Could not resolve model');
+      send({ type: 'set_model', model: 'pi/MiniMax-local' });
+      send({ type: 'llm_query', id: 'after-switch', request: { model: 'pi/MiniMax-local', prompt: 'question' } });
+      expect((await wait(message => message.type === 'llm_query_result' && message.id === 'after-switch')).result.text).toBe('protocol answer');
+      send({ type: 'update_runtime_config', id: 'missing-update', model: 'pi/missing' });
+      expect((await wait(message => message.type === 'update_runtime_config_result' && message.id === 'missing-update')).success).toBe(false);
+      send({ type: 'update_runtime_config', id: 'valid-update', model: 'pi/MiniMax-local' });
+      expect((await wait(message => message.type === 'update_runtime_config_result' && message.id === 'valid-update')).success).toBe(true);
+      messages.length = 0;
+      send({ type: 'prompt', id: 'updated-prompt', message: 'hello', systemPrompt: 'test' });
+      await wait(message => message.type === 'event' && message.event?.type === 'agent_end');
+      expect(stderr.match(/TEST_MINIMAX_DISPATCH/g)?.length).toBeGreaterThanOrEqual(2);
+    } finally {
+      send({ type: 'shutdown' });
+      if (await Promise.race([exited.then(() => true), Bun.sleep(3_000).then(() => false)]) === false) child.kill('SIGKILL');
+      await exited;
+    }
+  }, 20_000);
+
+  it('uses canonical MiniMax refs across init, setModel, runtime replacement and ephemeral queries', async () => {
+    const requests: Model<Api>[] = [];
+    const makeModels = () => {
+      const { models } = createFauxModels([textEvents('answer'), textEvents('answer'), textEvents('answer')]);
+      const faux = models.getProvider('faux')!;
+      const model = { ...models.getModel('faux', 'faux-1')!, id: 'MiniMax-local', provider: 'minimax-cn' };
+      models.setProvider(withModelRequestCompatibility({
+        ...faux, id: 'minimax-cn', getModels: () => [model], getAllModels: () => [model],
+        streamSimple(request, context, options) {
+          requests.push(request);
+          return faux.streamSimple(request, context, options);
+        },
+      }));
+      return models;
+    };
+    const models = makeModels();
+    const ref = () => {
+      const model = resolvePiModel(models, 'pi/MiniMax-local', 'minimax-cn')!;
+      return { provider: model.provider, modelId: model.id, contextWindow: model.contextWindow };
+    };
+    const { kernel, events, waitFor } = createKernel({ sessionPath: scratch(), script: [], models });
+    try {
+      await kernel.open({ model: ref() });
+      await kernel.submitPrompt('initial');
+      await waitFor('agent_end');
+      events.length = 0;
+      models.setProvider(makeModels().getProvider('minimax-cn')!);
+      await kernel.setModel(ref());
+      await kernel.submitPrompt('updated');
+      await waitFor('agent_end');
+      const controller = new AbortController();
+      const result = await queryLlm({ model: 'pi/MiniMax-local', prompt: 'ephemeral' }, {
+        signal: controller.signal, throwIfCancelled: () => controller.signal.throwIfAborted(),
+        setResource: () => {}, clearResource: () => {},
+      }, {
+        models, getConfig: () => ({ piAuthProvider: 'minimax-cn', preferCustomEndpoint: false }), debugLog: () => {},
+      });
+      expect(result.text).toBe('answer');
+      expect(requests).toHaveLength(3);
+      expect(requests.every(model => model.id === 'local' && model.contextWindow === 100_000 && model.api === 'faux')).toBe(true);
+      expect(ref().modelId).toBe('MiniMax-local');
+    } finally {
+      await kernel.close();
+    }
+  });
+
+  it('rejects an unavailable model instead of completing an empty turn', async () => {
+    const models = createFauxModels([]).models;
+    const { kernel } = createKernel({ sessionPath: scratch(), script: [], models });
+    try {
+      await kernel.open({ model: { provider: 'faux', modelId: 'faux-1' } });
+      await expect(kernel.setModel({ provider: 'faux', modelId: 'missing' })).rejects.toThrow('Could not resolve model');
+      models.setProvider({ ...models.getProvider('faux')!, getModels: () => [], getAllModels: () => [] });
+      await expect(kernel.submitPrompt('hi')).rejects.toThrow('Could not resolve model');
+      await expect(kernel.steer('hi')).rejects.toThrow('Could not resolve model');
+    } finally {
+      await kernel.close();
+    }
   });
 
   it('synthesizes the host event sequence for a plain prompt', async () => {

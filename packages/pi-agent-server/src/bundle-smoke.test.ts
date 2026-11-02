@@ -404,11 +404,14 @@ describe('pi-agent-server bundle', () => {
   it('applies runtime updates made while the first prompt opens the kernel', async () => {
     const fixtureBundle = join(scratchDir, 'opening-race.js');
     const bundle = readFileSync(bundlePath, 'utf8');
-    // Pause a temporary bundle copy after model resolution to reproduce the race.
-    const anchor = '  try {\n    await k3.open({';
-    expect(bundle.split(anchor)).toHaveLength(2);
-    writeFileSync(fixtureBundle, bundle.replace(anchor,
-      '  process.stderr.write("TEST_KERNEL_OPEN_PAUSED\\n");\n  await Bun.sleep(400);\n' + anchor));
+    // Hold kernel opening until both runtime updates have reached the config boundary.
+    const anchor = bundle.match(/^    await \w+\.open\(\{$/m)?.[0];
+    expect(anchor).toBeDefined();
+    const updateAnchor = '    applyProviderEndpointEnv(initConfig);';
+    expect(bundle.split(updateAnchor)).toHaveLength(2);
+    writeFileSync(fixtureBundle, bundle.replace(anchor!,
+      '    await new Promise(resolve => { globalThis.__resumeKernelOpen = resolve; process.stderr.write("TEST_KERNEL_OPEN_PAUSED\\n"); });\n' + anchor)
+      .replace(updateAnchor, updateAnchor + '\n    if (msg.id === "opening-update") globalThis.__resumeKernelOpen();'));
     let phase = 0;
     let updated = false;
     let finished = false;

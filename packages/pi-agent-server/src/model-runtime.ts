@@ -12,6 +12,9 @@ import {
   createProvider,
   type Credential,
   type ProviderStreams,
+  type Provider,
+  type Api,
+  type Model,
 } from '@earendil-works/pi-ai';
 import { builtinModels } from '@earendil-works/pi-ai/providers/all';
 import { openAICompletionsApi } from '@earendil-works/pi-ai/api/openai-completions.lazy';
@@ -162,6 +165,19 @@ function isLocalhostUrl(url: string): boolean {
   }
 }
 
+export function withModelRequestCompatibility(provider: Provider): Provider {
+  if (provider.id !== 'minimax-cn') return provider;
+  // Keep catalog identity stable; MiniMax CN only accepts the bare ID on the wire.
+  const requestModel = <T extends Api>(model: Model<T>): Model<T> => model.id.startsWith('MiniMax-')
+    ? { ...model, id: model.id.slice('MiniMax-'.length) }
+    : model;
+  return {
+    ...provider,
+    stream: (model, context, options) => provider.stream(requestModel(model), context, options),
+    streamSimple: (model, context, options) => provider.streamSimple(requestModel(model), context, options),
+  };
+}
+
 export interface ModelRuntime {
   models: MutableModels;
   credentials: OAuthSyncCredentialStore;
@@ -178,6 +194,8 @@ export async function createModelRuntime(
 ): Promise<ModelRuntime> {
   const credentials = new OAuthSyncCredentialStore(onOAuthUpdate);
   const models = builtinModels({ credentials });
+  const minimax = models.getProvider('minimax-cn');
+  if (minimax) models.setProvider(withModelRequestCompatibility(minimax));
 
   const baseUrl = config.baseUrl?.trim();
   if (baseUrl && config.customEndpoint) {

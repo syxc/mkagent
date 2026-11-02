@@ -35,14 +35,7 @@ export function resolvePiModel(
   // "azure") and the wrong one matches first.
   if (piAuthProvider) {
     const exact = models.getModel(piAuthProvider, bareId);
-    if (exact) {
-      // MiniMax CN API rejects model IDs with the 'MiniMax-' prefix (e.g. 500 for
-      // 'MiniMax-M2.5-highspeed') but accepts bare names ('M2.5-highspeed').
-      if (piAuthProvider === 'minimax-cn' && exact.id.startsWith('MiniMax-')) {
-        return { ...exact, id: exact.id.slice('MiniMax-'.length) };
-      }
-      return exact;
-    }
+    if (exact) return exact;
   }
 
   // Fallback: search all known chat models.

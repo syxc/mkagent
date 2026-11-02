@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { OAuthSyncCredentialStore, createModelRuntime, registerCustomEndpointModels } from './model-runtime.ts';
+import { OAuthSyncCredentialStore, createModelRuntime, registerCustomEndpointModels, withModelRequestCompatibility } from './model-runtime.ts';
+import { resolvePiModel } from './model-resolution.ts';
 
 describe('OAuth credential synchronization', () => {
   it('reports the credential actually replaced after queued updates', async () => {
@@ -25,6 +26,31 @@ describe('OAuth credential synchronization', () => {
     expect(updates.map(update => [update.previousRefresh, update.credential.refresh])).toEqual([
       ['old', 'middle'], ['middle', 'new'],
     ]);
+  });
+});
+
+describe('MiniMax request compatibility', () => {
+  it('keeps catalog metadata while adapting both durable and ephemeral dispatch after runtime replacement', async () => {
+    for (let generation = 0; generation < 2; generation++) {
+      const runtime = await createModelRuntime({}, () => {});
+      const provider = runtime.models.getProvider('minimax-cn')!;
+      const catalog = resolvePiModel(runtime.models, 'MiniMax-M2.7-highspeed', 'minimax-cn')!;
+      expect(catalog.id).toBe('MiniMax-M2.7-highspeed');
+      expect(runtime.models.getModel(catalog.provider, catalog.id)).toEqual(catalog);
+      const dispatched: unknown[] = [];
+      const fake = withModelRequestCompatibility({
+        ...provider,
+        stream(model) { dispatched.push(model); return undefined as never; },
+        streamSimple(model) { dispatched.push(model); return undefined as never; },
+      });
+      fake.stream(catalog, { messages: [] });
+      fake.streamSimple(catalog, { messages: [] });
+      expect(dispatched).toEqual([
+        { ...catalog, id: 'M2.7-highspeed' },
+        { ...catalog, id: 'M2.7-highspeed' },
+      ]);
+      expect(catalog.id).toBe('MiniMax-M2.7-highspeed');
+    }
   });
 });
 

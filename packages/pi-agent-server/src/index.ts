@@ -708,16 +708,12 @@ async function openKernel(): Promise<DurableKernel> {
   let model: KernelModelRef | undefined;
   let modelGeneration = runtimeConfigGeneration;
   let requestedModel = initConfig.model;
-  if (requestedModel) {
-    try {
-      model = await resolveModelRef(requestedModel);
-    } catch {
-      debugLog(`Could not resolve Pi model: ${initConfig.model}`);
-    }
-  }
-  if (!model) setInterceptorApiHints(undefined);
-
   try {
+    if (requestedModel) model = await resolveModelRef(requestedModel);
+    if (!model) {
+      setInterceptorApiHints(undefined);
+      throw new Error(`Could not resolve model: ${requestedModel || '(unset)'}`);
+    }
     await k.open({
       ...(model ? { model } : {}),
       thinkingLevel: THINKING_TO_PI[initConfig.thinkingLevel as keyof typeof THINKING_TO_PI],
@@ -1126,19 +1122,16 @@ async function handleSetModel(msg: Extract<InboundMessage, { type: 'set_model' }
     debugLog(`[set_model] No active session or model runtime, ignoring`);
     return;
   }
-  const ref = await resolveModelRef(msg.model);
-  if (!ref) {
-    debugLog(`[set_model] Could not resolve model: ${msg.model}`);
-    setInterceptorApiHints(undefined);
-    return;
-  }
   try {
+    const ref = await resolveModelRef(msg.model);
+    if (!ref) throw new Error(`Could not resolve model: ${msg.model}`);
     await kernel.setModel(ref);
     if (initConfig) initConfig.model = msg.model;
     debugLog(`[set_model] Model changed to: ${msg.model} (resolved: ${ref.provider}/${ref.modelId})`);
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     debugLog(`[set_model] Failed to set model: ${errorMsg}`);
+    send({ type: 'error', message: errorMsg, code: 'set_model_error' });
   }
 }
 

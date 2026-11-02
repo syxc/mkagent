@@ -72,14 +72,15 @@ describe('resolvePiModel', () => {
       expect(result!.provider).toBe('openai');
     });
 
-    it('strips MiniMax- prefix for minimax-cn provider', () => {
+    it('preserves the MiniMax catalog identity for durable model lookup', () => {
       const registry = createMockRegistry({
         'minimax-cn': [{ id: 'MiniMax-M2.5-highspeed', name: 'MiniMax-M2.5-highspeed', provider: 'minimax-cn' }],
       });
 
       const result = resolvePiModel(registry, 'MiniMax-M2.5-highspeed', 'minimax-cn');
       expect(result).toBeDefined();
-      expect(result!.id).toBe('M2.5-highspeed');
+      expect(result!.id).toBe('MiniMax-M2.5-highspeed');
+      expect(registry.getModel(result!.provider, result!.id)).toBeDefined();
     });
   });
 

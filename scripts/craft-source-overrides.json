@@ -1011,16 +1011,16 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.4.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "440dbc628d687a11f267887c88fb79b614b971cd50d714e0e1334a9ba8c676d6",
-      "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining JSONL host messages and Pi 1.1.0 event shapes; register approved tools through the extracted proxy adapter, serialize initialization and live runtime updates, cancel compactions by request ID, and release old host waits before reinitialization, shutdown or SIGTERM closes the kernel."
+      "sha256": "abebc8e14ede26127f2c3814020ade39723ae4c46597d9796e773784cfabdd43",
+      "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining JSONL host events, tool registration, runtime updates, compaction cancellation and shutdown cleanup. Reject unavailable initial models and report failed model switches through the existing host error protocol."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
-      "sha256": "506ecf537e22c8e027f2e4940ef03a23975d5d88a0dc9cb26b2c4f8a2d53b381",
-      "reason": "Migrate Craft model-resolution mocks to MutableModels getModel/getModels while retaining custom-endpoint priority, authenticated-provider isolation and model-versus-tool rejection cases."
+      "sha256": "dcd8c54fb1a0eb73a1b6f3984fe2dae176929c76b03bfb52323ad440fe23084c",
+      "reason": "Migrate Craft model-resolution mocks to MutableModels while retaining endpoint priority, provider isolation and rejection cases; verify that MiniMax CN resolution preserves the catalog identity and full model object."
     },
     "packages/pi-agent-server/src/model-resolution.ts": {
-      "sha256": "c792bcca80a9ac5c23a974439f99956919172595ab19991d064b04da2b6f5ed6",
-      "reason": "Adapt Craft model resolution from ModelRegistry find/getAll to pi-ai MutableModels getModel/getModels; retain pi prefix handling, custom-endpoint priority, provider isolation, MiniMax CN IDs and model rejection classification."
+      "sha256": "f4150c3ca000e7f60389cf1b92abf70ff86e3069a26eb61bc5ddce3f58f83a5c",
+      "reason": "Adapt Craft model resolution to pi-ai MutableModels; retain prefix handling, endpoint priority, provider isolation and rejection classification. Keep MiniMax CN catalog IDs intact so durable can resolve complete model definitions; apply request ID compatibility at dispatch."
     },
     "packages/pi-agent-server/src/tools/search/create-search-tool.test.ts": {
       "sha256": "b63ed7d9eea268db4d28e80723039384902eb945bf1ace150162185c0e2cd880",
@@ -2215,8 +2215,8 @@
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "packages/pi-agent-server/src/bundle-smoke.test.ts": {
-      "sha256": "1371ecf22a9506f865e7b472855e438533e8383c302ea0241103a023061affbf",
-      "reason": "Extend Craft's offline bundle authentication test for durable worker and image assets, codemode and MCP defaults, initialization races, live tools, runtime updates, approval cancellation and OAuth credential ownership."
+      "sha256": "a053e4d5ea4da9048d5ce9cac7714fd53239652cc4fdb0e9811232676e36b77e",
+      "reason": "Extend offline bundle tests for durable assets, codemode/MCP defaults, initialization races, tools, runtime updates, cancellation and OAuth ownership. Gate opening on the actual runtime config update instead of a fixed delay, and locate the open call independently of its generated variable name."
     },
     "packages/pi-agent-server/src/mini-model-query.test.ts": {
       "sha256": "949aca864489239e0e589e1feb080a22b438934d0dff3c5915b75bb1802388b2",
@@ -2633,8 +2633,8 @@
       "reason": "Verify durable MCP exposure, tool_search discovery, codemode access and registration updates after server tool-list changes."
     },
     "packages/pi-agent-server/src/model-runtime.test.ts": {
-      "sha256": "14de5130f7f3d73608055763e0664a2b9ed0e86a935c850ed99a68fc122860c1",
-      "reason": "Verify queued OAuth refresh notifications and isolation of custom endpoint catalogs between durable model runtimes."
+      "sha256": "00747be3c1ea47b21fe1f973fd1f422c1354449eb73175ae84bcfcaeda8a6fb3",
+      "reason": "Verify OAuth refresh notifications and endpoint catalog isolation; assert stable MiniMax CN catalog IDs, intact model metadata and bare request IDs through both stream dispatch methods."
     },
     "packages/pi-agent-server/src/test-fixtures/mcp-server-dynamic.ts": {
       "sha256": "efa1313ac0fedccceb350c4052708af64fd7ce2cc6db8ff849732988266bf549",
@@ -2693,12 +2693,12 @@
       "reason": "Migrate local main index.ts queryLlm behavior from temporary AgentSessions to pi-ai completeSimple while retaining mini-model recovery and cancellation."
     },
     "packages/pi-agent-server/src/kernel.e2e.test.ts": {
-      "sha256": "67182c5aa9d8ecb9c2d487bedb9d054c5ef76cac72339d9aa2dcd6d24ebdc1f1",
-      "reason": "Move retained Pi session contracts to a real durable Harness; add persistence, branch migration, tools, cache warming and compaction races, direct and nested proxy export checks across SQLite and JSONL, and subprocess reinitialization, EOF, shutdown and SIGTERM assertions with opening kernels or pending approvals."
+      "sha256": "ba4c4e702069b7077a0af663a64e37a3d8d419f54b4b581638e5c6471a2a7db4",
+      "reason": "Test retained Pi contracts through a real durable Harness. Verify canonical MiniMax identity and missing-model errors across initialization, model switching, runtime replacement and ephemeral protocol calls."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "7ee12e71f94ab6371d933c51dcf6f6777310e64d51f9bfb301170833180f06a0",
-      "reason": "Replace local main AgentSession lifecycle wiring with a durable Harness; retain host-compatible events and prompt replacement, derive context usage from committed history, preserve branch snapshots and anchors, update tool registrations live, and settle or cancel compaction tasks and queued summaries before shutdown. Retire inherited work before opening a copied branch and drain cache warming before closing Harness."
+      "sha256": "c797dbd5756d01f5b3921b24666cf45b7ddbab736e6ccffef0248d4d61fd5825",
+      "reason": "Replace AgentSession with a durable Harness while retaining host events, tools, branches, compaction and shutdown cleanup. Validate model catalog availability before input or model changes."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
       "sha256": "2b2ee30b4478fabc39101535c97668c64a526632849f6e76446d91794360af0e",
@@ -2745,8 +2745,8 @@
       "reason": "Convert legacy pi-coding-agent 1.1.0 JSONL histories to durable conversations and persist recoverable entry and branch anchor mappings; skip existing parent backends without opening them, migrate only legacy-only parents in place, and complete deferred migration in the child copy."
     },
     "packages/pi-agent-server/src/model-runtime.ts": {
-      "sha256": "0119c65e7f4716beb03d1d3459429b9bd9ecd5ee66cd237f4f1fd2fa338ea68a",
-      "reason": "Migrate local main index.ts credential synchronization and custom endpoint registration to the pi-ai 1.4.0 MutableModels runtime."
+      "sha256": "baf2d000e5fda0cbb6334f7650d6bd11c8ed8416bb5320f16bef850c565a6f92",
+      "reason": "Retain credential synchronization and custom endpoint registration in MutableModels. Apply MiniMax CN bare request IDs only at stream and streamSimple dispatch, preserving canonical model metadata across runtime replacement and ephemeral queries."
     },
     "packages/pi-agent-server/src/storage/durable-storage.ts": {
       "sha256": "b85448b29d4529d0293bfcdf676b8c3f3c9eaa59352414ac1e4d58fd69313c2a",

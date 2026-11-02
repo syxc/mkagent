@@ -568,6 +568,7 @@ export class DurableKernel {
 
   async submitPrompt(message: string, images?: Array<{ data: string; mimeType: string }>): Promise<void> {
     if (!this.conversation) throw new Error('Kernel not open');
+    this.requireModel(this.currentModel);
     const content = images && images.length > 0
       ? [{ type: 'text' as const, text: message }, ...images.map(img => ({ type: 'image' as const, data: img.data, mimeType: img.mimeType }))]
       : message;
@@ -576,6 +577,7 @@ export class DurableKernel {
 
   async steer(message: string): Promise<void> {
     if (!this.conversation) throw new Error('Kernel not open');
+    this.requireModel(this.currentModel);
     await this.conversation.submit({ type: 'input', content: message, whenBusy: 'steer' }, BACKGROUND_CONTEXT);
   }
 
@@ -590,7 +592,14 @@ export class DurableKernel {
     await Promise.all(compactions.map(compaction => compaction.done));
   }
 
+  private requireModel(model: KernelModelRef | undefined): void {
+    if (!model || !this.options.modelsSource().getModel(model.provider, model.modelId)) {
+      throw new Error(`Could not resolve model: ${model ? `${model.provider}/${model.modelId}` : '(unset)'}`);
+    }
+  }
+
   async setModel(model: KernelModelRef): Promise<void> {
+    this.requireModel(model);
     this.cacheWarmer.stop();
     this.currentModel = model;
     await this.conversation?.configure({ model: { provider: model.provider, modelId: model.modelId } }, BACKGROUND_CONTEXT);
