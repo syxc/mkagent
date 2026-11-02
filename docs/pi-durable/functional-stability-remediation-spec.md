@@ -69,7 +69,7 @@
 4. `bun run server:build:subprocess`、`bun run cli:build`、`bun run electron:build`。
 5. `bun run scripts/build-server.ts --output=<temporary-output>`，在仓库外使用该产物完成 WebUI 登录、消息回复、刷新恢复，确认资源来自产物。
 6. `bun run lint:electron`、`bun run lint:shared`、`bun run lint:ui` 与 `git diff --check`。
-7. `bun run lint`、`bun run audit:craft-reuse`。已知缺少 Craft 参考仓库会阻塞同步、覆盖率对照和来源审计；可完成独立检查，不得跳过后宣称总 lint 通过，也不擅自下载参考仓库。
+7. `bun run lint`、`bun run audit:craft-reuse`。原内核基线使用本仓库 `main`（本轮确认于 `6e8ebc4`），按需在隔离目录对照。来源审计清单另固定 Craft 上游提交 `8df01c5d0ac73c35add5954e6f190ce038d35845`；必须区分功能基线与来源基线，不能替换后声称原来源审计通过，也不擅自下载参考仓库。
 8. 本地 provider 下并发会话隔离、有效锚点分支、失败后恢复、导出导入与重试取消对照。
 
 安全边界的运行检查使用受控本地服务或 fetch，不连接真实内网服务。测试日志不能包含真实密钥或用户数据。构建和自动测试通过不代表真实 OAuth、跨平台安装和长期压力已通过。
@@ -81,8 +81,8 @@
 | C0 | completed | 规格覆盖 FS-01–FS-13；导航已登记 | `61ec6ed` |
 | C1 | completed | 新增 3 个冷启动回归在修复前均失败；修复后 bundle smoke 18 pass、0 fail；子进程 typecheck 通过。接收时取消代际覆盖初始化排队，打开内核后再次校验；steer 等待已有打开操作。 | `57e950f` |
 | C2 | completed | 宿主及真实内核缺锚点回归修复前均失败；修复后 branching + kernel e2e 147 pass、0 fail。宿主在创建会话前拒绝缺锚点，内核在复制父库前拒绝；SQLite/JSONL 父库不变，正常及 legacy 截断、无效锚点重试通过。旧的无锚点全量复制用例已改为明确拒绝，已有子库恢复仍可用。 | `9242bad` |
-| C3 | completed | 红测记录 5 项失败，旧版挂起读流不响应取消，红测由 15 秒命令上限终止。修复后 fetch + search 52 pass、0 fail；子进程 typecheck 通过。逐跳校验且最多 5 次跳转；请求、读流、保存边界取消及 50MB 上限已覆盖。搜索 4 个 provider 均传递信号，重试、模型切换及 DDG 降级在取消后停止；正常降级仍通过。DNS 校验与连接之间原有 TOCTOU 限制仍存在。 | `fix(tools): validate redirects and propagate cancellation` |
-| C4 | pending | — | — |
+| C3 | completed | 红测记录 5 项失败，旧版挂起读流不响应取消，红测由 15 秒命令上限终止。修复后 fetch + search 52 pass、0 fail；子进程 typecheck 通过。逐跳校验且最多 5 次跳转；请求、读流、保存边界取消及 50MB 上限已覆盖。搜索 4 个 provider 均传递信号，重试、模型切换及 DDG 降级在取消后停止；正常降级仍通过。DNS 校验与连接之间原有 TOCTOU 限制仍存在。 | `0c7c25c` |
+| C4 | completed | 函数策略和真实 MCP fixture 两项回归先失败，后 visibility 7 pass、0 fail，typecheck 通过。特殊名不再继承 Object 原型；自有精确/通配覆盖仍生效，无效 exposure 关闭曝光；hidden 工具不注册，正常工具可调用，direct/deferred/codemode 对照通过。同类 alias 读取随后经过合法 exposure 校验，不会注册非法可见性。 | `fix(mcp): ignore inherited exposure overrides` |
 | C5 | pending | — | — |
 | C6 | pending | — | — |
 | C7 | pending | — | — |
@@ -92,7 +92,7 @@
 
 ## 7. 已知阻塞与交付限制
 
-- Craft 参考仓库缺失是检查环境阻塞，不等于业务回归；当前独立 lint 基线为 0 error、106 warning，不借本轮清理无关警告。
+- 用户已指出本仓库 `main` 是未切换内核的版本；本轮已确认该分支存在，不再将原内核参考描述为缺失。来源审计脚本的默认外部路径不存在，且固定的 Craft 上游对象不在当前 Git 对象库；C10 分别记录原内核对照与来源审计的实际结果。当前独立 lint 基线为 0 error、106 warning，不借本轮清理无关警告。
 - 真实模型、OAuth、外部 MCP、跨平台发布及长期 soak 需要对应环境和授权；本轮不使用真实凭据或付费配额。
 - 当前 headless 基线的 WebUI 成功伴随源码资源回退；只有 C8 完成后的独立产物检查才能提升该覆盖结论。
 - 最终交付列出实际完成项、失败与受阻检查、未覆盖范围、原子提交及剩余风险。没有执行的检查不得标记完成。

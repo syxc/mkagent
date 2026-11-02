@@ -4,8 +4,8 @@
  * The core only validates and stores registrations. The MCP extension (built in, or another
  * extension that handles `mcp_servers_change`) connects them next to the servers from `mcp.json`.
  *
- * Vendored 1:1 from @earendil-works/pi-coding-agent 1.1.0 core/tools/../core/mcp-servers.js —
- * behavior must stay identical.
+ * Vendored from @earendil-works/pi-coding-agent 1.1.0 core/tools/../core/mcp-servers.js.
+ * Adapted to ignore inherited exposure overrides and reject invalid exposures.
  */
 
 /** Where a tool of an MCP server is surfaced. */
@@ -171,12 +171,17 @@ function resolveExposureAliases(value: Record<string, unknown>): Record<string, 
 /** Exposure of one tool of a server: its `toolExposure` entry, else the server's `exposure`. */
 export function getMcpToolExposure(config: McpServerConfig, toolName: string): McpExposure {
   const overrides = config.toolExposure ?? {};
-  const exact = overrides[toolName];
-  if (exact !== undefined) return exact;
-  for (const [pattern, exposure] of Object.entries(overrides)) {
-    if (pattern.includes('*') && toolPatternRegExp(pattern).test(toolName)) return exposure;
+  if (Object.hasOwn(overrides, toolName)) {
+    const exact = overrides[toolName];
+    return isExposure(exact) ? exact : 'hidden';
   }
-  return config.exposure ?? 'codemode';
+  for (const [pattern, exposure] of Object.entries(overrides)) {
+    if (pattern.includes('*') && toolPatternRegExp(pattern).test(toolName)) {
+      return isExposure(exposure) ? exposure : 'hidden';
+    }
+  }
+  const exposure = config.exposure ?? 'codemode';
+  return isExposure(exposure) ? exposure : 'hidden';
 }
 
 /**
