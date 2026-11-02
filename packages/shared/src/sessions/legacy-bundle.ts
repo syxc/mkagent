@@ -61,7 +61,7 @@ function validateRecords(values: Json[]): void {
         || !content(value.replacement.content, role, true)))) throw new Error('Invalid legacy context edit')
       if (Object.hasOwn(value, 'parentId')) {
         const seen = new Set<string>()
-        let parent = value.parentId
+        let parent: Json | undefined = value.parentId
         while (typeof parent === 'string' && parent !== value.targetId && !seen.has(parent)) {
           seen.add(parent)
           parent = entries.get(parent)?.parentId
