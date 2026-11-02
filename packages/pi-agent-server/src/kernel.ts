@@ -47,6 +47,8 @@ import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { findMostRecentSessionFile, migrateParentStore, migrateLegacySession, readEntryIdMap, readLegacyBranchConversation } from './migrate.ts';
 import { compactionReserveFor } from './compaction-reserve.ts';
 import { CacheWarmer } from './cache-warmer.ts';
+import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent/shared/sessions';
+import { rewriteStoredModelHistory } from '@mkagent/shared/sessions/model-history-paths';
 
 /**
  * Main-chat retry/stream policy, mirroring the old 1.1.0 main-chat settings
@@ -238,6 +240,10 @@ export class DurableKernel {
         }
       }
 
+      if (copiedParent) {
+        rewriteStoredModelHistory(this.options.sessionPath,
+          value => remapSessionFileReferences(value, branchFrom!, this.options.sessionPath));
+      }
       await this.openStore(copiedParent);
 
       // Complete any deferred parent migration in the copy before resolving its branch anchor.
@@ -272,6 +278,11 @@ export class DurableKernel {
         }
       }
 
+      if (copiedParent && this.conversation) {
+        const view = await this.conversation.context(BACKGROUND_CONTEXT);
+        const sourceReferences = remapSessionFileReferences(view.contributions.flat(), this.options.sessionPath, branchFrom!);
+        copyReferencedSessionFiles(sourceReferences, branchFrom!, this.options.sessionPath);
+      }
       this.sessionId = this.loadOrCreateSessionId();
       const model = config.model ?? legacy?.model;
       const thinkingLevel = config.thinkingLevel ?? legacy?.thinkingLevel;

@@ -13,7 +13,7 @@ import type { SessionHeader, StoredMessage, SessionConfig } from './types.ts'
 import type { StoredSession } from './types.ts'
 import { readSessionJsonl, makeSessionPathPortable } from './jsonl.ts'
 import { getSessionPath, getSessionFilePath } from './storage.ts'
-import { collectDurableBundle } from './durable-bundle.ts'
+import { collectDurableBundle, type Json } from './durable-bundle.ts'
 import { collectLegacyBundle } from './legacy-bundle.ts'
 import { debug } from '../utils/debug.ts'
 import {
@@ -114,8 +114,9 @@ export function serializeSession(
   })
   const secrets = new Set<string>()
   try {
-    const durableFiles = collectDurableBundle(storeDir, secrets)
-    files.push(...(durableFiles.length ? durableFiles : collectLegacyBundle(join(sessionDir, '.pi-sessions'), secrets)))
+    const portable = (value: Json) => JSON.parse(makeSessionPathPortable(JSON.stringify(value), sessionDir)) as Json
+    const durableFiles = collectDurableBundle(storeDir, secrets, portable)
+    files.push(...(durableFiles.length ? durableFiles : collectLegacyBundle(join(sessionDir, '.pi-sessions'), secrets, portable)))
   } catch (error) {
     debug('[bundle] Cannot safely export durable history:', error)
     return null

@@ -1,6 +1,7 @@
 import { lstatSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { redactHistory, type Json } from './durable-bundle.ts'
+import { assertNoHistorySecrets, redactHistory, type Json } from './durable-bundle.ts'
+import { mapLegacyRecords, type ModelValueMapper } from './model-history-paths.ts'
 import { MAX_BUNDLE_SIZE_BYTES, type BundleFile } from '../utils/bundle-files.ts'
 
 type RecordValue = { [key: string]: Json }
@@ -74,7 +75,7 @@ function validateRecords(values: Json[]): void {
 }
 
 /** Export one validated transcript; first open performs the existing durable migration. */
-export function collectLegacyBundle(directory: string, secrets: Set<string>): BundleFile[] {
+export function collectLegacyBundle(directory: string, secrets: Set<string>, map: ModelValueMapper = value => value): BundleFile[] {
   const root = lstatSync(directory, { throwIfNoEntry: false })
   if (!root) return []
   if (root.isSymbolicLink() || !root.isDirectory()) throw new Error('Legacy history must be a directory, not a symlink')
@@ -93,7 +94,9 @@ export function collectLegacyBundle(directory: string, secrets: Set<string>): Bu
   if (!original.endsWith('\n')) throw new Error('Incomplete legacy JSONL record')
   const records = original.split('\n').filter(line => line.trim()).map(line => JSON.parse(line) as Json)
   validateRecords(records)
-  const output = redactHistory(records, secrets).map(record => JSON.stringify(record)).join('\n') + '\n'
+  const mapped = mapLegacyRecords(redactHistory(records, secrets), map)
+  assertNoHistorySecrets(mapped, secrets)
+  const output = mapped.map(record => JSON.stringify(record)).join('\n') + '\n'
   const afterRoot = lstatSync(directory)
   if (afterRoot.isSymbolicLink() || !afterRoot.isDirectory() || afterRoot.ino !== root.ino || afterRoot.dev !== root.dev
     || readdirSync(directory).filter(name => name.endsWith('.jsonl')).join('\0') !== names.join('\0')) {

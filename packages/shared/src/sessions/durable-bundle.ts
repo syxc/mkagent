@@ -6,6 +6,7 @@ import { isCanonicalBrowserToolName } from '../agent/browser-tool-names.ts'
 import { BROWSER_INPUT_EVIDENCE, browserInputClassifications, redactBrowserInputEvidence, type BrowserInputClassification } from '../agent/browser-input-evidence.ts'
 import { PASSWORD_FILL_MARKER, PASSWORD_TEXT_MARKER, splitBatchCommands, tokenizeCommand } from '../agent/browser-tool-runtime.ts'
 import type { BundleFile } from '../utils/bundle-files.ts'
+import { mapDurableCommits, mapDurableEntry, type ModelValueMapper } from './model-history-paths.ts'
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json }
 type ObjectValue = { [key: string]: Json }
@@ -256,18 +257,19 @@ export function redactHistory(values: Json[], secrets: Set<string>): Json[] {
       return [key, replace(item)]
     }))
   }
-  const check = (value: Json): void => {
-    if (typeof value === 'string') {
-      for (const secret of secrets) if (value.includes(secret)) throw new Error('Unresolved browser password copy')
-    } else if (Array.isArray(value)) {
-      for (const item of value) check(item)
-    } else if (isObject(value)) {
-      for (const [key, item] of Object.entries(value)) { check(key); check(item) }
-    }
-  }
   const output = values.map(replace)
-  for (const value of output) check(value)
+  assertNoHistorySecrets(output, secrets)
   return output
+}
+
+export function assertNoHistorySecrets(value: Json, secrets: Set<string>): void {
+  if (typeof value === 'string') {
+    for (const secret of secrets) if (value.includes(secret)) throw new Error('Unresolved browser password copy')
+  } else if (Array.isArray(value)) {
+    for (const item of value) assertNoHistorySecrets(item, secrets)
+  } else if (isObject(value)) {
+    for (const [key, item] of Object.entries(value)) { assertNoHistorySecrets(key, secrets); assertNoHistorySecrets(item, secrets) }
+  }
 }
 
 function bundleFile(name: string, content: Buffer): BundleFile {
@@ -275,7 +277,7 @@ function bundleFile(name: string, content: Buffer): BundleFile {
 }
 
 /** Snapshot durable history with browser password inputs removed; reject unknown storage formats. */
-export function collectDurableBundle(storeDir: string, secrets: Set<string> = new Set()): BundleFile[] {
+export function collectDurableBundle(storeDir: string, secrets: Set<string> = new Set(), map: ModelValueMapper = value => value): BundleFile[] {
   const root = lstatSync(storeDir, { throwIfNoEntry: false })
   if (!root) return []
   if (root.isSymbolicLink() || !root.isDirectory()) throw new Error('Durable store root must be a directory, not a symlink')
@@ -371,7 +373,8 @@ export function collectDurableBundle(storeDir: string, secrets: Set<string> = ne
       }
     })
     if (required.size) throw new Error('Missing durable JSONL sidecar')
-    const redacted = redactHistory(records, secrets)
+    const redacted = redactHistory(records, secrets).map(values => mapDurableCommits(values as Json[], map))
+    assertNoHistorySecrets(redacted, secrets)
     const output = files.map((file, index) => bundleFile(file.name, Buffer.from((redacted[index] as Json[]).map(value => JSON.stringify(value) + '\n').join(''))))
     return [...output, ...metadata.filter(name => names.includes(name)).map(name => bundleFile(name, readFileSync(join(storeDir, name))))]
   }
@@ -423,7 +426,9 @@ export function collectDurableBundle(storeDir: string, secrets: Set<string> = ne
       for (const group of rows) {
         const update = db.prepare(`UPDATE ${group.table} SET ${group.column} = ? WHERE rowid = ?`)
         for (const row of group.values) {
-          const result = redacted[index++]
+          const redactedValue = redacted[index++]!
+          const result = group.table === 'entries' ? mapDurableEntry(redactedValue, map) : redactedValue
+          assertNoHistorySecrets(result, secrets)
           if (group.table === 'document_revisions' && (!isObject(result) || !isObject(result.content))) throw new Error('Invalid durable database revision')
           const value = group.table === 'document_revisions' ? (result as ObjectValue).content as ObjectValue : undefined
           const encoded = JSON.stringify(value ? value[row.kind === 'base' ? 'value' : 'ops'] : result)

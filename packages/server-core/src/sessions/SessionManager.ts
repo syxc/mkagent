@@ -70,6 +70,7 @@ import {
   serializeSession,
   copyReferencedSessionFiles,
   importSessionMessages,
+  restoreSessionBundleFiles,
   remapSessionFileReferences,
   setPendingPlanExecution as setStoredPendingPlanExecution,
   validateBundle,
@@ -81,7 +82,6 @@ import {
   type SessionTokenUsage,
   type StoredSession,
 } from '@mkagent/shared/sessions'
-import { restoreFiles } from '@mkagent/shared/utils/bundle-files'
 import { readFileAttachment } from '@mkagent/shared/utils'
 import { getWorkspaceAllowedDirs, validateFilePath } from '@mkagent/server-core/handlers'
 import { normalizeThinkingLevel, type ThinkingLevel } from '@mkagent/shared/agent/thinking-levels'
@@ -2129,7 +2129,7 @@ export class SessionManager implements ISessionManager {
       const targetPath = getSessionStoragePath(workspace.rootPath, created.id)
       stored.messages = importSessionMessages(bundle, targetPath)
       stored.tokenUsage = bundle.session.header.tokenUsage
-      restoreFiles(targetPath, bundle.files)
+      restoreSessionBundleFiles(bundle, targetPath)
       await saveStoredSession(stored)
     } catch (error) {
       if (!deleteStoredSession(workspace.rootPath, created.id)) log.error('Failed to roll back imported files', created.id)

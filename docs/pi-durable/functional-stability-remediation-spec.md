@@ -37,7 +37,7 @@
 | FS-10 | 10 | P2 / Mock | 工具调用的取消信号贯穿 fetch、读取及保存检查；取消后不写下载文件、不返回成功。同类 web_search 不因取消启动后备搜索。 |
 | FS-11 | 11 | P2 / 运行复现 | headless bundle 不因构建机源码目录仍存在而进入源码模式；从仓库外启动仍采用产物资源。关键资源缺失应明确失败，不能回退到源码。 |
 | FS-12 | 12 | P3 / 运行复现 | 端口 0 自动绑定后，WebUI 配置返回实际监听端口；固定端口、显式 public WebSocket URL 和 TLS 行为保持可用。 |
-| FS-13 | 静态风险 | P2 / 待验证 | 用无外网测试确认管理过的 Azure/Cloudflare 端点变量在 URL 清空、失效或切换后不会残留；随后修复并验证正常端点切换。 |
+| FS-13 | 静态风险 | P2 / 本地环境复现 | 用无外网测试确认管理过的 Azure/Cloudflare 端点变量在 URL 清空、失效或切换后不会残留；随后修复并验证正常端点切换。 |
 
 重试退避 → 追加输入 → 停止 → 新输入作为集成对照。旧检查中该组合的新输入已恢复，宿主也有主动结束队列与重置状态，不将缺少单个协议事件等同新的确定故障。
 
@@ -81,11 +81,11 @@
 | C0 | completed | 规格覆盖 FS-01–FS-13；导航已登记 | `61ec6ed` |
 | C1 | completed | 新增 3 个冷启动回归在修复前均失败；修复后 bundle smoke 18 pass、0 fail；子进程 typecheck 通过。接收时取消代际覆盖初始化排队，打开内核后再次校验；steer 等待已有打开操作。 | `57e950f` |
 | C2 | completed | 宿主及真实内核缺锚点回归修复前均失败；修复后 branching + kernel e2e 147 pass、0 fail。宿主在创建会话前拒绝缺锚点，内核在复制父库前拒绝；SQLite/JSONL 父库不变，正常及 legacy 截断、无效锚点重试通过。旧的无锚点全量复制用例已改为明确拒绝，已有子库恢复仍可用。 | `9242bad` |
-| C3 | completed | 红测记录 5 项失败，旧版挂起读流不响应取消，红测由 15 秒命令上限终止。修复后 fetch + search 52 pass、0 fail；子进程 typecheck 通过。独立复核发现生产动态包装器遗漏第三个参数；补充真实 bundle 红测，确认取消后请求仍未中止，再修复转发；bundle/search 66 pass、0 fail。逐跳校验且最多 5 次跳转；请求、读流、保存边界取消及 50MB 上限已覆盖。搜索 4 个 provider 均传递信号，重试、模型切换及 DDG 降级在取消后停止；正常降级仍通过。DNS 校验与连接之间原有 TOCTOU 限制仍存在。 | `0c7c25c`；`fix(tools): forward cancellation through dynamic search` |
+| C3 | completed | 红测记录 5 项失败，旧版挂起读流不响应取消，红测由 15 秒命令上限终止。修复后 fetch + search 52 pass、0 fail；子进程 typecheck 通过。独立复核发现生产动态包装器遗漏第三个参数；补充真实 bundle 红测，确认取消后请求仍未中止，再修复转发；bundle/search 66 pass、0 fail。逐跳校验且最多 5 次跳转；请求、读流、保存边界取消及 50MB 上限已覆盖。搜索 4 个 provider 均传递信号，重试、模型切换及 DDG 降级在取消后停止；正常降级仍通过。DNS 校验与连接之间原有 TOCTOU 限制仍存在。 | `0c7c25c`；`9e4013b` |
 | C4 | completed | 函数策略和真实 MCP fixture 两项回归先失败，后 visibility 7 pass、0 fail，typecheck 通过。特殊名不再继承 Object 原型；自有精确/通配覆盖仍生效，无效 exposure 关闭曝光；hidden 工具不注册，正常工具可调用，direct/deferred/codemode 对照通过。同类 alias 读取随后经过合法 exposure 校验，不会注册非法可见性。 | `020dcc8` |
 | C5 | completed | 初始 6 项红测及复核补充的 2 项红测均已运行失败；修复后 runtime/bundle/endpoint/host/compaction 92 pass、0 fail，完整 kernel e2e 146 pass、0 fail，最终 typecheck:all 通过。独立候选目录复用本次 init 的凭据存储，验收后串行发布；新输入等候提交，工具响应、取消和辅助查询不受阻。旧候选不能覆盖新提交，较新的用户模型选择保持顺序；无效更新保留主/辅助模型及宿主实例。mini 必须仍属于有效自定义目录，端点仅清除已管理键。首次打开、OAuth 轮换、SAVE 队列、前缀及有无 auth 对照通过。 | `32a5fba` |
-| C6 | completed | 原版 3 项附件/导入/符号链接回归均失败；修复后 session transport/persistence/bundle 81 pass、0 fail，既有 session-branching 另 1 pass，typecheck:all 通过。分支只复制保留消息引用的普通文件，附件三种路径及长响应可独立读取；后续专属文件不复制。导出将 UI 消息路径转成可移植 token，导入展开到新会话；旧 v1 的绝对引用兼容自有 header 或已打包附件证明的源目录。源文件保持不变，移除源目录后仍可读；链接、遍历、失败导入回滚通过。路径边界、Markdown、Windows JSON 反斜杠、引号和替换字符对照通过。 | `73aedea` |
-| C7 | completed | 初始 10 项及独立复核补充的 5 项回归均已观察失败；复核修复后 legacy 迁移/导出/真实内核 32 pass、0 fail，最终 validate:ci 和全量测试通过。同步导出只收集最新的普通旧 transcript，复用浏览器密码脱敏和残留秘密检查，不写源文件或提前创建 durable store。导入后真实 provider 请求保留原用户/助手上下文，原 inactive anchor 仍可分支；较旧 transcript 不混入。拒绝坏 JSON、非法树/消息块、链接与根目录链接；按角色校验 text/image/thinking/toolCall，也覆盖 custom_message 和 context_edit。补充 Windows 旧包跨目录源根识别，路径/transport 10 pass。 | `fix(sessions): retain legacy context in portable bundles` |
+| C6 | completed | 原版 3 项附件/导入/符号链接回归均失败；修复后 session transport/persistence/bundle 81 pass、0 fail，既有 session-branching 另 1 pass，typecheck:all 通过。复核发现显示层之外的模型路径遗漏，新增 5 项真实 kernel 红测后修复，history/migration/bundle/transport 281 pass、0 fail，最终 validate:ci 通过。SQLite、JSONL 和 legacy 模型内容及 replacement edits 均可移植；只修改私有副本，保留 ID、锚点、顺序和 document delta。分支在截止后收集模型上下文独有文件，重复的同内容显示附件可复用，后续专属文件不复制。删除源目录后两个导入和重开子会话仍可用；同 bundle 不被修改。旧 v1 兼容自有 header 或已打包附件证明的源目录；链接、遍历、失败回滚、Windows、引号及路径边界对照通过。部分迁移、inactive anchor 与父库不变的 8 项组合通过。 | `73aedea`；`fix(sessions): relocate model history file references` |
+| C7 | completed | 初始 10 项及独立复核补充的 5 项回归均已观察失败；复核修复后 legacy 迁移/导出/真实内核 32 pass、0 fail，最终 validate:ci 和全量测试通过。同步导出只收集最新的普通旧 transcript，复用浏览器密码脱敏和残留秘密检查，不写源文件或提前创建 durable store。导入后真实 provider 请求保留原用户/助手上下文，原 inactive anchor 仍可分支；较旧 transcript 不混入。拒绝坏 JSON、非法树/消息块、链接与根目录链接；按角色校验 text/image/thinking/toolCall，也覆盖 custom_message 和 context_edit。补充 Windows 旧包跨目录源根识别，路径/transport 10 pass。模型历史附件路径补充验证见 C6。 | `9aec364` |
 | C8 | completed | 实际 Bun bundle 红测显示源码目录被识别为 source、产物路径被丢弃；改用运行文件的 import.meta.url，CommonJS 保留 __dirname 兼容路径。修复后 runtime/resolver/launcher 20 pass、0 fail，最终 typecheck:all 通过。完整 headless 构建成功，真实产物 launcher 在仓库外、源码仍存在时完成登录及配置读取，无源码回退；删除 fixture 的 Pi 资源后不再解析到任何源码替身。C9 的端口 0 问题在此产物中仍可复现，单独修复。 | `b66e7a2` |
 | C9 | completed | 真实端口 0 服务的认证 /api/config 回归先失败（返回 ws://127.0.0.1:0）；修复后与实际绑定端口一致，并使用返回地址成功完成 WebSocket 握手。绑定回调在监听后同步发布端口，WebUI 每次请求读取当前值。server smoke + WebUI HTTP 15 pass、0 fail，typecheck:all 通过；固定端口、public URL、TLS 协议及代理头对照保持通过。 | `e300585` |
 | C10 | pending | — | — |

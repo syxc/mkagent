@@ -88,7 +88,7 @@ export {
 
 // Field utilities
 export { pickSessionFields } from './utils.ts';
-export { copyReferencedSessionFiles, importSessionMessages, remapSessionFileReferences } from './session-files.ts';
+export { copyReferencedSessionFiles, importSessionMessages, restoreSessionBundleFiles, remapSessionFileReferences } from './session-files.ts';
 
 // Slug generator utilities
 export {

@@ -1,9 +1,11 @@
-import { cpSync, lstatSync, mkdirSync, readdirSync } from 'node:fs'
+import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { expandSessionPath, makeSessionPathPortable } from './jsonl.ts'
 import { normalizePath } from '../utils/paths.ts'
 import type { StoredMessage } from './types.ts'
 import type { SessionBundle } from './bundle.ts'
+import { restoreFiles } from '../utils/bundle-files.ts'
+import { rewriteStoredModelHistory } from './model-history-paths.ts'
 
 function assertSafeSessionReferences(serialized: string): void {
   if (/\{\{SESSION_PATH\}\}(?:\/[^/\s"'<>]*)*\/\.\.(?=\/|[\s"'<>]|$)/u.test(serialized)) {
@@ -17,7 +19,7 @@ export function remapSessionFileReferences<T>(value: T, sourcePath: string, targ
   return JSON.parse(expandSessionPath(serialized, targetPath)) as T
 }
 
-export function importSessionMessages(bundle: SessionBundle, targetPath: string): StoredMessage[] {
+export function importSessionValue<T>(bundle: SessionBundle, value: T, targetPath: string): T {
   const roots = new Set<string>()
   if (bundle.session.header.workspaceRootPath) {
     const workspace = bundle.session.header.workspaceRootPath.replace(/[\\/]+$/, '')
@@ -40,14 +42,27 @@ export function importSessionMessages(bundle: SessionBundle, targetPath: string)
       }
     }
   }
-  let serialized = JSON.stringify(bundle.session.messages)
+  let serialized = JSON.stringify(value)
   for (const root of roots) serialized = makeSessionPathPortable(serialized, root)
   assertSafeSessionReferences(serialized)
-  return JSON.parse(expandSessionPath(serialized, targetPath)) as StoredMessage[]
+  return JSON.parse(expandSessionPath(serialized, targetPath)) as T
 }
 
-/** Copy only retained message files. Runtime stores are copied by the kernel. */
-export function copyReferencedSessionFiles(messages: StoredMessage[], sourcePath: string, targetPath: string): void {
+export function importSessionMessages(bundle: SessionBundle, targetPath: string): StoredMessage[] {
+  return importSessionValue(bundle, bundle.session.messages, targetPath)
+}
+
+export function restoreSessionBundleFiles(bundle: SessionBundle, targetPath: string): void {
+  restoreFiles(targetPath, bundle.files)
+  rewriteStoredModelHistory(targetPath, value => importSessionValue(bundle, value, targetPath))
+}
+
+/** Copy retained display/model files. Runtime stores are copied by the kernel. */
+export function copyReferencedSessionFiles(
+  messages: ReadonlyArray<{ content?: unknown; planPath?: string; attachments?: StoredMessage['attachments'] }>,
+  sourcePath: string,
+  targetPath: string,
+): void {
   const serialized = makeSessionPathPortable(JSON.stringify(messages), sourcePath)
   assertSafeSessionReferences(serialized)
   const portable = (path: string) => JSON.stringify(`{{SESSION_PATH}}/${normalizePath(relative(sourcePath, path))}`).slice(1, -1)
@@ -71,6 +86,13 @@ export function copyReferencedSessionFiles(messages: StoredMessage[], sourcePath
       } else if (stat.isFile() && referenced(source)) {
         const target = join(targetPath, relative(sourcePath, source))
         mkdirSync(dirname(target), { recursive: true })
+        if (existsSync(target)) {
+          const existing = lstatSync(target)
+          if (!existing.isFile() || existing.isSymbolicLink() || !readFileSync(target).equals(readFileSync(source))) {
+            throw new Error('Cannot replace an existing session file')
+          }
+          continue
+        }
         cpSync(source, target, { force: false, errorOnExist: true, dereference: false })
         if (!lstatSync(target).isFile()) throw new Error('Cannot copy a symbolic link from a session')
       } else {
