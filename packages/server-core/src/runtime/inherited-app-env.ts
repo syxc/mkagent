@@ -12,7 +12,8 @@
  * `scripts/build-server.ts`) set MKAGENT_APP_ROOT themselves and keep honoring it.
  */
 import { existsSync } from 'node:fs'
-import { isAbsolute, join, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 export interface InheritedAppEnvResolution {
   /** Root to resolve bundled runtimes from. */
@@ -24,11 +25,13 @@ export interface InheritedAppEnvResolution {
 }
 
 /**
- * This module's folder. `__dirname`, not `import.meta.dir`: Bun defines it in ES modules too,
- * and the Electron main bundle is CommonJS, where esbuild empties `import.meta` (the bundle's
- * own folder is returned there, which never holds a checkout).
+ * Bun embeds each source module's __dirname when bundling ESM. import.meta.url
+ * instead names the file being executed, even while the build checkout exists.
+ * Electron's CommonJS bundle has no import.meta.url and uses its runtime __dirname.
  */
-const MODULE_DIR: string | null = typeof __dirname === 'string' ? __dirname : null
+const MODULE_DIR: string | null = typeof import.meta.url === 'string'
+  ? (import.meta.url.startsWith('file:') ? dirname(fileURLToPath(import.meta.url)) : null)
+  : (typeof __dirname === 'string' ? __dirname : null)
 
 /** The monorepo root when `server-core` runs from source, else null (bundled builds). */
 export function sourceCheckoutRoot(moduleDir: string | null = MODULE_DIR): string | null {
