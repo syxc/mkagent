@@ -639,11 +639,17 @@ export class DurableKernel {
     }
   }
 
-  async setModel(model: KernelModelRef): Promise<void> {
-    this.requireModel(model);
+  async waitForIdle(context = BACKGROUND_CONTEXT): Promise<void> {
+    await this.conversation?.waitForIdle(context);
+  }
+
+  async setModel(model: KernelModelRef, models: Models = this.options.modelsSource(), context = BACKGROUND_CONTEXT): Promise<void> {
+    if (!models.getModel(model.provider, model.modelId)) {
+      throw new Error(`Could not resolve model: ${model.provider}/${model.modelId}`);
+    }
     this.cacheWarmer.stop();
+    await this.conversation?.configure({ model: { provider: model.provider, modelId: model.modelId } }, context);
     this.currentModel = model;
-    await this.conversation?.configure({ model: { provider: model.provider, modelId: model.modelId } }, BACKGROUND_CONTEXT);
   }
 
   async setThinkingLevel(level: string): Promise<void> {

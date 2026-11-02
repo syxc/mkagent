@@ -25,6 +25,13 @@ globalThis.fetch = Object.assign(async (input: string | URL | Request, init?: Re
   }
   if (url.hostname !== 'fake-provider.test') throw new Error(`OFFLINE_FETCH_BLOCKED: ${request.url}`);
   const body = await request.json() as { model?: string; tools?: Array<{ function?: { name?: string } }> };
+  if (process.env.TEST_ALLOW_UTILITY) {
+    process.stderr.write(`TEST_PROVIDER_MODEL:${body.model}\n`);
+    if (!body.tools?.length) {
+      const chunk = { id: 'utility', object: 'chat.completion.chunk', choices: [{ index: 0, delta: { content: `fixture utility ${body.model}` }, finish_reason: 'stop' }] };
+      return new Response(`data: ${JSON.stringify(chunk)}\n\ndata: [DONE]\n\n`, { headers: { 'content-type': 'text/event-stream' } });
+    }
+  }
   if (process.env.TEST_EXPECT_MODEL && body.model !== process.env.TEST_EXPECT_MODEL) throw new Error('TEST_WRONG_MODEL');
   if (!body.tools?.some(tool => tool.function?.name === 'codemode')) throw new Error('codemode was not offered');
   const delta = calls++ === 0

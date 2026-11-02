@@ -1347,11 +1347,14 @@ export class SessionManager implements ISessionManager {
   }
 
   private async refreshManagedRuntime(managed: ManagedSession): Promise<void> {
-    if (managed.runtimeRefreshPromise) return managed.runtimeRefreshPromise
-    managed.runtimeRefreshPromise = this.performRuntimeRefresh(managed).finally(() => {
-      managed.runtimeRefreshPromise = undefined
-    })
-    return managed.runtimeRefreshPromise
+    const pending = managed.runtimeRefreshPromise
+    const refresh = (pending?.catch(() => {}) ?? Promise.resolve()).then(() => this.performRuntimeRefresh(managed))
+    managed.runtimeRefreshPromise = refresh
+    try {
+      await refresh
+    } finally {
+      if (managed.runtimeRefreshPromise === refresh) managed.runtimeRefreshPromise = undefined
+    }
   }
 
   private async performRuntimeRefresh(managed: ManagedSession): Promise<void> {
@@ -1380,12 +1383,7 @@ export class SessionManager implements ISessionManager {
         customModels: connection.models?.map(model => typeof model === 'string' ? model : ({ id: model.id, contextWindow: model.contextWindow, supportsImages: model.supportsImages })),
       } : {},
     })
-    if (!updated) {
-      await agent.disposeForRestart?.()
-      agent.dispose()
-      managed.agent = null
-      return
-    }
+    if (!updated || managed.agent !== agent) return
     managed.backendRuntimeSignature = runtimeSignature
     managed.backendRestartSignature = restartSignature
   }

@@ -22,7 +22,9 @@ export function parseCloudflareGatewayUrl(url: string): { accountId: string; gat
     return null;
   }
   if (parsed.protocol !== 'https:' || parsed.hostname !== 'gateway.ai.cloudflare.com') return null;
-  const [version, accountId, gatewayId] = parsed.pathname.split('/').filter(Boolean).map(decodeURIComponent);
-  if (version !== 'v1' || !accountId || !gatewayId || accountId.startsWith('<') || gatewayId.startsWith('<')) return null;
-  return { accountId, gatewayId };
+  try {
+    const [version, accountId, gatewayId] = parsed.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+    if (version !== 'v1' || !accountId || !gatewayId || accountId.startsWith('<') || gatewayId.startsWith('<')) return null;
+    return { accountId, gatewayId };
+  } catch { return null; }
 }

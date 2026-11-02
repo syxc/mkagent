@@ -191,8 +191,8 @@ export interface ModelRuntime {
 export async function createModelRuntime(
   config: ModelRuntimeConfig,
   onOAuthUpdate: OAuthUpdateHandler,
+  credentials = new OAuthSyncCredentialStore(onOAuthUpdate),
 ): Promise<ModelRuntime> {
-  const credentials = new OAuthSyncCredentialStore(onOAuthUpdate);
   const models = builtinModels({ credentials });
   const minimax = models.getProvider('minimax-cn');
   if (minimax) models.setProvider(withModelRequestCompatibility(minimax));
