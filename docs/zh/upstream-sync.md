@@ -36,6 +36,17 @@ git -C /tmp/craft-v0156 checkout --detach 8df01c5d0ac73c35add5954e6f190ce038d358
 export CRAFT_AGENT_SOURCE=/tmp/craft-v0156
 ```
 
+UI 同步、测试覆盖分类和来源复用检查共用此参考副本。脚本优先使用 `CRAFT_AGENT_SOURCE`；未设置时，依次查找相对于 MkAgent 仓库根目录的 `../craft-agents-oss` 和 `../../agents/craft-agents-oss`。变量为空会报错。路径必须指向 Git checkout 根目录，HEAD 必须匹配 `scripts/craft-source-overrides.json#baselineCommit`，且 renderer 目录必须存在。准备完成后，参考副本保持干净、只读。
+
+在 MkAgent 仓库中运行：
+
+```bash
+bun run lint
+bun run audit:craft-reuse
+```
+
+`bun run lint` 包含 UI 同步、测试覆盖分类与 Electron/shared/UI ESLint。`bun run audit:craft-reuse` 单独检查来源哈希和已审阅差异。两者均不属于 `validate:ci`。
+
 当上游发布值得评估的新 tag 时:
 
 1. 记录新 tag 与 commit:`git -C ../craft-agents-oss rev-parse HEAD && git -C ../craft-agents-oss describe --tags --always`。
@@ -102,7 +113,7 @@ MkAgent 工作期间,参考 checkout(`../craft-agents-oss`、`../echo`、`../xag
 两份源真值文件记录哪些 MkAgent 文件相对 Craft 偏离:
 
 - `scripts/craft-source-overrides.json`(跟踪所有 `apps/`、`packages/` 源文件)
-- `scripts/craft-ui-overrides.json`(renderer 范围内的子集,112 条)
+- `scripts/craft-ui-overrides.json`（renderer 范围内已审阅的子集）
 
 每次同步后,**必须**重新生成并审阅。`audit:craft-reuse` 通过的前提是偏离合理,而**不是**只为了通过检查去 bump 哈希。
 
@@ -124,6 +135,7 @@ MkAgent 工作期间,参考 checkout(`../craft-agents-oss`、`../echo`、`../xag
 
 | 症状 | 可能原因 | 处理 |
 |---|---|---|
+| `Craft reference check failed` | 参考目录缺失、路径无效、checkout 不完整或 HEAD 错误 | 按上文准备独立参考副本，并将 `CRAFT_AGENT_SOURCE` 设为固定提交的 checkout 根目录 |
 | `audit:craft-reuse` 报一个文件意外失配 | seam 修改后忘了刷新覆盖哈希 | 重新生成 `scripts/craft-source-overrides.json`,接受前再审一下差异 |
 | `lint:craft-test-coverage` 出现 "missing" 标签 | 上游 test 移动 / 新增但没归类 | 在 `scripts/check-craft-test-coverage.ts` 中更新 seam 分类 |
 | 同步后 `apps/electron/src/main` 单独报类型错 | 上游引入了新的环境变量或平台辅助 | 确认它能跨过 Lite seam,在提交前记录在文档中 |

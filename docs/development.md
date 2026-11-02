@@ -7,7 +7,7 @@ This page summarizes how to set up an MkAgent development environment and which 
 | Tool | Version | Why |
 |---|---|---|
 | Bun | 1.3.14+ | Workspace, runtime, builds (`bun.lock`) |
-| Node | ≥ 18 (Bun ships it for fallbacks) | TypeScript toolchain |
+| Node | ≥ 18 | Fallback runtime for Node-based tools |
 | Python | 3.12 | Document-tool smoke tests |
 | `uv` | latest compatible for development; `0.10.6` in desktop release builds | Runs document-tool smoke tests and prepares assets; packaged artifacts bundle their target-platform binary |
 | Git | any modern version | `pre-commit`-style checks via husky are opt-in |
@@ -43,7 +43,7 @@ packages/
 docs/                  # English-language documentation
 docs/zh/               # Chinese translation
 scripts/               # Dev / build / lint / audit
-migration/             # Migration plan, audit, UI history
+docs/migration/        # Migration plan, audit, UI history
 ```
 
 `apps/online-docs` is intentionally outside the workspace globs.
@@ -53,9 +53,9 @@ migration/             # Migration plan, audit, UI history
 | Goal | Command |
 |---|---|
 | Install dependencies (CI-mode) | `bun install --frozen-lockfile` |
-| Quick offline install | `bun install --force` (rare, recovers a broken lockfile) |
+| Reinstall dependencies | `bun install --force` |
 | Run Electron in dev (vite + electron) | `bun run electron:dev` |
-| Run Electron from a prebuilt `apps/electron/dist/` | `bun run electron:start` |
+| Build and start Electron | `bun run electron:start` |
 | Start the WebUI and backend with hot module replacement | `bun run webui:dev` |
 | Start the headless server with the built WebUI | `bun run server:dev:webui` |
 | Production headless server (WebUI bundled, Pi built) | `bun run server:prod` |
@@ -63,11 +63,18 @@ migration/             # Migration plan, audit, UI history
 | Build the Pi subprocess | `bun run server:build:subprocess` |
 | Build a dev-signed macOS arm64 .app | `bun run electron:dist:dev:mac` |
 | Run all unit + isolated tests | `bun run test` |
-| Validate (typecheck + tests + shared suite + doc tool smoke + lint) | `bun run validate:ci` |
+| Check all package types, selected shared tests, and document-tool smoke tests | `bun run validate:dev` |
+| Run validate:dev and i18n parity, usage, and sort checks | `bun run validate:ci` |
+| Run Craft checks and Electron/shared/UI ESLint | `bun run lint` |
 | Audit MkAgent ↔ Craft reuse | `bun run audit:craft-reuse` |
+| Audit Craft renderer reuse and Lite boundaries | `bun run lint:craft-ui-sync` |
 | Audit Craft test coverage | `bun run lint:craft-test-coverage` |
 | Lint English/Chinese locale parity | `bun run lint:i18n:parity` |
 | Sort locales | `bun run sort-locales` (check-only: `bun run lint:i18n:sorted`) |
+
+`validate:ci` does not run the full `bun run test` suite, ESLint, or Craft audits. Run those commands separately.
+
+Before you run `bun run lint` or a Craft audit, prepare an independent reference checkout at the pinned commit and set `CRAFT_AGENT_SOURCE` to its root. See [upstream synchronization](./upstream-sync.md) for the clone commands, current baseline, and reference checks.
 
 ## Web development
 
@@ -100,6 +107,7 @@ CONFIG_DIR=/tmp/mkagent-dev bun run server:dev:webui
 | Variable | Default | Effect |
 |---|---|---|
 | `CONFIG_DIR` | `~/.mkagent` | Override the configuration root (also called the "data directory") |
+| `CRAFT_AGENT_SOURCE` | `../craft-agents-oss`, then `../../agents/craft-agents-oss` | Craft reference checkout root for lint and audits; HEAD must match `scripts/craft-source-overrides.json#baselineCommit` |
 | `MKAGENT_SERVER_TOKEN` | — | Required bearer token for headless server RPC auth |
 | `MKAGENT_RPC_HOST` / `MKAGENT_RPC_PORT` | `127.0.0.1` / `9100` | Server bind address / port |
 | `MKAGENT_RPC_TLS_CERT` / `_KEY` / `_CA` | — | Enable `wss://` with PEM-encoded cert/key; CA is optional |
@@ -136,4 +144,4 @@ bun install --force --frozen-lockfile
 bun run validate:ci
 ```
 
-This combination has passed MkAgent's full gate on a clean checkout (see `migration/migration-features.md`, "最终验证结果"). Audio/screen-recording permissions are not required because the gate never starts a GUI.
+This runs the current `validate:ci` checks without a GUI. Run `bun run test`, `bun run lint`, and `bun run audit:craft-reuse` separately. The [migration archive](./migration/migration-features.md) records earlier validation results.

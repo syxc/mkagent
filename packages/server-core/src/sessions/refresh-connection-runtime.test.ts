@@ -147,14 +147,15 @@ describe('refreshConnectionRuntime', () => {
     await expect(sm.refreshConnectionRuntime('slug-A')).resolves.toBeUndefined()
   })
 
-  it('disposes the runtime when in-place refresh fails so the next send rebuilds it', async () => {
+  it('retains the last usable runtime and signatures when a candidate is rejected', async () => {
     const failingAgent = createAgentStub({ refreshSucceeds: false })
     const managed = injectSession(sm, 'failing', tmpRoot, 'slug-A', failingAgent)
 
     await sm.refreshConnectionRuntime('slug-A')
 
     expect(failingAgent.updateRuntimeConfig).toHaveBeenCalledTimes(1)
-    expect(managed.agent).toBeNull()
+    expect(managed.agent).toBe(failingAgent)
+    expect(managed.backendRuntimeSignature).toBe('__stale_runtime_signature_for_test__')
   })
 
   it('skips in-place refresh and forces recreation when a restart-required field changed', async () => {
@@ -226,5 +227,25 @@ describe('refreshConnectionRuntime', () => {
         }
       }
     }
+  })
+
+  it('re-evaluates a newer save after an in-flight refresh', async () => {
+    const started = Promise.withResolvers<void>()
+    const release = Promise.withResolvers<void>()
+    const agent = createAgentStub()
+    agent.updateRuntimeConfig.mockImplementationOnce(async () => {
+      started.resolve()
+      await release.promise
+      return true
+    })
+    const managed = injectSession(sm, 'newer-save', tmpRoot, 'slug-A', agent)
+    const first = sm.refreshConnectionRuntime('slug-A')
+    await started.promise
+    ;(managed as unknown as { model: string }).model = 'pi/gpt-4.1'
+    const second = sm.refreshConnectionRuntime('slug-A')
+    release.resolve()
+    await Promise.all([first, second])
+    expect(agent.updateRuntimeConfig).toHaveBeenCalledTimes(2)
+    expect(agent.updateRuntimeConfig.mock.calls[1]?.[0].model).toBe('pi/gpt-4.1')
   })
 })

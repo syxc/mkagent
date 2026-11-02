@@ -11,7 +11,7 @@ describe('SessionManager branching', () => {
     const configDir = mkdtempSync(join(tmpdir(), 'mkagent-session-branch-'))
     try {
       const script = `
-        import { mkdirSync, writeFileSync } from 'node:fs';
+        import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
         import { join } from 'node:path';
         import { SessionManager, savePiTurnAnchor, loadPiTurnAnchors } from ${JSON.stringify(SESSION_MANAGER_URL)};
         import { createSession, getSessionPath, loadSession, saveSession } from '@mkagent/shared/sessions';
@@ -39,21 +39,30 @@ describe('SessionManager branching', () => {
         ];
         source.tokenUsage = { inputTokens: 1000, outputTokens: 800, totalTokens: 1800, contextTokens: 0, costUsd: 9 };
         await saveSession(source);
-        await savePiTurnAnchor(getSessionPath(workspaceRoot, source.id), 'assistant-1', 'pi-entry-1');
-
         const manager = new SessionManager();
         await manager.initialize();
         manager.getOrCreateAgent = async (managed) => {
           managed.agent = { ensureBranchReady: async () => {}, destroy: () => {} };
           return managed.agent;
         };
+        const beforeMissing = readdirSync(join(workspaceRoot, 'sessions')).sort();
+        let missingError = '';
+        try {
+          await manager.createSession('workspace-default', {
+            branchFromSessionId: source.id, branchFromMessageId: 'assistant-1',
+          });
+        } catch (error) {
+          missingError = error.message;
+        }
+        const afterMissing = readdirSync(join(workspaceRoot, 'sessions')).sort();
+        await savePiTurnAnchor(getSessionPath(workspaceRoot, source.id), 'assistant-1', 'pi-entry-1');
         const branch = await manager.createSession('workspace-default', {
           branchFromSessionId: source.id,
           branchFromMessageId: 'assistant-1',
         });
         const storedBranch = loadSession(workspaceRoot, branch.id);
         const anchors = await loadPiTurnAnchors(getSessionPath(workspaceRoot, branch.id));
-        console.log(JSON.stringify({ branch, storedBranch, anchors }));
+        console.log(JSON.stringify({ branch, storedBranch, anchors, missingError, beforeMissing, afterMissing }));
         manager.cleanup();
       `
       const run = Bun.spawnSync([process.execPath, '--eval', script], {
@@ -63,7 +72,9 @@ describe('SessionManager branching', () => {
         stderr: 'pipe',
       })
       expect(run.exitCode, run.stderr.toString()).toBe(0)
-      const { branch, storedBranch, anchors } = JSON.parse(run.stdout.toString())
+      const { branch, storedBranch, anchors, missingError, beforeMissing, afterMissing } = JSON.parse(run.stdout.toString())
+      expect(missingError).toContain('turn anchor')
+      expect(afterMissing).toEqual(beforeMissing)
       expect(branch.messages.map((message: { id: string }) => message.id)).toEqual(['user-1', 'assistant-1'])
       expect(storedBranch.tokenUsage).toMatchObject({ inputTokens: 0, outputTokens: 0, costUsd: 0 })
       expect(storedBranch.branchFromMessageId).toBe('assistant-1')

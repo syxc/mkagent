@@ -21,6 +21,7 @@ import http from 'node:http';
 import { createInterface } from 'node:readline';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { BACKGROUND_CONTEXT, withAbortSignal } from '@earendil-works/chord/context';
 
 // Durable kernel
 import { defineExtension, defineTool, type Extension, type ToolRegistration } from '@earendil-works/pi-durable';
@@ -38,7 +39,6 @@ import { registerBunOAuthFlows } from '@earendil-works/pi-ai/bun-oauth';
 registerBunOAuthFlows();
 
 // Model resolution (extracted for testability + custom-endpoint precedence)
-import { resolvePiModel } from './model-resolution.ts';
 import { queryLlm } from './ephemeral.ts';
 import { createProxyTool, type ProxyToolResult } from './tools/proxy.ts';
 import {
@@ -49,10 +49,9 @@ import {
 import { stripPiPrefix, type CustomEndpointConfig } from './custom-endpoint-models.ts';
 import {
   createModelRuntime,
-  registerCustomEndpointModels,
-  resolveCustomEndpointApiKey,
   type ModelRuntime,
 } from './model-runtime.ts';
+import { resolveRuntimeMiniModel, resolveRuntimeModel } from './runtime-models.ts';
 
 // Direct source imports from shared (bundled by bun build)
 import { getSessionPath } from '../../shared/src/sessions/storage.ts';
@@ -72,7 +71,7 @@ import type { PiCompactResult, PiContextUsagePayload } from '../../shared/src/ag
 import { adaptCredentialForPiSdk, type PiCredential } from './adapt-credential.ts';
 import { resolveCraftAgentDir } from './agent-dir.ts';
 import { toPiProviderId } from '../../shared/src/config/pi-provider-ids.ts';
-import { providerEndpointEnv } from './provider-endpoint-env.ts';
+import { ProviderEndpointEnvironment, providerEndpointEnv } from './provider-endpoint-env.ts';
 import { DurableKernel, type KernelHooks, type KernelModelRef } from './kernel.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 
@@ -111,6 +110,7 @@ interface RuntimeConfigUpdateMessage {
   type: 'update_runtime_config';
   id: string;
   model: string;
+  deadline?: number;
   providerType?: string;
   authType?: string;
   baseUrl?: string;
@@ -205,6 +205,7 @@ interface OutboundRuntimeConfigUpdateResult {
   id: string;
   success: boolean;
   updated: boolean;
+  miniModel?: string;
   errorMessage?: string;
 }
 interface OutboundSessionIdUpdate { type: 'session_id_update'; sessionId: string }
@@ -241,6 +242,8 @@ type OutboundMessage =
 let kernel: DurableKernel | null = null;
 let kernelPromise: Promise<DurableKernel> | null = null;
 let initialization: Promise<void> = Promise.resolve();
+// Invalidated at receipt, before commands waiting on initialization can run.
+let inputGeneration = 0;
 let reinitializing = false;
 let shuttingDown: Promise<void> | undefined;
 let mcpLoad: McpToolsLoadResult | null = null;
@@ -259,6 +262,9 @@ function nextLocalEphemeralQueryId(source: string): string {
 let initConfig: Extract<InboundMessage, { type: 'init' }> | null = null;
 let credentialGeneration = 0;
 let runtimeConfigGeneration = 0;
+let runtimeConfigRequest = 0;
+let runtimeCommit: Promise<void> = Promise.resolve();
+const endpointEnvironment = new ProviderEndpointEnvironment();
 
 // Mutable state
 let currentUserMessage = '';
@@ -365,11 +371,6 @@ function resolvedCwd(): string {
   return wd;
 }
 
-// Helper: derive preferCustomEndpoint flag from init config
-function shouldPreferCustomEndpoint(): boolean {
-  return Boolean(initConfig?.customEndpoint && initConfig?.baseUrl?.trim());
-}
-
 /**
  * Expose the active model API/provider/base URL to the interceptor process.
  * This gives the interceptor a robust routing hint (instead of brittle URL-only matching).
@@ -398,8 +399,8 @@ function setInterceptorApiHints(model: { api?: string; provider?: string; baseUr
  */
 function applyProviderEndpointEnv(config: InitMessage): void {
   const env = providerEndpointEnv(config.piAuth?.provider, config.baseUrl);
+  endpointEnvironment.apply(env);
   for (const [key, value] of Object.entries(env)) {
-    process.env[key] = value;
     debugLog(`Set ${key}=${value}`);
   }
   if (config.piAuth?.provider === 'cloudflare-ai-gateway' && !env.CLOUDFLARE_GATEWAY_ID) {
@@ -474,26 +475,7 @@ async function ensureModelRuntime(): Promise<ModelRuntime> {
  */
 async function resolveModelRef(modelId: string): Promise<KernelModelRef | undefined> {
   const runtime = await ensureModelRuntime();
-  let piModel = resolvePiModel(runtime.models, modelId, initConfig?.piAuth?.provider, shouldPreferCustomEndpoint());
-
-  if (!piModel && initConfig?.baseUrl?.trim() && initConfig?.customEndpoint) {
-    const bareId = stripPiPrefix(modelId);
-    // registerCustomEndpointModels accumulates known ids and re-registers the
-    // full set (setProvider replaces wholesale).
-    registerCustomEndpointModels({
-      models: runtime.models,
-      api: initConfig.customEndpoint.api,
-      baseUrl: initConfig.baseUrl.trim(),
-      apiKey: resolveCustomEndpointApiKey({ apiKey: initConfig.apiKey, piAuth: initConfig.piAuth, baseUrl: initConfig.baseUrl }),
-      endpointDefaults: {
-        supportsImages: initConfig.customEndpoint.supportsImages === true,
-        maxTokens: initConfig.customEndpoint.maxTokens,
-      },
-      entries: [{ id: bareId }],
-    });
-    piModel = runtime.models.getModel('custom-endpoint', bareId) ?? undefined;
-    debugLog(`[model] Dynamically registered custom endpoint model: ${bareId}`);
-  }
+  const piModel = initConfig ? resolveRuntimeModel(runtime, initConfig, modelId) : undefined;
 
   if (!piModel) return undefined;
   setInterceptorApiHints(piModel);
@@ -548,8 +530,8 @@ const searchProvider = {
   get name() {
     return resolveSearchProvider(initConfig?.piAuth, initConfig?.model ? stripPiPrefix(initConfig.model) : undefined).name;
   },
-  async search(query: string, count: number) {
-    return resolveSearchProvider(initConfig?.piAuth, initConfig?.model ? stripPiPrefix(initConfig.model) : undefined).search(query, count);
+  async search(query: string, count: number, signal?: AbortSignal) {
+    return resolveSearchProvider(initConfig?.piAuth, initConfig?.model ? stripPiPrefix(initConfig.model) : undefined).search(query, count, signal);
   },
 };
 
@@ -755,15 +737,18 @@ const MKAGENT_PI_EPHEMERAL_QUERY_DEADLINE_MS = LLM_QUERY_TIMEOUT_MS - 5_000;
 
 async function runEphemeralLlmQuery(id: string, request: LLMQueryRequest): Promise<LLMQueryResult> {
   return ephemeralQueries.run(id, MKAGENT_PI_EPHEMERAL_QUERY_DEADLINE_MS, async (lifecycle) => {
-    const runtime = await ensureModelRuntime();
+    await ensureModelRuntime();
+    // Capture the pair after lazy construction; a committed replacement is synchronous.
+    const runtime = modelRuntime!;
+    const config = initConfig;
     lifecycle.throwIfCancelled();
     return queryLlm(request, lifecycle, {
       models: runtime.models,
-      getConfig: () => initConfig ? {
-        miniModel: initConfig.miniModel,
-        sessionModel: initConfig.model,
-        piAuthProvider: initConfig.piAuth?.provider,
-        preferCustomEndpoint: shouldPreferCustomEndpoint(),
+      getConfig: () => config ? {
+        miniModel: config.miniModel,
+        sessionModel: config.model,
+        piAuthProvider: config.piAuth?.provider,
+        preferCustomEndpoint: Boolean(config.customEndpoint && config.baseUrl?.trim()),
       } : null,
       debugLog,
     });
@@ -822,6 +807,7 @@ async function initialize(msg: Extract<InboundMessage, { type: 'init' }>): Promi
   pendingToolExecutions.clear();
   prefetchCache.clear();
 
+  await runtimeCommit;
   if (kernelPromise) await kernelPromise.catch(() => undefined);
   if (kernel) {
     try {
@@ -859,10 +845,14 @@ async function initialize(msg: Extract<InboundMessage, { type: 'init' }>): Promi
 }
 
 async function handlePrompt(msg: Extract<InboundMessage, { type: 'prompt' }>): Promise<void> {
+  const generation = inputGeneration;
   currentUserMessage = msg.message;
 
   try {
+    await runtimeCommit;
     const k = await ensureKernel();
+    await runtimeCommit;
+    if (generation !== inputGeneration) return;
 
     // Force the Craft-built system prompt onto the conversation; the prompt
     // section renders it at request preparation.
@@ -874,6 +864,7 @@ async function handlePrompt(msg: Extract<InboundMessage, { type: 'prompt' }>): P
     // streamingBehavior contract.
     await k.submitPrompt(msg.message, msg.images);
   } catch (error) {
+    if (generation !== inputGeneration) return;
     const errorMsg = error instanceof Error ? error.message : String(error);
 
     // No wrapper-side overflow recovery here. The durable kernel's compaction
@@ -1008,7 +999,9 @@ async function handleCompact(msg: Extract<InboundMessage, { type: 'compact' }>, 
   const startedAt = Date.now();
   try {
     if (controller.signal.aborted) throw new Error('Compaction aborted');
+    await runtimeCommit;
     const k = await ensureKernel();
+    await runtimeCommit;
     if (controller.signal.aborted) throw new Error('Compaction aborted');
     const result = await k.compact(msg.customInstructions, controller.signal);
     debugLog(`[compact] Done in ${Date.now() - startedAt}ms: ${result.tokensBefore} -> ~${result.estimatedTokensAfter} tokens`);
@@ -1067,9 +1060,9 @@ async function handleUpdateRuntimeConfig(msg: RuntimeConfigUpdateMessage): Promi
       throw new Error('Runtime config update received before init');
     }
 
-    const updateGeneration = ++runtimeConfigGeneration;
+    const request = ++runtimeConfigRequest;
     const initGeneration = credentialGeneration;
-    initConfig = {
+    const candidateConfig: InitMessage = {
       ...initConfig,
       model: msg.model,
       providerType: msg.providerType ?? initConfig.providerType,
@@ -1078,37 +1071,40 @@ async function handleUpdateRuntimeConfig(msg: RuntimeConfigUpdateMessage): Promi
       customEndpoint: msg.customEndpoint,
       customModels: msg.customModels,
     };
-    applyProviderEndpointEnv(initConfig);
-
-    // Keep the current catalog available until its replacement has been built.
-    modelRuntimePromise = null;
-    const openingKernel = kernelPromise;
-    if (openingKernel) {
-      try { await openingKernel; } catch { /* The update still applies to the next session. */ }
-    }
-
-    const activeKernel = kernel;
-    if (initGeneration !== credentialGeneration || updateGeneration !== runtimeConfigGeneration) {
-      throw new Error('Runtime config update superseded');
-    }
-    if (activeKernel) {
-      const ref = await resolveModelRef(msg.model);
-      if (initGeneration !== credentialGeneration || updateGeneration !== runtimeConfigGeneration || activeKernel !== kernel) {
-        throw new Error('Runtime config update superseded');
-      }
-      if (!ref) {
-        throw new Error(`Could not resolve model after runtime update: ${msg.model}`);
-      }
-      await activeKernel.setModel(ref);
-      if (initGeneration !== credentialGeneration || updateGeneration !== runtimeConfigGeneration || activeKernel !== kernel) {
-        throw new Error('Runtime config update superseded');
-      }
+    const previous = await ensureModelRuntime();
+    const candidate = await createModelRuntime(candidateConfig, () => {}, previous.credentials);
+    const model = resolveRuntimeModel(candidate, candidateConfig, msg.model);
+    if (!model) throw new Error(`Could not resolve model after runtime update: ${msg.model}`);
+    candidateConfig.miniModel = resolveRuntimeMiniModel(candidate, candidateConfig);
+    const endpointEnv = providerEndpointEnv(candidateConfig.piAuth?.provider, candidateConfig.baseUrl);
+    const checkCurrent = () => {
+      if (initGeneration !== credentialGeneration || request !== runtimeConfigRequest) throw new Error('Runtime config update superseded');
+      if (msg.deadline !== undefined && Date.now() >= msg.deadline) throw new Error('Runtime config update deadline exceeded');
+    };
+    const commit = runtimeCommit.then(async () => {
+      checkCurrent();
+      if (kernelPromise) await kernelPromise.catch(() => undefined);
+      checkCurrent();
+      const active = kernel;
+      const context = msg.deadline === undefined ? BACKGROUND_CONTEXT
+        : withAbortSignal(AbortSignal.timeout(Math.max(0, msg.deadline - Date.now())), BACKGROUND_CONTEXT);
+      await active?.waitForIdle(context);
+      checkCurrent();
+      const ref = { provider: model.provider, modelId: model.id, contextWindow: model.contextWindow };
+      await active?.setModel(ref, candidate.models, context);
+      // No await between changing the kernel model and publishing its matching catalog.
+      candidateConfig.piAuth = initConfig!.piAuth;
+      initConfig = candidateConfig;
+      modelRuntime = candidate;
+      modelRuntimePromise = Promise.resolve(candidate);
+      runtimeConfigGeneration++;
+      endpointEnvironment.apply(endpointEnv);
+      setInterceptorApiHints(model);
       debugLog(`[runtime_config] Updated runtime config and active model: ${ref.provider}/${ref.modelId}`);
-    } else {
-      debugLog('[runtime_config] Stored update; no active session yet');
-    }
-
-    send({ type: 'update_runtime_config_result', id: msg.id, success: true, updated: true });
+      send({ type: 'update_runtime_config_result', id: msg.id, success: true, updated: true, miniModel: candidateConfig.miniModel });
+    });
+    runtimeCommit = commit.catch(() => {});
+    await commit;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     debugLog(`[runtime_config] Failed: ${errorMsg}`);
@@ -1123,11 +1119,16 @@ async function handleSetModel(msg: Extract<InboundMessage, { type: 'set_model' }
     return;
   }
   try {
-    const ref = await resolveModelRef(msg.model);
-    if (!ref) throw new Error(`Could not resolve model: ${msg.model}`);
-    await kernel.setModel(ref);
-    if (initConfig) initConfig.model = msg.model;
-    debugLog(`[set_model] Model changed to: ${msg.model} (resolved: ${ref.provider}/${ref.modelId})`);
+    const operation = runtimeCommit.then(async () => {
+      if (!kernel) throw new Error('Session closed during model change');
+      const ref = await resolveModelRef(msg.model);
+      if (!ref) throw new Error(`Could not resolve model: ${msg.model}`);
+      await kernel.setModel(ref);
+      if (initConfig) initConfig = { ...initConfig, model: msg.model };
+      debugLog(`[set_model] Model changed to: ${msg.model} (resolved: ${ref.provider}/${ref.modelId})`);
+    });
+    runtimeCommit = operation.catch(() => {});
+    await operation;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     debugLog(`[set_model] Failed to set model: ${errorMsg}`);
@@ -1277,14 +1278,20 @@ async function processMessage(msg: InboundMessage, compactController?: AbortCont
       await handleUpdateRuntimeConfig(msg);
       break;
 
-    case 'steer':
-      if (kernel) {
+    case 'steer': {
+      const generation = inputGeneration;
+      await runtimeCommit;
+      const active = kernel ?? await kernelPromise;
+      await runtimeCommit;
+      if (generation !== inputGeneration) break;
+      if (active && active === kernel) {
         debugLog(`Steering with: "${msg.message.slice(0, 100)}"`);
-        await kernel.steer(msg.message);
+        await active.steer(msg.message);
       } else {
         debugLog('Steer ignored — no active session');
       }
       break;
+    }
 
     case 'token_update': {
       const piAuth = toPiAuth(msg.piAuth);
@@ -1325,6 +1332,8 @@ function main(): void {
     if (!line.trim()) return;
     try {
       const msg = JSON.parse(line) as InboundMessage;
+      if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') inputGeneration++;
+      const generation = inputGeneration;
       if (msg.type === 'init') {
         // Later compact requests belong to the new initialization and must remain active.
         for (const controller of pendingCompactions.values()) controller.abort();
@@ -1339,7 +1348,10 @@ function main(): void {
         ? initialization.catch(() => undefined).then(() => processMessage(msg))
         : ['tool_execute_response', 'pre_tool_use_response', 'abort', 'cancel_compact', 'shutdown'].includes(msg.type)
           ? processMessage(msg)
-          : initialization.then(() => processMessage(msg, compactController));
+          : initialization.then(() => {
+              if ((msg.type === 'prompt' || msg.type === 'steer') && generation !== inputGeneration) return;
+              return processMessage(msg, compactController);
+            });
       if (msg.type === 'init') initialization = operation;
       operation.catch((error) => {
         if (msg.type === 'compact' && pendingCompactions.get(msg.id) === compactController) pendingCompactions.delete(msg.id);

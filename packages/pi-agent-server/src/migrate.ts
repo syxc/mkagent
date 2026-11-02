@@ -13,6 +13,8 @@ import { Harness, createRegistry, defineDoc, ROOT_CONVERSATION_ID, type Conversa
 import { openDurableStorage } from './storage/durable-storage.ts';
 import type { Message, UserMessage } from '@earendil-works/pi-ai';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
+import { remapSessionFileReferences } from '@mkagent/shared/sessions';
+import { mapLegacyRecords, type Json } from '@mkagent/shared/sessions/model-history-paths';
 
 const LegacyIdMapDoc = defineDoc({
   kind: 'mkagent.legacy-id-map',
@@ -122,7 +124,8 @@ export async function migrateLegacySession(
 
   const legacyFile = findMostRecentSessionFile(join(legacySessionPath, '.pi-sessions'));
   if (!legacyFile) return tail;
-  const legacyEntries = readLegacyEntries(legacyFile);
+  const legacyEntries = mapLegacyRecords(readLegacyEntries(legacyFile) as unknown as Json[],
+    value => remapSessionFileReferences(value, legacySessionPath, sessionPath)) as unknown as LegacyEntryLike[];
   const entriesById = new Map(legacyEntries.map(entry => [entry.id, entry]));
   let activeEntries = legacyEntries;
   if (legacyEntries.some(entry => 'parentId' in entry)) {

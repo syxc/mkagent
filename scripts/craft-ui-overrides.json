@@ -182,8 +182,8 @@
       "reason": "v0.15 starter-prompt chips limited to local files, news and Skills; unavailable Sources/mail setup removed"
     },
     "apps/electron/src/renderer/components/app-shell/chat-display/__tests__/new-chat-suggestions.test.ts": {
-      "sha256": "459403deeedafec1a6ed285084f92c87e025ea20afb95c616ed11e5c217de65f",
-      "reason": "Tests three source-free Lite suggestions and localized label versus sent-prompt routing instead of removed Sources ranking"
+      "sha256": "467ac8eb315ff3c731a16da19778c5c9d44d0a75a4830c81586f18aa714d3ce3",
+      "reason": "Tests three source-free Lite suggestions and localized label versus sent-prompt routing instead of removed Sources ranking; includes the per-locale translated-prompt regression added in 20fb16d."
     },
     "apps/electron/src/renderer/components/app-shell/chat-display/new-chat-suggestions.ts": {
       "sha256": "cbc7f3977174800434b2d6c68309048510b157adbd3b1ed09914afc8bf7388e7",

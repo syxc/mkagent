@@ -26,6 +26,7 @@
     "./auth": "./src/auth/index.ts",
     "./prompts": "./src/prompts/index.ts",
     "./sessions": "./src/sessions/index.ts",
+    "./sessions/model-history-paths": "./src/sessions/model-history-paths.ts",
     "./skills": "./src/skills/index.ts",
     "./workspaces": "./src/workspaces/index.ts",
     "./utils": "./src/utils/index.ts",

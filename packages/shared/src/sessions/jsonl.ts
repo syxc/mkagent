@@ -29,13 +29,16 @@ const SESSION_PATH_TOKEN = '{{SESSION_PATH}}';
  */
 export function makeSessionPathPortable(jsonLine: string, sessionDir: string): string {
   if (!sessionDir) return jsonLine;
-  const normalized = normalizePath(sessionDir);
-  let result = jsonLine.replaceAll(normalized, SESSION_PATH_TOKEN);
-  // On Windows, also replace JSON-escaped backslash paths
-  // (JSON.stringify escapes \ to \\, so C:\foo becomes C:\\foo in JSON strings)
-  if (sessionDir !== normalized) {
-    const jsonEscaped = sessionDir.replaceAll('\\', '\\\\');
-    result = result.replaceAll(jsonEscaped, SESSION_PATH_TOKEN);
+  let result = jsonLine;
+  const variants = new Set([normalizePath(sessionDir), sessionDir]);
+  for (const variant of variants) {
+    const encoded = JSON.stringify(variant).slice(1, -1);
+    const escaped = encoded.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // A shared prefix or an embedded path in a different directory is not this session.
+    const suffix = variant === normalizePath(variant) ? '' : String.raw`((?:\\\\[^"\\]*)*)`;
+    const pattern = new RegExp(String.raw`(^|[^\p{L}\p{N}_./\\-]|file://)` + escaped + String.raw`(?=$|[/\\\s"'\x60<>(){}\[\],;])` + suffix, 'gu');
+    result = result.replace(pattern, (_match, prefix: string, tail: string = '') =>
+      prefix + SESSION_PATH_TOKEN + (suffix ? tail.replaceAll('\\\\', '/') : ''));
   }
   return result;
 }
@@ -46,7 +49,7 @@ export function makeSessionPathPortable(jsonLine: string, sessionDir: string): s
  */
 export function expandSessionPath(jsonLine: string, sessionDir: string): string {
   if (!jsonLine.includes(SESSION_PATH_TOKEN)) return jsonLine;
-  return jsonLine.replaceAll(SESSION_PATH_TOKEN, normalizePath(sessionDir));
+  return jsonLine.replaceAll(SESSION_PATH_TOKEN, () => JSON.stringify(normalizePath(sessionDir)).slice(1, -1));
 }
 
 function normalizePermissionMode(value: unknown): PermissionMode | undefined {

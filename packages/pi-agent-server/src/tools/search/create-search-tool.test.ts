@@ -2,8 +2,33 @@ import { describe, expect, it } from 'bun:test';
 import { validateToolArguments } from '@earendil-works/pi-ai';
 import { createSearchTool } from './create-search-tool.ts';
 import type { WebSearchProvider } from './types.ts';
+import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 
 describe('createSearchTool', () => {
+  it('passes cancellation to providers and never falls back after cancellation', async () => {
+    const controller = new AbortController();
+    let received: AbortSignal | undefined;
+    let fallbackCalls = 0;
+    const primary: WebSearchProvider = {
+      name: 'primary',
+      async search(_query, _count, signal) {
+        received = signal;
+        controller.abort(new Error('fixture cancelled'));
+        throw new Error('primary interrupted');
+      },
+    };
+    const fallback: WebSearchProvider = {
+      name: 'fallback',
+      async search() { fallbackCalls++; return []; },
+    };
+    const pending = createSearchTool(primary, fallback).execute({ query: 'fixture' }, {} as never, {
+      ...BACKGROUND_CONTEXT, abortSignal: controller.signal,
+    });
+    await expect(pending).rejects.toThrow('fixture cancelled');
+    expect(received).toBe(controller.signal);
+    expect(fallbackCalls).toBe(0);
+  });
+
   it('keeps canonical tool identity', () => {
     const provider: WebSearchProvider = {
       name: 'Mock',

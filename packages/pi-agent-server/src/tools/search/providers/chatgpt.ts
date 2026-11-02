@@ -83,7 +83,7 @@ export class ChatGPTBackendSearchProvider implements WebSearchProvider {
     private options?: { model?: string },
   ) {}
 
-  async search(query: string, count: number): Promise<WebSearchResult[]> {
+  async search(query: string, count: number, signal?: AbortSignal): Promise<WebSearchResult[]> {
     const attemptErrors: string[] = [];
     const models = this.candidateModels();
 
@@ -93,6 +93,7 @@ export class ChatGPTBackendSearchProvider implements WebSearchProvider {
       let modelRejected = false;
 
       for (let attemptIndex = 0; attemptIndex < SEARCH_ATTEMPTS.length; attemptIndex++) {
+        signal?.throwIfAborted();
         const attempt = SEARCH_ATTEMPTS[attemptIndex]!;
         const hasMoreAttempts = attemptIndex < SEARCH_ATTEMPTS.length - 1;
 
@@ -129,7 +130,7 @@ export class ChatGPTBackendSearchProvider implements WebSearchProvider {
             'OpenAI-Beta': 'responses=experimental',
           },
           body: JSON.stringify(requestBody),
-          signal: AbortSignal.timeout(30_000),
+          signal: AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(30_000)]),
         });
 
         const contentType = response.headers.get('content-type') || 'unknown';
@@ -139,6 +140,7 @@ export class ChatGPTBackendSearchProvider implements WebSearchProvider {
             const data = await parseResponsePayload(response);
             return parseResponsesApiResults(data, query, count);
           } catch (parseError) {
+            signal?.throwIfAborted();
             const parseMessage = parseError instanceof Error ? parseError.message : String(parseError);
             attemptErrors.push(
               `${attempt.label} parse failed [${requestFingerprint}, content-type=${contentType}]: ${compactErrorText(parseMessage)}`,

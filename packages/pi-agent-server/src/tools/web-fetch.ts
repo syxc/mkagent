@@ -3,7 +3,7 @@ import { defineTool, type ToolRegistration } from '@earendil-works/pi-durable';
 import TurndownService from 'turndown';
 import { parse as parseHtml } from 'node-html-parser';
 import { join } from 'node:path';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { lookup } from 'node:dns/promises';
 import { randomUUID } from 'node:crypto';
 
@@ -92,6 +92,36 @@ async function validateUrl(url: string): Promise<void> {
   }
 }
 
+async function fetchValidatedUrl(url: string, signal: AbortSignal): Promise<{ response: Response; finalUrl: string }> {
+  const visited = new Set<string>();
+  let target = new URL(url);
+  for (let hop = 0; hop <= 5; hop++) {
+    signal.throwIfAborted();
+    target.hash = '';
+    const finalUrl = target.href;
+    if (visited.has(finalUrl)) throw new Error('Blocked: redirect loop');
+    visited.add(finalUrl);
+    await validateUrl(finalUrl);
+    signal.throwIfAborted();
+    const response = await fetch(finalUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; CraftAgent/1.0)',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      redirect: 'manual',
+      signal,
+    });
+    signal.throwIfAborted();
+    if (![301, 302, 303, 307, 308].includes(response.status)) return { response, finalUrl };
+    await response.body?.cancel();
+    signal.throwIfAborted();
+    const location = response.headers.get('location');
+    if (!location) throw new Error('Blocked: redirect has no Location header');
+    target = new URL(location, target);
+  }
+  throw new Error('Blocked: redirect limit exceeded');
+}
+
 // ============================================================
 // Streaming size-limited reader
 // ============================================================
@@ -101,11 +131,13 @@ async function validateUrl(url: string): Promise<void> {
  * Unlike checking Content-Length (which can be absent or lie),
  * this actually caps how many bytes we buffer.
  */
-async function readResponseBytes(response: Response, maxSize: number): Promise<Buffer> {
+async function readResponseBytes(response: Response, maxSize: number, signal: AbortSignal): Promise<Buffer> {
+  signal.throwIfAborted();
   const reader = response.body?.getReader();
   if (!reader) {
     // Fallback for runtimes without streaming body
     const ab = await response.arrayBuffer();
+    signal.throwIfAborted();
     if (ab.byteLength > maxSize) {
       throw new Error(`Response exceeded ${Math.round(maxSize / 1024 / 1024)}MB limit`);
     }
@@ -114,11 +146,16 @@ async function readResponseBytes(response: Response, maxSize: number): Promise<B
 
   const chunks: Uint8Array[] = [];
   let totalSize = 0;
+  let complete = false;
+  const cancel = () => { void reader.cancel().catch(() => {}); };
+  signal.addEventListener('abort', cancel, { once: true });
 
   try {
     while (true) {
+      signal.throwIfAborted();
       const { done, value } = await reader.read();
-      if (done) break;
+      signal.throwIfAborted();
+      if (done) { complete = true; break; }
       totalSize += value.byteLength;
       if (totalSize > maxSize) {
         throw new Error(`Response exceeded ${Math.round(maxSize / 1024 / 1024)}MB limit`);
@@ -126,6 +163,8 @@ async function readResponseBytes(response: Response, maxSize: number): Promise<B
       chunks.push(value);
     }
   } finally {
+    signal.removeEventListener('abort', cancel);
+    if (!complete) await reader.cancel().catch(() => {});
     reader.releaseLock();
   }
 
@@ -141,8 +180,8 @@ async function readResponseBytes(response: Response, maxSize: number): Promise<B
 /**
  * Read the full response body as text while enforcing a byte-size limit.
  */
-async function readResponseText(response: Response, maxSize: number): Promise<string> {
-  const buffer = await readResponseBytes(response, maxSize);
+async function readResponseText(response: Response, maxSize: number, signal: AbortSignal): Promise<string> {
+  const buffer = await readResponseBytes(response, maxSize, signal);
   return buffer.toString('utf-8');
 }
 
@@ -327,18 +366,27 @@ function handleText(
 export function createWebFetchTool(
   getSessionPath: () => string | null,
 ): ToolRegistration<typeof schema> {
-  async function saveBinary(buffer: Buffer, url: string, ext: string): Promise<string> {
+  async function saveBinary(buffer: Buffer, url: string, ext: string, signal: AbortSignal): Promise<string> {
+    signal.throwIfAborted();
     const sessionPath = getSessionPath();
+    signal.throwIfAborted();
     if (!sessionPath) throw new Error('No active session — cannot save file to disk');
     const dir = join(sessionPath, 'long_responses');
     await mkdir(dir, { recursive: true });
+    signal.throwIfAborted();
     let urlName = '';
     try { urlName = new URL(url).pathname.split('/').pop() || ''; } catch { /* malformed URL */ }
     const safe =
       urlName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 40) || 'download';
     const file = `${randomUUID()}_${safe}${ext}`;
     const abs = join(dir, file);
-    await writeFile(abs, buffer);
+    try {
+      await writeFile(abs, buffer, { signal });
+      signal.throwIfAborted();
+    } catch (error) {
+      await rm(abs, { force: true });
+      throw error;
+    }
     return abs;
   }
 
@@ -347,78 +395,56 @@ export function createWebFetchTool(
     description:
       'Fetch a URL and extract its content. Handles HTML (→ markdown), PDF (→ extracted text), images (→ saved to disk), JSON (→ pretty-printed), and plain text.',
     parameters: schema,
-    async execute(params) {
+    async execute(params, _api, context) {
       const { url, prompt } = params;
-
-      // SSRF protection: block non-HTTP schemes and private/reserved IPs
+      const signal = AbortSignal.any([
+        ...(context?.abortSignal ? [context.abortSignal] : []),
+        AbortSignal.timeout(30_000),
+      ]);
+      let savedPath: string | undefined;
+      const save = async (buffer: Buffer, source: string, ext: string) => {
+        savedPath = await saveBinary(buffer, source, ext, signal);
+        return savedPath;
+      };
       try {
-        await validateUrl(url);
-      } catch (err) {
-        return result(
-          `Refused to fetch ${url}: ${err instanceof Error ? err.message : String(err)}`,
-          true,
-        );
+        const { response, finalUrl } = await fetchValidatedUrl(url, signal);
+        if (!response.ok) {
+          await response.body?.cancel();
+          signal.throwIfAborted();
+          return result(`Failed to fetch ${url}: HTTP ${response.status} ${response.statusText}`, true);
+        }
+
+        const contentType = (response.headers.get('content-type') || '')
+          .toLowerCase()
+          .split(';')[0]!
+          .trim();
+
+        // Binary content types — stream with size limit
+        if (contentType === 'application/pdf') {
+          const buffer = await readResponseBytes(response, MAX_DOWNLOAD_SIZE, signal);
+          const output = await handlePdf(buffer, finalUrl, save);
+          signal.throwIfAborted();
+          return output;
+        }
+        if (contentType.startsWith('image/')) {
+          const buffer = await readResponseBytes(response, MAX_DOWNLOAD_SIZE, signal);
+          const output = await handleImage(buffer, finalUrl, contentType, save);
+          signal.throwIfAborted();
+          return output;
+        }
+
+        const text = await readResponseText(response, MAX_DOWNLOAD_SIZE, signal);
+        signal.throwIfAborted();
+        if (contentType.includes('html')) return handleHtml(text, finalUrl, prompt);
+        if (contentType === 'application/json' || contentType.endsWith('+json')) return handleJson(text, finalUrl);
+        return handleText(text, finalUrl);
+      } catch (error) {
+        if (signal.aborted) {
+          if (savedPath) await rm(savedPath, { force: true });
+          signal.throwIfAborted();
+        }
+        return result(`Failed to fetch ${url}: ${error instanceof Error ? error.message : String(error)}`, true);
       }
-
-      let response: Response;
-      try {
-        response = await fetch(url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; CraftAgent/1.0)',
-            Accept:
-              'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          },
-          redirect: 'follow',
-          signal: AbortSignal.timeout(30_000),
-        });
-      } catch (err) {
-        return result(
-          `Failed to fetch ${url}: ${err instanceof Error ? err.message : String(err)}`,
-          true,
-        );
-      }
-
-      if (!response.ok) {
-        return result(
-          `Failed to fetch ${url}: HTTP ${response.status} ${response.statusText}`,
-          true,
-        );
-      }
-
-      // Use the final URL after redirects for all output messages
-      const finalUrl = response.url || url;
-
-      const contentType = (response.headers.get('content-type') || '')
-        .toLowerCase()
-        .split(';')[0]!
-        .trim();
-
-      // Binary content types — stream with size limit
-      if (contentType === 'application/pdf') {
-        const buffer = await readResponseBytes(response, MAX_DOWNLOAD_SIZE);
-        return handlePdf(buffer, finalUrl, saveBinary);
-      }
-
-      if (contentType.startsWith('image/')) {
-        const buffer = await readResponseBytes(response, MAX_DOWNLOAD_SIZE);
-        return handleImage(buffer, finalUrl, contentType, saveBinary);
-      }
-
-      // Text content types — stream with size limit then decode
-      const text = await readResponseText(response, MAX_DOWNLOAD_SIZE);
-
-      if (contentType.includes('html')) {
-        return handleHtml(text, finalUrl, prompt);
-      }
-
-      if (
-        contentType === 'application/json' ||
-        contentType.endsWith('+json')
-      ) {
-        return handleJson(text, finalUrl);
-      }
-
-      return handleText(text, finalUrl);
     },
   });
 }

@@ -4,14 +4,10 @@
 import { existsSync } from 'node:fs'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { requireCraftSource } from './craft-source'
 
 const repoRoot = resolve(import.meta.dir, '..')
-const craftRoot = process.env.CRAFT_AGENT_SOURCE
-  ?? [
-    resolve(repoRoot, '..', 'craft-agents-oss'),
-    resolve(repoRoot, '..', '..', 'agents', 'craft-agents-oss'),
-  ].find(candidate => existsSync(candidate))
-  ?? resolve(repoRoot, '..', 'craft-agents-oss')
+const { root: craftRoot } = requireCraftSource(repoRoot)
 
 function trackedFiles(root: string): string[] {
   const result = Bun.spawnSync(['git', '-C', root, 'ls-files', '-z'], { stdout: 'pipe', stderr: 'pipe' })
@@ -100,7 +96,7 @@ const intentionalCaseReductions: Record<string, { upstream: number; retained: nu
   'apps/electron/src/renderer/hooks/__tests__/useSessionSearch.test.ts': { upstream: 9, retained: 6, reason: 'Four cases require excluded status/project metadata; retain unread independent windows and date pagination, with additional Lite unread collapse tests below.' },
   'packages/server-core/src/sessions/turn-usage.test.ts': { upstream: 9, retained: 3, reason: 'Retain Pi per-turn accumulation in the actual Lite manager; eight upstream Claude running-total/reset/fork-parent cases have no Pi backend state. Extra Lite occupancy and usage-free tests, and real SDK multi-call/turn/disk/restart/fork/child coverage in pi-usage-runtime.isolated.ts.' },
   "packages/server-core/src/sessions/session-completion.test.ts": { upstream: 9, retained: 2, reason: "Lite has no conductor completion listeners, activity subscriptions or workflow counting; cancelled turns, fallback abort and preservation of child sessions/background shells are tested, with real Pi Stop integration." },
-  'apps/electron/src/renderer/components/app-shell/chat-display/__tests__/new-chat-suggestions.test.ts': { upstream: 13, retained: 7, reason: 'Source ranking/email setup and source enabling excluded with Sources; custom cap/label/prompt, qualified/unqualified/unknown Skill mentions, no-mention and automatic fallback covered' },
+  'apps/electron/src/renderer/components/app-shell/chat-display/__tests__/new-chat-suggestions.test.ts': { upstream: 13, retained: 8, reason: 'Source ranking/email setup and source enabling excluded with Sources; custom cap/label/prompt, qualified/unqualified/unknown Skill mentions, no-mention and automatic fallback covered. Includes the added per-locale translated-prompt regression; counts are static test declarations, not runtime locale iterations.' },
   'packages/shared/src/agent/__tests__/tool-matching.test.ts': { upstream: 62, retained: 61, reason: 'Sources MCP matching excluded; Lite tool matching retained' },
   "packages/session-tools-core/src/tool-defs-filtering.test.ts": { upstream: 16, retained: 14, reason: "Decide and Source resource schema cases are excluded; Coding allowlist and Pi schema/browser flags are retained, with Source/project conditional case asserting Lite absence." },
   'packages/server-core/src/sessions/pi-retry-streaming.test.ts': { upstream: 4, retained: 2, reason: 'Lite forwards unbatched deltas and has no upstream delta-flush timers; discard and recovered persistence covered' },

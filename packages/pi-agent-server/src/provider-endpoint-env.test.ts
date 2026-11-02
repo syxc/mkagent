@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'bun:test';
 import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import { builtinModels } from '@earendil-works/pi-ai/providers/all';
 import { parseCloudflareGatewayUrl } from '../../shared/src/config/cloudflare-gateway.ts';
-import { providerEndpointEnv } from './provider-endpoint-env.ts';
+import { ProviderEndpointEnvironment, providerEndpointEnv } from './provider-endpoint-env.ts';
 
 describe('parseCloudflareGatewayUrl', () => {
   it('reads account and gateway ids from a gateway URL, with or without a provider suffix', () => {
@@ -16,6 +16,7 @@ describe('parseCloudflareGatewayUrl', () => {
     expect(parseCloudflareGatewayUrl('https://gateway.ai.cloudflare.com/v1/acc')).toBeNull();
     expect(parseCloudflareGatewayUrl('https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-id>')).toBeNull();
     expect(parseCloudflareGatewayUrl('not a url')).toBeNull();
+    expect(parseCloudflareGatewayUrl('https://gateway.ai.cloudflare.com/v1/%zz/gateway')).toBeNull();
   });
 });
 
@@ -29,7 +30,23 @@ describe('providerEndpointEnv', () => {
   it('is empty for other providers, a missing URL or an unusable gateway URL', () => {
     expect(providerEndpointEnv('openai', 'https://example.com')).toEqual({});
     expect(providerEndpointEnv('azure', undefined)).toEqual({});
+    expect(providerEndpointEnv('azure', 'not a URL')).toEqual({});
+    expect(providerEndpointEnv('azure', 'file:///fixture')).toEqual({});
     expect(providerEndpointEnv('cloudflare-ai-gateway', 'https://example.com/v1/a/b')).toEqual({});
+  });
+
+  it('removes owned values on invalidation and provider changes, preserving untouched inherited values', () => {
+    const env = { UNRELATED: 'preserved', CLOUDFLARE_ACCOUNT_ID: 'inherited' } as NodeJS.ProcessEnv;
+    const managed = new ProviderEndpointEnvironment(env);
+    managed.apply(providerEndpointEnv('azure', 'https://fixture.openai.azure.com'));
+    expect(env.AZURE_OPENAI_BASE_URL).toBe('https://fixture.openai.azure.com');
+    managed.apply(providerEndpointEnv('azure', 'invalid'));
+    expect(env.AZURE_OPENAI_BASE_URL).toBeUndefined();
+    expect(env.CLOUDFLARE_ACCOUNT_ID).toBe('inherited');
+    managed.apply(providerEndpointEnv('cloudflare-ai-gateway', 'https://gateway.ai.cloudflare.com/v1/account/gateway'));
+    expect(env.CLOUDFLARE_GATEWAY_ID).toBe('gateway');
+    managed.apply(providerEndpointEnv('openai', undefined));
+    expect(env).toEqual({ UNRELATED: 'preserved' });
   });
 });
 

@@ -15,8 +15,8 @@ describe('session branch rollback on preflight failure', () => {
       const script = `
         import { mkdirSync, writeFileSync } from 'node:fs';
         import { join } from 'node:path';
-        import { SessionManager } from ${JSON.stringify(SESSION_MANAGER_URL)};
-        import { createSession, listSessions, loadSession, saveSession } from '@mkagent/shared/sessions';
+        import { SessionManager, savePiTurnAnchor } from ${JSON.stringify(SESSION_MANAGER_URL)};
+        import { createSession, getSessionPath, listSessions, loadSession, saveSession } from '@mkagent/shared/sessions';
 
         const configDir = process.env.CONFIG_DIR;
         const workspaceRoot = join(configDir, 'workspaces', 'default');
@@ -38,6 +38,7 @@ describe('session branch rollback on preflight failure', () => {
           { id: 'assistant-1', role: 'assistant', content: 'answer', timestamp: 2 },
         ];
         await saveSession(source);
+        await savePiTurnAnchor(getSessionPath(workspaceRoot, source.id), 'assistant-1', 'parent-anchor');
 
         const manager = new SessionManager();
         await manager.initialize();

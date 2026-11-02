@@ -293,9 +293,12 @@ export class PiAgent extends BaseAgent {
 
   // Pending runtime config updates (custom endpoint model capability refresh)
   private pendingRuntimeConfigUpdates: Map<string, {
-    resolve: (updated: boolean) => void;
+    resolve: (result: { updated: boolean; miniModel?: string }) => void;
     reject: (error: Error) => void;
   }> = new Map();
+  private runtimeConfigUpdateQueue: Promise<void> = Promise.resolve();
+  private runtimeConfigUpdatesPending = 0;
+  private modelSelectionGeneration = 0;
 
   // Metadata captured before PreToolUse stripping, keyed by toolCallId.
   // This provides a deterministic bridge when side-channel metadata store misses.
@@ -1531,7 +1534,7 @@ export class PiAgent extends BaseAgent {
       return;
     }
 
-    pending.resolve(Boolean(msg.updated ?? true));
+    pending.resolve({ updated: Boolean(msg.updated ?? true), miniModel: typeof msg.miniModel === 'string' ? msg.miniModel : undefined });
   }
 
   /**
@@ -1696,14 +1699,14 @@ export class PiAgent extends BaseAgent {
   /**
    * Ask subprocess to refresh runtime-affecting custom endpoint config in-place.
    */
-  private async requestRuntimeConfigUpdate(update: BackendRuntimeUpdate): Promise<boolean> {
-    if (!this.subprocess) return true;
+  private async requestRuntimeConfigUpdate(update: BackendRuntimeUpdate): Promise<{ updated: boolean; miniModel?: string }> {
+    if (!this.subprocess) return { updated: false };
 
     const id = `runtime-config-${++this.rpcIdCounter}`;
     const timeoutMs = 15_000;
     const runtime = update.runtime ?? {};
 
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<{ updated: boolean; miniModel?: string }>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pendingRuntimeConfigUpdates.delete(id);
         reject(new Error(`update_runtime_config timed out after ${Math.floor(timeoutMs / 1000)}s`));
@@ -1723,6 +1726,7 @@ export class PiAgent extends BaseAgent {
       this.send({
         type: 'update_runtime_config',
         id,
+        deadline: Date.now() + timeoutMs,
         model: update.model,
         providerType: update.providerType,
         authType: update.authType,
@@ -2013,45 +2017,64 @@ export class PiAgent extends BaseAgent {
   // ============================================================
 
   async updateRuntimeConfig(update: BackendRuntimeUpdate): Promise<boolean> {
-    const previousModel = this.getModel();
-    const previousRuntime = getBackendRuntime(this.config);
-
-    this.config = {
-      ...this.config,
-      providerType: update.providerType ?? this.config.providerType,
-      authType: update.authType ?? this.config.authType,
-      model: update.model,
-      runtime: {
-        ...previousRuntime,
-        ...(update.runtime ?? {}),
-      },
-    };
-    this._model = update.model;
-
-    if (!this.subprocess) {
-      this.debug(`Runtime config updated locally (no subprocess): ${previousModel} → ${update.model}`);
-      return true;
-    }
-
-    const updated = await this.requestRuntimeConfigUpdate({
-      ...update,
-      providerType: this.config.providerType,
-      authType: this.config.authType,
-      runtime: getBackendRuntime(this.config),
+    const selectionGeneration = this.modelSelectionGeneration;
+    this.runtimeConfigUpdatesPending++;
+    const operation = this.runtimeConfigUpdateQueue.then(async () => {
+      const candidate = {
+        ...this.config,
+        providerType: update.providerType ?? this.config.providerType,
+        authType: update.authType ?? this.config.authType,
+        model: update.model,
+        runtime: { ...getBackendRuntime(this.config), ...(update.runtime ?? {}) },
+      };
+      // Finish an existing startup under its original config before sending the candidate.
+      await this.ensureSubprocess();
+      const child = this.subprocess;
+      if (!child) return false;
+      try {
+        const result = await this.requestRuntimeConfigUpdate({
+          ...update, providerType: candidate.providerType, authType: candidate.authType,
+          runtime: getBackendRuntime(candidate),
+        });
+        if (!result.updated || this.subprocess !== child) return false;
+        const model = selectionGeneration === this.modelSelectionGeneration ? update.model : this.getModel();
+        this.config = { ...candidate, model, ...(result.miniModel ? { miniModel: result.miniModel } : {}) };
+        this._model = model;
+        if (result.miniModel) this.adapter.setMiniModel(result.miniModel);
+        this.debug(`Runtime config refreshed in subprocess: ${update.model}`);
+        return true;
+      } catch (error) {
+        this.debug(`Runtime config rejected: ${error instanceof Error ? error.message : String(error)}`);
+        return false;
+      }
     });
-    this.debug(`Runtime config refreshed in subprocess: ${previousModel} → ${update.model}`);
-    return updated;
+    this.runtimeConfigUpdateQueue = operation.then(() => {}, () => {});
+    try {
+      return await operation;
+    } finally {
+      this.runtimeConfigUpdatesPending--;
+    }
   }
 
   override setModel(model: string): void {
     const previousModel = this.getModel();
+    this.modelSelectionGeneration++;
     super.setModel(model);
-    // Forward to subprocess so it uses the new model on next turn
-    if (this.subprocess) {
-      this.debug(`Forwarding model change to subprocess: ${previousModel} → ${model}`);
-      this.send({ type: 'set_model', model });
+    const forward = () => {
+      if (this.subprocess) {
+        this.debug(`Forwarding model change to subprocess: ${previousModel} → ${model}`);
+        this.send({ type: 'set_model', model });
+      } else {
+        this.debug(`Model updated but no subprocess to forward to: ${previousModel} → ${model}`);
+      }
+    };
+    // A user choice made after an update must also reach the child after that update.
+    if (this.runtimeConfigUpdatesPending) {
+      this.runtimeConfigUpdateQueue = this.runtimeConfigUpdateQueue.then(forward).catch(error => {
+        this.debug(`Model forwarding failed: ${error instanceof Error ? error.message : String(error)}`);
+      });
     } else {
-      this.debug(`Model updated but no subprocess to forward to: ${previousModel} → ${model}`);
+      forward();
     }
   }
 

@@ -7,7 +7,7 @@
 import { afterAll, describe, expect, it } from 'bun:test';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync, utimesSync, writeFileSync } from 'node:fs';
 import { Database } from 'bun:sqlite';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -43,6 +43,7 @@ import { createSearchTool } from './tools/search/create-search-tool.ts';
 import { createWebFetchTool } from './tools/web-fetch.ts';
 import { createCodemodeExtensionFor } from './tools/codemode.ts';
 import { createProxyTool } from './tools/proxy.ts';
+import { restoreSessionBundleFiles } from '@mkagent/shared/sessions';
 import { serializeSession } from '../../shared/src/sessions/bundle.ts';
 import { writeSessionJsonl } from '../../shared/src/sessions/jsonl.ts';
 import type { StoredSession } from '../../shared/src/sessions/types.ts';
@@ -844,6 +845,182 @@ describe('DurableKernel end-to-end', () => {
       await setup.kernel.close();
     }
   });
+
+  for (const backend of ['sqlite', 'jsonl'] as const) it(`restores ${backend} model attachment paths from a portable bundle`, async () => {
+    const workspace = scratch();
+    const sessionId = 'model-file-export';
+    const source = join(workspace, 'sessions', sessionId);
+    mkdirSync(join(source, 'attachments'), { recursive: true });
+    const attachment = join(source, 'attachments', 'document.pdf');
+    writeFileSync(attachment, Buffer.from([37, 80, 68, 70, 0, 255]));
+    mkdirSync(join(source, '.pi-sessions'));
+    writeFileSync(join(source, '.pi-sessions', 'legacy.jsonl'), [
+      { type: 'session', version: 3, id: 'edit-source' },
+      { type: 'message', id: 'before', parentId: null, message: { role: 'user', content: `BEFORE_EDIT ${attachment}`, timestamp: 1 } },
+      { type: 'context_edit', id: 'edit', parentId: 'before', targetId: 'before', replacement: { content: `EDIT_PATH ${attachment}` } },
+    ].map(record => JSON.stringify(record)).join('\n') + '\n');
+    if (backend === 'jsonl') {
+      const initial = await openNodeJsonlStorage(join(source, 'durable-store'), BACKGROUND_CONTEXT);
+      await initial.close(BACKGROUND_CONTEXT);
+    }
+    const original = createKernel({ sessionPath: source, script: [textEvents('source answer')] });
+    await original.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
+    await original.kernel.submitPrompt(`Read [Stored at: ${attachment}]`);
+    await original.waitFor('agent_end');
+    await original.kernel.close();
+    writeSessionJsonl(join(source, 'session.jsonl'), {
+      id: sessionId, workspaceRootPath: workspace, createdAt: 1, lastUsedAt: 1,
+      tokenUsage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, contextTokens: 0, costUsd: 0 },
+      messages: [{ id: 'display', type: 'user', content: 'DISPLAY-ONLY', timestamp: 1 }],
+    } as StoredSession);
+    const bundle = serializeSession(workspace, sessionId)!;
+    expect(bundle).not.toBeNull();
+    const originalBundle = JSON.stringify(bundle);
+    const target = scratch();
+    restoreSessionBundleFiles(bundle, target);
+    const secondTarget = scratch();
+    restoreSessionBundleFiles(bundle, secondTarget);
+    expect(JSON.stringify(bundle)).toBe(originalBundle);
+    rmSync(source, { recursive: true });
+    const resumed = createKernel({ sessionPath: target, script: [textEvents('restored')] });
+    try {
+      await resumed.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
+      await resumed.kernel.submitPrompt('continue');
+      await resumed.waitFor('agent_end');
+      const context = JSON.stringify(resumed.calls[0]!.messages);
+      expect(context).toContain(join(target, 'attachments', 'document.pdf'));
+      expect(context).toContain(`EDIT_PATH ${join(target, 'attachments', 'document.pdf')}`);
+      expect(context).not.toContain(attachment);
+      expect(readFileSync(join(target, 'attachments', 'document.pdf'))).toEqual(Buffer.from([37, 80, 68, 70, 0, 255]));
+    } finally {
+      await resumed.kernel.close();
+    }
+    const second = createKernel({ sessionPath: secondTarget, script: [textEvents('second import')] });
+    try {
+      await second.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
+      await second.kernel.submitPrompt('continue');
+      await second.waitFor('agent_end');
+      const context = JSON.stringify(second.calls[0]!.messages);
+      expect(context).toContain(`EDIT_PATH ${join(secondTarget, 'attachments', 'document.pdf')}`);
+      expect(context).not.toContain(target);
+      expect(context).not.toContain(attachment);
+    } finally {
+      await second.kernel.close();
+    }
+  });
+
+  for (const backend of ['sqlite', 'jsonl'] as const) it(`preserves ${backend} model attachment paths and files in a branch`, async () => {
+    const parent = scratch();
+    const childPath = scratch();
+    mkdirSync(join(parent, 'attachments'));
+    const attachment = join(parent, 'attachments', 'retained.txt');
+    writeFileSync(attachment, 'retained bytes');
+    if (backend === 'jsonl') {
+      const initial = await openNodeJsonlStorage(join(parent, 'durable-store'), BACKGROUND_CONTEXT);
+      await initial.close(BACKGROUND_CONTEXT);
+    }
+    const source = createKernel({ sessionPath: parent, script: [textEvents('first answer'), textEvents('later answer')] });
+    await source.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
+    await source.kernel.submitPrompt(`Read [Stored at: ${attachment}]`);
+    await source.waitFor('agent_end');
+    const anchor = String(source.events.find(event => event.type === 'pi_turn_anchor')!.sdkTurnAnchor);
+    writeFileSync(join(parent, 'attachments', 'later.txt'), 'later bytes');
+    await source.kernel.submitPrompt(`LATER_ONLY ${join(parent, 'attachments', 'later.txt')}`);
+    await source.waitFor('agent_end', 2);
+    await source.kernel.close();
+    const before = Object.fromEntries(readdirSync(join(parent, 'durable-store')).map(name =>
+      [name, readFileSync(join(parent, 'durable-store', name))]));
+    let child = createKernel({ sessionPath: childPath, script: [textEvents('branch answer')] });
+    try {
+      await child.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 },
+        branchFromSessionPath: parent, branchFromSdkTurnId: anchor });
+      expect(readFileSync(attachment, 'utf8')).toBe('retained bytes');
+      expect(Object.fromEntries(readdirSync(join(parent, 'durable-store')).map(name =>
+        [name, readFileSync(join(parent, 'durable-store', name))]))).toEqual(before);
+      expect(existsSync(join(childPath, 'attachments', 'retained.txt'))).toBe(true);
+      expect(existsSync(join(childPath, 'attachments', 'later.txt'))).toBe(false);
+      rmSync(parent, { recursive: true });
+      await child.kernel.close();
+      child = createKernel({ sessionPath: childPath, script: [textEvents('branch answer')] });
+      await child.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
+      await child.kernel.submitPrompt('continue branch');
+      await child.waitFor('agent_end');
+      const context = JSON.stringify(child.calls[0]!.messages);
+      expect(context).toContain(join(childPath, 'attachments', 'retained.txt'));
+      expect(context).not.toContain(attachment);
+      expect(context).not.toContain('LATER_ONLY');
+    } finally {
+      await child.kernel.close();
+    }
+  });
+
+  it('restores uninitialized legacy SDK context and branches from a portable bundle', async () => {
+    const workspace = scratch();
+    const sessionId = 'legacy-export';
+    const source = join(workspace, 'sessions', sessionId);
+    mkdirSync(join(source, '.pi-sessions'), { recursive: true });
+    mkdirSync(join(source, 'attachments'));
+    const attachment = join(source, 'attachments', 'legacy.txt');
+    writeFileSync(attachment, 'legacy bytes');
+    writeSessionJsonl(join(source, 'session.jsonl'), {
+      id: sessionId, workspaceRootPath: workspace, createdAt: 1, lastUsedAt: 1, sdkSessionId: 'old-sdk',
+      tokenUsage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, contextTokens: 0, costUsd: 0 },
+      messages: [{ id: 'display', type: 'user', content: 'DISPLAY-ONLY', timestamp: 1 }],
+    } as StoredSession);
+    const legacy = [
+      { type: 'session', version: 3, id: 'old-sdk' },
+      { type: 'message', id: 'user', parentId: null, message: { role: 'user', content: `SDK-ONLY-USER ${attachment}`, timestamp: 1 } },
+      { type: 'message', id: 'inactive', parentId: 'user', message: { role: 'user', content: 'INACTIVE-LEGACY-BRANCH', timestamp: 2 } },
+      { type: 'message', id: 'answer', parentId: 'user', message: assistantMessage([{ type: 'text', text: 'SDK-ONLY-ANSWER' }], 'stop') },
+      { type: 'context_edit', id: 'edit', parentId: 'answer', targetId: 'user',
+        replacement: { content: `SDK-ONLY-USER edited ${attachment}` } },
+    ].map(record => JSON.stringify(record)).join('\n') + '\n';
+    const older = join(source, '.pi-sessions', 'older.jsonl');
+    writeFileSync(older, JSON.stringify({ type: 'session', version: 3, id: 'older-sdk' }) + '\n'
+      + JSON.stringify({ type: 'message', id: 'old', message: { role: 'user', content: 'NOT-THE-LATEST', timestamp: 1 } }) + '\n');
+    utimesSync(older, 1, 1);
+    writeFileSync(join(source, '.pi-sessions', 'original.jsonl'), legacy);
+    const bundle = serializeSession(workspace, sessionId);
+    expect(bundle).not.toBeNull();
+    expect(readFileSync(join(source, '.pi-sessions', 'original.jsonl'), 'utf8')).toBe(legacy);
+    expect(existsSync(join(source, 'durable-store'))).toBe(false);
+    const restoredPath = join(scratch(), 'restored');
+    mkdirSync(restoredPath);
+    restoreSessionBundleFiles(bundle!, restoredPath);
+    rmSync(source, { recursive: true });
+    const resumed = createKernel({ sessionPath: restoredPath, script: [textEvents('continued')] });
+    try {
+      await resumed.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
+      await resumed.kernel.submitPrompt('continue');
+      await resumed.waitFor('agent_end');
+      const context = JSON.stringify(resumed.calls[0]!.messages);
+      expect(context).toContain('SDK-ONLY-USER');
+      expect(context).toContain('SDK-ONLY-ANSWER');
+      expect(context).toContain(join(restoredPath, 'attachments', 'legacy.txt'));
+      expect(context).not.toContain(attachment);
+      expect(context.indexOf('SDK-ONLY-USER')).toBeLessThan(context.indexOf('SDK-ONLY-ANSWER'));
+      expect(context).not.toContain('DISPLAY-ONLY');
+      expect(context).not.toContain('INACTIVE-LEGACY-BRANCH');
+      expect(context).not.toContain('NOT-THE-LATEST');
+    } finally {
+      await resumed.kernel.close();
+    }
+    const childPath = join(scratch(), 'child');
+    const child = createKernel({ sessionPath: childPath, script: [textEvents('branched')] });
+    try {
+      await child.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 },
+        branchFromSessionPath: restoredPath, branchFromSdkTurnId: 'inactive' });
+      await child.kernel.submitPrompt('branch');
+      await child.waitFor('agent_end');
+      const context = JSON.stringify(child.calls[0]!.messages);
+      expect(context).toContain('SDK-ONLY-USER');
+      expect(context).toContain('INACTIVE-LEGACY-BRANCH');
+      expect(context).toContain(join(childPath, 'attachments', 'legacy.txt'));
+      expect(context).not.toContain('SDK-ONLY-ANSWER');
+    } finally {
+      await child.kernel.close();
+    }
+  }, 10_000);
 
   for (const storage of ['sqlite', 'jsonl'] as const) it(`does not export a browser password from the durable ${storage} store`, async () => {
     const workspace = scratch();
@@ -2703,7 +2880,7 @@ describe('DurableKernel end-to-end', () => {
   const branchModel = { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 };
 
   for (const backend of ['sqlite', 'jsonl'] as const) for (const cutoff of [true, false]) {
-    it(`isolates inherited running work and queued submissions in a new ${backend} branch${cutoff ? ' at an anchor' : ' without an anchor'}`, async () => {
+    it(cutoff ? `isolates inherited running work and queued submissions in a new ${backend} branch at an anchor` : `rejects an unanchored ${backend} branch before copying running work`, async () => {
       const parentPath = scratch();
       if (backend === 'jsonl') {
         mkdirSync(join(parentPath, 'durable-store'));
@@ -2733,6 +2910,17 @@ describe('DurableKernel end-to-end', () => {
         expect((await queuedWrite.status(BACKGROUND_CONTEXT)).status).toBe('queued');
         const inbox = await parentHarness.snapshot(InboxDoc, root.id, BACKGROUND_CONTEXT);
         const branch = { model: branchModel, branchFromSessionPath: parentPath, ...(cutoff ? { branchFromSdkTurnId: anchor } : {}) };
+        if (!cutoff) {
+          child = createKernel(childOptions());
+          await expect(child.kernel.open(branch)).rejects.toThrow('turn anchor is required');
+          expect(child.calls).toHaveLength(0);
+          expect(executions).toBe(0);
+          expect(existsSync(join(childPath, 'durable-store'))).toBe(false);
+          expect(existsSync(join(childPath, '.durable-branch-pending'))).toBe(false);
+          expect(await parentHarness.inspect(BACKGROUND_CONTEXT)).toEqual(inspection);
+          expect(await parentHarness.snapshot(InboxDoc, root.id, BACKGROUND_CONTEXT)).toEqual(inbox);
+          return;
+        }
         if (cutoff) {
           const failed = createKernel(childOptions());
           try {
@@ -3079,7 +3267,7 @@ describe('DurableKernel end-to-end', () => {
       await parent.kernel.submitPrompt('later question');
       await parent.waitForWhere(() => parent.events.filter(event => event.type === 'agent_end').length === 2);
 
-      for (const invalidAnchor of ['missing-anchor', '99999999']) {
+      for (const invalidAnchor of [undefined, 'missing-anchor', '99999999']) {
         const childPath = join(scratch(), 'child');
         const failed = createKernel({ sessionPath: childPath, script: [] });
         try {
@@ -3224,11 +3412,14 @@ describe('DurableKernel end-to-end', () => {
   for (const backend of ['sqlite', 'jsonl'] as const) for (const partial of [false, true]) for (const missingSidecar of [false, true]) it(`completes a live ${partial ? 'partially' : 'fully'} migrated ${backend} parent in the child (${missingSidecar ? 'missing' : 'present'} id map) before forking an inactive anchor`, async () => {
     const parent = scratch();
     const parentStore = join(parent, 'durable-store');
+    mkdirSync(join(parent, 'attachments'));
+    const attachment = join(parent, 'attachments', 'inactive.txt');
+    writeFileSync(attachment, 'inactive bytes');
     mkdirSync(join(parent, '.pi-sessions'), { recursive: true });
     const transcript = [
       { type: 'session', id: 's-1', version: 3 },
       { type: 'message', id: 'root', parentId: null, message: { role: 'user', content: 'shared ancestor', timestamp: 1 } },
-      { type: 'message', id: 'old', parentId: 'root', message: { role: 'user', content: 'inactive anchor', timestamp: 2 } },
+      { type: 'message', id: 'old', parentId: 'root', message: { role: 'user', content: `inactive anchor ${attachment}`, timestamp: 2 } },
       { type: 'message', id: 'old-next', parentId: 'old', message: { role: 'user', content: 'past inactive anchor', timestamp: 3 } },
       { type: 'message', id: 'new', parentId: 'root', message: { role: 'user', content: 'active branch', timestamp: 4 } },
     ];
@@ -3283,6 +3474,9 @@ describe('DurableKernel end-to-end', () => {
       const messages = JSON.stringify(setup.calls[0]!.messages);
       expect(messages).toContain('shared ancestor');
       expect(messages).toContain('inactive anchor');
+      expect(messages).toContain(join(childPath, 'attachments', 'inactive.txt'));
+      expect(messages).not.toContain(attachment);
+      expect(readFileSync(join(childPath, 'attachments', 'inactive.txt'), 'utf8')).toBe('inactive bytes');
       expect(messages).not.toContain('past inactive anchor');
       expect(messages).not.toContain('active branch');
       expect(await storage.task(task.id, BACKGROUND_CONTEXT)).toEqual(task);

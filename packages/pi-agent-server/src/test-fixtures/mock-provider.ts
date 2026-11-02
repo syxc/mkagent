@@ -23,11 +23,37 @@ globalThis.fetch = Object.assign(async (input: string | URL | Request, init?: Re
   if (url.hostname === 'chatgpt.com') {
     throw new Error(refreshCalls > 1 ? 'TEST_OAUTH_REFRESHED_TWICE' : 'TEST_OAUTH_FIRST_REQUEST');
   }
+  if (process.env.TEST_SEARCH_CANCEL && url.hostname === 'api.openai.com') {
+    process.stderr.write('TEST_SEARCH_STARTED\n');
+    return new Promise<Response>((_resolve, reject) => {
+      const timer = setTimeout(() => {
+        process.stderr.write('TEST_SEARCH_NOT_ABORTED\n');
+        reject(new Error('Search was not aborted'));
+      }, 500);
+      request.signal.addEventListener('abort', () => {
+        clearTimeout(timer);
+        process.stderr.write('TEST_SEARCH_ABORTED\n');
+        reject(request.signal.reason);
+      }, { once: true });
+    });
+  }
   if (url.hostname !== 'fake-provider.test') throw new Error(`OFFLINE_FETCH_BLOCKED: ${request.url}`);
   const body = await request.json() as { model?: string; tools?: Array<{ function?: { name?: string } }> };
+  if (process.env.TEST_ALLOW_UTILITY) {
+    process.stderr.write(`TEST_PROVIDER_MODEL:${body.model}\n`);
+    if (!body.tools?.length) {
+      const chunk = { id: 'utility', object: 'chat.completion.chunk', choices: [{ index: 0, delta: { content: `fixture utility ${body.model}` }, finish_reason: 'stop' }] };
+      return new Response(`data: ${JSON.stringify(chunk)}\n\ndata: [DONE]\n\n`, { headers: { 'content-type': 'text/event-stream' } });
+    }
+  }
   if (process.env.TEST_EXPECT_MODEL && body.model !== process.env.TEST_EXPECT_MODEL) throw new Error('TEST_WRONG_MODEL');
   if (!body.tools?.some(tool => tool.function?.name === 'codemode')) throw new Error('codemode was not offered');
-  const delta = calls++ === 0
+  const firstCall = calls++ === 0;
+  const delta = process.env.TEST_SEARCH_CANCEL && firstCall
+    ? { tool_calls: [{ index: 0, id: 'search-cancel', type: 'function', function: {
+      name: 'web_search', arguments: JSON.stringify({ query: 'fixture' }),
+    } }] }
+    : firstCall
     ? { tool_calls: [{ index: 0, id: 'code-mcp', type: 'function', function: {
       name: 'codemode', arguments: JSON.stringify({ code: 'text(await tools.mcp__test__hello({})); try { await models.generateImages(null, { input: [{ type: "text", text: "fixture" }] }); } catch (_) {}' }),
     } }] }

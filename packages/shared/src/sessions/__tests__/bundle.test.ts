@@ -189,8 +189,78 @@ describe('serializeSession', () => {
     const bundle = serializeSession(tmpDir, session.id)
     expect(bundle).not.toBeNull()
     expect(bundle!.session.messages).toEqual(session.messages)
-    expect(bundle!.files.map(file => file.relativePath)).toEqual(['notes.md'])
+    expect(bundle!.files.map(file => file.relativePath).sort()).toEqual(['.pi-sessions/legacy.jsonl', 'notes.md'])
   })
+
+  it('exports sanitized legacy SDK history without changing the original transcript', () => {
+    const session = makeStoredSession()
+    const sessionDir = setupSessionDir(tmpDir, session)
+    const legacy = join(sessionDir, '.pi-sessions')
+    mkdirSync(legacy)
+    const secret = 'fixture-legacy-password'
+    const records = [
+      { type: 'session', id: 'legacy', version: 3 },
+      { type: 'message', id: 'ui-only', message: { role: 'bashExecution', command: 'echo fixture', output: 'fixture' } },
+      { type: 'message', id: 'call', parentId: null, message: { role: 'assistant', content: [{
+        type: 'toolCall', id: 'browser', name: 'browser_tool', arguments: { command: `fill @e2 ${secret}` },
+      }] } },
+      { type: 'message', id: 'result', parentId: 'call', message: { role: 'toolResult', toolCallId: 'browser',
+        toolName: 'browser_tool', content: [{ type: 'text', text: 'Filled password field @e2 (23 characters)' }] } },
+    ]
+    const original = records.map(record => JSON.stringify(record)).join('\n') + '\n'
+    writeFileSync(join(legacy, 'original.jsonl'), original)
+    const bundle = serializeSession(tmpDir, session.id)
+    expect(bundle).not.toBeNull()
+    const history = bundle!.files.find(file => file.relativePath === '.pi-sessions/legacy.jsonl')
+    expect(history).toBeDefined()
+    const restored = Buffer.from(history!.contentBase64, 'base64').toString()
+    expect(restored).toContain('fill @e2 ')
+    expect(restored).not.toContain(secret)
+    expect(readFileSync(join(legacy, 'original.jsonl'), 'utf8')).toBe(original)
+    expect(existsSync(join(sessionDir, 'durable-store'))).toBe(false)
+    session.messages[0]!.content = secret
+    writeSessionJsonl(join(sessionDir, 'session.jsonl'), session)
+    expect(serializeSession(tmpDir, session.id)).toBeNull()
+  })
+
+  for (const kind of ['invalid-json', 'missing-parent', 'cycle', 'duplicate-id', 'invalid-message', 'null-block', 'missing-text',
+    'bad-image', 'invalid-custom-message', 'invalid-context-edit', 'non-model-edit', 'tui-edit',
+    'edit-of-edit', 'off-branch-edit', 'symlink', 'linked-root'] as const) {
+    it(`rejects unsafe legacy export: ${kind}`, () => {
+      const session = makeStoredSession()
+      const sessionDir = setupSessionDir(tmpDir, session)
+      const legacy = join(sessionDir, '.pi-sessions')
+      if (kind === 'linked-root') {
+        symlinkSync(join(tmpDir, 'missing-legacy'), legacy, 'dir')
+      } else {
+        mkdirSync(legacy)
+        const root = { type: 'session', id: 'legacy', version: 3 }
+        const message = { type: 'message', id: 'm1', message: { role: 'user', content: 'retained', timestamp: 1 } }
+        const records = [
+          root,
+          ...(kind === 'missing-parent' ? [{ ...message, parentId: 'missing' }]
+            : kind === 'cycle' ? [{ ...message, parentId: 'm2' }, { ...message, id: 'm2', parentId: 'm1' }]
+            : kind === 'duplicate-id' ? [message, message]
+            : kind === 'invalid-message' ? [{ type: 'message', id: 'm1', message: {} }]
+            : kind === 'null-block' ? [{ ...message, message: { role: 'user', content: [null] } }]
+            : kind === 'missing-text' ? [{ ...message, message: { role: 'user', content: [{ type: 'text' }] } }]
+            : kind === 'bad-image' ? [{ ...message, message: { role: 'user', content: [{ type: 'image', data: 'fixture' }] } }]
+            : kind === 'invalid-custom-message' ? [{ type: 'custom_message', id: 'm1', content: [null] }]
+            : kind === 'invalid-context-edit' ? [message, { type: 'context_edit', id: 'edit', targetId: 'm1', replacement: { content: [null] } }]
+            : kind === 'non-model-edit' ? [{ type: 'usage', id: 'm1' }, { type: 'context_edit', id: 'edit', targetId: 'm1', replacement: null }]
+            : kind === 'tui-edit' ? [{ ...message, message: { role: 'bashExecution' } }, { type: 'context_edit', id: 'edit', targetId: 'm1', replacement: null }]
+            : kind === 'edit-of-edit' ? [message, { type: 'context_edit', id: 'edit', targetId: 'm1', replacement: null },
+              { type: 'context_edit', id: 'edit2', targetId: 'edit', replacement: null }]
+            : kind === 'off-branch-edit' ? [{ ...message, parentId: null }, { ...message, id: 'other', parentId: 'm1' },
+              { ...message, id: 'active', parentId: 'm1' }, { type: 'context_edit', id: 'edit', parentId: 'active', targetId: 'other', replacement: null }]
+            : [message]),
+        ]
+        if (kind === 'symlink') symlinkSync(join(tmpDir, 'missing-history.jsonl'), join(legacy, 'original.jsonl'))
+        else writeFileSync(join(legacy, 'original.jsonl'), records.map(record => JSON.stringify(record)).join('\n') + '\n' + (kind === 'invalid-json' ? '{broken}\n' : ''))
+      }
+      expect(serializeSession(tmpDir, session.id)).toBeNull()
+    })
+  }
 
   it('includes attachment files in bundle', () => {
     const session = makeStoredSession()

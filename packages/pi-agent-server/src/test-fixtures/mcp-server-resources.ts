@@ -14,7 +14,8 @@ for await (const line of lines) {
       };
       break;
     case 'tools/list':
-      result = { tools: [{ name: 'hello', description: 'Return a greeting', inputSchema: { type: 'object', properties: {}, additionalProperties: false } }] };
+      result = { tools: (process.argv.includes('--prototype-tools') ? ['hello', 'constructor', 'toString', '__proto__'] : ['hello'])
+        .map(name => ({ name, description: 'Return a greeting', inputSchema: { type: 'object', properties: {}, additionalProperties: false } })) };
       break;
     case 'resources/list':
       result = { resources: [] };

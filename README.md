@@ -94,7 +94,7 @@ be isolated for development or testing with `CONFIG_DIR=/path/to/directory`.
 | `bun run server:prod` | Build and start the headless server with WebUI |
 | `bun run cli:build` | Build the CLI bundle |
 | `bun run test` | Run unit and isolated tests |
-| `bun run validate:ci` | Run the full type, test, document-tool, and localization gate |
+| `bun run validate:ci` | Check all types, selected shared tests, document tools, and localization |
 
 More commands and environment variables are documented in the
 [development guide](./docs/development.md).
@@ -160,7 +160,9 @@ Use [GitHub Issues](https://github.com/MkThingsHQ/mkagent/issues) for bugs and f
 
 MkAgent started from selected architecture and code in
 [Craft Agents OSS](https://github.com/craft-ai-agents/craft-agents-oss) `v0.12.1`
-(`d7592c481216`) and continues with an independent Git history and product boundary. MkAgent is not
+(`d7592c481216`) and continues with an independent Git history and product boundary.
+The current selective-sync baseline is `v0.15.6` (`8df01c5d0ac7`); see
+[upstream synchronization](./docs/upstream-sync.md). MkAgent is not
 affiliated with or endorsed by the upstream project. See [NOTICE](./NOTICE) for attribution and the
 [comparison guide](./docs/comparison-with-craft.md) for the current differences.
 

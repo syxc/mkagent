@@ -36,6 +36,17 @@ git -C /tmp/craft-v0156 checkout --detach 8df01c5d0ac73c35add5954e6f190ce038d358
 export CRAFT_AGENT_SOURCE=/tmp/craft-v0156
 ```
 
+The UI sync, test coverage, and source reuse checks use this same reference. `CRAFT_AGENT_SOURCE` takes priority; when it is unset, the scripts try `../craft-agents-oss`, then `../../agents/craft-agents-oss`, relative to the MkAgent repository root. An empty variable is an error. The path must be the Git checkout root, HEAD must match `scripts/craft-source-overrides.json#baselineCommit`, and the renderer directory must exist. Keep the reference checkout clean and read-only after preparation.
+
+Run the checks from the MkAgent repository:
+
+```bash
+bun run lint
+bun run audit:craft-reuse
+```
+
+`bun run lint` includes UI sync, test coverage classification, and Electron/shared/UI ESLint. `bun run audit:craft-reuse` verifies source hashes and reviewed differences separately. Neither command is part of `validate:ci`.
+
 When upstream publishes a new tag worth evaluating:
 
 1. Record the new tag and commit: `git -C ../craft-agents-oss rev-parse HEAD && git -C ../craft-agents-oss describe --tags --always`.
@@ -124,6 +135,7 @@ These are recorded as Lite-boundary deletions in [`comparison-with-craft.md`](./
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
+| `Craft reference check failed` | Missing or invalid checkout path, incomplete checkout, or wrong HEAD | Prepare the independent reference above and set `CRAFT_AGENT_SOURCE` to its root at the pinned commit |
 | `audit:craft-reuse` reports a file diverged unexpectedly | You forgot to refresh override hashes after a seam change | regenerate `scripts/craft-source-overrides.json`, audit the diff before accepting |
 | `lint:craft-test-coverage` shows a "missing" tag | A Craft test moved or was added without classification | update the seam classification in `scripts/check-craft-test-coverage.ts` |
 | Type error in `apps/electron/src/main` only after a sync | Upstream introduced a new env var or platform helper | confirm it survives the Lite seam; document before commit |

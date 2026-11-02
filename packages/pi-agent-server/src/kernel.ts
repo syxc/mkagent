@@ -47,6 +47,8 @@ import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { findMostRecentSessionFile, migrateParentStore, migrateLegacySession, readEntryIdMap, readLegacyBranchConversation } from './migrate.ts';
 import { compactionReserveFor } from './compaction-reserve.ts';
 import { CacheWarmer } from './cache-warmer.ts';
+import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent/shared/sessions';
+import { rewriteStoredModelHistory } from '@mkagent/shared/sessions/model-history-paths';
 
 /**
  * Main-chat retry/stream policy, mirroring the old 1.1.0 main-chat settings
@@ -190,6 +192,9 @@ export class DurableKernel {
     let ownsPendingBranch = false;
     try {
       if (branchFrom && !existsSync(this.storeDir) && !legacyChild) {
+        if (!config.branchFromSdkTurnId) {
+          throw new Error('Pi branch preflight failed: a branch turn anchor is required');
+        }
         // A parent that has never opened under this kernel gets its legacy
         // transcript converted in place first, so the copy carries full context.
         await migrateParentStore(branchFrom, this.options.hooks.debugLog);
@@ -235,6 +240,10 @@ export class DurableKernel {
         }
       }
 
+      if (copiedParent) {
+        rewriteStoredModelHistory(this.options.sessionPath,
+          value => remapSessionFileReferences(value, branchFrom!, this.options.sessionPath));
+      }
       await this.openStore(copiedParent);
 
       // Complete any deferred parent migration in the copy before resolving its branch anchor.
@@ -243,9 +252,8 @@ export class DurableKernel {
         copiedParent ? branchFrom : undefined);
 
       // Branch cutoff: fork the copied conversation at the anchor entry, dropping
-      // everything after it. Without an anchor the copied conversation continues
-      // as-is (old continueRecent behavior). Branches must not silently degrade
-      // to fresh sessions, so an unresolvable anchor is a hard error.
+      // everything after it. Missing and unresolvable cutoffs must not silently
+      // resume the parent's later context.
       if (copiedParent) {
         const anchor = config.branchFromSdkTurnId ? this.resolveBranchAnchor(config.branchFromSdkTurnId) : undefined;
         if (config.branchFromSdkTurnId && anchor === undefined) {
@@ -270,6 +278,11 @@ export class DurableKernel {
         }
       }
 
+      if (copiedParent && this.conversation) {
+        const view = await this.conversation.context(BACKGROUND_CONTEXT);
+        const sourceReferences = remapSessionFileReferences(view.contributions.flat(), this.options.sessionPath, branchFrom!);
+        copyReferencedSessionFiles(sourceReferences, branchFrom!, this.options.sessionPath);
+      }
       this.sessionId = this.loadOrCreateSessionId();
       const model = config.model ?? legacy?.model;
       const thinkingLevel = config.thinkingLevel ?? legacy?.thinkingLevel;
@@ -637,11 +650,17 @@ export class DurableKernel {
     }
   }
 
-  async setModel(model: KernelModelRef): Promise<void> {
-    this.requireModel(model);
+  async waitForIdle(context = BACKGROUND_CONTEXT): Promise<void> {
+    await this.conversation?.waitForIdle(context);
+  }
+
+  async setModel(model: KernelModelRef, models: Models = this.options.modelsSource(), context = BACKGROUND_CONTEXT): Promise<void> {
+    if (!models.getModel(model.provider, model.modelId)) {
+      throw new Error(`Could not resolve model: ${model.provider}/${model.modelId}`);
+    }
     this.cacheWarmer.stop();
+    await this.conversation?.configure({ model: { provider: model.provider, modelId: model.modelId } }, context);
     this.currentModel = model;
-    await this.conversation?.configure({ model: { provider: model.provider, modelId: model.modelId } }, BACKGROUND_CONTEXT);
   }
 
   async setThinkingLevel(level: string): Promise<void> {

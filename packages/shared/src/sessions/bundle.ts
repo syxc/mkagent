@@ -11,9 +11,10 @@ import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import type { SessionHeader, StoredMessage, SessionConfig } from './types.ts'
 import type { StoredSession } from './types.ts'
-import { readSessionJsonl } from './jsonl.ts'
+import { readSessionJsonl, makeSessionPathPortable } from './jsonl.ts'
 import { getSessionPath, getSessionFilePath } from './storage.ts'
-import { collectDurableBundle } from './durable-bundle.ts'
+import { collectDurableBundle, type Json } from './durable-bundle.ts'
+import { collectLegacyBundle } from './legacy-bundle.ts'
 import { debug } from '../utils/debug.ts'
 import {
   type BundleFile,
@@ -113,7 +114,9 @@ export function serializeSession(
   })
   const secrets = new Set<string>()
   try {
-    files.push(...collectDurableBundle(storeDir, secrets))
+    const portable = (value: Json) => JSON.parse(makeSessionPathPortable(JSON.stringify(value), sessionDir)) as Json
+    const durableFiles = collectDurableBundle(storeDir, secrets, portable)
+    files.push(...(durableFiles.length ? durableFiles : collectLegacyBundle(join(sessionDir, '.pi-sessions'), secrets, portable)))
   } catch (error) {
     debug('[bundle] Cannot safely export durable history:', error)
     return null
@@ -144,7 +147,8 @@ export function serializeSession(
     if (value && typeof value === 'object') return Object.entries(value).some(([key, item]) => containsSecret(key) || containsSecret(item))
     return false
   }
-  if (containsSecret({ header, messages: stored.messages })) {
+  const messages = JSON.parse(makeSessionPathPortable(JSON.stringify(stored.messages), sessionDir)) as StoredMessage[]
+  if (containsSecret({ header, messages: stored.messages, portableMessages: messages })) {
     debug('[bundle] Cannot safely export a browser password copy')
     return null
   }
@@ -155,6 +159,7 @@ export function serializeSession(
     }
     const contents = Buffer.from(file.contentBase64, 'base64')
     const structuredHistory = /^durable-store\/(?:main|(?:doc|task)-\d+)\.jsonl$/.test(file.relativePath)
+      || file.relativePath === '.pi-sessions/legacy.jsonl'
     if (structuredHistory) continue
     for (const secret of secrets) {
       const raw = Buffer.from(secret)
@@ -170,7 +175,7 @@ export function serializeSession(
     version: 1,
     session: {
       header,
-      messages: stored.messages,
+      messages,
     },
     files,
   }

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { join } from 'node:path'
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { isPathInside, resolveInheritedAppEnv, sourceCheckoutRoot } from './inherited-app-env'
 
 const own = '/work/CraftAgentsDev/sdk-uplift-release'
@@ -42,6 +44,50 @@ describe('resolveInheritedAppEnv', () => {
 })
 
 describe('sourceCheckoutRoot', () => {
+  it('keeps a real Bun bundle in packaged mode while its source checkout exists', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'mkagent-runtime-bundle-'))
+    try {
+      const entry = join(root, 'entry.ts')
+      const bundle = join(root, 'packaged', 'server.js')
+      mkdirSync(join(root, 'packaged'), { recursive: true })
+      const piServer = join(root, 'packaged', 'resources', 'pi-agent-server', 'index.js')
+      mkdirSync(join(root, 'packaged', 'resources', 'pi-agent-server'), { recursive: true })
+      writeFileSync(piServer, '// packaged fixture')
+      writeFileSync(entry, `
+        import { sourceCheckoutRoot } from ${JSON.stringify(join(import.meta.dir, 'inherited-app-env.ts'))};
+        import { createHeadlessPlatform } from ${JSON.stringify(join(import.meta.dir, 'platform-headless.ts'))};
+        import { resolveBackendRuntimePaths } from ${JSON.stringify(join(import.meta.dir, '../../../shared/src/agent/backend/internal/runtime-resolver.ts'))};
+        const platform = createHeadlessPlatform();
+        console.log(JSON.stringify({ source: sourceCheckoutRoot(), appRoot: platform.appRootPath,
+          resources: platform.resourcesPath, packaged: platform.isPackaged,
+          piServer: resolveBackendRuntimePaths(platform).piServerPath }));
+      `)
+      const build = await Bun.build({ entrypoints: [entry], target: 'bun', format: 'esm', outdir: join(root, 'packaged'), naming: 'server.js', external: ['sharp'] })
+      expect(build.success, build.logs.map(String).join('\n')).toBe(true)
+      const child = Bun.spawnSync([process.execPath, bundle], {
+        cwd: tmpdir(),
+        env: { ...process.env, MKAGENT_APP_ROOT: join(root, 'packaged'), MKAGENT_IS_PACKAGED: 'true',
+          MKAGENT_RESOURCES_PATH: join(root, 'packaged', 'resources') },
+      })
+      expect(child.exitCode, child.stderr.toString()).toBe(0)
+      const result = JSON.parse(child.stdout.toString().trim().split('\n').at(-1)!)
+      expect(result.source, JSON.stringify(result)).toBeNull()
+      expect(result.appRoot).toBe(join(root, 'packaged'))
+      expect(result.resources).toBe(join(root, 'packaged', 'resources'))
+      expect(result.packaged).toBe(true)
+      expect(result.piServer).toBe(piServer)
+      rmSync(piServer)
+      const missing = Bun.spawnSync([process.execPath, bundle], {
+        cwd: tmpdir(),
+        env: { ...process.env, MKAGENT_APP_ROOT: join(root, 'packaged'), MKAGENT_IS_PACKAGED: 'true' },
+      })
+      expect(missing.exitCode).toBe(0)
+      expect(JSON.parse(missing.stdout.toString()).piServer).toBeUndefined()
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
   it('finds this monorepo when server-core runs from source', () => {
     const root = sourceCheckoutRoot()
     expect(root).not.toBeNull()

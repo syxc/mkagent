@@ -14,7 +14,7 @@ import {
 } from '@earendil-works/pi-durable';
 import { createToolSearchExtension, createToolSearchTool } from '@earendil-works/pi-durable/tool-search';
 import { closeMcpConnections, loadMcpTools } from './extension.ts';
-import type { McpExposure } from './mcp-servers.ts';
+import { getMcpToolExposure, type McpExposure, type McpServerConfig } from './mcp-servers.ts';
 import { createMcpToolDefinition } from './tools.ts';
 
 const resourcesFixture = join(import.meta.dir, '..', 'test-fixtures', 'mcp-server-resources.ts');
@@ -48,6 +48,44 @@ function mcpTool(exposure: McpExposure, toolName: string, description: string): 
 }
 
 describe('MCP tool visibility', () => {
+  it('uses only own exposure overrides, including prototype-shaped tool names', () => {
+    for (const name of ['constructor', 'toString', '__proto__']) {
+      expect(getMcpToolExposure({ exposure: 'hidden' }, name)).toBe('hidden');
+      expect(getMcpToolExposure({ exposure: 'hidden', toolExposure: { '*': 'deferred' } }, name)).toBe('deferred');
+      expect(getMcpToolExposure({ exposure: 'hidden', toolExposure: Object.fromEntries([[name, 'direct']]) }, name)).toBe('direct');
+    }
+    expect(getMcpToolExposure({ exposure: 'unsafe' } as unknown as McpServerConfig, 'hello')).toBe('hidden');
+    expect(getMcpToolExposure({ toolExposure: { hello: undefined } } as unknown as McpServerConfig, 'hello')).toBe('hidden');
+  });
+
+  it('never registers hidden prototype-shaped names from a live MCP server', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mkagent-mcp-prototype-'));
+    const agentDir = mcpConfig(dir, { demo: {
+      command: process.execPath, args: [resourcesFixture, '--prototype-tools'],
+      exposure: 'hidden', toolExposure: { hello: 'direct' },
+    } });
+    const mcp = await loadMcpTools({ agentDir, cwd: dir, version: '1.0', debugLog: () => {} });
+    const registry = createRegistry();
+    registry.install(defineExtension({ name: 'mcp', tools: mcp.tools }));
+    const harness = await Harness.open(new MemoryStorage(), { models: builtinModels(), registry }, BACKGROUND_CONTEXT);
+    try {
+      expect(mcp.errors).toEqual([]);
+      expect(mcp.tools.map(tool => tool.name)).toEqual(['mcp__demo__hello']);
+      expect(mcp.namespaces).toEqual([]);
+      const agent = await (await harness.root(BACKGROUND_CONTEXT)).agent(BACKGROUND_CONTEXT);
+      expect(agent.callable.map(tool => tool.name)).toContain('mcp__demo__hello');
+      for (const name of ['constructor', 'toString', '__proto__']) {
+        expect(agent.callable.map(tool => tool.name)).not.toContain(`mcp__demo__${name}`);
+      }
+      const greeting = await mcp.tools[0]!.execute({}, { output: () => {} } as unknown as ToolExecutionApi, BACKGROUND_CONTEXT);
+      expect(JSON.stringify(greeting.output)).toContain('hello from MCP');
+    } finally {
+      await harness.close(BACKGROUND_CONTEXT);
+      await closeMcpConnections(mcp.connections);
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('updates registrations when a server announces changed tools', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'mkagent-mcp-dynamic-'));
     const agentDir = mcpConfig(dir, { dynamic: { command: process.execPath, args: [dynamicFixture], exposure: 'direct' } });

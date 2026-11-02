@@ -80,7 +80,7 @@ MkAgent 会在 `~/.mkagent/workspaces/default` 创建默认工作区。开发或
 | `bun run server:prod` | 构建并启动带 WebUI 的 headless server |
 | `bun run cli:build` | 构建 CLI bundle |
 | `bun run test` | 运行单元测试和隔离测试 |
-| `bun run validate:ci` | 运行完整的类型、测试、文档工具和本地化检查 |
+| `bun run validate:ci` | 检查所有类型、指定 shared 测试、文档工具和本地化 |
 
 更多命令和环境变量请参阅[开发指南](./docs/zh/development.md)。
 
@@ -139,7 +139,7 @@ git diff --check
 
 ## 项目沿革
 
-MkAgent 起步于 [Craft Agents OSS](https://github.com/craft-ai-agents/craft-agents-oss)，当前选择性同步基线为 `v0.12.1`（`d7592c481216`），并保持独立的 Git 历史与产品边界。MkAgent 与上游项目不存在关联，也未获其认可。归属说明请参阅 [NOTICE](./NOTICE)，当前差异请参阅[对比指南](./docs/zh/comparison-with-craft.md)。
+MkAgent 最初基于 [Craft Agents OSS](https://github.com/craft-ai-agents/craft-agents-oss) `v0.12.1`（`d7592c481216`）的部分架构和代码开发，并保持独立的 Git 历史与产品边界。当前选择性同步基线为 `v0.15.6`（`8df01c5d0ac7`），详见[上游同步](./docs/zh/upstream-sync.md)。MkAgent 与上游项目不存在关联，也未获其认可。归属说明请参阅 [NOTICE](./NOTICE)，当前差异请参阅[对比指南](./docs/zh/comparison-with-craft.md)。
 
 ## 作者
 

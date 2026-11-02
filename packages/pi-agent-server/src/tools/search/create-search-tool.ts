@@ -62,20 +62,25 @@ export function createSearchTool(
     description:
       'Search the web for current information. Returns titles, URLs, and snippets. Use for current information, documentation lookups, or fact-checking.',
     parameters: schema,
-    async execute(params) {
+    async execute(params, _api, context) {
       const { query } = params;
       const count = Math.max(1, Math.min(10, params.count ?? 5));
+      const signal = context?.abortSignal ?? undefined;
+      signal?.throwIfAborted();
 
       try {
-        const results = await provider.search(query, count);
+        const results = await provider.search(query, count, signal);
+        signal?.throwIfAborted();
         return formatResults(query, provider.name, results);
       } catch (err) {
+        signal?.throwIfAborted();
         const primaryMsg = err instanceof Error ? err.message : String(err);
 
         const canFallback = provider.name !== fallbackProvider.name;
         if (canFallback) {
           try {
-            const fallbackResults = await fallbackProvider.search(query, count);
+            const fallbackResults = await fallbackProvider.search(query, count, signal);
+            signal?.throwIfAborted();
             return formatResults(
               query,
               fallbackProvider.name,
@@ -83,6 +88,7 @@ export function createSearchTool(
               `Primary search provider (${provider.name}) failed (${formatErrorSnippet(primaryMsg)}), automatically fell back to ${fallbackProvider.name}.`,
             );
           } catch (fallbackErr) {
+            signal?.throwIfAborted();
             const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
             return {
               output: [

@@ -8,5 +8,6 @@
 | [内核迁移审查问题修复规格](kernel-migration-review-fix-spec.md) | R1–R8 修复边界与最终集成验收 |
 | [首页建议与 Web 可用性修复执行规格](starter-web-repair-spec.md) | 两个首页入口的故障确认、Web 实际验证及修复验收 |
 | [Pi-durable 遗留修复与验收](kernel-legacy-fix-spec.md) | 宿主交互完成边界、MiniMax CN 模型身份及持久化清理竞态 |
+| [功能与稳定性修复执行规格](functional-stability-remediation-spec.md) | 本轮 12 项问题、端点残留风险、原子修复分组及逐项验收账本 |
 
 通用系统架构仍见 [英文架构文档](../architecture.md)、[中文架构文档](../zh/architecture.md) 和 [架构图](../architecture.html)。产品裁剪与上游同步的历史资料分别保留在 `docs/migration/`、`docs/sync/`。

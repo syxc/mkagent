@@ -9,11 +9,11 @@ import { isValidThinkingLevel, THINKING_LEVEL_IDS } from '@mkagent/shared/agent/
 const VALID_THINKING_LEVELS_LIST = THINKING_LEVEL_IDS.map(id => `'${id}'`).join(', ')
 import { pushTyped, type RpcServer } from '@mkagent/server-core/transport'
 import type { HandlerDeps } from '../handler-deps'
+import { watchSessionFiles, type SessionFileWatcher } from '../../sessions/session-file-watcher'
 
 interface ClientSessionWatchState {
-  watcher: import('fs').FSWatcher
+  watcher: SessionFileWatcher | null
   sessionId: string
-  debounceTimer: ReturnType<typeof setTimeout> | null
 }
 
 // Per-client session file watcher state (supports concurrent windows/clients safely)
@@ -47,12 +47,7 @@ export function cleanupSessionFileWatchForClient(clientId: string): void {
   const state = clientSessionWatches.get(clientId)
   if (!state) return
 
-  if (state.debounceTimer) {
-    clearTimeout(state.debounceTimer)
-    state.debounceTimer = null
-  }
-
-  state.watcher.close()
+  state.watcher?.close()
   clientSessionWatches.delete(clientId)
 }
 
@@ -444,34 +439,21 @@ export function registerSessionsHandlers(server: RpcServer, deps: HandlerDeps): 
     const sessionPath = sessionManager.getSessionPath(sessionId)
     if (!sessionPath) return
 
+    const state: ClientSessionWatchState = { watcher: null, sessionId }
+    clientSessionWatches.set(clientId, state)
     try {
-      const { watch } = await import('fs')
-
-      const state: ClientSessionWatchState = {
-        watcher: null as unknown as import('fs').FSWatcher,
-        sessionId,
-        debounceTimer: null,
-      }
-
-      state.watcher = watch(sessionPath, { recursive: true }, (_eventType, filename) => {
-        // Ignore internal files and hidden files
-        if (filename && (filename.includes('session.jsonl') || filename.startsWith('.'))) {
-          return
-        }
-
-        // Debounce: wait 100ms before notifying to batch rapid changes
-        if (state.debounceTimer) {
-          clearTimeout(state.debounceTimer)
-        }
-
-        state.debounceTimer = setTimeout(() => {
+      const watcher = await watchSessionFiles(sessionPath, () => {
+        if (clientSessionWatches.get(clientId) === state) {
           pushTyped(server, RPC_CHANNELS.sessions.FILES_CHANGED, { to: 'client', clientId }, state.sessionId)
-        }, 100)
-      })
-
-      clientSessionWatches.set(clientId, state)
+        }
+      }, error => log.debug('Failed to reconcile session files:', error))
+      if (clientSessionWatches.get(clientId) !== state) watcher.close()
+      else state.watcher = watcher
     } catch (error) {
-      log.error('Failed to start session file watcher:', error)
+      if (clientSessionWatches.get(clientId) === state) {
+        clientSessionWatches.delete(clientId)
+        log.error('Failed to start session file watcher:', error)
+      }
     }
   })
 

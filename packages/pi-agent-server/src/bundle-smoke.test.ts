@@ -191,6 +191,85 @@ describe('pi-agent-server bundle', () => {
     expect(output).not.toContain('OFFLINE_FETCH_BLOCKED');
   }, RUN_TIMEOUT_MS + 10_000);
 
+  it('forwards cancellation through the production dynamic search provider', async () => {
+    const sessionPath = join(scratchDir, 'search-cancel');
+    mkdirSync(sessionPath);
+    const output = await driveBundle([{
+      type: 'init', apiKey: 'fixture', model: 'pi/fake-model', cwd: scratchDir,
+      piAuth: { provider: 'openai', credential: { type: 'api_key', key: 'fixture' } },
+      thinkingLevel: 'off', workspaceRootPath: scratchDir, sessionId: 'search-cancel',
+      sessionPath, workingDirectory: scratchDir, plansFolderPath: join(scratchDir, 'plans'),
+      baseUrl: 'http://fake-provider.test/v1', customEndpoint: { api: 'openai-completions' },
+    }, { type: 'prompt', id: 'search', message: 'search fixture', systemPrompt: 'test' }],
+    out => out.includes('TEST_SEARCH_ABORTED') || out.includes('TEST_SEARCH_NOT_ABORTED'), {
+      preload: mockProviderPreloadPath, approveTools: true, env: { TEST_SEARCH_CANCEL: '1' },
+      onStderr(line) {
+        if (line.includes('TEST_SEARCH_STARTED')) return [{ type: 'abort' }];
+      },
+    });
+    expect(output).toContain('TEST_SEARCH_STARTED');
+    expect(output).toContain('TEST_SEARCH_ABORTED');
+    expect(output).not.toContain('TEST_SEARCH_NOT_ABORTED');
+  }, RUN_TIMEOUT_MS + 10_000);
+
+  it('retains cold-start steering until the kernel accepts it', async () => {
+    let steered = false;
+    let finished = false;
+    const output = await driveBundle([{
+      type: 'init', apiKey: 'fixture', model: 'pi/fake-model', cwd: scratchDir,
+      thinkingLevel: 'off', workspaceRootPath: scratchDir, sessionId: 'cold-steer',
+      sessionPath: scratchDir, workingDirectory: scratchDir, plansFolderPath: join(scratchDir, 'plans'),
+      baseUrl: 'http://fake-provider.test/v1', customEndpoint: { api: 'openai-completions' },
+    }], () => finished, {
+      preload: mockProviderPreloadPath, approveTools: true,
+      onMessage(message) {
+        if (message.type === 'ready') return [
+          { type: 'prompt', id: 'first', message: 'COLD_FIRST', systemPrompt: 'test' },
+          { type: 'steer', message: 'COLD_STEER' },
+        ];
+        if (message.event?.type === 'message_end' && message.event.message?.content === 'COLD_STEER') steered = true;
+        if (steered && message.event?.type === 'agent_end' && !message.event.willRetry) finished = true;
+      },
+    });
+    expect(steered).toBe(true);
+    expect(output).toContain('"text":"done"');
+    expect(output).not.toContain('Steer ignored');
+  }, RUN_TIMEOUT_MS + 10_000);
+
+  for (const duringInit of [false, true]) {
+    it(`discards stopped cold-start controls ${duringInit ? 'during initialization' : 'after readiness'} and accepts fresh input`, async () => {
+      let fresh = false;
+      let finished = false;
+      const init = {
+        type: 'init', apiKey: 'fixture', model: 'pi/fake-model', cwd: scratchDir,
+        thinkingLevel: 'off', workspaceRootPath: scratchDir, sessionId: `cold-abort-${duringInit}`,
+        sessionPath: scratchDir, workingDirectory: scratchDir, plansFolderPath: join(scratchDir, 'plans'),
+        baseUrl: 'http://fake-provider.test/v1', customEndpoint: { api: 'openai-completions' },
+      };
+      const controls = [
+        { type: 'prompt', id: 'cancelled', message: 'COLD_CANCELLED_PROMPT', systemPrompt: 'test' },
+        { type: 'steer', message: 'COLD_CANCELLED_STEER' },
+        { type: 'abort' },
+        { type: 'ensure_session_ready', id: 'after-cancel' },
+      ];
+      const output = await driveBundle(duringInit ? [init, ...controls] : [init], () => finished, {
+        preload: mockProviderPreloadPath, approveTools: true,
+        onMessage(message) {
+          if (!duringInit && message.type === 'ready') return controls;
+          if (message.type === 'ensure_session_ready_result') return [
+            { type: 'prompt', id: 'fresh', message: 'COLD_FRESH_INPUT', systemPrompt: 'test' },
+          ];
+          if (message.event?.type === 'message_end' && message.event.message?.content === 'COLD_FRESH_INPUT') fresh = true;
+          if (fresh && message.event?.type === 'agent_end' && !message.event.willRetry) finished = true;
+        },
+      });
+      expect(fresh).toBe(true);
+      expect(output).toContain('"text":"done"');
+      expect(output).not.toContain('"content":"COLD_CANCELLED_PROMPT"');
+      expect(output).not.toContain('"content":"COLD_CANCELLED_STEER"');
+    }, RUN_TIMEOUT_MS + 10_000);
+  }
+
   it('opens one kernel for concurrent session-ready requests', async () => {
     const output = await driveBundle([
       {
@@ -328,6 +407,141 @@ describe('pi-agent-server bundle', () => {
     }
   }, RUN_TIMEOUT_MS + 10_000);
 
+  for (const warm of [false, true]) it(`preserves usable models after a rejected ${warm ? 'warm' : 'cold'} runtime update`, async () => {
+    let phase = 'start';
+    let mainDone = false;
+    let queryDone = false;
+    const updates: any[] = [];
+    const queries: any[] = [];
+    const invalid = { type: 'update_runtime_config', id: 'invalid', model: 'pi/__missing_runtime_model__' };
+    const requestPair = (stage: string) => [
+      { type: 'prompt', id: `prompt-${stage}`, message: stage, systemPrompt: 'fixture' },
+      { type: 'llm_query', id: `query-${stage}`, request: { prompt: stage } },
+    ];
+    const output = await driveBundle([{
+      type: 'init', apiKey: 'fixture', model: 'pi/old-main', miniModel: 'pi/old-mini', cwd: scratchDir,
+      thinkingLevel: 'off', workspaceRootPath: scratchDir, sessionId: `transaction-${warm}`,
+      sessionPath: scratchDir, workingDirectory: scratchDir, plansFolderPath: join(scratchDir, 'plans'),
+      baseUrl: 'http://fake-provider.test/v1', customEndpoint: { api: 'openai-completions' },
+      customModels: ['old-main', 'old-mini'],
+    }], () => phase === 'done', {
+      preload: mockProviderPreloadPath, approveTools: true, env: { TEST_ALLOW_UTILITY: '1' },
+      onMessage(message) {
+        if (message.type === 'ready') return warm ? [{ type: 'ensure_session_ready', id: 'warm' }] : [invalid];
+        if (message.type === 'ensure_session_ready_result') return [invalid];
+        if (message.type === 'update_runtime_config_result') {
+          updates.push(message);
+          phase = message.id === 'invalid' ? 'old' : 'new';
+          mainDone = queryDone = false;
+          return requestPair(phase);
+        }
+        if (message.type === 'event' && message.event?.type === 'agent_end') mainDone = true;
+        if (message.type === 'llm_query_result') { queries.push(message); queryDone = true; }
+        if (!mainDone || !queryDone) return;
+        if (phase === 'old') {
+          phase = 'updating';
+          return [{ type: 'update_runtime_config', id: 'valid', model: 'pi/new-main',
+            baseUrl: 'http://fake-provider.test/v1', customEndpoint: { api: 'openai-completions' },
+            customModels: ['new-main', 'new-mini'] }];
+        }
+        if (phase === 'new') phase = 'done';
+      },
+    });
+    expect(updates.map(update => update.success)).toEqual([false, true]);
+    expect(queries.map(query => query.result?.model)).toEqual(['pi/old-mini', 'pi/new-mini']);
+    expect(queries.map(query => query.result?.text)).toEqual(['fixture utility old-mini', 'fixture utility new-mini']);
+    expect(output).toContain('TEST_PROVIDER_MODEL:old-main');
+    expect(output).toContain('TEST_PROVIDER_MODEL:new-main');
+    expect(output).not.toContain('prompt_error');
+    expect(output).not.toContain('OFFLINE_FETCH_BLOCKED');
+  }, RUN_TIMEOUT_MS + 10_000);
+
+  it('cannot publish an older candidate after a newer runtime update succeeds', async () => {
+    const fixtureBundle = join(scratchDir, 'runtime-candidate-race.js');
+    const source = readFileSync(bundlePath, 'utf8');
+    const buildAnchor = '    const candidate = await createModelRuntime(candidateConfig, () => {}, previous.credentials);';
+    const releaseAnchor = 'function handleRegisterTools(msg) {';
+    expect(source.split(buildAnchor)).toHaveLength(2);
+    expect(source.split(releaseAnchor)).toHaveLength(2);
+    writeFileSync(fixtureBundle, source.replace(buildAnchor, buildAnchor +
+      '\n    if (msg.id === "stale") await new Promise(resolve => { globalThis.__releaseCandidate = resolve; process.stderr.write("TEST_CANDIDATE_PAUSED\\n"); });')
+      .replace(releaseAnchor, releaseAnchor + '\n  globalThis.__releaseCandidate?.();'));
+    for (const name of ['codemode-worker.js', 'quickjs.wasm']) copyFileSync(join(packageDir, 'dist', name), join(scratchDir, name));
+    const update = (id: string, model: string) => ({
+      type: 'update_runtime_config', id, model: `pi/${model}-main`, baseUrl: 'http://fake-provider.test/v1',
+      customEndpoint: { api: 'openai-completions' }, customModels: [`${model}-main`, `${model}-mini`],
+    });
+    const results: any[] = [];
+    let done = false;
+    let mainDone = false;
+    let query: any;
+    const output = await driveBundle([{
+      type: 'init', apiKey: 'fixture', model: 'pi/old-main', cwd: scratchDir,
+      thinkingLevel: 'off', workspaceRootPath: scratchDir, sessionId: 'runtime-candidate-race',
+      sessionPath: scratchDir, workingDirectory: scratchDir, plansFolderPath: join(scratchDir, 'plans'),
+      baseUrl: 'http://fake-provider.test/v1', customEndpoint: { api: 'openai-completions' },
+    }], () => done, {
+      bundle: fixtureBundle, preload: mockProviderPreloadPath, approveTools: true, env: { TEST_ALLOW_UTILITY: '1' },
+      onStderr(line) { if (line === 'TEST_CANDIDATE_PAUSED') return [update('fresh', 'fresh')]; },
+      onMessage(message) {
+        if (message.type === 'ready') return [update('stale', 'stale')];
+        if (message.type === 'update_runtime_config_result') {
+          results.push(message);
+          if (message.id === 'fresh') return [{ type: 'register_tools', tools: [] }];
+          return [{ type: 'prompt', id: 'fresh', message: 'fixture', systemPrompt: 'fixture' },
+            { type: 'llm_query', id: 'fresh-mini', request: { prompt: 'fixture' } }];
+        }
+        if (message.type === 'event' && message.event?.type === 'agent_end') mainDone = true;
+        if (message.type === 'llm_query_result') query = message;
+        done = mainDone && !!query;
+      },
+    });
+    expect(results.map(result => [result.id, result.success])).toEqual([['fresh', true], ['stale', false]]);
+    expect(query.result?.model).toBe('pi/fresh-mini');
+    expect(output).toContain('TEST_PROVIDER_MODEL:fresh-main');
+    expect(output).not.toContain('TEST_PROVIDER_MODEL:stale-main');
+    expect(output).not.toContain('prompt_error');
+  }, RUN_TIMEOUT_MS + 10_000);
+
+  it('clears only managed endpoint variables across reinitialization', async () => {
+    const preload = join(scratchDir, 'endpoint-env-probe.ts');
+    writeFileSync(preload, `
+      import ${JSON.stringify(blockNetworkPreloadPath)};
+      const original = process.stdout.write.bind(process.stdout);
+      process.stdout.write = (chunk, ...args) => {
+        try {
+          if (JSON.parse(String(chunk)).type === 'ready') process.stderr.write('TEST_ENDPOINT_ENV:' + JSON.stringify({
+            azure: process.env.AZURE_OPENAI_BASE_URL,
+            account: process.env.CLOUDFLARE_ACCOUNT_ID, gateway: process.env.CLOUDFLARE_GATEWAY_ID,
+          }) + '\\n');
+        } catch {}
+        return original(chunk, ...args);
+      };
+    `);
+    const common = {
+      type: 'init', apiKey: '', model: 'pi/gpt-4o', cwd: scratchDir, thinkingLevel: 'off',
+      workspaceRootPath: scratchDir, sessionId: 'endpoint-env', sessionPath: scratchDir,
+      workingDirectory: scratchDir, plansFolderPath: join(scratchDir, 'plans'),
+    };
+    let ready = 0;
+    const output = await driveBundle([
+      { ...common, piAuth: { provider: 'azure', credential: { type: 'api_key', key: 'fixture' } }, baseUrl: 'https://fixture.openai.azure.com' },
+      { ...common, piAuth: { provider: 'azure', credential: { type: 'api_key', key: 'fixture' } } },
+      { ...common, piAuth: { provider: 'cloudflare-ai-gateway', credential: { type: 'api_key', key: 'fixture' } }, baseUrl: 'https://gateway.ai.cloudflare.com/v1/account/gateway' },
+      { ...common },
+    ], output => ready === 4 && output.split('TEST_ENDPOINT_ENV:').length === 5, { preload, env: { CLOUDFLARE_ACCOUNT_ID: 'inherited-account' },
+      onMessage(message) { if (message.type === 'ready') ready++; },
+    });
+    const envs = output.split('\n').filter(line => line.startsWith('TEST_ENDPOINT_ENV:'))
+      .map(line => JSON.parse(line.slice('TEST_ENDPOINT_ENV:'.length)));
+    expect(envs).toEqual([
+      { azure: 'https://fixture.openai.azure.com', account: 'inherited-account' },
+      { account: 'inherited-account' },
+      { account: 'account', gateway: 'gateway' },
+      {},
+    ]);
+  }, RUN_TIMEOUT_MS + 10_000);
+
   it('continues serving a prompt while runtime configuration is rebuilt', async () => {
     let phase = 0;
     const output = await driveBundle([
@@ -407,7 +621,7 @@ describe('pi-agent-server bundle', () => {
     // Hold kernel opening until both runtime updates have reached the config boundary.
     const anchor = bundle.match(/^    await \w+\.open\(\{$/m)?.[0];
     expect(anchor).toBeDefined();
-    const updateAnchor = '    applyProviderEndpointEnv(initConfig);';
+    const updateAnchor = '    const endpointEnv = providerEndpointEnv(candidateConfig.piAuth?.provider, candidateConfig.baseUrl);';
     expect(bundle.split(updateAnchor)).toHaveLength(2);
     writeFileSync(fixtureBundle, bundle.replace(anchor!,
       '    await new Promise(resolve => { globalThis.__resumeKernelOpen = resolve; process.stderr.write("TEST_KERNEL_OPEN_PAUSED\\n"); });\n' + anchor)
