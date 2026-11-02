@@ -4,7 +4,8 @@
  * Key behavior: Writes to the same session must be serialized to prevent
  * race conditions when rapid successive flushes write to the same .tmp file.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, spyOn } from 'bun:test';
+import * as fsPromises from 'fs/promises';
 import { mkdirSync, rmSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -42,10 +43,74 @@ describe('SessionPersistenceQueue', () => {
     queue = new SessionPersistenceQueue(0);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await queue.flushAll();
     // Clean up test directory
     if (existsSync(testDir)) {
       rmSync(testDir, { recursive: true, force: true });
+    }
+  });
+
+  it('flushAll waits for an active atomic rename before teardown', async () => {
+    const rename = fsPromises.rename;
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const renameSpy = spyOn(fsPromises, 'rename').mockImplementation(async (...args) => {
+      entered.resolve();
+      await release.promise;
+      return rename(...args);
+    });
+    let writing: Promise<void> | undefined;
+    let draining: Promise<void> | undefined;
+    try {
+      queue.enqueue(createTestSession('test-session', testDir, 'active-write'));
+      writing = queue.flush('test-session');
+      await entered.promise;
+      expect(queue.pendingCount).toBe(0);
+      let drained = false;
+      draining = queue.flushAll().then(() => { drained = true; });
+      await new Promise<void>(resolve => setImmediate(resolve));
+      expect(drained).toBe(false);
+      release.resolve();
+      await draining;
+      expect(existsSync(join(testDir, 'sessions', 'test-session', 'session.jsonl'))).toBe(true);
+    } finally {
+      release.resolve();
+      await writing;
+      await draining;
+      renameSpy.mockRestore();
+    }
+  });
+
+  it('drains timer writes before removing the workspace', async () => {
+    const rename = fsPromises.rename;
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const finished = Promise.withResolvers<void>();
+    const errors = spyOn(console, 'error');
+    const renameSpy = spyOn(fsPromises, 'rename').mockImplementation(async (...args) => {
+      entered.resolve();
+      await release.promise;
+      try {
+        return await rename(...args);
+      } finally {
+        finished.resolve();
+      }
+    });
+    try {
+      queue.enqueue(createTestSession('test-session', testDir));
+      await entered.promise;
+      setImmediate(() => release.resolve());
+      await queue.flushAll();
+      rmSync(testDir, { recursive: true, force: true });
+      await finished.promise;
+      await new Promise<void>(resolve => setImmediate(resolve));
+      expect(errors).not.toHaveBeenCalled();
+    } finally {
+      release.resolve();
+      await finished.promise;
+      renameSpy.mockRestore();
+      errors.mockRestore();
     }
   });
 

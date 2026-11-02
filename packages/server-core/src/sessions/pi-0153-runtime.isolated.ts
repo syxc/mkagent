@@ -6,7 +6,9 @@ import { join, resolve } from 'node:path'
 it('persists settings, ingests real HEIF, and applies caps/windows in the actual Pi subprocess', async () => {
   const root = mkdtempSync(join(tmpdir(), 'mkagent-0153-runtime-'))
   const previous = process.env.CONFIG_DIR
+  const previousHome = process.env.HOME
   process.env.CONFIG_DIR = root
+  process.env.HOME = root
   const wsRoot = join(root, 'workspace')
   mkdirSync(wsRoot)
   const workspace = { id: 'ws-sync', name: 'Sync', slug: 'sync', rootPath: wsRoot, createdAt: 1 }
@@ -30,6 +32,7 @@ it('persists settings, ingests real HEIF, and applies caps/windows in the actual
   const connection = { slug: 'fixture', name: 'Fixture', providerType: 'pi_compat', authType: 'none', baseUrl: `http://127.0.0.1:${endpoint.port}/v1`, customEndpoint: { api: 'openai-completions', maxTokens: 32768, supportsImages: true }, models: [{ id: 'large', contextWindow: 262144 }, { id: 'small', contextWindow: 131072 }], defaultModel: 'large', createdAt: 1 }
   writeFileSync(join(wsRoot, 'config.json'), JSON.stringify({ ...workspace, updatedAt: 1, defaults: { model: 'large', defaultLlmConnection: 'fixture', permissionMode: 'allow-all', thinkingLevel: 'off' } }))
   writeFileSync(join(root, 'config.json'), JSON.stringify({ workspaces: [workspace], activeWorkspaceId: workspace.id, activeSessionId: null, defaultLlmConnection: 'fixture', autoCompactWindow: 100000, llmConnections: [connection] }))
+  const { sessionPersistenceQueue } = await import('@mkagent/shared/sessions')
   const config = await import('@mkagent/shared/config')
   config.ensureConfigDir()
   const { SessionManager, setSessionPlatform } = await import('./SessionManager')
@@ -43,9 +46,13 @@ it('persists settings, ingests real HEIF, and applies caps/windows in the actual
   setSessionPlatform(platform)
   let manager = new SessionManager()
   const events: any[] = []
+  const compactionComplete = Promise.withResolvers<void>()
   try {
     await manager.initialize()
-    manager.setEventSink((_channel, _target, event) => event && events.push(event))
+    manager.setEventSink((_channel, _target, event) => {
+      if (event) events.push(event)
+      if (event?.statusType === 'compaction_complete') compactionComplete.resolve()
+    })
     const handlers = new Map<string, any>()
     const server = { handle: (channel: string, handler: any) => handlers.set(channel, handler) }
     const deps = { sessionManager: manager, platform }
@@ -77,7 +84,7 @@ it('persists settings, ingests real HEIF, and applies caps/windows in the actual
     await manager.sendMessage(session.id, 'Continue second turn. ' + 'Another fixture sentence. '.repeat(6000))
     // Actual SDK automatic compaction must issue a summary request with the configured cap.
     expect(requests.length).toBeGreaterThan(2)
-    for (let attempt = 0; attempt < 200 && !events.some(event => event.statusType === 'compaction_complete'); attempt++) await new Promise(resolve => setTimeout(resolve, 10))
+    await compactionComplete.promise
     expect(events.some(event => event.statusType === 'compaction_complete')).toBe(true)
     expect(requests.some(body => (body.max_tokens ?? body.max_completion_tokens) === 32768 && String(body.messages[0]?.content).startsWith('You are a context summarization assistant.'))).toBe(true)
     expect((await manager.getSession(session.id))?.currentStatus).toBeUndefined()
@@ -102,9 +109,13 @@ it('persists settings, ingests real HEIF, and applies caps/windows in the actual
     expect(limit).toBeGreaterThan(100000)
     expect(limit).toBeLessThan(131072)
     manager.cleanup()
+    await sessionPersistenceQueue.flushAll()
     manager = new SessionManager()
     await manager.initialize()
-    manager.setEventSink((_channel, _target, event) => event && events.push(event))
+    manager.setEventSink((_channel, _target, event) => {
+      if (event) events.push(event)
+      if (event?.statusType === 'compaction_complete') compactionComplete.resolve()
+    })
     await manager.sendMessage(session.id, 'Resume after restart.')
     expect(JSON.stringify(requests.at(-1).messages)).toContain('Apply updated global window.')
     expect((await manager.getSession(session.id))?.tokenUsage?.contextUsage?.limitTokens).toBe(limit)
@@ -126,9 +137,12 @@ it('persists settings, ingests real HEIF, and applies caps/windows in the actual
     expect(JSON.parse(readFileSync(join(root, 'config.json'), 'utf8')).autoCompactWindow).toBeUndefined()
   } finally {
     manager.cleanup()
+    await sessionPersistenceQueue.flushAll()
     endpoint.stop()
     if (previous === undefined) delete process.env.CONFIG_DIR
     else process.env.CONFIG_DIR = previous
+    if (previousHome === undefined) delete process.env.HOME
+    else process.env.HOME = previousHome
     rmSync(root, { recursive: true, force: true })
   }
 }, 60000)

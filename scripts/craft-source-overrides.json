@@ -1955,8 +1955,8 @@
       "reason": "Read complete first-line metadata for many pinned PRs/cursors beyond 8KB, preserve multibyte text, and exclude app-generated hidden notices from sidebar preview."
     },
     "packages/shared/src/sessions/persistence-queue.ts": {
-      "sha256": "476fbecc4342035b62a6c5fa4bcb79c86748bc2a32bbfd7855f6dc60680a186d",
-      "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
+      "sha256": "25a64f45da93bf5184248dbb39689f0c228400d50341c55ac1a55a8f96d4cc06",
+      "reason": "Retain debounced session persistence and metadata merging; serialize timer and explicit writes through the same tracked chain, and drain active writes as well as pending entries before shutdown or teardown."
     },
     "packages/shared/src/sessions/storage.ts": {
       "sha256": "1c0a3869a1b06492732e0fb89ec06252b1f6fdb7e65611e687cacde5a3281cfb",
@@ -2057,6 +2057,10 @@
     "packages/shared/tests/mode-manager.test.ts": {
       "sha256": "0227eaae3b29f5ce3acc6de539ae2db25c01867448919eb19fc0a48321296109",
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
+    },
+    "packages/shared/tests/persistence-queue.test.ts": {
+      "sha256": "762cc88395c0f0a128a88a7ab9fb149237893a87f738f0226bd8215b5f777029",
+      "reason": "Retain persistence queue tests and add deterministic active-rename regressions that prove flushAll drains timer writes before workspace deletion; await persistence during fixture cleanup."
     },
     "packages/shared/tests/shellguard-corpus.test.ts": {
       "sha256": "2b55d7de64dad437ade9d30bc691950f8a6fa24b7a38a03452a025585e47eb93",
@@ -2445,8 +2449,8 @@
       "reason": "Hermetic real config and populated SessionManager signatures verify native Azure and Cloudflare endpoint-only edits reach the live agent"
     },
     "packages/server-core/src/sessions/pi-0153-runtime.isolated.ts": {
-      "sha256": "b17cc0fb8b3013d4b4e75fd7c2795f32ef29f451556558f1c428e0127342bad8",
-      "reason": "Actual Pi subprocess regression: real HEIF RPC ingestion/model input, output cap, automatic/manual compaction, settings persistence, live cap/model refresh and restart; local OpenAI-compatible provider, no commercial credentials."
+      "sha256": "fc0e8c244167507fdca393aa39267c679ac01ff07b72bbdcfb86a917116c9133",
+      "reason": "Test the actual Pi subprocess with local provider, HEIF input, caps, compaction, live settings and restart. Isolate HOME and CONFIG_DIR, await compaction events and drain session persistence before restart or fixture deletion."
     },
     "packages/server-core/src/sessions/pi-usage-runtime.isolated.ts": {
       "sha256": "db7965882bffecfa5972f97eb874e5598451d54372e60d94759b17925804c11f",

@@ -71,7 +71,7 @@ class SessionPersistenceQueue {
     }
 
     const timer = setTimeout(() => {
-      void this.write(session.id)
+      void this.flush(session.id)
     }, this.debounceMs)
 
     this.pending.set(session.id, { data: session, timer })
@@ -85,6 +85,7 @@ class SessionPersistenceQueue {
     const entry = this.pending.get(sessionId)
     if (!entry) return
 
+    clearTimeout(entry.timer)
     this.pending.delete(sessionId)
 
     try {
@@ -166,22 +167,20 @@ class SessionPersistenceQueue {
    */
   async flush(sessionId: string): Promise<void> {
     const entry = this.pending.get(sessionId)
-    if (entry) {
-      clearTimeout(entry.timer)
+    const inProgress = this.writeInProgress.get(sessionId)
+    if (!entry) {
+      await inProgress
+      return
+    }
+    clearTimeout(entry.timer)
 
-      // Wait for any in-progress write to complete first
-      const inProgress = this.writeInProgress.get(sessionId)
-      if (inProgress) {
-        await inProgress
-      }
-
-      // Start new write and track it
-      const writePromise = this.write(sessionId)
-      this.writeInProgress.set(sessionId, writePromise)
-
-      try {
-        await writePromise
-      } finally {
+    // Register the whole chain before yielding so timers and flushes share one writer.
+    const writePromise = (inProgress ?? Promise.resolve()).then(() => this.write(sessionId))
+    this.writeInProgress.set(sessionId, writePromise)
+    try {
+      await writePromise
+    } finally {
+      if (this.writeInProgress.get(sessionId) === writePromise) {
         this.writeInProgress.delete(sessionId)
       }
     }
@@ -201,11 +200,13 @@ class SessionPersistenceQueue {
   }
 
   /**
-   * Flush all pending sessions. Call this on app quit.
+   * Drain all pending and active writes. Call this on app quit.
    */
   async flushAll(): Promise<void> {
-    const sessionIds = [...this.pending.keys()]
-    await Promise.all(sessionIds.map(id => this.flush(id)))
+    while (this.pending.size || this.writeInProgress.size) {
+      const sessionIds = new Set([...this.pending.keys(), ...this.writeInProgress.keys()])
+      await Promise.all([...sessionIds].map(id => this.flush(id)))
+    }
   }
 
   /**
