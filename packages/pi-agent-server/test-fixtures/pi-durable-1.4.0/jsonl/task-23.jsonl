@@ -1,0 +1,1 @@
+{"format":1,"type":"record","seq":3,"ordinal":1,"payload":{"type":"task","value":{"id":23,"conversationId":1,"kind":"pi.tool","version":2,"input":{"kind":"model","assistant":21,"callId":"old-call"},"background":false,"abortRequested":false,"state":{"status":"pending","checkpoint":{"phase":"call"}}}}}

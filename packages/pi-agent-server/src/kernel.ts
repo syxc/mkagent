@@ -2,7 +2,7 @@
  * Durable kernel session lifecycle.
  *
  * Owns the `Harness`, the root conversation, and the mapping from durable
- * `watchEvents` batches to the pi-coding-agent 1.1.0 `AgentSessionEvent` shapes
+ * public observer revisions to the pi-coding-agent 1.1.0 `AgentSessionEvent` shapes
  * the host's `PiEventAdapter` already consumes. Storage lives at
  * `<sessionPath>/durable-store/`; a legacy `<sessionPath>/.pi-sessions/`
  * transcript is converted by `migrate.ts` through an open `Harness`, and
@@ -23,8 +23,7 @@ import {
   defineExtension,
   hook,
   section,
-  watchEvents,
-  type AgentEvent,
+  type InputSubmissionDraft,
   type CompactionResult,
   type Conversation,
   type ConversationId,
@@ -36,6 +35,7 @@ import {
   type TaskId,
   type ToolRegistration,
 } from '@earendil-works/pi-durable';
+import { watchEvents, type AgentEvent } from './events/watch.ts';
 import { openDurableStorage } from './storage/durable-storage.ts';
 import { discardInheritedWork } from './storage/branch-storage.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
@@ -473,7 +473,7 @@ export class DurableKernel {
       const taskId = await tx.createTask(CompactionTask, { reason: 'threshold' }, {
         ownership: { kind: 'conversation' }, background: true,
       });
-      live.compactions = [{ taskId, reason: 'threshold', blocking: false, attempt: 1 }];
+      live.compactions = [{ taskId, trigger: 'threshold', blocking: false, attempt: 1 }];
     }, BACKGROUND_CONTEXT);
   }
 
@@ -527,8 +527,8 @@ export class DurableKernel {
         cwd: target.cwd ?? this.options.cwd,
         ...(this.options.shellPath ? { shellPath: this.options.shellPath } : {}),
       }),
-      onReport: (error, info) => {
-        this.options.hooks.debugLog(`[kernel] ${info?.type ?? 'report'}: ${error instanceof Error ? error.message : String(error)}`);
+      onReport: ({ kind, error }) => {
+        this.options.hooks.debugLog(`[kernel] ${kind}: ${error instanceof Error ? error.message : String(error)}`);
       },
     }, BACKGROUND_CONTEXT);
     if (!copiedParent) this.harness.resume();
@@ -620,7 +620,7 @@ export class DurableKernel {
     await this.submitInput({ type: 'input', content: message, whenBusy: 'steer' });
   }
 
-  private async submitInput(request: Parameters<Conversation['submit']>[0]): Promise<void> {
+  private async submitInput(request: InputSubmissionDraft): Promise<void> {
     const pending = this.conversation!.submit(request, BACKGROUND_CONTEXT).then(submission => {
       if (!this.startedInputs.delete(submission.id)) this.acceptedInputs.add(submission.id);
     });
@@ -924,6 +924,7 @@ export class DurableKernel {
       }
 
       case 'message_update': {
+        this.partial = event.message;
         if (event.usage) this.lastUsage = event.usage;
         const out: (AgentSessionEvent | Record<string, unknown>)[] = [];
         for (const change of event.changes) {

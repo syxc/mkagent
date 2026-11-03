@@ -49,5 +49,8 @@ export async function discardInheritedWork(storage: Storage): Promise<void> {
       if (document) writes.push({ type: 'document.retire', id: document.id });
     }
   }
-  if (writes.length > 0) await storage.commit(writes, BACKGROUND_CONTEXT);
+  if (writes.length > 0) {
+    const result = await storage.commit([writes], () => {}, BACKGROUND_CONTEXT);
+    if (result.stored !== 1) throw result.refused ?? new Error('Could not discard inherited work');
+  }
 }

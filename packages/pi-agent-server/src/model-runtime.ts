@@ -1,5 +1,5 @@
 /**
- * pi-ai 1.4.0 model runtime for the durable kernel.
+ * pi-ai 1.5.0 model runtime for the durable kernel.
  *
  * Replaces the 1.1.0 `ModelRuntime`/`ModelRegistry` pair: one `MutableModels`
  * collection owns provider auth (credential store) and the model catalog.

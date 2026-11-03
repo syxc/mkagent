@@ -16,7 +16,7 @@
  */
 import { createHash } from 'node:crypto';
 import { toLlmContent, type CallToolResult, type Tool as McpTool } from '@earendil-works/pi-mcp';
-import type { ToolResultMessage, TSchema } from '@earendil-works/pi-ai';
+import type { ToolResultMessage } from '@earendil-works/pi-ai';
 import type { ToolExecutionApi, ToolExecutionResult, ToolRegistration } from '@earendil-works/pi-durable';
 import type { Context, JsonValue } from '@earendil-works/chord';
 import { READ_MCP_RESOURCE_TOOL, type McpExposure } from './mcp-servers.ts';
@@ -235,8 +235,8 @@ export function createMcpToolDefinition(options: McpToolDefinitionOptions): Tool
   const registration: ToolRegistration = {
     name: options.name,
     description,
-    parameters: toParameters(tool.inputSchema) as TSchema,
-    structuredOutputSchema: createMcpResultSchema(tool.outputSchema) as TSchema,
+    parameters: toParameters(tool.inputSchema),
+    structuredOutputSchema: createMcpResultSchema(tool.outputSchema),
     ...toDurableVisibility(options.exposure),
     async execute(args, api: ToolExecutionApi, context: Context): Promise<ToolExecutionResult> {
       const client = await options.getClient();
