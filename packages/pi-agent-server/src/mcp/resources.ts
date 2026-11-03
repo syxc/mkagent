@@ -21,7 +21,6 @@ import {
 } from './mcp-servers.ts';
 import { toDurableVisibility, limitMcpContent, toModelContent } from './tools.ts';
 import type { McpServerConnection } from './runtime.ts';
-import type { TSchema } from '@earendil-works/pi-ai';
 import type { ToolRegistration } from '@earendil-works/pi-durable';
 import type { CallToolResult } from '@earendil-works/pi-mcp';
 import type { Context, JsonValue } from '@earendil-works/chord';
@@ -241,8 +240,8 @@ export function createMcpResourceToolDefinitions(options: McpResourceToolOptions
   }): ToolRegistration => ({
     name: definition.name,
     description: definition.description,
-    parameters: definition.parameters as TSchema,
-    structuredOutputSchema: definition.outputSchema as TSchema,
+    parameters: definition.parameters,
+    structuredOutputSchema: definition.outputSchema,
     ...visibility,
     async execute(args, api, context) {
       const result = await definition.execute(args as Record<string, unknown> | undefined, api, context);

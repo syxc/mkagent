@@ -67,7 +67,7 @@ function resolveMaxTokens(configured: number | undefined): number {
 }
 
 /**
- * Build a synthetic pi-ai 1.4.0 model definition for a custom endpoint.
+ * Build a synthetic pi-ai 1.5.0 model definition for a custom endpoint.
  * The full `Model` shape is required: `createProvider` does not fill in
  * `api`/`provider`/`baseUrl`, and generation dispatches on `model.api`.
  * Image support must be explicitly enabled at the connection level or per-model.

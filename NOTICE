@@ -11,7 +11,7 @@ MkAgent contains modifications and is not affiliated with or endorsed by
 the upstream project or its trademark owners.
 
 Portions of the Pi agent server and Pi event types are adapted from
-@earendil-works/pi-coding-agent (https://github.com/earendil-works/pi):
+@earendil-works/pi-coding-agent and pi-durable (https://github.com/earendil-works/pi):
 
 MIT License
 

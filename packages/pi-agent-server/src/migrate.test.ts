@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRegistry, Harness, ROOT_CONVERSATION_ID, type EntryRecord, type TaskId, type TaskRecord, type ToolRegistration } from '@earendil-works/pi-durable';
 import { JsonlStorage, openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
+import { commitWrites } from '@earendil-works/pi-durable/testing';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { migrateLegacySession, migrateParentStore, readLegacyBranchConversation } from './migrate.ts';
@@ -442,7 +443,7 @@ describe('migrateLegacySession', () => {
         kind: 'migration-preflight-test', version: 1, input: null, background: false,
         abortRequested: false, state: { status: 'running', checkpoint: null },
       };
-      await storage.commit([{ type: 'task', value: task }], BACKGROUND_CONTEXT);
+      await commitWrites(storage, [{ type: 'task', value: task }], BACKGROUND_CONTEXT);
       const sidecar = join(storeDir, `task-${task.id}.jsonl`);
       const committed = readFileSync(sidecar);
       const mainBefore = readFileSync(join(storeDir, 'main.jsonl'));
@@ -457,7 +458,7 @@ describe('migrateLegacySession', () => {
         return append(path, ...args);
       };
       updated = { ...task, state: { status: 'running', checkpoint: { progress: 1 } } };
-      committing = storage.commit([{ type: 'task', value: updated }], BACKGROUND_CONTEXT);
+      committing = commitWrites(storage, [{ type: 'task', value: updated }], BACKGROUND_CONTEXT);
       await reached.promise;
       before = readFileSync(sidecar);
       expect(before.length).toBeGreaterThan(committed.length);
@@ -519,7 +520,7 @@ describe('migrateLegacySession', () => {
             kind: 'migration-preflight-test', version: 1, input: null, background: false,
             abortRequested: false, restarts: 2, state: { status: 'running', checkpoint: null },
           };
-          if (running) await storage.commit([{ type: 'task', value: task }], BACKGROUND_CONTEXT);
+          if (running) await commitWrites(storage, [{ type: 'task', value: task }], BACKGROUND_CONTEXT);
           const migration = await storage.findDocument({ kind: 'mkagent.legacy-id-map', scope: { kind: 'session' } }, 'current', BACKGROUND_CONTEXT);
           const before = await storage.document(migration!.id, 'current', BACKGROUND_CONTEXT);
           if (partial) expect(before?.value.branches).not.toHaveProperty('inactive');

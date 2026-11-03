@@ -1,4 +1,4 @@
-import { Type } from '@earendil-works/pi-ai';
+import { obj, opt, str } from '@earendil-works/pi-schema';
 import { defineTool, type ToolRegistration } from '@earendil-works/pi-durable';
 import TurndownService from 'turndown';
 import { parse as parseHtml } from 'node-html-parser';
@@ -7,15 +7,15 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { lookup } from 'node:dns/promises';
 import { randomUUID } from 'node:crypto';
 
-const schema = Type.Object({
-  url: Type.String({ description: 'URL to fetch' }),
-  prompt: Type.Optional(
-    Type.String({
+const schema = obj({
+  url: str({ description: 'URL to fetch' }),
+  prompt: opt(
+    str({
       description:
         'Context hint included in the output prefix (e.g. "find the pricing table"). The full page content is always returned — use this to annotate what you were looking for.',
     }),
   ),
-});
+}, { open: true });
 
 const turndown = new TurndownService({
   headingStyle: 'atx',

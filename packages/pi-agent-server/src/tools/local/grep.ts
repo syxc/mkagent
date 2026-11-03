@@ -8,7 +8,7 @@ import { readFile as fsReadFile, stat as fsStat } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
-import { Type } from 'typebox';
+import { bool, num, obj, opt, str } from '@earendil-works/pi-schema';
 import { defineTool, type ToolRegistration } from '@earendil-works/pi-durable';
 import { resolveToCwd } from './path-utils.ts';
 import { resolveRipgrep } from './tool-binaries.ts';
@@ -16,15 +16,15 @@ import { DEFAULT_MAX_BYTES, formatSize, GREP_MAX_LINE_LENGTH, truncateHead, trun
 
 const DEFAULT_LIMIT = 100;
 
-const grepSchema = Type.Object({
-  pattern: Type.String({ description: 'Search pattern (regex or literal string)' }),
-  path: Type.Optional(Type.String({ description: 'Directory or file to search (default: current directory)' })),
-  glob: Type.Optional(Type.String({ description: "Filter files by glob pattern, e.g. '*.ts' or '**/*.spec.ts'" })),
-  ignoreCase: Type.Optional(Type.Boolean({ description: 'Case-insensitive search (default: false)' })),
-  literal: Type.Optional(Type.Boolean({ description: 'Treat pattern as literal string instead of regex (default: false)' })),
-  context: Type.Optional(Type.Number({ description: 'Number of lines to show before and after each match (default: 0)' })),
-  limit: Type.Optional(Type.Number({ description: 'Maximum number of matches to return (default: 100)' })),
-});
+const grepSchema = obj({
+  pattern: str({ description: 'Search pattern (regex or literal string)' }),
+  path: opt(str({ description: 'Directory or file to search (default: current directory)' })),
+  glob: opt(str({ description: "Filter files by glob pattern, e.g. '*.ts' or '**/*.spec.ts'" })),
+  ignoreCase: opt(bool({ description: 'Case-insensitive search (default: false)' })),
+  literal: opt(bool({ description: 'Treat pattern as literal string instead of regex (default: false)' })),
+  context: opt(num({ description: 'Number of lines to show before and after each match (default: 0)' })),
+  limit: opt(num({ description: 'Maximum number of matches to return (default: 100)' })),
+}, { open: true });
 
 interface RipgrepMatchEvent {
   type?: string;
