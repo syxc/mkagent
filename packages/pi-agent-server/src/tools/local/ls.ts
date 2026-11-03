@@ -8,15 +8,15 @@
  */
 import { readdir as fsReaddir, stat as fsStat } from 'node:fs/promises';
 import nodePath from 'node:path';
-import { Type } from 'typebox';
+import { num, obj, opt, str } from '@earendil-works/pi-schema';
 import { defineTool, type ToolRegistration } from '@earendil-works/pi-durable';
 import { pathExists, resolveToCwd } from './path-utils.ts';
 import { DEFAULT_MAX_BYTES, formatSize, truncateHead } from './truncate.ts';
 
-const lsSchema = Type.Object({
-  path: Type.Optional(Type.String({ description: 'Directory to list (default: current directory)' })),
-  limit: Type.Optional(Type.Number({ description: 'Maximum number of entries to return (default: 500)' })),
-});
+const lsSchema = obj({
+  path: opt(str({ description: 'Directory to list (default: current directory)' })),
+  limit: opt(num({ description: 'Maximum number of entries to return (default: 500)' })),
+}, { open: true });
 
 const DEFAULT_LIMIT = 500;
 

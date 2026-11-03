@@ -10,7 +10,7 @@
 import { createInterface } from 'node:readline';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
-import { Type } from 'typebox';
+import { num, obj, opt, str } from '@earendil-works/pi-schema';
 import { defineTool, type ToolRegistration } from '@earendil-works/pi-durable';
 import { pathExists, resolveToCwd } from './path-utils.ts';
 import { resolveFd } from './tool-binaries.ts';
@@ -25,13 +25,13 @@ export function relativizeFindResultPath(resultPath: string, searchPath: string,
   return hadTrailingSeparator && !posixPath.endsWith('/') ? `${posixPath}/` : posixPath;
 }
 
-const findSchema = Type.Object({
-  pattern: Type.String({
+const findSchema = obj({
+  pattern: str({
     description: "Glob pattern to match files, e.g. '*.ts', '**/*.json', or 'src/**/*.spec.ts'",
   }),
-  path: Type.Optional(Type.String({ description: 'Directory to search in (default: current directory)' })),
-  limit: Type.Optional(Type.Number({ description: 'Maximum number of results (default: 1000)' })),
-});
+  path: opt(str({ description: 'Directory to search in (default: current directory)' })),
+  limit: opt(num({ description: 'Maximum number of results (default: 1000)' })),
+}, { open: true });
 
 const DEFAULT_LIMIT = 1000;
 

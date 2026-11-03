@@ -31,6 +31,7 @@ import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { CompactionTask, DEFAULT_COMPACTION_POLICY, InboxDoc, LiveDoc, UsageDoc, ROOT_CONVERSATION_ID, createRegistry, defineDoc, defineExtension, defineTask, defineTool, hook, type Extension, Harness, type StorageWrite, type SubmissionId, type TaskId, type TaskRecord, type ToolRegistration } from '@earendil-works/pi-durable';
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
+import { commitWrites } from '@earendil-works/pi-durable/testing';
 import { CacheWarmer } from './cache-warmer.ts';
 import { DurableKernel } from './kernel.ts';
 import { withModelRequestCompatibility } from './model-runtime.ts';
@@ -860,8 +861,8 @@ describe('DurableKernel end-to-end', () => {
       { type: 'context_edit', id: 'edit', parentId: 'before', targetId: 'before', replacement: { content: `EDIT_PATH ${attachment}` } },
     ].map(record => JSON.stringify(record)).join('\n') + '\n');
     if (backend === 'jsonl') {
-      const initial = await openNodeJsonlStorage(join(source, 'durable-store'), BACKGROUND_CONTEXT);
-      await initial.close(BACKGROUND_CONTEXT);
+      mkdirSync(join(source, 'durable-store'), { recursive: true });
+      writeFileSync(join(source, 'durable-store', 'main.jsonl'), '');
     }
     const original = createKernel({ sessionPath: source, script: [textEvents('source answer')] });
     await original.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
@@ -916,8 +917,8 @@ describe('DurableKernel end-to-end', () => {
     const attachment = join(parent, 'attachments', 'retained.txt');
     writeFileSync(attachment, 'retained bytes');
     if (backend === 'jsonl') {
-      const initial = await openNodeJsonlStorage(join(parent, 'durable-store'), BACKGROUND_CONTEXT);
-      await initial.close(BACKGROUND_CONTEXT);
+      mkdirSync(join(parent, 'durable-store'), { recursive: true });
+      writeFileSync(join(parent, 'durable-store', 'main.jsonl'), '');
     }
     const source = createKernel({ sessionPath: parent, script: [textEvents('first answer'), textEvents('later answer')] });
     await source.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
@@ -1028,9 +1029,8 @@ describe('DurableKernel end-to-end', () => {
     const sessionPath = join(workspace, 'sessions', sessionId);
     mkdirSync(sessionPath, { recursive: true });
     if (storage === 'jsonl') {
-      const initial = await openNodeJsonlStorage(join(sessionPath, 'durable-store'), BACKGROUND_CONTEXT);
-      await initial.commit([], BACKGROUND_CONTEXT);
-      await initial.close(BACKGROUND_CONTEXT);
+      mkdirSync(join(sessionPath, 'durable-store'), { recursive: true });
+      writeFileSync(join(sessionPath, 'durable-store', 'main.jsonl'), '');
     }
     const secret = 'synthetic-password-value';
     const setup = createKernel({
@@ -1140,9 +1140,8 @@ describe('DurableKernel end-to-end', () => {
     const sessionPath = join(workspace, 'sessions', sessionId);
     mkdirSync(sessionPath, { recursive: true });
     if (storage === 'jsonl') {
-      const initial = await openNodeJsonlStorage(join(sessionPath, 'durable-store'), BACKGROUND_CONTEXT);
-      await initial.commit([], BACKGROUND_CONTEXT);
-      await initial.close(BACKGROUND_CONTEXT);
+      mkdirSync(join(sessionPath, 'durable-store'), { recursive: true });
+      writeFileSync(join(sessionPath, 'durable-store', 'main.jsonl'), '');
     }
     const secret = 'nested-password-fragment';
     const ordinary = 'ordinary-user-input';
@@ -1215,9 +1214,8 @@ describe('DurableKernel end-to-end', () => {
     const sessionPath = join(workspace, 'sessions', sessionId);
     mkdirSync(sessionPath, { recursive: true });
     if (storage === 'jsonl') {
-      const initial = await openNodeJsonlStorage(join(sessionPath, 'durable-store'), BACKGROUND_CONTEXT);
-      await initial.commit([], BACKGROUND_CONTEXT);
-      await initial.close(BACKGROUND_CONTEXT);
+      mkdirSync(join(sessionPath, 'durable-store'), { recursive: true });
+      writeFileSync(join(sessionPath, 'durable-store', 'main.jsonl'), '');
     }
     const result = { content: 'done', isError: mode === 'failure', browserInput: mode === 'missing' ? undefined : [mode === 'stopped' ? 'unknown' : 'ordinary'] };
     let executions = 0;
@@ -1282,9 +1280,8 @@ describe('DurableKernel end-to-end', () => {
     const sessionPath = join(workspace, 'sessions', sessionId);
     mkdirSync(sessionPath, { recursive: true });
     if (storage === 'jsonl') {
-      const initial = await openNodeJsonlStorage(join(sessionPath, 'durable-store'), BACKGROUND_CONTEXT);
-      await initial.commit([], BACKGROUND_CONTEXT);
-      await initial.close(BACKGROUND_CONTEXT);
+      mkdirSync(join(sessionPath, 'durable-store'), { recursive: true });
+      writeFileSync(join(sessionPath, 'durable-store', 'main.jsonl'), '');
     }
     let release!: () => void;
     let notify!: () => void;
@@ -1337,9 +1334,8 @@ describe('DurableKernel end-to-end', () => {
     const sessionPath = join(workspace, 'sessions', sessionId);
     mkdirSync(sessionPath, { recursive: true });
     if (storage === 'jsonl') {
-      const initial = await openNodeJsonlStorage(join(sessionPath, 'durable-store'), BACKGROUND_CONTEXT);
-      await initial.commit([], BACKGROUND_CONTEXT);
-      await initial.close(BACKGROUND_CONTEXT);
+      mkdirSync(join(sessionPath, 'durable-store'), { recursive: true });
+      writeFileSync(join(sessionPath, 'durable-store', 'main.jsonl'), '');
     }
     const secret = 'dwxhp-worbxf-frztn';
     const ordinary = 'unrelated-structured-output';
@@ -1433,9 +1429,8 @@ describe('DurableKernel end-to-end', () => {
     const sessionPath = join(workspace, 'sessions', sessionId);
     mkdirSync(sessionPath, { recursive: true });
     if (storage === 'jsonl') {
-      const initial = await openNodeJsonlStorage(join(sessionPath, 'durable-store'), BACKGROUND_CONTEXT);
-      await initial.commit([], BACKGROUND_CONTEXT);
-      await initial.close(BACKGROUND_CONTEXT);
+      mkdirSync(join(sessionPath, 'durable-store'), { recursive: true });
+      writeFileSync(join(sessionPath, 'durable-store', 'main.jsonl'), '');
     }
     let nestedStarted!: () => void;
     let finishNested!: () => void;
@@ -2519,6 +2514,33 @@ describe('DurableKernel end-to-end', () => {
     }
   });
 
+  it.each(['singleton', 'json-string'] as const)('reports repaired %s edit arguments in the tool start event', async shape => {
+    const dir = scratch();
+    const path = join(dir, 'repaired.txt');
+    const edit = { oldText: 'before', newText: 'after' };
+    writeFileSync(path, 'before');
+    const setup = createKernel({
+      sessionPath: dir,
+      script: [toolCallEvents({
+        type: 'toolCall', id: 'repair-edit', name: 'edit',
+        arguments: { path, edits: shape === 'singleton' ? edit : JSON.stringify([edit]) },
+      }), textEvents('done')],
+      extensions: [defineExtension({ name: 'repair-tools', tools: createBuiltinTools(dir) })],
+    });
+    try {
+      await setup.kernel.open({ model: { provider: 'faux', modelId: 'faux-1', contextWindow: 100_000 } });
+      await setup.kernel.submitPrompt('repair the edit arguments');
+      await setup.waitFor('agent_end');
+      expect(readFileSync(path, 'utf8')).toBe('after');
+      const starts = setup.events.filter(event => event.type === 'tool_execution_start' && event.toolCallId === 'repair-edit');
+      expect(starts).toHaveLength(1);
+      expect(starts[0]?.args).toEqual({ path, edits: [edit] });
+      const end = setup.events.find(event => event.type === 'tool_execution_end' && event.toolCallId === 'repair-edit');
+      expect(end?.isError).toBe(false);
+      expect(setup.events.indexOf(starts[0]!)).toBeLessThan(setup.events.indexOf(end!));
+    } finally { await setup.kernel.close(); }
+  });
+
   it('runs a tool round: tool events, then the follow-up model call', async () => {
     const toolCall: ToolCall = { type: 'toolCall', id: 't1', name: 'echo', arguments: { text: 'hi' } };
     const setup = createKernel({
@@ -2771,7 +2793,7 @@ describe('DurableKernel end-to-end', () => {
   }, 25_000);
 
   it.each(['missing', 'split'] as const)('does not delay retry cancellation when the failed entry is %s from its batch', async (mode) => {
-    const durable = await import('@earendil-works/pi-durable');
+    const durable = await import('./events/watch.ts');
     const { spyOn } = await import('bun:test');
     const watchEvents = durable.watchEvents;
     let transformed = false;
@@ -3108,7 +3130,7 @@ describe('DurableKernel end-to-end', () => {
             ? { status: 'terminal', outcome: { status: 'completed', result: { preserved: true } } }
             : states[index < 257 ? 0 : index - 256]! } });
         }
-        await seeded.commit(writes, BACKGROUND_CONTEXT);
+        await commitWrites(seeded, writes, BACKGROUND_CONTEXT);
         completed = await seeded.task(ids.at(-1)!, BACKGROUND_CONTEXT);
       } finally {
         await seeded.close(BACKGROUND_CONTEXT);
@@ -3161,7 +3183,9 @@ describe('DurableKernel end-to-end', () => {
           finally { database.close(); }
         }
         await restored.kernel.open({ model: branchModel });
-        await restored.waitFor('agent_end');
+        // 1.5 treats a request interrupted by process loss as a retryable failed attempt.
+        await restored.waitForWhere(event => event.type === 'agent_end' && event.willRetry === false);
+        expect(restored.events.some(event => event.type === 'auto_retry_start')).toBe(true);
         expect(restored.kernel.sessionId).toBe(parent.kernel.sessionId);
         expect(restored.calls).toHaveLength(2);
         expect(executions).toBe(1);
@@ -3460,7 +3484,7 @@ describe('DurableKernel end-to-end', () => {
         kind: 'migration-preflight-test', version: 1, input: null, background: false,
         abortRequested: false, restarts: 2, state: { status: 'running', checkpoint: null },
       };
-      await storage.commit([{ type: 'task', value: task }], BACKGROUND_CONTEXT);
+      await commitWrites(storage, [{ type: 'task', value: task }], BACKGROUND_CONTEXT);
       const record = await storage.findDocument({ kind: 'mkagent.legacy-id-map', scope: { kind: 'session' } }, 'current', BACKGROUND_CONTEXT);
       const migration = await storage.document(record!.id, 'current', BACKGROUND_CONTEXT);
       const filesBefore = Object.fromEntries(readdirSync(parentStore).sort().map(name => [name, readFileSync(join(parentStore, name))]));

@@ -1,0 +1,117 @@
+{
+  "sdk": "1.4.0",
+  "mkagent": "81c7c55359eb4b8e56625da845ea24d7dfce8a3d",
+  "ids": {
+    "root": 1,
+    "child": 14,
+    "childEntry": 20,
+    "generation": 22,
+    "tool": 23,
+    "compaction": 24,
+    "grandchild": 25
+  },
+  "idMap": {
+    "m1": 8,
+    "m2": 9,
+    "m3": 10,
+    "e1": 11,
+    "c1": 12,
+    "m4": 13
+  },
+  "rootMessages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "The conversation history before this point was compacted into the following summary:\n\n<summary>\n1.4.0 summary\n</summary>"
+        }
+      ],
+      "timestamp": 1793696425787
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "old answer"
+        }
+      ],
+      "api": "faux",
+      "provider": "faux",
+      "model": "old-fixture",
+      "usage": {
+        "input": 1,
+        "output": 1,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 2,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "stopReason": "stop",
+      "timestamp": 1
+    },
+    {
+      "role": "user",
+      "content": "after edit",
+      "timestamp": 2
+    },
+    {
+      "role": "user",
+      "content": "retained root",
+      "timestamp": 3
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "toolCall",
+          "id": "old-call",
+          "name": "fixture-tool",
+          "arguments": {}
+        }
+      ],
+      "api": "faux",
+      "provider": "faux",
+      "model": "old-fixture",
+      "usage": {
+        "input": 1,
+        "output": 1,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 2,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "stopReason": "stop",
+      "timestamp": 1
+    },
+    {
+      "role": "toolResult",
+      "toolCallId": "old-call",
+      "toolName": "fixture-tool",
+      "content": [
+        {
+          "type": "text",
+          "text": "Tool result unavailable: history ends before this call completed."
+        }
+      ],
+      "isError": true,
+      "details": {
+        "reason": "missing_result"
+      },
+      "timestamp": 1
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 /** Real kernel/storage shutdown with local providers that can return billed usage after abort. */
 import { afterEach, describe, expect, it } from 'bun:test';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { EventEmitter } from 'node:events';
@@ -11,7 +11,6 @@ import { createRegistry, defineExtension, defineTool, Harness, UsageDoc, type Co
 import { DurableKernel } from './kernel.ts';
 import type { CacheWarmer } from './cache-warmer.ts';
 import { openDurableStorage } from './storage/durable-storage.ts';
-import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
 
 // Bun's Process.on memoryPressure overload can hide Node's inherited generic event typing.
 const processEvents = process as EventEmitter;
@@ -62,9 +61,8 @@ async function setup(options: { backend?: 'sqlite' | 'jsonl'; holdSecondMain?: b
   const dir = mkdtempSync(join(tmpdir(), 'cache-warmer-close-'));
   const storeDir = join(dir, 'durable-store');
   if (options.backend === 'jsonl') {
-    const initial = await openNodeJsonlStorage(storeDir, BACKGROUND_CONTEXT);
-    await initial.commit([], BACKGROUND_CONTEXT);
-    await initial.close(BACKGROUND_CONTEXT);
+    mkdirSync(storeDir, { recursive: true });
+    writeFileSync(join(storeDir, 'main.jsonl'), '');
   }
   const tool = Promise.withResolvers<void>();
   const main = Promise.withResolvers<void>();

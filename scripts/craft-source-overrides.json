@@ -11,8 +11,8 @@
       "reason": "Craft ignore rules adapted for MkAgent local config and credentials; includes the generated Alma snapshots ignore rule added in 57ad06c."
     },
     "NOTICE": {
-      "sha256": "e33efd481fc42a15ae09186a273ac72a67a7ea973c4121ca1c0f43034634e285",
-      "reason": "Retain MkAgent branding and Craft origin notices, and add the MIT notice for server code and event declarations adapted from pi-coding-agent."
+      "sha256": "e169dc98e2ac3d49869511677ab48d4a2cb26b5705d7c061cd2e8e69b95be31c",
+      "reason": "Retain MkAgent branding and Craft origin notices, and include the MIT notice for server code and event declarations adapted from pi-coding-agent and pi-durable."
     },
     "README.md": {
       "sha256": "4cee9e0ac623faf263fd245fa023ea3422c47d98dd418e4ab5542ea955c8a218",
@@ -951,8 +951,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "a4882a8f1fb22681dd5cbdf5aeafd5ff1c0013f38414afdcc84cd50d410af4e3",
-      "reason": "Retain MkAgent workspace versions and Lite dependency removals; resolve the server durable, pi-ai, chord and codemode packages at 1.4.0 with Photon WASM, while retaining shared Pi 1.1.0 event compatibility and removing coding-agent dependencies."
+      "sha256": "08912f5ffa835efd15017f34e61fea2b7121408a32c68a209df2c63f7a9b2f12",
+      "reason": "Retain MkAgent workspace versions and Lite dependency removals; resolve the server durable, pi-ai, chord, codemode and schema packages at 1.5.0 with Photon WASM, while retaining shared Pi 1.1.0 event compatibility."
     },
     "package.json": {
       "sha256": "7e50a02766d5eed5ee0a89a8216267c39e63c7f4d212ccfa2bb824e72bdf3ee1",
@@ -991,8 +991,8 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "packages/pi-agent-server/package.json": {
-      "sha256": "e47c14ffb815bdb1d2d032cb85a81d97015783ada434d5955bfa1246336df6cf",
-      "reason": "Replace Craft's coding-agent runtime with pi-durable, pi-ai, chord and codemode 1.4.0, retain pi-mcp 1.1.0, and use the package build script to produce the subprocess and its worker and WASM assets."
+      "sha256": "73b5f26929a483590e102863dbbd293e0deeccb5eb13ee706d3b92589630cd7f",
+      "reason": "Replace Craft's coding-agent runtime with pi-durable, pi-ai, chord, codemode and schema 1.5.0, retain pi-mcp 1.1.0, and build the subprocess with its worker and WASM assets."
     },
     "packages/pi-agent-server/src/adapt-credential.test.ts": {
       "sha256": "d1333c4dba8dc86ef234d5f0a69cc0b47d79d5242f6a50671d008f2023b64216",
@@ -1007,8 +1007,8 @@
       "reason": "Adapt Craft custom-endpoint regressions to explicit pi-ai api and baseUrl fields, retaining image opt-in, context windows, validated output caps and omission of store for strict OpenAI-compatible gateways."
     },
     "packages/pi-agent-server/src/custom-endpoint-models.ts": {
-      "sha256": "a6bd4d7b04db21f2f504347d4e860059463f1f10a4b32f684b15bd72b780f938",
-      "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.4.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
+      "sha256": "8942d89ac1c159e377417f3f65633be64fde10feb9921cc04685d935cfa6fa79",
+      "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
       "sha256": "1685540dfbfab8b8636ba4a35b71d38858446e918601031ca4babe410b843f4a",
@@ -1023,7 +1023,7 @@
       "reason": "Adapt Craft model resolution to pi-ai MutableModels; retain prefix handling, endpoint priority, provider isolation and rejection classification. Keep MiniMax CN catalog IDs intact so durable can resolve complete model definitions; apply request ID compatibility at dispatch."
     },
     "packages/pi-agent-server/src/tools/search/create-search-tool.test.ts": {
-      "sha256": "c97e2519af54690d978e8299fb95e93b21984101e2275e6966d5058085a8eb64",
+      "sha256": "03da75cee639fbe7289a4200df306a3437d0fe61ec0e6cdc4131e7a1da77bdf0",
       "reason": "Adapt Craft search-tool tests to durable execute parameters and output results, retaining count limits, DuckDuckGo recovery, error flags and bounded error messages."
     },
     "packages/pi-agent-server/src/tools/search/providers/ddg.ts": {
@@ -1035,7 +1035,7 @@
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "packages/pi-agent-server/src/tools/web-fetch.ts": {
-      "sha256": "b652ef2584e77178d26449019d3a4c597f7de47cb75bf086dd908b89624be344",
+      "sha256": "d373c1a5638791b4325465c7fb429994fe39e2a31641996d62b6c8a315513eb3",
       "reason": "Adapt Craft web_fetch to durable defineTool and output results instead of ToolDefinition and content; retain HTML, PDF, image, JSON and text handling, output limits, session downloads and isError propagation."
     },
     "packages/pi-agent-server/tsconfig.typecheck.json": {
@@ -2243,7 +2243,7 @@
       "reason": "Extend Craft's offline bundle network guard to block WebSocket construction as well as fetch so newer provider transports cannot bypass the fixture."
     },
     "packages/pi-agent-server/src/tools/search/create-search-tool.ts": {
-      "sha256": "5448f3c41be0620667ec671d199468ea2cc96f6b3d2274f33ca7533f78811abe",
+      "sha256": "7cd063cdc4fe276e06b3ce0276ad5b41a702d414ffff4086da1ab247c9227eb8",
       "reason": "Adapt Craft web_search from ToolDefinition to durable defineTool and output results; retain search schemas, count limits, DuckDuckGo recovery, error flags and bounded error messages."
     },
     "packages/shared/src/agent/__tests__/browser-tool-redaction.test.ts": {
@@ -2657,11 +2657,11 @@
       "reason": "Port pi-coding-agent 1.1.0 core/cache-warmer.js replay, TTL, scheduling and cost policies to durable request hooks; persist actual returned usage for every stop reason and drain all refreshes before storage shutdown."
     },
     "packages/pi-agent-server/src/cache-warmer-lifecycle.test.ts": {
-      "sha256": "a26772f329e3535e449a04fdf62fb034ece2c2810794b898ed980d9825294ed5",
+      "sha256": "164b7360de4c01c10031140767dd32be00854070e76588ce4253546ef9d6c715",
       "reason": "Verify kernel shutdown drains current and replaced cache refreshes through validation and accounting; check cancellation, rejection handling and ledger reopen with real storage and local providers."
     },
     "packages/pi-agent-server/src/cache-warmer.test.ts": {
-      "sha256": "51c345dca9d7b897ce52e2a94563af76c10be738458c3a15a29e395055ecd2f3",
+      "sha256": "6c30eabd40de0437bf3de47a3999f90772c0017eb2708b9274fb7a6e35b7dcee",
       "reason": "Verify actual cache-warm usage, terminal responses, cumulative persistence, retention selection and no fabricated cost with real SQLite and JSONL ledgers and local model fixtures."
     },
     "packages/pi-agent-server/src/mcp/visibility.test.ts": {
@@ -2721,7 +2721,7 @@
       "reason": "Extract compactionReserveFor from local main session-settings.ts to preserve the host autoCompactWindow threshold in the durable kernel."
     },
     "packages/pi-agent-server/src/durable-storage.test.ts": {
-      "sha256": "a3cf96b99b10d3320f06ebf610febcbdb3ab9ad66b97c1e88db7979b5c8718ac",
+      "sha256": "21a2b12904f9f4240222095f7428935f826703c6635874575f1c5c8c515fe71b",
       "reason": "Verify SQLite selection for new durable stores and retention of existing JSONL stores."
     },
     "packages/pi-agent-server/src/ephemeral.ts": {
@@ -2729,11 +2729,11 @@
       "reason": "Migrate local main index.ts queryLlm behavior from temporary AgentSessions to pi-ai completeSimple while retaining mini-model recovery and cancellation."
     },
     "packages/pi-agent-server/src/kernel.e2e.test.ts": {
-      "sha256": "e9de34f5fb3ae2cec58785af6af353629c3b70bd9c9f9ca7d6fa59e425e6b418",
+      "sha256": "2f4bbc3efe4e3c3ac00c2b53911b7a2e28a6b524910859428994f9e87dbeb916",
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "5eba2af42ecdb76bb4003d74ca2dbd13e0ca3d72700393fe3f340f0baf739a06",
+      "sha256": "67ac86b1292a84c661b7bbc0078512433918264db7b26fcf4e7ad4db2898d19f",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
@@ -2761,7 +2761,7 @@
       "reason": "Port pi-coding-agent 1.1.0 core/resolve-config-value.js environment, template and command resolution using the platform default shell."
     },
     "packages/pi-agent-server/src/mcp/resources.ts": {
-      "sha256": "710afc1e911019e1fe0ffa8717d288f369f7b003f314576b257c0f5b7f271398",
+      "sha256": "882755663ed8c85c150f89ec437f15cecf0b95c2cfd5ab289e2fb53b076a3ba7",
       "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/resources.js resource listing and reading to durable tool registration and visibility."
     },
     "packages/pi-agent-server/src/mcp/runtime.ts": {
@@ -2769,11 +2769,11 @@
       "reason": "Port pi-coding-agent 1.1.0 extensions/mcp/runtime.js transport, reconnect, retry and logging behavior; report unsupported OAuth sign-in explicitly."
     },
     "packages/pi-agent-server/src/mcp/tools.ts": {
-      "sha256": "9b54751f1500c4a23807149804facd53b9e24b6a09b2dfc86141c45b182834b9",
+      "sha256": "664d87b1785584dcf1ebb2bf6ce0eb66ca8c703c5b17424b182be1a3822d6feb",
       "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/tools.js naming, content conversion and truncation to durable registrations without TUI renderers."
     },
     "packages/pi-agent-server/src/migrate.test.ts": {
-      "sha256": "4bcda77af62aa16784d878aaae760d73cd9dc6f4f8dc88c0d586386262177f0d",
+      "sha256": "7260ff31bd9484472b4cac746184d64614a1abd3d2f23caf8c0223ec30b46ba1",
       "reason": "Verify legacy transcript conversion, active and inactive branches, context edits, compaction mapping, interrupted migration recovery, and unchanged running parent tasks with present or missing id-map sidecars on SQLite and JSONL."
     },
     "packages/pi-agent-server/src/migrate.ts": {
@@ -2781,15 +2781,15 @@
       "reason": "Convert legacy pi-coding-agent 1.1.0 JSONL histories to durable conversations and persist recoverable entry and branch anchor mappings; skip existing parent backends without opening them, migrate only legacy-only parents in place, and complete deferred migration in the child copy."
     },
     "packages/pi-agent-server/src/model-runtime.ts": {
-      "sha256": "dc1f198a5e2249c54e2c4a911e940a36e30547e9e18c68f4b0a07b56af6e5322",
+      "sha256": "e1dd4bd5feb109849c4e322e4f0affb685286d999308ebde4489799128a36751",
       "reason": "Retain credential synchronization and custom endpoint registration in MutableModels. Apply MiniMax CN bare request IDs only at stream and streamSimple dispatch, preserving canonical model metadata across runtime replacement and ephemeral queries."
     },
     "packages/pi-agent-server/src/storage/durable-storage.ts": {
-      "sha256": "b85448b29d4529d0293bfcdf676b8c3f3c9eaa59352414ac1e4d58fd69313c2a",
+      "sha256": "a7f6d8cfb6c2e6c75c91f73732400ad4c29f5667e43f2bc81dfe161073c5989f",
       "reason": "Adapt chord 1.4.0 NodeSqliteDatabase queue and transaction semantics to bun:sqlite, using pi-durable SQLite storage while retaining existing JSONL stores."
     },
     "packages/pi-agent-server/src/storage/branch-storage.ts": {
-      "sha256": "988aa1b3f6e7a0a5ed9798dc77741aca6b95d94b3a71ceb11db03e1114dd14e7",
+      "sha256": "0a4d59349184e19eef3fd7f1775edb6fa414d168050291976c2c96420951bf58",
       "reason": "Retire inherited tasks, submissions and runtime documents atomically through Storage before opening a copied branch; preserve committed history and usage without scheduling inherited work."
     },
     "packages/pi-agent-server/src/tools/builtin.ts": {
@@ -2801,15 +2801,15 @@
       "reason": "Bind pi-durable codemode to the installed pi-codemode sandbox, packaged worker and WASM assets, with host approval for model calls."
     },
     "packages/pi-agent-server/src/tools/local/find.ts": {
-      "sha256": "7f07e39f3ef6697eff04947152b48c6a42faf759a6b45beab8f8a2259ea23aeb",
+      "sha256": "af35fc5469442720737c543dc7878fa13fff5a0b59bfe7667d20d8f16170c213",
       "reason": "Adapt pi-coding-agent 1.1.0 core/tools/find.js to durable registration and the local fd manager while retaining path and truncation behavior."
     },
     "packages/pi-agent-server/src/tools/local/grep.ts": {
-      "sha256": "ae3060b8527ec64e9adc5f4f5b4fdc680ad597565d18b2bf3f0890157b448a66",
+      "sha256": "7b353fa5ff2011afb22eaeba8f049c087da6fc73ee7cb50cd91e692668b7324c",
       "reason": "Adapt pi-coding-agent 1.1.0 core/tools/grep.js search behavior to durable registration and local ripgrep resolution."
     },
     "packages/pi-agent-server/src/tools/local/ls.ts": {
-      "sha256": "bf85e9120673d537d83d629bd79fb32ec36998a82154a6d66879866eb2ad055b",
+      "sha256": "ee0272a6406a543130f004671a574a32a35cf536f7e8d993923b480feed5ea1a",
       "reason": "Adapt pi-coding-agent 1.1.0 core/tools/ls.js listing and truncation behavior to durable registration without TUI renderers."
     },
     "packages/pi-agent-server/src/tools/local/path-utils.ts": {
@@ -2903,6 +2903,126 @@
     "packages/shared/src/sessions/session-files.ts": {
       "sha256": "2c80717dfa1d077fef7417e4faa29a47fae0054c4ca751525cca67748ff0fe90",
       "reason": "Copy and remap retained session files and display or model references across export, import, and branches."
+    },
+    "packages/pi-agent-server/src/events/translate.ts": {
+      "sha256": "e6ab037a92210355207e5d973094fecb6a5e6383234b6e90111a3240998d7419",
+      "reason": "Adapt public pi-durable 1.5.0 conversation and commit observers to retained host events, including held progress, transcript windows and nested tool results."
+    },
+    "packages/pi-agent-server/src/events/types.ts": {
+      "sha256": "832199e5a26382c15fa0a322aa8c675dd3d9a5f3befe653752b4b4f916254b5c",
+      "reason": "Adapt public pi-durable 1.5.0 conversation and commit observers to retained host events, including held progress, transcript windows and nested tool results."
+    },
+    "packages/pi-agent-server/src/events/watch.test.ts": {
+      "sha256": "e340700df6b1896fd3e94de137b4183a3e77f16befa3ed267ccfc24ff7fda33d",
+      "reason": "Adapt public pi-durable 1.5.0 conversation and commit observers to retained host events, including held progress, transcript windows and nested tool results."
+    },
+    "packages/pi-agent-server/src/events/watch.ts": {
+      "sha256": "d7b08030ff5dcaa88a129a09c4f6d352d113cf3a6b9ade8a0f3966bce9137218",
+      "reason": "Adapt public pi-durable 1.5.0 conversation and commit observers to retained host events, including held progress, transcript windows and nested tool results."
+    },
+    "packages/pi-agent-server/src/storage-upgrade.test.ts": {
+      "sha256": "d3c6593262a299e93abc9559ab74a24bd56a5df67b23e39f2339394807e5fd18",
+      "reason": "Verify released pi-durable 1.4.0 session fixtures through the 1.5.0 storage, migration and scheduler APIs."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/generate.ts": {
+      "sha256": "c208b7792c63a75f876935ab0f4d6f9a888dcf8b83ab752291991a615e77ad8b",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-15.jsonl": {
+      "sha256": "0a695e7a8bab7c3c4a1108a65455bafc835d80e50858e8aa1a9f610b74e8c976",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-16.jsonl": {
+      "sha256": "87726a33b7ca5c2ece4b564c9b70373d9a653b7e1dd6ac9c847372692fac6bb9",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-17.jsonl": {
+      "sha256": "dec9274adf4b46e457c6a06437f131c7156fc3e65f6b476b94c889999de04f7a",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-18.jsonl": {
+      "sha256": "3754c2e84732a7bdb210be0c23f88dfcf8b962b0273ba0a1b7452b2daeba226a",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-19.jsonl": {
+      "sha256": "80778587fcc923218a8996afbbd737a1e8eaafd1432a1b8d0fe832c185a6ccce",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-2.jsonl": {
+      "sha256": "6383e2a11cbef7ec0f8b89d07f736f37e162c4c1eb1c67b4ec7539be27d0625b",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-26.jsonl": {
+      "sha256": "b0f010ed81430e15ee357ef07b0acec9bab4b1e01fab4223ead04271c3fd9462",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-27.jsonl": {
+      "sha256": "3e7e5ebf22f8e76fd9c4d0239dba799e2bbdc3f193f6325ad846eeb0efcb0801",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-28.jsonl": {
+      "sha256": "52db6da12d5988256ff6d0abade4536b18acff615947a59c78ddd600e3e0e222",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-29.jsonl": {
+      "sha256": "8daf155fe00ec4fcade4adaf7366a4ef2a54ad10f0afb06aa2673abdf530584a",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-3.jsonl": {
+      "sha256": "cc756fdf2b0bed00cf3120c6f9d701101775c82f0a3aa25a595eb36ce7cd529f",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-30.jsonl": {
+      "sha256": "498ad93855219cef745ad93f622fea8656c918138d758995f7c62210cb4929e4",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-4.jsonl": {
+      "sha256": "e628650ba8c2e3f241851fb4f8584f65f2532e511294a33e3c999b1336ec1e70",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-5.jsonl": {
+      "sha256": "5086ccd170ba99275023b5bf9fa0c9cc2915c80867625cd688329459c9ea52dd",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-6.jsonl": {
+      "sha256": "21864fbec5c27b0e0121b4969fe54fe57dea4e1b08d41132b79500eb57e9a491",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/doc-7.jsonl": {
+      "sha256": "32c7b38129617a85bd9f8d2b195e5fd2d17dccb8c18cf56d24e80a6406adfd54",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/expected.json": {
+      "sha256": "892490cd5b984c5fafc186212363d6d18c94df951d45ce723fea1dc880269d05",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/main.jsonl": {
+      "sha256": "4c20622e5983b6a90f5973cb171fefc00f743fa095f52fbc22c773d50df56000",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/task-22.jsonl": {
+      "sha256": "aa7d0367d87290d9eab1a72e2df5f89e52dd0d8808cc80ea7052ae5e7883b0d4",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/task-23.jsonl": {
+      "sha256": "1c2935482f987b0c60acfef35386f26ef430df9273e135c1d5e68d263a44acd0",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/jsonl/task-24.jsonl": {
+      "sha256": "d1480c8ddd5d368e94e680e9f903b1bdf7271b31a0d97add63f158b7c72cb136",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/legacy.jsonl": {
+      "sha256": "f62870e77be2473a6ad2fa0f3fa9974d815d3e74ca373be6b2ca58a7db5d9f86",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/sqlite/expected.json": {
+      "sha256": "5b003b3ae92db0c40aaa4e664924ece7e3eb7314f38811cbed2180fa6d5885ee",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
+    },
+    "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/sqlite/store.db": {
+      "sha256": "739044ef785a28739abdc8753ee078079957115c7e9471cb9cfa5a9ca75d3382",
+      "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
     }
   },
   "deleted": {

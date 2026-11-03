@@ -5,21 +5,21 @@
  * so the model doesn't need to know which backend is used.
  */
 
-import { Type } from '@earendil-works/pi-ai';
+import { num, obj, opt, str } from '@earendil-works/pi-schema';
 import { defineTool } from '@earendil-works/pi-durable';
 import type { WebSearchProvider, WebSearchResult } from './types.ts';
 import { DDGSearchProvider } from './providers/ddg.ts';
 
-const schema = Type.Object({
-  query: Type.String({ description: 'The search query' }),
-  count: Type.Optional(
-    Type.Number({
+const schema = obj({
+  query: str({ description: 'The search query' }),
+  count: opt(
+    num({
       description: 'Max results (1-10, default 5)',
       minimum: 1,
       maximum: 10,
     }),
   ),
-});
+}, { open: true });
 
 function formatResults(
   query: string,

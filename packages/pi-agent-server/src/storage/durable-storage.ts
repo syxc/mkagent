@@ -95,6 +95,14 @@ class BunSqliteExecutor {
     });
   }
 
+  runCounted(sql: string, ...params: SqliteValue[]): Promise<number> {
+    return this.runOperation(() => {
+      this.statement(sql).run(...params);
+      // Bun's result includes trigger writes; the portable contract uses SQLite changes().
+      return (this.statement('SELECT changes() AS count').get() as { count: number }).count;
+    });
+  }
+
   get<T extends object>(sql: string, ...params: SqliteValue[]): Promise<T | undefined> {
     return this.runOperation(() => {
       // bun:sqlite yields null for no row; the contract expects undefined.

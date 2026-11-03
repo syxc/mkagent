@@ -1,0 +1,7 @@
+{"type":"session","version":3,"id":"synthetic-upgrade"}
+{"type":"message","id":"m1","message":{"role":"user","content":"old prompt","timestamp":1}}
+{"type":"message","id":"m2","message":{"role":"assistant","content":[{"type":"text","text":"old answer"}],"api":"faux","provider":"faux","model":"old-fixture","usage":{"input":1,"output":1,"cacheRead":0,"cacheWrite":0,"totalTokens":2,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"stop","timestamp":1}}
+{"type":"message","id":"m3","message":{"role":"user","content":"before edit","timestamp":2}}
+{"type":"context_edit","id":"e1","targetId":"m3","replacement":{"content":"after edit"}}
+{"type":"compaction","id":"c1","summary":"1.4.0 summary","firstKeptEntryId":"m2"}
+{"type":"message","id":"m4","message":{"role":"user","content":"retained root","timestamp":3}}
