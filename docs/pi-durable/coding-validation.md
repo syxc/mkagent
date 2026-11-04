@@ -1,4 +1,11 @@
-# Durable coding validation and limits
+# Pi-durable coding agent validation and remaining work
+
+This report records the implementation and checks at `4776fe1`. The target is
+`pi-durable coding agent`: pi-durable execution, Pi coding capabilities and
+plugin compatibility, with all existing MkAgent features preserved. The
+[implementation plan](durable-coding-agent-plan.md) defines the remaining
+corrections and acceptance gates after the user's clarification on 2026-11-04.
+An unimplemented operation or an unverified product path remains open work.
 
 ## Implemented scope
 
@@ -49,7 +56,9 @@ license. Headless archives also include the root LICENSE and NOTICE. Image
 workers resolve from the installed module; the project directory cannot
 supply an executable worker.
 
-The production dependency graph excludes `pi-coding-agent` and `pi-agent-core`.
+The current production dependency graph excludes both `pi-coding-agent` and
+`pi-agent-core`. The dependency policy prohibits the complete `pi-coding-agent`
+package and permits `pi-agent-core` when useful within the durable boundary.
 The `./native`, `./agent` and `./durable` exports expose the native coding layer,
 durable Agent facade and host bindings. Declaration files come from the same
 sources. The shared transport retains its existing wire contract.
@@ -104,9 +113,10 @@ Production crash checks first reproduced an old answer settling a new input,
 and an interrupted finalizer leaving an input permanently placed. Each has a
 test in the repository that passed after its correction.
 
-## Capability boundaries
+## Capability status and open acceptance items
 
 Retaining native source does not establish all host and platform combinations.
+The table records current evidence and gaps. It does not waive the target.
 
 | Inventory area | Behavior and limits |
 | --- | --- |
@@ -130,13 +140,25 @@ Retaining native source does not establish all host and platform combinations.
 | Extensions: UI | Production reports print mode and no interactive UI. Native TUI sources remain available to SDK consumers. |
 | Local package resources | Native installed-manifest discovery, filters and diagnostics are used. |
 | npm/git package management | Opening host resources does not install missing packages. Explicit installation workflows are not all exercised. |
-| Project MCP | Project execution requires explicit host trust. A product trust-approval UI is not part of this migration. |
-| MCP OAuth | Production interactive authorization is not provided. |
+| Project MCP | The loader requires explicit host trust. The product trust-approval path still needs integration and validation. |
+| MCP OAuth | Production interactive authorization is not provided. Host integration remains open. |
 | Codemode/tool search | Official host integrations and native tools share durable execution. Dynamic catalogs, deferred activation and handoff context through restart have coverage. |
 | Retry/steer/follow-up/compaction | Native callbacks use durable phases. Accepted queues, cancellation, repeated text, retry deadlines and compaction thresholds have coverage. |
 | Resume/branch/usage/export | Journal and legacy projection tests cover history, edits, branches, forks and usage. Native HTML export works with relocated templates and themes. All combinations of multiple heads and managed navigation are not exercised. |
 | CLI/JSONL/Desktop/WebUI | Packaged subprocess and JSONL checks run locally. The macOS arm64 headless launcher, health endpoint and authenticated WebSocket were exercised. Real Desktop and browser interaction were not exercised. |
 | Themes/shortcuts/editor/renderers | Native sources and resources are retained and packaged. Interactive terminal behavior was not exercised. |
+
+The native `AgentSession` is currently selected by the coding profile or
+explicit coding resources. Normal sessions retain the durable GenerationTask
+path and their Pi-resource isolation. The next implementation must separate
+runtime integration from resource policy and verify the intended behavior of
+both profiles. The existence of profiles or distinct durable task types alone
+does not establish a second execution kernel.
+
+Whole-product acceptance is still open. The checks above do not cover every
+MkAgent default-profile feature, product session operation or Desktop/WebUI
+flow. Those paths must be exercised in isolated environments before completion
+is claimed.
 
 Unsafe legacy checkpoints, old checkpoint versions and uncertain effects fail
 closed with migration diagnostics. Startup does not silently discard them.

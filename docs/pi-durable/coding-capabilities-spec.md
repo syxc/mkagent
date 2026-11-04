@@ -1,9 +1,12 @@
-# Durable coding capabilities and Pi extension compatibility
+# Pi-durable coding agent capabilities and Pi extension compatibility
 
 ## Baseline and goal
 
-This design ports the Pi coding agent's upper layers and replaces its Agent
-kernel with pi-durable. The upper-layer source is the compatibility baseline.
+The runtime is named `pi-durable coding agent`, also called `durable coding
+agent`. It combines pi-durable execution with the coding capabilities and
+plugin ecosystem of Pi coding agent. All existing MkAgent product features
+must remain complete and work through Desktop, WebUI, CLI and headless entry
+points. The upper-layer source is the compatibility baseline.
 The baseline is MkAgent `85325251a10d`, whose tree matches `0959d3563892`.
 The source baseline is Pi v1.5.0, commit
 `f9a26365568127461c47a07a37dcb42c140a3ac5`. The coding package's Pi dependencies
@@ -19,9 +22,16 @@ package reuse, real functional validation, and the best possible compatibility
 with existing Pi plugins. Compatibility must describe tested API behavior.
 Loading a plugin without exercising its operations does not establish compatibility.
 
+The user's clarification on 2026-11-04 permits `pi-agent-core` where needed.
+Production must not depend directly on the complete `pi-coding-agent` package.
+This clarification replaces the earlier dependency restriction in this document
+and in the historical first-switch specifications.
+
 This inventory is the acceptance target. Its baseline column describes MkAgent
 before this migration. See [validation and limits](coding-validation.md) for
-the implemented behavior, current evidence and limits.
+the implemented behavior and current evidence. Follow the ordered corrections
+and product acceptance gates in the
+[implementation plan](durable-coding-agent-plan.md).
 
 ## Architecture
 
@@ -36,6 +46,13 @@ The existing `DurableKernel` owns the Harness and production storage. The native
 `pi.coding.session`, `pi.coding.run` and owned tool tasks schedule its callbacks.
 Retries, compaction, nested execution and settlement return through those tasks.
 The old Agent loop is excluded from the source closure.
+
+Normal and coding profiles retain their existing prompts, tool visibility,
+permissions and resource policies. Runtime selection and Pi resource loading
+are separate concerns. A shared runtime must not make normal sessions load
+ambient Pi settings, extensions, skills or system-prompt files. Distinct durable
+task types are allowed when they serve different operations; acceptance checks
+execution ownership, capabilities and product behavior.
 
 Reuse the native `SessionManager.inMemory()` and projection functions for
 synchronous extension reads and previews. Production writes go through durable.
@@ -60,10 +77,17 @@ Use durable public tools, environment, images, codemode and tool-search APIs.
 Keep the existing cancellation fixes in local grep/find/ls until an equivalent
 official implementation is verified.
 
-Do not depend on the `pi-coding-agent` or `pi-agent-core` packages, including
-their private files. A probe importing only resource exports bundles 2,074 modules
-and about 9.0 MB of uncompressed code. The user explicitly rejected this route.
-The historical ban on those runtime dependencies remains in force.
+Do not add the complete `pi-coding-agent` package as a production dependency or
+load its runtime through a subpath. Use independent official Pi packages where
+they fit. `pi-agent-core` may supply public types or reusable operations where
+needed, but pi-durable remains responsible for execution scheduling, task
+ownership, accepted inputs, recovery and commits. Importing an official package
+must not start a second Agent loop outside that boundary.
+
+The current implementation does not require a `pi-agent-core` dependency.
+Keeping that dependency absent is an implementation choice, not an acceptance
+condition. Reassess source-port adapters when a public core API can replace
+them without changing durable execution.
 
 Port the complete public coding dependency closure from the pinned TypeScript
 source, including the SDK, resources, extensions, session layer and presentation
@@ -78,9 +102,10 @@ checkout. The runtime keeps TypeScript declarations and rewrites old Agent
 imports to the durable facade. Host consumers use `./native`, `./agent` and
 `./durable` exports.
 
-Plugin import identifiers resolve to the local port or independent official
-packages. They must not fall back to the old engine. A compatibility export
-list describes implemented runtime exports; it is not a full compatibility claim.
+Plugin SDK import identifiers resolve to the local port or independent official
+packages. Resolving a plugin's `pi-coding-agent` SDK identifier does not authorize
+loading the complete package. A compatibility export list describes implemented
+runtime exports; it is not a full compatibility claim.
 
 ## Durable boundary requirement
 
@@ -133,6 +158,12 @@ Plugin compatibility is assessed per API group. A retained source file or a
 successful registration does not establish all host, platform and interactive
 workflows. See the validation report for tested behavior and host limits.
 
+Missing host operations and missing validation remain open acceptance items.
+They cannot become accepted exclusions merely by being listed in the report.
+MkAgent regression coverage must also include model and credential updates,
+permissions, proxy and session tools, MCP, browser tools, background work,
+branching, persistence and transport behavior.
+
 ## Trust and configuration
 
 The host passes explicit directories and profile. Do not change process HOME
@@ -154,8 +185,9 @@ Shutdown and reload release old handlers and connections.
 
 ## Implementation sequence
 
-The migration followed this sequence. The validation report records the tested
-behavior and the platform and interactive workflows that remain unverified.
+The first implementation followed this sequence. It established the source port
+and main durable integration, but did not finish product acceptance. The
+implementation plan now defines the remaining work in order.
 
 1. Commit this versioned design and inventory.
 2. Port the native resource and extension dependency closure with provenance.
@@ -167,8 +199,8 @@ behavior and the platform and interactive workflows that remain unverified.
 7. Build and run the bundled JSONL subprocess outside the source tree, then run
    required repository checks. Record results and remaining compatibility limits.
 
-The final migration commit includes source audit entries and validation for the
-complete runtime.
+Commit `4776fe1` records that implementation and its source audit. Its checks
+are evidence for that commit, not proof that the clarified target is complete.
 No push, pull request, merge, paid model request or production service changes
 are authorized by this task.
 
