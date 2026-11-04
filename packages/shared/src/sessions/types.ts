@@ -16,7 +16,7 @@ export const SESSION_PERSISTENT_FIELDS = [
   'lastReadMessageId', 'hasUnread',
   'permissionMode', 'previousPermissionMode', 'workingDirectory',
   'model', 'llmConnection', 'connectionLocked', 'thinkingLevel',
-  'pendingPlanExecution',
+  'pendingPlanExecution', 'nativeSessionOwner',
   'isArchived', 'archivedAt',
   'branchFromMessageId', 'branchFromSdkSessionId', 'branchFromSessionPath',
   'branchFromSdkCwd', 'branchFromSdkTurnId',
@@ -44,6 +44,22 @@ export interface PendingPlanExecution {
   draftInputSnapshot?: string;
   awaitingCompaction: boolean;
   executionDispatched?: boolean;
+}
+
+/** Recovery evidence only. Live workers, callers and callbacks never enter this record. */
+export interface NativeSessionOwnerRecord {
+  transactionId: string;
+  role: 'source' | 'target';
+  sourceSessionId: string;
+  targetSessionId?: string;
+  sourceNativeSessionId: string;
+  targetNativeSessionId?: string;
+  operation: 'new';
+  phase: 'preparing' | 'prepared' | 'source_closed' | 'activating' | 'target_bound' | 'committed' | 'finished' | 'aborted' | 'failed';
+  committed: boolean;
+  callbacks: 'blocked' | 'authorized' | 'finished' | 'interrupted';
+  unpublished?: boolean;
+  error?: string;
 }
 
 export interface SessionConfig {
@@ -80,6 +96,7 @@ export interface SessionConfig {
   branchFromSdkCwd?: string;
   branchFromSdkTurnId?: string;
   parentSessionId?: string;
+  nativeSessionOwner?: NativeSessionOwnerRecord;
 }
 
 export interface StoredSession extends SessionConfig {

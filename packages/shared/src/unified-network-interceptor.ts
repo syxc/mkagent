@@ -28,6 +28,7 @@ import {
   isExtendedPromptCacheEnabled,
   is1MContextEnabled,
   setStoredError,
+  getInterceptorSessionDir,
   toolMetadataStore,
   displayNameSchema,
   intentSchema,
@@ -111,8 +112,8 @@ interface ApiAdapter {
   name: string;
   shouldIntercept(url: string): boolean;
   addMetadataToTools(body: Record<string, unknown>): Record<string, unknown>;
-  injectMetadataIntoHistory(body: Record<string, unknown>): Record<string, unknown>;
-  createSseProcessor(): TransformStream<Uint8Array, Uint8Array>;
+  injectMetadataIntoHistory(body: Record<string, unknown>, sessionDir?: string | null): Record<string, unknown>;
+  createSseProcessor(sessionDir?: string | null): TransformStream<Uint8Array, Uint8Array>;
   /** Whether SSE processing strips metadata (Anthropic) or passes through (OpenAI) */
   stripsSseMetadata: boolean;
   /** Optional request modifications (e.g., fast mode headers) */
@@ -216,11 +217,11 @@ export function injectMetadataIntoToolSchema<T extends {
  *
  * @returns true if metadata was found and stored
  */
-function captureMetadataFromInput(toolId: string, toolName: string, parsed: Record<string, unknown>): boolean {
+function captureMetadataFromInput(toolId: string, toolName: string, parsed: Record<string, unknown>, sessionDir: string | null): boolean {
   const intent = typeof parsed._intent === 'string' ? parsed._intent : undefined;
   const displayName = typeof parsed._displayName === 'string' ? parsed._displayName : undefined;
   if (intent || displayName) {
-    toolMetadataStore.set(toolId, { intent, displayName, timestamp: Date.now() });
+    toolMetadataStore.set(toolId, { intent, displayName, timestamp: Date.now() }, sessionDir);
     debugLog(`[SSE] Stored metadata for ${toolName} (${toolId}): intent=${!!intent}, displayName=${!!displayName}`);
     return true;
   }
@@ -495,7 +496,7 @@ const SSE_DATA_RE = /^data:\s*(.+)$/;
  * buffers tool_use input deltas, extracts _intent/_displayName into the metadata
  * store, and re-emits clean events without those fields.
  */
-export function createAnthropicSseStrippingStream(): TransformStream<Uint8Array, Uint8Array> {
+export function createAnthropicSseStrippingStream(sessionDir = getInterceptorSessionDir()): TransformStream<Uint8Array, Uint8Array> {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
@@ -572,7 +573,7 @@ export function createAnthropicSseStrippingStream(): TransformStream<Uint8Array,
     try {
       const parsed = JSON.parse(block.bufferedJson);
 
-      captureMetadataFromInput(block.id, block.name, parsed);
+      captureMetadataFromInput(block.id, block.name, parsed, sessionDir);
       delete parsed._intent;
       delete parsed._displayName;
 
@@ -736,7 +737,7 @@ const anthropicAdapter: ApiAdapter = {
     return body;
   },
 
-  injectMetadataIntoHistory(body: Record<string, unknown>): Record<string, unknown> {
+  injectMetadataIntoHistory(body: Record<string, unknown>, sessionDir = getInterceptorSessionDir()): Record<string, unknown> {
     const messages = body.messages as Array<{
       role?: string;
       content?: Array<{
@@ -760,7 +761,7 @@ const anthropicAdapter: ApiAdapter = {
         const hasDisplayName = '_displayName' in block.input;
         if (hasIntent && hasDisplayName) continue;
 
-        const stored = toolMetadataStore.get(block.id);
+        const stored = toolMetadataStore.get(block.id, sessionDir);
         if (stored) {
           const newInput: Record<string, unknown> = {};
           if (!hasDisplayName && stored.displayName) newInput._displayName = stored.displayName;
@@ -781,8 +782,8 @@ const anthropicAdapter: ApiAdapter = {
     return body;
   },
 
-  createSseProcessor(): TransformStream<Uint8Array, Uint8Array> {
-    return createAnthropicSseStrippingStream();
+  createSseProcessor(sessionDir = getInterceptorSessionDir()): TransformStream<Uint8Array, Uint8Array> {
+    return createAnthropicSseStrippingStream(sessionDir);
   },
 
   stripsSseMetadata: true,
@@ -855,7 +856,7 @@ interface TrackedToolCall {
  * - All upstream tool_call chunks are suppressed; the consolidated events
  *   are emitted just before the original `[DONE]` / `finish_reason` event.
  */
-export function createOpenAiSseStrippingStream(): TransformStream<Uint8Array, Uint8Array> {
+export function createOpenAiSseStrippingStream(sessionDir = getInterceptorSessionDir()): TransformStream<Uint8Array, Uint8Array> {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
@@ -921,7 +922,7 @@ export function createOpenAiSseStrippingStream(): TransformStream<Uint8Array, Ui
         // pass through the raw concatenation so downstream sees something.
         outArgs = tc.arguments;
       } else {
-        captureMetadataFromInput(tc.id, tc.name, merged);
+        captureMetadataFromInput(tc.id, tc.name, merged, sessionDir);
         delete merged._intent;
         delete merged._displayName;
         outArgs = JSON.stringify(merged);
@@ -1206,7 +1207,7 @@ const openAiAdapter: ApiAdapter = {
     return body;
   },
 
-  injectMetadataIntoHistory(body: Record<string, unknown>): Record<string, unknown> {
+  injectMetadataIntoHistory(body: Record<string, unknown>, sessionDir = getInterceptorSessionDir()): Record<string, unknown> {
     sanitizeOpenAiHistoryInPlace(body);
 
     const messages = body.messages as Array<{
@@ -1243,7 +1244,7 @@ const openAiAdapter: ApiAdapter = {
         const hasDisplayName = '_displayName' in args;
         if (hasIntent && hasDisplayName) continue;
 
-        const stored = toolMetadataStore.get(tc.id);
+        const stored = toolMetadataStore.get(tc.id, sessionDir);
         if (stored) {
           const newArgs: Record<string, unknown> = {};
           if (!hasDisplayName && stored.displayName) newArgs._displayName = stored.displayName;
@@ -1268,8 +1269,8 @@ const openAiAdapter: ApiAdapter = {
     validateOpenAiChatBody(body);
   },
 
-  createSseProcessor(): TransformStream<Uint8Array, Uint8Array> {
-    return createOpenAiSseStrippingStream();
+  createSseProcessor(sessionDir = getInterceptorSessionDir()): TransformStream<Uint8Array, Uint8Array> {
+    return createOpenAiSseStrippingStream(sessionDir);
   },
 
   stripsSseMetadata: true,
@@ -1283,7 +1284,7 @@ const openAiAdapter: ApiAdapter = {
  * - response.function_call_arguments.done
  * - response.output_item.done (item.type === 'function_call')
  */
-export function createOpenAiResponsesSseStrippingStream(): TransformStream<Uint8Array, Uint8Array> {
+export function createOpenAiResponsesSseStrippingStream(sessionDir = getInterceptorSessionDir()): TransformStream<Uint8Array, Uint8Array> {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   let lineBuffer = '';
@@ -1315,7 +1316,7 @@ export function createOpenAiResponsesSseStrippingStream(): TransformStream<Uint8
       if (callId && argsStr) {
         try {
           const parsed = JSON.parse(argsStr) as Record<string, unknown>;
-          captureMetadataFromInput(callId, 'response:function_call', parsed);
+          captureMetadataFromInput(callId, 'response:function_call', parsed, sessionDir);
           delete parsed._intent;
           delete parsed._displayName;
           data.arguments = JSON.stringify(parsed);
@@ -1341,7 +1342,7 @@ export function createOpenAiResponsesSseStrippingStream(): TransformStream<Uint8
         if (toolId) {
           try {
             const parsed = JSON.parse(item.arguments) as Record<string, unknown>;
-            captureMetadataFromInput(toolId, toolName, parsed);
+            captureMetadataFromInput(toolId, toolName, parsed, sessionDir);
             delete parsed._intent;
             delete parsed._displayName;
             item.arguments = JSON.stringify(parsed);
@@ -1433,7 +1434,7 @@ const openAiResponsesAdapter: ApiAdapter = {
     return body;
   },
 
-  injectMetadataIntoHistory(body: Record<string, unknown>): Record<string, unknown> {
+  injectMetadataIntoHistory(body: Record<string, unknown>, sessionDir = getInterceptorSessionDir()): Record<string, unknown> {
     const input = body.input as Array<Record<string, unknown>> | undefined;
     if (!Array.isArray(input)) return body;
 
@@ -1462,7 +1463,7 @@ const openAiResponsesAdapter: ApiAdapter = {
       const hasDisplayName = '_displayName' in args;
       if (hasIntent && hasDisplayName) continue;
 
-      const stored = toolMetadataStore.get(entry.call_id);
+      const stored = toolMetadataStore.get(entry.call_id, sessionDir);
       if (!stored) continue;
 
       const newArgs: Record<string, unknown> = {};
@@ -1486,8 +1487,8 @@ const openAiResponsesAdapter: ApiAdapter = {
     validateOpenAiResponsesBody(body);
   },
 
-  createSseProcessor(): TransformStream<Uint8Array, Uint8Array> {
-    return createOpenAiResponsesSseStrippingStream();
+  createSseProcessor(sessionDir = getInterceptorSessionDir()): TransformStream<Uint8Array, Uint8Array> {
+    return createOpenAiResponsesSseStrippingStream(sessionDir);
   },
 
   stripsSseMetadata: true,
@@ -1830,7 +1831,7 @@ function findAdapter(url: string): ApiAdapter | undefined {
 /**
  * Capture API errors from responses for the error handler.
  */
-async function captureApiError(response: Response, url: string): Promise<void> {
+async function captureApiError(response: Response, url: string, sessionDir: string | null): Promise<void> {
   if (response.status < 400) return;
 
   debugLog(`[Attempting to capture error for ${response.status} response]`);
@@ -1897,7 +1898,7 @@ async function captureApiError(response: Response, url: string): Promise<void> {
       statusText: response.statusText,
       message: errorMessage,
       timestamp: Date.now(),
-    });
+    }, sessionDir);
     debugLog(`[Captured API error: ${response.status} ${errorMessage}]`);
   } catch (e) {
     setStoredError({
@@ -1905,7 +1906,7 @@ async function captureApiError(response: Response, url: string): Promise<void> {
       statusText: response.statusText,
       message: response.statusText,
       timestamp: Date.now(),
-    });
+    }, sessionDir);
     debugLog(`[Error reading body, capturing basic info: ${e}]`);
   }
 }
@@ -1975,12 +1976,13 @@ export function toCurl(url: string, init?: RequestInit, fullBodies: boolean = DE
 /**
  * Log response and capture API errors.
  */
-async function logResponse(response: Response, url: string, startTime: number, adapter?: ApiAdapter): Promise<Response> {
+async function logResponse(response: Response, url: string, startTime: number, adapter?: ApiAdapter,
+  sessionDir = getInterceptorSessionDir()): Promise<Response> {
   const duration = Date.now() - startTime;
 
   // Capture API errors (runs regardless of DEBUG mode)
   if (adapter) {
-    await captureApiError(response, url);
+    await captureApiError(response, url, sessionDir);
   }
 
   if (!DEBUG) return response;
@@ -2114,6 +2116,7 @@ function synthesizeMalformedBodyResponse(
   url: string,
   startTime: number,
   adapter: ApiAdapter,
+  sessionDir: string | null,
 ): Promise<Response> {
   const body = JSON.stringify({
     error: {
@@ -2133,7 +2136,7 @@ function synthesizeMalformedBodyResponse(
     statusText: 'Bad Request (blocked by MkAgent)',
     message: err.detail,
     timestamp: Date.now(),
-  });
+  }, sessionDir);
 
   return logResponse(
     new Response(body, {
@@ -2144,6 +2147,7 @@ function synthesizeMalformedBodyResponse(
     url,
     startTime,
     adapter,
+    sessionDir,
   );
 }
 
@@ -2157,6 +2161,7 @@ async function interceptedFetch(
   input: string | URL | Request,
   init?: RequestInit
 ): Promise<Response> {
+  const sessionDir = getInterceptorSessionDir();
   const url =
     typeof input === 'string'
       ? input
@@ -2188,7 +2193,7 @@ async function interceptedFetch(
         parsed = adapter.addMetadataToTools(parsed);
         // Re-inject stored metadata into conversation history (also runs the
         // Responses-API repair pass before metadata)
-        parsed = adapter.injectMetadataIntoHistory(parsed);
+        parsed = adapter.injectMetadataIntoHistory(parsed, sessionDir);
 
         // Pre-flight validation. If the body is structurally invalid for this
         // adapter (duplicate tool_call_id, missing call_id, empty function
@@ -2200,7 +2205,7 @@ async function interceptedFetch(
             adapter.validateOutgoingBody(parsed);
           } catch (err) {
             if (err instanceof MalformedBodyError) {
-              return synthesizeMalformedBodyResponse(err, url, startTime, adapter);
+              return synthesizeMalformedBodyResponse(err, url, startTime, adapter, sessionDir);
             }
             throw err;
           }
@@ -2234,14 +2239,14 @@ async function interceptedFetch(
         const contentType = response.headers.get('content-type') ?? '';
         if (contentType.includes('text/event-stream') && response.body) {
           debugLog(`[${adapter.name}] Creating SSE processor (${adapter.stripsSseMetadata ? 'strip' : 'capture'})`);
-          const processor = adapter.createSseProcessor();
+          const processor = adapter.createSseProcessor(sessionDir);
           const processedBody = response.body.pipeThrough(processor);
           const processedResponse = new Response(processedBody, {
             status: response.status,
             statusText: response.statusText,
             headers: response.headers,
           });
-          return logResponse(processedResponse, url, startTime, adapter);
+          return logResponse(processedResponse, url, startTime, adapter, sessionDir);
         }
 
         // Non-SSE response — strip metadata from JSON body if present
@@ -2252,10 +2257,10 @@ async function interceptedFetch(
             status: response.status,
             statusText: response.statusText,
             headers: response.headers,
-          }), url, startTime, adapter);
+          }), url, startTime, adapter, sessionDir);
         }
 
-        return logResponse(response, url, startTime, adapter);
+        return logResponse(response, url, startTime, adapter, sessionDir);
       }
     } catch (e) {
       debugLog(`[${adapter?.name}] FETCH modification failed:`, e);
@@ -2265,7 +2270,7 @@ async function interceptedFetch(
   const proxy = getProxyForUrl(url);
   const proxyInit = proxy ? { ...init, proxy } : init;
   const response = await originalFetch(input, proxyInit);
-  return logResponse(response, url, startTime);
+  return logResponse(response, url, startTime, undefined, sessionDir);
 }
 
 // Create proxy to handle both function calls and static properties (e.g., fetch.preconnect in Bun)

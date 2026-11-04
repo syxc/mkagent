@@ -34,8 +34,8 @@
       "reason": "Route native RPC UI snapshots, transient effects and acknowledged responses through current client leases."
     },
     "apps/electron/src/renderer/App.tsx": {
-      "sha256": "7fdd227a1e283d74560197d2f28bce7fbaab0a1a1918259244fe4e6621c0d51b",
-      "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent. Bind native RPC UI to workspace client leases and preserve draft text and attachments during bootstrap."
+      "sha256": "499df30fecc0f9d57a4a1950a1ff3bab3d33efe2802e240a7b08acce0d5d2fa6",
+      "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent. Bind native RPC UI to workspace client leases and preserve draft text and attachments during bootstrap. Install committed native target snapshots before streaming and redirect only the initiating source panel."
     },
     "apps/electron/src/renderer/assets/mkagent_app_icon.png": {
       "sha256": "8ef2d656c2eb9bbef8d0d8abb646e1ded0e4143046434866d541aaf9e3da6dc5",

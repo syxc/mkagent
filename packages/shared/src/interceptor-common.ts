@@ -36,7 +36,12 @@ export const DEBUG = INTERCEPTOR_LOGGING_ENABLED &&
 export const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 
 /** Session directory — set by env var (subprocess) or setSessionDir() (main process) */
-let _sessionDir: string | null = process.env.MKAGENT_SESSION_DIR || null;
+let _sessionDir: string | null = null;
+
+/** Capture at request admission; a shared worker can change owners while a response is pending. */
+export function getInterceptorSessionDir(): string | null {
+  return _sessionDir ?? (process.env.MKAGENT_SESSION_DIR || null);
+}
 
 // ============================================================================
 // LOGGING
@@ -289,9 +294,9 @@ export interface LastApiError {
 
 const MAX_ERROR_AGE_MS = 5 * 60 * 1000; // 5 minutes
 
-function getErrorFilePath(): string {
+function getErrorFilePath(sessionDir = getInterceptorSessionDir()): string {
   // Prefer session-scoped file to avoid cross-session error consumption.
-  if (_sessionDir) return join(_sessionDir, 'api-error.json');
+  if (sessionDir) return join(sessionDir, 'api-error.json');
   // Fallback for legacy/non-session contexts.
   return join(CONFIG_DIR, 'api-error.json');
 }
@@ -314,8 +319,8 @@ function getStoredError(sessionDir?: string): LastApiError | null {
   }
 }
 
-export function setStoredError(error: LastApiError | null): void {
-  const errorFile = getErrorFilePath();
+export function setStoredError(error: LastApiError | null, sessionDir = getInterceptorSessionDir()): void {
+  const errorFile = getErrorFilePath(sessionDir);
   try {
     if (error) {
       writeFileSync(errorFile, JSON.stringify(error));
@@ -382,13 +387,12 @@ export interface ToolMetadata {
  *
  * IMPORTANT: Multiple sessions can run concurrently in the main process (parallel chats,
  * title generation, etc.). The singleton _sessionDir gets clobbered by whichever session
- * calls setSessionDir() last. To handle this, get() accepts an explicit sessionDir
- * parameter, and setSessionDir() merges (not replaces) the in-memory map so entries
- * from all sessions coexist safely (tool_use_ids are globally unique UUIDs).
+ * calls setSessionDir() last. Reads and writes accept the captured sessionDir,
+ * and cache keys include that directory because provider tool IDs can repeat.
  */
 
-function getMetadataFilePath(): string | null {
-  return _sessionDir ? join(_sessionDir, 'tool-metadata.json') : null;
+function getMetadataFilePath(sessionDir: string | null): string | null {
+  return sessionDir ? join(sessionDir, 'tool-metadata.json') : null;
 }
 
 /** Read metadata from a specific session directory's file */
@@ -403,18 +407,22 @@ function readMetadataFileFromDir(dir: string): Record<string, ToolMetadata> {
   }
 }
 
-// In-memory Map for same-process lookups (accumulates entries across all sessions)
+// The directory distinguishes identical provider IDs in different sessions.
 const _metadataMap = new Map<string, ToolMetadata>();
 
-/** Read the entire metadata file from disk (uses current _sessionDir) */
-function readMetadataFile(): Record<string, ToolMetadata> {
-  if (!_sessionDir) return {};
-  return readMetadataFileFromDir(_sessionDir);
+function metadataKey(id: string, sessionDir: string | null): string {
+  return `${sessionDir ?? ''}\0${id}`;
+}
+
+/** Read the metadata file captured by the request or selected by the caller. */
+function readMetadataFile(sessionDir = getInterceptorSessionDir()): Record<string, ToolMetadata> {
+  if (!sessionDir) return {};
+  return readMetadataFileFromDir(sessionDir);
 }
 
 /** Write the entire metadata object to the session file (atomic via temp+rename) */
-function writeMetadataFile(allMetadata: Record<string, ToolMetadata>): void {
-  const filePath = getMetadataFilePath();
+function writeMetadataFile(allMetadata: Record<string, ToolMetadata>, sessionDir: string | null): void {
+  const filePath = getMetadataFilePath(sessionDir);
   if (!filePath) return;
   try {
     const tmpPath = filePath + '.tmp';
@@ -432,13 +440,14 @@ function writeMetadataFile(allMetadata: Record<string, ToolMetadata>): void {
  */
 function mergeAndWriteMetadata(
   updater: (all: Record<string, ToolMetadata>) => void,
+  sessionDir: string | null,
   retries: number = 1,
 ): void {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const all = readMetadataFile();
+      const all = readMetadataFile(sessionDir);
       updater(all);
-      writeMetadataFile(all);
+      writeMetadataFile(all, sessionDir);
       return;
     } catch (error) {
       debugLog(`[toolMetadataStore.merge] Attempt ${attempt + 1}/${retries + 1} failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -451,8 +460,7 @@ export const toolMetadataStore = {
   /**
    * Set session directory and pre-populate in-memory map from file.
    * Called by main process so subsequent get() calls are O(1) memory lookups.
-   * Does NOT clear the map — entries from other sessions are preserved since
-   * tool_use_ids are globally unique UUIDs and won't conflict.
+   * Preserve other sessions under their separate directory keys.
    */
   setSessionDir(dir: string): void {
     _sessionDir = dir;
@@ -460,16 +468,16 @@ export const toolMetadataStore = {
     // clearing would discard metadata from other active sessions.
     const all = readMetadataFile();
     for (const [id, meta] of Object.entries(all)) {
-      _metadataMap.set(id, meta);
+      _metadataMap.set(metadataKey(id, dir), meta);
     }
   },
 
   /** Store metadata — writes to in-memory Map + cached file */
-  set(toolUseId: string, metadata: ToolMetadata): void {
-    _metadataMap.set(toolUseId, metadata);
+  set(toolUseId: string, metadata: ToolMetadata, sessionDir = getInterceptorSessionDir()): void {
+    _metadataMap.set(metadataKey(toolUseId, sessionDir), metadata);
     mergeAndWriteMetadata((all) => {
       all[toolUseId] = metadata;
-    });
+    }, sessionDir);
   },
 
   /**
@@ -477,28 +485,29 @@ export const toolMetadataStore = {
    * Accepts an explicit sessionDir to read from the correct file even when
    * _sessionDir has been clobbered by a concurrent session's setSessionDir().
    */
-  get(toolUseId: string, sessionDir?: string): ToolMetadata | undefined {
-    const inMemory = _metadataMap.get(toolUseId);
+  get(toolUseId: string, sessionDir = getInterceptorSessionDir()): ToolMetadata | undefined {
+    const key = metadataKey(toolUseId, sessionDir);
+    const inMemory = _metadataMap.get(key);
     if (inMemory) return inMemory;
 
     // Read from explicit sessionDir if provided, otherwise fall back to _sessionDir
-    const dir = sessionDir || _sessionDir;
+    const dir = sessionDir;
     if (!dir) return undefined;
 
     const all = readMetadataFileFromDir(dir);
     const entry = all[toolUseId];
     if (entry) {
       // Cache in memory for O(1) subsequent lookups
-      _metadataMap.set(toolUseId, entry);
+      _metadataMap.set(key, entry);
     }
     return entry;
   },
 
-  delete(toolUseId: string): void {
-    _metadataMap.delete(toolUseId);
+  delete(toolUseId: string, sessionDir = getInterceptorSessionDir()): void {
+    _metadataMap.delete(metadataKey(toolUseId, sessionDir));
     mergeAndWriteMetadata((all) => {
       delete all[toolUseId];
-    });
+    }, sessionDir);
   },
 
   get size(): number {

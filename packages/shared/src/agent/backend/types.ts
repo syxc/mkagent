@@ -127,6 +127,8 @@ export interface CoreBackendConfig {
   codingResources?: import('./pi/protocol.ts').PiCodingResources;
   /** A separate channel for native plugin UI, including hooks outside chat turns. */
   extensionUI?: ExtensionUIHostPort;
+  /** Product ownership of native session replacement. Live callbacks are not session data. */
+  nativeSessionOwner?: import('./pi/native-owner-protocol.ts').PiNativeOwnerHostPort;
   /** Workspace configuration */
   workspace: Workspace;
 
@@ -256,6 +258,7 @@ export interface PendingSteer extends RedirectMetadata {
 }
 
 export interface AgentBackend {
+  readonly nativeSessionOwner?: import('./pi/native-owner-protocol.ts').PiNativeOwnerBackend;
   // ============================================================
   // Chat & Lifecycle
   // ============================================================

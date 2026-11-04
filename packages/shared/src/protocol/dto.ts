@@ -124,7 +124,8 @@ export type SessionEvent =
   | { type: 'name_changed'; sessionId: string; name?: string }
   | { type: 'session_model_changed'; sessionId: string; model: string | null }
   | { type: 'session_deleted'; sessionId: string }
-  | { type: 'session_created'; sessionId: string }
+  | { type: 'session_created'; sessionId: string; session?: Session }
+  | { type: 'native_session_redirect'; sessionId: string; targetSessionId: string; transactionId: string }
   | { type: 'usage_update'; sessionId: string; tokenUsage: { inputTokens: number; contextWindow?: number; contextUsage?: ContextUsageSnapshot } }
   | { type: 'message_annotations_updated'; sessionId: string; messageId: string; annotations: AnnotationV1[] }
   | { type: 'working_directory_error'; sessionId: string; error: string };

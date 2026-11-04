@@ -45,7 +45,9 @@ import type { Workspace } from '../config/storage.ts';
 import { PiEventAdapter } from './backend/pi/event-adapter.ts';
 import { PiWorkerConnection, type PiWorkerLease } from './backend/pi/worker-connection.ts';
 import { PiExtensionUITransport } from './backend/pi/extension-ui-transport.ts';
-import type { PiCompactResult } from './backend/pi/protocol.ts';
+import type { PiCompactResult, PiWorkerInitConfig, PiWorkerScope } from './backend/pi/protocol.ts';
+import type { PiNativeOwnerActivation, PiNativeOwnerBackend, PiNativeOwnerControl, PiNativeOwnerEvent, PiNativeWorkerTransfer } from './backend/pi/native-owner-protocol.ts';
+import { createOwnerTransfer, isOwnerTransferConnection, ownerTransferState, parseOwnerEvent, workerScope } from './backend/pi/native-owner-runtime.ts';
 import { EventQueue } from './backend/event-queue.ts';
 
 // System prompt for MkAgent context
@@ -179,6 +181,20 @@ export class PiAgent extends BaseAgent {
   private subprocessReadyResolve: (() => void) | null = null;
   private subprocessReadyReject: ((error: Error) => void) | null = null;
   private disposed = false;
+  readonly nativeSessionOwner: PiNativeOwnerBackend = {
+    prepareActivation: () => this.prepareActivation(),
+    detachForOwner: () => this.detachForOwner(),
+    adoptForOwner: (transfer, transactionId) => this.adoptForOwner(transfer, transactionId),
+    sendOwnerControl: control => this.sendOwnerControl(control),
+    releaseForOwner: () => this.releaseForOwner(),
+  };
+  private ownerPreparing = false;
+  private detachedOwner?: { transactionId: string; completed: boolean };
+  private ownerControls = new Map<string, { lease: PiWorkerLease; connection: PiWorkerConnection }>();
+  private retainedWorkers = new Map<PiWorkerLease, { connection: PiWorkerConnection; tasks: Set<string> }>();
+  private sourceTransfer?: PiNativeWorkerTransfer;
+  private ownerReleaseTimeoutMs = 15_000;
+  private pendingOwnerReleases = new Map<string, PendingEphemeralRequest<void> & { lease: PiWorkerLease }>();
   private readonly extensionUI: PiExtensionUITransport;
 
   // Pi session ID (managed by subprocess, reported back)
@@ -292,6 +308,7 @@ export class PiAgent extends BaseAgent {
 
   // Pending auto-compaction toggle requests
   private pendingAutoCompactionToggles: Map<string, {
+    lease: PiWorkerLease;
     resolve: (enabled: boolean) => void;
     reject: (error: Error) => void;
   }> = new Map();
@@ -318,22 +335,28 @@ export class PiAgent extends BaseAgent {
 
   // Cached session tool context (lazy-created on first session tool call)
   private _sessionToolContext: SessionToolContext | null = null;
-  private pendingBackgroundStops = new Map<string, { resolve: (stopped: boolean) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
+  private pendingBackgroundStops = new Map<string, { resolve: (stopped: boolean) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout>; lease?: PiWorkerLease }>();
 
   private backgroundStopTimeoutMs = 10_000;
 
   async stopBackgroundTask(taskId: string): Promise<boolean> {
-    if (!this.subprocess) throw new Error('Background task transport unavailable');
+    const retained = [...this.retainedWorkers].find(([, binding]) => binding.tasks.has(taskId));
+    const lease = retained?.[0] ?? this.workerLease ?? undefined;
+    return this.requestBackgroundStop(taskId, lease);
+  }
+
+  private requestBackgroundStop(taskId: string, lease?: PiWorkerLease): Promise<boolean> {
+    if (!lease && !this.subprocess) throw new Error('Background task transport unavailable');
     const id = crypto.randomUUID();
-    const lease = this.workerLease;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pendingBackgroundStops.delete(id);
         lease?.cancelBackgroundStop(id);
+        if (lease) this.pruneRetainedWorker(lease);
         reject(new Error('Background task stop timed out'));
       }, this.backgroundStopTimeoutMs);
-      this.pendingBackgroundStops.set(id, { resolve, reject, timer });
-      if (this.send({ type: 'stop_background_task', id, taskId }) === false) {
+      this.pendingBackgroundStops.set(id, { resolve, reject, timer, lease });
+      if ((lease ? lease.send({ type: 'stop_background_task', id, taskId }) : this.send({ type: 'stop_background_task', id, taskId })) === false) {
         clearTimeout(timer);
         this.pendingBackgroundStops.delete(id);
         lease?.cancelBackgroundStop(id);
@@ -356,42 +379,395 @@ export class PiAgent extends BaseAgent {
 
   constructor(config: BackendConfig) {
     const resolvedModel = config.model || '';
-    const modelDef = getModelById(resolvedModel);
     super(config, resolvedModel);
 
     this._supportsBranching = true;
 
     this.piSessionId = config.session?.sdkSessionId || null;
-    this.adapter = new PiEventAdapter();
-    if (modelDef?.contextWindow) {
-      this.adapter.setContextWindow(modelDef.contextWindow);
-    }
-    if (config.miniModel) {
-      this.adapter.setMiniModel(config.miniModel);
-    }
+    this.adapter = this.createAdapter();
     this.extensionUI = new PiExtensionUITransport(config.extensionUI, command => this.subprocess !== null && this.send(command));
-
-    // Set session dir on adapter for concurrent-safe toolMetadataStore lookups
-    if (config.session?.id && config.workspace.rootPath) {
-      this.adapter.setSessionDir(join(config.workspace.rootPath, 'sessions', config.session.id));
-    }
-
-    // Wire the adapter's async recovery fallbacks into the event queue. They
-    // fire when the SDK doesn't follow through on a recovery it announced:
-    // no compaction_start after a held overflow agent_end (e.g.
-    // _overflowRecoveryAttempted was already true), or no auto_retry_start /
-    // retried agent_start after an agent_end { willRetry: true }. They run
-    // outside adaptEvent() so they can't yield through the generator —
-    // instead, they call these callbacks to enqueue the parked error and
-    // terminate the iterator.
-    this.adapter.setRecoveryFallbackHandlers(
-      (event) => this.eventQueue.enqueue(event),
-      () => this.eventQueue.complete(),
-    );
 
     if (!config.isHeadless) {
       this.startConfigWatcher();
     }
+  }
+
+  private createAdapter(): PiEventAdapter {
+    const adapter = new PiEventAdapter();
+    const modelDef = getModelById(this._model);
+    if (modelDef?.contextWindow) adapter.setContextWindow(modelDef.contextWindow);
+    if (this.config.miniModel) adapter.setMiniModel(this.config.miniModel);
+    if (this.config.session?.id && this.config.workspace.rootPath) {
+      adapter.setSessionDir(join(this.config.workspace.rootPath, 'sessions', this.config.session.id));
+    }
+    adapter.setRecoveryFallbackHandlers(
+      event => { if (this.adapter === adapter) this.deliverEvent(event); },
+      () => { if (this.adapter === adapter) this.completeDelivery(); },
+    );
+    return adapter;
+  }
+
+  private deliverEvent(event: AgentEvent, background = false): void {
+    if (this.detachedOwner) {
+      // Native callbacks can contain several complete SDK turns. Only the final
+      // owner_finished frame ends the managed product turn and reports its billing.
+      if (event.type === 'complete' || this.detachedOwner.completed) return;
+      this.backgroundEventSink?.(event);
+    } else if (background && this.backgroundEventSink) this.backgroundEventSink(event);
+    else this.eventQueue.enqueue(event);
+  }
+
+  private completeDelivery(): void {
+    if (!this.detachedOwner) this.eventQueue.complete();
+  }
+
+  private finishDetachedOwner(error?: string): void {
+    const delivery = this.detachedOwner;
+    if (!delivery || delivery.completed) return;
+    delivery.completed = true;
+    this.adapter.resetRecoveryState();
+    this._isProcessing = false;
+    this.eventQueue.complete();
+    if (error) this.backgroundEventSink?.({ type: 'error', message: error });
+    const usage = this.adapter.getTurnUsage();
+    this.backgroundEventSink?.(usage ? { type: 'complete', usage } : { type: 'complete' });
+    if (this.detachedOwner === delivery) this.detachedOwner = undefined;
+  }
+
+  private bindWorker(connection: PiWorkerConnection, sessionId: string): PiWorkerLease {
+    const tasks = new Set<string>();
+    const lease = connection.bind({
+      ownerSessionId: sessionId,
+      onLine: line => this.handleWorkerLine(line, connection, lease, tasks),
+      onStderr: text => {
+        if (this.workerLease !== lease) return;
+        this.recordStderr(text);
+        if (text.trim()) this.debug(`[subprocess stderr] ${text.trim()}`);
+      },
+      onError: error => this.workerLost(connection, lease, error),
+      onExit: (code, signal) => this.workerLost(connection, lease,
+        new Error(`Pi subprocess exited unexpectedly (${signal ? `signal ${signal}` : `code ${code}`})`), { code, signal }),
+    });
+    this.retainedWorkers.set(lease, { connection, tasks });
+    this.workerConnection = connection;
+    this.workerLease = lease;
+    this.subprocess = connection.child;
+    return lease;
+  }
+
+  private handleWorkerLine(line: string, connection: PiWorkerConnection, lease: PiWorkerLease, tasks: Set<string>): void {
+    let message: Record<string, unknown>;
+    try { message = JSON.parse(line); } catch {
+      if (this.workerLease === lease) this.handleLine(line);
+      return;
+    }
+    if (!message || typeof message !== 'object' || Array.isArray(message)) return;
+    const event = message.type === 'background_task_event' && message.event && typeof message.event === 'object'
+      ? message.event as Record<string, unknown> : undefined;
+    if (event?.type === 'shell_backgrounded' && typeof event.shellId === 'string') tasks.add(event.shellId);
+    if (event?.type === 'task_completed' && typeof event.taskId === 'string') tasks.delete(event.taskId);
+    if (message.type === 'owner_released') {
+      const pending = typeof message.id === 'string' ? this.pendingOwnerReleases.get(message.id) : undefined;
+      if (pending?.lease === lease) this.handleLine(line);
+      return;
+    }
+    if (typeof message.type === 'string' && message.type.startsWith('owner_')) {
+      const ownerEvent = parseOwnerEvent(message, workerScope(lease));
+      if (ownerEvent && (this.workerLease === lease || this.ownerControls.get(ownerEvent.transactionId)?.lease === lease)) {
+        this.handleOwnerEvent(ownerEvent, connection, lease);
+      }
+      return;
+    }
+    if (message.type === 'error' && typeof message.id === 'string') {
+      const pending = this.pendingOwnerReleases.get(message.id);
+      if (pending?.lease === lease) {
+        this.takePendingEphemeral(this.pendingOwnerReleases, message.id)?.reject(new Error(String(message.message || 'Pi owner release failed')));
+        return;
+      }
+    }
+    if (this.workerLease !== lease) {
+      // Retired foreground frames never touch a new source turn or its adapter.
+      if (event?.type === 'task_completed') this.backgroundEventSink?.(message.event as AgentEvent);
+      if (message.type === 'stop_background_task_result') this.handleBackgroundStopResult(message, lease);
+      this.pruneRetainedWorker(lease);
+      return;
+    }
+    this.handleLine(line);
+  }
+
+  private handleOwnerEvent(event: PiNativeOwnerEvent, connection: PiWorkerConnection, lease: PiWorkerLease): void {
+    const target = this.detachedOwner;
+    if (target && event.transactionId !== target.transactionId) return;
+    if (target && (event.type === 'owner_prepare' || event.type === 'owner_source_closed')) return;
+    if (!target && (event.type === 'owner_target_bound' || event.type === 'owner_finished')) return;
+    if (event.type === 'owner_prepare') {
+      if (target || this.ownerControls.size) return;
+      if (!this.config.nativeSessionOwner) {
+        lease.send({ type: 'owner_abort', transactionId: event.transactionId, error: 'Native session ownership is unavailable' });
+        return;
+      }
+      this.ownerControls.set(event.transactionId, { connection, lease });
+    } else if (!this.ownerControls.has(event.transactionId)) return;
+    if (event.type === 'owner_target_bound') {
+      if (!target) return;
+      this.piSessionId = event.nativeSessionId;
+      this.config.onSdkSessionIdUpdate?.(event.nativeSessionId);
+      this.subprocessReadyResolve?.();
+    }
+    if (event.type === 'owner_finished' || event.type === 'owner_failed') {
+      // The product callback may await managed-turn finalization.
+      this.finishDetachedOwner(event.type === 'owner_failed' || event.outcome === 'error' ? event.error : undefined);
+      if (target && event.type === 'owner_failed') this.subprocessReadyReject?.(new Error(event.error));
+      this.ownerControls.delete(event.transactionId);
+    }
+    const host = this.config.nativeSessionOwner;
+    if (host) void host.onEvent(event, this.nativeSessionOwner, connection).catch(error => {
+      this.debug(`Native owner callback failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.sendOwnerControl({ type: 'owner_abort', transactionId: event.transactionId, error: 'Native session owner failed' });
+    });
+  }
+
+  private workerLost(connection: PiWorkerConnection, lease: PiWorkerLease, error: Error, exit?: { code: number | null; signal: string | null }): void {
+    if (!this.retainedWorkers.has(lease)) return;
+    this.retainedWorkers.delete(lease);
+    lease.release();
+    for (const [id, pending] of this.pendingBackgroundStops) {
+      if (pending.lease !== lease) continue;
+      clearTimeout(pending.timer);
+      this.pendingBackgroundStops.delete(id);
+      lease.cancelBackgroundStop(id);
+      pending.reject(error);
+    }
+    for (const [id, pending] of this.pendingOwnerReleases) {
+      if (pending.lease !== lease) continue;
+      this.takePendingEphemeral(this.pendingOwnerReleases, id)?.reject(error);
+    }
+    for (const [id, binding] of this.ownerControls) {
+      if (binding.lease === lease) this.ownerControls.delete(id);
+    }
+    if (this.workerLease === lease && this.workerConnection === connection) {
+      this.finishDetachedOwner(error.message);
+      this.handleSubprocessExit(exit?.code ?? null, exit?.signal ?? null);
+    }
+    const host = this.config.nativeSessionOwner;
+    if (host) void host.onExit(this.nativeSessionOwner, connection, error).catch(error => {
+      this.debug(`Native owner exit callback failed: ${String(error)}`);
+    });
+  }
+
+  private async prepareActivation(): Promise<PiNativeOwnerActivation> {
+    if (this.disposed) throw new Error('PiAgent is disposed');
+    if (this.ownerPreparing || this._isProcessing || this.detachedOwner || this.subprocessStarting || this.pendingCompactions.size
+      || this.pendingMiniCompletions.size || this.pendingLlmQueries.size || this.pendingPermissions.size || this.runtimeConfigUpdatesPending) {
+      throw new Error('Native session target is busy');
+    }
+    this.ownerPreparing = true;
+    const epoch = this.compactionEpoch;
+    try {
+      if (this.subprocessStopping && !(await this.subprocessStopping)) throw new Error('Previous Pi owner did not stop');
+      if (this.subprocess) await this.releaseForOwner();
+      const config = await this.buildInitConfig();
+      if (this.disposed || this.compactionEpoch !== epoch) throw new Error('Pi owner activation preparation aborted');
+      this.refreshSessionToolCallbacks();
+      return {
+        config, tools: this.buildToolDefinitions(), systemPrompt: this.buildOwnerSystemPrompt(),
+        reason: this.config.session?.branchFromSessionPath ? 'fork' : this.piSessionId ? 'resume' : 'new',
+      };
+    } finally { this.ownerPreparing = false; }
+  }
+
+  private async detachForOwner(): Promise<PiNativeWorkerTransfer> {
+    const connection = this.workerConnection;
+    const lease = this.workerLease;
+    if (this.disposed || !connection || !lease || this.sourceTransfer) throw new Error('Pi source has no transferable worker');
+    const transfer = createOwnerTransfer(connection, lease, () => {
+      if (this.sourceTransfer === transfer) this.sourceTransfer = undefined;
+      for (const [id, binding] of this.ownerControls) {
+        if (binding.lease === lease) this.ownerControls.delete(id);
+      }
+      this.pruneRetainedWorker(lease);
+    });
+    this.sourceTransfer = transfer;
+    // The native command consumed the input; host recovery seeds stay available
+    // for the source's next model prompt.
+    const context = this.activeHostContext;
+    this.activeHostContext = undefined;
+    this.pendingHostContext = undefined;
+    this.activePromptId = undefined;
+    for (const end of context?.agentEnds ?? []) end();
+    const usage = this.adapter.getTurnUsage();
+    this.eventQueue.enqueue(usage ? { type: 'complete', usage } : { type: 'complete' });
+    this.eventQueue.complete();
+    this.adapter.resetRecoveryState();
+    this.turnEpoch++;
+    for (const [id, pending] of this.pendingAutoCompactionToggles) {
+      if (pending.lease !== lease) continue;
+      this.pendingAutoCompactionToggles.delete(id);
+      pending.reject(new Error('Pi source startup aborted by ownership transfer'));
+    }
+    this._isProcessing = false;
+    this.extensionUI.reset();
+    this.clearForeground();
+    // An already draining generator retains its queue and adapter.
+    this.eventQueue = new EventQueue();
+    this.adapter = this.createAdapter();
+    return transfer;
+  }
+
+  private adoptForOwner(transfer: PiNativeWorkerTransfer, transactionId: string): PiWorkerScope {
+    if (this.disposed || this.ownerPreparing || this._isProcessing || this.subprocess || this.subprocessStarting
+      || !transactionId || !this.config.session?.id) throw new Error('Pi target is not ready for adoption');
+    const state = ownerTransferState(transfer);
+    const lease = this.bindWorker(state.connection, this.config.session.id);
+    state.adopted = true;
+    this.adapter.resetRecoveryState();
+    this.adapter = this.createAdapter();
+    this.adapter.startTurn();
+    this.eventQueue.reset();
+    this.detachedOwner = { transactionId, completed: false };
+    this._isProcessing = true;
+    this.ownerControls.set(transactionId, { lease, connection: state.connection });
+    this.subprocessReady = new Promise<void>((resolve, reject) => {
+      this.subprocessReadyResolve = resolve;
+      this.subprocessReadyReject = reject;
+    });
+    void this.subprocessReady.catch(() => {});
+    return workerScope(lease);
+  }
+
+  private sendOwnerControl(control: PiNativeOwnerControl): boolean {
+    const binding = this.ownerControls.get(control.transactionId);
+    return binding ? binding.lease.send({ ...control }) : false;
+  }
+
+  private cancelOwnerOperations(error: string): void {
+    for (const [transactionId, binding] of this.ownerControls) {
+      binding.lease.send({ type: 'owner_abort', transactionId, error });
+    }
+  }
+
+  private async releaseForOwner(): Promise<void> {
+    const lease = this.workerLease;
+    if (!lease) return;
+    if (this.detachedOwner) this.cancelOwnerOperations('Pi owner released');
+    await this.requestOwnerRelease(lease);
+    lease.release();
+    if (this.workerLease === lease) {
+      this.finishDetachedOwner();
+      this.extensionUI.reset();
+      this.subprocessReadyReject?.(new Error('Pi owner released before ready'));
+      this.clearForeground();
+      this.detachedOwner = undefined;
+    }
+    for (const [id, binding] of this.ownerControls) {
+      if (binding.lease === lease) this.ownerControls.delete(id);
+    }
+    this.pruneRetainedWorker(lease);
+  }
+
+  private requestOwnerRelease(lease: PiWorkerLease): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const id = `release-owner-${++this.rpcIdCounter}`;
+      const timeout = setTimeout(() => {
+        this.pendingOwnerReleases.delete(id);
+        reject(new Error('Pi release_owner timed out'));
+      }, this.ownerReleaseTimeoutMs);
+      this.pendingOwnerReleases.set(id, { lease, timeout, resolve, reject });
+      if (!lease.send({ type: 'release_owner', id })) {
+        this.takePendingEphemeral(this.pendingOwnerReleases, id)?.reject(new Error('Pi owner transport unavailable'));
+      }
+    });
+  }
+
+  private clearForeground(): void {
+    this.subprocess = null;
+    this.workerConnection = null;
+    this.workerLease = null;
+    this.subprocessReady = null;
+    this.subprocessReadyResolve = null;
+    this.subprocessReadyReject = null;
+    this.subprocessStarting = null;
+    this.callbackPort = 0;
+    this.preToolMetadataByCallId.clear();
+  }
+
+  private pruneRetainedWorker(lease: PiWorkerLease): void {
+    const binding = this.retainedWorkers.get(lease);
+    if (!binding || binding.tasks.size || this.workerLease === lease
+      || [...this.ownerControls.values()].some(value => value.lease === lease)
+      || [...this.pendingBackgroundStops.values()].some(value => value.lease === lease)
+      || [...this.pendingOwnerReleases.values()].some(value => value.lease === lease)
+      || (this.sourceTransfer?.transport === binding.connection
+        && this.sourceTransfer.sourceScope.runtimeGeneration === lease.generation)) return;
+    this.retainedWorkers.delete(lease);
+  }
+
+  private buildToolDefinitions() {
+    this.assertBackendSessionToolParity();
+    const tools = getSessionToolProxyDefs({ profile: this._agentProfile });
+    const callLlm = tools.find(tool => tool.name === 'mcp__session__call_llm');
+    if (callLlm && this.config.miniModel) {
+      callLlm.description += `\n\nDefault fast model for this session: ${this.config.miniModel}. Omit the model parameter to use it automatically.`;
+    }
+    return tools;
+  }
+
+  private refreshSessionToolCallbacks(): void {
+    const sessionId = this.config.session?.id;
+    if (!sessionId) return;
+    // Preserve product callbacks such as browserPaneFns.
+    mergeSessionScopedToolCallbacks(sessionId, {
+      onPlanSubmitted: planPath => this.onPlanSubmitted?.(planPath),
+      queryFn: request => this.queryLlm(request),
+    });
+  }
+
+  private async buildInitConfig(): Promise<PiWorkerInitConfig> {
+    const runtime = getBackendRuntime(this.config);
+    const piAuth = await this.getPiAuth();
+    const apiKey = !piAuth && !runtime.customEndpoint ? await this.getApiKey() : undefined;
+    const sessionId = this.config.session?.id || this._sessionId;
+    const cwd = this.resolvedCwd();
+    return {
+      agentProfile: this._agentProfile, codingResources: this.config.codingResources,
+      extensionUIAvailable: this.extensionUI.available, apiKey: apiKey || '', piAuth: piAuth ?? undefined,
+      model: this._model, thinkingLevel: this._thinkingLevel, cwd,
+      workspaceRootPath: this.config.workspace.rootPath, sessionId,
+      sessionPath: this.config.session ? getSessionPath(this.config.workspace.rootPath, sessionId) : '',
+      workingDirectory: this.config.session?.workingDirectory || cwd,
+      plansFolderPath: getSessionPlansPath(this.config.workspace.rootPath, sessionId),
+      miniModel: this.config.miniModel, providerType: this.config.providerType, authType: this.config.authType,
+      workspaceId: this.config.workspace.id, baseUrl: runtime.baseUrl, customEndpoint: runtime.customEndpoint,
+      customModels: runtime.customModels, autoCompactWindow: this.config.autoCompactWindow,
+      branchFromSdkSessionId: this.config.session?.branchFromSdkSessionId,
+      branchFromSessionPath: this.config.session?.branchFromSessionPath,
+      branchFromSdkTurnId: this.config.session?.branchFromSdkTurnId,
+    };
+  }
+
+  private buildOwnerSystemPrompt(): string {
+    if (this.pinnedPreferencesPrompt === null) {
+      this.pinnedPreferencesPrompt = formatPreferencesForPrompt();
+      this.pinnedIncludeCoAuthoredBy = getCoAuthorPreference();
+    }
+    return [
+      getSystemPrompt(this.pinnedPreferencesPrompt, this.config.debugMode, this.config.workspace.rootPath,
+        this.config.session?.workingDirectory, this.config.systemPromptPreset, 'MkAgent Backend',
+        this.pinnedIncludeCoAuthoredBy ?? undefined, this._agentProfile),
+      formatStableGitDeveloperContext(this.config.session?.workingDirectory),
+      `<workspace_root>${this.config.workspace.rootPath}</workspace_root>`,
+      `<working_directory>${this.workingDirectory}</working_directory>`,
+      `<plans_directory>${getSessionPlansPath(this.config.workspace.rootPath, this._sessionId)}</plans_directory>`,
+    ].filter(Boolean).join('\n\n');
+  }
+
+  private handleBackgroundStopResult(message: Record<string, unknown>, lease?: PiWorkerLease): void {
+    const id = typeof message.id === 'string' ? message.id : '';
+    const pending = this.pendingBackgroundStops.get(id);
+    if (!pending || (lease && pending.lease !== lease)) return;
+    clearTimeout(pending.timer);
+    this.pendingBackgroundStops.delete(id);
+    pending.resolve(message.stopped === true);
   }
 
   /**
@@ -420,6 +796,7 @@ export class PiAgent extends BaseAgent {
    */
   private async ensureSubprocess(): Promise<void> {
     if (this.disposed) throw new Error('PiAgent is disposed');
+    if (this.ownerPreparing) throw new Error('Native owner activation is being prepared');
     if (this.subprocessStopping && !(await this.subprocessStopping)) {
       throw new Error('Previous Pi subprocess did not exit');
     }
@@ -517,28 +894,13 @@ export class PiAgent extends BaseAgent {
 
     this.subprocess = child;
 
-    this.workerConnection = new PiWorkerConnection(child);
-    this.workerLease = this.workerConnection.bind({
-      ownerSessionId: sessionId,
-      onLine: line => { if (this.subprocess === child) this.handleLine(line); },
-      onStderr: text => {
-        this.recordStderr(text);
-        const trimmed = text.trim();
-        if (trimmed) this.debug(`[subprocess stderr] ${trimmed}`);
-      },
-      onExit: (code, signal) => {
-        if (this.subprocess === child) this.handleSubprocessExit(code, signal);
-      },
-      onError: error => {
-        if (this.subprocess !== child) return;
-        this.debug(`Subprocess error: ${error.message}`);
-        this.subprocessReadyReject?.(error);
-        this.resetSubprocessErrorDedup();
-        this.eventQueue.enqueue({ type: 'error', message: `Pi subprocess error: ${error.message}` });
-        this.eventQueue.complete();
-        this.killSubprocess();
-      },
-    });
+    try {
+      this.bindWorker(new PiWorkerConnection(child), sessionId);
+    } catch (error) {
+      this.subprocessReadyReject?.(error instanceof Error ? error : new Error(String(error)));
+      this.clearForeground();
+      throw error;
+    }
 
     const sessionPath = this.config.session
       ? getSessionPath(this.config.workspace.rootPath, sessionId)
@@ -584,20 +946,7 @@ export class PiAgent extends BaseAgent {
     // Register session-scoped tools as proxy tools in the subprocess.
     // These tools (SubmitPlan, config_validate, call_llm, etc.)
     // are executed in the main process when the LLM calls them.
-    this.assertBackendSessionToolParity();
-    // Same visibility filters as Claude (session-scoped-tools.ts): feature flags, the
-    // "Built-in browser" setting and the agent profile (coding mode).
-    const sessionToolDefs = getSessionToolProxyDefs({
-      profile: this._agentProfile,
-    });
-
-    // Patch call_llm description with provider-specific model hint
-    if (this.config.miniModel) {
-      const callLlmDef = sessionToolDefs.find(d => d.name === 'mcp__session__call_llm');
-      if (callLlmDef) {
-        callLlmDef.description += `\n\nDefault fast model for this session: ${this.config.miniModel}. Omit the model parameter to use it automatically.`;
-      }
-    }
+    const sessionToolDefs = this.buildToolDefinitions();
 
     this.send({
       type: 'register_tools',
@@ -769,17 +1118,22 @@ export class PiAgent extends BaseAgent {
       try {
         if (!msg.handled) context?.consume();
       } catch {
-        this.eventQueue.enqueue({ type: 'error', message: 'Could not record the conversation context.' });
+        this.deliverEvent({ type: 'error', message: 'Could not record the conversation context.' });
       }
       for (const end of context?.agentEnds ?? []) end();
       if (msg.completed && !context?.agentEnds.length) {
-        this.eventQueue.enqueue({ type: 'complete' });
-        this.eventQueue.complete();
+        this.deliverEvent({ type: 'complete' });
+        this.completeDelivery();
       }
       return;
     }
 
     switch (type) {
+      case 'callback_port':
+        if (typeof msg.callbackPort === 'number' && Number.isInteger(msg.callbackPort)
+          && msg.callbackPort > 0 && msg.callbackPort <= 65535) this.callbackPort = msg.callbackPort;
+        break;
+
       case 'ready':
         // Subprocess initialized, callback server listening
         this.callbackPort = (msg.callbackPort as number) || 0;
@@ -792,13 +1146,19 @@ export class PiAgent extends BaseAgent {
 
       case 'background_task_event': {
         const event = msg.event as AgentEvent;
-        if (!this._isProcessing && this.backgroundEventSink) this.backgroundEventSink(event);
-        else this.eventQueue.enqueue(event);
+        this.deliverEvent(event, !this._isProcessing);
         break;
       }
-      case 'stop_background_task_result': {
-        const pending = this.pendingBackgroundStops.get(msg.id as string);
-        if (pending) { clearTimeout(pending.timer); this.pendingBackgroundStops.delete(msg.id as string); pending.resolve(msg.stopped === true); }
+      case 'stop_background_task_result':
+        this.handleBackgroundStopResult(msg);
+        break;
+      case 'owner_released': {
+        if (typeof msg.id !== 'string' || typeof msg.released !== 'boolean') break;
+        const pending = this.takePendingEphemeral(this.pendingOwnerReleases, msg.id);
+        if (pending) {
+          if (msg.released && msg.error === undefined) pending.resolve();
+          else pending.reject(new Error(typeof msg.error === 'string' ? msg.error : 'Pi owner release rejected'));
+        }
         break;
       }
       case 'event':
@@ -889,6 +1249,10 @@ export class PiAgent extends BaseAgent {
         break;
 
       case 'error': {
+        if (typeof msg.id === 'string') {
+          const release = this.takePendingEphemeral(this.pendingOwnerReleases, msg.id);
+          if (release) { release.reject(new Error(String(msg.message || 'Pi owner release failed'))); break; }
+        }
         const errorCode = typeof msg.code === 'string' ? msg.code : undefined;
         const rawMessage = String(msg.message || 'Unknown subprocess error');
 
@@ -958,9 +1322,9 @@ export class PiAgent extends BaseAgent {
 
         const parsed = parseError(new Error(rawMessage));
         if (parsed.code !== 'unknown_error') {
-          this.eventQueue.enqueue({ type: 'typed_error', error: parsed });
+          this.deliverEvent({ type: 'typed_error', error: parsed });
         } else {
-          this.eventQueue.enqueue({
+          this.deliverEvent({
             type: 'error',
             message: `Pi subprocess error: ${rawMessage}`,
           });
@@ -1051,7 +1415,7 @@ export class PiAgent extends BaseAgent {
         void this.pinCreatedPr(completedCommand ?? (agentEvent.input as { command?: unknown } | undefined)?.command, typeof agentEvent.result === 'string' ? agentEvent.result : '');
       }
       if (agentEvent.type === 'info' && agentEvent.message.startsWith('Compacted')) this.resetPrerequisiteState();
-      if (!this._isProcessing && this.backgroundEventSink && (
+      this.deliverEvent(agentEvent, !this._isProcessing && (
         // Pi threshold compaction may outlive the foreground agent_end.
         // Its result and post-append context snapshot still belong to this session.
         ((eventType === 'compaction_start' || eventType === 'compaction_end') && event.reason !== 'manual') ||
@@ -1062,11 +1426,7 @@ export class PiAgent extends BaseAgent {
         agentEvent.type === 'task_progress' ||
         agentEvent.type === 'task_completed' ||
         agentEvent.type === 'workflow_agent_completed'
-      )) {
-        this.backgroundEventSink(agentEvent);
-      } else {
-        this.eventQueue.enqueue(agentEvent);
-      }
+      ));
     }
 
     // Turn-completion is adapter-driven so overflow recovery and the SDK's
@@ -1078,7 +1438,7 @@ export class PiAgent extends BaseAgent {
     // auto-retry.
     if (this.adapter.shouldCompleteQueue(eventType === 'agent_end')) {
       this.prCreateCommands.clear();
-      this.eventQueue.complete();
+      this.completeDelivery();
     }
   }
 
@@ -1097,6 +1457,7 @@ export class PiAgent extends BaseAgent {
     input: Record<string, unknown>;
   }): Promise<void> {
     const child = this.subprocess;
+    const lease = this.workerLease;
     if (this.disposed) return;
     const { requestId, toolName, toolCallId, input } = req;
     const debugSessionId = this.config.session?.id || this._sessionId;
@@ -1178,7 +1539,7 @@ export class PiAgent extends BaseAgent {
         return;
 
       case 'prompt': {
-        if (!this.onPermissionRequest) {
+        if (this.detachedOwner ? !this.backgroundEventSink : !this.onPermissionRequest) {
           this.send({ type: 'pre_tool_use_response', requestId, action: 'block', reason: 'Permission is required but no permission handler is available.' });
           return;
         }
@@ -1195,7 +1556,7 @@ export class PiAgent extends BaseAgent {
           });
         });
 
-        this.onPermissionRequest({
+        const permissionRequest = {
           requestId: permRequestId,
           toolName,
           command: checkResult.command,
@@ -1209,11 +1570,14 @@ export class PiAgent extends BaseAgent {
           rememberForMinutes: checkResult.rememberForMinutes,
           commandHash: checkResult.commandHash,
           approvalTtlSeconds: checkResult.approvalTtlSeconds,
-        });
+        };
+        if (this.detachedOwner) {
+          this.deliverEvent({ ...permissionRequest, type: 'permission_request', permissionType: permissionRequest.type });
+        } else this.onPermissionRequest?.(permissionRequest);
 
         const allowed = await permissionPromise;
         this.pendingPermissions.delete(permRequestId);
-        if (this.disposed || this.subprocess !== child) return;
+        if (this.disposed || this.subprocess !== child || this.workerLease !== lease) return;
 
         if (!allowed) {
           this.send({ type: 'pre_tool_use_response', requestId, action: 'block', reason: 'Permission denied by user.' });
@@ -1243,6 +1607,7 @@ export class PiAgent extends BaseAgent {
     args: Record<string, unknown>;
   }): Promise<void> {
     const child = this.subprocess;
+    const lease = this.workerLease;
     if (this.disposed) return;
     const prereqResult = this.prerequisiteManager.checkPrerequisites(request.toolName);
     if (!prereqResult.allowed) {
@@ -1253,14 +1618,14 @@ export class PiAgent extends BaseAgent {
 
     try {
       const result = await this.routeToolCall(request.toolName, request.args);
-      if (this.disposed || this.subprocess !== child) return;
+      if (this.disposed || this.subprocess !== child || this.workerLease !== lease) return;
       this.send({
         type: 'tool_execute_response',
         requestId: request.requestId,
         result,
       });
     } catch (error) {
-      if (this.disposed || this.subprocess !== child) return;
+      if (this.disposed || this.subprocess !== child || this.workerLease !== lease) return;
       this.send({
         type: 'tool_execute_response',
         requestId: request.requestId,
@@ -1583,7 +1948,6 @@ export class PiAgent extends BaseAgent {
 
     this.subprocessReadyReject?.(new Error('Pi subprocess exited before ready'));
     this.subprocess = null;
-    this.workerConnection?.close();
     this.workerConnection = null;
     this.workerLease = null;
     this.resetSubprocessErrorDedup();
@@ -1594,7 +1958,7 @@ export class PiAgent extends BaseAgent {
     // If we were processing, emit error + complete
     if (this._isProcessing) {
       const exitReason = signal ? `signal ${signal}` : `code ${code}`;
-      this.eventQueue.enqueue({
+      this.deliverEvent({
         type: 'error',
         message: `Pi subprocess exited unexpectedly (${exitReason})`,
       });
@@ -1711,6 +2075,8 @@ export class PiAgent extends BaseAgent {
    */
   private async requestSetAutoCompaction(enabled: boolean): Promise<boolean> {
     // Only startup calls this, after the child has reported ready.
+    const lease = this.workerLease;
+    if (!lease) throw new Error('Pi startup aborted before auto-compaction configuration');
     const id = `set-auto-compaction-${++this.rpcIdCounter}`;
     const timeoutMs = 15_000;
 
@@ -1721,6 +2087,7 @@ export class PiAgent extends BaseAgent {
       }, timeoutMs);
 
       this.pendingAutoCompactionToggles.set(id, {
+        lease,
         resolve: (value) => {
           clearTimeout(timer);
           resolve(value);
@@ -1731,7 +2098,10 @@ export class PiAgent extends BaseAgent {
         },
       });
 
-      this.send({ type: 'set_auto_compaction', id, enabled });
+      if (!lease.send({ type: 'set_auto_compaction', id, enabled })) {
+        this.pendingAutoCompactionToggles.get(id)?.reject(new Error('Pi startup transport unavailable'));
+        this.pendingAutoCompactionToggles.delete(id);
+      }
     });
   }
 
@@ -1783,7 +2153,7 @@ export class PiAgent extends BaseAgent {
    */
   override async ensureBranchReady(): Promise<void> {
     const isBranchedSession = !!this.config.session?.branchFromMessageId;
-    if (!isBranchedSession) return;
+    if (!isBranchedSession || (this.config.nativeSessionOwner?.deferStartup && !this.workerLease)) return;
 
     // Branched sessions must include parent session path metadata for Pi forking.
     if (!this.config.session?.branchFromSessionPath) {
@@ -1827,25 +2197,32 @@ export class PiAgent extends BaseAgent {
     this.abortReason = undefined;
     this.eventQueue.reset();
     this.currentUserMessage = message;
+    this.detachedOwner = undefined;
     this.adapter.startTurn();
+    const turnQueue = this.eventQueue;
+    const turnAdapter = this.adapter;
     let completionReported = false;
-
-    // Refresh session-scoped tool callbacks.
-    // IMPORTANT: merge (don't replace) so SessionManager-provided browserPaneFns
-    // survives across turns.
-    const sessionId = this.config.session?.id;
-    if (sessionId) {
-      mergeSessionScopedToolCallbacks(sessionId, {
-        onPlanSubmitted: (planPath) => this.onPlanSubmitted?.(planPath),
-        queryFn: (request) => this.queryLlm(request),
-      });
+    async function* drainTurn(): AsyncGenerator<AgentEvent> {
+      for await (const event of turnQueue.drain()) {
+        if (event.type === 'complete') {
+          if (completionReported) continue;
+          completionReported = true;
+          const usage = event.usage ?? turnAdapter.getTurnUsage();
+          yield usage ? { ...event, usage } : event;
+        } else {
+          yield event;
+        }
+      }
     }
+
+    this.refreshSessionToolCallbacks();
 
     try {
       // Ensure subprocess is spawned and ready
       try {
         await this.ensureSubprocess();
       } catch (subprocessError) {
+        if (turnEpoch !== this.turnEpoch) throw new Error('Pi turn aborted');
         const errorMsg = subprocessError instanceof Error ? subprocessError.message : String(subprocessError);
         this.debug(`Failed to spawn Pi subprocess: ${errorMsg}`);
 
@@ -2007,24 +2384,21 @@ export class PiAgent extends BaseAgent {
         images: images.length > 0 ? images : undefined,
       });
 
-      for await (const event of this.eventQueue.drain()) {
-        if (event.type === 'complete') {
-          if (completionReported) continue;
-          completionReported = true;
-          const usage = event.usage ?? this.adapter.getTurnUsage();
-          yield usage ? { ...event, usage } : event;
-        } else {
-          yield event;
-        }
-      }
+      yield* drainTurn();
       // Stop closes the foreground queue before agent_end. Preserve the API
       // messages already billed, without inventing usage for an unfinished stream.
       if (!completionReported) {
-        const usage = this.adapter.getTurnUsage();
+        const usage = turnAdapter.getTurnUsage();
         if (usage) yield { type: 'complete', usage };
       }
     } catch (error) {
       if (compactMatch) yield { type: 'compaction_failed' };
+      if (turnEpoch !== this.turnEpoch) {
+        // A transferred startup never reached its drain loop. Its queue is
+        // sealed and distinct from the source's next foreground queue.
+        if (turnQueue !== this.eventQueue) yield* drainTurn();
+        return;
+      }
       if (error instanceof Error && error.message.includes('abort')) {
         if (compactMatch) yield { type: 'complete' };
         if (this.abortReason === AbortReason.PlanSubmitted) {
@@ -2047,9 +2421,11 @@ export class PiAgent extends BaseAgent {
 
       yield { type: 'complete' };
     } finally {
-      this.activePromptId = undefined;
-      this.activeHostContext = undefined;
-      this._isProcessing = false;
+      if (turnEpoch === this.turnEpoch) {
+        this.activePromptId = undefined;
+        this.activeHostContext = undefined;
+        this._isProcessing = false;
+      }
     }
   }
 
@@ -2163,6 +2539,7 @@ export class PiAgent extends BaseAgent {
   }
 
   async abort(reason?: string): Promise<void> {
+    this.cancelOwnerOperations(reason || 'Pi turn aborted');
     this.turnEpoch++;
     this.activeHostContext = undefined;
     this.cancelPendingCompactions();
@@ -2188,6 +2565,7 @@ export class PiAgent extends BaseAgent {
   }
 
   forceAbort(reason: AbortReason): void {
+    this.cancelOwnerOperations(`Pi turn aborted: ${reason}`);
     this.turnEpoch++;
     this.activeHostContext = undefined;
     this.cancelPendingCompactions();
@@ -2291,10 +2669,19 @@ export class PiAgent extends BaseAgent {
     }
 
     this._sessionToolContext = null;
+    this.stopRetainedTasks();
     // Pool clients are owned by the main process — don't close them here.
     this.killSubprocess();
     this.extensionUI.dispose();
     this.debug('PiAgent destroyed');
+  }
+
+  private stopRetainedTasks(): void {
+    for (const [lease, binding] of this.retainedWorkers) {
+      for (const taskId of binding.tasks) void this.requestBackgroundStop(taskId, lease).catch(error => {
+        this.debug(`Retained task stop failed: ${String(error)}`);
+      });
+    }
   }
 
   async disposeForRestart(): Promise<void> {
@@ -2306,6 +2693,7 @@ export class PiAgent extends BaseAgent {
     }
 
     this._sessionToolContext = null;
+    this.stopRetainedTasks();
     try {
       await this.killSubprocessGracefully();
     } finally {
@@ -2345,6 +2733,7 @@ export class PiAgent extends BaseAgent {
   }
 
   private killSubprocess(timeoutMs = 2_000): void {
+    this.cancelOwnerOperations('Pi subprocess stopped');
     this.extensionUI.reset();
     this.activeHostContext = undefined;
     this.cancelPendingCompactions();
@@ -2358,14 +2747,66 @@ export class PiAgent extends BaseAgent {
     this.pendingPermissions.clear();
     this.eventQueue.complete();
 
-    const workerScope = this.workerLease ? {
-      ownerSessionId: this.workerLease.ownerSessionId,
-      runtimeGeneration: this.workerLease.generation,
-    } : undefined;
-    this.workerConnection?.close();
-    this.workerConnection = null;
-    this.workerLease = null;
-
+    const connection = this.workerConnection;
+    const lease = this.workerLease;
+    if (connection && lease) {
+      this.subprocessReadyReject?.(error);
+      this.rejectPendingEphemeralMap(this.pendingOwnerReleases, error);
+      this.finishDetachedOwner();
+      this.detachedOwner = undefined;
+      this.adapter.resetRecoveryState();
+      // EOF and signal escalation belong exclusively to the connection's refcount.
+      // Do not wait for this child if a retained shell or adopted owner uses it.
+      if (isOwnerTransferConnection(connection)) {
+        const stopping = this.requestOwnerRelease(lease).then(
+          () => true,
+          releaseError => {
+            this.debug(`Pi owner shutdown failed: ${String(releaseError)}`);
+            return false;
+          },
+        ).then(stopped => {
+          lease.release();
+          const clearStopping = () => {
+            if (this.subprocessStopping === stopping) this.subprocessStopping = null;
+          };
+          if (stopped || connection.child.exitCode !== null || connection.child.signalCode !== null) clearStopping();
+          else connection.child.once('close', clearStopping);
+          for (const [id, binding] of this.ownerControls) {
+            if (binding.lease === lease) this.ownerControls.delete(id);
+          }
+          this.pruneRetainedWorker(lease);
+          return stopped;
+        });
+        this.subprocessStopping = stopping;
+        this.clearForeground();
+        return;
+      }
+      const retained = [...this.retainedWorkers].some(([ownedLease, binding]) =>
+        binding.connection === connection && (ownedLease !== lease || binding.tasks.size > 0));
+      if (!retained && connection.child.exitCode === null && connection.child.signalCode === null) {
+        const child = connection.child;
+        let timer: ReturnType<typeof setTimeout>;
+        const stopping = new Promise<boolean>(resolve => {
+          const done = (stopped: boolean) => {
+            clearTimeout(timer);
+            if (stopped) {
+              child.removeListener('close', closed);
+              if (this.subprocessStopping === stopping) this.subprocessStopping = null;
+            }
+            resolve(stopped);
+          };
+          const closed = () => done(true);
+          child.once('close', closed);
+          timer = setTimeout(() => done(false), timeoutMs + 2_000);
+          timer.unref();
+        });
+        this.subprocessStopping = stopping;
+      }
+      lease.release();
+      this.clearForeground();
+      this.pruneRetainedWorker(lease);
+      return;
+    }
     if (this.subprocess) {
       const child = this.subprocess;
       let resolveStopping!: (stopped: boolean) => void;
@@ -2406,7 +2847,7 @@ export class PiAgent extends BaseAgent {
         timer.unref();
         // Graceful cancellation needs time to flush durable state before restart.
         try {
-          this.send({ type: 'shutdown', ...workerScope });
+          this.send({ type: 'shutdown' });
         } catch {
           // stdin may already be closed
         }

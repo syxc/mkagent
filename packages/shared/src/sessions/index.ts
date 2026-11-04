@@ -17,6 +17,7 @@ export type {
   SessionMetadata,
   SessionHeader,
   SessionPersistentField,
+  NativeSessionOwnerRecord,
 } from './types.ts';
 
 // Field constants

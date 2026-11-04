@@ -2,6 +2,10 @@
   "version": 2,
   "baselineCommit": "8df01c5d0ac73c35add5954e6f190ce038d35845",
   "modified": {
+    "packages/shared/src/__tests__/interceptor-common.test.ts": {
+      "sha256": "6c20c84c96c300b0e8511267cbdcfb529a0c7a54b8574e1c89a81b848071f7cc",
+      "reason": "Verify metadata cache isolation and session-directory capture across native owner transfers."
+    },
     "apps/electron/src/renderer/actions/definitions.ts": {
       "sha256": "961add7a053c7055b9765ab92b2ec33700e2e9ea6f01890575a6701e0d079512",
       "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
@@ -391,7 +395,7 @@
       "reason": "Craft browser toolbar preload extended with the minimal app-theme update event"
     },
     "apps/electron/src/renderer/App.tsx": {
-      "sha256": "7fdd227a1e283d74560197d2f28bce7fbaab0a1a1918259244fe4e6621c0d51b",
+      "sha256": "499df30fecc0f9d57a4a1950a1ff3bab3d33efe2802e240a7b08acce0d5d2fa6",
       "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent."
     },
     "apps/electron/src/renderer/atoms/__tests__/browser-pane.test.ts": {
@@ -1015,7 +1019,7 @@
       "reason": "Adapt Craft credential regressions from ModelRuntime to the real pi-ai builtinModels catalog, retaining Codex bearer adaptation, canonical OAuth credentials and ambient Bedrock IAM resolution."
     },
     "packages/pi-agent-server/src/adapt-credential.ts": {
-      "sha256": "78ab18322cbcb7d7d3c7a3d710132be0dd797b10d82b1ffcb4e49ce1405a4f93",
+      "sha256": "be770a80164f0ca5a55b5c616bc2f2290c1821f7275696748d92e4ad59c8bb7b",
       "reason": "Craft ModelRuntime credential adapter retains MkAgent API-key and OAuth subscription compatibility"
     },
     "packages/pi-agent-server/src/custom-endpoint-models.test.ts": {
@@ -1027,7 +1031,7 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "aa44827b72c1e70abdfbb6ed119a25ab8b5ba3a49b7b74c7447206cb42c20c38",
+      "sha256": "eece925e5d10c2a5181d550d3e6be82d16acc8e35272da4406531954bf62de00",
       "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining host events, approvals, runtime updates and shutdown cleanup. Capture product ownership and input identity for JSONL calls, reject retired foreground scopes, and preserve source ownership for background notifications and stop requests."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
@@ -1247,7 +1251,7 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/server-core/src/sessions/SessionManager.ts": {
-      "sha256": "36d15f46b8e35518347f37b0d8278d3f8554070a4732f5bd43d56a31a24c42d7",
+      "sha256": "375060a4e87dff1be66c6ca2f9ec56504a23fa5ee5a0778e9481829750d7fc1c",
       "reason": "Retain the Craft-derived Pi/Lite lifecycle, permissions, persistence, imported sdkSessionId and PR handoffs. Require a strict final creation receipt with rollback. Preserve product input identity and caller provenance; settle completed inputs, retain the product queue and retire invalid client or session context."
     },
     "packages/server-core/src/sessions/background-task-stop.test.ts": {
@@ -1471,7 +1475,7 @@
       "reason": "Use production CONFIG_FILE in isolated cache TTL tests and retain schema-preservation assertions."
     },
     "packages/shared/src/__tests__/unified-network-interceptor.sse.test.ts": {
-      "sha256": "5495be100462f62ea2e9df4ccd638077e78124d20ffc40d16b9d9f8e34e896f3",
+      "sha256": "fefc52f9a34d044f50da794a8273c1329b355e52f44146a5890f74ea0ef20c5f",
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior Add red-green cases for combined tool and terminal frames, co-located text, usage and other choices without duplicated calls."
     },
     "packages/shared/src/__tests__/unified-network-interceptor.validation.test.ts": {
@@ -1607,7 +1611,7 @@
       "reason": "Retain Craft event conversion with MkAgent turn billing, message deduplication and retry queue handling; import the vendored host event contract and hold retryable failures when durable announces backoff before message_end. Read the retained host event contract from local wire types."
     },
     "packages/shared/src/agent/backend/pi/protocol.ts": {
-      "sha256": "9423eae1f254a00f61c772ba4deed2f62169a6eda01e28e33e77cad63323d754",
+      "sha256": "83f322a06d034080df3b607e11dcfde79f4ee3dbf37fdd780c2d42ef83d1933c",
       "reason": "Retain Pi/Lite protocol and tools. Carry explicit coding resources, independent native-session resource policy, and the product session and generation ownership scope through the subprocess protocol."
     },
     "packages/shared/src/agent/backend/pi/session-tool-defs.ts": {
@@ -1619,7 +1623,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/backend/types.ts": {
-      "sha256": "6b06f4e0b4495646e41e2311ba4cfd834bf44f7d7dcacc0a31066e36c1de71a5",
+      "sha256": "7812798740642b2aca80b8c5a449e0628d40255095c62eb5e1ba64a4ab3859fb",
       "reason": "Retain the Craft-derived Pi/Lite coding profile, prompt, context and tools, with pi-durable as subprocess runtime. Define coding resources, trust and stable product input metadata."
     },
     "packages/shared/src/agent/base-agent.ts": {
@@ -1715,7 +1719,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/pi-agent.ts": {
-      "sha256": "e7945ba3ca038ef15dccc6beaaa86b7f530dbed0a76e6865298dd9a1b9b755b4",
+      "sha256": "3c91596e525f6540312e88ed2f10db94c0ac5c14df43786d079272fbdc66e235",
       "reason": "Retain the Craft-derived Pi/Lite client, startup, permissions, runtime updates, compaction, recovery and PR handoffs. Use generation-checked worker bindings, preserve stable product prompt and steer identities, retain shutdown scope, and release abandoned background stop requests."
     },
     "packages/shared/src/agent/plan-types.ts": {
@@ -1907,7 +1911,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/interceptor-common.ts": {
-      "sha256": "aecb5ae498801531ab5d97e99ca500a27adb2c3da967f614a0be1aa73cc1ddaf",
+      "sha256": "7924e805e8c666d2b0757bbe364ac3ad1e404adb1267e110ee1cb2288566276f",
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/mentions/index.ts": {
@@ -1935,7 +1939,7 @@
       "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization."
     },
     "packages/shared/src/protocol/dto.ts": {
-      "sha256": "6876a245a2f76a3598b67f4e156a04219e6c1fa926403ef99b855273fba73a36",
+      "sha256": "96e77b4f35f84644aadcbf5a534dda14da83434c7167482a3f6967de20501889",
       "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions."
     },
     "packages/shared/src/protocol/events.ts": {
@@ -1963,7 +1967,7 @@
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "packages/shared/src/sessions/index.ts": {
-      "sha256": "b9b6cd99695830d6ceb88447cc86698f7e0cd5de79fe52e780171c8dcfac02ee",
+      "sha256": "8e4bd837758e4ba7c673d6a1c67823ac801d641bb5e72becd1862172c4207585",
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/sessions/jsonl.ts": {
@@ -1975,11 +1979,11 @@
       "reason": "Retain debounced persistence, metadata merging and active-write draining. Share the serial writer with strict receipts, preserve the prior record and signature on failure, and cancel unstarted writes without admitting stale snapshots."
     },
     "packages/shared/src/sessions/storage.ts": {
-      "sha256": "1c0a3869a1b06492732e0fb89ec06252b1f6fdb7e65611e687cacde5a3281cfb",
+      "sha256": "4d2a70445af8603b134089ecb2873c5e21fe96fdf430d8dd3d0dd2a41c8df174",
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/sessions/types.ts": {
-      "sha256": "acd2ad6937208b1e0bec201a2cf03ca1e6b0289a20b58a935adc7d18af937e84",
+      "sha256": "03b5dc2570ab93826b73460d7afaec12cca8dd5a98ea738b30fe33897de489da",
       "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions."
     },
     "packages/shared/src/skills/__tests__/storage.test.ts": {
@@ -1995,7 +1999,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/unified-network-interceptor.ts": {
-      "sha256": "f39691cb16b40006a00eac4ceb2483bc669ebd1f4f2d5f091c7fb3e438d26b40",
+      "sha256": "aaa9530a255acf7845307299c4ca53c885644c0993583deaa492f3558a03e922",
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior; v0.15.2: Keep additionalProperties:false when injecting declared intent/displayName into Anthropic tool schemas. Pi runtime resolver preloads this interceptor and anthropic-messages routes here even on custom endpoints. Actual installed-fetch regression verifies metadata and nested closure; real Pi Anthropic protocol smoke verifies SDK transport. Preserve finish markers, content, usage and other choices on frames that also contain buffered tool calls; flush each cleaned call before termination."
     },
     "packages/shared/src/utils/__tests__/url-safety.test.ts": {
@@ -2267,8 +2271,8 @@
       "reason": "Extend Craft browser password regressions for fill, type, paste and mixed batches when field type is unavailable, while retaining ordinary-field input behavior."
     },
     "packages/shared/src/agent/__tests__/pi-compaction.test.ts": {
-      "sha256": "6508b74db39e653453eee4d2e2f92cdf61b899e74d17b8bd9d42f0aae4b78978",
-      "reason": "Adapt Craft compaction timeout coverage to cancel_compact with the original request ID; add durable subprocess regressions for shared startup, real spawn failures, stale permission and tool responses, credential cancellation, signal failures, blocked restarts and session retention during shutdown."
+      "sha256": "54a594428d730f669a0500760bc1d68e07e04e2f089153fafb3f45f5b383f62e",
+      "reason": "Adapt Craft compaction timeout coverage to cancel_compact with the original request ID; add durable subprocess regressions for shared startup, real spawn failures, stale permission and tool responses, credential cancellation, signal failures, blocked restarts and session retention during shutdown. Observe actual child startup ordering for lease-scoped controls."
     },
     "packages/shared/src/agent/browser-tool-redaction.ts": {
       "sha256": "5a3c340c0fa171e8dfce4c333c989174e1ff660a83b08683ee499853d1076385",
@@ -2324,6 +2328,58 @@
     }
   },
   "mkOnly": {
+    "packages/pi-agent-server/src/native-owner-actions.e2e.test.ts": {
+      "sha256": "eb0724acfd8188f2c26859660f99499e7fe2bb8598b82c703534a156aebc3fe4",
+      "reason": "Verify native setup, startup, source closure and cancellation across the durable ownership barrier."
+    },
+    "packages/pi-agent-server/src/native-owner-actions.ts": {
+      "sha256": "192339d9a80d2898e1a0a505dc967920f686d040dbf7458876f051738f5fa96b",
+      "reason": "Run native session actions through product ownership while retaining local callbacks and durable execution."
+    },
+    "packages/pi-agent-server/src/native-owner.test.ts": {
+      "sha256": "b34c47770806888f4a17f441d0ad0beb58fcf7de314b0001a3ac9081fe554a02",
+      "reason": "Verify scoped ownership controls, commit barriers, cancellation and retained native command callbacks."
+    },
+    "packages/pi-agent-server/src/native-owner.ts": {
+      "sha256": "d8d80ed6482e2a99114708924d8cdbe77875a7ad85f40b4a4b75e6af937cb6e9",
+      "reason": "Keep the native command coroutine alive across product prepare, close, activation and commit controls."
+    },
+    "packages/server-core/src/sessions/native-owner-runtime.isolated.ts": {
+      "sha256": "3894c24e476b4853a55ab8d74c08593954fe1b6ad604d0ae2da79b6ee6274999",
+      "reason": "Exercise the actual product factory, PiAgent and bundled worker with local models and isolated ownership."
+    },
+    "packages/server-core/src/sessions/native-session-owner.isolated.ts": {
+      "sha256": "fb7783fd43453f06f99cc6911ad4826301f380c97104d8d1ee9a28856f2dcce8",
+      "reason": "Verify product persistence receipts, caller navigation, adopted completion and recovery without callback replay."
+    },
+    "packages/server-core/src/sessions/native-session-owner.test.ts": {
+      "sha256": "7ebe68c74d67134282a24571677cb8453d809bef228f8e0388d65fc03cb6c4ac",
+      "reason": "Verify product ownership phase ordering, caller leases, stale controls and scoped cancellation."
+    },
+    "packages/server-core/src/sessions/native-session-owner.ts": {
+      "sha256": "9d03f11b714a8038086a33996ed0aea3d229fb914fa7cd5f675059f89f21abde",
+      "reason": "Coordinate live native ownership with durable product receipts and independent source and target lifetimes."
+    },
+    "packages/shared/src/__tests__/unified-network-interceptor.owner.isolated.ts": {
+      "sha256": "5cf345364abd82c817c4e029defe00385f2596467cdafbecb9454a9cff14c527",
+      "reason": "Reproduce delayed Request validation across ownership changes and retain each owner's API error file."
+    },
+    "packages/shared/src/agent/__tests__/pi-native-owner.test.ts": {
+      "sha256": "1ceb319997736d36a79f28e57e6408db7194ae915d57fd1fee0fdb68b9fe9c78",
+      "reason": "Verify physical worker adoption, scoped release, startup recovery and source background task isolation."
+    },
+    "packages/shared/src/agent/backend/pi/native-owner-protocol.ts": {
+      "sha256": "b37bef390bbc6fd2dbb0165094a946cf1b06a06c4dceaed75b2c6eb0dd59de8f",
+      "reason": "Define live native ownership controls and host ports separately from persistent recovery records."
+    },
+    "packages/shared/src/agent/backend/pi/native-owner-runtime.ts": {
+      "sha256": "21434c6982c821cbdacf98018511eb9cb0004c4d067d1608e63b0ad01e204bfb",
+      "reason": "Validate scoped native frames and authorize worker transfers by live object identity."
+    },
+    "packages/shared/src/agent/backend/pi/worker-connection.test.ts": {
+      "sha256": "9c265b50b87718a014624341d91279c1377777e31509aae148daf59c6a4be4fb",
+      "reason": "Verify transfer pins and process retirement only after foreground and owned background work drains."
+    },
     "packages/server-core/src/sessions/input-origins.ts": {
       "sha256": "b170bf2b0127f9446c17875773c2bfb4efd4add0667982a99640ec61ecf961ae",
       "reason": "Track transient product input callers with releasable transaction claims, bounded turn completion and immediate client, cancellation and session retirement."
@@ -2409,7 +2465,7 @@
       "reason": "Verify immutable background ownership, exact owner and generation checks for stop requests, and owner-specific disposal."
     },
     "packages/pi-agent-server/src/worker-scope.e2e.test.ts": {
-      "sha256": "7492fd24b5485dfca4037c06a327ff05bfb8e843f6f43829d3e81161a8082bc2",
+      "sha256": "53e7dc4f1c9935f0ca1a44c8124d2a90412b73fca4b6b4fa0015593b8ba01e58",
       "reason": "Run both worker profiles with deterministic local models to verify owned replies, stale foreground rejection, history isolation, source background ownership and cleanup of retired queued compaction IDs across reinitialization."
     },
     "packages/shared/src/agent/__tests__/pi-worker-connection.test.ts": {
@@ -2417,7 +2473,7 @@
       "reason": "Verify real-process worker rebinding, scope validation, legacy first binding, restricted retained background capabilities, known completion and stop replies, shared exit notification, and abandoned reply cleanup."
     },
     "packages/shared/src/agent/backend/pi/worker-connection.ts": {
-      "sha256": "674c8375ae5a3d24bcb0b77f492f256fe23bc498186f708cf9be02577be55df3",
+      "sha256": "a7b64793a5c963404be7aaf52313c92910fa066feeb6ab8a7e9fe296dfb6c218",
       "reason": "Own Pi worker I/O and immutable generation-checked foreground bindings; retain restricted source background leases until known tasks and pending stop replies finish, and notify all live owners on process exit."
     },
     "packages/pi-agent-server/src/coding-host-cache-warming.e2e.test.ts": {
@@ -2753,7 +2809,7 @@
       "reason": "Shared MkAgent audit preflight resolves the Craft reference, validates the checkout root and pinned HEAD, and reports setup instructions before comparisons."
     },
     "scripts/craft-ui-overrides.json": {
-      "sha256": "2c743da444cd858478b409084a18dea80e63499a2e6f4047510587290caf340f",
+      "sha256": "f15f243cca2c82ed83c8215ccacf749a5c39a2a4572b1ed22417bd2454f5c6b8",
       "reason": "MkAgent renderer lineage ledger records the selective Craft v0.13.3 retry synchronization; v0.15.3: apply applicable retained feature changes and preserve Pi/Lite seams (see docs/sync/0.15.3-inventory.json and validation). Register the per-locale starter-prompt regression added in 20fb16d."
     },
     "scripts/release-workflow.test.ts": {
@@ -2861,7 +2917,7 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "00716fd4c9195ae6c3848dfe33fffd9764cd3ac64df547660fcf635487338632",
+      "sha256": "543fbe41940a888a2333ffff2dbca324fb2fd1c730cdd7ce2e78bc40eb2ade16",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
@@ -3153,11 +3209,11 @@
       "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
     },
     "packages/pi-agent-server/src/coding-host.e2e.test.ts": {
-      "sha256": "221b9326b833757390fd353406854ada5216c544db5b57705df69f3bd6fe5bd8",
+      "sha256": "95b5c517306e714cbe9cd9253f0a6a4a764672d7b63b86407791bb2ec3380d3e",
       "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery, approved file writes and native plugin execution with host-only resources across restart."
     },
     "packages/pi-agent-server/src/coding-host.ts": {
-      "sha256": "ff159ba51b5e4e6c651b67246c4349e095d398fe29de7ce951a065f059126f1a",
+      "sha256": "14093a2c550f66c07290153ea61d832376c52b311663878b98ae5d6a2bce9ef7",
       "reason": "Adapt native resources and extension actions to durable host boundaries, including committed auxiliary writes and shutdown."
     },
     "packages/pi-agent-server/test/coding-bundle.e2e.test.ts": {

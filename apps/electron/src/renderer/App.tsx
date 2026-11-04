@@ -56,7 +56,7 @@ import {
   showBackgroundFinishedChipAtom,
   pushBackgroundFinishedAtom,
 } from '@/atoms/background-finished'
-import { visibleSessionIdsAtom } from '@/atoms/panel-stack'
+import { focusedPanelRouteAtom, parseSessionIdFromRoute, visibleSessionIdsAtom } from '@/atoms/panel-stack'
 import { getSessionTitle } from '@/utils/session'
 import { extractBadges } from '@/lib/mentions'
 import { getDefaultStore } from 'jotai'
@@ -936,7 +936,25 @@ export default function App() {
       const workspaceId = windowWorkspaceId ?? ''
 
       // Session lifecycle events are handled explicitly (not by the agent event processor).
+      if (event.type === 'native_session_redirect') {
+        const focusedRoute = store.get(focusedPanelRouteAtom)
+        const target = store.get(sessionMetaMapAtom).get(event.targetSessionId)
+        if (focusedRoute && parseSessionIdFromRoute(focusedRoute) === event.sessionId
+          && target?.workspaceId === workspaceId) {
+          navigate(routes.view.allSessions(event.targetSessionId))
+        }
+        return
+      }
+
       if (event.type === 'session_created') {
+        // Native callbacks can stream immediately after publication. Install
+        // their committed snapshot before a later RPC can overwrite live events.
+        if (event.session) {
+          if (store.get(sessionMetaMapAtom).has(sessionId)) replaceLoadedSession(event.session)
+          else addSession(event.session)
+          syncSessionOptionsFromSession(event.session)
+          return
+        }
         window.electronAPI.getSessionMessages(sessionId)
           .then((createdSession: Session | null) => {
             if (createdSession) {

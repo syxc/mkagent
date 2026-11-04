@@ -182,6 +182,7 @@ export async function createSession(
     hidden?: boolean;
     isFlagged?: boolean;
     parentSessionId?: string;
+    nativeSessionOwner?: SessionConfig['nativeSessionOwner'];
   }
 ): Promise<SessionConfig> {
   ensureSessionsDir(workspaceRootPath);
@@ -210,6 +211,7 @@ export async function createSession(
     hidden: options?.hidden,
     isFlagged: options?.isFlagged,
     parentSessionId: options?.parentSessionId,
+    nativeSessionOwner: options?.nativeSessionOwner,
   };
 
   // Save empty session

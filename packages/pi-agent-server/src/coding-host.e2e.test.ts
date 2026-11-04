@@ -80,7 +80,7 @@ describe('coding extensions on the production durable host', () => {
     expect(errors).toEqual([]);
   });
 
-  test('native commands can wait for idle, replace and reload their own session', async () => {
+  test('native commands can wait and reload while replacement requires a product owner', async () => {
     const root = await durableFixture([]);
     await root.harness.close(BACKGROUND_CONTEXT);
     cleanup.push(() => rmSync(root.directory, { recursive: true, force: true }));
@@ -93,7 +93,10 @@ describe('coding extensions on the production durable host', () => {
         pi.registerCommand('idle', { handler: async (_args, ctx) => {
           await ctx.waitForIdle(); pi.appendEntry('idle', {});
         } });
-        pi.registerCommand('fresh', { handler: async (_args, ctx) => { await ctx.newSession(); } });
+        pi.registerCommand('fresh', { handler: async (_args, ctx) => {
+          try { await ctx.newSession(); }
+          catch (error) { pi.appendEntry('owner-required', { error: String(error) }); }
+        } });
         pi.registerCommand('refresh', { handler: async (_args, ctx) => { await ctx.reload(); } });
         pi.registerTool({ name: 'local', description: 'Synthetic local tool',
           parameters: { type: 'object', properties: {} },
@@ -116,13 +119,14 @@ describe('coding extensions on the production durable host', () => {
     const original = kernel.sessionId;
     await kernel.submitPrompt('/idle');
     await kernel.submitPrompt('/fresh');
-    expect(kernel.sessionId).not.toBe(original);
+    expect(kernel.sessionId).toBe(original);
     const replaced = kernel.sessionId;
     await kernel.submitPrompt('/refresh');
     expect(kernel.sessionId).toBe(replaced);
     const coding = (kernel as unknown as { coding: { journal: NativeSessionJournal } }).coding;
     expect(coding.journal.manager.getEntries().filter(entry => entry.customType === 'started').map(entry => entry.data))
-      .toEqual([{ reason: 'new' }, { reason: 'reload' }]);
+      .toEqual([{ reason: 'startup' }, { reason: 'reload' }]);
+    expect(coding.journal.manager.getEntries().filter(entry => entry.customType === 'owner-required')).toHaveLength(1);
     expect(errors).toEqual([]);
     expect(root.calls).toHaveLength(0);
   });

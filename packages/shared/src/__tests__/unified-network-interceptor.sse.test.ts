@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { toolMetadataStore } from '../interceptor-common.ts';
@@ -59,6 +59,28 @@ describe('unified-network-interceptor SSE processors', () => {
   afterEach(() => {
     toolMetadataStore._clearForTesting();
     rmSync(sessionDir, { recursive: true, force: true });
+  });
+
+  it('retains the source directory when a tool stream drains after foreground transfer', async () => {
+    const targetDir = mkdtempSync(join(tmpdir(), 'interceptor-target-'));
+    const stream = createOpenAiSseStrippingStream();
+    try {
+      toolMetadataStore.setSessionDir(targetDir);
+      await runThroughProcessor(stream, [
+        `data: ${JSON.stringify({ choices: [{ index: 0, delta: { tool_calls: [{
+          index: 0, id: 'source-call', type: 'function',
+          function: { name: 'hello', arguments: '{"_intent":"source intent"}' },
+        }] }, finish_reason: null }] })}\n\n`,
+        'data: {"choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}\n\n',
+        'data: [DONE]\n\n',
+      ]);
+      const source = JSON.parse(readFileSync(join(sessionDir, 'tool-metadata.json'), 'utf8'));
+      expect(source['source-call']?.intent).toBe('source intent');
+      expect(existsSync(join(targetDir, 'tool-metadata.json'))).toBe(false);
+    } finally {
+      toolMetadataStore.setSessionDir(sessionDir);
+      rmSync(targetDir, { recursive: true, force: true });
+    }
   });
 
   it.each(['tool_calls', 'stop', 'length', 'content_filter', null])(

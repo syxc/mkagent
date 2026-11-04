@@ -54,6 +54,8 @@ import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent
 import { rewriteStoredModelHistory } from '@mkagent/shared/sessions/model-history-paths';
 import { CodingHost, type KernelCodingOptions } from './coding-host.ts';
 import type { ExtensionUIHost } from './extension-ui.ts';
+import { nativeOwnerActions } from './native-owner-actions.ts';
+import type { PiNativeOwnerRequest } from '../../shared/src/agent/backend/pi/native-owner-protocol.ts';
 
 import type { ModelRuntimeCredentials, AgentSessionEvent as NativeAgentSessionEvent } from '@mkagent/pi-durable-coding/native';
 
@@ -78,6 +80,7 @@ export interface KernelModelRef {
 }
 
 export interface KernelHooks {
+  sessionIdentity?(sessionId: string): void;
   emitEvent(sessionEvent: AgentSessionEvent | Record<string, unknown>): void;
   sessionToolCompleted(toolName: string, args: Record<string, unknown>, isError: boolean): void;
   /** Speculative parallel prefetch for repeated proxy tool calls. */
@@ -105,9 +108,15 @@ export interface DurableKernelOptions {
   codingUI?: ExtensionUIHost;
   /** Apply the same approval and output policy used for the host's own tools. */
   wrapCodingTool?(tool: ToolRegistration): ToolRegistration;
+  replaceNativeSession?(
+    request: PiNativeOwnerRequest,
+    runTarget: (target: DurableKernel, signal: AbortSignal) => Promise<void>,
+  ): Promise<void>;
 }
 
 export interface KernelOpenOptions {
+  /** Load the target without running startup hooks before the product commit. */
+  codingReplacement?: { reason: 'new' | 'fork' | 'resume' };
   model?: KernelModelRef;
   thinkingLevel?: string;
   branchFromSessionPath?: string;
@@ -185,6 +194,7 @@ export class DurableKernel {
   private toolOutputBuffers = new Map<string, string>();
   private pendingInputs = new Set<Promise<void>>();
   private inputAdmission: Promise<boolean> = Promise.resolve(true);
+  private inputEpoch = 0;
   private acceptedInputs = new Set<number>();
   private startedInputs = new Set<number>();
   private coding: CodingHost | undefined;
@@ -326,8 +336,11 @@ export class DurableKernel {
         );
       }
       this.thinkingLevel = (await this.conversation!.agent(BACKGROUND_CONTEXT)).thinkingLevel as ThinkingLevel;
-      await this.openCoding(copiedParent ? 'fork' : legacyChild || resuming ? 'resume' : 'startup');
-      this.harness!.resume();
+      this.options.hooks.sessionIdentity?.(this.sessionId);
+      await this.openCoding(config.codingReplacement?.reason
+        ?? (copiedParent ? 'fork' : legacyChild || resuming ? 'resume' : 'startup'), !!config.codingReplacement);
+      if (!this.harness) return;
+      if (!config.codingReplacement) this.harness.resume();
       if (copiedParent) {
         unlinkSync(pendingBranch);
       }
@@ -655,7 +668,7 @@ export class DurableKernel {
   // Conversation commands
   // ============================================================
 
-  private async openCoding(reason: 'startup' | 'resume' | 'fork' | 'new' | 'reload'): Promise<void> {
+  private async openCoding(reason: 'startup' | 'resume' | 'fork' | 'new' | 'reload', deferred = false): Promise<void> {
     const profile = this.options.coding;
     if (!profile) return;
     if (!this.options.wrapCodingTool) throw new Error('Coding extensions require the host tool approval wrapper');
@@ -676,6 +689,7 @@ export class DurableKernel {
         this.thinkingLevel = thinkingLevel;
       },
       shutdown: () => { void this.abort().then(() => this.close()); },
+      activateExecution: deferred ? () => this.harness!.resume() : undefined,
       getSystemPrompt: () => this.systemPrompt,
       wrapTool: this.options.wrapCodingTool,
       publishTools: tools => {
@@ -686,22 +700,24 @@ export class DurableKernel {
       error: error => this.options.hooks.debugLog(`[coding:${error.event}] ${error.extensionPath}: ${error.error}`),
       commands: {
         waitForIdle: () => this.waitForIdle(),
-        newSession: async options => {
-          if (options?.parentSession !== undefined || options?.setup !== undefined || options?.withSession !== undefined) {
-            throw new Error('newSession parentSession, setup and withSession require the MkAgent session owner');
-          }
-          return this.changeCodingSession();
-        },
-        fork: async (id, options) => {
-          if (options?.withSession !== undefined) throw new Error('fork withSession requires the MkAgent session owner');
-          return this.changeCodingSession(id, options?.position ?? 'before');
-        },
+        ...nativeOwnerActions({
+          source: () => {
+            if (!this.coding || this.closing) throw new Error('Native session is closing');
+            return this.coding;
+          },
+          replace: async (request, runTarget) => {
+            if (!this.options.replaceNativeSession) throw new Error('Native session replacement requires the MkAgent session owner');
+            await this.options.replaceNativeSession(request, async (target, signal) => {
+              if (!target.coding) throw new Error('Native replacement target has no coding runtime');
+              await runTarget(target.coding, signal);
+            });
+          },
+        }),
         navigateTree: async () => { throw new Error('Native tree navigation requires the MkAgent session owner'); },
-        switchSession: async () => { throw new Error('Session switching requires the MkAgent session owner'); },
         reload: () => this.reloadCodingSession(),
       },
     }, reason);
-    await this.coding.start(reason);
+    if (!deferred) await this.coding.start(reason);
   }
 
   private reloadCodingSession(): Promise<void> {
@@ -761,39 +777,6 @@ export class DurableKernel {
     this.options.hooks.emitEvent(event as unknown as Record<string, unknown>);
   }
 
-  private async changeCodingSession(nativeId?: string, position: 'at' | 'before' = 'at') {
-    if (this.closing) throw new Error('Cannot change a coding session while closing');
-    await this.abort();
-    const previous = this.conversation!;
-    const agent = await previous.agent(BACKGROUND_CONTEXT);
-    let target: EntryId | undefined;
-    if (nativeId) {
-      const entries = this.coding!.journal.manager.getEntries();
-      const selected = entries.find(entry => entry.id === nativeId);
-      if (!selected) throw new Error(`Native branch entry not found: ${nativeId}`);
-      const id = position === 'before' ? selected.parentId : selected.id;
-      target = id ? this.coding!.journal.durableId(id) : undefined;
-      if (id && target === undefined) throw new Error(`Native branch anchor not persisted: ${id}`);
-    }
-    let next: Conversation;
-    if (target !== undefined) next = await previous.fork(target, { ownership: { kind: 'ownerless' } }, BACKGROUND_CONTEXT);
-    else {
-      const record = await this.harness!.commit(tx => tx.createConversation({ ownership: { kind: 'ownerless' } }), BACKGROUND_CONTEXT);
-      next = (await this.harness!.conversation(record.id, BACKGROUND_CONTEXT))!;
-      await next.configure(agent, BACKGROUND_CONTEXT);
-    }
-    await this.coding!.close();
-    this.coding = undefined;
-    this.conversation = next;
-    this.sessionId = randomUUID();
-    writeFileSync(join(this.storeDir, 'session-id.txt'), this.sessionId);
-    writeFileSync(join(this.storeDir, 'conversation-id.txt'), String(next.id));
-    this.detachWatch?.();
-    await this.attachWatch(next.id);
-    await this.openCoding(nativeId ? 'fork' : 'new');
-    return { cancelled: false };
-  }
-
   async submitPrompt(message: string, images?: Array<{ data: string; mimeType: string }>,
     nativeInput?: CodingInputOptions['nativeInput']): Promise<{ handled: boolean; completed: boolean }> {
     const content = images?.length ? [{ type: 'text' as const, text: message },
@@ -818,7 +801,14 @@ export class DurableKernel {
 
   private enqueueCodingInput(content: UserMessage['content'], mode: 'steer' | 'followUp',
     options: CodingInputOptions = {}): Promise<boolean> {
-    const operation = this.inputAdmission.then(() => this.processCodingInput(content, mode, options));
+    const coding = this.coding;
+    const epoch = this.inputEpoch;
+    const operation = this.inputAdmission.then(() => {
+      if (epoch !== this.inputEpoch || coding !== this.coding || this.closing) {
+        throw new Error('Input belongs to an inactive session runtime');
+      }
+      return this.processCodingInput(content, mode, options);
+    });
     this.inputAdmission = operation.catch(() => true);
     return operation;
   }
@@ -1054,8 +1044,9 @@ export class DurableKernel {
     }));
   }
 
-  close(): Promise<void> {
+  close(reason: Parameters<CodingHost['close']>[0] = 'quit'): Promise<void> {
     if (this.closing) return this.closing;
+    this.inputEpoch++;
     const completion = Promise.withResolvers<void>();
     this.closing = completion.promise;
     const resumeUI = this.options.codingUI?.suspend();
@@ -1068,7 +1059,7 @@ export class DurableKernel {
         // The command reports reload errors; teardown must still release its kernel.
         await this.codingReload?.catch(() => undefined);
         await Promise.all([warming, ...compactions.map(compaction => compaction.done)]);
-        await this.coding?.close();
+        await this.coding?.close(reason);
         this.coding = undefined;
         this.registry = null;
         this.detachWatch?.();

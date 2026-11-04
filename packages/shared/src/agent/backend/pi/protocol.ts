@@ -1,3 +1,45 @@
+import type { CustomEndpointConfig } from '../../../config/llm-connections.ts';
+
+export type PiWorkerCredential =
+  | { type: 'api_key'; key: string }
+  | { type: 'oauth'; access: string; refresh: string; expires: number }
+  | { type: 'iam'; accessKeyId: string; secretAccessKey: string; region?: string; sessionToken?: string };
+
+/** Configuration is sent only over the live worker transport, never a transition record. */
+export interface PiWorkerInitConfig {
+  agentProfile?: 'default' | 'coding';
+  codingResources?: PiCodingResources;
+  extensionUIAvailable?: boolean;
+  apiKey: string;
+  model: string;
+  cwd: string;
+  thinkingLevel: string;
+  workspaceRootPath: string;
+  sessionId: string;
+  sessionPath: string;
+  workingDirectory: string;
+  plansFolderPath: string;
+  miniModel?: string;
+  agentDir?: string;
+  providerType?: string;
+  authType?: string;
+  workspaceId?: string;
+  baseUrl?: string;
+  branchFromSdkSessionId?: string;
+  branchFromSessionPath?: string;
+  branchFromSdkTurnId?: string;
+  customEndpoint?: CustomEndpointConfig;
+  customModels?: Array<string | { id: string; contextWindow?: number; supportsImages?: boolean }>;
+  autoCompactWindow?: number;
+  piAuth?: { provider: string; credential: PiWorkerCredential };
+}
+
+export interface PiProxyToolDefinition {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
 /** Product ownership is independent of the native coding session ID. */
 export interface PiWorkerScope {
   readonly ownerSessionId: string;

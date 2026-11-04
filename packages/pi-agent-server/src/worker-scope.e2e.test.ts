@@ -4,6 +4,7 @@ import { createInterface } from 'node:readline';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import http from 'node:http';
 
 type Frame = Record<string, any>;
 interface WorkerFixture {
@@ -95,6 +96,119 @@ async function withWorker(profile: 'default' | 'coding', run: (fixture: WorkerFi
   }
 }
 
+async function prepareTransfer(
+  f: WorkerFixture, beforeTransfer?: (port: number) => Promise<void>, launch: 'prompt' | 'startup' = 'prompt',
+) {
+  const source = { ownerSessionId: 'source', runtimeGeneration: 1 };
+  const target = { ownerSessionId: 'target', runtimeGeneration: 2 };
+  const plugin = join(f.directory, 'transfer.ts');
+  writeFileSync(plugin, `export default function(pi) {
+    pi.registerCommand('fresh', { handler: async (_, ctx) => ctx.newSession() });
+    pi.on('session_start', event => {
+      if (event.reason === 'startup' && ${JSON.stringify(launch)} === 'startup') {
+        pi.sendUserMessage('/fresh', { expandPromptTemplates: true });
+      }
+    });
+  }`);
+  f.send({ ...f.init('source', 1), codingResources: {
+    agentDir: join(f.directory, 'pi'), resourcePolicy: 'host-only', extensionPaths: [plugin],
+  } });
+  const ready = await f.waitFor(message => message.type === 'ready');
+  await beforeTransfer?.(ready.callbackPort);
+  f.send(launch === 'prompt'
+    ? { type: 'prompt', id: 'transfer', message: '/fresh', systemPrompt: '', ...source }
+    : { type: 'ensure_session_ready', id: 'startup-transfer', ...source });
+  const prepare = await f.waitFor(message => message.type === 'owner_prepare');
+  f.send({ type: 'owner_prepared', transactionId: prepare.transactionId, targetSessionId: 'target', ...source });
+  await f.waitFor(message => message.type === 'owner_source_closed');
+  return { source, target, transactionId: prepare.transactionId, sourcePort: ready.callbackPort };
+}
+
+test.each(['prompt', 'startup'] as const)('release during target extension loading from %s waits for cleanup and retires target admission', async launch => {
+  await withWorker('coding', async f => {
+    const { target, transactionId } = await prepareTransfer(f, undefined, launch);
+    const entered = Promise.withResolvers<void>();
+    const gate = Promise.withResolvers<void>();
+    const endpoint = Bun.serve({ hostname: '127.0.0.1', port: 0, async fetch() {
+      entered.resolve();
+      await gate.promise;
+      return new Response('released');
+    } });
+    const plugin = join(f.directory, 'delayed-target.ts');
+    writeFileSync(plugin, `export default async function(pi) {
+      await fetch('http://127.0.0.1:${endpoint.port}/gate');
+      pi.on('session_start', () => { throw new Error('Released target must not start'); });
+    }`);
+    try {
+      f.send({ type: 'owner_activate', transactionId, activation: {
+        config: { ...f.init('target', 2), codingResources: {
+          agentDir: join(f.directory, 'pi'), resourcePolicy: 'host-only', extensionPaths: [plugin],
+        } }, tools: [], systemPrompt: '', reason: 'new',
+      }, ...target });
+      await entered.promise;
+      f.sendBatch({ type: 'release_owner', id: 'released-loading', ...target },
+        { type: 'ensure_session_ready', id: 'retired-loading', ...target });
+      // A source-scoped shell control reply provides an event-loop fence.
+      f.send({ type: 'stop_background_task', id: 'release-fence', taskId: 'absent',
+        ownerSessionId: 'source', runtimeGeneration: 1 });
+      await f.waitFor(message => message.id === 'release-fence');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const premature = f.messages.some(message => message.id === 'released-loading');
+      gate.resolve();
+      expect(premature).toBe(false);
+      expect(await f.waitFor(message => message.id === 'released-loading')).toMatchObject({ released: true, ...target });
+      expect(f.messages.some(message => message.type === 'owner_target_bound')).toBe(false);
+      expect(f.messages.some(message => message.id === 'retired-loading')).toBe(false);
+      expect(f.requests).toHaveLength(0);
+    } finally {
+      gate.resolve();
+      endpoint.stop(true);
+    }
+  });
+}, 15_000);
+
+test('native transfer revokes partial source callbacks and publishes a working target port', async () => {
+  await withWorker('coding', async f => {
+    const body = JSON.stringify({ prompt: 'retired callback marker', model: 'local-scope' });
+    let request!: http.ClientRequest;
+    let finished!: Promise<void>;
+    const { target, transactionId, sourcePort } = await prepareTransfer(f, async port => {
+      request = http.request({ hostname: '127.0.0.1', port, path: '/call-llm',
+        method: 'POST', headers: { 'content-length': Buffer.byteLength(body) } });
+      finished = new Promise<void>(resolve => {
+        request.on('error', () => resolve());
+        request.on('response', response => { response.resume(); response.on('end', resolve); });
+      });
+      await new Promise<void>((resolve, reject) => request.write(body.slice(0, 8),
+        error => error ? reject(error) : resolve()));
+      const fence = await fetch(`http://127.0.0.1:${port}/fence`);
+      expect(fence.status).toBe(404);
+    });
+    f.send({ type: 'owner_activate', transactionId, activation: {
+      config: f.init('target', 2), tools: [], systemPrompt: '', reason: 'new',
+    }, ...target });
+    await f.waitFor(message => message.type === 'owner_target_bound');
+    request.end(body.slice(8));
+    await finished;
+    expect(f.requests).toHaveLength(0);
+    const oldResult = await fetch(`http://127.0.0.1:${sourcePort}/call-llm`, {
+      method: 'POST', body: JSON.stringify({ prompt: 'old listener marker', model: 'local-scope' }),
+    }).then(async response => response.json()).catch(() => null);
+    expect(oldResult?.text).toBeUndefined();
+    expect(f.requests).toHaveLength(0);
+    const portEvent = await f.waitFor(message => message.type === 'callback_port' && message.ownerSessionId === 'target');
+    expect(portEvent.callbackPort).not.toBe(sourcePort);
+    const result = await fetch(`http://127.0.0.1:${portEvent.callbackPort}/call-llm`, {
+      method: 'POST', body: JSON.stringify({ prompt: 'target callback marker', model: 'local-scope' }),
+    }).then(response => response.json());
+    expect(result.text).toBe('local reply');
+    expect(f.requests).toHaveLength(1);
+    expect(JSON.stringify(f.requests[0])).toContain('target callback marker');
+    f.send({ type: 'owner_committed', transactionId, ...target });
+    await f.waitFor(message => message.type === 'owner_finished');
+  });
+}, 15_000);
+
 test.each(['default', 'coding'] as const)('%s worker scopes replies and rejects retired foreground requests', async profile => {
   await withWorker(profile, async ({ requests, messages, send, waitFor, init }) => {
     send(init('source', 1));
@@ -145,6 +259,90 @@ function initUI(fixture: WorkerFixture, owner: string, generation: number, avail
   return { ...fixture.init(owner, generation), extensionUIAvailable: available,
     codingResources: { agentDir: join(fixture.directory, 'pi'), resourcePolicy: 'host-only', extensionPaths: [plugin] } };
 }
+
+test.each(['prompt', 'startup'] as const)('native owner %s activation keeps hooks behind commit and routes callback work to the target', async launch => {
+  await withWorker('coding', async f => {
+    const source = { ownerSessionId: 'source', runtimeGeneration: 1 };
+    const target = { ownerSessionId: 'target', runtimeGeneration: 2 };
+    const targetCwd = join(f.directory, 'target-cwd');
+    mkdirSync(targetCwd);
+    const tracePath = join(f.directory, 'owner-trace.jsonl');
+    writeFileSync(tracePath, '');
+    const plugin = join(f.directory, 'owner.ts');
+    writeFileSync(plugin, `
+      import { appendFileSync } from 'node:fs';
+      const trace = value => appendFileSync(${JSON.stringify(tracePath)}, JSON.stringify(value) + '\\n');
+      export default function(pi) {
+        pi.on('session_start', (event, ctx) => {
+          trace(['start', event.reason, ctx.cwd]);
+          if (event.reason === 'startup' && ${JSON.stringify(launch)} === 'startup') {
+            pi.sendUserMessage('/fresh', { expandPromptTemplates: true });
+          }
+        });
+        pi.on('session_shutdown', event => trace(['shutdown', event.reason]));
+        pi.on('session_before_switch', event => trace(['before', event.reason]));
+        pi.registerCommand('fresh', { handler: async (_, ctx) => ctx.newSession({
+          setup: async manager => {
+            trace(['setup', manager.getCwd()]);
+            manager.appendMessage({ role: 'user', content: 'setup marker', timestamp: Date.now() });
+          },
+          withSession: async next => {
+            trace(['with', next.cwd]);
+            await next.sendUserMessage('target marker');
+          },
+        }) });
+      }
+    `);
+    const codingResources = { agentDir: join(f.directory, 'pi'), resourcePolicy: 'host-only',
+      extensionPaths: [plugin], globalSettings: { compaction: { enabled: false }, cacheWarming: 'off' } };
+    const traces = () => readFileSync(tracePath, 'utf8').trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
+    f.sendBatch({ ...f.init('source', 1), codingResources }, { type: 'ensure_session_ready', id: 'owner-open', ...source });
+    if (launch === 'prompt') {
+      await f.waitFor(message => message.id === 'owner-open');
+      f.send({ type: 'prompt', id: 'source-command', inputId: 'product-input', message: '/fresh', systemPrompt: '', ...source });
+    }
+    const prepare = await f.waitFor(message => message.type === 'owner_prepare');
+    expect(prepare).toMatchObject({ ...source, operation: { type: 'new' } });
+    expect(f.messages.find(message => message.type === 'session_id_update' && message.ownerSessionId === 'source'))
+      .toMatchObject({ sessionId: prepare.sourceNativeSessionId });
+    if (launch === 'prompt') expect(prepare.inputId).toBe('product-input');
+    else expect(Object.hasOwn(prepare, 'inputId')).toBe(false);
+    expect(traces()).toEqual([['start', 'startup', f.directory], ['before', 'new']]);
+    const transactionId = prepare.transactionId;
+    f.send({ type: 'owner_prepared', transactionId, targetSessionId: 'target', ...source });
+    expect(await f.waitFor(message => message.type === 'owner_source_closed')).toMatchObject(source);
+    expect(traces()).toEqual([['start', 'startup', f.directory], ['before', 'new'], ['shutdown', 'new']]);
+    const config = { ...f.init('target', 2), codingResources, cwd: targetCwd, workingDirectory: targetCwd };
+    f.send({ type: 'owner_activate', transactionId, activation: { config, tools: [], systemPrompt: 'target system marker',
+      reason: 'new' }, ...target });
+    const bound = await f.waitFor(message => message.type === 'owner_target_bound');
+    expect(bound).toMatchObject(target);
+    expect(bound.nativeSessionId).not.toBe(prepare.sourceNativeSessionId);
+    expect(traces()).toHaveLength(3);
+    expect(f.requests).toHaveLength(0);
+    f.sendBatch(
+      { type: 'owner_committed', transactionId, ...source },
+      { type: 'ensure_session_ready', id: 'commit-fence', ...target },
+    );
+    await f.waitFor(message => message.id === 'commit-fence');
+    expect(traces()).toHaveLength(3);
+    f.send({ type: 'owner_committed', transactionId, ...target });
+    expect(await f.waitFor(message => message.type === 'owner_finished')).toMatchObject({ ...target, outcome: 'complete' });
+    expect(traces()).toEqual([
+      ['start', 'startup', f.directory], ['before', 'new'], ['shutdown', 'new'],
+      ['setup', targetCwd], ['start', 'new', targetCwd], ['with', targetCwd],
+    ]);
+    expect(f.requests).toHaveLength(1);
+    expect(JSON.stringify(f.requests[0])).toContain('setup marker');
+    expect(JSON.stringify(f.requests[0])).toContain('target marker');
+    expect(JSON.stringify(f.requests[0])).toContain('target system marker');
+    expect(f.messages.filter(message => message.type === 'event' && message.event?.type === 'agent_start')
+      .every(message => message.ownerSessionId === 'target' && message.runtimeGeneration === 2)).toBe(true);
+    f.send({ type: 'release_owner', id: 'target-release', ...target });
+    expect(await f.waitFor(message => message.id === 'target-release')).toMatchObject({ ...target, released: true });
+    expect(traces().at(-1)).toEqual(['shutdown', 'quit']);
+  });
+}, 15_000);
 
 test('worker delivers startup UI and validates responses before the kernel becomes ready', async () => {
   await withWorker('coding', async f => {

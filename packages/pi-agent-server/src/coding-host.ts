@@ -12,7 +12,7 @@ import type { AgentTool } from '@mkagent/pi-durable-coding/agent';
 import {
   createAgentSession, createHostResources, initializeExtensionModels, initTheme, hostToolToAgent, wrapAgentTool, ModelRuntime, SessionManager,
   type AgentSession, type AgentSessionEvent, type ExtensionCommandContextActions, type HostResourceOptions,
-  type ModelRuntimeCredentials, type PromptOptions, type SourceInfo,
+  type ModelRuntimeCredentials, type PromptOptions, type SourceInfo, type SessionShutdownEvent,
 } from '@mkagent/pi-durable-coding/native';
 import { LegacyCodingAdoption } from './storage/coding-recovery.ts';
 import { ExtensionUIHost, type ExtensionUIBinding } from './extension-ui.ts';
@@ -34,6 +34,7 @@ export interface CodingHostBindings {
   thinkingLevel(): string;
   selection(model: Model<Api> | undefined, thinkingLevel: AgentSession['thinkingLevel']): void;
   shutdown(): void;
+  activateExecution?(): void;
   getSystemPrompt(): string | undefined;
   commands: ExtensionCommandContextActions;
   ui?: ExtensionUIHost;
@@ -61,6 +62,7 @@ export class CodingHost {
   private readonly stopAnchors: () => void;
   private stopEvents?: () => void;
   private closed = false;
+  private started = false;
   private closing = false;
   private closePending?: Promise<void>;
   private legacy?: LegacyCodingAdoption;
@@ -175,6 +177,7 @@ export class CodingHost {
   }
 
   async start(reason: 'startup' | 'resume' | 'fork' | 'reload' | 'new'): Promise<void> {
+    this.started = true;
     if (this.host.ui) {
       // The reserved built-in system theme reads no project themes and starts no watcher.
       initTheme(undefined, false);
@@ -191,6 +194,7 @@ export class CodingHost {
       commandContextActions: this.host.commands,
       shutdownHandler: this.host.shutdown, onError: this.host.error,
     });
+    this.host.activateExecution?.();
     await this.legacy?.adopt();
     await this.flush();
     const pending = await this.durable.pendingSession();
@@ -323,17 +327,17 @@ export class CodingHost {
     this.session.setBaseTools(Object.fromEntries(tools.map(tool => [tool.name, hostToolToAgent(tool)])));
   }
 
-  close(): Promise<void> {
+  close(reason: SessionShutdownEvent['reason'] = 'quit'): Promise<void> {
     this.closing = true;
-    return this.closePending ??= Promise.resolve().then(() => this.closeSession());
+    return this.closePending ??= Promise.resolve().then(() => this.closeSession(reason));
   }
 
-  private async closeSession(): Promise<void> {
+  private async closeSession(reason: SessionShutdownEvent['reason']): Promise<void> {
     // Drain dialogs before waiting for actions or shutdown hooks that may await them.
     this.ui?.close();
     this.session.cancelCacheWarming();
     await this.abort();
-    await this.session.extensionRunner.emit({ type: 'session_shutdown', reason: 'quit' });
+    if (this.started) await this.session.extensionRunner.emit({ type: 'session_shutdown', reason });
     await this.flush();
     this.stopEvents?.();
     this.stopAnchors();
