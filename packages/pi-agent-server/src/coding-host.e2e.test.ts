@@ -4,9 +4,10 @@ import { join, resolve } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import { builtinModels } from '@earendil-works/pi-ai/providers/all';
+import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
 import { defineExtension } from '@earendil-works/pi-durable';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
-import { DurableCodingSessionStore } from '@mkagent/pi-durable-coding';
+import type { NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
 import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
 import { DurableKernel } from './kernel.ts';
 import { BackgroundShells } from './background-shell.ts';
@@ -17,6 +18,53 @@ const cleanup: Array<() => Promise<void> | void> = [];
 afterEach(async () => { for (const operation of cleanup.splice(0).reverse()) await operation(); });
 
 describe('coding extensions on the production durable host', () => {
+  test('native commands can wait for idle, replace and reload their own session', async () => {
+    const root = await durableFixture([]);
+    await root.harness.close(BACKGROUND_CONTEXT);
+    cleanup.push(() => rmSync(root.directory, { recursive: true, force: true }));
+    const agentDir = join(root.directory, 'agent');
+    mkdirSync(agentDir);
+    const plugin = join(agentDir, 'commands.ts');
+    writeFileSync(plugin, `
+      export default function(pi) {
+        pi.on('session_start', event => pi.appendEntry('started', { reason: event.reason }));
+        pi.registerCommand('idle', { handler: async (_args, ctx) => {
+          await ctx.waitForIdle(); pi.appendEntry('idle', {});
+        } });
+        pi.registerCommand('fresh', { handler: async (_args, ctx) => { await ctx.newSession(); } });
+        pi.registerCommand('refresh', { handler: async (_args, ctx) => { await ctx.reload(); } });
+        pi.registerTool({ name: 'local', description: 'Synthetic local tool',
+          parameters: { type: 'object', properties: {} },
+          execute: async (_id, _args, _signal, _update, ctx) => {
+            return { content: [{ type: 'text', text: ctx.model.id }], details: {} };
+          }
+        });
+      }
+    `);
+    const errors: string[] = [];
+    const kernel = new DurableKernel({
+      sessionPath: join(root.directory, 'session'), cwd: root.directory, modelsSource: () => root.models,
+      toolsExtension: defineExtension({ name: 'empty' }), coding: { agentDir, extensionPaths: [plugin] },
+      wrapCodingTool: tool => tool,
+      hooks: { emitEvent: () => {}, sessionToolCompleted: () => {}, prefetchToolCall: () => {},
+        isPrefetchableTool: () => false, debugLog: error => errors.push(error) },
+    });
+    cleanup.push(() => kernel.close());
+    await kernel.open({ model: { provider: 'faux', modelId: 'local', contextWindow: 100_000 } });
+    const original = kernel.sessionId;
+    await kernel.submitPrompt('/idle');
+    await kernel.submitPrompt('/fresh');
+    expect(kernel.sessionId).not.toBe(original);
+    const replaced = kernel.sessionId;
+    await kernel.submitPrompt('/refresh');
+    expect(kernel.sessionId).toBe(replaced);
+    const coding = (kernel as unknown as { coding: { journal: NativeSessionJournal } }).coding;
+    expect(coding.journal.manager.getEntries().filter(entry => entry.customType === 'started').map(entry => entry.data))
+      .toEqual([{ reason: 'new' }, { reason: 'reload' }]);
+    expect(errors).toEqual([]);
+    expect(root.calls).toHaveLength(0);
+  });
+
   test('selects an extension model and keeps it usable after host model replacements', async () => {
     const root = await durableFixture([response('registered answer')]);
     await root.harness.close(BACKGROUND_CONTEXT);
@@ -53,14 +101,16 @@ describe('coding extensions on the production durable host', () => {
     await kernel.open({ model: { provider: 'faux', modelId: 'local', contextWindow: 100_000 } });
     replaceModels();
     await kernel.submitPrompt('/select-registered');
-    const store = (kernel as unknown as { coding: { store: DurableCodingSessionStore } }).coding.store;
-    expect((await store.read()).find(entry => entry.customType === 'model-selected')?.data)
+    const store = (kernel as unknown as { coding: { journal: NativeSessionJournal } }).coding.journal.manager;
+    expect((await store.getEntries()).find(entry => entry.customType === 'model-selected')?.data)
       .toEqual({ selected: true, model: 'registered' });
+    expect(kernel.currentModel?.modelId).toBe('registered');
     replaceModels();
     await kernel.submitPrompt('hello');
     await kernel.waitForIdle();
     expect(root.calls).toHaveLength(1);
-    expect(models.getModel('faux', 'registered')).toBeDefined();
+    expect(models.getModel('faux', 'registered')).toBeUndefined();
+    expect(root.requestedModels).toEqual([{ provider: 'faux', id: 'registered' }]);
   });
 
   test('rejects unsupported session options before replacing the current session', async () => {
@@ -97,11 +147,11 @@ describe('coding extensions on the production durable host', () => {
     });
     cleanup.push(() => kernel.close());
     await kernel.open({ model: { provider: 'faux', modelId: 'local', contextWindow: 100_000 } });
-    const coding = () => (kernel as unknown as { coding: { store: DurableCodingSessionStore } }).coding;
-    const original = coding().store.id;
+    const coding = () => (kernel as unknown as { coding: { journal: NativeSessionJournal } }).coding;
+    const original = coding().journal.manager.getSessionId();
     await kernel.submitPrompt('/session-contract');
-    expect(coding().store.id).toBe(original);
-    const entries = await coding().store.read();
+    expect(coding().journal.manager.getSessionId()).toBe(original);
+    const entries = await coding().journal.manager.getEntries();
     expect(entries.filter(entry => entry.customType === 'session-error')).toHaveLength(5);
     expect(entries.filter(entry => entry.customType === 'unexpected-success')).toHaveLength(0);
     expect(root.calls).toHaveLength(0);
@@ -134,7 +184,7 @@ describe('coding extensions on the production durable host', () => {
     await kernel.open({ model });
     await kernel.submitPrompt('/aside');
     const projected = (instance: DurableKernel) =>
-      (instance as unknown as { coding: { store: DurableCodingSessionStore } }).coding.store.read();
+      (instance as unknown as { coding: { journal: NativeSessionJournal } }).coding.journal.manager.getEntries();
     expect((await projected(kernel)).some(entry => entry.customType === 'aside')).toBe(false);
     expect(root.calls).toHaveLength(0);
     await kernel.close();
@@ -145,7 +195,7 @@ describe('coding extensions on the production durable host', () => {
     await reopened.submitPrompt('hello');
     await reopened.waitForIdle();
     expect(root.calls[0].messages.filter(message => message.role !== 'system').map(message => message.content))
-      .toEqual(['hello', [{ type: 'text', text: 'next-input-context' }]]);
+      .toEqual([[{ type: 'text', text: 'hello' }], [{ type: 'text', text: 'next-input-context' }]]);
     expect((await projected(reopened)).filter(entry => entry.customType === 'aside')).toHaveLength(1);
   });
 
@@ -179,7 +229,7 @@ describe('coding extensions on the production durable host', () => {
           pi.appendEntry('settings-copy', { reserve: pi.getSettings().compaction?.reserveTokens });
         } });
         pi.on('session_start', event => pi.appendEntry('started', { reason: event.reason }));
-        pi.on('agent_start', () => pi.setActiveTools(['hello', 'write']));
+        pi.on('before_agent_start', () => pi.setActiveTools(['hello', 'write']));
         pi.registerCommand('extension-raw', { handler: () => pi.sendUserMessage('/say extension') });
         pi.registerCommand('extension-expanded', { handler: () =>
           pi.sendUserMessage('/say extension', { expandPromptTemplates: true }) });
@@ -246,21 +296,20 @@ describe('coding extensions on the production durable host', () => {
     await kernel.waitForIdle();
     expect(root.calls).toHaveLength(3);
     expect(root.calls[0].messages.filter(message => message.role !== 'system').map(message => message.content))
-      .toEqual(['Say transformed', [{ type: 'text', text: 'before-agent-message' }]]);
+      .toEqual([[{ type: 'text', text: 'Say transformed' }], [{ type: 'text', text: 'before-agent-message' }]]);
     expect(root.calls[0].messages[0].content).toContain('host-system');
     expect(root.calls[0].messages[0].content).toContain('native-system');
     expect(root.calls[0].messages[0].content).toContain(join(agentDir, 'AGENTS.md'));
     expect(root.calls[0].messages[0].content).toContain('plugin-system');
-    expect(root.calls[0].messages.filter(message => message.role === 'system')
-      .flatMap(message => message.toolsAdded ?? []).map(tool => tool.name).sort()).toEqual(['hello', 'write']);
+    expect(getCurrentTools(root.calls[0].messages).map(tool => tool.name).sort()).toEqual(['hello', 'write']);
     expect(JSON.stringify(root.calls[2].messages.at(-1)?.content)).toContain('verify-result');
     expect(approvals.find(item => item.name === 'hello')?.input.name).toBe('hook-name');
     expect(approvals.find(item => item.name === 'Write')?.input.content).toBe('hook-content');
     expect(readFileSync(join(root.directory, 'approved.txt'), 'utf8')).toBe('approved-content');
     expect(existsSync(join(root.directory, 'requested.txt'))).toBe(false);
     const projected = async () => {
-      const coding = (kernel as unknown as { coding: { store: DurableCodingSessionStore } }).coding;
-      return coding.store.read();
+      const coding = (kernel as unknown as { coding: { journal: NativeSessionJournal } }).coding;
+      return coding.journal.manager.getEntries();
     };
     const entries = await projected();
     expect(entries.some(entry => entry.customType === 'marked')).toBe(true);
@@ -278,15 +327,15 @@ describe('coding extensions on the production durable host', () => {
     await kernel.submitPrompt('/extension-raw');
     await kernel.waitForIdle();
     expect(root.calls[3].messages.filter(message => message.role !== 'system').slice(-2).map(message => message.content))
-      .toEqual(['/say transformed', [{ type: 'text', text: 'before-agent-message' }]]);
+      .toEqual([[{ type: 'text', text: '/say transformed' }], [{ type: 'text', text: 'before-agent-message' }]]);
     await kernel.submitPrompt('/extension-expanded');
     await kernel.waitForIdle();
     expect(root.calls[4].messages.filter(message => message.role !== 'system').slice(-2).map(message => message.content))
-      .toEqual(['Say transformed', [{ type: 'text', text: 'before-agent-message' }]]);
+      .toEqual([[{ type: 'text', text: 'Say transformed' }], [{ type: 'text', text: 'before-agent-message' }]]);
     await kernel.steer('idle steer');
     await kernel.waitForIdle();
     expect(root.calls[5].messages.filter(message => message.role !== 'system').slice(-2).map(message => message.content))
-      .toEqual(['idle steer', [{ type: 'text', text: 'before-agent-message' }]]);
+      .toEqual([[{ type: 'text', text: 'idle steer' }], [{ type: 'text', text: 'before-agent-message' }]]);
     expect((await projected()).filter(entry => entry.customType === 'input-observed').map(entry => entry.data))
       .toEqual([
         { source: 'interactive', text: '/say hello' }, { source: 'extension', text: '/say extension' },
@@ -297,7 +346,7 @@ describe('coding extensions on the production durable host', () => {
     const reopened = new DurableKernel(options);
     cleanup.push(() => reopened.close());
     await reopened.open({ model: { provider: 'faux', modelId: 'local', contextWindow: 100_000 } });
-    const restored = await (reopened as unknown as { coding: { store: DurableCodingSessionStore } }).coding.store.read();
+    const restored = await (reopened as unknown as { coding: { journal: NativeSessionJournal } }).coding.journal.manager.getEntries();
     expect(reopened.sessionId).toBe(id);
     expect(restored.some(entry => entry.customType === 'marked')).toBe(true);
     expect(restored.filter(entry => entry.customType === 'started').map(entry => entry.data))

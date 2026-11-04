@@ -26,6 +26,7 @@ export function response(text: string, stopReason: AssistantMessage['stopReason'
 export async function durableFixture(answers: AssistantMessage[], settings: HarnessSettings = {}) {
   const directory = mkdtempSync(join(tmpdir(), 'durable-boundary-'));
   const calls: TranscriptContext[] = [];
+  const requestedModels: Array<{ provider: string; id: string }> = [];
   const reports: Report[] = [];
   const models = builtinModels({ credentials: new InMemoryCredentialStore() });
   models.setProvider(createProvider({
@@ -38,7 +39,8 @@ export async function durableFixture(answers: AssistantMessage[], settings: Harn
     auth: { apiKey: { name: 'Local', resolve: async () => ({ auth: { apiKey: 'local-test-placeholder' } }) } },
     api: { faux: {
       stream: () => { throw new Error('Unexpected non-simple stream'); },
-      streamSimple: (_model, context) => {
+      streamSimple: (model, context) => {
+        requestedModels.push({ provider: model.provider, id: model.id });
         calls.push(context);
         const message = answers.shift();
         if (!message) throw new Error('Unexpected model request');
@@ -63,5 +65,5 @@ export async function durableFixture(answers: AssistantMessage[], settings: Harn
     .then(storage => Harness.open(storage, options, BACKGROUND_CONTEXT));
   const harness = await open();
   const conversation = await harness.root(BACKGROUND_CONTEXT, { agent: { model: { provider: 'faux', modelId: 'local' } } });
-  return { directory, registry, harness, conversation, calls, reports, open, models };
+  return { directory, registry, harness, conversation, calls, requestedModels, reports, open, models };
 }

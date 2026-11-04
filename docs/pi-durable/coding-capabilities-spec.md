@@ -19,8 +19,9 @@ package reuse, real functional validation, and the best possible compatibility
 with existing Pi plugins. Compatibility must describe tested API behavior.
 Loading a plugin without exercising its operations does not establish compatibility.
 
-This inventory is the acceptance target. See [validation and limits](coding-validation.md)
-for the implemented behavior, current evidence and remaining work.
+This inventory is the acceptance target. Its baseline column describes MkAgent
+before this migration. See [validation and limits](coding-validation.md) for
+the implemented behavior, current evidence and limits.
 
 ## Architecture
 
@@ -30,11 +31,11 @@ Pi packages. It has no dependency on
 MkAgent shared code, Electron, the subprocess implementation or UI components.
 The subprocess supplies narrow callbacks for session operations and permissions.
 
-The existing `DurableKernel` owns the Harness, model loop, storage, recovery,
-branching and compaction. The ported session layer binds those operations to
-durable. It must not retain a second Agent loop. The original `AgentSession`
-contains scheduling, retries and nested execution, so replacing only its
-`new Agent()` call is insufficient.
+The existing `DurableKernel` owns the Harness and production storage. The native
+`AgentSession` supplies coding behavior. A durable Agent facade and the
+`pi.coding.session`, `pi.coding.run` and owned tool tasks schedule its callbacks.
+Retries, compaction, nested execution and settlement return through those tasks.
+The old Agent loop is excluded from the source closure.
 
 Reuse the native `SessionManager.inMemory()` and projection functions for
 synchronous extension reads and previews. Production writes go through durable.
@@ -64,16 +65,18 @@ their private files. A probe importing only resource exports bundles 2,074 modul
 and about 9.0 MB of uncompressed code. The user explicitly rejected this route.
 The historical ban on those runtime dependencies remains in force.
 
-Port `extensions/loader`, `runner` and the protocol from the pinned TypeScript
-source. Preserve their registration, event chaining, rollback and stale-context
-behavior. Replace module resolution and the bindings supplied to `bindCore()`,
-`bindCommandContext()` and `setUIContext()`.
+Port the complete public coding dependency closure from the pinned TypeScript
+source, including the SDK, resources, extensions, session layer and presentation
+code. Preserve registration, event chaining, rollback and stale-context behavior.
+Controlled port scripts bind execution, model credentials, resource trust and
+effective settings to the host.
 
-The port records each source hash, selection and transformation in `UPSTREAM.json`.
-The generation script reproduces the port from a clean checkout. Kernel-coupled
-TypeScript modules are transpiled to JavaScript to remove type-only references
-without importing the old kernel's package. Host boundaries remain typed.
-This does not establish complete source-level TypeScript API compatibility.
+`UPSTREAM-RUNTIME.json` records each source and output hash, asset and
+transformation in the full runtime port. `UPSTREAM.json` records the earlier
+compatibility helpers. The generation scripts reproduce both from the pinned
+checkout. The runtime keeps TypeScript declarations and rewrites old Agent
+imports to the durable facade. Host consumers use `./native`, `./agent` and
+`./durable` exports.
 
 Plugin import identifiers resolve to the local port or independent official
 packages. They must not fall back to the old engine. A compatibility export
@@ -86,12 +89,13 @@ message entry, return context edits and custom entries, and request continuation
 Durable 1.5.0's `onYield` runs before final answer persistence; `afterRun` runs
 after input settlement. Neither hook alone preserves this protocol.
 
-Full boundary support therefore requires a small, versioned durable patch or an
-equivalent upstream API. The boundary must run after message/tool persistence and
-before the next generation or final settlement. Persist its drafts and decision,
-then apply them once through durable scheduling. New checkpoint phases require
-task-version migration and recovery tests. External plugin effects are not
-exactly-once. Event forwarding alone must not be reported as boundary support.
+The coding runtime uses its own versioned durable tasks for these boundaries.
+The journal commits native drafts, accepted queue identities and the next
+checkpoint together. Request intent precedes context transforms and streaming
+callbacks. Recovery does not replay uncertain callbacks or unsafe tools.
+The legacy durable patch remains for non-coding tasks and migration.
+New checkpoint phases require task-version and recovery checks. External plugin
+effects do not have an exactly-once guarantee.
 
 ## Capability inventory and acceptance
 
@@ -125,9 +129,9 @@ exactly-once. Event forwarding alone must not be reported as boundary support.
 | CLI/JSONL/Desktop/WebUI | MkAgent transports | Real packaged subprocess and headless CLI execution; UI-specific limits recorded |
 | Themes/shortcuts/editor/renderers | Native TUI concern | Retain diagnostics and document unsupported terminal-only behavior |
 
-Plugin compatibility is assessed per API group. Terminal rendering, unsupported
-session navigation and virtual model routing cannot be advertised as complete
-compatibility merely because their registrations load.
+Plugin compatibility is assessed per API group. A retained source file or a
+successful registration does not establish all host, platform and interactive
+workflows. See the validation report for tested behavior and host limits.
 
 ## Trust and configuration
 
@@ -150,6 +154,9 @@ Shutdown and reload release old handlers and connections.
 
 ## Implementation sequence
 
+The migration followed this sequence. The validation report records the tested
+behavior and the platform and interactive workflows that remain unverified.
+
 1. Commit this versioned design and inventory.
 2. Port the native resource and extension dependency closure with provenance.
 3. Bind native resource/input/prompt behavior, tools and session projections to durable.
@@ -160,7 +167,8 @@ Shutdown and reload release old handlers and connections.
 7. Build and run the bundled JSONL subprocess outside the source tree, then run
    required repository checks. Record results and remaining compatibility limits.
 
-Each feature commit includes its source audit entries and relevant validation.
+The final migration commit includes source audit entries and validation for the
+complete runtime.
 No push, pull request, merge, paid model request or production service changes
 are authorized by this task.
 
@@ -175,9 +183,10 @@ Resource snapshots avoid full repository scans on every tool call. Reload at
 an idle boundary replaces the snapshot and tool registration set. The host
 transport DTOs do not import upstream runtime types.
 
-Rollback disables the compatibility package at the server integration boundary;
-durable session entries remain the source of truth. New extension entries must
-not prevent older kernels from reading the remaining conversation.
+Rollback requires a runtime that understands the stored task versions and
+migration fence. Disabling the integration alone does not transfer accepted
+work back to the old scheduler. Durable entries remain the source of truth;
+unsupported checkpoints require explicit reconciliation before migration.
 
 ## Validation isolation and evidence
 

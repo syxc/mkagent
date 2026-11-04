@@ -80,7 +80,7 @@ for (const backend of ['sqlite', 'jsonl'] as const) describe(`1.4.0 ${backend} u
         harness.waitForTask(expected.ids.generation as TaskId, context),
         harness.waitForTask(expected.ids.tool as TaskId, context),
       ]);
-      expect([newGeneration.version, newTool.version]).toEqual([2, 3]);
+      expect([newGeneration.version, newTool.version]).toEqual([4, 3]);
       expect([newGeneration.input, newTool.input]).toEqual([generation.input, tool.input]);
       expect(newGeneration.state.status).toBe('terminal');
       expect(newTool.state.status).toBe('terminal');

@@ -1,0 +1,261 @@
+/** Reproduce the complete public Pi coding source closure with a replaceable execution boundary. */
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { isBuiltin } from 'node:module';
+import { dirname, extname, join, relative, resolve, sep } from 'node:path';
+import ts from 'typescript';
+import { portModelRuntime } from './model-runtime-port.ts';
+import { portResourceLoader } from './resource-loader-port.ts';
+import { portSettingsManager } from './settings-runtime-port.ts';
+import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
+import { portAgentFacade, portAgentSession, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
+
+const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
+const checkout = process.argv[2];
+if (!checkout) throw new Error('Usage: bun vendor-coding-runtime.ts /absolute/pi-checkout [--inventory|--check]');
+const upstream = resolve(checkout);
+const source = join(upstream, 'packages/coding-agent/src');
+const destination = resolve(import.meta.dir, '..');
+const checking = process.argv.includes('--check');
+const inventory = process.argv.includes('--inventory');
+const head = Bun.spawnSync(['git', '-C', upstream, 'rev-parse', 'HEAD']);
+const status = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--',
+  'packages/coding-agent/src', 'packages/coding-agent/package.json', 'packages/agent/src', 'LICENSE']);
+if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCode || status.stdout.toString().trim()) {
+  throw new Error('Expected clean pinned Pi v1.5.0 sources');
+}
+const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
+const queue = ['index.ts', 'core/agent-session-services.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'utils/highlight-js.d.ts'];
+const visited = new Set<string>();
+const dependencies = new Set<string>();
+const coreImports = new Set<string>();
+const records: Array<{ source: string; target: string; sha256: string; portSha256: string; changes: string[] }> = [];
+const hash = (body: string | Uint8Array) => createHash('sha256').update(body).digest('hex');
+const slash = (path: string) => path.split(sep).join('/');
+
+function save(path: string, body: string | Uint8Array) {
+  if (inventory) return;
+  const target = join(destination, path);
+  if (checking) {
+    if (hash(readFileSync(target)) !== hash(body)) throw new Error(`Source output differs: ${path}`);
+  } else {
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, body);
+  }
+}
+
+while (queue.length) {
+  const path = queue.shift()!;
+  if (visited.has(path)) continue;
+  visited.add(path);
+  const original = readFileSync(join(source, path), 'utf8');
+  const parsed = ts.createSourceFile(path, original, ts.ScriptTarget.Latest, true);
+  const replacements: Array<{ start: number; end: number; body: string }> = [];
+  const changes = new Set<string>();
+  const inspect = (literal: ts.StringLiteralLike) => {
+    const specifier = literal.text;
+    if (specifier === '@earendil-works/pi-agent-core') {
+      let target = slash(relative(dirname(join(destination, 'src/pi', path)), join(destination, 'src/agent-runtime.ts')));
+      if (!target.startsWith('.')) target = './' + target;
+      replacements.push({ start: literal.getStart(parsed), end: literal.end, body: JSON.stringify(target) });
+      changes.add('durable-agent-boundary');
+      return;
+    }
+    if (specifier.startsWith('.')) {
+      const candidate = resolve(dirname(join(source, path)), specifier);
+      if (!candidate.startsWith(source + sep)) throw new Error(`Relative import escapes coding sources: ${path}: ${specifier}`);
+      const selected = existsSync(candidate) && extname(candidate) ? candidate
+        : existsSync(candidate + '.ts') ? candidate + '.ts' : join(candidate, 'index.ts');
+      if (!existsSync(selected)) throw new Error(`Missing source import: ${path}: ${specifier}`);
+      queue.push(slash(relative(source, selected)));
+      return;
+    }
+    const name = specifier.startsWith('@') ? specifier.split('/').slice(0, 2).join('/') : specifier.split('/')[0]!;
+    // Bun treats undici as built in, but Node consumers still require the pinned package.
+    if (packageInfo.dependencies[name] || !isBuiltin(specifier)) dependencies.add(name);
+  };
+  const visit = (node: ts.Node) => {
+    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+      if (node.moduleSpecifier.text === '@earendil-works/pi-agent-core' && ts.isImportDeclaration(node)) {
+        const bindings = node.importClause?.namedBindings;
+        if (bindings && ts.isNamedImports(bindings)) for (const item of bindings.elements) coreImports.add((item.propertyName ?? item.name).text);
+        else coreImports.add('*');
+      }
+      inspect(node.moduleSpecifier);
+    } else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) && ts.isStringLiteral(node.argument.literal)) {
+      inspect(node.argument.literal);
+    } else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) {
+      inspect(node.arguments[0]);
+    } else if (ts.isModuleDeclaration(node) && ts.isStringLiteral(node.name)) {
+      inspect(node.name);
+    } else if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'resolve' &&
+      node.arguments[0] && ts.isStringLiteral(node.arguments[0]) && !node.arguments[0].text.startsWith('.')) {
+      const name = node.arguments[0].text.split('/')[0]!;
+      if (packageInfo.dependencies[name]) inspect(node.arguments[0]);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(parsed);
+  let body = original;
+  for (const edit of replacements.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.body + body.slice(edit.end);
+  if (path === 'core/resource-loader.ts' || path === 'core/package-manager.ts') {
+    body = portResourceLoader(path, body);
+    changes.add('host-resource-trust-and-installed-package-policy');
+  }
+  if (path === 'core/model-runtime.ts') {
+    body = portModelRuntime(body);
+    changes.add('host-owned-models-and-credentials');
+  }
+  if (path === 'core/agent-session.ts') {
+    body = portAgentSession(body);
+    changes.add('durable-recovery-and-host-tool-policy');
+  }
+  if (path === 'core/sdk.ts') {
+    body = portSDK(body);
+    changes.add('durable-sdk-host-bindings');
+  }
+  if (path === 'core/agent-session-services.ts') {
+    body = portSessionServices(body);
+    changes.add('shared-extension-model-initialization');
+  }
+  if (path === 'core/settings-manager.ts') {
+    body = portSettingsManager(body);
+    changes.add('host-compaction-threshold-policy');
+  }
+  if (path === 'utils/image-resize.ts' || path === 'utils/photon.ts') {
+    body = portImageAssets(path, body);
+    changes.add('installed-image-worker-and-versioned-bundle-wasm');
+  }
+  if (path === 'core/extensions/types.ts' || path === 'core/tools/tool-definition-wrapper.ts') {
+    body = portToolDefinition(path, body);
+    changes.add('explicit-durable-tool-replay-policy');
+  }
+  if (body.includes('process.off(')) {
+    body = body.replaceAll('process.off(', 'process.removeListener(');
+    changes.add('node-and-bun-process-listener-types');
+  }
+  if (path === 'core/tools/find.ts') {
+    body = body.replace('path.PlatformPath', 'typeof path');
+    changes.add('node-path-platform-type');
+  }
+  if (path === 'core/extensions/loader.ts') {
+    const before = 'const usesEmbeddedModules = isBunBinary || isNodeSeaBinary || isBundledNode;';
+    if (!body.includes(before)) throw new Error('Extension module resolver changed');
+    body = body.replace(before, 'const usesEmbeddedModules = true;');
+    changes.add('host-independent-extension-modules');
+  }
+  if (path === 'config.ts') {
+    body = body.replace('export const VERSION: string = pkg.version || "0.0.0";',
+      `export const VERSION: string = ${JSON.stringify(packageInfo.version)};`);
+    body = body.replace('installed.version !== VERSION', 'installed.version !== pkg.version');
+    changes.add('pinned-coding-version-with-host-install-detection');
+    for (const segment of ['"modes", "interactive", "theme"', '"core", "export-html"', '"modes", "interactive", "assets"']) {
+      const before = `join(packageDir, srcOrDist, ${segment})`;
+      if (!body.includes(before)) throw new Error('Package asset resolver changed: ' + segment);
+      body = body.replace(before, `join(packageDir, srcOrDist, "pi", ${segment})`);
+    }
+    changes.add('source-asset-location');
+    body = portBundledAssets(body);
+    changes.add('installed-native-bundle-assets');
+  }
+  const target = 'src/pi/' + path;
+  save(target, body);
+  records.push({ source: 'packages/coding-agent/src/' + path, target, sha256: hash(original), portSha256: hash(body), changes: [...changes] });
+}
+
+function assets(directory: string) {
+  for (const entry of readdirSync(join(source, directory), { withFileTypes: true })) {
+    const path = directory + '/' + entry.name;
+    if (entry.isDirectory()) assets(path);
+    else if (!path.endsWith('.ts')) {
+      const body = readFileSync(join(source, path));
+      const target = 'src/pi/' + path;
+      save(target, body);
+      records.push({ source: 'packages/coding-agent/src/' + path, target, sha256: hash(body), portSha256: hash(body), changes: [] });
+    }
+  }
+}
+for (const directory of ['modes/interactive/theme', 'modes/interactive/assets', 'core/export-html']) assets(directory);
+// Reuse the public state facade and protocol, while replacing its execution implementation.
+// The native agent-loop implementation is deliberately outside this source closure.
+for (const [path, target] of [
+  ['types.ts', 'src/agent-runtime.ts'],
+  ['agent.ts', 'src/durable-agent.ts'],
+  ['stream-fn.ts', 'src/stream-fn.ts'],
+  ['proxy.ts', 'src/stream-proxy.ts'],
+] as const) {
+  const original = readFileSync(join(upstream, 'packages/agent/src', path), 'utf8');
+  let body = original.replaceAll('"./types.ts"', '"./agent-runtime.ts"');
+  const changes = ['local-agent-protocol'];
+  if (path === 'proxy.ts') {
+    body = body.replace('ReadableStreamDefaultReader<Uint8Array> | undefined',
+      'Pick<ReadableStreamDefaultReader<Uint8Array>, "read" | "cancel" | "releaseLock"> | undefined');
+    changes.push('portable-fetch-reader-type');
+  }
+  if (path === 'agent.ts') {
+    body = body.replace('"./agent-loop.ts"', '"./durable-loop.ts"');
+    body = 'import { DurableLoopBinding } from "./durable-coding/engine.ts";\n' + body;
+    body = body.replace('export interface AgentOptions {', 'export interface AgentOptions {\n\tdurable?: DurableLoopBinding;');
+    body = body.replace('private _state: MutableAgentState;', 'private _state: MutableAgentState;\n\tpublic readonly durable: DurableLoopBinding;');
+    body = body.replace('this._state = createMutableAgentState(runtimeOptions.initialState);', 'this._state = createMutableAgentState(runtimeOptions.initialState);\n\t\tthis.durable = runtimeOptions.durable ?? new DurableLoopBinding();');
+    body = body.replace('let skipInitialSteeringPoll = options.skipInitialSteeringPoll === true;', 'let skipInitialSteeringPoll = options.skipInitialSteeringPoll === true;');
+    body = body.replace('model: this._state.model,\n\t\t\treasoning:', 'durable: this.durable,\n\t\t\tmodel: this._state.model,\n\t\t\treasoning:');
+    changes.push('durable-loop-backend');
+    body = portAgentFacade(body);
+    changes.push('durable-state-recovery');
+  }
+  if (path === 'types.ts') {
+    body = 'import type { DurableLoopBinding } from "./durable-coding/engine.ts";\n' + body;
+    body = body.replace('export interface AgentLoopConfig extends SimpleStreamOptions {', 'export interface AgentLoopConfig extends SimpleStreamOptions {\n\tdurable?: DurableLoopBinding;');
+    body += '\nexport * from "./durable-agent.ts";\n'
+      + 'export * from "./durable-loop.ts";\n'
+      + 'export * from "./stream-proxy.ts";\n'
+      + 'export { setDefaultStreamFn } from "./stream-fn.ts";\n';
+    changes.push('complete-public-agent-exports');
+  }
+  save(target, body);
+  records.push({ source: 'packages/agent/src/' + path, target, sha256: hash(original), portSha256: hash(body), changes });
+}
+// These functions define request/message semantics, not scheduling. The durable task owns every transition.
+const helperSource = readFileSync(join(upstream, 'packages/agent/src/agent-loop.ts'), 'utf8');
+const helperAST = ts.createSourceFile('agent-loop.ts', helperSource, ts.ScriptTarget.Latest, true);
+const helperNames = new Set([
+  'declareToolChanges', 'withToolChanges', 'streamAssistantResponse', 'prepareToolCallArguments',
+  'prepareToolCall', 'createErrorToolResult', 'emitToolExecutionEnd', 'createToolResultMessage',
+  'emitToolResultMessage', 'shouldTerminateToolBatch',
+]);
+const functions = helperAST.statements.filter((node): node is ts.FunctionDeclaration =>
+  ts.isFunctionDeclaration(node) && !!node.name && helperNames.has(node.name.text));
+if (functions.length !== helperNames.size) throw new Error('Pinned agent operation helpers changed');
+const helperBody = [
+  '// Native Pi request and tool preparation operations; scheduling belongs to pi-durable tasks.',
+  'import { getCurrentTools, getToolStateChanges, mergeClientIdentity, normalizeContext, PI_ATTRIBUTION, toToolDeclaration, validateToolArguments, type AssistantMessage, type SystemMessage, type ToolResultMessage, type ToolStateChanges } from "@earendil-works/pi-ai";',
+  'import type { AgentContext, AgentLoopConfig, AgentMessage, AgentTool, AgentToolCall, AgentToolCallOutcome, AgentToolResult, StreamFn } from "./agent-runtime.ts";',
+  'export type AgentEventSink = (event: import("./agent-runtime.ts").AgentEvent) => Promise<void> | void;',
+  'type ToolCallHooks = Pick<AgentLoopConfig, "beforeToolCall" | "afterToolCall">;',
+  'type PreparedToolCall = { kind: "prepared"; toolCall: AgentToolCall; tool: AgentTool<any>; args: unknown };',
+  'type ImmediateToolCallOutcome = { kind: "immediate"; result: AgentToolResult<any>; isError: boolean };',
+  'type FinalizedToolCallOutcome = AgentToolCallOutcome;',
+  'const NO_CHANGES: ToolStateChanges = { toolsAdded: [], toolsRemoved: [] };',
+  'export const DEFAULT_AGENT_IDENTITY = { attribution: PI_ATTRIBUTION };',
+  ...functions.map(node => 'export ' + node.getText(helperAST)),
+  '',
+].join('\n');
+save('src/native-operations.ts', helperBody);
+records.push({
+  source: 'packages/agent/src/agent-loop.ts', target: 'src/native-operations.ts',
+  sha256: hash(helperSource), portSha256: hash(helperBody), changes: ['selected-native-operations-without-scheduler'],
+});
+const externalDependencies = Object.fromEntries([...dependencies].sort().map(name => {
+  const version = packageInfo.dependencies[name];
+  return [name, version ?? '<builtin or development type>'];
+}));
+records.sort((a, b) => a.target.localeCompare(b.target));
+const manifest = {
+  repository: 'https://github.com/earendil-works/pi', version: '1.5.0', revision,
+  policy: 'Complete public coding source, preserved TypeScript declarations; execution binds to the local durable Agent boundary.',
+  dependencies: externalDependencies, coreImports: [...coreImports].sort(), files: records,
+};
+save('UPSTREAM-RUNTIME.json', JSON.stringify(manifest, null, 2) + '\n');
+const sourceFiles = records.filter(record => record.target.endsWith('.ts')).length;
+console.log(JSON.stringify({ mode: inventory ? 'inventory' : checking ? 'check' : 'write', sourceFiles, assets: records.length - sourceFiles, dependencies: externalDependencies, coreImports: [...coreImports].sort() }, null, 2));

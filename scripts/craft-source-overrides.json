@@ -11,8 +11,8 @@
       "reason": "Craft ignore rules adapted for MkAgent local config and credentials; includes the generated Alma snapshots ignore rule added in 57ad06c."
     },
     "NOTICE": {
-      "sha256": "32400943f510737b4b1084ee108aa7a419ee64bf785f3e49fca947661e5ca372",
-      "reason": "Retain MkAgent branding and Craft origin notices, and include the MIT notice for server code and event declarations adapted from pi-coding-agent and pi-durable. Record pinned Pi 1.5.0 MIT source-port and patch provenance."
+      "sha256": "61262519dc52021b25513dfdad2de7a7a1446a1cdb89ea1c17566fc5f1456cfc",
+      "reason": "Retain Craft and Pi license notices and identify the complete pinned Pi source port and transformation manifests."
     },
     "README.md": {
       "sha256": "4cee9e0ac623faf263fd245fa023ea3422c47d98dd418e4ab5542ea955c8a218",
@@ -243,8 +243,8 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "apps/electron/scripts/copy-assets.ts": {
-      "sha256": "ef1ed7da3c43291c96b93a9d58928d6958ea226f6c1be2b13883c35726a18b9a",
-      "reason": "Adapt Craft resource copying to the Lite document and tool set, target Bun and uv binaries, and ship the durable server with its codemode worker, QuickJS WASM and Photon WASM."
+      "sha256": "8392f64eca1b8b8fa5c9943de945ab3879f49f11b69318ed9587a5ce03111391",
+      "reason": "Package the durable coding subprocess, both Photon versions, Pi license, native themes and HTML export assets."
     },
     "apps/electron/src/__tests__/transport.test.ts": {
       "sha256": "4ed2a7275236f0f8d631d4a27bac86891b1fbd533e21605e8e28c627484b3711",
@@ -951,8 +951,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "adb182fd1ae38cda812fda2aa45e37538101a4dcb60c778855c0da030bdbd5e0",
-      "reason": "Retain MkAgent workspace versions and Lite dependency removals; resolve the server durable, pi-ai, chord, codemode and schema packages at 1.5.0 with Photon WASM, while retaining shared Pi 1.1.0 event compatibility. Pin independent coding libraries and the reproducible durable patch. Remove the historical type-only pi-agent-core production dependency from the resolved graph."
+      "sha256": "d50c7cff6ce753f5e19466788cad577539e27f80bd6b474ac9b8ab32954a14e1",
+      "reason": "Lock the complete native coding dependency closure and independent official Pi packages without the old coding-agent or agent-core runtime."
     },
     "package.json": {
       "sha256": "b79a730bd5592712e5daf22a2abc12b42f4132323679217785b9d2e18c44c0d0",
@@ -991,7 +991,7 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "packages/pi-agent-server/package.json": {
-      "sha256": "b9e354b4eea246357fc5fdb5f49ad4af0cddaf8deec5a5e657ba762de0f819b4",
+      "sha256": "e0439a79ae45c9537db4dd57f90598bb742020aafcf0cb5095a72a7febe7e043",
       "reason": "Replace Craft's coding-agent runtime with pi-durable, pi-ai, chord, codemode and schema 1.5.0, retain pi-mcp 1.1.0, and build the subprocess with its worker and WASM assets. Depend on the local coding package with one durable engine."
     },
     "packages/pi-agent-server/src/adapt-credential.test.ts": {
@@ -1011,7 +1011,7 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "8c7b9acea651a763d09c117f19acfb740b7d7387c80407eed916ed2e23194cd9",
+      "sha256": "4149ea7bb8a2e5a96babf96d252bfc976ea651afbcd5d2cbc49faf65568c07e6",
       "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining JSONL host events, tool registration, runtime updates, compaction cancellation and shutdown cleanup. Reject unavailable initial models and report failed model switches through the existing host error protocol. Bind the coding profile to explicit resources and host tool approval."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
@@ -2191,8 +2191,8 @@
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "scripts/build-server.ts": {
-      "sha256": "0698a5ab5dfca4a02a1b9ec709f30fd26398f36ff0617217667cb168e66c8ac8",
-      "reason": "Adapt Craft server packaging to MkAgent's portable Lite distribution and require the durable codemode worker, QuickJS WASM and Photon WASM beside the Pi server bundle."
+      "sha256": "b19c6c3c099dccb930d013c1695ef9605989adb99738ffa836830270a6977814",
+      "reason": "Include Pi runtime resources and license notices in the standalone headless archive and verify their presence."
     },
     "scripts/check-i18n-parity.ts": {
       "sha256": "1c2d2bc8d2c6154d7cad20af822e4f7413192f47c0d3f46e6a39a7e36026805c",
@@ -2215,7 +2215,7 @@
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "packages/pi-agent-server/src/bundle-smoke.test.ts": {
-      "sha256": "6a4f7a935331344b1da352047004fa9e620a70928aff2b3132aef66db6ad6727",
+      "sha256": "d1b5653f8f2e16a0db576a683736a41763d313003e113dc38492364dc7b2dd6a",
       "reason": "Extend offline bundle tests for durable assets, codemode/MCP defaults, initialization races, tools, runtime updates, cancellation and OAuth ownership. Gate opening on the actual runtime config update instead of a fixed delay, and locate the open call independently of its generated variable name."
     },
     "packages/pi-agent-server/src/mini-model-query.test.ts": {
@@ -2649,8 +2649,8 @@
       "reason": "Cross-platform bounded retry runner hardens dependency installation and Electron packaging downloads"
     },
     "packages/pi-agent-server/scripts/build.ts": {
-      "sha256": "6eadc2e0e97e13d4fe778179fe4116d15b852e161a1129d4e9c22ae216ff5043",
-      "reason": "Build the durable subprocess and codemode worker, and copy QuickJS and Photon WASM assets beside the bundles."
+      "sha256": "25783f11a124d02d693f67babbf25c76a0c7f12aa81db3abd13812371ea912b5",
+      "reason": "Bundle the native durable coding server and copy its exact Photon WASM version, license and non-code SDK assets."
     },
     "packages/pi-agent-server/src/cache-warmer.ts": {
       "sha256": "7d1ca54d32dc242776a6fe34cce44810554fe5d4243ee0d42f135619f048d8af",
@@ -2717,7 +2717,7 @@
       "reason": "Extend Craft-derived session bundles with validated SQLite and JSONL snapshots; associate browser classifications and nested results with their durable task, conversation and call, remove secrets only from matching browser arguments, reject unresolved inputs and retained copies, and preserve branch metadata."
     },
     "packages/pi-agent-server/src/compaction-reserve.ts": {
-      "sha256": "9451ea475cdaef619b074dc24080f0051c9ee3e8d1e780900e8f64b33b1b0aa1",
+      "sha256": "b139b5e27c875351b6b82dbf38f491df1134b978aef779ebe325563bd3b6febb",
       "reason": "Extract compactionReserveFor from local main session-settings.ts to preserve the host autoCompactWindow threshold in the durable kernel."
     },
     "packages/pi-agent-server/src/durable-storage.test.ts": {
@@ -2733,7 +2733,7 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "3700dd4c6d6c43bd2bb43d7260b716afccd8de0802d9f3234bace4fd6e1d552b",
+      "sha256": "43adafea990e287035cfa2bcbd0ba3c08585631fa50172118a02912fcf7eb1b1",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
@@ -2781,7 +2781,7 @@
       "reason": "Convert legacy pi-coding-agent 1.1.0 JSONL histories to durable conversations and persist recoverable entry and branch anchor mappings; skip existing parent backends without opening them, migrate only legacy-only parents in place, and complete deferred migration in the child copy."
     },
     "packages/pi-agent-server/src/model-runtime.ts": {
-      "sha256": "e1dd4bd5feb109849c4e322e4f0affb685286d999308ebde4489799128a36751",
+      "sha256": "d48bfae22f98bd913ee7fa30a02120f767c0aec46f4d9fc6774e34395852f685",
       "reason": "Retain credential synchronization and custom endpoint registration in MutableModels. Apply MiniMax CN bare request IDs only at stream and streamSimple dispatch, preserving canonical model metadata across runtime replacement and ephemeral queries."
     },
     "packages/pi-agent-server/src/storage/durable-storage.ts": {
@@ -2921,7 +2921,7 @@
       "reason": "Adapt public pi-durable 1.5.0 conversation and commit observers to retained host events, including held progress, transcript windows and nested tool results."
     },
     "packages/pi-agent-server/src/storage-upgrade.test.ts": {
-      "sha256": "d3c6593262a299e93abc9559ab74a24bd56a5df67b23e39f2339394807e5fd18",
+      "sha256": "16f49fc2b2524abe8441baa944846d45b5dd7012701be9ef352823b5cc24f53d",
       "reason": "Verify released pi-durable 1.4.0 session fixtures through the 1.5.0 storage, migration and scheduler APIs."
     },
     "packages/pi-agent-server/test-fixtures/pi-durable-1.4.0/generate.ts": {
@@ -3025,11 +3025,11 @@
       "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
     },
     "packages/pi-agent-server/src/coding-host.e2e.test.ts": {
-      "sha256": "826f711ae8b938cc45d2424ff8a66d9c3766fd3306d3ee131f7c91dd4b6361f1",
+      "sha256": "e5570727d289e36ff6ebf3d561fa4bdbfbba0ba87af66b5c5355f867e4ee97d9",
       "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery and approved file writes."
     },
     "packages/pi-agent-server/src/coding-host.ts": {
-      "sha256": "6d6603ac330b6592b1f964f9d3624bb40c2cc66ca04d954cfed9f5b07e5980ac",
+      "sha256": "3f9a3af27b17801287721d27851861700a762666d393f90d9f952c8a78aa8fc7",
       "reason": "Adapt native resources, prompts, extension actions and pending messages to durable host boundaries."
     },
     "packages/pi-agent-server/test/coding-bundle.e2e.test.ts": {
@@ -3049,7 +3049,7 @@
       "reason": "Record pinned source selections, transformations and generated output hashes."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "18cb95973871753ab3630d2892175c9c62fbbd257c3d8acd2d9055a36ecde558",
+      "sha256": "9925ad1dbbc07e02d2693401d2f30b5f96e2a6f989ec34604b0ced39e60a7972",
       "reason": "Declare independent coding capabilities using official Pi libraries and loader dependencies."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
@@ -3285,7 +3285,7 @@
       "reason": "Verify imports, registration, cancellation, headless operations and engine rejection."
     },
     "packages/pi-durable-coding/test/fixtures/durable-harness.ts": {
-      "sha256": "91af1f2ff815b924f0dcb25544bdd73fdb823936ddaff06135133a16e306ebc6",
+      "sha256": "f096dd3d1b5289b3ca402bc506960f6aba68478c9ead5541a3e54abdf16b7145",
       "reason": "Provide temporary real durable storage and a deterministic local provider."
     },
     "packages/pi-durable-coding/test/fixtures/upstream/hello.ts": {
@@ -3311,6 +3311,1278 @@
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
       "sha256": "38b57721fc6d38ca192022cccae8b2b80693e08fc742e12524f30881eff42d5e",
       "reason": "Apply the typed generation-task patch through frozen Bun installs with one scheduler."
+    },
+    "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
+      "sha256": "53af9ef53c9ada189e0122a646c18ccf20bc16c2720fa56c25a3a2de22690352",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the coding-host-catalog.e2e.test.ts fixture."
+    },
+    "packages/pi-agent-server/src/coding-host-handoff.e2e.test.ts": {
+      "sha256": "9a4491e102171f84b710c141ebd8f88399bad860e392c1acaebd1198c466204c",
+      "reason": "Verify host handoff call ordering, empty summaries, accepted steering and native context after reopening."
+    },
+    "packages/pi-agent-server/src/coding-host-usage.e2e.test.ts": {
+      "sha256": "f1ba6cb3ae2c8f9897a2c68cc3a5fe00f1d32db213b0c0d56d8716a5f3188fff",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the coding-host-usage.e2e.test.ts fixture."
+    },
+    "packages/pi-agent-server/src/storage/coding-crash.test.ts": {
+      "sha256": "f5e8f32fddfe117b52cc56a90554a4226bd191f4e9fe5959b67e8a28d1b61a67",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the coding-crash.test.ts fixture."
+    },
+    "packages/pi-agent-server/src/storage/coding-migration.test.ts": {
+      "sha256": "acab823db538ebddbcff2ed5ce38681fa1625ccb0f2e100ba3805af83d5c0b5e",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the coding-migration.test.ts fixture."
+    },
+    "packages/pi-agent-server/src/storage/coding-migration.ts": {
+      "sha256": "1f21bc7934c88b1d1397a9b50f3a4d3b1a4ab45c28d0a79cdb8776254502a7d1",
+      "reason": "Implement atomic legacy checkpoint adoption and original submission recovery in coding-migration.ts."
+    },
+    "packages/pi-agent-server/src/storage/coding-recovery-atomicity.test.ts": {
+      "sha256": "6023077a9d00d547409e2cbfa566e92833d4d752de493e1e6e43342a4cfc2f9b",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the coding-recovery-atomicity.test.ts fixture."
+    },
+    "packages/pi-agent-server/src/storage/coding-recovery.e2e.test.ts": {
+      "sha256": "26417d970cb6c0ca2b898f1e700a12c1eeb33972d5770723d6a26eeb931a86f2",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the coding-recovery.e2e.test.ts fixture."
+    },
+    "packages/pi-agent-server/src/storage/coding-recovery.ts": {
+      "sha256": "3e49273b28c4fbb1e4e641579a8b03e73abb3ac351f700eea13ba2f7a822bdbb",
+      "reason": "Implement atomic legacy checkpoint adoption and original submission recovery in coding-recovery.ts."
+    },
+    "packages/pi-agent-server/src/test-fixtures/native-image.ts": {
+      "sha256": "06f69e156884d3a1c01697b38f96a121e40c7c8532b7ca1d7a1ab50b65b9727f",
+      "reason": "Exercise native prompt image processing and HTML export with a deterministic local provider from source and relocated bundles."
+    },
+    "packages/pi-agent-server/test/fixtures/coding-crash-worker.ts": {
+      "sha256": "aa7ba553a711b8cb8f720eb15832a80932929211a2b6f9c62ef1d3855322c519",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the coding-crash-worker.ts fixture."
+    },
+    "packages/pi-durable-coding/.gitignore": {
+      "sha256": "2d4cb41561eae410c17e3294ef58936e4dc0d6df851bd9b67beef1320705d290",
+      "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
+    },
+    "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
+      "sha256": "ec653f7e9ab9dcb99af919c8a0c9899986d6538e70ea42651ce21cbf931a9feb",
+      "reason": "Record pinned Pi v1.5.0 source and output hashes, complete public closure, asset origins and controlled runtime transformations."
+    },
+    "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
+      "sha256": "b8c97d0c1abaafc1908c4f40b427742e3ee10a78c3e17949aae9e92e473d0f29",
+      "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in asset-runtime-port.ts."
+    },
+    "packages/pi-durable-coding/scripts/model-runtime-port.ts": {
+      "sha256": "6d2cc3aee58340d93adb4e37c6c76ab3743f001b543ea730f7837f4335dc4b90",
+      "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in model-runtime-port.ts."
+    },
+    "packages/pi-durable-coding/scripts/resource-loader-port.ts": {
+      "sha256": "bc8fc4ba0b5d1e2555e2fed5ab1ee7bdcd5df92a7a7555ade1b992d4ed4c4d7a",
+      "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in resource-loader-port.ts."
+    },
+    "packages/pi-durable-coding/scripts/session-runtime-port.ts": {
+      "sha256": "ffcfc17fda412823ab45e4a6c2f798d2860727b148c9b22f59ddbea8405b2e1b",
+      "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in session-runtime-port.ts."
+    },
+    "packages/pi-durable-coding/scripts/settings-runtime-port.ts": {
+      "sha256": "e00ea9a4308f4f0fd02cf320e04beb204ff8cc694d50037c16b10b5dae5e45e2",
+      "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in settings-runtime-port.ts."
+    },
+    "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
+      "sha256": "6528fe1cf02b31cc0c37622e38ea61003e448ff07903099df8da83cf90fc0d31",
+      "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in vendor-coding-runtime.ts."
+    },
+    "packages/pi-durable-coding/src/agent-runtime.ts": {
+      "sha256": "9a1c83c9a6564a15ad922dfd5f6249a94abf2b24331ef9877e279afac5be135d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/types.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/compaction-reserve.ts": {
+      "sha256": "26a20eb451a3ef7d15553be3f0f92c72305a7ced6eb3b41df12354d81c563e4c",
+      "reason": "Provide the independent native coding host adapter and public contracts in compaction-reserve.ts."
+    },
+    "packages/pi-durable-coding/src/durable-agent.ts": {
+      "sha256": "fd54a4c3d3ca1181d549fc8d6ae4d8817fff782febf46527089d048422d0aa46",
+      "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/durable-coding/engine.ts": {
+      "sha256": "c2b0b43bb1804dbf52288f8696f5f097f1c3a8cbd32e75cab17f5756030f9bfb",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in engine.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/index.ts": {
+      "sha256": "d08cc411367aaf5367155cb1c99710ba824a4a9bd6638434a74eddb6863186b4",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in index.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/input-queues.ts": {
+      "sha256": "1cd84c233494fe904d6a9cc4233b279239dc421b8e029a40ad96d6f95f3a94a3",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in input-queues.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/legacy-session-context.ts": {
+      "sha256": "ff7ae10c7898e1cb09c4ac042c5af11ee615e15e9c15c216838c08c8b095973b",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in legacy-session-context.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/message-identities.ts": {
+      "sha256": "9400be5b9090d04fe12dfd3ce0a770418c57b7b075bdf62d2467dab8a8c125bb",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in message-identities.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/run-task.ts": {
+      "sha256": "be80c5ff5e77c54d82fb4837d6bae97afb2d24d39c91f4c9f53e0f2cc1dab872",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in run-task.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/session-binding.ts": {
+      "sha256": "43ef4f7a2220593bc13c5ee08c8eacee93fa44321f286bcef264fb5e883898da",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in session-binding.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/session-journal-projection.ts": {
+      "sha256": "33aa394a69edd2d68169a65764873a3116d4f2dbb357a7c5ee904cf3df93684b",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in session-journal-projection.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/session-journal.ts": {
+      "sha256": "ae71777a035a683757a06a5ac1e3563f7f00ad95ee605dbabdc0530b6bda1463",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in session-journal.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/session-task.ts": {
+      "sha256": "d0ac1bee698c2abca1aed6e7cd4512b552f91478ac5dc61939e0554f9811358f",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in session-task.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/single-tool-task.ts": {
+      "sha256": "2a68ae635ef08ccde12ab6b8346615fbeb9d20cfebedcb94bd93246a9942afaf",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in single-tool-task.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/task-registry.ts": {
+      "sha256": "b764687419a71eeed5d9a31127cbd8c36d2feda9947128a9bc2aef25037fe73e",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in task-registry.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/tool-batch.ts": {
+      "sha256": "72551a256cff8f061807e24aec773eed250877440d5eb44779ffe3776a2bdd30",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in tool-batch.ts."
+    },
+    "packages/pi-durable-coding/src/durable-coding/tool-task.ts": {
+      "sha256": "e85b0ca594797443914d4a716f66e15f417b0fd6c6c628a1de553ae7a30aeb9c",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in tool-task.ts."
+    },
+    "packages/pi-durable-coding/src/durable-loop.ts": {
+      "sha256": "2cd9b678430beb0e83b08e56aa36071bbfdeae1832f611bc9ce149e92c012de3",
+      "reason": "Provide the independent native coding host adapter and public contracts in durable-loop.ts."
+    },
+    "packages/pi-durable-coding/src/host-resources.ts": {
+      "sha256": "2fdde1c41c81717a0c9903ff667391d911272d81051ab7572c907beab7d0e0c7",
+      "reason": "Provide the independent native coding host adapter and public contracts in host-resources.ts."
+    },
+    "packages/pi-durable-coding/src/host-tool-controls.ts": {
+      "sha256": "1c938cad3214fb6020a8f1ef12b3af617d8978251df578cfda8b889d936c1ec6",
+      "reason": "Provide the independent native coding host adapter and public contracts in host-tool-controls.ts."
+    },
+    "packages/pi-durable-coding/src/host-tool-nested.ts": {
+      "sha256": "9a214113e15e22f99eb8cefc0364196f2247f3cfc90379a63e6d4162297fd2cf",
+      "reason": "Provide the independent native coding host adapter and public contracts in host-tool-nested.ts."
+    },
+    "packages/pi-durable-coding/src/host-tools.ts": {
+      "sha256": "aaefc806fe2e6a475f8c85b669e6bf62bb5591bb044d758f1b535aeab6447465",
+      "reason": "Provide the independent native coding host adapter and public contracts in host-tools.ts."
+    },
+    "packages/pi-durable-coding/src/native-operations.ts": {
+      "sha256": "8221637426549d2ed380b6ff0011ec58687482c88b4540cc41dbe5fcbc49b52f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent-loop.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/native.ts": {
+      "sha256": "a9ea70b0e99bb3898dabe92e0d7227b1055a94adcf278e2ec8a8ffbf5bc1742d",
+      "reason": "Provide the independent native coding host adapter and public contracts in native.ts."
+    },
+    "packages/pi-durable-coding/src/node-process.d.ts": {
+      "sha256": "959e922213bca94a52f0cef283db6ca9edd2c084f4c149854fa3499f1ea3c4c4",
+      "reason": "Provide the independent native coding host adapter and public contracts in node-process.d.ts."
+    },
+    "packages/pi-durable-coding/src/pi/cli/args.ts": {
+      "sha256": "2bd10a6f3c7ed331d7aaad53b4520c0fe91a0c1dc55b6dc6caa7aa3771e2beef",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/args.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/cli/auth-check.ts": {
+      "sha256": "bed735dae4b5b6a68f78e282f0bd1e48f1f9c90aad1be6d2c43510b816947144",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/auth-check.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/cli/auth-command.ts": {
+      "sha256": "c313c83c6a8981cad0872be8d753a2efa049c1fbb7c216fc01f2b0f0c262b9be",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/auth-command.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/cli/config-selector.ts": {
+      "sha256": "780107f9a3a23afbd56786dfd3dc361e6d0f3a7f41e5bef13d01abf734ea87e8",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/config-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/cli/credential-print.ts": {
+      "sha256": "7e2e06b04630d08f4f8513011aac7443c0abf854319f91e30d431badead1b9ad",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/credential-print.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/cli/file-processor.ts": {
+      "sha256": "df2db268e6098519c9cac5bed7c2e164a68d6070e01daa8e8b89d40ac6af4abf",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/file-processor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/cli/initial-message.ts": {
+      "sha256": "b9df15ffa8769bf419c411cd152c8b807dd0bc2997b6ed3638c2f02376a9b43f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/initial-message.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/cli/list-models.ts": {
+      "sha256": "a8a47f1de6405a0a61a2659e8b761c8f9e561d8ff4448390c93d80f5970ac860",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/list-models.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/cli/project-trust.ts": {
+      "sha256": "f53dace044983ef779b0c99ea3f1a75155116ace6e4569c623b95d6c24972c3b",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/project-trust.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/cli/session-picker.ts": {
+      "sha256": "e0fd17128dce7ff0748a098e546ca717d309072c6e000253c49c9176dd279de2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/session-picker.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/cli/startup-ui.ts": {
+      "sha256": "65540b4788ab6a905d199abdaf50e8367222d9619205baf3d2055ec100d8a5fb",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/cli/startup-ui.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/config.ts": {
+      "sha256": "ceae99179302d8b1c6ac14197e7111ce0c866f8119483c1ef6af5808661f877d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/config.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/agent-session-runtime.ts": {
+      "sha256": "3fab6fa2da0c63b38025b393f48d140866ebb877dde77964d51cbc514492f07d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/agent-session-runtime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/agent-session-services.ts": {
+      "sha256": "00b586e1dca795e15e9c561a3375e828209bf7855a7fe41adce052d83391e8c6",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/agent-session-services.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/agent-session.ts": {
+      "sha256": "d3cfd86a184837712c476c768a1d2aef9edbebee758338aa9b9022b9e33f8680",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/agent-session.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/auth-guidance.ts": {
+      "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/auth-guidance.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/auth-storage.ts": {
+      "sha256": "163626f5abc34099a9afb2803d0cc49b9c66d0feacd605165e88063c328cef68",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/auth-storage.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/bash-executor.ts": {
+      "sha256": "6fae3801533d64ccc018c43682bbff868619dd7cdab8f67730c731a5785d2984",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/bash-executor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/bug-report-upload.ts": {
+      "sha256": "3765668a4e70ff01d870ae381e74dd01819f27a0615fc58a9fd6540765afd7c9",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/bug-report-upload.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/bug-report.ts": {
+      "sha256": "f225042e507b1b7990fe0af6341a049eb0a854823eee00537f67929c5a1f6d6a",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/bug-report.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/cache-stats.ts": {
+      "sha256": "5998714de13c0548331ec3f953a3fa4d820464592fc4826671397289ed4e4eff",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/cache-stats.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/cache-warmer.ts": {
+      "sha256": "596080fbe60702a44bcd8a31aeca45a5048d24c53fb0f0b40dd8781f776a8842",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/cache-warmer.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/client-identity.ts": {
+      "sha256": "8c17ba14d52fe1549c79b6ff8f7bcf3cc940d55d155d75dc4a4d7cea67e363c0",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/client-identity.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/compaction/branch-summarization.ts": {
+      "sha256": "2e7ffee366cf8ec6bf61219dc51240546e99c6403867db0e36bd4a3361e321c3",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/compaction/branch-summarization.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/compaction/compaction.ts": {
+      "sha256": "18f984a00135f18468558993ba750ba2baf83487095897bba5228999c990dd5a",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/compaction/compaction.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/compaction/index.ts": {
+      "sha256": "f82bde781410ae1a638989ff91bde9cc7045341a76bb9757de2ea6beea4c077d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/compaction/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/compaction/utils.ts": {
+      "sha256": "904688554d55f25208481af98db7a51b90727b27851ccd1cb990ef087c789b0c",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/compaction/utils.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/crash-log.ts": {
+      "sha256": "9942412b5aff241215d04636f8e05c22940379cf6daedf766aeddf13d08d16ad",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/crash-log.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/defaults.ts": {
+      "sha256": "5bf544f0b96a4f1d9f6c253d4f40d9a943c53be97091903f5c013968ef3b60aa",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/defaults.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/diagnostics.ts": {
+      "sha256": "1914431098db1b4638e4fb3582ac22e8125356c4ab024671494f565c6d5ffb39",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/diagnostics.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/event-bus.ts": {
+      "sha256": "fe5c39a57081fb9674c5bdc8c4bc6779bb8524c8895afc337af5ea517bdc71a2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/event-bus.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/exec.ts": {
+      "sha256": "b94829cba4cf98c5cd8476be143697bd2a52414179b0c4e10e9e0665a167f833",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/exec.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/experimental.ts": {
+      "sha256": "b91285b8dbd14bfbb3fce3775dc4c994a057cf3efa07882fc1bd42c44fbfced5",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/experimental.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/export-html/ansi-to-html.ts": {
+      "sha256": "09232a1add3bbb0cd436c881dca877b81efa754c1b6133b57e057ef212ec9926",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/ansi-to-html.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/export-html/index.ts": {
+      "sha256": "d289d402ff12fc1b92a1ac35798a1fac7afefed5932fa683cedd93a4e466d974",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/export-html/template.css": {
+      "sha256": "c9d26cc314336192021d604c0f1a4a63115172b24d03500571379f9172c06fc9",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/template.css; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/export-html/template.html": {
+      "sha256": "47d208235b066c856dae69c60281a3b99d164b99be9b81153d880375c9327105",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/template.html; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/export-html/template.js": {
+      "sha256": "14fbe96123a82ee0f3efdd9f9634dd316c59810509fdbd8c5a5f41f3918c07a4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/template.js; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/export-html/tool-renderer.ts": {
+      "sha256": "834559ea738a7ec8ccc252e31a5a0d54ec1850d27e9cbfe6da270baf9b71d449",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/tool-renderer.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/export-html/vendor/highlight.min.js": {
+      "sha256": "837a6fa5b0c736b52bbde2b2b6190f305da3fc9ed41681db5321507057b5c846",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/vendor/highlight.min.js; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/export-html/vendor/marked-cjk-friendly.min.js": {
+      "sha256": "93d2c938754cb24eef5b9ffecc268a98ef6beeb75dad614b0e874176aeeba565",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/vendor/marked-cjk-friendly.min.js; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/export-html/vendor/marked.min.js": {
+      "sha256": "438eedfcf932a414d0d0bfeea32dc365c063563b8ca713b4687fc8f8b501e5e4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/vendor/marked.min.js; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/extensions/index.ts": {
+      "sha256": "510e8a71fe1b73d830c0184dfeb7187b8f7f0887f64c6b171a19956a43e64fea",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/extensions/jiti-loader.ts": {
+      "sha256": "199594e72a9d8abe002c5e80420b94bb65ad0d7953f301249cf7a08652359042",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/jiti-loader.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/extensions/jiti-static-loader.ts": {
+      "sha256": "b8507bc36a9c9bcb2f4bafbc70b103269ffc3fb7c9052d5d76bf290c4d51bc7b",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/jiti-static-loader.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/extensions/loader.ts": {
+      "sha256": "59b2237971c51dddae7cd2e34114378cf0db043e66e529d2b97f934745483c50",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/loader.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/extensions/pi-ai-extension-view.ts": {
+      "sha256": "119d56316bd9b344fea619f5441367c2a916de58d0ffc8aa665b5c9d44244455",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/extensions/runner.ts": {
+      "sha256": "f4c940030e45b0588afdcedb27e313804e3af0b74c62967572ffaecd74a31294",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/runner.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/extensions/types.ts": {
+      "sha256": "c77e6baabea893d791a22d219b960c9d297753c723526d24cc34e948803367f0",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/types.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts": {
+      "sha256": "ef6d49a54f2ed2b0f3486bfc3bf8aec7086c735304317bc86477c041c529ee2f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/virtual-modules.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/extensions/wrapper.ts": {
+      "sha256": "2528681cdc77545a889b47705c6bfaae7f5f642f9daf445a0705238e9d39a556",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/wrapper.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/footer-data-provider.ts": {
+      "sha256": "024ae5b3f50a15db9c149f644845ffb267df838b3a555a0756db95043e05a0e2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/footer-data-provider.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/http-dispatcher.ts": {
+      "sha256": "d64922c476d11b90555b8f23cab92ce1f4f83174cb750c125a96d8d4374744e2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/http-dispatcher.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/key-id-schema.ts": {
+      "sha256": "a9c95165ec58e3b7ce8ce495fbe32d421fa75f6f72b49f037a64d876f109847f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/key-id-schema.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/keybindings.ts": {
+      "sha256": "6ddb9730a831e02bc2b32a9650e9b2029379cc37ccf6cdbf9b5bb47f91de321f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/keybindings.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/mcp-servers.ts": {
+      "sha256": "148855a4417dd0133b9499407fb2d1621d72702a263fa00fbfcd2b83769bf05f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/mcp-servers.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/messages.ts": {
+      "sha256": "bb9493ba057680e62ce803380dd317bd8c62bd41f8c1a2ebdee2e00a8d51b639",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/messages.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/model-config.ts": {
+      "sha256": "792fe48456eae6175f121a4ef8bc15ebabccfd7f09691850eff2764f79f3a122",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/model-config.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/model-registry.ts": {
+      "sha256": "f4ced2d92df9097647aba7da3ae0bb273fa8089e966be15dba880db51d5dee0b",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/model-registry.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/model-resolver.ts": {
+      "sha256": "4a1bad8a4d2088681698df09a6b6260e4f7963550b72fec7e5d564cee7404372",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/model-resolver.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/model-runtime.ts": {
+      "sha256": "fc5628c39763843261932ad0d698aab5e33c2bea9e57ee76a603282840d2f684",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/model-runtime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/models-store.ts": {
+      "sha256": "9a93afb3ad9123e59cb61606e77d431b38bbeb3063afc0e2974341109f23db02",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/models-store.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/nested-tool-calls.ts": {
+      "sha256": "4d899f84a11c9514b0f9cdb40100ae92ee33096783328aa029aee0d55d768625",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/nested-tool-calls.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/output-guard.ts": {
+      "sha256": "68c0e9a7533f0cf7270bb50a7558185a9f9a0f71304c85bb438dd620161a4f04",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/output-guard.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/package-manager.ts": {
+      "sha256": "f1e1644d9d889fc0ab760346853941d43433323a5df56de7820efee3c75a290c",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/package-manager.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/pi-ai-schemas.ts": {
+      "sha256": "ba5a59729646209cbfa870d8a9b3def24d51c2eb21b1ea6a6a331690c35cddd8",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/pi-ai-schemas.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/pi-manifest.ts": {
+      "sha256": "d5506c48ced4bb2572f55ce2f7d3f4bca8d3e30eece6ceb84d63f73cd0f00cf2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/pi-manifest.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/project-trust.ts": {
+      "sha256": "f269a26a2dc5b4891cae4dcf9ab2bba553dd1f3cb8e9594fc1b771ee19e37bff",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/project-trust.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/prompt-templates.ts": {
+      "sha256": "1bdaa7b3825f92bf33203fd7587014b878c55b3d812900cca5cad08fefd92171",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/prompt-templates.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/provider-composer.ts": {
+      "sha256": "bddf6d242288123d00e6ae75c4c5f2ce19706152ae87ee33e326e55623f91501",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/provider-composer.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/radius.ts": {
+      "sha256": "cdf5af03d5a5fb3464c83750f31ac15088cc3ad2240f2b53fbd0937e88ed02fc",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/radius.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/remote-catalog-provider.ts": {
+      "sha256": "27788bc35663378ba33329c298128baaa9c5913cd7c0d4ff88af8d440b611c92",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/remote-catalog-provider.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/resolve-config-value.ts": {
+      "sha256": "0f53dad47fe5d5d8837c022b7951ccd3bd5a9b577bd662f0986272110e83bcc7",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/resolve-config-value.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/resource-loader.ts": {
+      "sha256": "cec3726c83caadb556dcd0da9e09ebc1e3002cbb27397d1b5a65b258649b1d76",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/resource-loader.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/runtime-credentials.ts": {
+      "sha256": "ddbedbe209da4314a873c9e435c2a80404a25bcf63406351888bd613068b7036",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/runtime-credentials.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/sdk.ts": {
+      "sha256": "2f32a65d098969830a365a98775d01fd14daa1c096c8205f771bb9913f16ca3d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/sdk.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/session-cwd.ts": {
+      "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/session-cwd.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/session-export.ts": {
+      "sha256": "8ec53e13bd4bc9097e4f7640e2fd2e58ffbbdcadce6df5efdf5cb5622f98d285",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/session-export.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/session-manager.ts": {
+      "sha256": "f4f0a023fd909f4aebad256b5b8cafb88132c6fe109898d93c07f6b960ee4148",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/session-manager.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/settings-defaults.ts": {
+      "sha256": "6fb94031cfd462e357723a35aab328e9a1ed5109c2aa59549d8291345875d5a9",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/settings-defaults.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/settings-diagnostics.ts": {
+      "sha256": "8ef3554ff841468a2493d9bab2754aa7a305471ea5754e54efccc363fe0dd0e1",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/settings-diagnostics.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/settings-manager.ts": {
+      "sha256": "eab399c599821b1d0c152a974f77286f4a55470c067309562146e17c4ed06be0",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/settings-manager.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/settings-schema.ts": {
+      "sha256": "965de683b2fb61cedaee158a8bcb40601fa0e71026725a19bc84873ad3b61159",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/settings-schema.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/skills.ts": {
+      "sha256": "79e7d971a26730e3a692c434c32dc63bd8ce36aa4bedaaaf96e405f4a39bc411",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/skills.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/slash-commands.ts": {
+      "sha256": "4f404cefc207904ee084216ca9e14ea1c6dcbb5fb859724a91511a5a44a722f4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/slash-commands.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/source-info.ts": {
+      "sha256": "ad2d4ca1e364c4e3a0c2e113a047d5dbee1a2897d2eeb0d666b5b3fc2e3d51b1",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/source-info.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/system-prompt.ts": {
+      "sha256": "eef891d637974d09a6611d33e52d66d5f2a93d6e9512259ba45f593c42143617",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/system-prompt.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/telemetry.ts": {
+      "sha256": "5ec837b287ea0303f704a5278c586e2a5d4003f3ad2ccad94997d2fa59164855",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/telemetry.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/timings.ts": {
+      "sha256": "55e4d7f31bdf3727baa4e89f361a6abee9ae4a76f64a30369ea157cb37bbc2b2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/timings.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/bash.ts": {
+      "sha256": "4c1e12c7ffcafa11a180b4cb8df13549a43925c15d08a62b8794a4715c54c178",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/bash.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/edit-diff.ts": {
+      "sha256": "f85a9809eb44b9828236050cf38a8e45933e5cfd583a186e9a0e55a664dd3e8d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/edit-diff.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/edit.ts": {
+      "sha256": "d05eb64ada7755eb5269befbee09fafd2bb26e266476c020ad9d721f9f0df8d7",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/edit.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/file-mutation-queue.ts": {
+      "sha256": "33cb06ac9bcdf32c8b84d9d12e33be44c503a7670f668e003a3262cd34294d11",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/file-mutation-queue.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/find.ts": {
+      "sha256": "fde34ae222195fba6f444fd9a645da8435d6a830499cf307ff20679c654bed55",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/find.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/grep.ts": {
+      "sha256": "ce3c4decaee87d81e41f9776560a46a95d6e97b0d6e3269e4df8ad2e10266df1",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/grep.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/index.ts": {
+      "sha256": "c8fe3c607d0c445146df183459f46de19f7b4feebe8e93e77962cf55cf36e629",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/ls.ts": {
+      "sha256": "61111b7e9d17eaec0b5b5a132e573257553ca31a031c264fdc5986783e3aca5e",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/ls.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/output-accumulator.ts": {
+      "sha256": "255c11af6596a043f2d8225d3faba1ff18e3f43fe47052b3e018f9ef9517a9d9",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/output-accumulator.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/path-utils.ts": {
+      "sha256": "ab6f420d2388a41366113c17a25e356867820b87b02a169d044cfcf83e1997d3",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/path-utils.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/powershell.ts": {
+      "sha256": "56645690718f03e6c5a19b574a74e3f28f0d0df7563fb226eeee5c88576aefad",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/powershell.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/read.ts": {
+      "sha256": "27ada138021cfa2884af5ab276e9c7e685de65fa7bfa1d27c64d905e75845a58",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/read.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/render-utils.ts": {
+      "sha256": "691de101cb635dd8e899fa1f07175f7d3f0baf779022c816edd1b86b90a44cb4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/render-utils.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/renderers/bash.ts": {
+      "sha256": "ada1e7766ea385344691d944196ff2ff1af45c6f8f17604143b31fff8de55d9f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/bash.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/renderers/edit.ts": {
+      "sha256": "9f3f6d87ed42ab9a587e751c1299a42af12e6c76848110e8fa7dcbf6852367a8",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/edit.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/renderers/find.ts": {
+      "sha256": "a33591e8193eb2a5591596019676899587f783149434f857eaf331edb8fabe70",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/find.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/renderers/grep.ts": {
+      "sha256": "8a990da5f4305b0976ad4c245188fbf1fd5e4a3bad69b86c2ffd85bdd1115927",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/grep.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/renderers/index.ts": {
+      "sha256": "27b2cff3b607f7d95392d91d9fc95fd975af2cdc4861f5e9f5646b06d41f84ae",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/renderers/ls.ts": {
+      "sha256": "69ef43c9bcc3082b4c7880b0ad2edf4c0605c84fac326a2254e55397b9c81084",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/ls.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/renderers/read.ts": {
+      "sha256": "34ce43fcfb7fff6d2b230c4d8c2034ec00f91bcf06dcb2a157a4679c350a236e",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/read.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/renderers/write.ts": {
+      "sha256": "59723b9e77710ef6bef218728bbc585debf53d2320955e7697cbc3e4d1c3bd20",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/write.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/tool-definition-wrapper.ts": {
+      "sha256": "60d47613de4c8644ba89456b83b47c108869f9a91baf6e62d9fab61ea3e8d2df",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/tool-definition-wrapper.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/truncate.ts": {
+      "sha256": "8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/truncate.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/tools/write.ts": {
+      "sha256": "b93b6a83eaee6959ae713934bbcdba834a39b023694a3ca986c73b331f771a3d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/write.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/trust-manager.ts": {
+      "sha256": "ce480f9a1689e2da996609e9708443c391f9ab0cab5bcc047aebc1613b17e2f9",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/trust-manager.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/usage-totals.ts": {
+      "sha256": "9295795b1320f73c7778296a788a9216185439dec117d5e3c7d83ab17f86a361",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/usage-totals.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/core/virtual-models.ts": {
+      "sha256": "f24a0411428bfffa43e64e0787d60724e9fc354ea31273ddcbc78c7785c37c11",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/virtual-models.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/codemode/execute.lazy.ts": {
+      "sha256": "484dafb4ba45f57542ec391d667c6e3cfe424385564498d9974abf1e1745c02f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/execute.lazy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/codemode/execute.ts": {
+      "sha256": "68f4c424c2f4f90204f76fd82137c789d0a9c59cb5647e23ee4fc625f4b1cd7b",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/execute.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/codemode/index.ts": {
+      "sha256": "7684b16067a29ea1c83170afdce35437c54afdd679b250c7465a668624aff70f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/codemode/renderer.ts": {
+      "sha256": "e0a9f27668d3ee5ad7485dcf4df24cec473589a607d413bb30d80977300f11ba",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/renderer.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/codemode/tool.ts": {
+      "sha256": "eaabc63ccf5b2ca6013b954bfaabfb1f1c79c974a1d90d490e3a3ad246ee5911",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/tool.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/codemode/worker.ts": {
+      "sha256": "eff1f57d225d054ec40aa6753631426a426528f2ef769c4e82020757cb055911",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/worker.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/index.ts": {
+      "sha256": "ab46255cb0a7b0427ed838aa168295f594e7a50d92f4babcc6abb8796f3211cb",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/llama/client.ts": {
+      "sha256": "21dd9b4c662ba4329e1448f93859c6028471347495ca8bb23d3a5a799d03d709",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/llama/client.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/llama/huggingface.ts": {
+      "sha256": "eb606891ead96898a4bb4a05220ddd5cd7acb814055ec649a6497335fc14bd3c",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/llama/huggingface.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/llama/index.ts": {
+      "sha256": "748974470600b6a59d8076c4dde266e2abb7e2c54e63dcb6c7e3649bb8946a58",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/llama/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/llama/provider.ts": {
+      "sha256": "9e6fe489681e75a0bfc8cb01c3a2c1264c9030add3b62fce211a3b59961f20d3",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/llama/provider.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/llama/ui.ts": {
+      "sha256": "3985271ee8a4b233abe051eafe1747a7f21d99bf1618cda34d1fa8617b065a35",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/llama/ui.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/cli.lazy.ts": {
+      "sha256": "a8d080f76fbe7f75971bb01578809a85b62594c2b9dfe8d0776c151d8783129d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/cli.lazy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/cli.ts": {
+      "sha256": "327751812abb3e85355b165a06df6ea3cf57710d40bc1efcbc5808e9eaa23352",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/cli.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/config.ts": {
+      "sha256": "950e308e9f507080eb2c25b1dd69e7917a573bd9f72911444f53f4e3cfd6a140",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/config.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/index.ts": {
+      "sha256": "65f505cdebdb959b5315fabad611ea34995346bcc3f6228d17b0e1ef749c60db",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/log.ts": {
+      "sha256": "6e4d70a321a4dce8946b208276cee50bb8b3d9908894dc12af833754dde0e407",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/log.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/oauth.ts": {
+      "sha256": "12fc5abb9185e291a5528f3312733a8e7f0028d1caeeb1bcf9f99a8979f10949",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/oauth.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/resources.ts": {
+      "sha256": "0ac0b965b123d22ceeadd64b62b53d9cf81e072898d21ea81888e840b51e02b5",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/resources.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/runtime.lazy.ts": {
+      "sha256": "ff26d6c1aefacd0e3434f82a988b5d02bd7994163316c05c84671adda0467473",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/runtime.lazy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/runtime.ts": {
+      "sha256": "f2bf62f39179e2d956df3783f1d561667c589afd6f6ee94ebdaeaf6b22de154c",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/runtime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/tools.ts": {
+      "sha256": "951d5b9f9ad3492184dfb04b88159b8ae8b09aab358b7bda29628107360d190c",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/tools.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/mcp/ui.ts": {
+      "sha256": "36eeeba45ed70ab18baff63951a949a8d31ddd7abc0dbe9b6bcf7df20a856dff",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/ui.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/tool-search/index.ts": {
+      "sha256": "212528d795f06a7b935670534efa35371277e31b074a6ecd7ff144bce09ee7b6",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/tool-search/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/extensions/tool-search/tool.ts": {
+      "sha256": "27f675348b17878ae91a50947198ea9fedffb16d12cbd963cec9dcf8aae5bbc2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/tool-search/tool.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/index.ts": {
+      "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/main.ts": {
+      "sha256": "a39fc036efe68836ecd869c5f14518c2d9cada248c1359d7cf44ab17a7f894a1",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/main.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/migrations.ts": {
+      "sha256": "59fc18cedfcbecd993918bb335e5e76a9f9c899c61ecf9eab110f86d976af1bc",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/migrations.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/index.ts": {
+      "sha256": "546cf0e6fa0d645265116bec02b2e53313a2359f5b20bd23c286e6c33c0829f3",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/assets/clankolas.png": {
+      "sha256": "169acd0dfe6fbb8d8742ed24a3fc654fd0b2e2d4223c733249c5493723f1b72d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/assets/clankolas.png; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/bug-report.ts": {
+      "sha256": "d55147d46ed0754c759b98efe2dbd79d1f41cef7203964859862251ec47cd862",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/bug-report.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/chat-viewport.ts": {
+      "sha256": "24bbdd06a5e17d6c0631f7de51329eb7bb4ecd4a460dec7b3d593ff9e6219960",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/chat-viewport.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/armin.ts": {
+      "sha256": "45d59fdf8adba4ea8a28b573a9127e628ae30a787dfa95e136ccd7bef0d1ddbe",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/armin.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/assistant-message.ts": {
+      "sha256": "abf3b596f21de78ace3efb774236c9b5ac7647f77890ceb067a65a17c4ea67fb",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/assistant-message.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/auth-url.ts": {
+      "sha256": "a4b3531e947746ca1bc2319b717ff79b37898366d282d02f9fc0b955481fc913",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/auth-url.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/bash-execution.ts": {
+      "sha256": "445225e244705077013724464e1e63e2cfa20b3bc926754a0fbc93207fc99419",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/bash-execution.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/bordered-loader.ts": {
+      "sha256": "f4a6487b80360bde89d8e96ebec16d84d4cd106dcc57c53757be571c7c4da1f6",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/bordered-loader.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/branch-summary-message.ts": {
+      "sha256": "0831b5b84f58cab44e416f7261d9fbc5ec9cdc93d4ffb02801c8b60029e98e70",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/branch-summary-message.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/compaction-summary-message.ts": {
+      "sha256": "2f9c153912569dade21400f8f044bab7742c6d0c50d52e5be5a6a12f5ee6147e",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/compaction-summary-message.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/config-selector.ts": {
+      "sha256": "368e698929756c834bae8916d1d05b877be97f43419dda7bcc331c46c84c64a2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/config-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/countdown-timer.ts": {
+      "sha256": "6ade4aa41c2c2400bdb79d47701c95504be48e3ab9f2b1aee3836a888c2d1da9",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/countdown-timer.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/custom-editor.ts": {
+      "sha256": "88c84412094b1422f5a5297c9c624be598d6161faa4177cf31f2849460880612",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/custom-editor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/custom-entry.ts": {
+      "sha256": "0627f03c6edaaf1d1737ff449d49a67099273d3ab076f9f8b07a6553cfd3a503",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/custom-entry.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/custom-message.ts": {
+      "sha256": "aeabd0b44c714ed44c7fc1949e7482395de0675ab3197782cc17871b75d6005e",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/custom-message.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/diff.ts": {
+      "sha256": "b43f8d91ba9f19088dc9dc86126091c3fdfca25eac6461f5510f5e1e9ddd6491",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/diff.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/dynamic-border.ts": {
+      "sha256": "1f7fa398a861906e3dbbd217434f290f09d23c5e561ab7d6ef24808db4353cb0",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/dynamic-border.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/earendil-announcement.ts": {
+      "sha256": "49b1711624425b7d504bf7d871810225814138b64bb2152fe3e70dbf1dd005d4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/earendil-announcement.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/easter-egg-3d.lazy.ts": {
+      "sha256": "7836ce86e45ea369c0d8d65b29d2201f2b1ee367bdbf0a1ee0307c0848e07df8",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/easter-egg-3d.lazy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/easter-egg-3d.ts": {
+      "sha256": "90c1f86db5281da25bb683da28a055035ffa092c3de59dfa3faadb027bbfb429",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/easter-egg-3d.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/extension-editor.ts": {
+      "sha256": "3ba0c3631030022670bf1e0d7573768c492e2cbcbaa4e0a4c019041929fe7847",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/extension-editor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/extension-input.ts": {
+      "sha256": "efd8f7c27b2a1f1a9215e0cca31a34b3d54db2783ade2914dfa1facf8e1945bd",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/extension-input.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/extension-selector.ts": {
+      "sha256": "d83767b09d73264eb0cb9af54b6f13e0e9c15a429a6dd7b9c8e7498e013b7704",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/extension-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/first-time-setup.ts": {
+      "sha256": "dd00a757cee6c71cd252c98acc9aa768b56aae16c99a8ee30c4001878d2d0f4c",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/first-time-setup.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/footer.ts": {
+      "sha256": "494c5dca212af8d895e20810269fd9d46b3b4f8e12435c803ae93049d6eb4ad4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/footer.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/index.ts": {
+      "sha256": "bdef9fdb464a35ef8297befb1bc2818315c728a1fc40427c6e84247c7a9b3b81",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/keybinding-hints.ts": {
+      "sha256": "76b13ee8bfc6e49d5b2b5496eac13523bd9aad95770cbfa4a239336131f94aae",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/login-dialog.ts": {
+      "sha256": "41d7c1d566d5a04d01b220c9b1ac34a0ccd05b7a07e34f5a861886563b2d4b45",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/login-dialog.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/markdown-transform.ts": {
+      "sha256": "741630247cea8647de271b8bba10337f102470ef57478cd7c38364fbae8b052a",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/markdown-transform.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/mermaid.ts": {
+      "sha256": "994acb562b70957ed828770d74879e03cfffbc472acef94073ad74cda8defe58",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/mermaid.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/model-selector.ts": {
+      "sha256": "cf276628534cd5df90fdf084e8262b0e1d3a6bf5fcb3a5cb9e18ab6fcbc7fc01",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/model-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/oauth-selector.ts": {
+      "sha256": "8cfc9747a3da1a07924ca952a1bdb7e4c8c8aed0964a194dc5429baa84de3006",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/oauth-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/pi-logo.ts": {
+      "sha256": "bbf3b354e774466a1a4df545d66ed929c0834ab1b469cd84c0362c567ffc5618",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/pi-logo.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/radius-login-selector.ts": {
+      "sha256": "7653dad2a6703685252e55eea093b1523e92283b9cf543e5a3b733d48e89bee4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/radius-login-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/scoped-models-selector.ts": {
+      "sha256": "2321702b0c016f3a4d741452029204d29e71832886c540d65d11ee0525c41c42",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/scoped-models-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/session-selector-search.ts": {
+      "sha256": "3c3b50deebfbcf9e9a7583c19f43dfaa38d052c8a4e9e4d6e14d5291ac7ddfcd",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/session-selector-search.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/session-selector.ts": {
+      "sha256": "03a403c25588858828d08e8b28a922e7504d290c3e8fc57f52a8637d67e46a39",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/session-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/settings-selector.ts": {
+      "sha256": "e827c2eb7bff19ce306b39a043d791f2a16c5c93532072b0efd9272c132f0a53",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/settings-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/settings-submenu.ts": {
+      "sha256": "ab0d51b6fd6b9568400736311e79c0a465636335baa1bd709c60cd1d2107735f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/settings-submenu.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/show-images-selector.ts": {
+      "sha256": "6bea191c5442c0fa46c7fd54836de31df2042c8ed3aef3225b2a56a5fc1a65a9",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/show-images-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/skill-invocation-message.ts": {
+      "sha256": "c0a10b3e2a6d034b4ae992aba9f44a3a81cd3e56d55b8b106299b4083d3e3cdb",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/skill-invocation-message.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/status-indicator.ts": {
+      "sha256": "80d33d17875b6f58af3878d3bb0b29d099e2b7a9fbfb0725a6cd4408bd535ab8",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/status-indicator.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/theme-selector.ts": {
+      "sha256": "267be3176c67bddb72f0f64a9c3561a256c758707afbeabe2ac68112c8e3b5f8",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/theme-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/themed-text.ts": {
+      "sha256": "7003c90ab15dc37c1a10e744bbf24c597e91fe7415d59b75c085b2e5c1749817",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/themed-text.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/thinking-selector.ts": {
+      "sha256": "be69bcb46490b93e0f4a8635c57a0c01082ec561a1982a6b34732c8bf297f0df",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/thinking-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/tool-execution.ts": {
+      "sha256": "b23593ca04e66567f94c0768662389db0f830a78c9f1ea193876a2718ce9b336",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/tool-execution.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/tree-selector.ts": {
+      "sha256": "052a2b48101f076895d192d150f9eb74cfa95f9cf9e89aee57e3e98442ed8c69",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/tree-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/trust-selector.ts": {
+      "sha256": "2872e04461df34437d0ea2275ec24b76c9eaf22727ce496d88b471b366e82a3a",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/trust-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/user-message-selector.ts": {
+      "sha256": "4ce2e8fdbf378b24c291864d490baa33e72517d292d6afe43f5500e89c85447b",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/user-message-selector.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/user-message.ts": {
+      "sha256": "cd5f20bbbac514f68836c6a604995b815e840036a26c1c05c15866087821cdd8",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/user-message.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/components/visual-truncate.ts": {
+      "sha256": "0e52adab4b4568ff6cfe8798f994d70122f7fd2e1b7618438023637915187c05",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/visual-truncate.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/external-editor.ts": {
+      "sha256": "6b5a394373cb1d991e9cc0b2e42c70958351261bfc8e5e2c8f6ed8039df736ad",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/external-editor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/interactive-mode.ts": {
+      "sha256": "73b6249ccde26e23fa6a48521283c7853e028a70f955ecf3e6627fc2e4eaf3d4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/interactive-mode.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/model-catalog-refresh.ts": {
+      "sha256": "a7a10647deaba5036019737c376ab3f73eed12703dafeb8cb8920581ec8672e2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/model-catalog-refresh.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/model-search.ts": {
+      "sha256": "390f4025d29e7c566dc8b28c8276adc3bd5e5b4a860111158f3e20293f8ffbc6",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/model-search.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/program-status-reporter.ts": {
+      "sha256": "52bf05641fecb006f40992c9e8bf6b7efc21822401387096dcf2f698ad6d83c4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/program-status-reporter.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/session-share.ts": {
+      "sha256": "9d4aee68f970b09c764334ab878932801be93ea302cabe444f963b62dd0bb626",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/session-share.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/theme/dark.json": {
+      "sha256": "e1f96982f8cb7d2a48eca7db03c9cb282cb1e14a243680cd855638ecd6a251b6",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/dark.json; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/theme/light.json": {
+      "sha256": "2dee6a4be7f765e7fd7728166b7ebf8c29e4ce313f8ec6b38ae50699e3abc2f3",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/light.json; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/theme/system-theme.ts": {
+      "sha256": "877a3dc24fd194f2dc5ee9efe8f1699acdcdac6defa197009bc7b39920bbb729",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/system-theme.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/theme/theme-controller.ts": {
+      "sha256": "b1ac907ac1ed5e1fbb754d93b42795605ca093cecdcfa3c661b3ed66f48a0d7f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/theme-controller.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/theme/theme-schema.ts": {
+      "sha256": "6440ccc6aa0576f0f9447584b707b3bf09f2b77aed64687f4598db261588474b",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/theme-schema.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/theme/theme-tokens.ts": {
+      "sha256": "6c38a169da4f85ee04bc31980a13ef6a498b6be68e63faceda4f5a1e5c632ecf",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/theme-tokens.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/theme/theme.ts": {
+      "sha256": "4a8a7147f4d510d6d25352a5ecd9f6f1bd6956fe4e9e0258d562b96d022e5a94",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/theme.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/interactive/tui-renderer.ts": {
+      "sha256": "a5b0a847dbac31cceac6e3d6d68aaf46404ceca7ad11e716a2386b68f7a249aa",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/tui-renderer.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/json-event.ts": {
+      "sha256": "87f6fa86cd73b817470062f5ab0a99c790d0c0e222e25979b96bfcd157e119bf",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/json-event.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/print-mode.ts": {
+      "sha256": "64680adc3f5cbeab5a518037a2dbc451686cff060fd7bdec40e076f80f2bd0ef",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/print-mode.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/rpc/jsonl.ts": {
+      "sha256": "95723d349fcebad1f1da7ce103d02ba7d5e2c876b7d178d41d8b56beedbd93e0",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/jsonl.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/rpc/rpc-client.ts": {
+      "sha256": "fe07874603650c27e23152aeab4ba6b2fd7c2b584c61c4e9b24680baf2b51b14",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/rpc-client.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/rpc/rpc-mode.ts": {
+      "sha256": "002b3fdd592af221c47e1c97f2cf364f40b6aa1039a7ed09189355b07a9cbee8",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/rpc-mode.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/modes/rpc/rpc-types.ts": {
+      "sha256": "9ba54fceee984d62231976892c44a97bbcfc3a491a91566d104732b9bde2a97d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/rpc-types.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/package-manager-cli.ts": {
+      "sha256": "8525ec60c7ba789deaf3f91577088e41f4a9e1634320777338059207b95db19d",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/package-manager-cli.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/abort.ts": {
+      "sha256": "f3a3265a2fb2b577bf32334ae8849c1f3dd1ac1487b81d7bc2d5007897fb5790",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/abort.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/ansi.ts": {
+      "sha256": "0559e8db84dacf6ca15125d52d46231be26afa943b9b90a070d144b99fa84cbb",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/ansi.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/changelog.ts": {
+      "sha256": "d4dae0df7e79f53dfb600da439b9c0be2ae21a5c1ed86033e6232f9a8f147360",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/changelog.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/child-process.ts": {
+      "sha256": "cd324f5b9a1abadd85ab5a331750d475c8bd51ec65cae091ad9b416245ec85d4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/child-process.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/clipboard-command.ts": {
+      "sha256": "384255c04f35e0a36d161c43ca931ee5bb6dc3c05ae9a91303b2a5c35964a8b9",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/clipboard-command.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/clipboard-image.ts": {
+      "sha256": "faf8a11253d5a3648f041d0800696fc08c9099c9ec3b957fecf543fdc219eda6",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/clipboard-image.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/clipboard.ts": {
+      "sha256": "b75a97f581b55a8ac199f9b0e13907c568a5c9b192733606110007663ceaafe9",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/clipboard.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/exif-orientation.ts": {
+      "sha256": "fbca93e04682d00139c319a0721417d47b505e0c6e5787f4d9d9dba164194ad0",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/exif-orientation.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/frontmatter.ts": {
+      "sha256": "99142d78b94e658e0be65cf05046be8069b3700168a683e0af64219ad903bcd6",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/frontmatter.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/fs-watch.ts": {
+      "sha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/fs-watch.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/git.ts": {
+      "sha256": "c8972c0cf248173f7bc3a42a5e9796db290ea3f978c792a0b371814dda7f2638",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/git.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/highlight-js.d.ts": {
+      "sha256": "d6fa92ca904ade62331b033a28da2e4e374379e997d5342ef1d390f018500b39",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/highlight-js.d.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/html.ts": {
+      "sha256": "d3abd075ab64807a1facae1511ec0b9b22f63153c7808eb63e7560fb00b1d48b",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/html.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/image-convert.ts": {
+      "sha256": "5c61e36a267b9bbd5beeb2bb3f2a0938ed7a05f7333d4a17355ea807fc7bcd3b",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-convert.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/image-process.ts": {
+      "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-process.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/image-resize-core.ts": {
+      "sha256": "324a1768fafbe20408e354e570c648eec58ee6e9f0892b53a3853f295e41a3b5",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-resize-core.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/image-resize-worker.ts": {
+      "sha256": "10c44a69b0150a088328a1a2a30332f993598d01eaa4c7e583185d3eab911da2",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-resize-worker.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/image-resize.ts": {
+      "sha256": "d777752e62499e71df217394652ff6285e1ba8ea34d6d258443f28774e76a97f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-resize.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/json.ts": {
+      "sha256": "7ee95ee422abcc3610033e27d1e1da08ebadac0502b6326a1540b64843a084dd",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/json.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/management-http.ts": {
+      "sha256": "2195b345fdd5c607f87a55b93e7d00c6d70d7dcfe2989b08bbd9f39b529a756a",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/management-http.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/mime.ts": {
+      "sha256": "561d5511a976cdf4fc2d1b2ac773b21820bbad62e954e39c473f77c46a77f0af",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/mime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/open-browser.ts": {
+      "sha256": "7f7c69e37ac63c62b4584e47cae874d4682bc1d5fb8e2913ce5682bc2dd089af",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/open-browser.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/output-files.ts": {
+      "sha256": "a7ad819c4087b6f3ac79147d5e052718e181b105efc112be16a779a78a333620",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/output-files.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/paths.ts": {
+      "sha256": "c8a2995b52a181e46cfae3b30f31448d201742d303249f34119ef2fd7a44e672",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/paths.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/photon.ts": {
+      "sha256": "755f6673a323a306a32eb7642395d42eb8ec05b39721fd3ca96991152d71e3cd",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/photon.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/pi-user-agent.ts": {
+      "sha256": "2e7a31bc3d1c48bf91afa2e46ac1f09050487dfe465d10663ab559caff31d463",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/pi-user-agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/shell.ts": {
+      "sha256": "bacb0f871b92e38ac17221e0c1b00ac5211e0f5c0063675afd980513c7c79fb4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/shell.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/sleep.ts": {
+      "sha256": "41bb3a7cccc0420483993d6fbc4e85d7cc1ab5a4ec46ce440deaae224f1005fc",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/sleep.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/syntax-highlight.ts": {
+      "sha256": "d54b89e54097abd85119385c0ae21320dc587b7494c03833f9ce48328d2e8f41",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/syntax-highlight.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/text.ts": {
+      "sha256": "bb323f9607c499115b532021f4f0163c6df04d834aee9c32c3c77b273bd2d7c6",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/text.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/tool-result-images.ts": {
+      "sha256": "151a2c2a2724e4b09858218a0cb6c9c076fd987080c934597699ab3956a27cf6",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/tool-result-images.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/tools-manager.ts": {
+      "sha256": "d9f37a23a5af7ccfc2bb2ea172677e0c5fc8bbe5f265305eae75a5e775f3fa50",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/tools-manager.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/version-check.ts": {
+      "sha256": "23279d94eae94dc19b1221c58a7993677327a47a8b6e37c9c1e4201f3adcf983",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/version-check.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/windows-self-update.ts": {
+      "sha256": "4289579fd8219b63dbe2d01bff20dd6afb806fb8e4d14484bc911868bfd83844",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/windows-self-update.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/wsl.ts": {
+      "sha256": "689ab1d024e0d7e6d956ee9040c50ca8d741627c07718bf487dfdb560985d024",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/wsl.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/pi/utils/zip.ts": {
+      "sha256": "9e523bcac3e9fcc3996b483ca8b4ab2934b551b03e8764ba8a6e92932ee8a548",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/zip.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/stream-fn.ts": {
+      "sha256": "a6b2cce7515e43411f9b3469225d39712508542d86bc3e806a9f39b57808454f",
+      "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/stream-fn.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/src/stream-proxy.ts": {
+      "sha256": "5d61a1de581c13272e0155d8f05ca42632745ef1e8ac433a9c93c2e21b884453",
+      "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/proxy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+    },
+    "packages/pi-durable-coding/test/durable-agent.test.ts": {
+      "sha256": "4c2941ce9febfe2ddfa202f60ca98cbb5b2effec0814e1bd66916aadff6f927a",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the durable-agent.test.ts fixture."
+    },
+    "packages/pi-durable-coding/test/durable-coding-tool-task.test.ts": {
+      "sha256": "740b0bb2ea17e35a0acb9da33676e7e183b5e2f199085b46160f90f2dfba0a55",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the durable-coding-tool-task.test.ts fixture."
+    },
+    "packages/pi-durable-coding/test/fixtures/native-recovery-worker.ts": {
+      "sha256": "fe4d26a33b2e5ed3996c1d28a0befb7195111d54ee230ef1d8de97e789b177bc",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the native-recovery-worker.ts fixture."
+    },
+    "packages/pi-durable-coding/test/host-model-runtime.test.ts": {
+      "sha256": "3b3c48ac10771f7657bc55e7474035f629eddde4b2ee82a7f30b03e0e1cd7bed",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the host-model-runtime.test.ts fixture."
+    },
+    "packages/pi-durable-coding/test/host-resources.test.ts": {
+      "sha256": "ec1d2f7f4b947f674d0f0955a83b2368997137d7db91ba748a4aaf370d4e4bd6",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the host-resources.test.ts fixture."
+    },
+    "packages/pi-durable-coding/test/host-tools.test.ts": {
+      "sha256": "bdc9a5c6fe69134c47b8a46e434ee030e62738fdcccd7688c4370a03d70f7b40",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the host-tools.test.ts fixture."
+    },
+    "packages/pi-durable-coding/test/native-session-journal.test.ts": {
+      "sha256": "2c81ccd7656b7ce171198f2964b153c389b60bde10244d3bc0bfffa348abeaa6",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the native-session-journal.test.ts fixture."
+    },
+    "packages/pi-durable-coding/test/native-session-recovery.test.ts": {
+      "sha256": "631752d6edfe86a67da3b3e2ce03de5394ba59a099f7bef072d6991fc9518dbb",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the native-session-recovery.test.ts fixture."
+    },
+    "packages/pi-durable-coding/test/native-session-task.test.ts": {
+      "sha256": "80f289ac5c539e4e6d8c45da665b2b2e262209a3e3506827d8e61ab49f9420ea",
+      "reason": "Exercise durable native coding behavior and isolated recovery through the native-session-task.test.ts fixture."
+    },
+    "packages/pi-durable-coding/test/reference/durable-worker.mjs": {
+      "sha256": "aee6e2ddf7a84f35880f470918e4d3639efa3f4d050800a8b712d829edafc5f6",
+      "reason": "Compare native coding behavior with the independent pinned upstream process through durable-worker.mjs."
+    },
+    "packages/pi-durable-coding/test/reference/harness.ts": {
+      "sha256": "8eeaf42a97a0a0194ff5bc330c0a32eada40208998c6d021f9609c0a111b0bbf",
+      "reason": "Compare native coding behavior with the independent pinned upstream process through harness.ts."
+    },
+    "packages/pi-durable-coding/test/reference/native-worker.mjs": {
+      "sha256": "406e8075a56cc29d79ac2d7cd69e1002d590be107f177ec888656a1a46195144",
+      "reason": "Compare native coding behavior with the independent pinned upstream process through native-worker.mjs."
+    },
+    "packages/pi-durable-coding/test/reference/parity.ts": {
+      "sha256": "e32322bcdac30b55e3ede6026e12338d239b77c668dd124828cb8d8168ea7d63",
+      "reason": "Compare native coding behavior with the independent pinned upstream process through parity.ts."
+    },
+    "packages/pi-durable-coding/test/reference/protocol.ts": {
+      "sha256": "2ec972d155fd649ceedaafcc86a14c896c13fef90573f095774a6c33ab067777",
+      "reason": "Compare native coding behavior with the independent pinned upstream process through protocol.ts."
+    },
+    "packages/pi-durable-coding/test/reference/scenario-worker.mjs": {
+      "sha256": "be273273b7502ff71abe17b2b0eb75706c10bbc7da2ad7ec24265059cb235191",
+      "reason": "Compare native coding behavior with the independent pinned upstream process through scenario-worker.mjs."
+    },
+    "packages/pi-durable-coding/test/reference/scenarios.ts": {
+      "sha256": "886f4e933cde07bdafc3818c0e0824f40794eb52fde4fc481de7f46e6e09a0c6",
+      "reason": "Compare native coding behavior with the independent pinned upstream process through scenarios.ts."
+    },
+    "packages/pi-durable-coding/test/reference/smoke.ts": {
+      "sha256": "06863bccde2bc0df063af80f2a61cefde599017bbf7d71bdb4a1cf490dd97db0",
+      "reason": "Compare native coding behavior with the independent pinned upstream process through smoke.ts."
+    },
+    "packages/pi-durable-coding/test/reference/trace.ts": {
+      "sha256": "d4b15abeafad33b207c5389881741a7dbb72127438fda1b467fe7f52da62291b",
+      "reason": "Compare native coding behavior with the independent pinned upstream process through trace.ts."
+    },
+    "packages/pi-durable-coding/tsconfig.types.json": {
+      "sha256": "ec5d8fd6ee0dcacb67a98fc5dbcc91a90eac66393cf4ca72e77f8566d5bfeec0",
+      "reason": "Emit independent package declarations for the native coding API and durable host bindings."
     }
   },
   "deleted": {

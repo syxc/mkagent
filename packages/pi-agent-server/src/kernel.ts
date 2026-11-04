@@ -18,6 +18,7 @@ import {
   GenerationTask,
   Harness,
   LiveDoc,
+  ROOT_CONVERSATION_ID,
   ProviderDoc,
   createRegistry,
   defineExtension,
@@ -39,6 +40,7 @@ import {
 import { watchEvents, type AgentEvent } from './events/watch.ts';
 import { openDurableStorage } from './storage/durable-storage.ts';
 import { discardInheritedWork } from './storage/branch-storage.ts';
+import { migrateLegacyCodingWork } from './storage/coding-migration.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import type { AssistantMessage, Models, ModelThinkingLevel as ThinkingLevel, ToolCall, UserMessage } from '@earendil-works/pi-ai';
 import { calculateContextTokens, estimateMessageTokens } from '@earendil-works/pi-ai/utils/estimate';
@@ -51,7 +53,8 @@ import { CacheWarmer } from './cache-warmer.ts';
 import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent/shared/sessions';
 import { rewriteStoredModelHistory } from '@mkagent/shared/sessions/model-history-paths';
 import { CodingHost, type KernelCodingOptions } from './coding-host.ts';
-import { appendCodingEntries } from '@mkagent/pi-durable-coding';
+
+import type { ModelRuntimeCredentials, AgentSessionEvent as NativeAgentSessionEvent } from '@mkagent/pi-durable-coding/native';
 
 /**
  * Main-chat retry/stream policy, mirroring the old 1.1.0 main-chat settings
@@ -91,6 +94,7 @@ export interface DurableKernelOptions {
   autoCompactWindow?: number;
   /** Current pi-ai `Models`; read at each use so re-init can swap it live. */
   modelsSource(): Models;
+  modelCredentialsSource?(): ModelRuntimeCredentials;
   hooks: KernelHooks;
   /** Tools extension installed on the registry (wrapped builtin + session + MCP tools). */
   toolsExtension: Extension;
@@ -347,6 +351,7 @@ export class DurableKernel {
 
   /** Attach the event synthesizer to a conversation's watch stream. */
   private async attachWatch(conversationId: ConversationId): Promise<void> {
+    if (this.options.coding) return;
     const stream = await watchEvents(this.harness!, conversationId, BACKGROUND_CONTEXT);
     const pendingCompactions = new Map<number, { reason: 'manual' | 'threshold' | 'overflow'; tokensBefore: number }>();
     let delivery = Promise.resolve();
@@ -495,11 +500,29 @@ export class DurableKernel {
 
   private async openStore(copiedParent: boolean): Promise<void> {
     const storage = await openDurableStorage(this.storeDir, BACKGROUND_CONTEXT);
+    const marker = join(this.storeDir, 'conversation-id.txt');
+    let selected: ConversationId | undefined;
+    if (existsSync(marker)) {
+      const rawId = readFileSync(marker, 'utf-8').trim();
+      const parsedId = Number(rawId);
+      if (!Number.isSafeInteger(parsedId) || String(parsedId) !== rawId) {
+        await storage.close(BACKGROUND_CONTEXT);
+        throw new Error('Invalid durable branch conversation id');
+      }
+      selected = parsedId as ConversationId;
+    }
     if (copiedParent) {
       try {
         // Clear inherited work before Harness.open can reconcile it; abort/wait APIs can schedule it.
         await discardInheritedWork(storage);
       } catch (error) {
+        await storage.close(BACKGROUND_CONTEXT).catch(() => {});
+        throw error;
+      }
+    }
+    if (!copiedParent && this.options.coding) {
+      try { await migrateLegacyCodingWork(storage, selected ?? ROOT_CONVERSATION_ID); }
+      catch (error) {
         await storage.close(BACKGROUND_CONTEXT).catch(() => {});
         throw error;
       }
@@ -555,14 +578,9 @@ export class DurableKernel {
       },
     }, BACKGROUND_CONTEXT);
 
-    const marker = join(this.storeDir, 'conversation-id.txt');
-    if (existsSync(marker)) {
-      const rawId = readFileSync(marker, 'utf-8').trim();
-      const parsedId = Number(rawId);
-      if (!Number.isSafeInteger(parsedId) || String(parsedId) !== rawId) throw new Error('Invalid durable branch conversation id');
-      const conversationId = parsedId as ConversationId;
-      const existing = await this.harness.conversation(conversationId, BACKGROUND_CONTEXT);
-      if (!existing) throw new Error(`Durable branch conversation not found: ${conversationId}`);
+    if (selected !== undefined) {
+      const existing = await this.harness.conversation(selected, BACKGROUND_CONTEXT);
+      if (!existing) throw new Error(`Durable branch conversation not found: ${selected}`);
       this.conversation = existing;
     } else {
       this.conversation = await this.harness.root(BACKGROUND_CONTEXT, {
@@ -631,41 +649,40 @@ export class DurableKernel {
     const profile = this.options.coding;
     if (!profile) return;
     if (!this.options.wrapCodingTool) throw new Error('Coding extensions require the host tool approval wrapper');
-    const registry = this.registry!;
+    this.nativeTools = [];
+    this.installTools();
     this.coding = await CodingHost.load({
-      harness: this.harness!, conversation: this.conversation!, registry,
+      harness: this.harness!, conversation: this.conversation!, registry: this.registry!,
       cwd: this.options.cwd, sessionPath: this.options.sessionPath, id: this.sessionId, profile,
-      models: this.options.modelsSource,
-      model: () => this.currentModel && this.currentModels().getModel(this.currentModel.provider, this.currentModel.modelId),
+      models: this.options.modelsSource, credentials: this.options.modelCredentialsSource?.(),
+      autoCompactWindow: this.options.autoCompactWindow,
+      model: async models => {
+        const selected = this.currentModel ?? (await this.conversation!.agent(BACKGROUND_CONTEXT)).model;
+        return selected && models.getModel(selected.provider, selected.modelId);
+      },
       thinkingLevel: () => this.thinkingLevel,
-      setModel: async model => {
-        if (!this.currentModels().getModel(model.provider, model.id)) return false;
-        await this.setModel({ provider: model.provider, modelId: model.id, contextWindow: model.contextWindow });
-        return true;
+      selection: (model, thinkingLevel) => {
+        if (model) this.currentModel = { provider: model.provider, modelId: model.id, contextWindow: model.contextWindow };
+        this.thinkingLevel = thinkingLevel;
       },
-      setThinkingLevel: level => this.setThinkingLevel(level),
-      busy: () => this.busy, signal: () => this.runController.signal,
-      abort: () => this.abort(), shutdown: () => { void this.abort().then(() => this.close()); },
+      shutdown: () => { void this.abort().then(() => this.close()); },
       getSystemPrompt: () => this.systemPrompt,
-      compact: options => {
-        const config = options as { customInstructions?: string; onComplete?(result: unknown): void; onError?(error: Error): void } | undefined;
-        void this.compact(config?.customInstructions).then(config?.onComplete, error => config?.onError?.(error));
-      },
+      wrapTool: this.options.wrapCodingTool,
       publishTools: tools => {
-        this.nativeTools = tools.map(tool => this.options.wrapCodingTool!(tool));
-        this.updateTools(this.hostTools);
+        this.nativeTools = tools;
+        this.installTools();
       },
-      submit: (content, mode, options) => this.enqueueCodingInput(content, mode, { ...options, source: 'extension' }),
+      event: event => this.nativeEvent(event),
       error: error => this.options.hooks.debugLog(`[coding:${error.event}] ${error.extensionPath}: ${error.error}`),
       commands: {
         waitForIdle: () => this.waitForIdle(),
-        newSession: async (options?: { parentSession?: string; setup?: unknown; withSession?: unknown }) => {
+        newSession: async options => {
           if (options?.parentSession !== undefined || options?.setup !== undefined || options?.withSession !== undefined) {
             throw new Error('newSession parentSession, setup and withSession require the MkAgent session owner');
           }
           return this.changeCodingSession();
         },
-        fork: async (id: string, options?: { position?: 'at' | 'before'; withSession?: unknown }) => {
+        fork: async (id, options) => {
           if (options?.withSession !== undefined) throw new Error('fork withSession requires the MkAgent session owner');
           return this.changeCodingSession(id, options?.position ?? 'before');
         },
@@ -678,11 +695,44 @@ export class DurableKernel {
           await this.openCoding('reload');
         },
       },
-    });
-    // Warm the final request after native context handlers have transformed it.
-    const warmer = registry.snapshot().extension('mkagent-cache-warmer');
-    if (warmer) { registry.uninstall(warmer); registry.install(warmer); }
+    }, reason);
     await this.coding.start(reason);
+  }
+
+  /** Native AgentSession supplies its own events; only add host metadata and accounting. */
+  private nativeEvent(event: NativeAgentSessionEvent | Record<string, unknown>): void {
+    const selected = this.coding?.session.model;
+    if (selected) this.currentModel = { provider: selected.provider, modelId: selected.id, contextWindow: selected.contextWindow };
+    if (event.type === 'agent_start') this.busy = true;
+    if (event.type === 'agent_settled') this.busy = false;
+    if (event.type === 'thinking_level_changed') this.thinkingLevel = event.level as ThinkingLevel;
+    if (event.type === 'message_end' && 'message' in event) {
+      const message = event.message as AssistantMessage;
+      if (message.role === 'assistant') {
+        this.lastAssistant = message;
+        this.lastUsage = message.usage;
+        const calls = message.content.filter((part): part is ToolCall => part.type === 'toolCall')
+          .filter(call => this.options.hooks.isPrefetchableTool(call.name));
+        if (calls.length >= 2) for (const call of calls) {
+          this.options.hooks.prefetchToolCall(call.id, call.name, call.arguments);
+        }
+      }
+    }
+    if (event.type === 'tool_execution_start') {
+      const name = String(event.toolName);
+      const sessionName = name.replace(/^(mcp__session__|session__)/, '');
+      if (name !== sessionName) this.pendingSessionTools.set(String(event.toolCallId), {
+        toolName: sessionName, args: event.args as Record<string, unknown>,
+      });
+    } else if (event.type === 'tool_execution_end') {
+      const call = this.pendingSessionTools.get(String(event.toolCallId));
+      if (call) {
+        this.pendingSessionTools.delete(String(event.toolCallId));
+        this.options.hooks.sessionToolCompleted(call.toolName, call.args, event.isError === true);
+      }
+    }
+    // Native custom messages and new lifecycle events extend the legacy wire union.
+    this.options.hooks.emitEvent(event as unknown as Record<string, unknown>);
   }
 
   private async changeCodingSession(nativeId?: string, position: 'at' | 'before' = 'at') {
@@ -691,11 +741,11 @@ export class DurableKernel {
     const agent = await previous.agent(BACKGROUND_CONTEXT);
     let target: EntryId | undefined;
     if (nativeId) {
-      const entries = await this.coding!.store.read();
+      const entries = this.coding!.journal.manager.getEntries();
       const selected = entries.find(entry => entry.id === nativeId);
       if (!selected) throw new Error(`Native branch entry not found: ${nativeId}`);
       const id = position === 'before' ? selected.parentId : selected.id;
-      target = id ? this.coding!.store.resolveEntry(id) : undefined;
+      target = id ? this.coding!.journal.durableId(id) : undefined;
       if (id && target === undefined) throw new Error(`Native branch anchor not persisted: ${id}`);
     }
     let next: Conversation;
@@ -721,12 +771,12 @@ export class DurableKernel {
     const content = images?.length ? [{ type: 'text' as const, text: message },
       ...images.map(image => ({ ...image, type: 'image' as const }))] : message;
     await this.enqueueCodingInput(content, 'followUp');
-    await this.coding?.drain();
+    await this.coding?.flush();
   }
 
   async steer(message: string): Promise<void> {
     await this.enqueueCodingInput(message, 'steer');
-    await this.coding?.drain();
+    await this.coding?.flush();
   }
 
   private enqueueCodingInput(content: UserMessage['content'], mode: 'steer' | 'followUp',
@@ -739,38 +789,28 @@ export class DurableKernel {
   private async processCodingInput(raw: UserMessage['content'], mode: 'steer' | 'followUp',
     options: { source?: 'interactive' | 'extension'; expandPromptTemplates?: boolean }): Promise<void> {
     if (!this.conversation) throw new Error('Kernel not open');
-    const message = typeof raw === 'string' ? raw : raw.filter(part => part.type === 'text').map(part => part.text).join('\n');
-    const nativeImages = typeof raw === 'string' ? undefined : raw.filter(part => part.type === 'image');
-    const processed = this.coding ? await this.coding.input(message, nativeImages?.length ? nativeImages : undefined, mode, options)
-      : { handled: false as const, text: message, images: nativeImages };
-    if (processed.handled) return;
-    this.requireModel(this.currentModel);
-    let prepared: Awaited<ReturnType<CodingHost['beforeAgentStart']>> | undefined;
-    const running = this.coding
-      ? (await this.harness!.snapshot(LiveDoc, this.conversation.id, BACKGROUND_CONTEXT))?.run !== undefined : this.busy;
-    if (!running) {
-      this.runController = new AbortController();
-      prepared = await this.coding?.beforeAgentStart(processed.text, processed.images);
+    if (this.coding) {
+      const text = typeof raw === 'string' ? raw : raw.filter(part => part.type === 'text').map(part => part.text).join('\n');
+      const images = typeof raw === 'string' ? undefined : raw.filter(part => part.type === 'image');
+      await this.coding.submit(text, {
+        images, source: options.source,
+        expandPromptTemplates: options.expandPromptTemplates ?? true,
+        streamingBehavior: mode,
+      });
+      return;
     }
-    const content = processed.images?.length
-      ? [{ type: 'text' as const, text: processed.text }, ...processed.images] : processed.text;
-    await this.submitInput({ type: 'input', content, whenBusy: mode }, prepared?.entries, prepared?.queuedIds);
+    this.requireModel(this.currentModel);
+    await this.submitInput({ type: 'input', content: raw, whenBusy: mode });
   }
 
-  private async submitInput(request: InputSubmissionDraft, entries: EntryDraft[] = [], nextTurnIds: string[] = []): Promise<void> {
-    const admitted = entries.length ? this.conversation!.commit(async tx => {
-      const id = await this.conversation!.submit(tx, request);
-      await appendCodingEntries(tx, this.conversation!.id, entries);
-      if (nextTurnIds.length) await this.coding!.store.consumeNextTurn(tx, nextTurnIds);
-      return { id };
-    }, BACKGROUND_CONTEXT) : this.conversation!.submit(request, BACKGROUND_CONTEXT);
+  private async submitInput(request: InputSubmissionDraft): Promise<void> {
+    const admitted = this.conversation!.submit(request, BACKGROUND_CONTEXT);
     const pending = admitted.then(submission => {
       if (!this.startedInputs.delete(submission.id)) this.acceptedInputs.add(submission.id);
     });
     this.pendingInputs.add(pending);
-    try {
-      await pending;
-    } finally {
+    try { await pending; }
+    finally {
       this.pendingInputs.delete(pending);
       if (!this.pendingInputs.size) this.startedInputs.clear();
     }
@@ -784,12 +824,13 @@ export class DurableKernel {
 
     const compactions = [...this.manualCompactions];
     for (const compaction of compactions) compaction.controller.abort();
-    await conversation.abort(BACKGROUND_CONTEXT);
+    if (this.coding) await this.coding.abort();
+    else await conversation.abort(BACKGROUND_CONTEXT);
     await Promise.all(compactions.map(compaction => compaction.done));
   }
 
   private currentModels(): Models {
-    return this.coding?.models.collection ?? this.options.modelsSource();
+    return this.coding?.models ?? this.options.modelsSource();
   }
 
   private requireModel(model: KernelModelRef | undefined): void {
@@ -799,7 +840,8 @@ export class DurableKernel {
   }
 
   async waitForIdle(context = BACKGROUND_CONTEXT): Promise<void> {
-    await this.conversation?.waitForIdle(context);
+    if (this.coding) await this.coding.waitForIdle();
+    else await this.conversation?.waitForIdle(context);
   }
 
   async setModel(model: KernelModelRef, models: Models = this.currentModels(), context = BACKGROUND_CONTEXT): Promise<void> {
@@ -809,20 +851,29 @@ export class DurableKernel {
     this.cacheWarmer.stop();
     await this.conversation?.configure({ model: { provider: model.provider, modelId: model.modelId } }, context);
     this.currentModel = model;
+    if (this.coding) {
+      await this.coding.session.setModel(models.getModel(model.provider, model.modelId)!);
+      await this.coding.flush();
+    }
   }
 
   async setThinkingLevel(level: string): Promise<void> {
     this.cacheWarmer.stop();
     await this.conversation?.configure({ thinkingLevel: level as never }, BACKGROUND_CONTEXT);
     this.thinkingLevel = level as ThinkingLevel;
+    if (this.coding) {
+      this.coding.session.setThinkingLevel(level as ThinkingLevel);
+      await this.coding.flush();
+    }
   }
 
   setAutoCompaction(enabled: boolean): void {
     this.autoCompactionEnabled = enabled;
+    this.coding?.session.setAutoCompactionEnabled(enabled);
   }
 
   getAutoCompactionEnabled(): boolean {
-    return this.autoCompactionEnabled;
+    return this.coding?.session.autoCompactionEnabled ?? this.autoCompactionEnabled;
   }
 
   /** Manual compaction in the host's PiCompactResult shape. */
@@ -832,6 +883,16 @@ export class DurableKernel {
     tokensBefore: number;
     estimatedTokensAfter?: number;
   }> {
+    if (this.coding) {
+      const abort = () => this.coding?.session.abortCompaction();
+      signal?.addEventListener('abort', abort, { once: true });
+      try {
+        signal?.throwIfAborted();
+        const result = await this.coding.session.compact(customInstructions);
+        await this.coding.flush();
+        return result;
+      } finally { signal?.removeEventListener('abort', abort); }
+    }
     const conversation = this.conversation;
     const harness = this.harness;
     if (!conversation || !harness) throw new Error('Kernel not open');
@@ -923,9 +984,17 @@ export class DurableKernel {
     return page.items[0];
   }
 
-  /** Publish a new tool set for subsequent requests without closing the conversation. */
+  /** Publish a new host catalog and rebuild the native declarations without reloading extensions. */
   updateTools(extension: Extension): void {
     this.hostTools = extension;
+    this.installTools();
+    const nativeNames = new Set(this.nativeTools.map(tool => tool.name));
+    this.coding?.updateTools(this.registry!.snapshot().tools()
+      .flatMap(({ tool }) => nativeNames.has(tool.name) ? [] : [tool]));
+  }
+
+  private installTools(): void {
+    const extension = this.hostTools;
     const names = new Set(this.nativeTools.map(tool => tool.name));
     this.registry?.install(defineExtension({
       ...extension, tools: [...(extension.tools ?? []).filter(tool => !names.has(tool.name)), ...this.nativeTools],
@@ -958,6 +1027,7 @@ export class DurableKernel {
     contextUsage?: { tokens: number | null; contextWindow: number; percent: number | null };
     compactionSettings: { enabled: boolean; reserveTokens: number };
   }> {
+    if (this.coding) return this.coding.contextUsagePayload();
     const compactionSettings = {
       enabled: this.autoCompactionEnabled,
       reserveTokens: compactionReserveFor(

@@ -2,135 +2,181 @@
 
 ## Implemented scope
 
-The coding profile uses the existing `DurableKernel`. The independent
-`@mkagent/pi-durable-coding` package supplies native resources and a source-ported
-Pi extension runner. Pi v1.5.0, commit
-`f9a26365568127461c47a07a37dcb42c140a3ac5`, is the source baseline.
-`UPSTREAM.json` records 36 source files and fixtures. The package includes the
-upstream MIT license.
+The coding profile uses the existing `DurableKernel` and its Harness.
+`@mkagent/pi-durable-coding` contains the complete public Pi coding source
+closure from v1.5.0, commit `f9a26365568127461c47a07a37dcb42c140a3ac5`.
+`UPSTREAM-RUNTIME.json` records 249 source files, 9 assets, source hashes and
+controlled transformations. `UPSTREAM.json` records the earlier compatibility
+helpers. The package retains the upstream MIT license.
 
-The durable patch adds awaited preparation and stream hooks, plus committed
-`turn_end` and `agent_before_settle` decisions. Draft entries and the next task
-checkpoint commit together. Tests cover interruption inside preparation, restart
-after preparation commits, and migration of stored v1, v2 and v3 preparation
-checkpoints to v4. Effects outside durable storage can repeat if a handler is
-interrupted before its decision is memoized.
+Production constructs the native `AgentSession`, `DefaultResourceLoader`,
+`SettingsManager` and bound `ModelRuntime`. A local Agent facade delegates
+execution to `pi.coding.session`, `pi.coding.run` and owned tool tasks in
+pi-durable. The old Agent loop is not copied. Native retry, compaction and
+settlement callbacks return to durable phases.
 
-The host permission wrapper still owns tool approval. Native `tool_call` handlers
-run before approval. `tool_result` observes the final approved arguments.
-Synchronous plugin metadata uses the native session view and persists in durable
-history. The separate native JSONL writer does not own production storage.
+The journal commits native messages, branches, context edits and the next task
+checkpoint together. Steering, follow-up and custom input acceptance have
+separate durable receipts. Queue cancellation survives restart. Entry observers
+publish host anchors only after storage acknowledges the receipt.
 
-The shared host event types retain the existing wire contract locally. The
-production dependency graph must contain neither `pi-coding-agent` nor
-`pi-agent-core`. Plugin import aliases expose the implemented local export set;
-attempts to run the legacy Agent or import its private subpaths fail explicitly.
+Request intent is recorded before context transforms, provider callbacks and
+stream events. Recovery reports an interrupted operation instead of repeating
+callbacks with uncertain effects. Uncertain tools repeat only when their
+registration explicitly sets `replay: "safe"`. Effects outside durable storage
+do not have an exactly-once guarantee.
+
+Startup fences supported legacy `pi.generation` v4 and owned `pi.tool` v3 work
+before opening the new Harness. One transaction transfers the successor root,
+accepted queues and original submission IDs. A rejected transaction restores
+the live session snapshot. A failed root or interrupted finalizer settles placed
+inputs as unanswered. A successful answer must follow its input in the current
+native branch.
+
+The host permission wrapper owns tool approval. Native `tool_call` handlers run
+before approval. `tool_result` receives the final approved arguments. Nested
+calls use a durable task owner. Native tool metadata and discovery remain
+available after catalog replacement and restart.
+
+Tool handoffs reset the native branch in the same durable commit as the next
+checkpoint. The last handoff in tool-call order wins, including an empty
+summary. Accepted steering follows that summary. Recovery retains the new
+context without repeating the completed tool.
+
+The server bundle includes separate Photon WASM files for the durable and
+native coding tools, native themes, HTML export templates and the Pi MIT
+license. Headless archives also include the root LICENSE and NOTICE. Image
+workers resolve from the installed module; the project directory cannot
+supply an executable worker.
+
+The production dependency graph excludes `pi-coding-agent` and `pi-agent-core`.
+The `./native`, `./agent` and `./durable` exports expose the native coding layer,
+durable Agent facade and host bindings. Declaration files come from the same
+sources. The shared transport retains its existing wire contract.
 
 ## Verification
 
-All checks use temporary configuration, an environment allowlist, local
-deterministic models and random loopback ports. They do not use the live WebUI,
-real credentials or the real Craft checkout.
+Checks use temporary HOME and config directories, an environment allowlist,
+local deterministic models and random loopback ports. They do not use the live
+WebUI, real credentials or the real Craft checkout.
 
-| Check | Result |
+| Check | Evidence |
 | --- | --- |
-| Coding package, production host and standalone bundle | 78 tests pass, 358 assertions |
-| Durable kernel regression | 153 tests pass, 1,914 assertions |
-| Host tool wrappers and image reads | 8 tests pass, 36 assertions |
-| Coding and agent-server type checks | Pass |
-| Repository `validate:ci` | Pass, including the coding package type check |
-| Repository lint | Pass with warnings |
-| Pinned Pi source reproduction | 36 files verified |
-| Durable patch reproduction | Pass with semantic TypeScript validation |
-| Frozen install in a clean directory | Pass; installed patch matches generated output |
-| Agent-server build | Pass |
-| Craft source-lineage audit | Pass against the isolated pinned mirror |
-| Shared event contract after legacy dependency removal | Pass |
-| OpenAI, relay and Responses stream regression | 27 tests pass, 128 assertions |
-| Full headless CLI | Pass with the unchanged hello plugin and two local model requests |
+| Full coding and production host regression | 769 passed, 0 failed across 53 files |
+| Native lifecycle recovery | Actual SIGKILL and restart, uncertain requests and callbacks |
+| Production migration and queues | SQLite and JSONL SIGKILL checks, original IDs and repeated text |
+| Legacy checkpoint adoption | 12 startup cases across both storage backends |
+| Adoption rollback | Admission and commit rejection, followed by concurrent retry |
+| Upstream behavior oracle | 17 scenarios in separate upstream and local processes |
+| Type checks | Coding declarations, server and repository consumers |
+| Repository checks | `validate:ci`, lint and isolated Craft source audit |
+| Source reproduction | Pinned source hashes and controlled port comparison |
+| Source integrity | Dirty upstream source directory rejected before generation |
+| Clean installation and build | Frozen lockfile with scripts disabled; clean declarations and server bundle passed |
+| Independent package consumer | Runtime and declaration imports passed for root, compat, native, agent and durable |
+| Handoff recovery | Reversed parallel completion, empty summary, steering, reopen and SQLite/JSONL SIGKILL |
+| Bundle resources | Project worker canary blocked; relocated PNG processing, BMP read and HTML export passed |
+| Headless archive | macOS arm64 build, license/assets inspection, launcher, HTTP health and authenticated WebSocket passed |
 
-The standalone bundle test builds the real subprocess outside the source tree.
-It loads an unchanged official `hello` extension, receives a host approval
-modification, executes the tool and sends the approved result in the next
-request. It exercises the packaged module resolver through real JSONL I/O.
+`validate:ci` passed after a test fixture type error was corrected. Lint
+finished with 0 errors and 106 warnings. The isolated Craft audit passed.
+After the final asset-path correction, all five affected bundle checks passed.
 
-The full headless CLI check also starts the real server, creates an isolated
-workspace and connection, enables coding mode, executes `hello` and receives the
-final answer. Its combined tool-call and finish frame exposed a host SSE defect.
-The correction preserves terminal markers, text, usage and other choices while
-forwarding each cleaned tool call once. Five added stream cases failed before
-the correction; the unchanged CLI fixture then completed successfully.
+The oracle covers text, loadout changes, tool round trips, message transforms,
+parallel completion order, sequential batches, aborted preflight, queued inputs,
+turn and settlement continuation, nested settled actions and terminating tools.
+Its upstream npm installation is an independent behavior reference. The pinned
+git checkout supplies the source hashes; npm bytes alone do not prove git identity.
 
-The regression checks also cover context replacements after committed edits,
-error-boundary continuation, model selection after host collection replacement,
-prompt composition with `SYSTEM.md`, and retention of distinct instruction-file
-sources. Each of these cases failed before its correction.
+The standalone subprocess fixture loads an unchanged official `hello`
+extension, applies host approval changes, executes its tool and sends the result
+in the next request. JSONL and bundle checks run outside the source tree.
+
+Host regressions also cover extension providers and virtual models through
+reload and reopen, auth availability after catalog replacement, dynamic tools,
+deferred discovery, nested calls, model usage and context occupancy. Native
+compaction reads effective profile and project settings. The host window
+override stays in memory and follows model changes.
+
+The request recovery checks first reproduced repeated callback effects.
+Adoption failure checks first reproduced live queue mutation after rollback.
+Production crash checks first reproduced an old answer settling a new input,
+and an interrupted finalizer leaving an input permanently placed. Each has a
+test in the repository that passed after its correction.
 
 ## Capability boundaries
 
-The table follows the acceptance inventory. A retained feature or a passing
-fixture does not establish every upstream combination.
+Retaining native source does not establish all host and platform combinations.
 
-| Inventory area | Verified behavior and remaining limits |
+| Inventory area | Behavior and limits |
 | --- | --- |
-| read/write/edit/bash | Existing durable tools remain. Approved file writes and Bash timeout pass. The complete exact-edit, shell-exit and cancellation matrix is not repeated here. |
-| grep/find/ls | Existing local adaptations remain. A complete native schema, ignore-rule, Unicode and limit comparison is pending. |
-| Images and long output | BMP conversion and large-image resizing pass. The complete output-spill and recovery matrix is pending. |
-| PowerShell | A native named tool and Windows execution are not verified. |
-| Permissions and metadata | Host approval modification, denial, final arguments and nested durable calls are covered. Trusted plugin code itself is not sandboxed. |
-| Project instructions | Global, ancestor, cwd and worktree parsing pass. Native paths retain their source identity. Deduplication between host-rendered text and native files needs shared source metadata. |
-| SYSTEM/APPEND files | Native precedence and composition are covered. The host base prompt remains present when `SYSTEM.md` supplies coding instructions. |
-| Native skills | Native parsing, collisions, explicit invocation and installed resources are covered. |
-| Skill activation | Native command expansion passes. Integration with every shared mention and successful-read prerequisite remains incomplete. |
-| Prompt templates | Quoting, empty arguments, defaults, slices, unknown commands and input transforms pass. |
-| Extensions: tools | The official hello plugin, structured results, nested calls, visibility, progress and cancellation have functional coverage. |
-| Extensions: commands/input | Commands, transform/handled behavior, extension input source and template expansion are covered. Production reload combinations need further coverage. |
-| Extensions: events | Session start, input, before-start, run/turn start, user/custom and assistant message preparation, assistant streaming, tool call/result and settlement boundaries are covered. Native `agent_end`, tool-result message lifecycle and tool-execution lifecycle ordering are incomplete. |
-| Extensions: context | Before-start prompt changes, request transforms and committed edit preservation pass. Complex provenance combinations remain an acceptance area. |
-| Extensions: state | Custom metadata, stable IDs, labels/name projection, restore and isolated store forks are covered. Managed-session lifecycle combinations need further coverage. |
-| Extensions: models | Host authentication, provider registration, overrides, restoration and host collection replacement pass. Virtual model routing, immediate auth-snapshot refresh and interactive OAuth are incomplete. |
-| Extensions: session control | Unsupported setup/withSession, tree navigation and managed switching fail explicitly. Basic new/fork adapters exist; complete owner, close and abort semantics are not verified. |
-| Extensions: UI | The runtime reports print mode and no interactive UI. It does not provide the native TUI. |
-| Local package resources | Installed manifest discovery, patterns, filters and source diagnostics are covered. |
-| npm/git package management | Opening resources does not fetch missing packages. Explicit installation workflows are not fully exercised. |
-| Project MCP | Project execution requires an explicit trusted host configuration. The normal product trust-approval UI is not integrated. |
-| MCP OAuth | Interactive authorization remains unavailable. |
-| Codemode/tool search | Existing official durable integrations remain. Nested plugin calls and hidden tools are covered. Complete dynamic removal and exposure combinations need further coverage. |
-| Retry/steer/follow-up/compaction | Kernel regressions pass. Native boundary continuation and preparation recovery have additional real Harness tests. |
-| Resume/branch/usage/export | Existing kernel regressions and native projection/store tests pass. Full native managed-session branching is not established. |
-| CLI/JSONL/Desktop/WebUI | Source JSONL, the standalone subprocess and the full headless CLI pass. Desktop and browser interaction were not exercised. |
-| Themes/shortcuts/editor/renderers | Resource diagnostics are retained. Terminal rendering, editor integration and shortcuts need a TUI host. |
+| read/write/edit/bash | Production tools keep host approval. Native implementations and public SDK exports are retained. Filesystem, approval and timeout regressions use local fixtures. |
+| grep/find/ls | Host tools keep their cancellation adaptations. Native SDK tools remain available. Cross-platform Unicode and ignore-rule combinations are not all exercised. |
+| Images and long output | Native image conversion, truncation and output code are retained. Relocated native PNG processing and durable BMP reads use their respective packaged WASM files. Every spill and recovery combination is not exercised. |
+| PowerShell | Sources are retained. Windows execution was not exercised. |
+| Permissions and metadata | Allow, deny, modified arguments, nested calls, visibility and durable ownership have coverage. Trusted Node plugins are not sandboxed. |
+| Project instructions | Native parsing and source identity are retained. Project execution requires host trust. Host-rendered and native instruction deduplication still depends on shared source metadata. |
+| SYSTEM/APPEND files | Native precedence and composition have coverage. The host base prompt remains present. |
+| Native skills | Native parsing, explicit invocation, collisions and installed resources have coverage. |
+| Skill activation | Native expansion is retained. Every shared mention and successful-read prerequisite combination is not exercised. |
+| Prompt templates | Native parsing, quoting, defaults, slices, collisions and input transforms have coverage. |
+| Extensions: tools | Unmodified plugins, structured results, nested calls, progress, cancellation and deferred discovery have coverage. |
+| Extensions: commands/input | Native command and input processing are used. Production reload and handled-input cases have coverage. |
+| Extensions: events | Native run, turn, message, tool and settlement events are retained. Oracle scenarios check order and effects. Crash tests check uncertain delivery. |
+| Extensions: context | Native transforms, boundary drafts and journal projection are used. Complex mixed provenance combinations are not all exercised. |
+| Extensions: state | Custom entries, labels, IDs, committed restore, edits and forks have coverage. |
+| Extensions: models | Host models, extension providers, virtual models, selection, reload, reopen and auth availability have coverage. Interactive OAuth was not exercised. |
+| Extensions: session control | Native APIs are retained. Production managed operations use host bindings. Every navigation, fork and concurrent close combination is not exercised. |
+| Extensions: UI | Production reports print mode and no interactive UI. Native TUI sources remain available to SDK consumers. |
+| Local package resources | Native installed-manifest discovery, filters and diagnostics are used. |
+| npm/git package management | Opening host resources does not install missing packages. Explicit installation workflows are not all exercised. |
+| Project MCP | Project execution requires explicit host trust. A product trust-approval UI is not part of this migration. |
+| MCP OAuth | Production interactive authorization is not provided. |
+| Codemode/tool search | Official host integrations and native tools share durable execution. Dynamic catalogs, deferred activation and handoff context through restart have coverage. |
+| Retry/steer/follow-up/compaction | Native callbacks use durable phases. Accepted queues, cancellation, repeated text, retry deadlines and compaction thresholds have coverage. |
+| Resume/branch/usage/export | Journal and legacy projection tests cover history, edits, branches, forks and usage. Native HTML export works with relocated templates and themes. All combinations of multiple heads and managed navigation are not exercised. |
+| CLI/JSONL/Desktop/WebUI | Packaged subprocess and JSONL checks run locally. The macOS arm64 headless launcher, health endpoint and authenticated WebSocket were exercised. Real Desktop and browser interaction were not exercised. |
+| Themes/shortcuts/editor/renderers | Native sources and resources are retained and packaged. Interactive terminal behavior was not exercised. |
 
-The implementation therefore provides tested API groups, not complete Pi
-ExtensionAPI or TypeScript SDK compatibility. The no-UI boundary and unimplemented
-event groups must remain visible to plugin authors.
+Unsafe legacy checkpoints, old checkpoint versions and uncertain effects fail
+closed with migration diagnostics. Startup does not silently discard them.
+Those stores need reconciliation with the previous runtime before migration.
+
+After an uncertain request, accepted queues remain available. An explicit new
+prompt starts before those retained queues, following native prompt semantics.
+The interrupted model request is not automatically repeated. Native history
+keeps the failure message; durable model context excludes failed, aborted and
+deferred assistant messages.
 
 ## Reproduction and upgrade
 
-Run these checks in an isolated environment:
+Use an isolated environment and a pinned Craft mirror:
 
 ```sh
-bun test ./packages/pi-durable-coding \
-  ./packages/pi-agent-server/src/coding-host.e2e.test.ts \
-  ./packages/pi-agent-server/test/coding-bundle.e2e.test.ts
-bun test ./packages/pi-agent-server/src/kernel.e2e.test.ts
-bun test ./packages/pi-agent-server/src/tools/wrap.test.ts \
-  ./packages/pi-agent-server/src/tools/builtin.test.ts
+bun test ./packages/pi-durable-coding ./packages/pi-agent-server
+bun packages/pi-durable-coding/test/reference/parity.ts \
+  <isolated-upstream-node-modules> <pinned-Pi-checkout>
+bun packages/pi-durable-coding/scripts/vendor-coding-runtime.ts \
+  <pinned-Pi-checkout> --check
 bun run validate:ci
 bun run lint
 bun run audit:craft-reuse
 bun run --cwd packages/pi-agent-server build
 bun install --frozen-lockfile --ignore-scripts
+bun run server:build --output <task-owned-output-directory> --compress
 ```
 
-The source audit requires `CRAFT_AGENT_SOURCE` to identify the isolated pinned
-Craft reference. Source-port reproduction uses
-`packages/pi-durable-coding/scripts/vendor-upstream.ts <Pi checkout> --check`.
-Patch reproduction uses `scripts/patch-durable.ts` in that package with the
-pinned checkout, installed durable directory and pristine durable directory.
-Use `--check` to compare generated files without rewriting them.
+Set `CRAFT_AGENT_SOURCE` to the isolated pinned Craft checkout. The earlier
+helper port uses `scripts/vendor-upstream.ts` in the coding package. Durable
+patch reproduction uses `scripts/patch-durable.ts` with the pinned checkout,
+installed durable directory and pristine durable directory.
 
-On upgrade, compare upstream event and resource behavior, regenerate both
-manifests and the Bun patch, then rerun the functional fixtures and stored-task
-migrations. Tests for the current checkpoint versions do not establish migration
-support for a future Pi release.
+The headless build replaces its output directory. Use a new directory owned
+by the validation task.
+
+On upgrade, compare the public source closure and controlled port scripts.
+Regenerate both source manifests, declaration files and the Bun patch. Run the
+oracle, subprocess, journal, queue, lifecycle and stored-task migration checks.
+The generator requires a clean pinned checkout for every consumed coding and
+Agent source, package metadata and license.
+Current checkpoint tests do not establish support for a future Pi release.

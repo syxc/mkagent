@@ -16,7 +16,9 @@ Portions of the Pi agent server and Pi event types are adapted from
 The coding compatibility source port and durable boundary patch use Pi v1.5.0,
 commit f9a26365568127461c47a07a37dcb42c140a3ac5. Source hashes, selected exports
 and transformations are recorded in packages/pi-durable-coding/UPSTREAM.json
-and DURABLE-PATCH.json. The copied MIT license is LICENSE.pi in that package.
+and DURABLE-PATCH.json. The complete coding runtime source closure and controlled
+ports are recorded in UPSTREAM-RUNTIME.json in the same package. The copied MIT
+license is LICENSE.pi in that package and in the headless distribution.
 
 MIT License
 

@@ -681,6 +681,10 @@ async function openKernel(): Promise<DurableKernel> {
       if (!modelRuntime) throw new Error('Model runtime not initialized');
       return modelRuntime.models;
     },
+    modelCredentialsSource: () => {
+      if (!modelRuntime) throw new Error('Model runtime not initialized');
+      return modelRuntime.codingCredentials;
+    },
     hooks: kernelHooks,
     toolsExtension: buildToolsExtension(cwd, mcpLoad.tools),
     ...(initConfig.agentProfile === 'coding' || initConfig.codingResources ? {
@@ -1084,7 +1088,7 @@ async function handleUpdateRuntimeConfig(msg: RuntimeConfigUpdateMessage): Promi
       customModels: msg.customModels,
     };
     const previous = await ensureModelRuntime();
-    const candidate = await createModelRuntime(candidateConfig, () => {}, previous.credentials);
+    const candidate = await createModelRuntime(candidateConfig, () => {}, previous.credentials, previous.codingCredentials);
     const model = resolveRuntimeModel(candidate, candidateConfig, msg.model);
     if (!model) throw new Error(`Could not resolve model after runtime update: ${msg.model}`);
     candidateConfig.miniModel = resolveRuntimeMiniModel(candidate, candidateConfig);
