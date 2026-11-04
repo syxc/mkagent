@@ -664,7 +664,20 @@ export class SessionManager implements ISessionManager {
     }
 
     this.sessions.set(managed.id, managed)
-    await this.flushSession(managed.id)
+    try {
+      await sessionPersistenceQueue.persist(this.toStored(managed))
+    } catch (error) {
+      sessionPersistenceQueue.cancel(managed.id)
+      this.extensionUI.remove(managed.id)
+      await rollbackFailedBranchCreation({
+        managed,
+        workspaceRootPath: workspace.rootPath,
+        sessionId: managed.id,
+        deleteFromRuntimeSessions: id => this.sessions.delete(id),
+        deleteStoredSession,
+      })
+      throw error
+    }
     if (internal.emitCreatedEvent !== false) this.notifySessionCreated(workspace.id, managed.id)
     return this.toSession(managed, true)
   }

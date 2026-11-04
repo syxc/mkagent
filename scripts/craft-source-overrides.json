@@ -1247,8 +1247,8 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/server-core/src/sessions/SessionManager.ts": {
-      "sha256": "10a2e5546719b0c014130e6641b3fdc7a7e2a28532eb9825b74ffe47f9096168",
-      "reason": "Retain the Craft-derived Pi/Lite session lifecycle, permissions, context, persistence and PR handoffs; preserve sdkSessionId when importing a bundle with durable session metadata so restored history retains its host correlation."
+      "sha256": "fbd498b08df4d4a32696d08c121b6c94da5f5715e4f2dfa562819a2def4fc026",
+      "reason": "Retain the Craft-derived Pi/Lite session lifecycle, permissions, context, persistence and PR handoffs; preserve imported sdkSessionId. Require a strict final record receipt before announcing creation, and roll back failed creations."
     },
     "packages/server-core/src/sessions/background-task-stop.test.ts": {
       "sha256": "342eb29a494100b86413319250f10d587b041bd6d6aa0640d4c56333f995b872",
@@ -1971,8 +1971,8 @@
       "reason": "Read complete first-line metadata for many pinned PRs/cursors beyond 8KB, preserve multibyte text, and exclude app-generated hidden notices from sidebar preview."
     },
     "packages/shared/src/sessions/persistence-queue.ts": {
-      "sha256": "25a64f45da93bf5184248dbb39689f0c228400d50341c55ac1a55a8f96d4cc06",
-      "reason": "Retain debounced session persistence and metadata merging; serialize timer and explicit writes through the same tracked chain, and drain active writes as well as pending entries before shutdown or teardown."
+      "sha256": "5f985cfb54be3c623008c07e95bfb4ce0643c7dd938898f36c121a880a8083f6",
+      "reason": "Retain debounced persistence, metadata merging and active-write draining. Share the serial writer with strict receipts, preserve the prior record and signature on failure, and cancel unstarted writes without admitting stale snapshots."
     },
     "packages/shared/src/sessions/storage.ts": {
       "sha256": "1c0a3869a1b06492732e0fb89ec06252b1f6fdb7e65611e687cacde5a3281cfb",
@@ -2324,6 +2324,14 @@
     }
   },
   "mkOnly": {
+    "packages/server-core/src/sessions/session-creation-receipt.isolated.ts": {
+      "sha256": "21a16a48653cca620734dd28ffea03193ceb03afaa719b6b44282b28024bd646",
+      "reason": "Verify real product creation rejects an uncommitted final record, rolls back without a success event, and recovers on the next creation."
+    },
+    "packages/shared/tests/persistence-receipt.isolated.ts": {
+      "sha256": "df843acf138f33150263e2bbdefb87b199a32c6a60bbf566b68a46e35eb4858d",
+      "reason": "Exercise strict persistence failures, atomic replacement, metadata recovery, shared writer admission order and cancellation in an isolated process."
+    },
     "apps/electron/src/renderer/actions/__tests__/dialog-shortcuts.test.ts": {
       "sha256": "45a004ab9d8dfd92c930abdf654144c6b2f1f0904ebb7216915b02d1636a80ff",
       "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
