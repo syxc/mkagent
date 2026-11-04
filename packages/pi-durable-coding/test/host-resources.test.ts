@@ -56,6 +56,46 @@ afterEach(() => {
 });
 
 describe('host native resources', () => {
+  test('host-only policy isolates native sessions from ambient Pi resources and settings across reloads', async () => {
+    for (const directory of [agentDir, join(cwd, '.pi')]) {
+      put(join(directory, 'settings.json'), JSON.stringify({ compaction: { enabled: false }, retry: { enabled: false } }));
+      put(join(directory, 'SYSTEM.md'), 'ambient system');
+      put(join(directory, 'APPEND_SYSTEM.md'), 'ambient append');
+      put(join(directory, 'AGENTS.md'), 'ambient instructions');
+      put(join(directory, 'extensions', 'ambient.ts'), 'throw new Error("AMBIENT EXTENSION EXECUTED");');
+      put(join(directory, 'prompts', 'ambient.md'), 'Ambient prompt');
+      skill(join(directory, 'skills', 'ambient', 'SKILL.md'), 'ambient');
+      theme(join(directory, 'themes', 'ambient.json'), 'ambient');
+    }
+    put(join(cwd, 'AGENTS.md'), 'ambient project');
+    const read = spyOn(fs, 'readFileSync');
+    const checkExternalWork = blockExternalWork();
+    let prompt = '  host prompt\n';
+    const { resourceLoader, settingsManager } = createHostResources({
+      cwd, agentDir, projectTrusted: true, resourcePolicy: 'host-only', getSystemPrompt: () => prompt,
+    });
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await resourceLoader.reload();
+      expect(resourceLoader.getExtensions().extensions).toEqual([]);
+      expect(resourceLoader.getExtensions().errors).toEqual([]);
+      expect(resourceLoader.getSkills().skills).toEqual([]);
+      expect(resourceLoader.getPrompts().prompts).toEqual([]);
+      expect(resourceLoader.getThemes().themes).toEqual([]);
+      expect(resourceLoader.getAgentsFiles().agentsFiles).toEqual([]);
+      expect(resourceLoader.getSystemPrompt()).toBe(prompt);
+      expect(resourceLoader.getSystemPromptSource()).toBeUndefined();
+      expect(resourceLoader.getAppendSystemPrompt()).toEqual([]);
+      expect(settingsManager.getCompactionSettings().enabled).toBe(true);
+      settingsManager.setTheme('host-choice');
+      await settingsManager.flush();
+      prompt = 'updated host prompt';
+    }
+    expect(settingsManager.getTheme()).toBe('host-choice');
+    expect(read.mock.calls.map(call => String(call[0])).filter(path =>
+      /(?:settings\.json|SYSTEM\.md|AGENTS\.md|SKILL\.md|ambient\.md|ambient\.json)$/.test(path))).toEqual([]);
+    checkExternalWork();
+  });
+
   test('does not read untrusted project settings, modules, prompts or ancestor context', async () => {
     put(join(agentDir, 'settings.json'), '{"theme":"dark"}');
     put(join(agentDir, 'AGENTS.md'), 'global context');

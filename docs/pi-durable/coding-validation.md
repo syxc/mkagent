@@ -7,6 +7,23 @@ plugin compatibility, with all existing MkAgent features preserved. The
 corrections and acceptance gates after the user's clarification on 2026-11-04.
 An unimplemented operation or an unverified product path remains open work.
 
+## Corrections after the clarified documentation baseline
+
+D1 changes after documentation commit `f7a33eb` separate native execution from
+automatic resource discovery. The `host-only` resource policy keeps explicit
+host plugins, paths and settings ports. It isolates ambient Pi settings,
+extensions, skills, prompts, themes, context and system-prompt files. Normal
+sessions keep their existing durable GenerationTask behavior.
+
+The new tests first reproduced ambient extension execution, then passed after
+the policy change. A production-host test invokes the unmodified upstream
+hello plugin, applies approved arguments and restores its tool history after
+reopen. Coding/server regression: 771 passed, 0 failed across 53 files.
+`validate:ci`, the isolated Craft audit and the pinned-source generator check
+passed. Lint passed with 0 errors and 106 warnings. The source inventory remains
+249 files and 9 assets. These results cover D1; whole-product and remaining
+plugin integration acceptance stay open.
+
 ## Implemented scope
 
 The coding profile uses the existing `DurableKernel` and its Harness.

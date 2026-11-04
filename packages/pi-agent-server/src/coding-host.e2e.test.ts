@@ -18,6 +18,68 @@ const cleanup: Array<() => Promise<void> | void> = [];
 afterEach(async () => { for (const operation of cleanup.splice(0).reverse()) await operation(); });
 
 describe('coding extensions on the production durable host', () => {
+  test('runs explicit native plugins with host-only resources and restores their durable history', async () => {
+    const root = await durableFixture([
+      { ...response('', 'toolUse'), content: [{ type: 'toolCall', id: 'greeting', name: 'hello', arguments: { name: 'requested' } }] },
+      response('first answer'), response('resumed answer'),
+    ]);
+    await root.harness.close(BACKGROUND_CONTEXT);
+    cleanup.push(() => rmSync(root.directory, { recursive: true, force: true }));
+    const agentDir = join(root.directory, 'agent');
+    for (const directory of [agentDir, join(root.directory, '.pi')]) {
+      mkdirSync(join(directory, 'extensions'), { recursive: true });
+      writeFileSync(join(directory, 'settings.json'), '{"compaction":{"enabled":false}}');
+      writeFileSync(join(directory, 'SYSTEM.md'), 'ambient-system-must-stay-out');
+      writeFileSync(join(directory, 'AGENTS.md'), 'ambient-instructions-must-stay-out');
+      writeFileSync(join(directory, 'extensions', 'ambient.ts'), 'throw new Error("AMBIENT EXTENSION EXECUTED");');
+    }
+    const approved: string[] = [];
+    const errors: string[] = [];
+    const options: ConstructorParameters<typeof DurableKernel>[0] = {
+      sessionPath: join(root.directory, 'session'), cwd: root.directory, modelsSource: () => root.models,
+      toolsExtension: defineExtension({ name: 'empty' }),
+      coding: {
+        agentDir, projectTrusted: true, resourcePolicy: 'host-only',
+        extensionPaths: [resolve(import.meta.dir, '../../pi-durable-coding/test/fixtures/upstream/hello.ts')],
+      },
+      wrapCodingTool: tool => ({
+        ...tool, execute: (args, api, context) => {
+          approved.push(tool.name);
+          return tool.execute({ ...args, name: 'approved' }, api, context);
+        },
+      }),
+      hooks: { emitEvent: () => {}, sessionToolCompleted: () => {}, prefetchToolCall: () => {},
+        isPrefetchableTool: () => false, debugLog: error => errors.push(error) },
+    };
+    const model = { provider: 'faux', modelId: 'local', contextWindow: 100_000 };
+    const first = new DurableKernel(options);
+    cleanup.push(() => first.close());
+    first.systemPrompt = 'host-owned-system';
+    await first.open({ model });
+    await first.submitPrompt('first question');
+    await first.waitForIdle();
+    const id = first.sessionId;
+    await first.close();
+    const resumed = new DurableKernel(options);
+    cleanup.push(() => resumed.close());
+    resumed.systemPrompt = 'host-owned-system';
+    await resumed.open({ model });
+    await resumed.submitPrompt('second question');
+    await resumed.waitForIdle();
+    expect(resumed.sessionId).toBe(id);
+    expect(root.calls).toHaveLength(3);
+    expect(approved).toEqual(['hello']);
+    expect(JSON.stringify(root.calls[2]!.messages)).toContain('Hello, approved!');
+    for (const call of root.calls) {
+      expect(getCurrentTools(call.messages).map(tool => tool.name)).toEqual(['hello']);
+      const system = JSON.stringify(call.messages.filter(message => message.role === 'system'));
+      expect(system).toContain('host-owned-system');
+      expect(system).not.toContain('ambient-');
+    }
+    expect((await resumed.contextUsagePayload()).compactionSettings.enabled).toBe(true);
+    expect(errors).toEqual([]);
+  });
+
   test('native commands can wait for idle, replace and reload their own session', async () => {
     const root = await durableFixture([]);
     await root.harness.close(BACKGROUND_CONTEXT);

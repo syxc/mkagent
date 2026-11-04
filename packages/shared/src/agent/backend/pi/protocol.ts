@@ -1,6 +1,8 @@
 /** Raw Pi SDK context metadata on JSONL events/responses. No runtime imports. */
 export interface PiCodingResources {
   agentDir?: string;
+  /** Native session execution does not require automatic Pi resource discovery. */
+  resourcePolicy?: 'native' | 'host-only';
   projectTrusted?: boolean;
   extensionPaths?: string[];
   skillPaths?: string[];

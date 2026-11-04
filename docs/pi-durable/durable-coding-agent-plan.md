@@ -69,7 +69,7 @@ MkAgent 最初以 Pi coding agent 为底层，第一次切换改用 pi-durable�
 | 编号 | 修正项 | 具体工作与通过条件 | 当前状态 |
 |---|---|---|---|
 | D0 | 校正文档与目标 | 统一名称，允许按需引用 core，明确产品保留范围、执行职责和验收账本；历史规格注明适用范围。 | 已完成 |
-| D1 | 运行时与资源策略 | 解耦 AgentSession 接入和资源加载，确认普通与 coding profile 均通过运行时契约；保留普通模式资源隔离、提示词、工具与压缩设置，并覆盖既有会话恢复。 | 待执行 |
+| D1 | 运行时与资源策略 | 解耦 AgentSession 接入和资源加载，确认普通与 coding profile 均通过运行时契约；保留普通模式资源隔离、提示词、工具与压缩设置，并覆盖既有会话恢复。 | 已完成 |
 | D2 | MkAgent 主链路 | 按保留清单检查模型、审批、代理/会话工具、MCP、浏览器、后台任务、持久化、分支和传输；修复发现的缺口，运行相关产品集成和完整仓库回归。 | 待执行 |
 | D3 | 插件会话与交互 | 补齐由产品会话所有者执行的原生会话操作和插件交互适配；每个 API 组用未修改插件驱动实际效果，检查 reload、取消和恢复。 | 待执行 |
 | D4 | 原生资源与授权 | 补齐项目资源的信任入口、MCP 交互授权和显式包管理路径；继续保持禁止隐式安装及未授权项目执行。 | 待执行 |
@@ -79,6 +79,15 @@ MkAgent 最初以 Pi coding agent 为底层，第一次切换改用 pi-durable�
 D1 的已知风险是把原生会话开关直接设为始终启用：它会连带加载普通会话以前隔离的 Pi 资源。现有 `kernel.e2e.test.ts` 的默认 profile 隔离用例是保留契约，不能通过改掉该预期来消除失败。
 
 D2 的最小入口包括 `pi-conversation-flow.integration.test.ts`、`pi-permission-sync.test.ts`、`session-branching.test.ts` 和 `session-file-transport.test.ts`，并结合 `scripts/run-tests.ts` 的完整测试发现及隔离规则。实际运行时使用仓库绝对路径和隔离环境。
+
+## 执行账本
+
+| 项目 | 实现与证据 |
+|---|---|
+| D0 | 文档基线已提交为 `f7a33eb`，当前四份能力及计划文档的标点检查、diff 检查通过。历史规格新增适用范围说明。 |
+| D1 资源策略 | `HostResourceOptions.resourcePolicy` 与协议支持 `native`、`host-only`。后者隔离自动发现的 Pi 设置、扩展、skills、prompts、themes、context 和 SYSTEM 文件，保留宿主显式资源及设置存储端口。普通模式继续使用现有 durable GenerationTask，不因任务类型不同判为架构缺陷。 |
+| D1 行为检查 | 新用例先复现环境扩展被执行，修正后资源测试 9 项通过。原生宿主集成用例通过，覆盖未修改的 hello 插件、宿主审批修改参数和关闭后恢复工具历史。 |
+| D1 完整检查 | 文档基线 `f7a33eb` 后的 D1 工作树：coding/server 回归 771 项通过、0 失败，`validate:ci` 通过。Lint 为 0 错误、106 警告。隔离 Craft 审计和固定上游生成检查通过，仍为 249 份源码和 9 项资源。 |
 
 ## 验证与完成规则
 

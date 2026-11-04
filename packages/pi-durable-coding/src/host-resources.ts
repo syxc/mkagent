@@ -18,6 +18,8 @@ import {
 } from './pi/core/settings-manager.ts';
 
 export interface HostResourceOptions extends Omit<CodingResourceOptions, 'globalSettings' | 'projectSettings'> {
+  /** Host-only disables ambient Pi discovery; explicit host paths and factories remain available. */
+  resourcePolicy?: 'native' | 'host-only';
   /** A supplied scope replaces that scope's file and keeps native writes in session memory. */
   globalSettings?: Settings;
   projectSettings?: Settings;
@@ -37,16 +39,20 @@ export interface HostResourceOptions extends Omit<CodingResourceOptions, 'global
 
 /** Keep native settings methods while choosing host files, profile scopes, or a storage port. */
 export function createHostSettingsManager(options: Pick<HostResourceOptions,
-  'cwd' | 'agentDir' | 'projectTrusted' | 'globalSettings' | 'projectSettings' | 'settingsStorage'
+  'cwd' | 'agentDir' | 'projectTrusted' | 'globalSettings' | 'projectSettings' | 'settingsStorage' | 'resourcePolicy'
 >): SettingsManager {
   const trust = { projectTrusted: options.projectTrusted === true };
-  if (!options.settingsStorage && options.globalSettings === undefined && options.projectSettings === undefined) {
+  const hostOnly = options.resourcePolicy === 'host-only';
+  if (!hostOnly && !options.settingsStorage && options.globalSettings === undefined && options.projectSettings === undefined) {
     return SettingsManager.create(options.cwd, options.agentDir, trust);
   }
   const files = options.settingsStorage ?? new FileSettingsStorage(options.cwd, options.agentDir);
   const profiles: Partial<Record<SettingsScope, string>> = {};
-  if (options.globalSettings !== undefined) profiles.global = JSON.stringify(options.globalSettings);
-  if (options.projectSettings !== undefined) profiles.project = JSON.stringify(options.projectSettings);
+  for (const scope of ['global', 'project'] as const) {
+    const supplied = scope === 'global' ? options.globalSettings : options.projectSettings;
+    if (supplied !== undefined) profiles[scope] = JSON.stringify(supplied);
+    else if (hostOnly && !options.settingsStorage) profiles[scope] = '{}';
+  }
   return SettingsManager.fromStorage({
     withLock(scope, fn) {
       if (profiles[scope] === undefined) return files.withLock(scope, fn);
@@ -79,8 +85,10 @@ export function createHostResources(options: HostResourceOptions): {
 } {
   const cwd = resolve(options.cwd);
   const agentDir = resolve(options.agentDir);
+  const discover = options.resourcePolicy !== 'host-only';
   const settingsManager = createHostSettingsManager({ ...options, cwd, agentDir });
   const promptPath = (name: string) => {
+    if (!discover) return undefined;
     const directories = [
       ...(settingsManager.isProjectTrusted() ? [join(cwd, '.pi')] : []),
       agentDir,
@@ -96,10 +104,10 @@ export function createHostResources(options: HostResourceOptions): {
     additionalSkillPaths: options.skillPaths,
     additionalPromptTemplatePaths: options.promptPaths,
     additionalThemePaths: options.themePaths,
-    noExtensions: options.noExtensions,
-    noSkills: options.noSkills,
-    noPromptTemplates: options.noPromptTemplates,
-    noThemes: options.noThemes,
+    noExtensions: !discover || options.noExtensions,
+    noSkills: !discover || options.noSkills,
+    noPromptTemplates: !discover || options.noPromptTemplates,
+    noThemes: !discover || options.noThemes,
     disabledBuiltinExtensions: options.disabledBuiltinExtensions,
     onMissingPackage: async () => 'skip',
     packageResolutionPolicy: {
@@ -107,7 +115,8 @@ export function createHostResources(options: HostResourceOptions): {
     },
     noContextFiles: true,
     agentsFilesOverride: () => ({
-      agentsFiles: loadProjectContextFiles({ cwd, agentDir, projectTrusted: settingsManager.isProjectTrusted() }),
+      agentsFiles: discover
+        ? loadProjectContextFiles({ cwd, agentDir, projectTrusted: settingsManager.isProjectTrusted() }) : [],
     }),
     systemPrompt: '',
     appendSystemPrompt: [],

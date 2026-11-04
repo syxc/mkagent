@@ -1591,8 +1591,8 @@
       "reason": "Retain Craft event conversion with MkAgent turn billing, message deduplication and retry queue handling; import the vendored host event contract and hold retryable failures when durable announces backoff before message_end. Read the retained host event contract from local wire types."
     },
     "packages/shared/src/agent/backend/pi/protocol.ts": {
-      "sha256": "81a1092a9fda57ea30ecc895308b995d64c6a9aa02a104389568fd7180c48c3d",
-      "reason": "Retain Pi/Lite protocol and tools; decision-model messages and filtering deferred Carry explicit coding resource options through the subprocess protocol."
+      "sha256": "1c86062ba34c847c1de6d7c928a9edd03ac425c0f053897f346f676c56048347",
+      "reason": "Retain Pi/Lite protocol and tools; decision-model messages and filtering deferred. Carry explicit coding resources and independent native-session resource policy through the subprocess protocol."
     },
     "packages/shared/src/agent/backend/pi/session-tool-defs.ts": {
       "sha256": "8ddb91e07bfcc16c46c038f17080e5cc63eebd26b5f057500a27a8c05e6693f7",
@@ -3025,8 +3025,8 @@
       "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
     },
     "packages/pi-agent-server/src/coding-host.e2e.test.ts": {
-      "sha256": "e5570727d289e36ff6ebf3d561fa4bdbfbba0ba87af66b5c5355f867e4ee97d9",
-      "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery and approved file writes."
+      "sha256": "221b9326b833757390fd353406854ada5216c544db5b57705df69f3bd6fe5bd8",
+      "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery, approved file writes and native plugin execution with host-only resources across restart."
     },
     "packages/pi-agent-server/src/coding-host.ts": {
       "sha256": "3f9a3af27b17801287721d27851861700a762666d393f90d9f952c8a78aa8fc7",
@@ -3461,8 +3461,8 @@
       "reason": "Provide the independent native coding host adapter and public contracts in durable-loop.ts."
     },
     "packages/pi-durable-coding/src/host-resources.ts": {
-      "sha256": "2fdde1c41c81717a0c9903ff667391d911272d81051ab7572c907beab7d0e0c7",
-      "reason": "Provide the independent native coding host adapter and public contracts in host-resources.ts."
+      "sha256": "f618c8a452faa34e53f95333a2fa923f506c65f53068b3741a4f639b69932784",
+      "reason": "Bind the native Pi resource loader to host paths, settings and trust; allow native sessions to disable ambient Pi discovery while retaining explicit host resources."
     },
     "packages/pi-durable-coding/src/host-tool-controls.ts": {
       "sha256": "1c938cad3214fb6020a8f1ef12b3af617d8978251df578cfda8b889d936c1ec6",
@@ -4525,8 +4525,8 @@
       "reason": "Exercise durable native coding behavior and isolated recovery through the host-model-runtime.test.ts fixture."
     },
     "packages/pi-durable-coding/test/host-resources.test.ts": {
-      "sha256": "ec1d2f7f4b947f674d0f0955a83b2368997137d7db91ba748a4aaf370d4e4bd6",
-      "reason": "Exercise durable native coding behavior and isolated recovery through the host-resources.test.ts fixture."
+      "sha256": "b27dd86c558d33734260411c9c2461acc8c744ee9e98c2047f9c36b6ef6d7e31",
+      "reason": "Exercise native resource trust, provenance, explicit packages and reload; prove host-only sessions do not read ambient Pi settings or execute discovered extensions."
     },
     "packages/pi-durable-coding/test/host-tools.test.ts": {
       "sha256": "bdc9a5c6fe69134c47b8a46e434ee030e62738fdcccd7688c4370a03d70f7b40",
