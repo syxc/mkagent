@@ -1068,7 +1068,7 @@ async function handlePrompt(msg: Extract<InboundMessage, { type: 'prompt' }>): P
 
     // Queued as followUp when a run is already active, matching the 1.1.0
     // streamingBehavior contract.
-    const result = await k.submitPrompt(msg.message, msg.images, msg.nativeInput);
+    const result = await k.submitPrompt(msg.message, msg.images, msg.nativeInput, msg.inputId);
     if (generation === inputGeneration) send({ type: 'prompt_result', id: msg.id, ...result });
   } catch (error) {
     if (generation !== inputGeneration) return;
@@ -1540,7 +1540,7 @@ async function processMessage(msg: InboundMessage, compactController?: AbortCont
       if (generation !== inputGeneration) break;
       if (active && active === kernel) {
         debugLog(`Steering with: "${msg.message.slice(0, 100)}"`);
-        await active.steer(msg.message);
+        await active.steer(msg.message, msg.inputId);
       } else {
         debugLog('Steer ignored — no active session');
       }

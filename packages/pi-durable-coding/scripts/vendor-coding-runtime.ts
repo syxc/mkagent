@@ -8,7 +8,7 @@ import { portModelRuntime } from './model-runtime-port.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portSettingsManager } from './settings-runtime-port.ts';
 import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
-import { portAgentFacade, portAgentSession, portCacheWarmer, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
+import { portAgentFacade, portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const checkout = process.argv[2];
@@ -110,6 +110,10 @@ while (queue.length) {
     body = portAgentSession(body);
     changes.add('durable-recovery-and-host-tool-policy');
     changes.add('host-current-system-prompt-before-agent-start');
+  }
+  if (path === 'core/messages.ts') {
+    body = portNativeMessages(body);
+    changes.add('exclude-host-correlation-from-model-context');
   }
   if (path === 'core/sdk.ts') {
     body = portSDK(body);

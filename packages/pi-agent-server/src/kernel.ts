@@ -134,6 +134,7 @@ interface RetrySynthState {
 }
 
 type CodingInputOptions = {
+  hostMessageId?: string;
   source?: 'interactive' | 'extension' | 'rpc';
   expandPromptTemplates?: boolean;
   nativeInput?: { text: string; hostContextPrefix: string };
@@ -726,10 +727,15 @@ export class DurableKernel {
     // Register before starting, including the interval without an active coding host.
     const operation = Promise.resolve().then(async () => {
       const resumeUI = this.options.codingUI?.suspend();
+      const source = this.coding;
       try {
-        await this.waitForIdle();
-        await this.coding?.close();
-        this.coding = undefined;
+        if (source) {
+          try { await this.waitForIdle(); }
+          finally {
+            try { await source.close(); }
+            finally { if (this.coding === source) this.coding = undefined; }
+          }
+        }
       } finally {
         resumeUI?.();
       }
@@ -778,10 +784,10 @@ export class DurableKernel {
   }
 
   async submitPrompt(message: string, images?: Array<{ data: string; mimeType: string }>,
-    nativeInput?: CodingInputOptions['nativeInput']): Promise<{ handled: boolean; completed: boolean }> {
+    nativeInput?: CodingInputOptions['nativeInput'], hostMessageId?: string): Promise<{ handled: boolean; completed: boolean }> {
     const content = images?.length ? [{ type: 'text' as const, text: message },
       ...images.map(image => ({ ...image, type: 'image' as const }))] : message;
-    const operation = this.enqueueCodingInput(content, 'followUp', { nativeInput, source: nativeInput ? 'rpc' : undefined });
+    const operation = this.enqueueCodingInput(content, 'followUp', { nativeInput, hostMessageId, source: nativeInput || hostMessageId ? 'rpc' : undefined });
     let tail = this.inputAdmission;
     const handled = await operation;
     let completed = handled;
@@ -794,8 +800,8 @@ export class DurableKernel {
     return { handled, completed: completed && !this.coding?.isStreaming };
   }
 
-  async steer(message: string): Promise<void> {
-    await this.enqueueCodingInput(message, 'steer');
+  async steer(message: string, hostMessageId?: string): Promise<void> {
+    await this.enqueueCodingInput(message, 'steer', { hostMessageId, source: hostMessageId ? 'rpc' : undefined });
     if (!this.closing) await this.coding?.flush();
   }
 
@@ -816,10 +822,16 @@ export class DurableKernel {
   private async processCodingInput(raw: UserMessage['content'], mode: 'steer' | 'followUp',
     options: CodingInputOptions): Promise<boolean> {
     if (!this.conversation) throw new Error('Kernel not open');
+    if (this.options.coding && !this.coding) {
+      const epoch = this.inputEpoch;
+      await this.reloadCodingSession();
+      if (this.closing || epoch !== this.inputEpoch) throw new Error('Input belongs to an inactive session runtime');
+    }
     if (this.coding) {
       const text = typeof raw === 'string' ? raw : raw.filter(part => part.type === 'text').map(part => part.text).join('\n');
       const images = typeof raw === 'string' ? undefined : raw.filter(part => part.type === 'image');
       return this.coding.submit(options.nativeInput?.text ?? text, {
+        hostMessageId: options.hostMessageId,
         images, source: options.source,
         hostContextPrefix: options.nativeInput?.hostContextPrefix,
         expandPromptTemplates: options.expandPromptTemplates ?? true,
@@ -1059,19 +1071,24 @@ export class DurableKernel {
         // The command reports reload errors; teardown must still release its kernel.
         await this.codingReload?.catch(() => undefined);
         await Promise.all([warming, ...compactions.map(compaction => compaction.done)]);
-        await this.coding?.close(reason);
-        this.coding = undefined;
-        this.registry = null;
-        this.detachWatch?.();
-        this.detachWatch = null;
-        if (this.harness) {
-          await this.harness.close(BACKGROUND_CONTEXT);
-          this.harness = null;
-        }
-        this.conversation = null;
       } finally {
-        resumeUI?.();
-        this.closing = undefined;
+        try { await this.coding?.close(reason); }
+        finally {
+          this.coding = undefined;
+          this.registry = null;
+          try {
+            this.detachWatch?.();
+            this.detachWatch = null;
+          } finally {
+            try { await this.harness?.close(BACKGROUND_CONTEXT); }
+            finally {
+              this.harness = null;
+              this.conversation = null;
+              resumeUI?.();
+              this.closing = undefined;
+            }
+          }
+        }
       }
     })().then(completion.resolve, completion.reject);
     return completion.promise;

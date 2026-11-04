@@ -51,7 +51,25 @@ export function portAgentSession(source: string): string {
   let body = edit(source, '\tbaseToolsOverride?: Record<string, AgentTool>;',
     '\tbaseToolsOverride?: Record<string, AgentTool>;\n\t/** Host execution policy applies after native tool registration and before declarations. */\n\twrapTool?: (tool: AgentTool, source?: SourceInfo) => AgentTool;\n\tonAction?: (work: () => Promise<void>) => Promise<void>;\n\tonToolsChanged?: (tools: AgentTool[]) => void;');
   body = edit(body, '\tsource?: InputSource;',
-    '\tsource?: InputSource;\n\t/** Host context is added after native commands, input hooks and resource expansion. */\n\thostContextPrefix?: string;');
+    '\tsource?: InputSource;\n\t/** Product identity is metadata, separate from durable admission deduplication. */\n\thostMessageId?: string;\n\t/** Host context is added after native commands, input hooks and resource expansion. */\n\thostContextPrefix?: string;');
+  body = edit(body, '\t\tconst targetRecord = target as unknown as Record<string, unknown>;',
+    '\t\tconst targetRecord = target as unknown as Record<string, unknown>;\n\t\tconst hostMessageId = targetRecord.hostMessageId;');
+  body = edit(body, '\t\tObject.assign(targetRecord, replacement);',
+    '\t\tObject.assign(targetRecord, replacement);\n\t\t// A plugin may replace content without replacing the accepted product identity.\n\t\tif (typeof hostMessageId === "string") targetRecord.hostMessageId = hostMessageId;\n\t\telse delete targetRecord.hostMessageId;');
+  body = edit(body,
+    '\tprivate async _startRun(trigger: BeforeAgentStartTrigger, onStarted?: () => void): Promise<void> {',
+    '\tprivate async _startRun(trigger: BeforeAgentStartTrigger, onStarted?: () => void, hostMessageId?: string): Promise<void> {');
+  body = edit(body, 'messages = await this._prepareRun(trigger);', 'messages = await this._prepareRun(trigger, hostMessageId);');
+  body = edit(body,
+    '\tprivate async _prepareRun(trigger: BeforeAgentStartTrigger): Promise<AgentMessage[]> {',
+    '\tprivate async _prepareRun(trigger: BeforeAgentStartTrigger, hostMessageId?: string): Promise<AgentMessage[]> {');
+  body = edit(body, '\t\t\tmessages.push({\n\t\t\t\trole: "user",',
+    '\t\t\tmessages.push({\n\t\t\t\trole: "user",\n\t\t\t\t...(hostMessageId ? { hostMessageId } : {}),');
+  body = edit(body, '\t\t\tpreflightResult?.("started"),\n\t\t);',
+    '\t\t\tpreflightResult?.("started"), options?.hostMessageId,\n\t\t);');
+  for (const method of ['Steer', 'FollowUp']) body = edit(body,
+    `await this._queue${method}(expandedText, currentImages);`,
+    `await this._queue${method}(expandedText, currentImages, options?.hostMessageId);`);
   body = edit(body, '\t\t// If streaming, queue via steer() or followUp() based on option',
     '\t\tif (options?.hostContextPrefix) expandedText = options.hostContextPrefix + expandedText;\n\n\t\t// If streaming, queue via steer() or followUp() based on option');
   body = edit(body, '\tprivate _baseToolsOverride?: Record<string, AgentTool>;',
@@ -189,11 +207,14 @@ export function portAgentSession(source: string): string {
   for (const [method, kind, textQueue] of [
     ['steer', 'steering', '_steeringMessages'], ['followUp', 'followUp', '_followUpMessages'],
   ] as const) {
+    const queue = method === 'steer' ? 'Steer' : 'FollowUp';
+    body = edit(body, `private async _queue${queue}(text: string, images?: ImageContent[]): Promise<void> {`,
+      `private async _queue${queue}(text: string, images?: ImageContent[], hostMessageId?: string): Promise<void> {`);
     body = edit(body, `\t\tthis.${textQueue}.push(text);\n\t\tthis._emitQueueUpdate();`, '');
     const call = method === 'steer'
       ? '\t\tthis.agent.steer({\n\t\t\trole: "user",\n\t\t\tcontent,\n\t\t\ttimestamp: Date.now(),\n\t\t});'
       : '\t\tthis.agent.followUp({ role: "user", content, timestamp: Date.now() });';
-    body = edit(body, call, `\t\tconst message: AgentMessage = { role: "user", content, timestamp: Date.now() };
+    body = edit(body, call, `\t\tconst message: AgentMessage = { role: "user", content, timestamp: Date.now(), ...(hostMessageId ? { hostMessageId } : {}) };
 \t\tawait this._acceptQueuedInput("${kind}", message, text);
 \t\tthis.${textQueue}.push(text);
 \t\tthis._emitQueueUpdate();
@@ -296,6 +317,11 @@ export function portAgentSession(source: string): string {
   body = edit(body, '\t\t\t\tthis._deferredSettledActions.push(async () => await this.sendCustomMessage(message, options));', `\t\t\t\tif (await this.agent.durable.deferSessionAction({ type: "custom", message, options })) return;
 \t\t\t\tthis._deferredSettledActions.push(async () => await this.sendCustomMessage(message, options));`);
   return body;
+}
+
+export function portNativeMessages(source: string): string {
+  return edit(source, '\t\t\t\tcase "toolResult":\n\t\t\t\t\treturn m;',
+    '\t\t\t\tcase "toolResult":\n\t\t\t\t\t// Host correlation survives native persistence but never enters model context.\n\t\t\t\t\tif ("hostMessageId" in m) {\n\t\t\t\t\t\tconst { hostMessageId: _hostMessageId, ...message } = m;\n\t\t\t\t\t\treturn message;\n\t\t\t\t\t}\n\t\t\t\t\treturn m;');
 }
 
 export function portSDK(source: string): string {

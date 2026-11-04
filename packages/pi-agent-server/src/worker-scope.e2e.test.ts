@@ -124,6 +124,66 @@ async function prepareTransfer(
   return { source, target, transactionId: prepare.transactionId, sourcePort: ready.callbackPort };
 }
 
+test('real worker preserves transformed prompt, steer and follow-up identities across reopening', async () => {
+  await withWorker('coding', async f => {
+    const scope = { ownerSessionId: 'source', runtimeGeneration: 1 };
+    const plugin = join(f.directory, 'input-identity.ts');
+    writeFileSync(plugin, `export default function(pi) {
+      pi.on('input', event => ({ action: 'transform', text: event.text.replace('same', 'normalized') }));
+      pi.on('message_end', event => {
+        if (event.message.role === 'user') return { message: {
+          role: 'user', content: event.message.content, timestamp: event.message.timestamp,
+        } };
+      });
+    }`);
+    const config = { ...f.init('source', 1), codingResources: {
+      agentDir: join(f.directory, 'pi'), resourcePolicy: 'host-only', extensionPaths: [plugin],
+    } };
+    f.toolCalls.push({ name: 'bash', arguments: JSON.stringify({ command: 'printf identity-gate' }) });
+    f.send(config);
+    await f.waitFor(message => message.type === 'ready');
+    f.send({ type: 'prompt', id: 'first-rpc', inputId: 'host-first', message: 'same',
+      nativeInput: { text: 'same', hostContextPrefix: '' }, systemPrompt: '', ...scope });
+    const approval = await f.waitFor(message => message.type === 'pre_tool_use_request');
+    // The following prompt receipt fences both queued admissions while the tool awaits approval.
+    f.sendBatch(
+      { type: 'steer', inputId: 'host-steer', message: 'same', ...scope },
+      { type: 'prompt', id: 'follow-rpc', inputId: 'host-follow', message: 'same',
+        nativeInput: { text: 'same', hostContextPrefix: '' }, systemPrompt: '', ...scope },
+    );
+    await f.waitFor(message => message.type === 'prompt_result' && message.id === 'follow-rpc');
+    f.send({ type: 'pre_tool_use_response', requestId: approval.requestId, action: 'allow', ...scope });
+    await f.waitFor(message => message.type === 'event' && message.event.type === 'agent_end' && f.requests.length === 3);
+    await f.waitFor(message => message.type === 'event' && message.event.type === 'native_session_projection'
+      && message.event.descriptor.entryIds.some((entry: Frame) => entry.productMessageId === 'host-follow'));
+    const sessionPath = join(f.directory, 'sessions', 'source');
+    const readManifest = () => JSON.parse(readFileSync(join(sessionPath, 'meta', 'native-session.json'), 'utf8')) as Frame;
+    const rows = readFileSync(join(sessionPath, 'native-session', 'session.jsonl'), 'utf8').trim().split('\n')
+      .map(line => JSON.parse(line) as Frame);
+    const users = rows.filter(entry => entry.type === 'message' && entry.message.role === 'user');
+    const manifest = readManifest();
+    expect(manifest.sessionId).toBe('source');
+    expect(users).toHaveLength(3);
+    expect(users.map(user => manifest.entryIds.find((entry: Frame) => entry.nativeId === user.id)?.productMessageId))
+      .toEqual(['host-first', 'host-steer', 'host-follow']);
+    expect(JSON.stringify(users)).toContain('normalized');
+    expect(JSON.stringify(f.requests)).toContain('normalized');
+    expect(JSON.stringify(f.requests)).not.toContain('host-first');
+    expect(JSON.stringify(f.requests)).not.toContain('host-steer');
+    expect(JSON.stringify(f.requests)).not.toContain('host-follow');
+    const resumedScope = { ownerSessionId: 'source', runtimeGeneration: 2 };
+    f.send({ ...config, ...resumedScope });
+    await f.waitFor(message => message.type === 'ready' && message.runtimeGeneration === 2);
+    f.send({ type: 'ensure_session_ready', id: 'reopened-native', ...resumedScope });
+    await f.waitFor(message => message.id === 'reopened-native');
+    const reopened = readManifest();
+    expect(reopened.nativeSessionId).toBe(manifest.nativeSessionId);
+    expect(reopened.entryIds.filter((entry: Frame) => entry.productMessageId?.startsWith('host-')))
+      .toEqual(manifest.entryIds.filter((entry: Frame) => entry.productMessageId?.startsWith('host-')));
+    expect(f.requests).toHaveLength(3);
+  });
+}, 15_000);
+
 test.each(['prompt', 'startup'] as const)('release during target extension loading from %s waits for cleanup and retires target admission', async launch => {
   await withWorker('coding', async f => {
     const { target, transactionId } = await prepareTransfer(f, undefined, launch);

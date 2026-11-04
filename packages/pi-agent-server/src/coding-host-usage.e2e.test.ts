@@ -1,13 +1,14 @@
-import { afterEach, expect, test } from 'bun:test';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { afterEach, expect, spyOn, test } from 'bun:test';
+import { mkdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
-import { defineExtension } from '@earendil-works/pi-durable';
+import { defineExtension, type Harness } from '@earendil-works/pi-durable';
 import type { AssistantMessage } from '@earendil-works/pi-ai';
 import { PiEventAdapter } from '../../shared/src/agent/backend/pi/event-adapter.ts';
 import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
 import { DurableKernel, type DurableKernelOptions } from './kernel.ts';
 import type { CodingHost } from './coding-host.ts';
+import { readNativeSessionDescriptor } from './storage/native-session-projection.ts';
 
 const cleanup: Array<() => Promise<void> | void> = [];
 afterEach(async () => { for (const operation of cleanup.splice(0).reverse()) await operation(); });
@@ -30,10 +31,10 @@ async function fixture(answers: AssistantMessage[]) {
     hooks: { emitEvent: event => events.push(event), sessionToolCompleted: () => {}, prefetchToolCall: () => {},
       isPrefetchableTool: () => false, debugLog: () => {} },
   };
-  const open = async () => {
+  const open = async (deferred = false) => {
     const kernel = new DurableKernel(options);
     cleanup.push(() => kernel.close());
-    await kernel.open({ model });
+    await kernel.open({ model, ...(deferred ? { codingReplacement: { reason: 'resume' as const } } : {}) });
     return kernel;
   };
   return { ...root, open, options, path, events };
@@ -140,4 +141,107 @@ test('autoCompactWindow drives actual native threshold compaction and reports un
   });
   expect((await kernel.contextUsagePayload()).contextUsage?.tokens).toBeNull();
   expect(state.calls).toHaveLength(2);
+});
+
+test('committed assistant product IDs survive real kernel close and reopen', async () => {
+  const state = await fixture([response('persisted response')]);
+  const kernel = await state.open();
+  await kernel.submitPrompt('hello');
+  await kernel.waitForIdle();
+  const host = coding(kernel);
+  const ids = state.events.filter(event => event.type === 'message_end' && event.message?.role === 'assistant')
+    .map(event => event.sdkMessageId);
+  expect(ids).toHaveLength(1);
+  const descriptor = await readNativeSessionDescriptor(state.options.sessionPath);
+  expect(host.session.sessionManager.getSessionFile()).toBe(descriptor.sessionFile);
+  expect(descriptor.entryIds.filter(entry => entry.productMessageId !== undefined).map(entry => entry.productMessageId)).toEqual(ids);
+  await kernel.close();
+  const reopened = await state.open();
+  const recovered = await readNativeSessionDescriptor(state.options.sessionPath);
+  expect(recovered.nativeSessionId).toBe(descriptor.nativeSessionId);
+  expect(coding(reopened).journal.committedSnapshot().entryIds).toEqual(host.journal.committedSnapshot().entryIds);
+  expect(recovered.entryIds).toEqual(descriptor.entryIds);
+  expect(state.calls).toHaveLength(1);
+});
+
+test('projection IO failure during shutdown still closes the journal, listener and durable store', async () => {
+  const state = await fixture([response('done')]);
+  const kernel = await state.open();
+  await kernel.submitPrompt('hello');
+  await kernel.waitForIdle();
+  const host = coding(kernel);
+  cleanup.pop();
+  cleanup.push(async () => {
+    const harness = (kernel as unknown as { harness: Harness | null }).harness;
+    if (!harness) return;
+    host.session.dispose();
+    await host.projection.close();
+    host.journal.close();
+    await harness.close(BACKGROUND_CONTEXT);
+  });
+  unlinkSync(host.projection.paths.manifestFile);
+  mkdirSync(host.projection.paths.manifestFile);
+  host.session.sessionManager.appendCustomEntry('shutdown-metadata', {});
+  await expect(kernel.close()).rejects.toThrow('journal commit remains authoritative');
+  expect(() => host.journal.manager.appendCustomEntry('late-write', {})).toThrow('closed');
+  await expect(host.projection.rebuild()).rejects.toThrow('closed');
+  expect((kernel as unknown as { harness: Harness | null }).harness).toBeNull();
+});
+
+test('failed reload retires its closed host and the next native input can reload again', async () => {
+  const state = await fixture([]);
+  writeFileSync(state.path, `export default function(pi) {
+    pi.registerCommand('refresh', { handler: async (_args, ctx) => { await ctx.reload(); } });
+    pi.on('session_shutdown', () => { pi.appendEntry('shutdown-ran', {}); });
+  }`);
+  const kernel = await state.open();
+  const previous = coding(kernel);
+  unlinkSync(previous.projection.paths.manifestFile);
+  mkdirSync(previous.projection.paths.manifestFile);
+  try { await kernel.submitPrompt('/refresh'); } catch { /* The dispatcher may report the failed command. */ }
+  expect(() => previous.journal.manager.appendCustomEntry('late-write', {})).toThrow('closed');
+  expect(coding(kernel) === undefined).toBe(true);
+  rmSync(previous.projection.paths.manifestFile, { recursive: true });
+  await kernel.submitPrompt('/refresh');
+  await kernel.waitForIdle();
+  expect(coding(kernel) === previous).toBe(false);
+  expect(coding(kernel).journal.committedSnapshot().entries.filter(entry => entry.type === 'custom' && entry.customType === 'shutdown-ran')).toHaveLength(2);
+  expect(state.calls).toHaveLength(0);
+});
+
+test('a controlled recovery projection failure drains before the shutdown hook runs once', async () => {
+  const state = await fixture([]);
+  writeFileSync(state.path, `export default function(pi) {
+    pi.on('session_shutdown', () => { pi.appendEntry('shutdown-after-recovery', {}); });
+  }`);
+  const kernel = await state.open(true);
+  const host = coding(kernel);
+  const release = Promise.withResolvers<void>();
+  const draining = Promise.withResolvers<void>();
+  const wait = host.session.waitForIdle.bind(host.session);
+  const resume = spyOn(host.session, 'recoverDurable').mockImplementation(async onBound => {
+    onBound?.();
+    await release.promise;
+    return false;
+  });
+  const idle = spyOn(host.session, 'waitForIdle').mockImplementation(async () => {
+    await wait();
+    draining.resolve();
+  });
+  try {
+    await host.start('resume');
+    unlinkSync(host.projection.paths.manifestFile);
+    mkdirSync(host.projection.paths.manifestFile);
+    host.session.sessionManager.appendCustomEntry('recovery-metadata', {});
+    const closing = kernel.close();
+    await draining.promise;
+    release.resolve();
+    await expect(closing).rejects.toThrow('journal commit remains authoritative');
+    expect(host.journal.committedSnapshot().entries.filter(entry => entry.type === 'custom' && entry.customType === 'shutdown-after-recovery')).toHaveLength(1);
+    expect((kernel as unknown as { harness: Harness | null }).harness).toBeNull();
+  } finally {
+    release.resolve();
+    resume.mockRestore();
+    idle.mockRestore();
+  }
 });

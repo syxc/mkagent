@@ -1,6 +1,7 @@
 /** Own the complete native coding session while the supplied durable kernel owns execution. */
 import { randomUUID } from 'node:crypto';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { basename } from 'node:path';
 import { copyJson, type JsonValue } from '@earendil-works/chord';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { InMemoryCredentialStore, type AssistantMessage, type Models, type Model, type Api } from '@earendil-works/pi-ai';
@@ -15,6 +16,7 @@ import {
   type ModelRuntimeCredentials, type PromptOptions, type SourceInfo, type SessionShutdownEvent,
 } from '@mkagent/pi-durable-coding/native';
 import { LegacyCodingAdoption } from './storage/coding-recovery.ts';
+import { NativeSessionProjection, nativeSessionPaths } from './storage/native-session-projection.ts';
 import { ExtensionUIHost, type ExtensionUIBinding } from './extension-ui.ts';
 
 export type KernelCodingOptions = Omit<HostResourceOptions, 'cwd' | 'getSystemPrompt'>;
@@ -52,6 +54,7 @@ const State = defineDoc<{ owner: number; state: JsonValue | null }>({
 
 export class CodingHost {
   readonly journal: NativeSessionJournal;
+  readonly projection: NativeSessionProjection;
   readonly models: ModelRuntime;
   session!: AgentSession;
   private readonly durable: DurableLoopBinding;
@@ -71,6 +74,13 @@ export class CodingHost {
   private constructor(private readonly host: CodingHostBindings, journal: NativeSessionJournal, models: ModelRuntime) {
     this.journal = journal;
     this.models = models;
+    this.projection = new NativeSessionProjection(journal, {
+      sessionPath: host.sessionPath, sessionId: basename(host.sessionPath),
+      published: descriptor => host.event({ type: 'native_session_projection', descriptor }),
+      error: error => host.error({
+        extensionPath: '<host>', event: 'projection', error: error instanceof Error ? error.message : String(error),
+      }),
+    });
     this.durable = new DurableLoopBinding({
       kernel: host, journal, models,
       commitState: tx => this.persistState(tx),
@@ -80,8 +90,14 @@ export class CodingHost {
     });
     this.stopAnchors = journal.observeMessages({
       appended: (message, nativeId) => {
+        if (message.role === 'user' && 'hostMessageId' in message && typeof message.hostMessageId === 'string') {
+          journal.linkMessage(nativeId, message.hostMessageId);
+        }
         const anchor = this.anchors.find(value => value.nativeId === undefined && value.message === message);
-        if (anchor) anchor.nativeId = nativeId;
+        if (anchor) {
+          anchor.nativeId = nativeId;
+          journal.linkMessage(nativeId, anchor.id);
+        }
       },
       committed: (nativeId, durableId) => {
         const pending = this.anchors.findIndex(value => value.nativeId === nativeId);
@@ -103,12 +119,14 @@ export class CodingHost {
     const journal = await NativeSessionJournal.open({
       harness: host.harness, conversation: host.conversation, context: BACKGROUND_CONTEXT, cwd: host.cwd,
       header: SessionManager.inMemory(host.cwd, { id: host.id }).getHeader()!,
+      sessionFile: nativeSessionPaths(host.sessionPath).sessionFile,
       onObserverError: error => host.error({
         extensionPath: '<host>', event: 'journal', error: error instanceof Error ? error.message : String(error),
       }),
     });
     const coding = new CodingHost(host, journal, models);
     try {
+      await coding.projection.flush();
       const resources = createHostResources({ ...host.profile, cwd: host.cwd, getSystemPrompt: host.getSystemPrompt });
       resources.settingsManager.setHostAutoCompactWindow(host.autoCompactWindow);
       await resources.resourceLoader.reload();
@@ -160,6 +178,7 @@ export class CodingHost {
       return coding;
     } catch (error) {
       coding.stopAnchors();
+      await coding.projection.close();
       journal.close();
       throw error;
     }
@@ -291,6 +310,11 @@ export class CodingHost {
 
   /** Idle/plugin writes and queue admissions use the same journal, without starting another executor. */
   async flush(): Promise<void> {
+    await this.flushJournal();
+    await this.projection.flush();
+  }
+
+  private async flushJournal(): Promise<void> {
     await this.journal.phase(() => this.host.harness.commit(tx => this.commitChanges(tx), BACKGROUND_CONTEXT));
     this.host.selection(this.session.model, this.session.thinkingLevel);
   }
@@ -303,14 +327,23 @@ export class CodingHost {
   }
 
   async waitForIdle(): Promise<void> {
+    await this.waitForActions();
+    if (!this.closed) await this.projection.flush();
+  }
+
+  private async waitForActions(): Promise<void> {
     if (this.closed) return;
+    const failures: unknown[] = [];
     const current = this.actionScope.getStore();
     const pending = () => [...this.jobs].filter(job => job !== current?.job);
     do {
       await this.session.waitForIdle();
-      await Promise.all(pending());
+      for (const result of await Promise.allSettled(pending())) {
+        if (result.status === 'rejected') failures.push(result.reason);
+      }
     } while (pending().length || this.session.isStreaming);
-    if (!this.closed) await this.flush();
+    if (!this.closed) await this.flushJournal();
+    if (failures.length) throw failures[0];
   }
 
   async abort(): Promise<void> {
@@ -336,16 +369,31 @@ export class CodingHost {
     // Drain dialogs before waiting for actions or shutdown hooks that may await them.
     this.ui?.close();
     this.session.cancelCacheWarming();
-    await this.abort();
-    if (this.started) await this.session.extensionRunner.emit({ type: 'session_shutdown', reason });
-    await this.flush();
-    this.stopEvents?.();
-    this.stopAnchors();
-    this.legacy?.close();
-    this.anchors.length = 0;
-    this.session.dispose();
-    await this.durable.close();
-    this.journal.close();
-    this.closed = true;
+    try {
+      await this.session.abort();
+      // Projection IO must not prevent the shutdown hook or durable cleanup.
+      let drainFailed = false;
+      let drainError: unknown;
+      try { await this.waitForActions(); }
+      catch (error) { drainFailed = true; drainError = error; }
+      if (this.started) await this.session.extensionRunner.emit({ type: 'session_shutdown', reason });
+      await this.flush();
+      if (drainFailed) throw drainError;
+    } finally {
+      try {
+        this.stopEvents?.();
+        this.stopAnchors();
+        this.legacy?.close();
+        this.anchors.length = 0;
+        this.session.dispose();
+      } finally {
+        try { await this.durable.close(); }
+        finally {
+          await this.projection.close();
+          this.journal.close();
+          this.closed = true;
+        }
+      }
+    }
   }
 }

@@ -185,6 +185,11 @@ export function convertToLlm(messages: AgentMessage[]): Message[] {
 				case "user":
 				case "assistant":
 				case "toolResult":
+					// Host correlation survives native persistence but never enters model context.
+					if ("hostMessageId" in m) {
+						const { hostMessageId: _hostMessageId, ...message } = m;
+						return message;
+					}
 					return m;
 				default:
 					// biome-ignore lint/correctness/noSwitchDeclarations: fine

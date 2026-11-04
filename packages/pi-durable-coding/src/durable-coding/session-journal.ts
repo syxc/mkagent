@@ -1,6 +1,7 @@
 /** A synchronous native session view, published only by durable storage receipts. */
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
+import { dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import type { Context } from '@earendil-works/chord';
 import {
@@ -46,6 +47,8 @@ export interface NativeSessionJournalOptions {
   cwd: string;
   /** Used only when no journal has been stored yet, including legacy envelope migration. */
   header?: SessionHeader;
+  /** Stable host projection path; the native manager remains in-memory and never writes this file. */
+  sessionFile?: string;
   onObserverError?(error: unknown): void;
 }
 
@@ -86,6 +89,8 @@ export class NativeSessionJournal {
     this.committed = this.makeManager(state);
     this.manager = new Proxy(this.committed, {
       get: (_target, property) => {
+        if (options.sessionFile && property === 'getSessionFile') return () => options.sessionFile;
+        if (options.sessionFile && property === 'getSessionDir') return () => dirname(options.sessionFile!);
         const value = Reflect.get(this.view(), property);
         if (typeof value !== 'function' || property === 'constructor') return value;
         return (...args: unknown[]) => {
