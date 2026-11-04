@@ -113,7 +113,7 @@ D2 的最小入口包括 `pi-conversation-flow.integration.test.ts`、`pi-permis
 | D3.3 前置复核 | 修正后的队列与产品创建路径经独立静态复核，未发现新增高置信度缺陷。扩大相关回归至 42 份文件，992 项通过、11 项跳过、0 失败，新增隔离用例另有 9 项通过；隔离 Craft 来源审计为 2050 份文件，通过。全仓回归在约 107 秒时收到 SIGTERM，未产生最终汇总，不能沿用 D3.2 的结果声称本轮全仓通过。已初始化分支的写入失败回滚尚未动态验证；同步 `writeSessionJsonl` 仍有先删除再替换的既有写法，检索仅发现测试调用，本轮未改动。 |
 | D3.3 输入归属前置 | `abf4714` 保存持久化前置修正。随后工作树将产品消息 ID 传入 chat、redirect 和 worker 独立的 `inputId`，每次 prompt 保持不同 RPC ID。真实重复产品 ID 用例曾复现相关 ID 重用，分离后原生 PiAgent 联调 11 项、97 个断言通过。产品 owner 保留真实 RPC caller，重放不重新登记；完成后清除普通归属，可释放租约允许事务跨源收尾，断连、工作区变更、取消、删除及 cleanup 仍使对应租约失效。已完成输入未清除也经实际队列用例先复现。归属尚未用于产品会话替换，握手及定向导航仍待实现与验收。 |
 | D3.3 输入复核 | 独立静态复核覆盖 11 个实现及测试文件，发现空闲源的 Stop 提前返回，未撤销跨收尾租约；真实队列用例先复现，撤销移到 processing 判断前后通过，复核确认 P2 修正且未发现其他新增高置信度问题。末轮定向用例 18 项、81 个断言通过；扩大产品与 RPC 回归为 144 项、418 个断言通过，共享 agent 为 571 项、1394 个断言通过。输入接线期间实际 coding factory 为 1 项、43 个断言通过；末轮 `validate:ci` 通过，shared lint 为 0 错误、2 项既有警告。隔离 Craft 来源审计包含新增归属模块及测试，共 2052 份文件，通过。本轮未重跑完整 `bun run test`。独立 reviewer 仅做源码静态复核，没有独立读取 git diff 或运行测试；上述执行证据来自主代理。 |
-| D3.3 NEW 握手 | 当前工作树接通真实 SessionManager、PiAgent 和 worker 的 prepare、源关闭、目标激活、绑定、提交及完成握手。原命令协程保留 setup 与 withSession 闭包，提交前不运行目标 startup 或回调。目标取得独立发布回执后可脱离源存活；源可另起 worker，再次转交或删除，旧目标仍可运行。fork、switch 和带 parentSession 的 new 仍在源关闭前明确拒绝，依赖 D3.4 的稳定路径和锚点，D3.3 尚未整体完成。 |
+| D3.3 NEW 握手 | 本地提交 `f88f857` 保存 NEW 转交前置，接通真实 SessionManager、PiAgent 和 worker 的 prepare、源关闭、目标激活、绑定、提交及完成握手。原命令协程保留 setup 与 withSession 闭包，提交前不运行目标 startup 或回调。目标取得独立发布回执后可脱离源存活；源可另起 worker，再次转交或删除，旧目标仍可运行。fork、switch 和带 parentSession 的 new 仍在源关闭前明确拒绝，依赖 D3.4 的稳定路径和锚点，D3.3 尚未整体完成。 |
 | D3.3 运行中隔离 | 加载中的 release 等待 kernel 与 MCP 清理后确认；callback listener 捕获每次 owner 的 scope，撤销时销毁旧 socket，并在请求体、附件、查询及响应边界检查归属。旧 startup 失败不能清理新连接，源后台任务继续按旧 lease 路由。延迟 Request 的合成错误曾写入新 owner，隔离用例先失败后通过；补充无源目录场景后，实际子进程内 15 个断言通过，父进程另校验退出状态。 |
 | D3.3 产品证据 | 真实产品链首次为 1 项、37 个断言通过，覆盖同 PID 转交、源另起 worker、定向 caller 导航、setup 和 withSession、目标续谈、实际目标 HTTP 回调、源 Stop、源连续转交、删除源后两个目标继续，以及 startup 发起 NEW。完整回归后又补入同一物理 worker 连续转交两次，扩展夹具为 1 项、47 个断言通过。产品协调与持久化用例 34 项、269 个断言通过。异常收尾原先先发布再保存目标，两种写入故障用例均先失败；修正后正常与异常发布都等待独立回执。测试中空数组比较会忽略 undefined 元素，已实际验证并将发布次数改为长度断言。 |
 | D3.3 复核与界限 | worker 的独立静态复核没有发现高置信度缺陷，覆盖加载、释放、MCP、callback 和 activation；未独立取得 git diff 或重跑测试。各加载失败与 release 交错、查询中释放和端口复用仍缺少定向故障证据。Renderer 同步安装目标快照并按当前焦点处理导航。用户授权新建独立浏览器空间后，真实 WebUI 的 NEW 跳转和目标消息显示通过；文件门控延迟期间切到另一面板后，目标完成未抢占焦点，右侧草稿保留，另一客户端仍停留在源会话。完整 Desktop 可视及其他插件交互仍待 D3.6。 |
@@ -128,8 +128,8 @@ D2 的最小入口包括 `pi-conversation-flow.integration.test.ts`、`pi-permis
 | D3.1 连接与归属 | 从 `PiAgent` 抽取 worker 连接，保留启动、错误、关闭和重启契约。产品 ID、runtime generation 和 operation ID 用于路由、去重及拒绝迟到响应；验证前台转交时源后台任务仍归源。 |
 | D3.2 插件交互 | 复用原生 RPC UI 契约和共享 renderer，接通 select、confirm、input、editor、通知、状态、文本 widget、标题及草稿。保留取消与空字符串的区别，响应绕过初始化等待，停止、reload 和关闭释放待决交互。 |
 | D3.3 会话替换 | 产品 owner 执行 new、fork、switch 的准备、激活和完成握手；准确运行 before、shutdown、start 和本地回调。记录恢复阶段，避免双 writer、重复产品会话及任意闭包自动重放。 |
-| D3.4 原生路径与命名 | 从已提交 journal 生成原生 JSONL 投影，支持准确 before/at fork 锚点；名称含清空操作，在提交回执后与产品列表同步。 |
-| D3.5 树导航 | 将原生摘要生成移入 durable task，持久化活动 leaf 和产品消息映射，保留非活动分支、附件、label、取消及 editorText 语义。 |
+| D3.4 原生路径与命名 | 从已提交 journal 生成稳定原生 JSONL 和映射，保留完整树、活动 leaf、原始 entry ID、产品消息关联、label 及附件；支持准确 before/at fork 锚点与可信 switch。名称含清空操作，在提交回执后与产品列表同步。 |
+| D3.5 树导航 | 将原生摘要生成移入 durable task，复用 D3.4 的活动 leaf、产品消息映射和完整树，接通导航、取消及 editorText 语义。 |
 | D3.6 行为验收 | 原样运行固定上游 rpc-demo、confirm-destructive、session-name 及两端共用的标准插件夹具，检查回调、审批、后台任务、reload、重启和故障恢复，再运行隔离产品交互。 |
 
 Web 与 RPC 的交互能力按固定上游 RPC 契约实现。自定义终端组件、raw terminal input、header/footer factory 等保留 TUI 环境边界。D4 继续负责项目资源信任与 MCP 授权业务接线。
@@ -142,7 +142,7 @@ Web 与 RPC 的交互能力按固定上游 RPC 契约实现。自定义终端组
 
 | 阶段 | 约束 |
 |---|---|
-| prepare | 原命令内运行 before hook，校验路径与锚点。产品锁住源操作，准备未发布目标，取得目标与源 prepared 记录的严格持久化回执后回复。 |
+| prepare | 原命令内运行 before hook，校验路径与锚点。产品锁住源操作；new/fork 创建未发布目标，switch 只预留同工作区中身份与路径已验证的空闲既有目标。取得对应 prepared 记录的严格持久化回执后回复；尚不释放目标 writer。 |
 | source closed | 原协程关闭源 host、journal 与 store，保留物理进程和源后台任务。产品结束源 generator，保存最终源记录，源队列暂不启动。 |
 | activate | 同一物理连接以更高 generation 绑定目标，应用目标自己的配置、权限、工具、MCP、cwd、UI 与 store。尚不运行本地回调。 |
 | target bound | worker 确认目标 native 身份，产品严格保存目标 committed、源 committed，再取得目标独立发布回执。随后发布目标、向仍有效的发起者导航并授予回调执行机会。异常收尾发布错误目标也须先取得独立回执。 |
@@ -151,6 +151,16 @@ Web 与 RPC 的交互能力按固定上游 RPC 契约实现。自定义终端组
 源记录保存事务阶段和回调授权状态，目标在发布前保存未发布 marker。尚未独立发布的目标恢复时依据源记录发布或回滚；取得独立发布回执的目标可在源删除或开始下一次事务后恢复。旧事务收尾仅在源仍存在且 transaction ID 匹配时更新源记录，不能重建已删除源或覆盖下一事务。仅删除本事务新建且未提交的记录。凭据、进程、lease、Promise 和闭包不持久化，重启不重放任意闭包。物理连接统一管理进程寿命，释放一个会话的绑定不能终止其他会话的前台或后台任务。
 
 当前原生 manager 来自内存，switch 的成功路径依赖 D3.4 的稳定 native JSONL 与产品映射；准确 fork 同样依赖提交后的锚点投影。缺失路径或锚点时须在源关闭前明确失败，不能冒充成功或退化为空分支。这些失败边界不构成完整 fork、switch 验收。
+
+### D3.4 投影与操作边界
+
+journal 是唯一权威。已提交快照包含 header、完整 entries、活动 leaf、revision、native/durable ID 映射和产品消息关联；回执到达前不发布候选状态。固定原生路径为产品会话目录中的 `native-session/session.jsonl`，配套 `meta/native-session.json` 保存身份、映射、leaf、revision 和摘要。原生 proxy 只暴露这些路径，不开启第二个文件 writer；宿主恢复仍使用 journal。原生 JSONL 没有独立 leaf 字段，不能重排 entries 或制造 entry 来伪装活动分支。投影失败只触发重建，不重跑已提交回调。
+
+fork 在目标 durable 事务中复制完整已提交树并选择准确 before/at leaf，重新分配目标 header 身份，保留原始 entry ID、parent anchors、非活动分支及其附件。null leaf 明确表示活动空根。固定 Pi 的分支文件只抽取活动路径并重建 labels，本任务保留完整树及原始身份，须在行为对照中记录该差异。`new(parentSession)` 只记录可信来源关系，目标历史保持空。
+
+switch 仅解析同工作区已登记且身份、revision、摘要一致的规范路径，拒绝忙、删除中、越界、缺失或重复身份的目标。源关闭后才释放目标旧 writer 并激活。owner 记录区分新建与既有目标；switch 失败或重启不能删除、隐藏或重新创建既有目标。shutdown/start 的来源与目标路径使用稳定原生路径。
+
+产品消息关联与原生 entry 在同一次 durable 事务中保存，支持一个产品 ID 对应多个 native entry，不用重复文本推断身份。名称从已提交快照派生，空字符串保留清空语义；严格保存产品记录后再广播，重启补齐尚未同步的 committed revision。依次实现并验证公共快照、原子投影、fork、switch、parentSession 和名称同步，再进入 D3.5。
 
 ## 验证与完成规则
 

@@ -58,7 +58,10 @@ Reuse the native `SessionManager.inMemory()` and projection functions for
 synchronous extension reads and previews. Production writes go through durable.
 Custom entries, messages, labels, context edits and compaction changes need
 commit barriers before the next request, settlement, fork, reload and shutdown.
-The native JSONL writer remains an import/export concern.
+Stable native JSONL paths are rebuilt from committed journal snapshots. A
+companion manifest preserves the active leaf, entry mappings and revision.
+These files support native path APIs and import/export. They do not own
+execution or recovery, and the native JSONL writer stays disabled.
 
 The server combines builtin, extension, web, proxy and MCP tools, then applies
 the existing host permission wrapper to every tool. Native `tool_call` handlers
