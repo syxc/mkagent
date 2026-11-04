@@ -1,0 +1,328 @@
+{
+  "repository": "https://github.com/earendil-works/pi",
+  "version": "1.5.0",
+  "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
+  "policy": "Source port. No pi-coding-agent or pi-agent-core package imports. Generated files are reproduced by scripts/vendor-upstream.ts.",
+  "typescript": "5.9.3",
+  "files": [
+    {
+      "source": "packages/coding-agent/src/core/skills.ts",
+      "target": "src/upstream/core/skills.ts",
+      "sha256": "79e7d971a26730e3a692c434c32dc63bd8ce36aa4bedaaaf96e405f4a39bc411",
+      "portSha256": "99166471919da374ed31ac93a390b11c1cec42d5304f4d921c27e4a8a1841808"
+    },
+    {
+      "source": "packages/coding-agent/src/core/prompt-templates.ts",
+      "target": "src/upstream/core/prompt-templates.ts",
+      "sha256": "1bdaa7b3825f92bf33203fd7587014b878c55b3d812900cca5cad08fefd92171",
+      "portSha256": "0ba657f6e9a0731b609d8fe93c87602e101667539f4cd44722da2457c63e1692",
+      "changes": [
+        "checked-index-access"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/source-info.ts",
+      "target": "src/upstream/core/source-info.ts",
+      "sha256": "ad2d4ca1e364c4e3a0c2e113a047d5dbee1a2897d2eeb0d666b5b3fc2e3d51b1",
+      "portSha256": "7f8780441d87af384978bc2933a3fddedd220a8da76214e8292315ac4c6201bc"
+    },
+    {
+      "source": "packages/coding-agent/src/core/diagnostics.ts",
+      "target": "src/upstream/core/diagnostics.ts",
+      "sha256": "1914431098db1b4638e4fb3582ac22e8125356c4ab024671494f565c6d5ffb39",
+      "portSha256": "dcea0a05485ca79598859d95847a1131d1dfe2f232226bb20c02ef307e38cc6e"
+    },
+    {
+      "source": "packages/coding-agent/src/core/event-bus.ts",
+      "target": "src/upstream/core/event-bus.ts",
+      "sha256": "fe5c39a57081fb9674c5bdc8c4bc6779bb8524c8895afc337af5ea517bdc71a2",
+      "portSha256": "3bd9e4f41af53cfea7a40f3a39fba89e7a37f6962ecb7a363cce8d181e97cf9d"
+    },
+    {
+      "source": "packages/coding-agent/src/core/pi-manifest.ts",
+      "target": "src/upstream/core/pi-manifest.ts",
+      "sha256": "d5506c48ced4bb2572f55ce2f7d3f4bca8d3e30eece6ceb84d63f73cd0f00cf2",
+      "portSha256": "4248e4508d068133d382dc5bf89af83f282628ee3b022544ed4102bd1db4b3ae"
+    },
+    {
+      "source": "packages/coding-agent/src/utils/frontmatter.ts",
+      "target": "src/upstream/utils/frontmatter.ts",
+      "sha256": "99142d78b94e658e0be65cf05046be8069b3700168a683e0af64219ad903bcd6",
+      "portSha256": "3ab0400a709b8e138dbdc22f1fa294716fdacf033f6bca691eaa8e0583547391"
+    },
+    {
+      "source": "packages/coding-agent/src/utils/text.ts",
+      "target": "src/upstream/utils/text.ts",
+      "sha256": "bb323f9607c499115b532021f4f0163c6df04d834aee9c32c3c77b273bd2d7c6",
+      "portSha256": "9a65da900f86fa24080f042d4dec3611c984b0def06534c1650ef5b6e595b1bd"
+    },
+    {
+      "source": "packages/coding-agent/src/utils/paths.ts",
+      "target": "src/upstream/utils/paths.ts",
+      "sha256": "c8a2995b52a181e46cfae3b30f31448d201742d303249f34119ef2fd7a44e672",
+      "portSha256": "b8ca587fc30ce83c2b532cd03ecd1ccda929a63c2ebbf42c50f02a6b41a143a0",
+      "changes": [
+        "checked-index-access"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/utils/child-process.ts",
+      "target": "src/upstream/utils/child-process.ts",
+      "sha256": "cd324f5b9a1abadd85ab5a331750d475c8bd51ec65cae091ad9b416245ec85d4",
+      "portSha256": "e093a913e5027dd86597dc8442b9a5908fbe8f840af19812e917fd1ee400fdab"
+    },
+    {
+      "source": "packages/coding-agent/src/core/package-manager.ts",
+      "target": "src/upstream/core/package-manager.ts",
+      "sha256": "117f6a99c323c4284a905d1731756f745f435e11f82912b44363301f7b698fa0",
+      "portSha256": "4a869c22257716c1e9854c64466b082c1b288ede24e68c43cdf4a4d1928772d8",
+      "changes": [
+        "checked-index-access"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/utils/git.ts",
+      "target": "src/upstream/utils/git.ts",
+      "sha256": "c8972c0cf248173f7bc3a42a5e9796db290ea3f978c792a0b371814dda7f2638",
+      "portSha256": "bf651cb76e7f971b827c691d3ad4c0846acf5e3fd37be25f7be74fc42924d9c2"
+    },
+    {
+      "source": "packages/coding-agent/src/core/output-guard.ts",
+      "target": "src/upstream/core/output-guard.ts",
+      "sha256": "68c0e9a7533f0cf7270bb50a7558185a9f9a0f71304c85bb438dd620161a4f04",
+      "portSha256": "4a798f6ae126db2a50a8f5de9f44f6df86c5aec73eb609a26fe4b5743b9eaa78"
+    },
+    {
+      "source": "packages/coding-agent/src/core/system-prompt.ts",
+      "target": "src/upstream/core/system-prompt.ts",
+      "sha256": "eef891d637974d09a6611d33e52d66d5f2a93d6e9512259ba45f593c42143617",
+      "portSha256": "4b3e7a7bf48172e653df69602633717501628d756b1eb14c7ba19798990da7f3"
+    },
+    {
+      "source": "packages/coding-agent/src/core/exec.ts",
+      "target": "src/upstream/core/exec.ts",
+      "sha256": "b94829cba4cf98c5cd8476be143697bd2a52414179b0c4e10e9e0665a167f833",
+      "portSha256": "9375716bbd1c2da87c33408fc9e51440e908be32f34bc331950d02d0b23b05ba"
+    },
+    {
+      "source": "packages/coding-agent/src/core/timings.ts",
+      "target": "src/upstream/core/timings.ts",
+      "sha256": "55e4d7f31bdf3727baa4e89f361a6abee9ae4a76f64a30369ea157cb37bbc2b2",
+      "portSha256": "ddaf0420b14a6f2b8893a8e133a16256619b72bf0e7052273d46867e4d9bb8d0"
+    },
+    {
+      "source": "packages/coding-agent/src/core/mcp-servers.ts",
+      "target": "src/upstream/core/mcp-servers.ts",
+      "sha256": "148855a4417dd0133b9499407fb2d1621d72702a263fa00fbfcd2b83769bf05f",
+      "portSha256": "bd173c50711160111ccb3c5b6a65ce3cf0f803fe74eaea2cd57d9f26d034a7a6"
+    },
+    {
+      "source": "packages/coding-agent/src/core/extensions/runner.ts",
+      "target": "src/upstream/core/extensions/runner.js",
+      "sha256": "3cd6d1ad18e8e4c7adf722aed9291bc64f06e3a7d461755c21e3cba4819f4e5e",
+      "portSha256": "a3cd3f4036c1289ef26e1c4a712e85cbcf9c55718eee16ed38312a4e2500bd33",
+      "changes": [
+        "erase-types",
+        "headless-theme-binding"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/extensions/loader.ts",
+      "target": "src/upstream/core/extensions/loader.js",
+      "sha256": "873cbe2ae4a15e9563c5a563d447b7aa3a05cca45e145d4250d54ad601bdc85f",
+      "portSha256": "0db87dddf4951b732bae74d0d50f678eac630a519c4e589587c76fc880571458",
+      "changes": [
+        "erase-types",
+        "extension-module-resolution"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/extensions/types.ts",
+      "target": "src/upstream/core/extensions/types.js",
+      "sha256": "78cfd4937aa72c02be444354ef5cb94310b9b40e20e477969630eb81c6a7391b",
+      "portSha256": "c50b6cd4904c8010ce6695a46832080e993003b50e4aae98d53950829d627ce6",
+      "changes": [
+        "erase-types"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts",
+      "target": "src/upstream/core/extensions/pi-ai-extension-view.ts",
+      "sha256": "119d56316bd9b344fea619f5441367c2a916de58d0ffc8aa665b5c9d44244455",
+      "portSha256": "ce4ff8375111f2638ebae11cc38d8baa41a92b9a2534e35e4060afe113116485"
+    },
+    {
+      "source": "packages/coding-agent/src/core/messages.ts",
+      "target": "src/upstream/core/messages.js",
+      "sha256": "5397e3c96c9504266e4ee8b6e88d5098b3280ee7dbb0c687b74708c62a06c8d4",
+      "portSha256": "dad6446f0af94dbddbbf744281e3c1796b655e4ac05440e5ae12208ce5338566",
+      "changes": [
+        "erase-types"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/session-manager.ts",
+      "target": "src/upstream/core/session-manager.js",
+      "sha256": "444650a737052f0d710c19f9e50e115c24b49107130059d5bef458eacf3927c7",
+      "portSha256": "87b3bafd563da4fe2ca299f5612133c7b3cf8e64223e13399ca2f58974578201",
+      "changes": [
+        "erase-types",
+        "session-message-binding",
+        "durable-model-projection"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/model-registry.ts",
+      "target": "src/upstream/core/model-registry.js",
+      "sha256": "f4ced2d92df9097647aba7da3ae0bb273fa8089e966be15dba880db51d5dee0b",
+      "portSha256": "c13a82819f0d687660bffa482341f0a06b7e4e314c322c0d8306b06a960b1ee6",
+      "selection": [
+        "ModelRegistry"
+      ],
+      "changes": [
+        "erase-types"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/settings-manager.ts",
+      "target": "src/upstream/core/settings-merge.js",
+      "sha256": "7b21f0900b96b8b11751c046cc009bdbd62b2a6f579a96e9727c737d0dd5e62d",
+      "portSha256": "40b2aa2d8ce36f837a15c52e679af3c5daeb3b02999176809f099a00a13df23b",
+      "selection": [
+        "isMergeableObject",
+        "deepMergeObjects",
+        "isToolModifier",
+        "mergeDefaultTools",
+        "deepMergeSettings"
+      ],
+      "changes": [
+        "erase-types"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/provider-composer.ts",
+      "target": "src/upstream/core/provider-composer.js",
+      "sha256": "bddf6d242288123d00e6ae75c4c5f2ce19706152ae87ee33e326e55623f91501",
+      "portSha256": "e988338e0cc0db8f1aefe5acb1bcd9fb8e03bd266f863dd29e4721247435d687",
+      "changes": [
+        "erase-types"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/resolve-config-value.ts",
+      "target": "src/upstream/core/resolve-config-value.ts",
+      "sha256": "0f53dad47fe5d5d8837c022b7951ccd3bd5a9b577bd662f0986272110e83bcc7",
+      "portSha256": "31730d1678bee6adf3166f9d933d586521d612c61ed60d6e329c2261b02ebaa2"
+    },
+    {
+      "source": "packages/coding-agent/src/utils/shell.ts",
+      "target": "src/upstream/utils/shell.ts",
+      "sha256": "bacb0f871b92e38ac17221e0c1b00ac5211e0f5c0063675afd980513c7c79fb4",
+      "portSha256": "2171607335ccc09b39ea778fb60802a5daa133ed861efb2e5a1d8e90bb4c8c93",
+      "selection": [
+        "ShellConfig",
+        "isLegacyWslBashPath",
+        "getBashShellConfig",
+        "shellPathExists",
+        "findExecutableOnPath",
+        "getShellConfig"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/footer-data-provider.ts",
+      "target": "src/upstream/core/git-paths.ts",
+      "sha256": "024ae5b3f50a15db9c149f644845ffb267df838b3a555a0756db95043e05a0e2",
+      "portSha256": "75b5ff0072877dc915d4c646174620891349924f5aa2a15e81632610df8c917c",
+      "selection": [
+        "GitPaths",
+        "findGitPaths"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/resource-loader.ts",
+      "target": "src/upstream/core/context-files.ts",
+      "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
+      "portSha256": "185ae61521d87a2764c700980135e566c5f2e7ff1423654c047e741f7551e658",
+      "selection": [
+        "loadContextFileFromDir",
+        "findShadowedContextFile",
+        "loadProjectContextFiles"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/resource-loader.ts",
+      "target": "src/upstream/core/resource-collisions.ts",
+      "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
+      "portSha256": "a4a5baee89c3d6009a3defdf75b4a8c4023b7c5a15b556451eee4206afd3883b",
+      "selection": [
+        "DefaultResourceLoader.dedupePrompts"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/compaction/compaction.ts",
+      "target": "src/upstream/core/context-tokens.js",
+      "sha256": "32714966eb644da31cd84e8eb172965256160626b3d26ae9752c3894300f2b0b",
+      "portSha256": "df01d3203f7adf9196fcd16786743c78a9ddb045ae8c5862436814557f6e278c",
+      "selection": [
+        "calculateContextTokens",
+        "getAssistantUsage",
+        "getLastAssistantUsageInfo",
+        "estimateContextTokens",
+        "estimateProjectedContextTokens",
+        "ESTIMATED_IMAGE_CHARS",
+        "estimateTextAndImageContentChars",
+        "estimateTokens"
+      ],
+      "changes": [
+        "erase-types"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/agent-session.ts",
+      "target": "src/upstream/core/boundary-drafts.js",
+      "sha256": "b7c24bf1c1366e931083100d921a80d390d66bacde4acf7472a7b57af1bb69aa",
+      "portSha256": "e47c7898af101e0434694dcd1fc14123059b26d504ecb698cdcd9572c4096694",
+      "selection": [
+        "AgentSession._applyBoundaryDrafts",
+        "AgentSession._buildBoundaryContext",
+        "AgentSession._replaceMessageInPlace"
+      ],
+      "changes": [
+        "erase-types"
+      ]
+    },
+    {
+      "source": "packages/durable/src/harness/context.ts",
+      "target": "src/upstream/durable/context.js",
+      "sha256": "160a047b022725ec799f4581ef7e52798632015dcd908755c3df6cd1e9f35fc8",
+      "portSha256": "dff86bd68e278d638477068ece35108701c7a64005458f4c8862fadebc373abe",
+      "selection": [
+        "EXCLUDED_STOP_REASONS",
+        "MISSING_RESULT_TEXT",
+        "findBaseline",
+        "carriesSystemMessage",
+        "leadWithSystem",
+        "contribute",
+        "orderToolResults",
+        "missingResult",
+        "deeplyFrozen",
+        "freezeJson"
+      ],
+      "changes": [
+        "erase-types"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/hello.ts",
+      "target": "test/fixtures/upstream/hello.ts",
+      "sha256": "0aa4e9800c2526914d4c1edb00b2cfa9bd9dd6da5218289994cccd5f5bfa4934",
+      "portSha256": "0aa4e9800c2526914d4c1edb00b2cfa9bd9dd6da5218289994cccd5f5bfa4934"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/input-transform.ts",
+      "target": "test/fixtures/upstream/input-transform.ts",
+      "sha256": "cf0f65d610631ca75d18aae1c8f1408139702f674cb2835f8c009b943776474b",
+      "portSha256": "cf0f65d610631ca75d18aae1c8f1408139702f674cb2835f8c009b943776474b"
+    }
+  ]
+}

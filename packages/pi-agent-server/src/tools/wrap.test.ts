@@ -113,9 +113,16 @@ describe('file tool permissions', () => {
       debugLog: () => {},
     });
 
-    await write.execute({ path: originalPath, content: 'approved' }, { callId: 'write-1', env } as unknown as ToolExecutionApi, context);
+    const approved = new Map<string, unknown>();
+    await write.execute({ path: originalPath, content: 'approved' }, {
+      callId: 'write-1', env,
+      memo: async (key: string, value: unknown) => { approved.set(key, value); return value; },
+    } as unknown as ToolExecutionApi, context);
     expect(readFileSync(approvedPath, 'utf8')).toBe('approved');
     expect(existsSync(originalPath)).toBe(false);
+    expect(approved.get('mkagent.tool.approved-arguments')).toEqual({
+      path: approvedPath, file_path: originalPath, content: 'approved',
+    });
   });
 
   it('rejects conflicting paths returned by approval', async () => {
@@ -166,7 +173,7 @@ describe('file tool permissions', () => {
       debugLog: () => {},
     });
 
-    await write.execute({ path: '@original.txt', content: 'approved' }, { callId: 'write-1', env } as unknown as ToolExecutionApi, context);
+    await write.execute({ path: '@original.txt', content: 'approved' }, { callId: 'write-1', env, memo: async () => undefined } as unknown as ToolExecutionApi, context);
     expect(checkedPath).toBe(originalPath);
     expect(readFileSync(approvedPath, 'utf8')).toBe('approved');
     expect(existsSync(originalPath)).toBe(false);
@@ -178,7 +185,7 @@ describe('background bash timeout', () => {
     const { bash, events } = fixture();
     await bash.execute(
       { command: 'sleep 30', timeout: 0.2, run_in_background: true },
-      { callId: 'call-1' } as unknown as ToolExecutionApi,
+      { callId: 'call-1', memo: async () => undefined } as unknown as ToolExecutionApi,
       context,
     );
 

@@ -67,7 +67,7 @@ import { createCodemodeExtensionFor } from './tools/codemode.ts';
 import { loadMcpTools, closeMcpConnections, type McpToolsLoadResult } from './mcp/extension.ts';
 import { createToolSearchExtension } from '@earendil-works/pi-durable/tool-search';
 import { version as CLIENT_VERSION } from '../package.json';
-import type { PiCompactResult, PiContextUsagePayload } from '../../shared/src/agent/backend/pi/protocol.ts';
+import type { PiCodingResources, PiCompactResult, PiContextUsagePayload } from '../../shared/src/agent/backend/pi/protocol.ts';
 import { adaptCredentialForPiSdk, type PiCredential } from './adapt-credential.ts';
 import { resolveCraftAgentDir } from './agent-dir.ts';
 import { toPiProviderId } from '../../shared/src/config/pi-provider-ids.ts';
@@ -82,6 +82,8 @@ import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 /** Init message from main process — configures the agent server */
 interface InitMessage {
   type: 'init';
+  agentProfile?: 'default' | 'coding';
+  codingResources?: PiCodingResources;
   apiKey: string;
   model: string;
   cwd: string;
@@ -570,16 +572,9 @@ function buildProxyTools(): ToolRegistration[] {
  * `isError` so the model gets an error tool result and the UI marks the call
  * failed, as a thrown error would.
  */
-function buildToolsExtension(cwd: string, mcpTools: readonly ToolRegistration[]): Extension {
+function toolWrapDependencies(cwd: string): ToolWrapDeps {
   if (!initConfig) throw new Error('Cannot build tools: init not received');
-  const builtinTools = createBuiltinTools(cwd);
-  const searchTool = createSearchTool(searchProvider);
-  const webFetchTool = createWebFetchTool(() =>
-    initConfig ? getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId) : null
-  );
-  const proxyTools = buildProxyTools();
-
-  const wrapDeps: ToolWrapDeps = {
+  return {
     requestApproval: requestPreToolUseApproval,
     backgroundShells,
     tasksDirectory: join(resolveCraftAgentDir(initConfig), 'tasks'),
@@ -598,7 +593,16 @@ function buildToolsExtension(cwd: string, mcpTools: readonly ToolRegistration[])
     getSessionPath: () => initConfig ? getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId) : null,
     debugLog,
   };
+}
 
+function buildToolsExtension(cwd: string, mcpTools: readonly ToolRegistration[]): Extension {
+  const builtinTools = createBuiltinTools(cwd);
+  const searchTool = createSearchTool(searchProvider);
+  const webFetchTool = createWebFetchTool(() =>
+    initConfig ? getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId) : null
+  );
+  const proxyTools = buildProxyTools();
+  const wrapDeps = toolWrapDependencies(cwd);
   const wrapped = [
     ...builtinTools,
     searchTool,
@@ -679,6 +683,14 @@ async function openKernel(): Promise<DurableKernel> {
     },
     hooks: kernelHooks,
     toolsExtension: buildToolsExtension(cwd, mcpLoad.tools),
+    ...(initConfig.agentProfile === 'coding' || initConfig.codingResources ? {
+      coding: {
+        ...initConfig.codingResources,
+        agentDir: initConfig.codingResources?.agentDir
+          ?? (process.env.PI_CODING_AGENT_DIR?.trim() || join(homedir(), '.pi', 'agent')),
+      },
+      wrapCodingTool: tool => wrapToolForKernel(tool, toolWrapDependencies(cwd)),
+    } : {}),
     extensions: [
       // Codemode + tool_search default on (mcp.json autoEnableCodemode: false opts out of codemode).
       ...(mcpLoad.autoEnableCodemode ? [createCodemodeExtensionFor(mcpLoad.namespaces, requestPreToolUseApproval)] : []),

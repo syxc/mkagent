@@ -1090,18 +1090,19 @@ export function createOpenAiSseStrippingStream(): TransformStream<Uint8Array, Ui
           }
         }
       }
+      if (choice.delta) delete choice.delta.tool_calls;
     }
 
-    // Suppress all upstream tool_call delta payloads. Consolidated events
-    // are emitted on flush.
-    if (handledToolCalls) {
+    // Buffer only tool calls; preserve text, other choices, usage and terminal fields.
+    const hasFinish = choices.some(choice => choice?.finish_reason !== undefined && choice.finish_reason !== null);
+    const hasDelta = choices.some(choice => Object.keys(choice?.delta ?? {}).length > 0);
+    if (handledToolCalls && !hasFinish && !hasDelta && data.usage === undefined) {
       return;
     }
 
-    const forwardStr = strippedEmptyToolCalls ? JSON.stringify(data) : dataStr;
+    const forwardStr = handledToolCalls || strippedEmptyToolCalls ? JSON.stringify(data) : dataStr;
 
     // On finish, flush buffered tool calls with clean args BEFORE emitting finish event
-    const hasFinish = choices.some(choice => choice?.finish_reason === 'tool_calls' || choice?.finish_reason === 'stop');
     if (hasFinish) {
       if (bufferingToolCalls) {
         flushTrackedCalls(controller);

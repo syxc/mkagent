@@ -122,6 +122,8 @@ export interface BackendHostRuntimeContext {
  */
 export interface CoreBackendConfig {
   agentProfile?: import('@mkagent/session-tools-core').AgentProfile;
+  /** Explicit Pi resources and project trust for coding extensions. */
+  codingResources?: import('./pi/protocol.ts').PiCodingResources;
   /** Workspace configuration */
   workspace: Workspace;
 

@@ -547,6 +547,8 @@ export class PiAgent extends BaseAgent {
     // Send init command (flat structure matching subprocess InboundMessage type)
     this.send({
       type: 'init',
+      agentProfile: this._agentProfile,
+      codingResources: this.config.codingResources,
       apiKey: legacyApiKey || '',
       model: this._model,
       cwd,

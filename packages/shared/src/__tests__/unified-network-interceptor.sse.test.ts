@@ -61,6 +61,38 @@ describe('unified-network-interceptor SSE processors', () => {
     rmSync(sessionDir, { recursive: true, force: true });
   });
 
+  it.each(['tool_calls', 'stop', 'length', 'content_filter', null])(
+    'OpenAI: preserves other fields when tool calls share a %s frame', async finishReason => {
+      const chunk = {
+        id: 'combined', usage: { completion_tokens: 3 },
+        choices: [
+          { index: 0, delta: { content: 'alongside', tool_calls: [{ index: 0, id: 'combined-call',
+            type: 'function', function: { name: 'hello', arguments: '{"name":"cli","_intent":"greet"}' } }] },
+            finish_reason: finishReason },
+          { index: 1, delta: { content: 'other-choice' }, finish_reason: null },
+        ],
+      };
+      const terminal = finishReason ?? 'tool_calls';
+      const sse = [`data: ${JSON.stringify(chunk)}\n\n`];
+      if (finishReason === null) sse.push('data: {"choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}\n\n');
+      sse.push('data: [DONE]\n\n');
+      const out = await runThroughProcessor(createOpenAiSseStrippingStream(), sse);
+      const frames = out.split('\n').filter(line => line.startsWith('data: ') && line !== 'data: [DONE]')
+        .map(line => JSON.parse(line.slice(6)));
+      const toolFrame = frames.findIndex(frame => frame.choices?.some((choice: any) => choice.delta?.tool_calls?.length));
+      const finishFrame = frames.findIndex(frame => frame.choices?.some((choice: any) => choice.finish_reason === terminal));
+      expect(toolFrame).toBeGreaterThanOrEqual(0);
+      expect(finishFrame).toBeGreaterThan(toolFrame);
+      expect(frames.flatMap(frame => frame.choices ?? []).flatMap(choice => choice.delta?.tool_calls ?? [])).toHaveLength(1);
+      expect(out).toContain('"content":"alongside"');
+      expect(out).toContain('"content":"other-choice"');
+      expect(out).toContain('"completion_tokens":3');
+      expect(out).toContain('"arguments":"{\\"name\\":\\"cli\\"}"');
+      expect(out).not.toContain('_intent');
+      expect(toolMetadataStore.get('combined-call', sessionDir)?.intent).toBe('greet');
+    },
+  );
+
   it('OpenAI: keeps terminal chunks when delta.tool_calls is empty', async () => {
     const sse = [
       'data: {"choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[]}}]}\n\n',

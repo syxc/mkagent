@@ -263,12 +263,18 @@ describe('DurableKernel end-to-end', () => {
     const agentDir = join(dir, 'agent');
     mkdirSync(agentDir);
     writeFileSync(join(agentDir, 'mcp.json'), '{}');
-    const env: NodeJS.ProcessEnv = { CONFIG_DIR: dir, TMPDIR: dir, XDG_CONFIG_HOME: dir, PI_CODING_AGENT_DIR: dir, PI_OFFLINE: '1' };
+    const codingDir = join(dir, 'pi-agent');
+    mkdirSync(codingDir);
+    writeFileSync(join(codingDir, 'settings.json'), JSON.stringify({
+      extensions: [join(import.meta.dir, '../../pi-durable-coding/test/fixtures/upstream/hello.ts')],
+    }));
+    const env: NodeJS.ProcessEnv = { HOME: dir, USERPROFILE: dir, CONFIG_DIR: dir, TMPDIR: dir, XDG_CONFIG_HOME: dir, PI_CODING_AGENT_DIR: codingDir, PI_OFFLINE: '1' };
     if (process.env.PATH) env.PATH = process.env.PATH;
     const bootstrap = `
       import { mock } from 'bun:test';
       import { builtinModels as original } from '@earendil-works/pi-ai/providers/all';
       import { createProvider, createAssistantMessageEventStream } from '@earendil-works/pi-ai';
+      import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
       const makeBuiltinModels = original;
       mock.module('@earendil-works/pi-ai/providers/all', () => ({ builtinModels: (options) => {
         const models = makeBuiltinModels(options);
@@ -278,11 +284,17 @@ describe('DurableKernel end-to-end', () => {
           models: [{ id: 'MiniMax-local', name: 'Local', provider: 'minimax-cn', api: 'faux',
             baseUrl: 'http://local.test', reasoning: false, input: ['text'],
             cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 100000, maxTokens: 4096 }],
-          api: { faux: { stream() { throw new Error('Unexpected raw stream'); }, streamSimple(model) {
+          api: { faux: { stream() { throw new Error('Unexpected raw stream'); }, streamSimple(model, context) {
             if (model.id !== 'local' || model.contextWindow !== 100000) throw new Error('Incorrect model dispatch');
             process.stderr.write('TEST_MINIMAX_DISPATCH\\n');
+            const visibleTools = getCurrentTools(context.messages);
             const stream = createAssistantMessageEventStream();
-            queueMicrotask(() => { for (const event of ${JSON.stringify(textEvents('protocol answer'))}) stream.push(event); });
+            const useHello = visibleTools.some(tool => tool.name === 'hello')
+              && !context.messages.some(message => message.role === 'toolResult');
+            const events = useHello
+              ? ${JSON.stringify(toolCallEvents({ type: 'toolCall', id: 'protocol-hello', name: 'hello', arguments: { name: 'protocol' } }))}
+              : ${JSON.stringify(textEvents('protocol answer'))};
+            queueMicrotask(() => { for (const event of events) stream.push(event); });
             return stream;
           } } },
         }));
@@ -315,6 +327,7 @@ describe('DurableKernel end-to-end', () => {
     };
     const initialize = (model: string) => send({
       type: 'init', model, cwd: dir, thinkingLevel: 'off', workspaceRootPath: dir,
+      agentProfile: 'coding',
       sessionId: 'model-protocol', agentDir, sessionPath: dir, workingDirectory: dir,
       plansFolderPath: join(dir, 'plans'), piAuth: { provider: 'minimax-cn', credential: { type: 'api_key', key: 'fake' } },
     });
@@ -338,6 +351,11 @@ describe('DurableKernel end-to-end', () => {
       expect((await wait(message => message.type === 'update_runtime_config_result' && message.id === 'valid-update')).success).toBe(true);
       messages.length = 0;
       send({ type: 'prompt', id: 'updated-prompt', message: 'hello', systemPrompt: 'test' });
+      const approval = await wait(message => message.type === 'pre_tool_use_request' && message.toolName === 'hello');
+      expect(approval.input).toEqual({ name: 'protocol' });
+      send({ type: 'pre_tool_use_response', requestId: approval.requestId, action: 'modify', input: { name: 'approved-protocol' } });
+      const toolEnd = await wait(message => message.type === 'event' && message.event?.type === 'tool_execution_end');
+      expect(JSON.stringify(toolEnd.event.result)).toContain('Hello, approved-protocol!');
       await wait(message => message.type === 'event' && message.event?.type === 'agent_end');
       expect(stderr.match(/TEST_MINIMAX_DISPATCH/g)?.length).toBeGreaterThanOrEqual(2);
     } finally {

@@ -13,6 +13,11 @@ the upstream project or its trademark owners.
 Portions of the Pi agent server and Pi event types are adapted from
 @earendil-works/pi-coding-agent and pi-durable (https://github.com/earendil-works/pi):
 
+The coding compatibility source port and durable boundary patch use Pi v1.5.0,
+commit f9a26365568127461c47a07a37dcb42c140a3ac5. Source hashes, selected exports
+and transformations are recorded in packages/pi-durable-coding/UPSTREAM.json
+and DURABLE-PATCH.json. The copied MIT license is LICENSE.pi in that package.
+
 MIT License
 
 Copyright (c) 2025 Mario Zechner

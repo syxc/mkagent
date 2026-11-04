@@ -2,10 +2,13 @@
 
 ## Baseline and goal
 
-This design extends the durable kernel with a separate coding capability package.
+This design ports the Pi coding agent's upper layers and replaces its Agent
+kernel with pi-durable. The upper-layer source is the compatibility baseline.
 The baseline is MkAgent `85325251a10d`, whose tree matches `0959d3563892`.
-Both upstream packages are pinned to 1.5.0. The upstream `main` sources are
-review inputs, not a moving production dependency:
+The source baseline is Pi v1.5.0, commit
+`f9a26365568127461c47a07a37dcb42c140a3ac5`. The coding package's Pi dependencies
+are pinned to 1.5.0. The existing shared transport retains pi-ai 1.1.0.
+The upstream `main` sources are review inputs:
 
 - https://github.com/earendil-works/pi/tree/main/packages/durable
 - https://github.com/earendil-works/pi/tree/main/packages/coding-agent
@@ -16,18 +19,28 @@ package reuse, real functional validation, and the best possible compatibility
 with existing Pi plugins. Compatibility must describe tested API behavior.
 Loading a plugin without exercising its operations does not establish compatibility.
 
+This inventory is the acceptance target. See [validation and limits](coding-validation.md)
+for the implemented behavior, current evidence and remaining work.
+
 ## Architecture
 
-`@mkagent/pi-durable-coding` owns resource loading, input expansion and native
-extension adaptation. It depends on public Pi APIs. It has no dependency on
+`@mkagent/pi-durable-coding` contains the ported resource, prompt, extension,
+session projection and presentation code. It depends on independent official
+Pi packages. It has no dependency on
 MkAgent shared code, Electron, the subprocess implementation or UI components.
 The subprocess supplies narrow callbacks for session operations and permissions.
 
 The existing `DurableKernel` owns the Harness, model loop, storage, recovery,
-branching and compaction. Native `Agent` and `AgentSession` must never be created.
-An official in-memory `SessionManager` may project committed durable entries for
-read-only extension access. It must never become a second persistent transcript.
-Extension state is committed into the durable conversation and restored from it.
+branching and compaction. The ported session layer binds those operations to
+durable. It must not retain a second Agent loop. The original `AgentSession`
+contains scheduling, retries and nested execution, so replacing only its
+`new Agent()` call is insufficient.
+
+Reuse the native `SessionManager.inMemory()` and projection functions for
+synchronous extension reads and previews. Production writes go through durable.
+Custom entries, messages, labels, context edits and compaction changes need
+commit barriers before the next request, settlement, fork, reload and shutdown.
+The native JSONL writer remains an import/export concern.
 
 The server combines builtin, extension, web, proxy and MCP tools, then applies
 the existing host permission wrapper to every tool. Native `tool_call` handlers
@@ -46,17 +59,39 @@ Use durable public tools, environment, images, codemode and tool-search APIs.
 Keep the existing cancellation fixes in local grep/find/ls until an equivalent
 official implementation is verified.
 
-Use `pi-coding-agent@1.5.0` public exports for native resource parsing, package
-resolution, extension loading and `ExtensionRunner`. Private deep imports are
-prohibited. A probe importing only resource exports bundles 2,074 modules and
-about 9.0 MB of uncompressed code. The package also installs agent-core and TUI.
-The public export layout prevents a small isolated extension import.
+Do not depend on the `pi-coding-agent` or `pi-agent-core` packages, including
+their private files. A probe importing only resource exports bundles 2,074 modules
+and about 9.0 MB of uncompressed code. The user explicitly rejected this route.
+The historical ban on those runtime dependencies remains in force.
 
-This revises the historical switch specification's ban on the coding-agent
-dependency. The invariant is now one durable agent runtime, rather than absence
-of transitive agent-core code. Official reuse reduces the maintenance of the
-rapidly changing extension API. Exact version pins, bundle smoke tests and an API
-compatibility matrix control this cost.
+Port `extensions/loader`, `runner` and the protocol from the pinned TypeScript
+source. Preserve their registration, event chaining, rollback and stale-context
+behavior. Replace module resolution and the bindings supplied to `bindCore()`,
+`bindCommandContext()` and `setUIContext()`.
+
+The port records each source hash, selection and transformation in `UPSTREAM.json`.
+The generation script reproduces the port from a clean checkout. Kernel-coupled
+TypeScript modules are transpiled to JavaScript to remove type-only references
+without importing the old kernel's package. Host boundaries remain typed.
+This does not establish complete source-level TypeScript API compatibility.
+
+Plugin import identifiers resolve to the local port or independent official
+packages. They must not fall back to the old engine. A compatibility export
+list describes implemented runtime exports; it is not a full compatibility claim.
+
+## Durable boundary requirement
+
+Native `turn_end` and `agent_before_settle` handlers can refer to a committed
+message entry, return context edits and custom entries, and request continuation.
+Durable 1.5.0's `onYield` runs before final answer persistence; `afterRun` runs
+after input settlement. Neither hook alone preserves this protocol.
+
+Full boundary support therefore requires a small, versioned durable patch or an
+equivalent upstream API. The boundary must run after message/tool persistence and
+before the next generation or final settlement. Persist its drafts and decision,
+then apply them once through durable scheduling. New checkpoint phases require
+task-version migration and recovery tests. External plugin effects are not
+exactly-once. Event forwarding alone must not be reported as boundary support.
 
 ## Capability inventory and acceptance
 
@@ -105,9 +140,8 @@ Project-local `trusted: true` is not an authorization source.
 
 Load global MkAgent resources from its agent directory and native project
 resources from `.pi`. MkAgent workspace and `.agents` skills remain usable.
-Resolve package resources through the official package manager with missing
-sources skipped. An explicit package management operation is required to fetch
-or install dependencies.
+Resolve installed local package resources from their Pi manifest. An explicit
+package management operation is required to fetch or install dependencies.
 
 Trusted Node plugins can access filesystem and network directly. They are not
 sandboxed by the tool wrapper. Denial must happen before module import.
@@ -117,12 +151,13 @@ Shutdown and reload release old handlers and connections.
 ## Implementation sequence
 
 1. Commit this versioned design and inventory.
-2. Add the independent resource and extension package, using official public APIs.
-3. Connect resource/input/prompt composition, extension tools and durable state.
+2. Port the native resource and extension dependency closure with provenance.
+3. Bind native resource/input/prompt behavior, tools and session projections to durable.
 4. Connect host trust, native skill discovery and plugin event/model callbacks.
 5. Verify actual file editing and shell checks through a local deterministic model,
    including allow/modify/deny, nested calls, cancellation, restore and reload.
-6. Build and run the bundled JSONL subprocess outside the source tree, then run
+6. Implement and test the durable boundary stage and remaining session/provider bindings.
+7. Build and run the bundled JSONL subprocess outside the source tree, then run
    required repository checks. Record results and remaining compatibility limits.
 
 Each feature commit includes its source audit entries and relevant validation.

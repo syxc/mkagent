@@ -1,0 +1,627 @@
+diff --git a/dist/harness/generation.js b/dist/harness/generation.js
+--- a/dist/harness/generation.js
++++ b/dist/harness/generation.js
+@@ -22,7 +22,7 @@ const DEFAULT_POLL_AFTER_MS = 5000;
+  */
+ export const GenerationTask = defineTask({
+     name: "pi.generation",
+-    version: 2,
++    version: 4,
+     initial: () => ({ phase: "prepare", attempt: 1 }),
+     // Version 2 leaves calls to tools not offered in a sequential round's `pending`, flagged `unoffered` in their slots.
+     // A version 1 Harness would start their tool tasks unflagged, resolving the name, so it leaves version 2 blocked
+@@ -43,6 +43,13 @@ export const GenerationTask = defineTask({
+                 return endCutOff(runtime, task, context);
+             const { conversationId } = runtime;
+             const agent = await runtime.agent(context);
++            if (!task.state.checkpoint.codingPrepared && agentHooks(agent, GenerationTask.definition.name)
++                .some(({ handlers }) => typeof handlers.codingPrepare === "function")) {
++                await runtime.commit(async () => ({
++                    status: "running", checkpoint: { phase: "codingPrepare", prepare: task.state.checkpoint },
++                }), context);
++                return;
++            }
+             const settings = runtime.settings;
+             const { model, thinkingLevel } = agent;
+             const resolved = model === undefined ? undefined : runtime.models.getModel(model.provider, model.modelId);
+@@ -68,7 +75,7 @@ export const GenerationTask = defineTask({
+             // nothing it answers. Otherwise, as for a continue after an answer or in an empty conversation, end the run
+             // before any request.
+             const last = view.messages.findLast((message) => message.role !== "system");
+-            if (last?.role !== "user" && last?.role !== "toolResult")
++            if (!task.input.codingRequest && last?.role !== "user" && last?.role !== "toolResult")
+                 return failNothingToAnswer(runtime, context);
+             const shown = replaySections(view.messages);
+             let env;
+@@ -206,8 +213,11 @@ export const GenerationTask = defineTask({
+                 return endCutOff(runtime, task, context);
+             const { assistant, tools, pending } = task.state.checkpoint;
+             const [next, ...rest] = pending;
+-            if (next === undefined)
++            if (next === undefined) {
++                if (await codingEnabled(runtime, context))
++                    return stageCodingTools(runtime, assistant, tools, context);
+                 return finishToolRound(runtime, assistant, tools, context);
++            }
+             // Sequential round: start the next call and wait for it.
+             await runtime.commit(async (tx) => {
+                 const live = await tx.doc(LiveDoc, runtime.conversationId);
+@@ -228,6 +238,35 @@ export const GenerationTask = defineTask({
+          * Ask the `afterRun` hooks for tasks and create them, as the generation's children, in the commit that moves to
+          * `drain`; without any, end the run now.
+          */
++        codingPrepare: async (task, runtime, context) => {
++            if (cutOffTooOften(task, runtime))
++                return endCutOff(runtime, task, context);
++            return prepareCodingEvents(runtime, task.state.checkpoint.prepare, context);
++        },
++        codingBoundary: async (task, runtime, context) => {
++            if (cutOffTooOften(task, runtime))
++                return endCutOff(runtime, task, context);
++            return commitCodingDecision(runtime, task.state.checkpoint, "turn_end", context);
++        },
++        codingSettle: async (task, runtime, context) => {
++            if (cutOffTooOften(task, runtime))
++                return endCutOff(runtime, task, context);
++            const state = task.state.checkpoint;
++            if (state.step === "before")
++                return commitCodingDecision(runtime, state, "agent_before_settle", context);
++            if (state.plan.kind === "tools") {
++                const continued = state.continued === true && await codingCanAnswer(runtime, context);
++                return finishToolRound(runtime, state.assistant, state.plan.tools, context, { ...state, continued });
++            }
++            if (state.plan.kind === "failure") {
++                if (state.continued && await codingCanAnswer(runtime, context)) {
++                    return routeCodingAnswer(runtime, state, context);
++                }
++                const message = (await runtime.entry(AssistantEntry, state.assistant, context)).model[0];
++                return recoverFailure(runtime, state.plan.request, message, context, state);
++            }
++            return routeCodingAnswer(runtime, state, context);
++        },
+         finish: async (task, runtime, context) => {
+             const { run } = task.state.checkpoint;
+             if (cutOffTooOften(task, runtime))
+@@ -545,9 +584,15 @@ async function streamResponse(runtime, model, messages, options, attempt, contex
+                 timer = runtime.setTimer(flush, interval);
+         });
+     };
++    const observeCoding = agentHooks(await runtime.agent(context), GenerationTask.definition.name)
++        .some(({ handlers }) => typeof handlers.codingStream === "function");
+     try {
+         const events = runtime.models.streamSimple(model, { messages: [...messages] }, options);
+         for await (const event of events) {
++            if (observeCoding) {
++                const copied = copyJson(event, { omitUndefinedProperties: true });
++                await runtime.hooks.each("codingStream", handler => handler({ type: "event", event: copied }, runtime, context));
++            }
+             // A partial without content, such as pi-ai's opening `start` event, shows nothing; a deferred response
+             // never gets past it, so it never leaves a partial.
+             if (event.type === "done" || event.type === "error" || event.partial.content.length === 0)
+@@ -563,6 +608,8 @@ async function streamResponse(runtime, model, messages, options, attempt, contex
+         stopped = true;
+         timer?.();
+         await inFlight;
++        if (observeCoding)
++            await runtime.hooks.each("codingStream", handler => handler({ type: "closed", aborted: runtime.signal.aborted }, runtime, context));
+     }
+ }
+ /** Classify a terminal provider message in one commit that also clears the partial. */
+@@ -601,6 +648,15 @@ async function classify(runtime, request, message, context) {
+     if (message.stopReason === "stop" || message.stopReason === "length" || message.stopReason === "toolUse") {
+         return answer(runtime, message, context);
+     }
++    if (await codingEnabled(runtime, context)) {
++        const { messages: _messages, ...kept } = request;
++        return stageCodingTurn(runtime, message, { kind: "failure", request: kept }, context);
++    }
++    return recoverFailure(runtime, request, message, context);
++}
++async function recoverFailure(runtime, request, message, context, coding) {
++    const conversationId = runtime.conversationId;
++    const { attempt, compacted, model: ref, cutoff } = request;
+     // The retry and compaction policies govern the next attempt, so they are read now rather than pinned at preparation.
+     const settings = runtime.settings;
+     const overflow = message.stopReason === "error" && isContextOverflow(message);
+@@ -611,7 +667,8 @@ async function classify(runtime, request, message, context) {
+             const text = message.errorMessage ?? "Context overflow";
+             await runtime.commit(async (tx) => {
+                 const live = await tx.doc(LiveDoc, conversationId);
+-                await appendAssistant(tx, conversationId, message);
++                if (coding === undefined)
++                    await appendAssistant(tx, conversationId, message);
+                 delete live.generation;
+                 const child = await createCompaction(tx, conversationId, { reason: "overflow" }, runtime.taskId);
+                 const checkpoint = { phase: "prepare", attempt, compacted: child, overflow: text };
+@@ -628,11 +685,18 @@ async function classify(runtime, request, message, context) {
+         policy.enabled &&
+         attempt <= policy.maxRetries;
+     const until = retry ? runtime.now() + retryDelayMs(policy, attempt) : 0;
++    if (!retry && coding?.step === "route") {
++        await runtime.commit(async () => ({
++            status: "running", checkpoint: { ...coding, step: "before" },
++        }), context);
++        return;
++    }
+     await runtime.commit(async (tx) => {
+         // Read before the first table write; only a failure uses it.
+         const failure = retry ? undefined : await prepareFailure(tx, runtime);
+         const live = await tx.doc(LiveDoc, conversationId);
+-        await appendAssistant(tx, conversationId, message);
++        if (coding === undefined)
++            await appendAssistant(tx, conversationId, message);
+         if (failure === undefined) {
+             live.generation = { attempt, retry: { at: until, error: message.errorMessage ?? "" } };
+             const checkpoint = {
+@@ -664,6 +728,9 @@ async function answer(runtime, message, context) {
+             return;
+         continuation = (await hook(message, runtime, context))?.continue;
+     });
++    if (await codingEnabled(runtime, context)) {
++        return stageCodingTurn(runtime, message, { kind: "answer", ...(continuation === undefined ? {} : { continuation }) }, context);
++    }
+     const afterRun = await asksAfterRun(runtime, context);
+     const conversationId = runtime.conversationId;
+     await runtime.commit(async (tx) => {
+@@ -845,7 +912,7 @@ async function startToolRound(runtime, request, message, calls, context) {
+  * reset, or hand it to the next generation at the `postTools` boundary, in the handoff's new context when there is one
+  * (spec §8.5).
+  */
+-async function finishToolRound(runtime, assistant, tools, context) {
++async function finishToolRound(runtime, assistant, tools, context, coding) {
+     const conversationId = runtime.conversationId;
+     const controls = new Map();
+     const outcomes = await runtime.outcomes(tools, context);
+@@ -856,11 +923,12 @@ async function finishToolRound(runtime, assistant, tools, context) {
+     });
+     const slots = (await runtime.snapshot(LiveDoc, conversationId, context))?.tools ?? [];
+     const results = slots.flatMap((slot) => (slot.entry === undefined ? [] : [slot.entry]));
+-    await runtime.hooks.each("afterTools", (hook) => hook(assistant, results, runtime, context));
++    if (coding === undefined)
++        await runtime.hooks.each("afterTools", (hook) => hook(assistant, results, runtime, context));
+     // In call order, the slots' order; a slot without a task (faulted or orphaned before it got one) has no control.
+     const ordered = slots.map((slot) => (slot.taskId === undefined ? undefined : controls.get(slot.taskId)));
+     // Every call of the round must ask to terminate.
+-    const terminate = slots.length > 0 && ordered.every((control) => control?.terminate === true);
++    const terminate = coding?.continued !== true && slots.length > 0 && ordered.every((control) => control?.terminate === true);
+     const added = ordered.flatMap((control) => control?.addTools ?? []);
+     // The last handoff in call order wins.
+     const handoff = ordered.findLast((control) => control?.handoff !== undefined)?.handoff;
+@@ -869,9 +937,22 @@ async function finishToolRound(runtime, assistant, tools, context) {
+     const afterRun = terminate && (await asksAfterRun(runtime, context));
+     await runtime.commit(async (tx) => {
+         const boundary = await prepareBoundary(tx, conversationId, runtime.settings);
++        const live = await tx.doc(LiveDoc, conversationId);
++        const turns = live.run?.taskId === runtime.taskId ? live.run.turns : 0;
++        const limited = maxTurns !== undefined && turns >= maxTurns;
++        const resetQueued = hasQueuedReset(boundary.inbox.items);
++        if (coding !== undefined && (terminate || limited || resetQueued)
++            && !("step" in coding && coding.step === "finalize")) {
++            return {
++                status: "running", checkpoint: {
++                    ...coding, phase: "codingSettle", step: "before", continued: false,
++                    outcome: terminate ? "completed" : limited ? "error" : "aborted",
++                    plan: { kind: "tools", tools: [...tools] },
++                },
++            };
++        }
+         if (added.length > 0)
+             await addTools(tx, conversationId, added);
+-        const live = await tx.doc(LiveDoc, conversationId);
+         const now = runtime.now();
+         // The run's last entry so far: the newest result, or the assistant when no result has an entry.
+         let last = results.reduce((newest, id) => (id > newest ? id : newest), assistant);
+@@ -882,7 +963,6 @@ async function finishToolRound(runtime, assistant, tools, context) {
+             boundary.head = entry.id;
+             last = entry.id;
+         }
+-        const turns = live.run?.taskId === runtime.taskId ? live.run.turns : 0;
+         const held = afterRun ? holdRun(tx, live, runtime, { reason: "terminate", answer: assistant, last }) : undefined;
+         if (held !== undefined)
+             return held;
+@@ -917,7 +997,7 @@ async function finishToolRound(runtime, assistant, tools, context) {
+                 delete live.nestedTools;
+                 if (live.run?.taskId === runtime.taskId)
+                     live.run.inputs.push(...users);
+-                handOver(live, runtime.taskId, await createGeneration(tx, conversationId));
++                handOver(live, runtime.taskId, await createGeneration(tx, conversationId, {}, coding === undefined ? {} : { codingRequest: true }));
+             }
+         }
+         return { status: "terminal", outcome: { status: "completed", result: { entryId: assistant } } };
+@@ -944,12 +1024,213 @@ export async function startRun(tx, conversationId, live, run, options) {
+         delete live.runFailure;
+ }
+ /** A generation owned by its conversation. */
+-function createGeneration(tx, conversationId, telemetry = {}) {
+-    return tx.createTask(GenerationTask, {}, { ownership: { kind: "conversation" }, conversationId, ...telemetry });
++function createGeneration(tx, conversationId, telemetry = {}, input = {}) {
++    return tx.createTask(GenerationTask, input, { ownership: { kind: "conversation" }, conversationId, ...telemetry });
+ }
+ /** Hand run control from `from` to `to`; the run's inputs move with it. */
+ export function handOver(live, from, to) {
+     if (live.run?.taskId === from)
+         live.run.taskId = to;
+ }
+-//# sourceMappingURL=generation.js.map
+\ No newline at end of file
++/** One preparation per request attempt, including a prompt preparation resumed after compaction. */
++async function prepareCodingEvents(runtime, checkpoint, context) {
++    const { attempt } = checkpoint;
++    const key = "mkagent.coding." + "prepare.v1:" + attempt;
++    let prepared = await runtime.memo(key, context);
++    if (prepared === undefined) {
++        const run = (await runtime.snapshot(LiveDoc, runtime.conversationId, context))?.run;
++        const latest = (await runtime.entries({}, 1, undefined, context)).items[0]?.id;
++        const batches = [];
++        await runtime.hooks.each("codingPrepare", async (handler) => {
++            const result = await handler({
++                agentStart: run?.codingStarted !== true, turnIndex: run?.codingTurn ?? 0,
++                ...(run?.first === undefined ? {} : { first: run.first }),
++                ...(run?.codingLastMessage === undefined ? {} : { after: run.codingLastMessage }),
++            }, runtime, context);
++            if (result?.entries)
++                batches.push(copyJson(result.entries, { omitUndefinedProperties: true }));
++        });
++        prepared = await runtime.memo(key, copyJson({ batches, latest }, { omitUndefinedProperties: true }), context);
++    }
++    const value = prepared;
++    await runtime.commit(async (tx) => {
++        const next = { status: "running", checkpoint: { ...checkpoint, codingPrepared: true } };
++        const live = await tx.doc(LiveDoc, runtime.conversationId);
++        if (live.run?.taskId !== runtime.taskId)
++            return next;
++        // The same memo can be revisited after blocking compaction; the commit marker also covers empty hook batches.
++        if (live.run.codingPreparation?.taskId === runtime.taskId && live.run.codingPreparation.attempt === attempt)
++            return next;
++        for (const batch of value.batches)
++            await appendCodingEntries(tx, runtime.conversationId, batch);
++        live.run.codingStarted = true;
++        live.run.codingPreparation = { taskId: runtime.taskId, attempt };
++        if (value.latest !== undefined)
++            live.run.codingLastMessage = value.latest;
++        return next;
++    }, context);
++}
++/** Native boundaries are opt-in; all ordinary durable runs keep their original path. */
++async function codingEnabled(runtime, context) {
++    return agentHooks(await runtime.agent(context), GenerationTask.definition.name)
++        .some(({ handlers }) => typeof handlers.codingBoundary === "function");
++}
++async function codingCanAnswer(runtime, context) {
++    const view = await runtime.context(runtime.conversationId, context);
++    const last = view.messages.findLast(message => message.role !== "system");
++    return last?.role === "user" || last?.role === "toolResult";
++}
++async function stageCodingTurn(runtime, message, plan, context) {
++    await runtime.commit(async (tx) => {
++        const live = await tx.doc(LiveDoc, runtime.conversationId);
++        const entry = await appendAssistant(tx, runtime.conversationId, message);
++        delete live.generation;
++        const state = {
++            phase: "codingBoundary", assistant: entry.id, results: [], plan,
++            turnIndex: live.run?.codingTurn ?? 0,
++            outcome: message.stopReason === "aborted" ? "aborted" : message.stopReason === "error" ? "error" : "completed",
++        };
++        return { status: "running", checkpoint: state };
++    }, context);
++}
++async function stageCodingTools(runtime, assistant, tools, context) {
++    const live = await runtime.snapshot(LiveDoc, runtime.conversationId, context);
++    const results = live?.tools?.flatMap(slot => slot.entry === undefined ? [] : [slot.entry]) ?? [];
++    await runtime.hooks.each("afterTools", handler => handler(assistant, results, runtime, context));
++    await runtime.commit(async () => ({
++        status: "running",
++        checkpoint: {
++            phase: "codingBoundary", assistant, results, plan: { kind: "tools", tools },
++            turnIndex: live?.run?.codingTurn ?? 0, outcome: "completed",
++        },
++    }), context);
++}
++async function commitCodingDecision(runtime, state, type, context) {
++    const key = "mkagent.coding." + type + ".v1:" + state.turnIndex;
++    let decision = await runtime.memo(key, context);
++    if (decision === undefined) {
++        const prepared = { entries: [], continue: false };
++        await runtime.hooks.each("codingBoundary", async (handler) => {
++            const asked = await handler({
++                type, assistant: state.assistant, results: state.results,
++                turnIndex: state.turnIndex, outcome: state.outcome,
++            }, runtime, context);
++            if (asked === undefined)
++                return;
++            // Validate the hook's JSON inside its reporting scope, before merging it.
++            const checked = copyJson(asked, { omitUndefinedProperties: true });
++            if (checked.entries) {
++                const offset = prepared.entries.length;
++                for (const entry of checked.entries) {
++                    const refs = entry.references;
++                    prepared.entries.push(refs === undefined ? entry : {
++                        ...entry, references: {
++                            ...(refs.head === undefined ? {} : { head: refs.head + offset }),
++                            ...(refs.edits === undefined ? {} : { edits: Object.fromEntries(Object.entries(refs.edits).map(([index, target]) => [index, target + offset])) }),
++                        },
++                    });
++                }
++            }
++            if (checked.continue !== undefined)
++                prepared.continue = checked.continue;
++        });
++        decision = await runtime.memo(key, copyJson(prepared, { omitUndefinedProperties: true }), context);
++    }
++    // The memo stores precisely this host decision, with JSON-checked drafts.
++    const prepared = decision;
++    await runtime.commit(async (tx) => {
++        await appendCodingEntries(tx, runtime.conversationId, prepared.entries);
++        const live = await tx.doc(LiveDoc, runtime.conversationId);
++        if (type === "turn_end" && live.run?.taskId === runtime.taskId)
++            live.run.codingTurn = state.turnIndex + 1;
++        return {
++            status: "running", checkpoint: {
++                ...state, phase: "codingSettle", step: type === "turn_end" ? "route" : "finalize",
++                continued: prepared.continue,
++            },
++        };
++    }, context);
++}
++/** Apply inbox writes before deciding whether this activity can settle. */
++async function routeCodingAnswer(runtime, state, context) {
++    const canAnswer = await codingCanAnswer(runtime, context);
++    const wants = state.continued === true && canAnswer;
++    const afterRun = state.step === "finalize" && await asksAfterRun(runtime, context);
++    const conversationId = runtime.conversationId;
++    await runtime.commit(async (tx) => {
++        const boundary = await prepareBoundary(tx, conversationId, runtime.settings);
++        const last = await tx.latestEntryId(conversationId) ?? state.assistant;
++        const live = await tx.doc(LiveDoc, conversationId);
++        const hasReset = hasQueuedReset(boundary.inbox.items);
++        if (hasReset && state.step === "route") {
++            return { status: "running", checkpoint: { ...state, step: "before", continued: false } };
++        }
++        const continuation = state.plan.kind === "answer" ? state.plan.continuation : undefined;
++        const yielding = takesContinuation(continuation, boundary) ? continuation : undefined;
++        const queuedUser = boundary.inbox.items.some(item => item.mode === "steer" || item.mode === "followUp");
++        const queuedWrite = boundary.inbox.items.findLast(item => item.mode === "write");
++        const queuedWrites = queuedWrite !== undefined;
++        if (state.continued && !canAnswer && !queuedUser && !queuedWrites && !hasReset && yielding === undefined) {
++            runtime.report(new Error("Coding continuation has no answerable context"), { kind: "extension" });
++        }
++        // afterRun owns the final boundary. In particular, reset inputs cannot be placed into the old run.
++        if (afterRun && (hasReset || (!wants && !queuedUser && yielding === undefined && !(state.continued && queuedWrites)))) {
++            const held = holdRun(tx, live, runtime, {
++                reason: state.plan.kind === "terminate" ? "terminate" : "answer", answer: state.assistant, last,
++            });
++            if (held !== undefined)
++                return held;
++        }
++        // A before-settle continuation on new context precedes queued follow-ups.
++        const at = state.step === "finalize" && state.continued && (canAnswer || queuedWrites) ? "postTools" : "final";
++        const { users, first, reset } = await applyBoundary(tx, boundary, at, runtime.now());
++        const completed = {
++            status: "terminal", outcome: { status: "completed", result: { entryId: state.assistant } },
++        };
++        if (!hasReset && (wants || users.length > 0 || yielding !== undefined)) {
++            if (yielding !== undefined) {
++                await tx.appendEntry(UserEntry, conversationId, { model: [{ role: "user", content: yielding, timestamp: runtime.now() }] });
++            }
++            if (live.run?.taskId === runtime.taskId) {
++                live.run.inputs.push(...users);
++                if (yielding !== undefined)
++                    live.run.turns = 0;
++            }
++            handOver(live, runtime.taskId, await createGeneration(tx, conversationId, {}, { codingRequest: true }));
++            delete live.generation;
++            return completed;
++        }
++        if (!reset && state.continued && !canAnswer && queuedWrites) {
++            // Context queries see committed history. Re-evaluate the same decision after the writes land.
++            return { status: "running", checkpoint: { ...state, appliedWrite: queuedWrite.id } };
++        }
++        if (state.step === "route" && !reset) {
++            return { status: "running", checkpoint: { ...state, step: "before", continued: false } };
++        }
++        endRun(tx, live, runtime.taskId, { status: "done", answer: state.assistant });
++        if (users.length > 0)
++            await startRun(tx, conversationId, live, { inputs: users, first });
++        return completed;
++    }, context);
++}
++/** Append in order, resolving every local reference before passing it to durable. */
++export async function appendCodingEntries(tx, conversation, entries) {
++    const ids = [];
++    const resolve = (position) => {
++        const id = ids[position];
++        if (id === undefined)
++            throw new Error('Coding entry references must point to an earlier draft');
++        return id;
++    };
++    for (const { references, ...entry } of entries) {
++        if (references?.head !== undefined)
++            entry.head = resolve(references.head);
++        if (references?.edits)
++            entry.edits = entry.edits?.map((edit, index) => {
++                const target = references.edits[index];
++                return target === undefined ? edit : { ...edit, target: resolve(target) };
++            });
++        ids.push((await tx.appendEntry(conversation, entry)).id);
++    }
++    return ids;
++}
+diff --git a/dist/harness/types.d.ts b/dist/harness/types.d.ts
+--- a/dist/harness/types.d.ts
++++ b/dist/harness/types.d.ts
+@@ -1,5 +1,5 @@
+ import type { Context, JsonValue, WatchHandle } from "@earendil-works/chord";
+-import type { Api, AssistantMessage, CacheRetention, ClientIdentity, Message, Model, Models, ModelThinkingLevel, Tool, ToolCall, ToolResultMessage, Transport, Usage, UserMessage } from "@earendil-works/pi-ai";
++import type { Api, AssistantMessage, AssistantMessageEvent, CacheRetention, ClientIdentity, Message, Model, Models, ModelThinkingLevel, Tool, ToolCall, ToolResultMessage, Transport, Usage, UserMessage } from "@earendil-works/pi-ai";
+ import type { Static } from "@earendil-works/pi-schema";
+ import type { TelemetryContext } from "@earendil-works/pi-telemetry";
+ import type { ExecutionEnv, ShellOutputSkip, ShellOutputWindow } from "../env/index.ts";
+@@ -888,6 +888,35 @@ export interface HookApi extends DocumentReader {
+ export type HookResult<T> = T | undefined | Promise<T | undefined>;
+ /** Hooks of the built-in generation task. */
+ export interface GenerationHooks {
++  /** Await native run/turn and input-message handlers before rendering this request's agent and prompt. */
++  codingPrepare(
++    event: { readonly agentStart: boolean; readonly turnIndex: number; readonly first?: EntryId; readonly after?: EntryId },
++    api: HookApi, context: Context,
++  ): HookResult<{ readonly entries?: readonly (EntryDraft & { references?: { head?: number; edits?: Record<number, number> } })[] }>;
++
++  /** Await native stream handlers before consuming the next provider event. Closing drains plugin writes. */
++  codingStream(
++    frame: { readonly type: "event"; readonly event: AssistantMessageEvent }
++      | { readonly type: "closed"; readonly aborted: boolean },
++    api: HookApi, context: Context,
++  ): HookResult<void>;
++
++  /**
++   * A committed native coding boundary. The host returns validated entry drafts.
++   * Decisions are memoized per task, event and turn; drafts and the next phase
++   * commit together. Side effects before the memo commits may repeat on restart.
++   */
++  codingBoundary(
++    boundary: {
++      readonly type: "turn_end" | "agent_before_settle";
++      readonly assistant: EntryId;
++      readonly results: readonly EntryId[];
++      readonly turnIndex: number;
++      readonly outcome: "completed" | "error" | "aborted";
++    },
++    api: HookApi, context: Context,
++  ): HookResult<{ readonly entries?: readonly (EntryDraft & { references?: { head?: number; edits?: Record<number, number> } })[]; readonly continue?: boolean }>;
++
+     /** Before every request attempt, including recovery; the result is used for that request only. */
+     beforeRequest(request: {
+         readonly messages: readonly Message[];
+@@ -990,5 +1019,4 @@ export interface CompactionHooks {
+         readonly summary: string;
+     }>;
+ }
+-export {};
+-//# sourceMappingURL=types.d.ts.map
+\ No newline at end of file
++export {};
+\ No newline at end of file
+diff --git a/dist/harness/live.d.ts b/dist/harness/live.d.ts
+--- a/dist/harness/live.d.ts
++++ b/dist/harness/live.d.ts
+@@ -109,6 +109,11 @@ export type RunFailure = {
+ };
+ /** Run control (spec §8.2). */
+ export type LiveRun = {
++    /** Native coding turn index, independent of the durable tool-round limit. */
++    codingTurn?: number;
++    codingStarted?: boolean;
++    codingLastMessage?: EntryId;
++    codingPreparation?: { taskId: TaskId; attempt: number };
+     /** The task that settles the run's inputs: its generation, handed from one to the next. */
+     taskId: TaskId;
+     /** The run's placed inputs, settled when it ends; `[]` once it answered and runs only its `afterRun` tasks. */
+@@ -258,5 +263,4 @@ export declare function clearProgress(slot: Draft<SlotProgress>): void;
+  * uncertain storage failure poisons the Session instead and writes no outcome.
+  */
+ export declare function settleSchedulerOutcome(tx: Transaction, record: TaskRecord<JsonValue, JsonValue, JsonValue>, outcome: SchedulerOutcome): Promise<void>;
+-export {};
+-//# sourceMappingURL=live.d.ts.map
+\ No newline at end of file
++export {};
+\ No newline at end of file
+diff --git a/dist/harness/generation.d.ts b/dist/harness/generation.d.ts
+--- a/dist/harness/generation.d.ts
++++ b/dist/harness/generation.d.ts
+@@ -1,12 +1,15 @@
+ import { type Draft } from "@earendil-works/chord";
+-import type { DeferredHandle, ModelThinkingLevel } from "@earendil-works/pi-ai";
+-import type { ConversationId, EntryId, SubmissionId, Task, TaskId, Tx } from "../types.ts";
++import type { DeferredHandle, Message, ModelThinkingLevel } from "@earendil-works/pi-ai";
++import type { ConversationId, EntryId, EntryDraft, SubmissionId, Task, TaskId, Tx } from "../types.ts";
+ import { type LiveState } from "./live.ts";
+ import { type ToolTaskResult } from "./tool.ts";
+-import type { CompactionResult, ConversationStreamOptions, GenerationHooks, ModelRef, RunSummary } from "./types.ts";
+-export type GenerationInput = Record<string, never>;
++import type { CompactionResult, ConversationStreamOptions, GenerationHooks, ModelRef, RunSummary, UserInput } from "./types.ts";
++export type GenerationInput = {
++    codingRequest?: true;
++};
+ export type GenerationCheckpoint = {
+     phase: "prepare";
++    codingPrepared?: true;
+     attempt: number;
+     /** The blocking compaction this generation waited for; it starts no other compaction (spec §8.3). */
+     compacted?: TaskId<CompactionResult>;
+@@ -70,10 +73,61 @@ export type GenerationCheckpoint = {
+     phase: "drain";
+     answer: EntryId;
+     tasks: TaskId[];
++} | CodingCheckpoint | CodingPrepareCheckpoint;
++type CodingPlan = {
++    kind: "answer";
++    continuation?: UserInput;
++} | {
++    kind: "tools";
++    tools: TaskId<ToolTaskResult>[];
++} | {
++    kind: "terminate";
++    last: EntryId;
++} | {
++    kind: "failure";
++    request: Request;
++};
++type CodingState = {
++    assistant: EntryId;
++    results: EntryId[];
++    turnIndex: number;
++    outcome: "completed" | "error" | "aborted";
++    plan: CodingPlan;
++    continued?: boolean;
++    appliedWrite?: SubmissionId;
++};
++type CodingCheckpoint = CodingState & ({
++    phase: "codingBoundary";
++} | {
++    phase: "codingSettle";
++    step: "route" | "before" | "finalize";
++});
++type CodingPrepareCheckpoint = {
++    phase: "codingPrepare";
++    prepare: {
++        phase: "prepare";
++        attempt: number;
++        codingPrepared?: true;
++        compacted?: TaskId<CompactionResult>;
++        overflow?: string;
++        threshold?: true;
++    };
+ };
+ export type GenerationResult = {
+     entryId: EntryId;
+ };
++/** What classification needs from the request that produced a message. */
++type Request = {
++    readonly attempt: number;
++    readonly compacted: TaskId<CompactionResult> | undefined;
++    readonly model: ModelRef;
++    readonly thinkingLevel: ModelThinkingLevel | undefined;
++    readonly cutoff: EntryId;
++    /** Committed model context through `cutoff`, when the phase already derived it. */
++    readonly messages?: readonly Message[];
++    /** Set when the message came from polling, so a still deferred result polls strictly later. */
++    readonly pollAt?: number;
++};
+ /**
+  * Built-in generation task: prepares the positional system prompt and tool loadout, requests or polls the model,
+  * retries, and classifies the response. The run's inputs live in `pi.live.run`.
+@@ -97,4 +151,12 @@ export declare function startRun(tx: Tx, conversationId: ConversationId, live: D
+ }): Promise<void>;
+ /** Hand run control from `from` to `to`; the run's inputs move with it. */
+ export declare function handOver(live: Draft<LiveState>, from: TaskId, to: TaskId): void;
+-//# sourceMappingURL=generation.d.ts.map
+\ No newline at end of file
++export interface CodingEntryDraft extends EntryDraft {
++    references?: {
++        head?: number;
++        edits?: Record<number, number>;
++    };
++}
++/** Append in order, resolving every local reference before passing it to durable. */
++export declare function appendCodingEntries(tx: Tx, conversation: ConversationId, entries: readonly CodingEntryDraft[]): Promise<EntryId[]>;
++export {};
