@@ -18,6 +18,7 @@ import type { AgentEvent } from '@mkagent/core/types';
  */
 
 import http from 'node:http';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { createInterface } from 'node:readline';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
@@ -67,7 +68,7 @@ import { createCodemodeExtensionFor } from './tools/codemode.ts';
 import { loadMcpTools, closeMcpConnections, type McpToolsLoadResult } from './mcp/extension.ts';
 import { createToolSearchExtension } from '@earendil-works/pi-durable/tool-search';
 import { version as CLIENT_VERSION } from '../package.json';
-import type { PiCodingResources, PiCompactResult, PiContextUsagePayload } from '../../shared/src/agent/backend/pi/protocol.ts';
+import type { PiCodingResources, PiCompactResult, PiContextUsagePayload, PiWorkerScope } from '../../shared/src/agent/backend/pi/protocol.ts';
 import { adaptCredentialForPiSdk, type PiCredential } from './adapt-credential.ts';
 import { resolveCraftAgentDir } from './agent-dir.ts';
 import { toPiProviderId } from '../../shared/src/config/pi-provider-ids.ts';
@@ -121,7 +122,7 @@ interface RuntimeConfigUpdateMessage {
 }
 
 /** Messages from main process (stdin) */
-type InboundMessage =
+type InboundMessage = (
   | { type: 'stop_background_task'; id: string; taskId: string }
   | InitMessage
   | { type: 'prompt'; id: string; message: string; systemPrompt: string; images?: Array<{ type: 'image'; data: string; mimeType: string }> }
@@ -141,7 +142,8 @@ type InboundMessage =
   | RuntimeConfigUpdateMessage
   | { type: 'steer'; message: string }
   | { type: 'token_update'; piAuth: { provider: string; credential: PiCredential } }
-  | { type: 'shutdown' };
+  | { type: 'shutdown' }
+) & Partial<PiWorkerScope>;
 
 /** Proxy tool definition from main process */
 interface ProxyToolDef {
@@ -270,7 +272,9 @@ const endpointEnvironment = new ProviderEndpointEnvironment();
 
 // Mutable state
 let currentUserMessage = '';
-const backgroundShells = new BackgroundShells(event => send({ type: 'background_task_event', event }));
+let foregroundScope: PiWorkerScope | undefined;
+const workerContext = new AsyncLocalStorage<{ scope?: PiWorkerScope }>();
+const backgroundShells = new BackgroundShells((event, scope) => sendScoped({ type: 'background_task_event', event }, scope));
 
 // Pending promises for async handshakes
 const pendingPreToolUse = new Map<string, { resolve: (response: { action: string; input?: Record<string, unknown>; reason?: string }) => void }>();
@@ -301,9 +305,32 @@ let callbackPort = 0;
 // JSONL I/O
 // ============================================================
 
-function send(msg: OutboundMessage): void {
-  const line = JSON.stringify(msg);
+function currentWorkerScope(): PiWorkerScope | undefined {
+  const context = workerContext.getStore();
+  return context ? context.scope : foregroundScope;
+}
+
+function isForegroundScope(scope: PiWorkerScope | undefined): boolean {
+  return scope?.ownerSessionId === foregroundScope?.ownerSessionId &&
+    scope?.runtimeGeneration === foregroundScope?.runtimeGeneration;
+}
+
+function sendScoped(msg: OutboundMessage, scope?: PiWorkerScope): void {
+  const line = JSON.stringify({ ...msg, ...scope });
   process.stdout.write(line + '\n');
+}
+
+function send(msg: OutboundMessage): void {
+  sendScoped(msg, currentWorkerScope());
+}
+
+function readWorkerScope(msg: Partial<PiWorkerScope>): PiWorkerScope | undefined {
+  if (msg.ownerSessionId === undefined && msg.runtimeGeneration === undefined) return undefined;
+  if (typeof msg.ownerSessionId !== 'string' || !msg.ownerSessionId ||
+      typeof msg.runtimeGeneration !== 'number' || !Number.isSafeInteger(msg.runtimeGeneration) || msg.runtimeGeneration < 1) {
+    throw new Error('Invalid Pi worker message scope');
+  }
+  return { ownerSessionId: msg.ownerSessionId, runtimeGeneration: msg.runtimeGeneration };
 }
 
 function debugLog(message: string): void {
@@ -577,6 +604,7 @@ function toolWrapDependencies(cwd: string): ToolWrapDeps {
   return {
     requestApproval: requestPreToolUseApproval,
     backgroundShells,
+    ownerScope: currentWorkerScope(),
     tasksDirectory: join(resolveCraftAgentDir(initConfig), 'tasks'),
     // Same env options as the kernel's; background bash must not run through
     // durable's bash tool (its api is call-scoped and rejects after settle).
@@ -621,26 +649,28 @@ function buildToolsExtension(cwd: string, mcpTools: readonly ToolRegistration[])
 // Kernel session lifecycle
 // ============================================================
 
-const kernelHooks: KernelHooks = {
-  emitEvent: (event) => send({ type: 'event', event: event as OutboundAgentEvent }),
-  sessionToolCompleted: (toolName, args, isError) => send({ type: 'session_tool_completed', toolName, args, isError }),
-  prefetchToolCall: (toolCallId, toolName, args) => {
-    if (reinitializing || shuttingDown) return;
-    const requestId = `prefetch-${toolCallId}`;
-    const promise = new Promise<{ content: string; isError: boolean }>((resolve) => {
-      pendingToolExecutions.set(requestId, { resolve });
-    });
-    send({
-      type: 'tool_execute_request',
-      requestId,
-      toolName,
-      args,
-    });
-    prefetchCache.set(toolCallId, promise);
-  },
-  isPrefetchableTool,
-  debugLog,
-};
+function createKernelHooks(scope: PiWorkerScope | undefined): KernelHooks {
+  return {
+    emitEvent: (event) => sendScoped({ type: 'event', event: event as OutboundAgentEvent }, scope),
+    sessionToolCompleted: (toolName, args, isError) => sendScoped({ type: 'session_tool_completed', toolName, args, isError }, scope),
+    prefetchToolCall: (toolCallId, toolName, args) => {
+      if (reinitializing || shuttingDown) return;
+      const requestId = `prefetch-${toolCallId}`;
+      const promise = new Promise<{ content: string; isError: boolean }>((resolve) => {
+        pendingToolExecutions.set(requestId, { resolve });
+      });
+      sendScoped({
+        type: 'tool_execute_request',
+        requestId,
+        toolName,
+        args,
+      }, scope);
+      prefetchCache.set(toolCallId, promise);
+    },
+    isPrefetchableTool,
+    debugLog,
+  };
+}
 
 async function ensureKernel(): Promise<DurableKernel> {
   if (kernel) return kernel;
@@ -685,7 +715,7 @@ async function openKernel(): Promise<DurableKernel> {
       if (!modelRuntime) throw new Error('Model runtime not initialized');
       return modelRuntime.codingCredentials;
     },
-    hooks: kernelHooks,
+    hooks: createKernelHooks(currentWorkerScope()),
     toolsExtension: buildToolsExtension(cwd, mcpLoad.tools),
     ...(initConfig.agentProfile === 'coding' || initConfig.codingResources ? {
       coding: {
@@ -1228,7 +1258,7 @@ async function shutdown(): Promise<void> {
 async function processMessage(msg: InboundMessage, compactController?: AbortController): Promise<void> {
   switch (msg.type) {
     case 'stop_background_task':
-      send({ type: 'stop_background_task_result', id: msg.id, stopped: await backgroundShells.stop(msg.taskId) });
+      send({ type: 'stop_background_task_result', id: msg.id, stopped: await backgroundShells.stop(msg.taskId, currentWorkerScope()) });
       break;
     case 'init':
       await handleInit(msg);
@@ -1348,6 +1378,19 @@ function main(): void {
     if (!line.trim()) return;
     try {
       const msg = JSON.parse(line) as InboundMessage;
+      const scope = readWorkerScope(msg);
+      if (msg.type === 'init') {
+        if ((scope && scope.ownerSessionId !== msg.sessionId) ||
+            (foregroundScope && (!scope || scope.runtimeGeneration < foregroundScope.runtimeGeneration ||
+              (scope.runtimeGeneration === foregroundScope.runtimeGeneration && scope.ownerSessionId !== foregroundScope.ownerSessionId)))) {
+          debugLog('Ignoring stale or mismatched worker initialization');
+          return;
+        }
+        foregroundScope = scope;
+      } else if (msg.type !== 'stop_background_task' && !isForegroundScope(scope)) {
+        debugLog('Ignoring message from an inactive worker binding');
+        return;
+      }
       if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') inputGeneration++;
       const generation = inputGeneration;
       if (msg.type === 'init') {
@@ -1360,20 +1403,29 @@ function main(): void {
         compactController = new AbortController();
         pendingCompactions.set(msg.id, compactController);
       }
+      const dispatch = () => {
+        if (msg.type !== 'init' && msg.type !== 'stop_background_task' && !isForegroundScope(scope)) {
+          // Retired requests never reach handleCompact's cleanup.
+          if (msg.type === 'compact' && pendingCompactions.get(msg.id) === compactController) pendingCompactions.delete(msg.id);
+          debugLog('Ignoring queued message from an inactive worker binding');
+          return Promise.resolve();
+        }
+        return workerContext.run({ scope }, () => processMessage(msg, compactController));
+      };
       const operation = msg.type === 'init'
-        ? initialization.catch(() => undefined).then(() => processMessage(msg))
-        : ['tool_execute_response', 'pre_tool_use_response', 'abort', 'cancel_compact', 'shutdown'].includes(msg.type)
-          ? processMessage(msg)
+        ? initialization.catch(() => undefined).then(dispatch)
+        : ['tool_execute_response', 'pre_tool_use_response', 'abort', 'cancel_compact', 'stop_background_task', 'shutdown'].includes(msg.type)
+          ? dispatch()
           : initialization.then(() => {
               if ((msg.type === 'prompt' || msg.type === 'steer') && generation !== inputGeneration) return;
-              return processMessage(msg, compactController);
+              return dispatch();
             });
       if (msg.type === 'init') initialization = operation;
       operation.catch((error) => {
         if (msg.type === 'compact' && pendingCompactions.get(msg.id) === compactController) pendingCompactions.delete(msg.id);
         const errorMsg = error instanceof Error ? error.message : String(error);
         debugLog(`Error processing message: ${errorMsg}`);
-        send({ type: 'error', message: errorMsg });
+        sendScoped({ type: 'error', message: errorMsg }, scope);
       });
     } catch (parseError) {
       debugLog(`Failed to parse JSONL: ${parseError}`);

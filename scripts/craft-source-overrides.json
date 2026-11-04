@@ -1011,8 +1011,8 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "4149ea7bb8a2e5a96babf96d252bfc976ea651afbcd5d2cbc49faf65568c07e6",
-      "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining JSONL host events, tool registration, runtime updates, compaction cancellation and shutdown cleanup. Reject unavailable initial models and report failed model switches through the existing host error protocol. Bind the coding profile to explicit resources and host tool approval."
+      "sha256": "7efacfdfa4107d6a41c765cc4b74616c114b9a8477188c944ed19421085836cb",
+      "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining host events, approvals, runtime updates and shutdown cleanup. Capture product ownership for JSONL calls and kernel events, reject retired foreground scopes, and preserve source ownership for background notifications and stop requests."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
       "sha256": "dcd8c54fb1a0eb73a1b6f3984fe2dae176929c76b03bfb52323ad440fe23084c",
@@ -1591,8 +1591,8 @@
       "reason": "Retain Craft event conversion with MkAgent turn billing, message deduplication and retry queue handling; import the vendored host event contract and hold retryable failures when durable announces backoff before message_end. Read the retained host event contract from local wire types."
     },
     "packages/shared/src/agent/backend/pi/protocol.ts": {
-      "sha256": "1c86062ba34c847c1de6d7c928a9edd03ac425c0f053897f346f676c56048347",
-      "reason": "Retain Pi/Lite protocol and tools; decision-model messages and filtering deferred. Carry explicit coding resources and independent native-session resource policy through the subprocess protocol."
+      "sha256": "9423eae1f254a00f61c772ba4deed2f62169a6eda01e28e33e77cad63323d754",
+      "reason": "Retain Pi/Lite protocol and tools. Carry explicit coding resources, independent native-session resource policy, and the product session and generation ownership scope through the subprocess protocol."
     },
     "packages/shared/src/agent/backend/pi/session-tool-defs.ts": {
       "sha256": "8ddb91e07bfcc16c46c038f17080e5cc63eebd26b5f057500a27a8c05e6693f7",
@@ -1699,8 +1699,8 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/pi-agent.ts": {
-      "sha256": "a9290794b822e43a23ca244b041c04425c04a5325d25b7600f0635344dce87cf",
-      "reason": "Retain the Craft-derived Pi/Lite subprocess client and PR handoffs; share startup through credential loading, reject stale child callbacks and late requests, forward browser input classifications, cancel compactions by request ID, block replacement startup until the previous child exits, and reopen the event queue during failed-resume recovery without losing replacement events or user cancellation. Forward the coding profile and resource options through Pi init; isolate worker I/O behind generation-checked product-session bindings."
+      "sha256": "419749261a240fb43b6ec5839b738ba42a3cefbc17ff83e702399406b654bb79",
+      "reason": "Retain the Craft-derived Pi/Lite client, startup, permissions, runtime updates, compaction, error recovery and PR handoffs. Isolate worker I/O behind owned generation-checked bindings; preserve scope during shutdown and release abandoned background stop requests on timeout or unavailable transport."
     },
     "packages/shared/src/agent/plan-types.ts": {
       "sha256": "529cc7377490361bef7e742729c31f9adffdadb5b77a8eb0d5eda3ccfa2d9aaf",
@@ -2308,13 +2308,21 @@
     }
   },
   "mkOnly": {
+    "packages/pi-agent-server/src/background-shell-owner.test.ts": {
+      "sha256": "8586784a03e673b72bb8c67df14361880a8ccfb9107b3073f80931d113b06ccd",
+      "reason": "Verify immutable background ownership, exact owner and generation checks for stop requests, and owner-specific disposal."
+    },
+    "packages/pi-agent-server/src/worker-scope.e2e.test.ts": {
+      "sha256": "5c127083e92f4b43e5614016ff68e1963bdc196a9c3fcde90e097bbdbd5f8f61",
+      "reason": "Run both worker profiles with deterministic local models to verify owned replies, stale foreground rejection, history isolation, source background ownership and cleanup of retired queued compaction IDs across reinitialization."
+    },
     "packages/shared/src/agent/__tests__/pi-worker-connection.test.ts": {
-      "sha256": "663af371a59b08cc7fc20d83997e74332441e25cfa6d4e1c86259543f53c6e0d",
-      "reason": "Verify real-process worker rebinding, generation and owner validation, initial unscoped compatibility, stale lease rejection and release isolation."
+      "sha256": "c4da0079b71982eb23c6a85cb63e196f895a2b87e0cb324c71312e2be533af44",
+      "reason": "Verify real-process worker rebinding, scope validation, legacy first binding, restricted retained background capabilities, known completion and stop replies, shared exit notification, and abandoned reply cleanup."
     },
     "packages/shared/src/agent/backend/pi/worker-connection.ts": {
-      "sha256": "0ccca7720320b3249ba6b7b34ffdc30be2718e5b6a403995267f8a9f95cc867b",
-      "reason": "Own Pi worker I/O and generation-checked foreground bindings independently of product agent callbacks."
+      "sha256": "674c8375ae5a3d24bcb0b77f492f256fe23bc498186f708cf9be02577be55df3",
+      "reason": "Own Pi worker I/O and immutable generation-checked foreground bindings; retain restricted source background leases until known tasks and pending stop replies finish, and notify all live owners on process exit."
     },
     "packages/pi-agent-server/src/coding-host-cache-warming.e2e.test.ts": {
       "sha256": "b4e092c1b40332ca2adb759477091af087d1bd01d02367c0c64f856a7bea6de2",
@@ -2461,8 +2469,8 @@
       "reason": "Adapt local main background-shell regressions to durable Bash execution, retaining live output, task-specific cancellation and failed-command output checks."
     },
     "packages/pi-agent-server/src/background-shell.ts": {
-      "sha256": "e2cafa03608330a3759a00646a4b9bf4723c797c4741ec93a83031dc5a196287",
-      "reason": "Retain the local main permission-gated background shell owner and replace the pi-coding-agent result type dependency with its compatible local shape."
+      "sha256": "fdee8bf0a2eb82a288c3b473dc51aa7f6866ef35ed5a123bb8d42c0641d28055",
+      "reason": "Retain permission-gated background shells with a compatible local result type. Snapshot product and generation ownership at launch, preserve it on completion, and enforce ownership for stopping and scoped disposal."
     },
     "packages/pi-agent-server/src/mkagent-metadata-schema.test.ts": {
       "sha256": "cc019512931c282297c5d35019b64ac73023ace7ecbe55b7a01a41efeabc3b4f",
@@ -2853,8 +2861,8 @@
       "reason": "Vendor the required pi-coding-agent 1.1.0 core/tools/truncate.js size, head, line and middle truncation helpers."
     },
     "packages/pi-agent-server/src/tools/wrap.ts": {
-      "sha256": "cb67f1acf27fdc8e4596ff9fc5834510116f813b2d8e4fab67f0f18b950be41d",
-      "reason": "Migrate local main index.ts wrapSingleTool to durable registrations; resolve file paths before host approval, apply approved path changes and reject conflicts, and retain metadata stripping, independent background Bash execution and response summarization. Memoize final approved arguments for native tool-result observers."
+      "sha256": "852cd36caeec3dac064a491655df3b9a0c56bc565af4cc1ea9f26e3889e83653",
+      "reason": "Adapt local main tool wrappers for durable registration, host approval and approved argument changes, metadata stripping, summarization and native observers. Capture the kernel ownership scope when launching independent background Bash tasks."
     },
     "packages/shared/src/agent/backend/pi/agent-session-events.ts": {
       "sha256": "14fb3d9372d96d613db473cb98f66b662ed5a304e0d2262fb3ccd4ab631cb8ef",

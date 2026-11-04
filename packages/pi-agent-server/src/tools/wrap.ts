@@ -15,6 +15,7 @@ import { copyJson } from '@earendil-works/chord';
 import { estimateTokens, handleLargeResponse, tokenLimitFor } from '../../../shared/src/utils/large-response.ts';
 import { getSessionPath } from '../../../shared/src/sessions/storage.ts';
 import { PI_TOOL_NAME_MAP } from '../../../shared/src/agent/backend/pi/constants.ts';
+import type { PiWorkerScope } from '../../../shared/src/agent/backend/pi/protocol.ts';
 import { allowMkAgentMetadataProperties, stripMkAgentMetadata } from '../mkagent-metadata-schema.ts';
 import type { BackgroundShells } from '../background-shell.ts';
 import { resolveReadPath, resolveToCwd } from './local/path-utils.ts';
@@ -23,6 +24,7 @@ export interface ToolWrapDeps {
   /** Main-process permission check; resolves the (possibly modified) input, throws on block. */
   requestApproval(toolName: string, input: Record<string, unknown>, toolCallId?: string): Promise<Record<string, unknown>>;
   backgroundShells: BackgroundShells;
+  ownerScope?: PiWorkerScope;
   /** Directory for background task output files (`<agentDir>/tasks`). */
   tasksDirectory: string;
   /**
@@ -106,6 +108,7 @@ export function wrapToolForKernel(tool: AnyTool, deps: ToolWrapDeps): AnyTool {
       let outputBuffer = '';
       const started = deps.backgroundShells.start({
         directory: deps.tasksDirectory,
+        owner: deps.ownerScope,
         toolUseId: api.callId,
         command,
         execute: async (taskSignal, update) => {

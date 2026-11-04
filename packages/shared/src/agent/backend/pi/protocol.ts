@@ -1,3 +1,9 @@
+/** Product ownership is independent of the native coding session ID. */
+export interface PiWorkerScope {
+  readonly ownerSessionId: string;
+  readonly runtimeGeneration: number;
+}
+
 /** Raw Pi SDK context metadata on JSONL events/responses. No runtime imports. */
 export interface PiCodingResources {
   agentDir?: string;

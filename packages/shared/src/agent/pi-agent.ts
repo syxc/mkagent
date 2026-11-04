@@ -321,13 +321,20 @@ export class PiAgent extends BaseAgent {
   async stopBackgroundTask(taskId: string): Promise<boolean> {
     if (!this.subprocess) throw new Error('Background task transport unavailable');
     const id = crypto.randomUUID();
+    const lease = this.workerLease;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pendingBackgroundStops.delete(id);
+        lease?.cancelBackgroundStop(id);
         reject(new Error('Background task stop timed out'));
       }, this.backgroundStopTimeoutMs);
       this.pendingBackgroundStops.set(id, { resolve, reject, timer });
-      this.send({ type: 'stop_background_task', id, taskId });
+      if (this.send({ type: 'stop_background_task', id, taskId }) === false) {
+        clearTimeout(timer);
+        this.pendingBackgroundStops.delete(id);
+        lease?.cancelBackgroundStop(id);
+        reject(new Error('Background task transport unavailable'));
+      }
     });
   }
 
@@ -713,17 +720,19 @@ export class PiAgent extends BaseAgent {
   /**
    * Send a JSONL command to the subprocess stdin.
    */
-  private send(cmd: Record<string, unknown>): void {
+  private send(cmd: Record<string, unknown>): boolean {
     if (this.workerLease) {
-      if (!this.workerLease.send(cmd)) this.debug('Cannot send to subprocess: worker binding unavailable');
-      return;
+      const sent = this.workerLease.send(cmd);
+      if (!sent) this.debug('Cannot send to subprocess: worker binding unavailable');
+      return sent;
     }
     if (!this.subprocess?.stdin?.writable) {
       this.debug('Cannot send to subprocess: stdin not writable');
-      return;
+      return false;
     }
     const line = JSON.stringify(cmd);
     this.subprocess.stdin.write(line + '\n');
+    return true;
   }
 
   /**
@@ -2283,6 +2292,10 @@ export class PiAgent extends BaseAgent {
     this.pendingPermissions.clear();
     this.eventQueue.complete();
 
+    const workerScope = this.workerLease ? {
+      ownerSessionId: this.workerLease.ownerSessionId,
+      runtimeGeneration: this.workerLease.generation,
+    } : undefined;
     this.workerConnection?.close();
     this.workerConnection = null;
     this.workerLease = null;
@@ -2327,7 +2340,7 @@ export class PiAgent extends BaseAgent {
         timer.unref();
         // Graceful cancellation needs time to flush durable state before restart.
         try {
-          this.send({ type: 'shutdown' });
+          this.send({ type: 'shutdown', ...workerScope });
         } catch {
           // stdin may already be closed
         }
