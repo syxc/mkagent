@@ -53,6 +53,7 @@ import { CacheWarmer } from './cache-warmer.ts';
 import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent/shared/sessions';
 import { rewriteStoredModelHistory } from '@mkagent/shared/sessions/model-history-paths';
 import { CodingHost, type KernelCodingOptions } from './coding-host.ts';
+import type { ExtensionUIHost } from './extension-ui.ts';
 
 import type { ModelRuntimeCredentials, AgentSessionEvent as NativeAgentSessionEvent } from '@mkagent/pi-durable-coding/native';
 
@@ -101,6 +102,7 @@ export interface DurableKernelOptions {
   /** Extra extensions installed beside the tools extension (codemode, tool_search). */
   extensions?: readonly Extension[];
   coding?: KernelCodingOptions;
+  codingUI?: ExtensionUIHost;
   /** Apply the same approval and output policy used for the host's own tools. */
   wrapCodingTool?(tool: ToolRegistration): ToolRegistration;
 }
@@ -121,6 +123,12 @@ interface RetrySynthState {
   attempt: number;
   errorMessage: string | undefined;
 }
+
+type CodingInputOptions = {
+  source?: 'interactive' | 'extension' | 'rpc';
+  expandPromptTemplates?: boolean;
+  nativeInput?: { text: string; hostContextPrefix: string };
+};
 
 export class DurableKernel {
   /** Active model for context-window tracking and compaction reserves. */
@@ -176,10 +184,12 @@ export class DurableKernel {
   /** Retained output window per running tool call (append/trimStart semantics). */
   private toolOutputBuffers = new Map<string, string>();
   private pendingInputs = new Set<Promise<void>>();
-  private inputAdmission: Promise<void> = Promise.resolve();
+  private inputAdmission: Promise<boolean> = Promise.resolve(true);
   private acceptedInputs = new Set<number>();
   private startedInputs = new Set<number>();
   private coding: CodingHost | undefined;
+  private codingReload: Promise<void> | undefined;
+  private closing: Promise<void> | undefined;
   private nativeTools: ToolRegistration[] = [];
   private hostTools: Extension;
   private thinkingLevel: ThinkingLevel = 'off';
@@ -655,7 +665,7 @@ export class DurableKernel {
       harness: this.harness!, conversation: this.conversation!, registry: this.registry!,
       cwd: this.options.cwd, sessionPath: this.options.sessionPath, id: this.sessionId, profile,
       models: this.options.modelsSource, credentials: this.options.modelCredentialsSource?.(),
-      autoCompactWindow: this.options.autoCompactWindow,
+      autoCompactWindow: this.options.autoCompactWindow, ui: this.options.codingUI,
       model: async models => {
         const selected = this.currentModel ?? (await this.conversation!.agent(BACKGROUND_CONTEXT)).model;
         return selected && models.getModel(selected.provider, selected.modelId);
@@ -688,15 +698,31 @@ export class DurableKernel {
         },
         navigateTree: async () => { throw new Error('Native tree navigation requires the MkAgent session owner'); },
         switchSession: async () => { throw new Error('Session switching requires the MkAgent session owner'); },
-        reload: async () => {
-          await this.waitForIdle();
-          await this.coding?.close();
-          this.coding = undefined;
-          await this.openCoding('reload');
-        },
+        reload: () => this.reloadCodingSession(),
       },
     }, reason);
     await this.coding.start(reason);
+  }
+
+  private reloadCodingSession(): Promise<void> {
+    if (this.closing) return Promise.reject(new Error('Cannot reload a coding session while closing'));
+    if (this.codingReload) return this.codingReload;
+    // Register before starting, including the interval without an active coding host.
+    const operation = Promise.resolve().then(async () => {
+      const resumeUI = this.options.codingUI?.suspend();
+      try {
+        await this.waitForIdle();
+        await this.coding?.close();
+        this.coding = undefined;
+      } finally {
+        resumeUI?.();
+      }
+      await this.openCoding('reload');
+    });
+    this.codingReload = operation;
+    return operation.finally(() => {
+      if (this.codingReload === operation) this.codingReload = undefined;
+    });
   }
 
   /** Native AgentSession supplies its own events; only add host metadata and accounting. */
@@ -736,6 +762,7 @@ export class DurableKernel {
   }
 
   private async changeCodingSession(nativeId?: string, position: 'at' | 'before' = 'at') {
+    if (this.closing) throw new Error('Cannot change a coding session while closing');
     await this.abort();
     const previous = this.conversation!;
     const agent = await previous.agent(BACKGROUND_CONTEXT);
@@ -767,40 +794,51 @@ export class DurableKernel {
     return { cancelled: false };
   }
 
-  async submitPrompt(message: string, images?: Array<{ data: string; mimeType: string }>): Promise<void> {
+  async submitPrompt(message: string, images?: Array<{ data: string; mimeType: string }>,
+    nativeInput?: CodingInputOptions['nativeInput']): Promise<{ handled: boolean; completed: boolean }> {
     const content = images?.length ? [{ type: 'text' as const, text: message },
       ...images.map(image => ({ ...image, type: 'image' as const }))] : message;
-    await this.enqueueCodingInput(content, 'followUp');
-    await this.coding?.flush();
+    const operation = this.enqueueCodingInput(content, 'followUp', { nativeInput, source: nativeInput ? 'rpc' : undefined });
+    let tail = this.inputAdmission;
+    const handled = await operation;
+    let completed = handled;
+    // Commands may enqueue native prompts before their own admission finishes.
+    while (completed && tail !== this.inputAdmission) {
+      tail = this.inputAdmission;
+      completed = await tail;
+    }
+    if (!this.closing) await this.coding?.flush();
+    return { handled, completed: completed && !this.coding?.isStreaming };
   }
 
   async steer(message: string): Promise<void> {
     await this.enqueueCodingInput(message, 'steer');
-    await this.coding?.flush();
+    if (!this.closing) await this.coding?.flush();
   }
 
   private enqueueCodingInput(content: UserMessage['content'], mode: 'steer' | 'followUp',
-    options: { source?: 'interactive' | 'extension'; expandPromptTemplates?: boolean } = {}): Promise<void> {
+    options: CodingInputOptions = {}): Promise<boolean> {
     const operation = this.inputAdmission.then(() => this.processCodingInput(content, mode, options));
-    this.inputAdmission = operation.catch(() => {});
+    this.inputAdmission = operation.catch(() => true);
     return operation;
   }
 
   private async processCodingInput(raw: UserMessage['content'], mode: 'steer' | 'followUp',
-    options: { source?: 'interactive' | 'extension'; expandPromptTemplates?: boolean }): Promise<void> {
+    options: CodingInputOptions): Promise<boolean> {
     if (!this.conversation) throw new Error('Kernel not open');
     if (this.coding) {
       const text = typeof raw === 'string' ? raw : raw.filter(part => part.type === 'text').map(part => part.text).join('\n');
       const images = typeof raw === 'string' ? undefined : raw.filter(part => part.type === 'image');
-      await this.coding.submit(text, {
+      return this.coding.submit(options.nativeInput?.text ?? text, {
         images, source: options.source,
+        hostContextPrefix: options.nativeInput?.hostContextPrefix,
         expandPromptTemplates: options.expandPromptTemplates ?? true,
         streamingBehavior: mode,
       });
-      return;
     }
     this.requireModel(this.currentModel);
     await this.submitInput({ type: 'input', content: raw, whenBusy: mode });
+    return false;
   }
 
   private async submitInput(request: InputSubmissionDraft): Promise<void> {
@@ -817,16 +855,31 @@ export class DurableKernel {
   }
 
   async abort(): Promise<void> {
-    this.runController.abort();
-    this.cacheWarmer.stop();
-    const conversation = this.conversation;
-    if (!conversation || !this.harness) return;
+    const resumeUI = this.options.codingUI?.suspend();
+    try {
+      this.runController.abort();
+      this.cacheWarmer.stop();
+      const conversation = this.conversation;
+      if (!conversation || !this.harness) return;
 
-    const compactions = [...this.manualCompactions];
-    for (const compaction of compactions) compaction.controller.abort();
-    if (this.coding) await this.coding.abort();
-    else await conversation.abort(BACKGROUND_CONTEXT);
-    await Promise.all(compactions.map(compaction => compaction.done));
+      const compactions = [...this.manualCompactions];
+      for (const compaction of compactions) compaction.controller.abort();
+      for (;;) {
+        const active = this.coding;
+        const reloading = this.codingReload;
+        if (active) await active.abort();
+        else await conversation.abort(BACKGROUND_CONTEXT);
+        if (reloading) {
+          await reloading;
+          // Startup can launch native work after the first abort.
+          continue;
+        }
+        if (active === this.coding) break;
+      }
+      await Promise.all(compactions.map(compaction => compaction.done));
+    } finally {
+      resumeUI?.();
+    }
   }
 
   private currentModels(): Models {
@@ -1001,21 +1054,36 @@ export class DurableKernel {
     }));
   }
 
-  async close(): Promise<void> {
+  close(): Promise<void> {
+    if (this.closing) return this.closing;
+    const completion = Promise.withResolvers<void>();
+    this.closing = completion.promise;
+    const resumeUI = this.options.codingUI?.suspend();
+    // Cancellation is synchronous; draining returned usage can outlive this call.
     const warming = this.cacheWarmer.close();
     const compactions = [...this.manualCompactions];
     for (const compaction of compactions) compaction.controller.abort();
-    await Promise.all([warming, ...compactions.map(compaction => compaction.done)]);
-    await this.coding?.close();
-    this.coding = undefined;
-    this.registry = null;
-    this.detachWatch?.();
-    this.detachWatch = null;
-    if (this.harness) {
-      await this.harness.close(BACKGROUND_CONTEXT);
-      this.harness = null;
-    }
-    this.conversation = null;
+    void (async () => {
+      try {
+        // The command reports reload errors; teardown must still release its kernel.
+        await this.codingReload?.catch(() => undefined);
+        await Promise.all([warming, ...compactions.map(compaction => compaction.done)]);
+        await this.coding?.close();
+        this.coding = undefined;
+        this.registry = null;
+        this.detachWatch?.();
+        this.detachWatch = null;
+        if (this.harness) {
+          await this.harness.close(BACKGROUND_CONTEXT);
+          this.harness = null;
+        }
+        this.conversation = null;
+      } finally {
+        resumeUI?.();
+        this.closing = undefined;
+      }
+    })().then(completion.resolve, completion.reject);
+    return completion.promise;
   }
 
   // ============================================================

@@ -75,6 +75,8 @@ import { toPiProviderId } from '../../shared/src/config/pi-provider-ids.ts';
 import { ProviderEndpointEnvironment, providerEndpointEnv } from './provider-endpoint-env.ts';
 import { DurableKernel, type KernelHooks, type KernelModelRef } from './kernel.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
+import type { RpcExtensionUIResponse } from '@mkagent/pi-durable-coding/native';
+import { ExtensionUIHost, type ExtensionUIEvent } from './extension-ui.ts';
 
 // ============================================================
 // Types — JSONL Protocol
@@ -85,6 +87,7 @@ interface InitMessage {
   type: 'init';
   agentProfile?: 'default' | 'coding';
   codingResources?: PiCodingResources;
+  extensionUIAvailable?: boolean;
   apiKey: string;
   model: string;
   cwd: string;
@@ -123,9 +126,12 @@ interface RuntimeConfigUpdateMessage {
 
 /** Messages from main process (stdin) */
 type InboundMessage = (
+  | { type: 'extension_ui_available'; available: boolean }
+  | (RpcExtensionUIResponse & { uiEpoch: string; responseId: string })
   | { type: 'stop_background_task'; id: string; taskId: string }
   | InitMessage
-  | { type: 'prompt'; id: string; message: string; systemPrompt: string; images?: Array<{ type: 'image'; data: string; mimeType: string }> }
+  | { type: 'prompt'; id: string; message: string; systemPrompt: string; images?: Array<{ type: 'image'; data: string; mimeType: string }>;
+      nativeInput?: { text: string; hostContextPrefix: string } }
   | { type: 'register_tools'; tools: ProxyToolDef[] }
   | { type: 'tool_execute_response'; requestId: string; result: ProxyToolResult }
   | { type: 'pre_tool_use_response'; requestId: string; action: 'allow' | 'block' | 'modify'; input?: Record<string, unknown>; reason?: string }
@@ -222,6 +228,9 @@ interface OutboundOAuthCredentialUpdate {
 interface OutboundError { type: 'error'; message: string; code?: string; id?: string }
 
 type OutboundMessage =
+  | ExtensionUIEvent
+  | { type: 'extension_ui_response_result'; id: string; accepted: boolean }
+  | { type: 'prompt_result'; id: string; handled: boolean; completed: boolean }
   | { type: 'background_task_event'; event: AgentEvent }
   | { type: 'stop_background_task_result'; id: string; stopped: boolean }
   | OutboundReady
@@ -273,7 +282,8 @@ const endpointEnvironment = new ProviderEndpointEnvironment();
 // Mutable state
 let currentUserMessage = '';
 let foregroundScope: PiWorkerScope | undefined;
-const workerContext = new AsyncLocalStorage<{ scope?: PiWorkerScope }>();
+let foregroundUI: ExtensionUIHost | undefined;
+const workerContext = new AsyncLocalStorage<{ scope?: PiWorkerScope; ui?: ExtensionUIHost }>();
 const backgroundShells = new BackgroundShells((event, scope) => sendScoped({ type: 'background_task_event', event }, scope));
 
 // Pending promises for async handshakes
@@ -683,6 +693,7 @@ async function ensureKernel(): Promise<DurableKernel> {
 async function openKernel(): Promise<DurableKernel> {
   if (!initConfig) throw new Error('Cannot create session: init not received');
 
+  const codingUI = workerContext.getStore()?.ui;
   const cwd = resolvedCwd();
   const sessionPath = getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId);
 
@@ -718,6 +729,7 @@ async function openKernel(): Promise<DurableKernel> {
     hooks: createKernelHooks(currentWorkerScope()),
     toolsExtension: buildToolsExtension(cwd, mcpLoad.tools),
     ...(initConfig.agentProfile === 'coding' || initConfig.codingResources ? {
+      codingUI,
       coding: {
         ...initConfig.codingResources,
         agentDir: initConfig.codingResources?.agentDir
@@ -908,7 +920,8 @@ async function handlePrompt(msg: Extract<InboundMessage, { type: 'prompt' }>): P
 
     // Queued as followUp when a run is already active, matching the 1.1.0
     // streamingBehavior contract.
-    await k.submitPrompt(msg.message, msg.images);
+    const result = await k.submitPrompt(msg.message, msg.images, msg.nativeInput);
+    if (generation === inputGeneration) send({ type: 'prompt_result', id: msg.id, ...result });
   } catch (error) {
     if (generation !== inputGeneration) return;
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -919,7 +932,7 @@ async function handlePrompt(msg: Extract<InboundMessage, { type: 'prompt' }>): P
     // retry events the PiEventAdapter expects).
 
     debugLog(`Prompt failed: ${errorMsg}`);
-    send({ type: 'error', message: errorMsg, code: 'prompt_error' });
+    send({ type: 'error', id: msg.id, message: errorMsg, code: 'prompt_error' });
     // Send synthetic agent_end so the main process event queue unblocks.
     // willRetry: false — this is the terminal error path, no retry follows.
     send({ type: 'event', event: { type: 'agent_end', messages: [], willRetry: false } });
@@ -972,25 +985,31 @@ function handleCancelEphemeralQuery(
 }
 
 async function handleAbort(): Promise<void> {
-  for (const controller of pendingCompactions.values()) controller.abort();
+  const resumeUI = workerContext.getStore()?.ui?.suspend();
+  try {
+    for (const controller of pendingCompactions.values()) controller.abort();
 
-  // Release host callbacks before waiting for SDK tasks that depend on them.
-  for (const [, pending] of pendingPreToolUse) {
-    pending.resolve({ action: 'block', reason: 'Aborted' });
-  }
-  pendingPreToolUse.clear();
-  for (const [, pending] of pendingToolExecutions) {
-    pending.resolve({ content: 'Aborted', isError: true });
-  }
-  pendingToolExecutions.clear();
-  prefetchCache.clear();
-
-  if (kernel) {
-    try {
-      await kernel.abort();
-    } catch (error) {
-      debugLog(`Abort failed: ${error instanceof Error ? error.message : String(error)}`);
+    // Release host callbacks before waiting for SDK tasks that depend on them.
+    for (const [, pending] of pendingPreToolUse) {
+      pending.resolve({ action: 'block', reason: 'Aborted' });
     }
+    pendingPreToolUse.clear();
+    for (const [, pending] of pendingToolExecutions) {
+      pending.resolve({ content: 'Aborted', isError: true });
+    }
+    pendingToolExecutions.clear();
+    prefetchCache.clear();
+
+    const active = kernel ?? await kernelPromise?.catch(() => undefined);
+    if (active) {
+      try {
+        await active.abort();
+      } catch (error) {
+        debugLog(`Abort failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  } finally {
+    resumeUI?.();
   }
 }
 
@@ -1211,6 +1230,7 @@ function handleShutdown(): Promise<void> {
 
 async function shutdown(): Promise<void> {
   debugLog('Shutdown requested');
+  foregroundUI?.close();
   for (const controller of pendingCompactions.values()) controller.abort();
 
   // Release host callbacks before waiting for SDK tasks that depend on them.
@@ -1257,6 +1277,13 @@ async function shutdown(): Promise<void> {
 
 async function processMessage(msg: InboundMessage, compactController?: AbortController): Promise<void> {
   switch (msg.type) {
+    case 'extension_ui_available':
+      workerContext.getStore()?.ui?.setAvailable(msg.available === true);
+      break;
+    case 'extension_ui_response':
+      send({ type: 'extension_ui_response_result', id: msg.responseId,
+        accepted: workerContext.getStore()?.ui?.respond(msg.uiEpoch, msg) ?? false });
+      break;
     case 'stop_background_task':
       send({ type: 'stop_background_task_result', id: msg.id, stopped: await backgroundShells.stop(msg.taskId, currentWorkerScope()) });
       break;
@@ -1386,13 +1413,18 @@ function main(): void {
           debugLog('Ignoring stale or mismatched worker initialization');
           return;
         }
+        // Close at receipt so an old startup hook cannot block the re-init queue.
+        foregroundUI?.close();
         foregroundScope = scope;
+        foregroundUI = new ExtensionUIHost(event => sendScoped(event, scope));
+        foregroundUI.setAvailable(msg.extensionUIAvailable === true);
       } else if (msg.type !== 'stop_background_task' && !isForegroundScope(scope)) {
         debugLog('Ignoring message from an inactive worker binding');
         return;
       }
       if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') inputGeneration++;
       const generation = inputGeneration;
+      const ui = foregroundUI;
       if (msg.type === 'init') {
         // Later compact requests belong to the new initialization and must remain active.
         for (const controller of pendingCompactions.values()) controller.abort();
@@ -1410,11 +1442,12 @@ function main(): void {
           debugLog('Ignoring queued message from an inactive worker binding');
           return Promise.resolve();
         }
-        return workerContext.run({ scope }, () => processMessage(msg, compactController));
+        return workerContext.run({ scope, ui }, () => processMessage(msg, compactController));
       };
       const operation = msg.type === 'init'
         ? initialization.catch(() => undefined).then(dispatch)
-        : ['tool_execute_response', 'pre_tool_use_response', 'abort', 'cancel_compact', 'stop_background_task', 'shutdown'].includes(msg.type)
+        : ['tool_execute_response', 'pre_tool_use_response', 'extension_ui_response', 'extension_ui_available',
+            'abort', 'cancel_compact', 'stop_background_task', 'shutdown'].includes(msg.type)
           ? dispatch()
           : initialization.then(() => {
               if ((msg.type === 'prompt' || msg.type === 'steer') && generation !== inputGeneration) return;

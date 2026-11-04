@@ -505,7 +505,7 @@ describe('Pi manual compaction RPC', () => {
     try {
       release();
       await Promise.all([first, second]);
-      expect(messages).toEqual(['init', 'set_auto_compaction', 'register_tools']);
+      expect(messages).toEqual(['init', 'register_tools', 'set_auto_compaction']);
     } finally {
       browserEnabled.mockRestore();
       await agent.disposeForRestart();

@@ -3,6 +3,7 @@ import { prEntryId } from '@mkagent/shared/pr-watch'
 import { getPrAutoFixMonitor, getPrWatchRegistry } from '../handlers/rpc/pr-watch'
 import type { BoundPr, PrMonitorState } from '@mkagent/shared/protocol'
 import { addTurnUsage } from './turn-usage'
+import { SessionExtensionUI } from './extension-ui'
 import type { BackgroundTaskOutput, StopBackgroundTaskResult } from '@mkagent/shared/protocol'
 import { launchOutputFile, readBackgroundTaskOutput } from './background-task-output'
 import type { EventSink, RpcServer } from '@mkagent/server-core/transport'
@@ -15,6 +16,7 @@ import type {
   SendMessageOptions,
   Session,
   SessionEvent,
+  ExtensionUISnapshot,
   UnreadSummary,
 } from '@mkagent/shared/protocol'
 import type { ISessionManager, IBrowserPaneManager } from '@mkagent/server-core/handlers'
@@ -343,6 +345,10 @@ export class SessionManager implements ISessionManager {
   private sessions = new Map<string, ManagedSession>()
   private configWatchers = new Map<string, ConfigWatcher>()
   private eventSink: EventSink = () => {}
+  private readonly extensionUI = new SessionExtensionUI((clientId, update) => {
+    this.eventSink(RPC_CHANNELS.sessions.EXTENSION_UI_UPDATED, { to: 'client', clientId }, update)
+  })
+  private readonly pendingUIAttachments = new Map<string, Set<{ retired: boolean }>>()
   private initPromise: Promise<void> | null = null
   private activeViewingByWorkspace = new Map<string, string>()
   private completionListeners = new Set<(event: SessionCompletionEvent) => void>()
@@ -382,9 +388,42 @@ export class SessionManager implements ISessionManager {
   }
 
   onClientDisconnected(clientId: string): void {
+    this.disconnectExtensionUI(clientId)
     for (const [sessionId, pinned] of this.browserHostPins) {
       if (pinned === clientId) this.browserHostPins.delete(sessionId)
     }
+  }
+
+  disconnectExtensionUI(clientId: string): void {
+    for (const admission of this.pendingUIAttachments.get(clientId) ?? []) admission.retired = true
+    this.pendingUIAttachments.delete(clientId)
+    this.extensionUI.disconnect(clientId)
+  }
+
+  async attachExtensionUI(sessionId: string, workspaceId: string, clientId: string, subscriptionId: string): Promise<ExtensionUISnapshot> {
+    const admission = { retired: false }
+    const pending = this.pendingUIAttachments.get(clientId) ?? new Set<{ retired: boolean }>()
+    this.pendingUIAttachments.set(clientId, pending)
+    pending.add(admission)
+    try {
+      await this.waitForInit()
+      if (admission.retired) throw new Error('Extension UI subscription retired')
+      if (this.sessions.get(sessionId)?.workspace.id !== workspaceId) throw new Error('Session not found in workspace')
+      return this.extensionUI.attach(sessionId, clientId, subscriptionId)
+    } finally {
+      pending.delete(admission)
+      if (!pending.size && this.pendingUIAttachments.get(clientId) === pending) this.pendingUIAttachments.delete(clientId)
+    }
+  }
+
+  detachExtensionUI(sessionId: string, clientId: string, subscriptionId: string): void {
+    this.extensionUI.detach(sessionId, clientId, subscriptionId)
+  }
+
+  async respondToExtensionUI(sessionId: string, workspaceId: string, clientId: string, subscriptionId: string,
+    uiEpoch: string, response: unknown): Promise<boolean> {
+    if (this.sessions.get(sessionId)?.workspace.id !== workspaceId) return false
+    return this.extensionUI.respond(sessionId, clientId, subscriptionId, uiEpoch, response)
   }
 
   private readonly prWatchSessionListeners = new Set<(sessionId: string | null) => void>()
@@ -644,6 +683,7 @@ export class SessionManager implements ISessionManager {
     if (!managed) return
     await this.cancelProcessing(sessionId, true)
     managed.agent?.destroy()
+    this.extensionUI.remove(sessionId)
     unregisterSessionScopedToolCallbacks(sessionId)
     sessionPersistenceQueue.cancel(sessionId)
     deleteStoredSession(managed.workspace.rootPath, sessionId)
@@ -1173,6 +1213,7 @@ export class SessionManager implements ISessionManager {
       },
       coreConfig: {
         workspace: managed.workspace,
+        extensionUI: this.extensionUI.port(managed.id),
         session: this.toStored(managed),
         model: context.resolvedModel,
         autoCompactWindow: getAutoCompactWindow(),
@@ -2142,6 +2183,8 @@ export class SessionManager implements ISessionManager {
   }
 
   cleanup(): void {
+    for (const clientId of this.pendingUIAttachments.keys()) this.disconnectExtensionUI(clientId)
+    this.extensionUI.clear()
     for (const listener of this.prWatchSessionListeners) listener(null)
     this.prWatchSessionListeners.clear()
     for (const watcher of this.configWatchers.values()) watcher.stop()

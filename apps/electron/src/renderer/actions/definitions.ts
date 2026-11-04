@@ -193,6 +193,7 @@ export const actions = {
     description: 'Switch between Explore, Ask, and Execute modes',
     defaultHotkey: 'shift+tab',
     category: 'Chat',
+    when: '!menuOpen',
   },
   'chat.nextSearchMatch': {
     id: 'chat.nextSearchMatch',

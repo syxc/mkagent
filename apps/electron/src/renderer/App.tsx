@@ -25,7 +25,7 @@ import { useSession } from '@/hooks/useSession'
 import { useUpdateChecker } from '@/hooks/useUpdateChecker'
 import { NavigationProvider } from '@/contexts/NavigationContext'
 import { navigate, routes } from './lib/navigate'
-import { attachmentFromContentRef, toDraftRef } from './lib/drafts'
+import { attachmentFromContentRef, mergePersistedDrafts, toDraftRef } from './lib/drafts'
 import { stripMarkdown } from './utils/text'
 import { coerceInputText } from './lib/input-text'
 import { getSessionsToRefreshAfterStaleReconnect } from './lib/reconnect-recovery'
@@ -72,6 +72,7 @@ import {
 import { useLinkInterceptor, type FilePreviewState } from '@/hooks/useLinkInterceptor'
 import { useTransportConnectionState } from '@/hooks/useTransportConnectionState'
 import { useStaleSessionRecovery } from '@/hooks/useStaleSessionRecovery'
+import { useExtensionUI } from '@/hooks/useExtensionUI'
 import { TransportConnectionBanner, shouldShowTransportConnectionBanner } from '@/components/app-shell/TransportConnectionBanner'
 import {
   isBackgroundLaunchResult,
@@ -370,6 +371,8 @@ export default function App() {
   // during typing; attachments are stored as lightweight refs (path + name) and
   // hydrated via readFileAttachment() on session switch.
   const sessionDraftsRef = useRef<Map<string, SessionDraft>>(new Map())
+  const modifiedDraftsRef = useRef({ text: new Set<string>(), attachments: new Set<string>() })
+  const draftsReadyRef = useRef(Promise.withResolvers<void>())
   // Unified session options for all session-scoped settings
   const [sessionOptions, setSessionOptions] = useState<Map<string, SessionOptions>>(new Map())
 
@@ -799,10 +802,10 @@ export default function App() {
     // Attachment files are not read here — hydration happens lazily when the session
     // is opened so app startup isn't delayed by reading potentially large files.
     window.electronAPI.getAllDrafts().then((drafts) => {
-      if (Object.keys(drafts).length > 0) {
-        sessionDraftsRef.current = new Map(Object.entries(drafts))
-      }
-    })
+      mergePersistedDrafts(sessionDraftsRef.current, drafts, modifiedDraftsRef.current)
+      window.dispatchEvent(new Event('craft:drafts-loaded'))
+    }).catch(error => rendererLog.warn('[drafts] Failed to load drafts:', error))
+      .finally(() => draftsReadyRef.current.resolve())
   }, [appState, loadSessionsFromServer, resolveDefaultConnectionSlug])
 
   // Subscribe to LLM connections change events (live updates when models are fetched)
@@ -1526,15 +1529,17 @@ export default function App() {
     if (existingTimeout) {
       clearTimeout(existingTimeout)
     }
-    const timeout = setTimeout(() => {
+    const timeout = setTimeout(async () => {
+      await draftsReadyRef.current.promise
       const draft = sessionDraftsRef.current.get(sessionId) ?? { text: '' }
-      window.electronAPI.setDraft(sessionId, draft)
-      draftSaveTimeoutRef.current.delete(sessionId)
+      void window.electronAPI.setDraft(sessionId, draft).catch(error => rendererLog.warn('[drafts] Failed to save draft:', error))
+      if (draftSaveTimeoutRef.current.get(sessionId) === timeout) draftSaveTimeoutRef.current.delete(sessionId)
     }, DRAFT_SAVE_DEBOUNCE_MS)
     draftSaveTimeoutRef.current.set(sessionId, timeout)
   }, [])
 
   const handleInputChange = useCallback((sessionId: string, value: string) => {
+    modifiedDraftsRef.current.text.add(sessionId)
     const text = coerceInputText(value)
     const existing = sessionDraftsRef.current.get(sessionId)
     const existingAttachments = Array.isArray(existing?.attachments) ? existing.attachments : []
@@ -1554,6 +1559,7 @@ export default function App() {
   }, [schedulePersistDraft])
 
   const handleAttachmentsChange = useCallback((sessionId: string, attachments: FileAttachment[]) => {
+    modifiedDraftsRef.current.attachments.add(sessionId)
     const existing = sessionDraftsRef.current.get(sessionId)
     const refs: DraftAttachmentRef[] = []
     for (const a of attachments) {
@@ -1576,6 +1582,20 @@ export default function App() {
     }
     schedulePersistDraft(sessionId)
   }, [schedulePersistDraft])
+
+  const extensionSessionIds = useAtomValue(sessionIdsAtom)
+  const extensionUI = useExtensionUI(windowWorkspaceId, extensionSessionIds, useCallback((sessionId, effect) => {
+    if (effect.method === 'set_editor_text') {
+      handleInputChange(sessionId, effect.text)
+      window.dispatchEvent(new CustomEvent('craft:restore-input', { detail: { sessionId, text: effect.text } }))
+    } else if (effect.notifyType === 'error') {
+      toast.error(effect.message)
+    } else if (effect.notifyType === 'warning') {
+      toast.warning(effect.message)
+    } else {
+      toast.info(effect.message)
+    }
+  }, [handleInputChange]))
 
   // Open new chat - creates session and selects it
   // Used by components via AppShellContext and for programmatic navigation
@@ -1772,9 +1792,8 @@ export default function App() {
       // and ensures no stale state from old workspace persists)
       setSessionOptions(new Map())
 
-      // 6. Clear message drafts from previous workspace
-      // (prevents memory growth on repeated workspace switches)
-      sessionDraftsRef.current.clear()
+      // Draft IDs are global, as is getAllDrafts(). Keep this cache so a pending
+      // save or a plugin text update retains its attachments across a workspace switch.
 
       // 7. Reset skills to prevent a stale flash during workspace switch.
       store.set(skillsAtom, [])
@@ -1823,6 +1842,8 @@ export default function App() {
     workspaceDefaultLlmConnection,
     refreshLlmConnections,
     pendingPermissions,
+    extensionUI: extensionUI.snapshots,
+    onRespondToExtensionUI: extensionUI.respond,
     getDraft,
     getDraftAttachmentRefs,
     hydrateDraftAttachments,
@@ -1866,6 +1887,8 @@ export default function App() {
     workspaceDefaultLlmConnection,
     refreshLlmConnections,
     pendingPermissions,
+    extensionUI.snapshots,
+    extensionUI.respond,
     getDraft,
     getDraftAttachmentRefs,
     hydrateDraftAttachments,

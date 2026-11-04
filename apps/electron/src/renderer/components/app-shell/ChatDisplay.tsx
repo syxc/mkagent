@@ -55,7 +55,7 @@ import { ChatInputZone, type StructuredInputState, type StructuredResponse, type
 import type { RichTextInputHandle } from "@/components/ui/rich-text-input"
 import { useBackgroundTasks } from "@/hooks/useBackgroundTasks"
 import type { BackgroundTask } from "@/atoms/sessions"
-import type { BackgroundTaskOutput } from "@mkagent/shared/protocol"
+import type { BackgroundTaskOutput, ExtensionUIResponse, ExtensionUISnapshot } from "@mkagent/shared/protocol"
 import { agentDocument } from "./BackgroundTaskChip"
 import { runCommandMessage } from "@/lib/run-command-message"
 import { useTurnCardExpansion } from "@/hooks/useTurnCardExpansion"
@@ -157,6 +157,8 @@ interface ChatDisplayProps {
   disabled?: boolean
   /** Pending permission request for this session */
   pendingPermission?: PermissionRequest
+  extensionUI?: ExtensionUISnapshot
+  onRespondToExtensionUI?: (uiEpoch: string, response: ExtensionUIResponse) => Promise<boolean>
   /** Callback to respond to permission request */
   onRespondToPermission?: (
     sessionId: string,
@@ -278,6 +280,8 @@ export const ChatDisplay = React.forwardRef<ChatDisplayHandle, ChatDisplayProps>
   textareaRef: externalTextareaRef,
   disabled = false,
   pendingPermission,
+  extensionUI,
+  onRespondToExtensionUI,
   onRespondToPermission,
   // Thinking level
   thinkingLevel = 'medium',
@@ -1664,6 +1668,8 @@ export const ChatDisplay = React.forwardRef<ChatDisplayHandle, ChatDisplayProps>
           {/* === INPUT CONTAINER: FreeForm or Structured Input === */}
           <ChatInputZone
             compactMode={compactMode}
+            extensionUI={extensionUI}
+            onRespondToExtensionUI={onRespondToExtensionUI}
             permissionMode={permissionMode}
             onPermissionModeChange={onPermissionModeChange}
             tasks={backgroundTasks}

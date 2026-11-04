@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "@mkagent/core": "workspace:*",
+    "@mkagent/pi-durable-coding": "workspace:*",
     "@mkagent/session-tools-core": "workspace:*",
     "@isaacs/ttlcache": "^2.1.4",
     "@leeoniya/ufuzzy": "^1.0.19",

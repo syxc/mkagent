@@ -23,6 +23,7 @@ import type {
 import type { SessionOptions, SessionOptionUpdates } from '../hooks/useSessionOptions'
 import { defaultSessionOptions } from '../hooks/useSessionOptions'
 import { sessionAtomFamily } from '../atoms/sessions'
+import type { ExtensionUIResponse, ExtensionUISnapshot } from '@mkagent/shared/protocol'
 
 export interface AppShellContextType {
   // Data
@@ -40,6 +41,8 @@ export interface AppShellContextType {
   /** Refresh LLM connections from config */
   refreshLlmConnections: () => Promise<void>
   pendingPermissions: Map<string, PermissionRequest[]>
+  extensionUI?: ReadonlyMap<string, ExtensionUISnapshot>
+  onRespondToExtensionUI?: (sessionId: string, uiEpoch: string, response: ExtensionUIResponse) => Promise<boolean>
   /** Get draft input text for a session - reads from ref without triggering re-renders */
   getDraft: (sessionId: string) => string
   /** Get persisted attachment refs (path + name) for a session's draft - no file IO */

@@ -1,12 +1,14 @@
 import { expect, test } from 'bun:test';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 type Frame = Record<string, any>;
 interface WorkerFixture {
+  directory: string;
+  exited: Promise<number | null>;
   requests: Array<Record<string, unknown>>;
   toolCalls: Array<{ name: string; arguments: string }>;
   messages: Frame[];
@@ -40,7 +42,7 @@ async function withWorker(profile: 'default' | 'coding', run: (fixture: WorkerFi
     env: { ...process.env, HOME: home, CONFIG_DIR: join(directory, 'config'),
       CRAFT_CONFIG_DIR: join(directory, 'config'), PI_CODING_AGENT_DIR: join(directory, 'pi') },
   });
-  const exited = new Promise<void>(resolve => child.once('close', () => resolve()));
+  const exited = new Promise<number | null>(resolve => child.once('close', code => resolve(code)));
   let stderr = '';
   child.stderr.on('data', (chunk: Buffer) => { stderr = (stderr + chunk.toString()).slice(-4096); });
   const reader = createInterface({ input: child.stdout });
@@ -81,7 +83,7 @@ async function withWorker(profile: 'default' | 'coding', run: (fixture: WorkerFi
     customEndpoint: { api: 'openai-completions' }, customModels: [{ id: 'local-scope', contextWindow: 100_000 }],
   });
   try {
-    await run({ requests, toolCalls, messages, send, sendBatch, waitFor, init });
+    await run({ directory, exited, requests, toolCalls, messages, send, sendBatch, waitFor, init });
   } finally {
     for (const waiter of waiters) clearTimeout(waiter.timeout);
     child.stdin.end();
@@ -120,6 +122,123 @@ test.each(['default', 'coding'] as const)('%s worker scopes replies and rejects 
     expect(JSON.stringify(requests[1])).toContain('target marker');
     expect(JSON.stringify(requests[1])).not.toContain('source marker');
     expect(messages.some(message => message.id === 'stale')).toBe(false);
+  });
+}, 15_000);
+
+function initUI(fixture: WorkerFixture, owner: string, generation: number, available = true) {
+  const plugin = join(fixture.directory, 'ui-plugin.ts');
+  writeFileSync(plugin, `
+    import { writeFileSync } from 'node:fs';
+    export default function(pi) {
+      let starts = 0;
+      pi.on('session_start', async (_, ctx) => {
+        starts++;
+        const value = await ctx.ui.select('Startup', ['one', 'two']);
+        writeFileSync(${JSON.stringify(join(fixture.directory, 'ui-result.json'))},
+          JSON.stringify({ value: value ?? null, starts, hasUI: ctx.hasUI, mode: ctx.mode }));
+      });
+      pi.registerCommand('state', { handler: async (_, ctx) => {
+        ctx.ui.notify(ctx.mode + '|' + ctx.hasUI + '|' + starts);
+      } });
+    }
+  `);
+  return { ...fixture.init(owner, generation), extensionUIAvailable: available,
+    codingResources: { agentDir: join(fixture.directory, 'pi'), resourcePolicy: 'host-only', extensionPaths: [plugin] } };
+}
+
+test('worker delivers startup UI and validates responses before the kernel becomes ready', async () => {
+  await withWorker('coding', async f => {
+    const scope = { ownerSessionId: 'source', runtimeGeneration: 1 };
+    f.sendBatch(initUI(f, 'source', 1), { type: 'ensure_session_ready', id: 'opened', ...scope });
+    const request = await f.waitFor(message => message.type === 'extension_ui_request' && message.method === 'select');
+    expect(request).toMatchObject(scope);
+    expect(f.messages.some(message => message.id === 'opened')).toBe(false);
+    f.sendBatch(
+      { type: 'extension_ui_response', responseId: 'wrong-epoch', id: request.id, uiEpoch: 'retired', value: 'one', ...scope },
+      { type: 'extension_ui_response', responseId: 'wrong-owner', id: request.id, uiEpoch: request.uiEpoch,
+        value: 'one', ownerSessionId: 'different', runtimeGeneration: 1 },
+      { type: 'extension_ui_response', responseId: 'valid', id: request.id, uiEpoch: request.uiEpoch, value: 'two', ...scope },
+    );
+    expect(await f.waitFor(message => message.type === 'extension_ui_response_result' && message.id === 'wrong-epoch'))
+      .toMatchObject({ ...scope, accepted: false });
+    expect(await f.waitFor(message => message.type === 'extension_ui_response_result' && message.id === 'valid'))
+      .toMatchObject({ ...scope, accepted: true });
+    await f.waitFor(message => message.id === 'opened');
+    expect(f.messages.some(message => message.id === 'wrong-owner')).toBe(false);
+    expect(JSON.parse(readFileSync(join(f.directory, 'ui-result.json'), 'utf8')))
+      .toEqual({ value: 'two', starts: 1, hasUI: true, mode: 'rpc' });
+    f.send({ type: 'extension_ui_response', responseId: 'duplicate', id: request.id,
+      uiEpoch: request.uiEpoch, value: 'one', ...scope });
+    expect(await f.waitFor(message => message.id === 'duplicate')).toMatchObject({ accepted: false });
+    expect(f.requests).toHaveLength(0);
+  });
+}, 15_000);
+
+test.each(['abort', 'disconnect'] as const)('worker %s releases an opening kernel and reconnect preserves one startup hook', async action => {
+  await withWorker('coding', async f => {
+    const scope = { ownerSessionId: 'source', runtimeGeneration: 1 };
+    f.sendBatch(initUI(f, 'source', 1), { type: 'ensure_session_ready', id: 'opened', ...scope });
+    const request = await f.waitFor(message => message.type === 'extension_ui_request' && message.method === 'select');
+    f.send(action === 'abort' ? { type: 'abort', ...scope } : { type: 'extension_ui_available', available: false, ...scope });
+    await f.waitFor(message => message.id === 'opened');
+    expect(JSON.parse(readFileSync(join(f.directory, 'ui-result.json'), 'utf8')))
+      .toEqual({ value: null, starts: 1, hasUI: false, mode: 'print' });
+    if (action === 'disconnect') f.send({ type: 'extension_ui_available', available: true, ...scope });
+    await f.waitFor(message => message.type === 'extension_ui_state' && message.available === true && message.reset === false);
+    f.send({ type: 'prompt', id: 'state', message: '/state', systemPrompt: '', ...scope });
+    expect(await f.waitFor(message => message.type === 'extension_ui_request' && message.method === 'notify'))
+      .toMatchObject({ ...scope, message: 'rpc|true|1' });
+    f.send({ type: 'extension_ui_response', responseId: 'late', id: request.id,
+      uiEpoch: request.uiEpoch, value: 'one', ...scope });
+    expect(await f.waitFor(message => message.id === 'late')).toMatchObject({ accepted: false });
+    expect(f.requests).toHaveLength(0);
+  });
+}, 15_000);
+
+test('reinitialization cancels source startup UI and gives the target an independent UI epoch', async () => {
+  await withWorker('coding', async f => {
+    const source = { ownerSessionId: 'source', runtimeGeneration: 1 };
+    const target = { ownerSessionId: 'target', runtimeGeneration: 2 };
+    f.sendBatch(initUI(f, 'source', 1), { type: 'ensure_session_ready', id: 'source-open', ...source });
+    const previous = await f.waitFor(message => message.type === 'extension_ui_request' && message.method === 'select');
+    f.sendBatch(initUI(f, 'target', 2), { type: 'ensure_session_ready', id: 'target-open', ...target });
+    const next = await f.waitFor(message => message.type === 'extension_ui_request' && message.method === 'select'
+      && message.ownerSessionId === 'target');
+    expect(next.uiEpoch).not.toBe(previous.uiEpoch);
+    f.sendBatch(
+      { type: 'extension_ui_response', responseId: 'retired-epoch', id: previous.id,
+        uiEpoch: previous.uiEpoch, value: 'one', ...target },
+      { type: 'extension_ui_response', responseId: 'next-response', id: next.id,
+        uiEpoch: next.uiEpoch, value: 'two', ...target },
+    );
+    expect(await f.waitFor(message => message.id === 'retired-epoch')).toMatchObject({ accepted: false });
+    expect(await f.waitFor(message => message.id === 'next-response')).toMatchObject({ accepted: true });
+    expect(await f.waitFor(message => message.id === 'target-open')).toMatchObject(target);
+    expect(JSON.parse(readFileSync(join(f.directory, 'ui-result.json'), 'utf8')))
+      .toMatchObject({ value: 'two', hasUI: true, mode: 'rpc' });
+    expect(f.requests).toHaveLength(0);
+  });
+}, 15_000);
+
+test('worker shutdown releases pending startup UI and exits without a forced kill', async () => {
+  await withWorker('coding', async f => {
+    const scope = { ownerSessionId: 'source', runtimeGeneration: 1 };
+    f.sendBatch(initUI(f, 'source', 1), { type: 'ensure_session_ready', id: 'opened', ...scope });
+    await f.waitFor(message => message.type === 'extension_ui_request' && message.method === 'select');
+    f.send({ type: 'shutdown', ...scope });
+    expect(await f.exited).toBe(0);
+  });
+}, 15_000);
+
+test('worker without a UI responder preserves native print mode and no-op defaults', async () => {
+  await withWorker('coding', async f => {
+    const scope = { ownerSessionId: 'source', runtimeGeneration: 1 };
+    f.sendBatch(initUI(f, 'source', 1, false), { type: 'ensure_session_ready', id: 'opened', ...scope });
+    await f.waitFor(message => message.id === 'opened');
+    expect(JSON.parse(readFileSync(join(f.directory, 'ui-result.json'), 'utf8')))
+      .toEqual({ value: null, starts: 1, hasUI: false, mode: 'print' });
+    expect(f.messages.some(message => message.type === 'extension_ui_request')).toBe(false);
+    expect(f.requests).toHaveLength(0);
   });
 }, 15_000);
 

@@ -50,6 +50,10 @@ export function portAgentFacade(source: string): string {
 export function portAgentSession(source: string): string {
   let body = edit(source, '\tbaseToolsOverride?: Record<string, AgentTool>;',
     '\tbaseToolsOverride?: Record<string, AgentTool>;\n\t/** Host execution policy applies after native tool registration and before declarations. */\n\twrapTool?: (tool: AgentTool, source?: SourceInfo) => AgentTool;\n\tonAction?: (work: () => Promise<void>) => Promise<void>;\n\tonToolsChanged?: (tools: AgentTool[]) => void;');
+  body = edit(body, '\tsource?: InputSource;',
+    '\tsource?: InputSource;\n\t/** Host context is added after native commands, input hooks and resource expansion. */\n\thostContextPrefix?: string;');
+  body = edit(body, '\t\t// If streaming, queue via steer() or followUp() based on option',
+    '\t\tif (options?.hostContextPrefix) expandedText = options.hostContextPrefix + expandedText;\n\n\t\t// If streaming, queue via steer() or followUp() based on option');
   body = edit(body, '\tprivate _baseToolsOverride?: Record<string, AgentTool>;',
     '\tprivate _baseToolsOverride?: Record<string, AgentTool>;\n\tprivate _wrapTool?: AgentSessionConfig["wrapTool"];\n\tprivate _onAction?: AgentSessionConfig["onAction"];\n\tprivate _onToolsChanged?: AgentSessionConfig["onToolsChanged"];');
   body = edit(body, '\t\tthis._baseToolsOverride = config.baseToolsOverride;',

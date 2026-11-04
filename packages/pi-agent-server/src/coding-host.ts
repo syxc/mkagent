@@ -10,11 +10,12 @@ import {
 import { DurableLoopBinding, NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
 import type { AgentTool } from '@mkagent/pi-durable-coding/agent';
 import {
-  createAgentSession, createHostResources, initializeExtensionModels, hostToolToAgent, wrapAgentTool, ModelRuntime, SessionManager,
+  createAgentSession, createHostResources, initializeExtensionModels, initTheme, hostToolToAgent, wrapAgentTool, ModelRuntime, SessionManager,
   type AgentSession, type AgentSessionEvent, type ExtensionCommandContextActions, type HostResourceOptions,
   type ModelRuntimeCredentials, type PromptOptions, type SourceInfo,
 } from '@mkagent/pi-durable-coding/native';
 import { LegacyCodingAdoption } from './storage/coding-recovery.ts';
+import { ExtensionUIHost, type ExtensionUIBinding } from './extension-ui.ts';
 
 export type KernelCodingOptions = Omit<HostResourceOptions, 'cwd' | 'getSystemPrompt'>;
 
@@ -35,6 +36,7 @@ export interface CodingHostBindings {
   shutdown(): void;
   getSystemPrompt(): string | undefined;
   commands: ExtensionCommandContextActions;
+  ui?: ExtensionUIHost;
   wrapTool(tool: ToolRegistration): ToolRegistration;
   publishTools(tools: ToolRegistration[]): void;
   event(event: AgentSessionEvent | Record<string, unknown>): void;
@@ -60,7 +62,9 @@ export class CodingHost {
   private stopEvents?: () => void;
   private closed = false;
   private closing = false;
+  private closePending?: Promise<void>;
   private legacy?: LegacyCodingAdoption;
+  private ui?: ExtensionUIBinding;
 
   private constructor(private readonly host: CodingHostBindings, journal: NativeSessionJournal, models: ModelRuntime) {
     this.journal = journal;
@@ -171,8 +175,20 @@ export class CodingHost {
   }
 
   async start(reason: 'startup' | 'resume' | 'fork' | 'reload' | 'new'): Promise<void> {
+    if (this.host.ui) {
+      // The reserved built-in system theme reads no project themes and starts no watcher.
+      initTheme(undefined, false);
+      const runner = this.session.extensionRunner;
+      this.ui = this.host.ui.bind(runner.getUIContext(), available => {
+        runner.setUIContext(this.ui!.context, available ? 'rpc' : 'print');
+      });
+      // Keep persistent cleanup writable while the bridge owns responder availability.
+      runner.hasUI = () => this.ui?.available ?? false;
+    }
     await this.session.bindExtensions({
-      mode: 'print', commandContextActions: this.host.commands,
+      mode: this.ui?.available ? 'rpc' : 'print',
+      uiContext: this.ui?.context,
+      commandContextActions: this.host.commands,
       shutdownHandler: this.host.shutdown, onError: this.host.error,
     });
     await this.legacy?.adopt();
@@ -212,13 +228,18 @@ export class CodingHost {
     this.host.event(usage ? { ...event, ...usage } : event);
   }
 
+  get isStreaming(): boolean { return this.session.isStreaming; }
+
   /** Admit input after native command, input and before-agent-start processing; retain its running promise. */
-  async submit(text: string, options: PromptOptions): Promise<void> {
-    const admitted = Promise.withResolvers<void>();
-    const run = this.action(() => this.session.prompt(text, { ...options, preflightResult: () => admitted.resolve() }));
+  async submit(text: string, options: PromptOptions): Promise<boolean> {
+    const admitted = Promise.withResolvers<boolean>();
+    const run = this.action(() => this.session.prompt(text, {
+      ...options, preflightResult: disposition => admitted.resolve(disposition === 'handled'),
+    }));
     void run.catch(error => admitted.reject(error));
-    await admitted.promise;
+    const handled = await admitted.promise;
     if (!this.closed) await this.flush();
+    return handled;
   }
 
   private action<T>(work: () => Promise<T>, background = false): Promise<T> {
@@ -278,27 +299,38 @@ export class CodingHost {
   }
 
   async waitForIdle(): Promise<void> {
+    if (this.closed) return;
     const current = this.actionScope.getStore();
     const pending = () => [...this.jobs].filter(job => job !== current?.job);
     do {
       await this.session.waitForIdle();
       await Promise.all(pending());
     } while (pending().length || this.session.isStreaming);
-    await this.flush();
+    if (!this.closed) await this.flush();
   }
 
   async abort(): Promise<void> {
-    await this.session.abort();
-    await this.waitForIdle();
+    const resumeUI = this.host.ui?.suspend();
+    try {
+      await this.session.abort();
+      await this.waitForIdle();
+    } finally {
+      resumeUI?.();
+    }
   }
 
   updateTools(tools: ToolRegistration[]): void {
     this.session.setBaseTools(Object.fromEntries(tools.map(tool => [tool.name, hostToolToAgent(tool)])));
   }
 
-  async close(): Promise<void> {
-    if (this.closed) return;
+  close(): Promise<void> {
     this.closing = true;
+    return this.closePending ??= Promise.resolve().then(() => this.closeSession());
+  }
+
+  private async closeSession(): Promise<void> {
+    // Drain dialogs before waiting for actions or shutdown hooks that may await them.
+    this.ui?.close();
     this.session.cancelCacheWarming();
     await this.abort();
     await this.session.extensionRunner.emit({ type: 'session_shutdown', reason: 'quit' });

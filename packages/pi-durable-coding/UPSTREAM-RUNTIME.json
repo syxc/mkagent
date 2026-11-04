@@ -190,7 +190,7 @@
       "source": "packages/coding-agent/src/core/agent-session.ts",
       "target": "src/pi/core/agent-session.ts",
       "sha256": "b7c24bf1c1366e931083100d921a80d390d66bacde4acf7472a7b57af1bb69aa",
-      "portSha256": "96384becc92d3bad20d0bb8e376e7fd697fd8b192bfd8b519ed8f4dad81fefcb",
+      "portSha256": "fe9eafb7e998c6a6b832975fea6d6a82bab2464f1e49cc340f04adf962adab17",
       "changes": [
         "durable-agent-boundary",
         "durable-recovery-and-host-tool-policy",
@@ -1944,6 +1944,15 @@
       "sha256": "9e523bcac3e9fcc3996b483ca8b4ab2934b551b03e8764ba8a6e92932ee8a548",
       "portSha256": "9e523bcac3e9fcc3996b483ca8b4ab2934b551b03e8764ba8a6e92932ee8a548",
       "changes": []
+    },
+    {
+      "source": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
+      "target": "src/rpc-ui.ts",
+      "sha256": "be06a1d53916e03e9274cce9e4833692b235494e4047f1f7139d7f0147daae1a",
+      "portSha256": "1b753278961cb97ac8f3e66bbf4ecf832ee8b2dfcab9374d6e689c3ac5db9b46",
+      "changes": [
+        "standalone-extension-ui-wire-contracts"
+      ]
     },
     {
       "source": "packages/agent/src/stream-fn.ts",

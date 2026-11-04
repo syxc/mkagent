@@ -19,6 +19,7 @@ import type { AgentProfile } from '@mkagent/session-tools-core';
 import type { PermissionMode } from '../mode-manager.ts';
 import type { Workspace } from '../../config/storage.ts';
 import type { SessionConfig as Session } from '../../sessions/storage.ts';
+import type { ExtensionUIHostPort } from '../../protocol/extension-ui.ts';
 
 // Import AbortReason and RecoveryMessage from core module (single source of truth)
 import { AbortReason, type RecoveryMessage } from '../core/index.ts';
@@ -124,6 +125,8 @@ export interface CoreBackendConfig {
   agentProfile?: import('@mkagent/session-tools-core').AgentProfile;
   /** Explicit Pi resources and project trust for coding extensions. */
   codingResources?: import('./pi/protocol.ts').PiCodingResources;
+  /** A separate channel for native plugin UI, including hooks outside chat turns. */
+  extensionUI?: ExtensionUIHostPort;
   /** Workspace configuration */
   workspace: Workspace;
 

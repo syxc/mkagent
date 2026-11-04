@@ -8,6 +8,7 @@
     ".": { "types": "./types/index.d.ts", "default": "./src/index.ts" },
     "./compat": { "types": "./types/compat.d.ts", "default": "./src/compat.ts" },
     "./native": { "types": "./types/native.d.ts", "default": "./src/native.ts" },
+    "./rpc-ui": "./src/rpc-ui.ts",
     "./agent": { "types": "./types/agent-runtime.d.ts", "default": "./src/agent-runtime.ts" },
     "./durable": { "types": "./types/durable-coding/index.d.ts", "default": "./src/durable-coding/index.ts" }
   },

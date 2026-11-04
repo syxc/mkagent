@@ -489,23 +489,45 @@ export function FreeFormInput({
     onAttachmentsChangeRef.current?.(attachments)
   }, [attachments])
 
-  // Sync from parent when inputValue changes externally (e.g., switching sessions)
   const prevInputValueRef = React.useRef(coerceInputText(inputValue))
+  const syncTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+  const inputRef = React.useRef(input)
+  inputRef.current = input
+
+  const replaceInput = React.useCallback((text: string) => {
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
+    syncTimeoutRef.current = null
+    prevInputValueRef.current = text
+    inputRef.current = text
+    setInput(text)
+  }, [])
+
+  // An external replacement supersedes any draft still waiting to reach the parent.
   React.useEffect(() => {
     if (inputValue === undefined) return
     const nextInputValue = coerceInputText(inputValue)
     if (nextInputValue !== prevInputValueRef.current) {
-      setInput(nextInputValue)
-      prevInputValueRef.current = nextInputValue
+      replaceInput(nextInputValue)
     }
-  }, [inputValue])
+  }, [inputValue, replaceInput])
+
+  // The event also carries replacements equal to the last parent value (including "").
+  React.useEffect(() => {
+    const restore = (event: Event) => {
+      const detail = (event as CustomEvent<{ sessionId?: string; text?: unknown }>).detail
+      if (!sessionId || detail?.sessionId !== sessionId) return
+      replaceInput(coerceInputText(detail.text))
+    }
+    window.addEventListener('craft:restore-input', restore)
+    return () => window.removeEventListener('craft:restore-input', restore)
+  }, [sessionId, replaceInput])
 
   // Debounced sync to parent (saves draft without blocking typing)
-  const syncTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
   const syncToParent = React.useCallback((value: string) => {
     if (!onInputChange) return
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
     syncTimeoutRef.current = setTimeout(() => {
+      syncTimeoutRef.current = null
       onInputChange(value)
       prevInputValueRef.current = value
     }, 300) // Debounce 300ms
@@ -513,9 +535,6 @@ export function FreeFormInput({
 
   // Sync immediately on unmount to preserve input across mode switches
   // Also cleanup any pending debounced sync
-  const inputRef = React.useRef(input)
-  inputRef.current = input // Keep ref in sync with state
-
   React.useEffect(() => {
     return () => {
       // Cancel pending debounced sync

@@ -5,7 +5,35 @@ import {
   attachmentFromContentRef,
   isAbsolutePath,
   toDraftRef,
+  mergePersistedDrafts,
 } from '../drafts'
+import type { SessionDraft } from '@mkagent/shared/config'
+
+describe('delayed draft bootstrap', () => {
+  it('keeps a plugin text replacement and restores attachments that had not loaded yet', () => {
+    const current = new Map<string, SessionDraft>([['session', { text: 'plugin text' }]])
+    const attachments = [{ path: '/tmp/draft.txt', name: 'draft.txt' }]
+    mergePersistedDrafts(current, { session: { text: 'old text', attachments } },
+      { text: new Set(['session']), attachments: new Set() })
+    expect(current.get('session')).toEqual({ text: 'plugin text', attachments })
+  })
+
+  it('preserves empty editor text and explicit attachment removal independently', () => {
+    const current = new Map<string, SessionDraft>()
+    const persisted = {
+      textCleared: { text: 'old', attachments: [{ path: '/tmp/old.txt', name: 'old.txt' }] },
+      attachmentsCleared: { text: 'keep', attachments: [{ path: '/tmp/old.txt', name: 'old.txt' }] },
+      bothCleared: { text: 'old', attachments: [{ path: '/tmp/old.txt', name: 'old.txt' }] },
+    }
+    mergePersistedDrafts(current, persisted, {
+      text: new Set(['textCleared', 'bothCleared']),
+      attachments: new Set(['attachmentsCleared', 'bothCleared']),
+    })
+    expect(current.get('textCleared')).toEqual({ text: '', attachments: persisted.textCleared.attachments })
+    expect(current.get('attachmentsCleared')).toEqual({ text: 'keep' })
+    expect(current.has('bothCleared')).toBe(false)
+  })
+})
 
 function makeAttachment(overrides: Partial<FileAttachment> = {}): FileAttachment {
   return {

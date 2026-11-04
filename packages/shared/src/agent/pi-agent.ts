@@ -43,6 +43,7 @@ import type { Workspace } from '../config/storage.ts';
 // Event adapter
 import { PiEventAdapter } from './backend/pi/event-adapter.ts';
 import { PiWorkerConnection, type PiWorkerLease } from './backend/pi/worker-connection.ts';
+import { PiExtensionUITransport } from './backend/pi/extension-ui-transport.ts';
 import type { PiCompactResult } from './backend/pi/protocol.ts';
 import { EventQueue } from './backend/event-queue.ts';
 
@@ -177,6 +178,7 @@ export class PiAgent extends BaseAgent {
   private subprocessReadyResolve: (() => void) | null = null;
   private subprocessReadyReject: ((error: Error) => void) | null = null;
   private disposed = false;
+  private readonly extensionUI: PiExtensionUITransport;
 
   // Pi session ID (managed by subprocess, reported back)
   private piSessionId: string | null = null;
@@ -187,6 +189,7 @@ export class PiAgent extends BaseAgent {
   // State
   private _isProcessing: boolean = false;
   private abortReason?: AbortReason;
+  private turnEpoch = 0;
 
   // Event adapter
   private adapter: PiEventAdapter;
@@ -342,6 +345,9 @@ export class PiAgent extends BaseAgent {
 
   // RPC request counter for unique IDs
   private rpcIdCounter: number = 0;
+  private activePromptId?: string;
+  private pendingHostContext?: () => void;
+  private activeHostContext?: { consume: () => void; agentEnds: Array<() => void> };
 
   // ============================================================
   // Constructor
@@ -362,6 +368,7 @@ export class PiAgent extends BaseAgent {
     if (config.miniModel) {
       this.adapter.setMiniModel(config.miniModel);
     }
+    this.extensionUI = new PiExtensionUITransport(config.extensionUI, command => this.subprocess !== null && this.send(command));
 
     // Set session dir on adapter for concurrent-safe toolMetadataStore lookups
     if (config.session?.id && config.workspace.rootPath) {
@@ -543,6 +550,7 @@ export class PiAgent extends BaseAgent {
       type: 'init',
       agentProfile: this._agentProfile,
       codingResources: this.config.codingResources,
+      extensionUIAvailable: this.extensionUI.available,
       apiKey: legacyApiKey || '',
       model: this._model,
       cwd,
@@ -572,17 +580,6 @@ export class PiAgent extends BaseAgent {
     if (this.subprocess !== child) throw new Error('Pi subprocess startup aborted');
     this.debug('Pi subprocess is ready');
 
-    // Ensure auto-compaction is explicitly enabled for embedded sessions.
-    // PI defaults this to enabled, but we set it proactively for clarity and resilience.
-    try {
-      const enabled = await this.requestSetAutoCompaction(true);
-      this.debug(`PI auto-compaction enabled: ${enabled}`);
-    } catch (error) {
-      this.debug(`Failed to configure PI auto-compaction (continuing): ${error instanceof Error ? error.message : String(error)}`);
-    }
-
-    if (this.subprocess !== child) throw new Error('Pi subprocess startup aborted');
-
     // Register session-scoped tools as proxy tools in the subprocess.
     // These tools (SubmitPlan, config_validate, call_llm, etc.)
     // are executed in the main process when the LLM calls them.
@@ -606,6 +603,15 @@ export class PiAgent extends BaseAgent {
       tools: sessionToolDefs,
     });
     this.debug(`Registered ${sessionToolDefs.length} session tools with subprocess`);
+
+    // This opens the kernel and runs startup hooks, which need the complete host tool catalog.
+    try {
+      const enabled = await this.requestSetAutoCompaction(true);
+      this.debug(`PI auto-compaction enabled: ${enabled}`);
+    } catch (error) {
+      this.debug(`Failed to configure PI auto-compaction (continuing): ${error instanceof Error ? error.message : String(error)}`);
+    }
+    if (this.subprocess !== child) throw new Error('Pi subprocess startup aborted');
 
   }
 
@@ -753,6 +759,23 @@ export class PiAgent extends BaseAgent {
 
     if (type !== 'error') {
       this.resetSubprocessErrorDedup();
+    }
+    if (this.extensionUI.handleMessage(msg)) return;
+    if (type === 'prompt_result') {
+      if (msg.id !== this.activePromptId || typeof msg.handled !== 'boolean' || typeof msg.completed !== 'boolean') return;
+      const context = this.activeHostContext;
+      this.activeHostContext = undefined;
+      try {
+        if (!msg.handled) context?.consume();
+      } catch {
+        this.eventQueue.enqueue({ type: 'error', message: 'Could not record the conversation context.' });
+      }
+      for (const end of context?.agentEnds ?? []) end();
+      if (msg.completed && !context?.agentEnds.length) {
+        this.eventQueue.enqueue({ type: 'complete' });
+        this.eventQueue.complete();
+      }
+      return;
     }
 
     switch (type) {
@@ -951,12 +974,22 @@ export class PiAgent extends BaseAgent {
       default:
         this.debug(`Unknown subprocess message type: ${type}`);
     }
+    if (type === 'error' && msg.id === this.activePromptId) {
+      const context = this.activeHostContext;
+      this.activeHostContext = undefined;
+      for (const end of context?.agentEnds ?? []) end();
+    }
   }
 
   /**
    * Forward a Pi SDK event from the subprocess through the event adapter.
    */
   private handleSubprocessEvent(event: Record<string, unknown>): void {
+    // A fast model can finish before its durable input receipt reaches the parent.
+    if (event.type === 'agent_end' && this.activeHostContext) {
+      this.activeHostContext.agentEnds.push(() => this.handleSubprocessEvent(event));
+      return;
+    }
     // The subprocess sends Pi SDK AgentSessionEvent objects serialized as JSON.
     // Feed them through PiEventAdapter to convert to MkAgentEvents.
 
@@ -1544,6 +1577,8 @@ export class PiAgent extends BaseAgent {
    */
   private handleSubprocessExit(code: number | null, signal: string | null): void {
     this.debug(`Pi subprocess exited: code=${code}, signal=${signal}`);
+    this.extensionUI.reset();
+    this.activeHostContext = undefined;
 
     this.subprocessReadyReject?.(new Error('Pi subprocess exited before ready'));
     this.subprocess = null;
@@ -1769,14 +1804,23 @@ export class PiAgent extends BaseAgent {
   // Chat (AsyncGenerator backed by the subprocess event queue)
   // ============================================================
 
+  protected override prepareTurnContext(consume: () => void): void {
+    if (this._agentProfile === 'coding') this.pendingHostContext = consume;
+    else consume();
+  }
+
   protected async *chatImpl(
     messageParam: string,
     attachments?: FileAttachment[],
     options?: ChatOptions
   ): AsyncGenerator<AgentEvent> {
     let message = messageParam;
+    const hostContext = this.pendingHostContext;
+    this.pendingHostContext = undefined;
+    const rawMessage = this.getCurrentTurnUserMessage() ?? messageParam;
     const compactMatch = message.trim().match(/^\/compact(?:\s+([\s\S]+))?$/i);
     let compactEpoch = this.compactionEpoch;
+    const turnEpoch = this.turnEpoch;
     // Reset state for new turn
     this._isProcessing = true;
     this.abortReason = undefined;
@@ -1830,6 +1874,7 @@ export class PiAgent extends BaseAgent {
         }
       }
 
+      if (turnEpoch !== this.turnEpoch) throw new Error('Pi turn aborted');
       if (compactMatch) {
         if (compactEpoch !== this.compactionEpoch) throw new Error('Compaction aborted');
         const customInstructions = compactMatch[1]?.trim() || undefined;
@@ -1943,13 +1988,19 @@ export class PiAgent extends BaseAgent {
 
       // Send prompt to subprocess
       const turnId = `turn-${++this.rpcIdCounter}`;
+      this.activePromptId = turnId;
+      this.activeHostContext = hostContext ? { consume: hostContext, agentEnds: [] } : undefined;
       const child = this.subprocess;
       await this.pushLatestOAuthCredential();
+      if (turnEpoch !== this.turnEpoch) throw new Error('Pi turn aborted');
       if (this.disposed || this.subprocess !== child) throw new Error('Pi subprocess stopped');
       this.send({
         type: 'prompt',
         id: turnId,
         message: userMessage,
+        nativeInput: this._agentProfile === 'coding' && userMessage.endsWith(rawMessage)
+          ? { text: rawMessage, hostContextPrefix: userMessage.slice(0, userMessage.length - rawMessage.length) }
+          : undefined,
         systemPrompt: fullSystemPrompt,
         images: images.length > 0 ? images : undefined,
       });
@@ -1994,6 +2045,8 @@ export class PiAgent extends BaseAgent {
 
       yield { type: 'complete' };
     } finally {
+      this.activePromptId = undefined;
+      this.activeHostContext = undefined;
       this._isProcessing = false;
     }
   }
@@ -2108,6 +2161,8 @@ export class PiAgent extends BaseAgent {
   }
 
   async abort(reason?: string): Promise<void> {
+    this.turnEpoch++;
+    this.activeHostContext = undefined;
     this.cancelPendingCompactions();
     // Deny all pending permissions
     for (const [, pending] of this.pendingPermissions) {
@@ -2131,6 +2186,8 @@ export class PiAgent extends BaseAgent {
   }
 
   forceAbort(reason: AbortReason): void {
+    this.turnEpoch++;
+    this.activeHostContext = undefined;
     this.cancelPendingCompactions();
     this.abortReason = reason;
     this._isProcessing = false;
@@ -2234,6 +2291,7 @@ export class PiAgent extends BaseAgent {
     this._sessionToolContext = null;
     // Pool clients are owned by the main process — don't close them here.
     this.killSubprocess();
+    this.extensionUI.dispose();
     this.debug('PiAgent destroyed');
   }
 
@@ -2246,7 +2304,11 @@ export class PiAgent extends BaseAgent {
     }
 
     this._sessionToolContext = null;
-    await this.killSubprocessGracefully();
+    try {
+      await this.killSubprocessGracefully();
+    } finally {
+      this.extensionUI.dispose();
+    }
     this.debug('PiAgent disposed for restart');
   }
 
@@ -2281,6 +2343,8 @@ export class PiAgent extends BaseAgent {
   }
 
   private killSubprocess(timeoutMs = 2_000): void {
+    this.extensionUI.reset();
+    this.activeHostContext = undefined;
     this.cancelPendingCompactions();
     const error = new Error('Pi subprocess stopped');
     this.rejectAllPendingEphemeral(error);

@@ -2,6 +2,22 @@
   "version": 2,
   "baselineCommit": "8df01c5d0ac73c35add5954e6f190ce038d35845",
   "modified": {
+    "apps/electron/src/renderer/actions/definitions.ts": {
+      "sha256": "961add7a053c7055b9765ab92b2ec33700e2e9ea6f01890575a6701e0d079512",
+      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+    },
+    "apps/electron/src/renderer/lib/__tests__/drafts.test.ts": {
+      "sha256": "9e6f39ef506efc593176624da9af149e1a0767304fa17f987406f2c3a458bf98",
+      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+    },
+    "apps/electron/src/renderer/lib/drafts.ts": {
+      "sha256": "b178e3a95a8b7fc52b6a726d2dd110afc220393196c04142c8318fab59509228",
+      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+    },
+    "packages/shared/src/protocol/index.ts": {
+      "sha256": "fabd3f3ef587839e04e2b263681f2e3532e69d8fb8a245086b523ae5a1ba557c",
+      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+    },
     ".env.example": {
       "sha256": "3fb7bf14e2bb07e5e62631256cc8dca97f87fc745835a9ea3a3782839126f718",
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
@@ -375,7 +391,7 @@
       "reason": "Craft browser toolbar preload extended with the minimal app-theme update event"
     },
     "apps/electron/src/renderer/App.tsx": {
-      "sha256": "aee4835f5da7091e742ac2e0cf12ccb6390099bc10aa3ffa2700eea1045673e9",
+      "sha256": "7fdd227a1e283d74560197d2f28bce7fbaab0a1a1918259244fe4e6621c0d51b",
       "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent."
     },
     "apps/electron/src/renderer/atoms/__tests__/browser-pane.test.ts": {
@@ -455,7 +471,7 @@
       "reason": "Craft renderer adapted only for excluded product surfaces, Pi-only wiring, or MkAgent branding"
     },
     "apps/electron/src/renderer/components/app-shell/ChatDisplay.tsx": {
-      "sha256": "d1240599d3069142250a727d9bcc9cb6e28b7ec2e62ff53307ee2cdedf8ea3d0",
+      "sha256": "ff93109aafb8411b59bd057d07eda880b8dc46b0f1e4e12aa75d363140ab77c2",
       "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent. Register loaded session metadata before navigation so the created-session push cannot race with route validation."
     },
     "apps/electron/src/renderer/components/app-shell/CompactSessionMenu.tsx": {
@@ -555,7 +571,7 @@
       "reason": "Retain tabs/overflow/urgency and arrows; extract generic sizing to PR-specific helpers without restoring labels, and remove hidden tabs from keyboard focus."
     },
     "apps/electron/src/renderer/components/app-shell/input/ChatInputZone.tsx": {
-      "sha256": "f5c24f3ba1c45cdedc704213562fa20b3dad47a8aec3d31d4f24bce6266a5ac1",
+      "sha256": "1ab7cce9f77321ba4b27185da6df3192f5d9b54ff7098dc439a74ad80bb2211b",
       "reason": "Craft renderer adapted only for excluded product surfaces, Pi-only wiring, or MkAgent branding"
     },
     "apps/electron/src/renderer/components/app-shell/input/CodingWorkspacePanel.tsx": {
@@ -567,7 +583,7 @@
       "reason": "Retain Lite permission modes and precise approvals; Guarded and decision configuration deferred"
     },
     "apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx": {
-      "sha256": "8031ff1a194db0e37a0f5a87443d98ab2295054c2be1bf4542d79763914993e5",
+      "sha256": "62878d191d6a107fd5d4a8c6ac4e60c40338208253021f179a639c0d88d07bd1",
       "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent."
     },
     "apps/electron/src/renderer/components/app-shell/input/StructuredInput.tsx": {
@@ -699,7 +715,7 @@
       "reason": "Craft renderer adapted only for excluded product surfaces, Pi-only wiring, or MkAgent branding"
     },
     "apps/electron/src/renderer/context/AppShellContext.tsx": {
-      "sha256": "837ae24d8d864eddbb69128cff66a61d46f606e9490e6cd44ad9b914bcf35a50",
+      "sha256": "04c257cf2451b34a3c949048c6b3f82e904f49bc137b53b188ba3fca5093c230",
       "reason": "Craft renderer adapted only for excluded product surfaces, Pi-only wiring, or MkAgent branding; v0.15.2: Wire workspace settings through shell/context/chat rendering to actual composer submit with skillSlugs. Reload on saved settings; ignore stale workspace reads; source selection branches remain absent."
     },
     "apps/electron/src/renderer/context/SessionListContext.tsx": {
@@ -807,7 +823,7 @@
       "reason": "Retained MkAgent Lite implementation and branding; upstream full-product branches remain excluded"
     },
     "apps/electron/src/renderer/pages/ChatPage.tsx": {
-      "sha256": "0eea02afef71791dd72dfb6f4db0113d5cf4e735b74a721064e12db6c214a903",
+      "sha256": "2b7993d64cd64d1b4b6aec3fbbb80eef31263909c381a67ab50cc2aa54d80142",
       "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization."
     },
     "apps/electron/src/renderer/pages/SkillInfoPage.tsx": {
@@ -879,7 +895,7 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "apps/electron/src/shared/types.ts": {
-      "sha256": "f23dfd94584acd56d10a84b4c32cd9c7d219eadbca9734fd24453a3b7597274e",
+      "sha256": "dbc8d36df6207fbb0ba4b93c2106e1c2e1407a965571804056b2aa187ec91ade",
       "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization."
     },
     "apps/electron/src/transport/__tests__/channel-map-parity.test.ts": {
@@ -891,7 +907,7 @@
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "apps/electron/src/transport/channel-map.ts": {
-      "sha256": "b94fb3e2f9287f7e8f91b99c48166117e6357eb58cc9921df0a5d794597e52e8",
+      "sha256": "e45660e18ddcc87b3bfa7252dc0b90927beb451f5a652a2f694ba931139c06e2",
       "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization."
     },
     "apps/electron/vite.config.ts": {
@@ -951,7 +967,7 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "d50c7cff6ce753f5e19466788cad577539e27f80bd6b474ac9b8ab32954a14e1",
+      "sha256": "3815921d703c7a586d93d577be3c9414a3ca2726cf3522ec863af4ac8f83417d",
       "reason": "Lock the complete native coding dependency closure and independent official Pi packages without the old coding-agent or agent-core runtime."
     },
     "package.json": {
@@ -1011,7 +1027,7 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "7efacfdfa4107d6a41c765cc4b74616c114b9a8477188c944ed19421085836cb",
+      "sha256": "7ce9ad56503891ca036fe45f7a3952a009953081b11f08e6c768429fc1654830",
       "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining host events, approvals, runtime updates and shutdown cleanup. Capture product ownership for JSONL calls and kernel events, reject retired foreground scopes, and preserve source ownership for background notifications and stop requests."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
@@ -1115,7 +1131,7 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior"
     },
     "packages/server-core/src/handlers/rpc/sessions.ts": {
-      "sha256": "3b5a6c6210bc35c05dcb6bd9e6ee992aba7a6d76fd646edd7d03cf91cb3f6957",
+      "sha256": "be527b5bba0d766532f45a81749e60d66805fc5500168ff6a5d1ce2219a08d70",
       "reason": "Retain v0.15.4 shared transport/runtime/style/CLI lifecycle hunk with existing MkAgent Pi/Lite seams; add per-client watcher reconciliation and cancellation-safe subscription ownership."
     },
     "packages/server-core/src/handlers/rpc/settings.ts": {
@@ -1135,11 +1151,11 @@
       "reason": "Async execFile branch lookup, detached HEAD null; Electron duplicate core handlers removed in favor of server-core."
     },
     "packages/server-core/src/handlers/rpc/workspace.ts": {
-      "sha256": "bb3a1b88522dcc8889722cb760dc5855cd11e973ea5b8be9a6e4bb9d2c32520b",
+      "sha256": "d197c05e01e778f20e9373c0365baf94cb2389dc365f24e4bf0b7f7639b982ed",
       "reason": "Retain Lite RPC workspace lifecycle; reject current or other-window-open workspace removal before unregistering."
     },
     "packages/server-core/src/handlers/session-manager-interface.ts": {
-      "sha256": "738b4d690cd94210aad4726907848646efb124714ab5f258984f5f1147dfa9a2",
+      "sha256": "753f429378cc17e25b3edd9fb84df3c1c474fbd983eec7c90bc421305c8dbb4f",
       "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions."
     },
     "packages/server-core/src/model-fetchers/index.ts": {
@@ -1231,7 +1247,7 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/server-core/src/sessions/SessionManager.ts": {
-      "sha256": "318a544f60ecb85e9b446a39b6b4e58963c394e3688115ca5f509a40606ced25",
+      "sha256": "10a2e5546719b0c014130e6641b3fdc7a7e2a28532eb9825b74ffe47f9096168",
       "reason": "Retain the Craft-derived Pi/Lite session lifecycle, permissions, context, persistence and PR handoffs; preserve sdkSessionId when importing a bundle with durable session metadata so restored history retains its host correlation."
     },
     "packages/server-core/src/sessions/background-task-stop.test.ts": {
@@ -1423,7 +1439,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/package.json": {
-      "sha256": "14b1c6f6f4a30e9e28d009ae6533d5161a0173d3fb18596eb6b4493f3c94b205",
+      "sha256": "d2da385ce17200cef6b6292afe3268f87ed5723b4643b16bc3611fed9e367977",
       "reason": "Retain MkAgent versions, Lite exports and pr-watch; export the vendored Pi event contract at agent/pi-events and remove coding-agent while keeping pi-agent-core and pi-ai 1.1.0 for host event compatibility. Remove pi-agent-core; local wire types use the independent pi-ai definitions."
     },
     "packages/shared/src/__tests__/feature-flags.test.ts": {
@@ -1603,11 +1619,11 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/backend/types.ts": {
-      "sha256": "5fa93a8ea3bf387e1553162c08be107563550561c4cccbd688c5830c3e24eb6a",
+      "sha256": "5d48403b6652e5402d6b8e25e93e6294543c33e4501931214a0a8da7f3e2782a",
       "reason": "Retain the Craft-derived Pi/Lite coding profile, prompt, context and tool configuration without excluded backends; identify pi-durable as the PiAgent subprocess runtime. Define backend-neutral coding resource paths and project trust."
     },
     "packages/shared/src/agent/base-agent.ts": {
-      "sha256": "1e83a71da6fb9494c72f456ca4ec4164cf5e7d20d951d26fe623b6741e3ca588",
+      "sha256": "abffc8d7a573d229cadad65ddb996ab4a20616f203bbe07ded90c1db7c441f68",
       "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions."
     },
     "packages/shared/src/agent/browser-tool-runtime.ts": {
@@ -1699,7 +1715,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/pi-agent.ts": {
-      "sha256": "419749261a240fb43b6ec5839b738ba42a3cefbc17ff83e702399406b654bb79",
+      "sha256": "54ef25507a96b82dcd28a650d0eef5013855d6ba09a110aec22ef78b3eec7ac3",
       "reason": "Retain the Craft-derived Pi/Lite client, startup, permissions, runtime updates, compaction, error recovery and PR handoffs. Isolate worker I/O behind owned generation-checked bindings; preserve scope during shutdown and release abandoned background stop requests on timeout or unavailable transport."
     },
     "packages/shared/src/agent/plan-types.ts": {
@@ -1915,7 +1931,7 @@
       "reason": "Retain shared/Pi coding profile, lean prompt, context/preferences and canonical tool filtering. Excluded Source/Project/Guarded/Claude cases adapted individually."
     },
     "packages/shared/src/protocol/channels.ts": {
-      "sha256": "89b4e39da3a2dbae5a8b51daefad9b1ef0ad2d038d82d4d1d2fef7ee1e41f4cd",
+      "sha256": "2fa096e2d3bdf73ec104cf897cef21c8c225b40c1c09850bebdb1da2e2591871",
       "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization."
     },
     "packages/shared/src/protocol/dto.ts": {
@@ -2215,7 +2231,7 @@
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "packages/pi-agent-server/src/bundle-smoke.test.ts": {
-      "sha256": "d1b5653f8f2e16a0db576a683736a41763d313003e113dc38492364dc7b2dd6a",
+      "sha256": "a6cfaaa9c0aaef53f2f5f24c997270b51bfdf940f7024b904efb8f2bb836bed4",
       "reason": "Extend offline bundle tests for durable assets, codemode/MCP defaults, initialization races, tools, runtime updates, cancellation and OAuth ownership. Gate opening on the actual runtime config update instead of a fixed delay, and locate the open call independently of its generated variable name."
     },
     "packages/pi-agent-server/src/mini-model-query.test.ts": {
@@ -2251,7 +2267,7 @@
       "reason": "Extend Craft browser password regressions for fill, type, paste and mixed batches when field type is unavailable, while retaining ordinary-field input behavior."
     },
     "packages/shared/src/agent/__tests__/pi-compaction.test.ts": {
-      "sha256": "3f4af07d242d0f2de2974b164b94ac2a912b5ac2f6454b5846f203f1cb439807",
+      "sha256": "6508b74db39e653453eee4d2e2f92cdf61b899e74d17b8bd9d42f0aae4b78978",
       "reason": "Adapt Craft compaction timeout coverage to cancel_compact with the original request ID; add durable subprocess regressions for shared startup, real spawn failures, stale permission and tool responses, credential cancellation, signal failures, blocked restarts and session retention during shutdown."
     },
     "packages/shared/src/agent/browser-tool-redaction.ts": {
@@ -2308,12 +2324,76 @@
     }
   },
   "mkOnly": {
+    "apps/electron/src/renderer/actions/__tests__/dialog-shortcuts.test.ts": {
+      "sha256": "45a004ab9d8dfd92c930abdf654144c6b2f1f0904ebb7216915b02d1636a80ff",
+      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+    },
+    "apps/electron/src/renderer/components/app-shell/input/ExtensionUI.tsx": {
+      "sha256": "4db84ec5a509c51a833c88b485e1093846119e5a20dac49d577fed1ae90f5eb0",
+      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+    },
+    "apps/electron/src/renderer/hooks/useExtensionUI.ts": {
+      "sha256": "113b4b9c3c7f64c4996f7ff5e14df649776716b23ce0358f3f9ac02a4bc61e8f",
+      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+    },
+    "apps/electron/src/renderer/lib/__tests__/extension-ui-client.test.ts": {
+      "sha256": "75eecc3c71812dda14d6aecd833cb839bb6615df2c96c5072aedf0b9a02ab227",
+      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+    },
+    "apps/electron/src/renderer/lib/extension-ui-client.ts": {
+      "sha256": "b23c1eabcb7d91b784db66cef1a056d3a89b840a207d73af7f2f31cb358a1a5c",
+      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+    },
+    "apps/electron/src/transport/__tests__/extension-ui.isolated.ts": {
+      "sha256": "b33a0b6708ad17c3e6a4ec4cf4f4d4ebad0aac789e68915f271df03e0641ef36",
+      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+    },
+    "packages/pi-agent-server/src/extension-ui.e2e.test.ts": {
+      "sha256": "c08f4ac8ce365d3aae4fa16902a199e21f1b1ecb57cf4fde5a77bc689816bf7c",
+      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+    },
+    "packages/pi-agent-server/src/extension-ui.ts": {
+      "sha256": "5b7d39ae0feeea3f4b73ae5e1b0095be45faeb612106732ac9e42a7fddb24e4c",
+      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+    },
+    "packages/pi-durable-coding/src/rpc-ui.ts": {
+      "sha256": "1b753278961cb97ac8f3e66bbf4ecf832ee8b2dfcab9374d6e689c3ac5db9b46",
+      "reason": "Port the pinned Pi RPC UI contract and native prompt context through reproducible durable coding transforms."
+    },
+    "packages/server-core/src/handlers/rpc/workspace.extension-ui.test.ts": {
+      "sha256": "63f2ff3a4f12f05d9d9f58113f46185ffc98275083198a98574d98a2a9250a3c",
+      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+    },
+    "packages/server-core/src/sessions/extension-ui.test.ts": {
+      "sha256": "12a4fbebae519cdfd1a6040d2585ac23036119b732dc776c16b88b3a03173970",
+      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+    },
+    "packages/server-core/src/sessions/extension-ui.ts": {
+      "sha256": "320a3a7e120bb2b8a65c85ba66514d357d26713053abf563ff2fa561b313f848",
+      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+    },
+    "packages/shared/src/agent/__tests__/pi-extension-ui.isolated.ts": {
+      "sha256": "56e4831974bf052bd6f1281d9d93b0c16595c293fa952f75eec26b78de815cf3",
+      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+    },
+    "packages/shared/src/agent/backend/pi/extension-ui-transport.test.ts": {
+      "sha256": "a44ee04f17f2832e9d57ac923711211d2cb325b415dbe26a2456f206e33c59e9",
+      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+    },
+    "packages/shared/src/agent/backend/pi/extension-ui-transport.ts": {
+      "sha256": "cf0521291c7c73ba9e6105f8b27a5d5a1f36ccf41f022c765fb4b95b30f7eebc",
+      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+    },
+    "packages/shared/src/protocol/extension-ui.ts": {
+      "sha256": "fa20bf3e35eeb0f87ae16e83542aaa46bf7715f1e0f41a9c80a45efa21703a9e",
+      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+    },
     "packages/pi-agent-server/src/background-shell-owner.test.ts": {
       "sha256": "8586784a03e673b72bb8c67df14361880a8ccfb9107b3073f80931d113b06ccd",
       "reason": "Verify immutable background ownership, exact owner and generation checks for stop requests, and owner-specific disposal."
     },
     "packages/pi-agent-server/src/worker-scope.e2e.test.ts": {
-      "sha256": "5c127083e92f4b43e5614016ff68e1963bdc196a9c3fcde90e097bbdbd5f8f61",
+      "sha256": "7492fd24b5485dfca4037c06a327ff05bfb8e843f6f43829d3e81161a8082bc2",
       "reason": "Run both worker profiles with deterministic local models to verify owned replies, stale foreground rejection, history isolation, source background ownership and cleanup of retired queued compaction IDs across reinitialization."
     },
     "packages/shared/src/agent/__tests__/pi-worker-connection.test.ts": {
@@ -2501,7 +2581,7 @@
       "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path"
     },
     "packages/server-core/src/sessions/coding-runtime.isolated.ts": {
-      "sha256": "4e9cb1ed4ac6a1d10790763d428bc8e6b0b962be42f9f24e711165661c612829",
+      "sha256": "d7aa4ebf12965a00a522e85441b0889854e6bf040121b8f95c0197b6056989c4",
       "reason": "Build the current Pi subprocess before the retained Coding product test, preserving export, import, resumed history and branch-anchor assertions."
     },
     "packages/server-core/src/sessions/native-endpoint-refresh.isolated.ts": {
@@ -2657,7 +2737,7 @@
       "reason": "Shared MkAgent audit preflight resolves the Craft reference, validates the checkout root and pinned HEAD, and reports setup instructions before comparisons."
     },
     "scripts/craft-ui-overrides.json": {
-      "sha256": "ad02050478df4c133b1d2625a211b3743905ade63d788eea252e653f1fbd0bf2",
+      "sha256": "2c743da444cd858478b409084a18dea80e63499a2e6f4047510587290caf340f",
       "reason": "MkAgent renderer lineage ledger records the selective Craft v0.13.3 retry synchronization; v0.15.3: apply applicable retained feature changes and preserve Pi/Lite seams (see docs/sync/0.15.3-inventory.json and validation). Register the per-locale starter-prompt regression added in 20fb16d."
     },
     "scripts/release-workflow.test.ts": {
@@ -2765,7 +2845,7 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "43adafea990e287035cfa2bcbd0ba3c08585631fa50172118a02912fcf7eb1b1",
+      "sha256": "00716fd4c9195ae6c3848dfe33fffd9764cd3ac64df547660fcf635487338632",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
@@ -3061,7 +3141,7 @@
       "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery, approved file writes and native plugin execution with host-only resources across restart."
     },
     "packages/pi-agent-server/src/coding-host.ts": {
-      "sha256": "4d05fada2816774d7fa6bf7ca14d702421c10fcb3a7c34016eadf177299b3291",
+      "sha256": "ff159ba51b5e4e6c651b67246c4349e095d398fe29de7ce951a065f059126f1a",
       "reason": "Adapt native resources and extension actions to durable host boundaries, including committed auxiliary writes and shutdown."
     },
     "packages/pi-agent-server/test/coding-bundle.e2e.test.ts": {
@@ -3081,7 +3161,7 @@
       "reason": "Record pinned source selections, transformations and generated output hashes."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "9925ad1dbbc07e02d2693401d2f30b5f96e2a6f989ec34604b0ced39e60a7972",
+      "sha256": "a0fdd922b8892b68470b95ebf142783752beac4f2f43ce84e0b49590c1f18073",
       "reason": "Declare independent coding capabilities using official Pi libraries and loader dependencies."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
@@ -3393,7 +3473,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "c13217913ac1a7d78c6a176574b9297cab5c412090878c5713f7f072249dad82",
+      "sha256": "933f0def16347d1f78a0f88f2d9f89de5f2f8eea8cb53e9c8838e1acd57fab5d",
       "reason": "Record pinned Pi v1.5.0 source and output hashes, complete public closure, asset origins and controlled runtime transformations."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3409,7 +3489,7 @@
       "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in resource-loader-port.ts."
     },
     "packages/pi-durable-coding/scripts/session-runtime-port.ts": {
-      "sha256": "0d2dfc2122d9cf855540e41f49a20840782439a47af693bc4c58e1b51e692662",
+      "sha256": "de6d61686755c40f38612fc66ed8b212c89eba4df2a79c29f7383e1e9e50c020",
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks."
     },
     "packages/pi-durable-coding/scripts/settings-runtime-port.ts": {
@@ -3417,7 +3497,7 @@
       "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in settings-runtime-port.ts."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "b7b00d9c269099620f35629e5ed16f1efb25ef7a4f7a32bd915ef4fee7fb1988",
+      "sha256": "829d433380babb3b2bb04f07fd8bb35bf8e54d4cf0e707e528554c410ce8a163",
       "reason": "Reproduce pinned native coding sources and preserve host stack formatting during extension transpiler initialization."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -3577,7 +3657,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/agent-session-services.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/agent-session.ts": {
-      "sha256": "96384becc92d3bad20d0bb8e376e7fd697fd8b192bfd8b519ed8f4dad81fefcb",
+      "sha256": "fe9eafb7e998c6a6b832975fea6d6a82bab2464f1e49cc340f04adf962adab17",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/agent-session.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/auth-guidance.ts": {

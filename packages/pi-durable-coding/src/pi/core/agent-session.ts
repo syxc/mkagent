@@ -338,6 +338,8 @@ export interface PromptOptions {
 	streamingBehavior?: "steer" | "followUp";
 	/** Source of input for extension input event handlers. Defaults to "interactive". */
 	source?: InputSource;
+	/** Host context is added after native commands, input hooks and resource expansion. */
+	hostContextPrefix?: string;
 	/** Internal hook used by RPC mode to observe how an accepted prompt was dispatched. Not called if the prompt is rejected. */
 	preflightResult?: (disposition: PromptDisposition) => void;
 }
@@ -2325,6 +2327,8 @@ export class AgentSession {
 			expandedText = this._expandSkillCommand(expandedText);
 			expandedText = expandPromptTemplate(expandedText, [...this.promptTemplates]);
 		}
+
+		if (options?.hostContextPrefix) expandedText = options.hostContextPrefix + expandedText;
 
 		// If streaming, queue via steer() or followUp() based on option
 		if (this.isStreaming) {

@@ -180,7 +180,8 @@ package management operation is required to fetch or install dependencies.
 
 Trusted Node plugins can access filesystem and network directly. They are not
 sandboxed by the tool wrapper. Denial must happen before module import.
-No-UI clients return explicit unsupported results for interactive operations.
+Clients without a responder report `hasUI: false` and use native cancellation
+defaults for dialogs. Terminal component factories require a TUI host.
 Shutdown and reload release old handlers and connections.
 
 ## Implementation sequence

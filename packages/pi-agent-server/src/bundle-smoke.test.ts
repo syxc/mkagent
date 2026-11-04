@@ -652,10 +652,16 @@ describe('pi-agent-server bundle', () => {
     } }));
     const fixtureBundle = join(scratchDir, 'abort-wait.js');
     const bundle = readFileSync(bundlePath, 'utf8');
-    const anchor = '      await kernel.abort();';
-    expect(bundle.split(anchor)).toHaveLength(2);
-    writeFileSync(fixtureBundle, bundle.replace(anchor,
-      `${anchor}\n      process.stderr.write("TEST_ABORT_FINISHED\\n");`));
+    // The kernel also awaits active.abort(); instrument only the stdin handler.
+    const start = bundle.indexOf('async function handleAbort(');
+    const end = bundle.indexOf('async function handleMiniCompletion(', start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const handler = bundle.slice(start, end);
+    const anchor = 'await active.abort();';
+    expect(handler.split(anchor)).toHaveLength(2);
+    const instrumented = handler.replace(anchor, `${anchor}\nprocess.stderr.write("TEST_ABORT_FINISHED\\n");`);
+    writeFileSync(fixtureBundle, bundle.slice(0, start) + instrumented + bundle.slice(end));
     for (const name of ['codemode-worker.js', 'quickjs.wasm']) {
       copyFileSync(join(packageDir, 'dist', name), join(scratchDir, name));
     }
