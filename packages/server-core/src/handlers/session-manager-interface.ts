@@ -35,6 +35,7 @@ export interface ISessionManager {
   attachExtensionUI(sessionId: string, workspaceId: string, clientId: string, subscriptionId: string): Promise<ExtensionUISnapshot>
   detachExtensionUI(sessionId: string, clientId: string, subscriptionId: string): void
   disconnectExtensionUI(clientId: string): void
+  onClientWorkspaceChanged(clientId: string): void
   respondToExtensionUI(sessionId: string, workspaceId: string, clientId: string, subscriptionId: string,
     uiEpoch: string, response: unknown): Promise<boolean>
   createSession(

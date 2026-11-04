@@ -26,6 +26,7 @@ import type {
   BackendConfig,
   BackendRuntimeUpdate,
   ChatOptions,
+  RedirectMetadata,
 } from './backend/types.ts';
 import { AbortReason } from './backend/types.ts';
 import { getBackendRuntime } from './backend/internal/driver-types.ts';
@@ -1997,6 +1998,7 @@ export class PiAgent extends BaseAgent {
       this.send({
         type: 'prompt',
         id: turnId,
+        inputId: options?.messageId,
         message: userMessage,
         nativeInput: this._agentProfile === 'coding' && userMessage.endsWith(rawMessage)
           ? { text: rawMessage, hostContextPrefix: userMessage.slice(0, userMessage.length - rawMessage.length) }
@@ -2230,7 +2232,7 @@ export class PiAgent extends BaseAgent {
    * queued tools, and continues with full context intact.
    * Events flow through the existing generator — no abort needed.
    */
-  override redirect(message: string): boolean {
+  override redirect(message: string, metadata?: RedirectMetadata): boolean {
     if (this.isCompactionInFlight()) {
       // A manual /compact owns this turn: no agent loop is running to consume a
       // steer, so it would vanish (OSS #1058). Refuse without aborting the
@@ -2244,7 +2246,7 @@ export class PiAgent extends BaseAgent {
       return false;
     }
     this.debug(`Steering mid-stream: "${message.slice(0, 100)}"`);
-    this.send({ type: 'steer', message });
+    this.send({ type: 'steer', inputId: metadata?.messageId, message });
     return true;
   }
 

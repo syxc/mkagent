@@ -4,6 +4,7 @@ import { getPrAutoFixMonitor, getPrWatchRegistry } from '../handlers/rpc/pr-watc
 import type { BoundPr, PrMonitorState } from '@mkagent/shared/protocol'
 import { addTurnUsage } from './turn-usage'
 import { SessionExtensionUI } from './extension-ui'
+import { InputOrigins } from './input-origins'
 import type { BackgroundTaskOutput, StopBackgroundTaskResult } from '@mkagent/shared/protocol'
 import { launchOutputFile, readBackgroundTaskOutput } from './background-task-output'
 import type { EventSink, RpcServer } from '@mkagent/server-core/transport'
@@ -355,6 +356,7 @@ export class SessionManager implements ISessionManager {
   private browserPaneManager: IBrowserPaneManager | null = null
   private rpcServer: RpcServer | null = null
   private browserHostPins = new Map<string, string>()
+  private readonly inputClients = new InputOrigins()
   private lastTimestamp = 0
 
   waitForInit(): Promise<void> {
@@ -388,7 +390,12 @@ export class SessionManager implements ISessionManager {
   }
 
   onClientDisconnected(clientId: string): void {
+    this.onClientWorkspaceChanged(clientId)
+  }
+
+  onClientWorkspaceChanged(clientId: string): void {
     this.disconnectExtensionUI(clientId)
+    this.inputClients.retireClient(clientId)
     for (const [sessionId, pinned] of this.browserHostPins) {
       if (pinned === clientId) this.browserHostPins.delete(sessionId)
     }
@@ -701,6 +708,7 @@ export class SessionManager implements ISessionManager {
     sessionPersistenceQueue.cancel(sessionId)
     deleteStoredSession(managed.workspace.rootPath, sessionId)
     this.sessions.delete(sessionId)
+    this.inputClients.retireSession(sessionId)
     this.emit(managed.workspace.id, { type: 'session_deleted', sessionId })
     this.refreshBadge()
   }
@@ -746,6 +754,7 @@ export class SessionManager implements ISessionManager {
     existingMessageId?: string,
     _isRetry?: boolean,
     onAck?: (messageId: string) => void,
+    rpcContext?: { callerClientId?: string },
   ): Promise<void> {
     const managed = this.sessions.get(sessionId)
     if (!managed) throw new Error(`Session not found: ${sessionId}`)
@@ -770,6 +779,9 @@ export class SessionManager implements ISessionManager {
       managed.messages.push(userMessage)
       if (!options?.hidden) managed.lastMessageRole = 'user'
     }
+    if (!existingMessageId && rpcContext?.callerClientId) {
+      this.inputClients.admit(sessionId, userMessage.id, rpcContext.callerClientId)
+    }
     managed.lastMessageAt = now
     managed.lastUsedAt = now
     managed.connectionLocked = true
@@ -777,7 +789,7 @@ export class SessionManager implements ISessionManager {
     if (managed.isProcessing) {
       const redirected = managed.agent?.isCompactionInFlight?.()
         ? false
-        : (managed.agent?.redirect(message) ?? false)
+        : (managed.agent?.redirect(message, { messageId: userMessage.id }) ?? false)
       if (!redirected) {
         userMessage.isQueued = true
         managed.messageQueue.push({
@@ -831,7 +843,7 @@ export class SessionManager implements ISessionManager {
       }
     }
     if (this.sessions.get(sessionId) !== managed || (managed.stopEpoch ?? 0) !== acceptedEpoch) return
-    await this.runTurn(managed, message, attachments)
+    await this.runTurn(managed, message, attachments, userMessage.id)
     if (shouldGenerateTitle) void this.generateTitle(managed, message)
   }
 
@@ -849,7 +861,8 @@ export class SessionManager implements ISessionManager {
   private async runTurn(
     managed: ManagedSession,
     message: string,
-    attachments?: FileAttachment[],
+    attachments: FileAttachment[] | undefined,
+    messageId: string,
   ): Promise<void> {
     managed.isProcessing = true
     const turnSerial = managed.activeTurnSerial = (managed.activeTurnSerial ?? 0) + 1
@@ -860,7 +873,7 @@ export class SessionManager implements ISessionManager {
       const agent = await this.getOrCreateAgent(managed)
       if (managed.pendingHandoffSummary) await this.waitForHandoffSummary(managed)
       if (this.sessions.get(managed.id) !== managed || (managed.stopEpoch ?? 0) !== stopEpoch) return
-      for await (const event of agent.chat(message, attachments)) {
+      for await (const event of agent.chat(message, attachments, { messageId })) {
         if (this.handleAgentEvent(managed, event)) stopReason = 'error'
       }
     } catch (error) {
@@ -883,6 +896,7 @@ export class SessionManager implements ISessionManager {
       }
       managed.isProcessing = false
       managed.currentStatus = undefined
+      this.inputClients.finishTurn(managed.id, new Set(managed.messageQueue.map(input => input.messageId)))
       if (managed.pendingExternalHeader) {
         this.applyExternalSessionMetadata(managed, managed.pendingExternalHeader)
         managed.pendingExternalHeader = undefined
@@ -1465,7 +1479,9 @@ export class SessionManager implements ISessionManager {
 
   async cancelProcessing(sessionId: string, silent = false): Promise<void> {
     const managed = this.sessions.get(sessionId)
-    if (!managed?.isProcessing) return
+    if (!managed) return
+    this.inputClients.cancelTurn(sessionId, new Set(managed.messageQueue.map(input => input.messageId)))
+    if (!managed.isProcessing) return
     managed.stopEpoch = (managed.stopEpoch ?? 0) + 1
     managed.cancelHandoffWait?.()
     if (managed.agent && !managed.agent.stopTurn?.()) managed.agent.forceAbort(AbortReason.UserStop)
@@ -2209,6 +2225,7 @@ export class SessionManager implements ISessionManager {
     }
     this.turnCompleteListeners.clear()
     this.sessions.clear()
+    this.inputClients.clear()
     this.browserHostPins.clear()
     this.rpcServer = null
     this.browserPaneManager = null

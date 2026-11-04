@@ -1027,8 +1027,8 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "7ce9ad56503891ca036fe45f7a3952a009953081b11f08e6c768429fc1654830",
-      "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining host events, approvals, runtime updates and shutdown cleanup. Capture product ownership for JSONL calls and kernel events, reject retired foreground scopes, and preserve source ownership for background notifications and stop requests."
+      "sha256": "aa44827b72c1e70abdfbb6ed119a25ab8b5ba3a49b7b74c7447206cb42c20c38",
+      "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining host events, approvals, runtime updates and shutdown cleanup. Capture product ownership and input identity for JSONL calls, reject retired foreground scopes, and preserve source ownership for background notifications and stop requests."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
       "sha256": "dcd8c54fb1a0eb73a1b6f3984fe2dae176929c76b03bfb52323ad440fe23084c",
@@ -1151,12 +1151,12 @@
       "reason": "Async execFile branch lookup, detached HEAD null; Electron duplicate core handlers removed in favor of server-core."
     },
     "packages/server-core/src/handlers/rpc/workspace.ts": {
-      "sha256": "d197c05e01e778f20e9373c0365baf94cb2389dc365f24e4bf0b7f7639b982ed",
-      "reason": "Retain Lite RPC workspace lifecycle; reject current or other-window-open workspace removal before unregistering."
+      "sha256": "cdb3e7de4d198f3febc0765858fb5cad75ddeb72cd5b9cea11ba42124482b2af",
+      "reason": "Retain Lite RPC workspace lifecycle and workspace-removal guards; retire native input and UI client ownership when the workspace changes."
     },
     "packages/server-core/src/handlers/session-manager-interface.ts": {
-      "sha256": "753f429378cc17e25b3edd9fb84df3c1c474fbd983eec7c90bc421305c8dbb4f",
-      "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions."
+      "sha256": "ab64b1f9cb95dfde27babe541e7a194febd399334ed348535f3432866394e2ac",
+      "reason": "Merge PR/handoff contracts into the Pi/Lite architecture; retain local context, permissions and persistence. Expose workspace retirement for native input and UI ownership alongside ordered first-send and profile contracts."
     },
     "packages/server-core/src/model-fetchers/index.ts": {
       "sha256": "4cd98d56c21f93d5a92e95670da116cd653bc02b1404486dfde41f34ab563abd",
@@ -1247,8 +1247,8 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/server-core/src/sessions/SessionManager.ts": {
-      "sha256": "fbd498b08df4d4a32696d08c121b6c94da5f5715e4f2dfa562819a2def4fc026",
-      "reason": "Retain the Craft-derived Pi/Lite session lifecycle, permissions, context, persistence and PR handoffs; preserve imported sdkSessionId. Require a strict final record receipt before announcing creation, and roll back failed creations."
+      "sha256": "36d15f46b8e35518347f37b0d8278d3f8554070a4732f5bd43d56a31a24c42d7",
+      "reason": "Retain the Craft-derived Pi/Lite lifecycle, permissions, persistence, imported sdkSessionId and PR handoffs. Require a strict final creation receipt with rollback. Preserve product input identity and caller provenance; settle completed inputs, retain the product queue and retire invalid client or session context."
     },
     "packages/server-core/src/sessions/background-task-stop.test.ts": {
       "sha256": "342eb29a494100b86413319250f10d587b041bd6d6aa0640d4c56333f995b872",
@@ -1271,8 +1271,8 @@
       "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization."
     },
     "packages/server-core/src/sessions/midstream-queue.test.ts": {
-      "sha256": "d480bf8d27c0a40e56d2b519694903056e1f53def9552e2d6e70cc557aa2a1ef",
-      "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
+      "sha256": "957b763fa3deb9ddcfbaf60804a8e63cdd56e0ed00eede328f5a4031fc14f088",
+      "reason": "Retain queue, compaction and permission regressions; assert stable product identities across redirect and replay and prevent replay from restoring a disconnected client's origin."
     },
     "packages/server-core/src/sessions/pi-retry-streaming.test.ts": {
       "sha256": "2b8465eb70ee3f7564e395e328b751fc6ae7974ad25d57aa99898ae15828b9e2",
@@ -1619,8 +1619,8 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/backend/types.ts": {
-      "sha256": "5d48403b6652e5402d6b8e25e93e6294543c33e4501931214a0a8da7f3e2782a",
-      "reason": "Retain the Craft-derived Pi/Lite coding profile, prompt, context and tool configuration without excluded backends; identify pi-durable as the PiAgent subprocess runtime. Define backend-neutral coding resource paths and project trust."
+      "sha256": "6b06f4e0b4495646e41e2311ba4cfd834bf44f7d7dcacc0a31066e36c1de71a5",
+      "reason": "Retain the Craft-derived Pi/Lite coding profile, prompt, context and tools, with pi-durable as subprocess runtime. Define coding resources, trust and stable product input metadata."
     },
     "packages/shared/src/agent/base-agent.ts": {
       "sha256": "abffc8d7a573d229cadad65ddb996ab4a20616f203bbe07ded90c1db7c441f68",
@@ -1715,8 +1715,8 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/pi-agent.ts": {
-      "sha256": "54ef25507a96b82dcd28a650d0eef5013855d6ba09a110aec22ef78b3eec7ac3",
-      "reason": "Retain the Craft-derived Pi/Lite client, startup, permissions, runtime updates, compaction, error recovery and PR handoffs. Isolate worker I/O behind owned generation-checked bindings; preserve scope during shutdown and release abandoned background stop requests on timeout or unavailable transport."
+      "sha256": "e7945ba3ca038ef15dccc6beaaa86b7f530dbed0a76e6865298dd9a1b9b755b4",
+      "reason": "Retain the Craft-derived Pi/Lite client, startup, permissions, runtime updates, compaction, recovery and PR handoffs. Use generation-checked worker bindings, preserve stable product prompt and steer identities, retain shutdown scope, and release abandoned background stop requests."
     },
     "packages/shared/src/agent/plan-types.ts": {
       "sha256": "529cc7377490361bef7e742729c31f9adffdadb5b77a8eb0d5eda3ccfa2d9aaf",
@@ -2324,6 +2324,14 @@
     }
   },
   "mkOnly": {
+    "packages/server-core/src/sessions/input-origins.ts": {
+      "sha256": "b170bf2b0127f9446c17875773c2bfb4efd4add0667982a99640ec61ecf961ae",
+      "reason": "Track transient product input callers with releasable transaction claims, bounded turn completion and immediate client, cancellation and session retirement."
+    },
+    "packages/server-core/src/sessions/input-origins.test.ts": {
+      "sha256": "cb0607cbd756c928e9b54bfc3e52977b6ec75604357bc606067bc06a72022a22",
+      "reason": "Verify exact owner claims, queued provenance, retained source completion, two-client retirement, reused identity, Stop and deletion boundaries."
+    },
     "packages/server-core/src/sessions/session-creation-receipt.isolated.ts": {
       "sha256": "21a16a48653cca620734dd28ffea03193ceb03afaa719b6b44282b28024bd646",
       "reason": "Verify real product creation rejects an uncommitted final record, rolls back without a success event, and recovers on the next creation."
@@ -2369,8 +2377,8 @@
       "reason": "Port the pinned Pi RPC UI contract and native prompt context through reproducible durable coding transforms."
     },
     "packages/server-core/src/handlers/rpc/workspace.extension-ui.test.ts": {
-      "sha256": "63f2ff3a4f12f05d9d9f58113f46185ffc98275083198a98574d98a2a9250a3c",
-      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+      "sha256": "8935f6f5ae7aa5622c492e2a63d98eef631468070415747f70c33d92fb4e72a2",
+      "reason": "Verify workspace changes retire native client context and UI subscriptions while repeated selection of the same workspace preserves them."
     },
     "packages/server-core/src/sessions/extension-ui.test.ts": {
       "sha256": "12a4fbebae519cdfd1a6040d2585ac23036119b732dc776c16b88b3a03173970",
@@ -2381,8 +2389,8 @@
       "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
     },
     "packages/shared/src/agent/__tests__/pi-extension-ui.isolated.ts": {
-      "sha256": "56e4831974bf052bd6f1281d9d93b0c16595c293fa952f75eec26b78de815cf3",
-      "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
+      "sha256": "743a6fe34b5eb748ca3a8a41d3f23aa4bcec7f1a2d42a1cadce20b7e0596e7d9",
+      "reason": "Verify native UI ownership, input completion and lifecycle boundaries; exercise product prompt and steer identities through the actual PiAgent and worker with a local model."
     },
     "packages/shared/src/agent/backend/pi/extension-ui-transport.test.ts": {
       "sha256": "a44ee04f17f2832e9d57ac923711211d2cb325b415dbe26a2456f206e33c59e9",

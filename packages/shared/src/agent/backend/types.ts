@@ -229,6 +229,8 @@ export interface CoreBackendConfig {
  * Options for the chat method.
  */
 export interface ChatOptions {
+  /** Stable product message identity, independent of transport request counters. */
+  messageId?: string;
   /** Retry flag (internal use for session recovery) */
   isRetry?: boolean;
   /** Override thinking level for this message only */

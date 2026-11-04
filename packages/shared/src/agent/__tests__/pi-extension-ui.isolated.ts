@@ -1,5 +1,5 @@
 /** Run real native startup UI before a chat generator exists. */
-import { afterAll, afterEach, expect, test } from 'bun:test';
+import { afterAll, afterEach, expect, spyOn, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -38,12 +38,16 @@ async function fixture(automaticStartup = true, hostSeeds = false) {
     import { writeFileSync } from 'node:fs';
     export default function(pi) {
       const inputs = [];
-      pi.on('input', event => {
+      pi.on('input', (event, ctx) => {
         inputs.push({ text: event.text, source: event.source });
         writeFileSync(${JSON.stringify(inputPath)}, JSON.stringify(inputs));
         if (event.text === 'transform-fixture') return { action: 'transform', text: 'Native transformed text' };
         if (event.text === 'handled-fixture') return { action: 'handled' };
         if (event.text === 'invalid-transform') return { action: 'transform', text: null };
+        if (event.text === 'identity-steer') {
+          ctx.ui.notify(JSON.stringify({ kind: 'identity-steer' }), 'info');
+          return { action: 'handled' };
+        }
       });
       pi.on('session_start', async (_, ctx) => {
         const answer = await ctx.ui.input('Startup', 'placeholder');
@@ -101,6 +105,7 @@ async function fixture(automaticStartup = true, hostSeeds = false) {
   const receipts: Array<Promise<boolean>> = [];
   const lifecycle = { resets: 0, closes: 0 };
   const startup = Promise.withResolvers<ExtensionUIDialog>();
+  const steerHandled = Promise.withResolvers<void>();
   let controller: ExtensionUIController | undefined;
   const port: ExtensionUIHostPort = {
     connect(value) {
@@ -110,6 +115,7 @@ async function fixture(automaticStartup = true, hostSeeds = false) {
         event(event) {
           events.push(event);
           if (event.type !== 'extension_ui_request') return;
+          if (event.method === 'notify' && event.message === JSON.stringify({ kind: 'identity-steer' })) steerHandled.resolve();
           if (event.method === 'input') {
             startup.resolve(event);
             if (automaticStartup) receipts.push(value.respond(event.uiEpoch, { type: 'extension_ui_response', id: event.id, value: '' }));
@@ -142,7 +148,7 @@ async function fixture(automaticStartup = true, hostSeeds = false) {
   });
   cleanup.push(async () => { await agent.disposeForRestart(); agent.destroy(); });
   return {
-    agent, events, receipts, lifecycle, contexts, startup: startup.promise,
+    agent, events, receipts, lifecycle, contexts, startup: startup.promise, steerHandled: steerHandled.promise,
     completions: () => completions,
     lastUserMessage: () => lastUserMessage,
     inputs: () => JSON.parse(readFileSync(inputPath, 'utf8')),
@@ -161,6 +167,51 @@ async function fixture(automaticStartup = true, hostSeeds = false) {
       event.type === 'extension_ui_request' && event.method === 'notify' ? [JSON.parse(event.message)] : []),
   };
 }
+
+test('preserves product input identities through real native prompt and steering', async () => {
+  const f = await fixture();
+  const transport = f.agent as unknown as { send(message: Record<string, unknown>): boolean };
+  const send = transport.send.bind(f.agent);
+  const frames: Array<{ type: unknown; id: unknown; inputId: unknown }> = [];
+  const observer = spyOn(transport, 'send').mockImplementation(message => {
+    if (message.type === 'prompt' || message.type === 'steer') {
+      frames.push({ type: message.type, id: message.id, inputId: message.inputId });
+    }
+    return send(message);
+  });
+  const block = f.holdModel('Identity fixture');
+  const events: Array<{ type: string }> = [];
+  const running = (async () => {
+    for await (const event of f.agent.chat('Identity fixture', undefined, { messageId: 'product-initial' })) events.push(event);
+  })();
+  void running.catch(() => {});
+  try {
+    await block.entered;
+    expect(f.agent.redirect('identity-steer', { messageId: 'product-steer' })).toBe(true);
+    await f.steerHandled;
+    block.release();
+    await running;
+    const retryEvents: Array<{ type: string }> = [];
+    for await (const event of f.agent.chat('handled-fixture', undefined, { messageId: 'product-initial' })) retryEvents.push(event);
+    const promptIds = frames.filter(frame => frame.type === 'prompt').map(frame => frame.id);
+    expect(promptIds).toHaveLength(2);
+    expect(new Set(promptIds).size).toBe(2);
+    expect(frames.map(({ type, inputId }) => ({ type, inputId }))).toEqual([
+      { type: 'prompt', inputId: 'product-initial' },
+      { type: 'steer', inputId: 'product-steer' },
+      { type: 'prompt', inputId: 'product-initial' },
+    ]);
+    expect(retryEvents.filter(event => event.type === 'error')).toEqual([]);
+    expect(retryEvents.at(-1)?.type).toBe('complete');
+    expect(events.filter(event => event.type === 'error')).toEqual([]);
+    expect(events.at(-1)?.type).toBe('complete');
+    expect(f.completions()).toBe(1);
+  } finally {
+    block.release();
+    observer.mockRestore();
+    await running;
+  }
+}, 30_000);
 
 test.each(['side-effect', 'model'])('stop during startup UI prevents a late %s prompt', async kind => {
   const f = await fixture(false);

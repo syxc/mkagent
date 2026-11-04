@@ -30,7 +30,7 @@ test.each([true, false])('workspace switch revokes old UI only when the workspac
     updateClientWorkspace(_client, workspace) { routing.push(workspace) },
   }
   const deps = {
-    sessionManager: { disconnectExtensionUI: (clientId: string) => ui.disconnect(clientId) },
+    sessionManager: { onClientWorkspaceChanged: (clientId: string) => ui.disconnect(clientId) },
     platform: { logger: { info() {}, debug() {}, error() {}, warn() {} } },
   } as unknown as HandlerDeps
   registerWorkspaceCoreHandlers(server, deps)

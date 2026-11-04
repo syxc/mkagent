@@ -130,7 +130,7 @@ type InboundMessage = (
   | (RpcExtensionUIResponse & { uiEpoch: string; responseId: string })
   | { type: 'stop_background_task'; id: string; taskId: string }
   | InitMessage
-  | { type: 'prompt'; id: string; message: string; systemPrompt: string; images?: Array<{ type: 'image'; data: string; mimeType: string }>;
+  | { type: 'prompt'; id: string; inputId?: string; message: string; systemPrompt: string; images?: Array<{ type: 'image'; data: string; mimeType: string }>;
       nativeInput?: { text: string; hostContextPrefix: string } }
   | { type: 'register_tools'; tools: ProxyToolDef[] }
   | { type: 'tool_execute_response'; requestId: string; result: ProxyToolResult }
@@ -146,7 +146,7 @@ type InboundMessage = (
   | { type: 'cancel_compact'; id: string }
   | { type: 'set_auto_compaction'; id: string; enabled: boolean }
   | RuntimeConfigUpdateMessage
-  | { type: 'steer'; message: string }
+  | { type: 'steer'; inputId?: string; message: string }
   | { type: 'token_update'; piAuth: { provider: string; credential: PiCredential } }
   | { type: 'shutdown' }
 ) & Partial<PiWorkerScope>;
@@ -283,7 +283,7 @@ const endpointEnvironment = new ProviderEndpointEnvironment();
 let currentUserMessage = '';
 let foregroundScope: PiWorkerScope | undefined;
 let foregroundUI: ExtensionUIHost | undefined;
-const workerContext = new AsyncLocalStorage<{ scope?: PiWorkerScope; ui?: ExtensionUIHost }>();
+const workerContext = new AsyncLocalStorage<{ scope?: PiWorkerScope; ui?: ExtensionUIHost; inputId?: string }>();
 const backgroundShells = new BackgroundShells((event, scope) => sendScoped({ type: 'background_task_event', event }, scope));
 
 // Pending promises for async handshakes
@@ -1442,7 +1442,8 @@ function main(): void {
           debugLog('Ignoring queued message from an inactive worker binding');
           return Promise.resolve();
         }
-        return workerContext.run({ scope, ui }, () => processMessage(msg, compactController));
+        const inputId = msg.type === 'prompt' || msg.type === 'steer' ? msg.inputId : undefined;
+        return workerContext.run({ scope, ui, inputId }, () => processMessage(msg, compactController));
       };
       const operation = msg.type === 'init'
         ? initialization.catch(() => undefined).then(dispatch)

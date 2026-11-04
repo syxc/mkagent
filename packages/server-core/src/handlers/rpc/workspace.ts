@@ -94,7 +94,7 @@ export function registerWorkspaceCoreHandlers(server: RpcServer, deps: HandlerDe
   server.handle(RPC_CHANNELS.window.SWITCH_WORKSPACE, async (ctx, workspaceId: string) => {
     const end = perf.start('ipc.switchWorkspace', { workspaceId })
     const previousWorkspaceId = ctx.workspaceId ?? windowManager?.getWorkspaceForWindow(ctx.webContentsId!)
-    if (previousWorkspaceId !== workspaceId) sessionManager.disconnectExtensionUI(ctx.clientId)
+    if (previousWorkspaceId !== workspaceId) sessionManager.onClientWorkspaceChanged(ctx.clientId)
 
     // Keep WS push routing in sync (works for both GUI and headless)
     server.updateClientWorkspace?.(ctx.clientId, workspaceId)
