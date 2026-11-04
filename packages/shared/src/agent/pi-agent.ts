@@ -17,7 +17,6 @@ import { formatStableGitDeveloperContext, formatVolatileGitDeveloperContext } fr
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
-import { createInterface, type Interface as ReadlineInterface } from 'node:readline';
 import type { AgentEvent } from '@mkagent/core/types';
 import type { FileAttachment } from '../utils/files.ts';
 import type { BrowserInputClassification } from './browser-input-evidence.ts';
@@ -43,6 +42,7 @@ import type { Workspace } from '../config/storage.ts';
 
 // Event adapter
 import { PiEventAdapter } from './backend/pi/event-adapter.ts';
+import { PiWorkerConnection, type PiWorkerLease } from './backend/pi/worker-connection.ts';
 import type { PiCompactResult } from './backend/pi/protocol.ts';
 import { EventQueue } from './backend/event-queue.ts';
 
@@ -169,7 +169,8 @@ export class PiAgent extends BaseAgent {
 
   // Subprocess process handle
   private subprocess: ChildProcess | null = null;
-  private readline: ReadlineInterface | null = null;
+  private workerConnection: PiWorkerConnection | null = null;
+  private workerLease: PiWorkerLease | null = null;
   private subprocessReady: Promise<void> | null = null;
   private subprocessStarting: Promise<void> | null = null;
   private subprocessStopping: Promise<boolean> | null = null;
@@ -501,41 +502,27 @@ export class PiAgent extends BaseAgent {
 
     this.subprocess = child;
 
-    // Set up readline for JSONL parsing from stdout
-    this.readline = createInterface({
-      input: child.stdout!,
-      crlfDelay: Infinity,
-    });
-
-    this.readline.on('line', (line: string) => {
-      if (this.subprocess === child) this.handleLine(line);
-    });
-
-    // Always capture stderr into a bounded ring buffer so callers (e.g. the
-    // connection-test timeout path in factory.ts) can surface it on failure.
-    // Keep the MKAGENT_DEBUG-gated log for interactive dev work.
-    child.stderr?.on('data', (data: Buffer) => {
-      const text = data.toString();
-      this.recordStderr(text);
-      const trimmed = text.trim();
-      if (trimmed) {
-        this.debug(`[subprocess stderr] ${trimmed}`);
-      }
-    });
-
-    // Handle subprocess exit
-    child.on('exit', (code, signal) => {
-      if (this.subprocess === child) this.handleSubprocessExit(code, signal);
-    });
-
-    child.on('error', (error) => {
-      if (this.subprocess !== child) return;
-      this.debug(`Subprocess error: ${error.message}`);
-      this.subprocessReadyReject?.(error);
-      this.resetSubprocessErrorDedup();
-      this.eventQueue.enqueue({ type: 'error', message: `Pi subprocess error: ${error.message}` });
-      this.eventQueue.complete();
-      this.killSubprocess();
+    this.workerConnection = new PiWorkerConnection(child);
+    this.workerLease = this.workerConnection.bind({
+      ownerSessionId: sessionId,
+      onLine: line => { if (this.subprocess === child) this.handleLine(line); },
+      onStderr: text => {
+        this.recordStderr(text);
+        const trimmed = text.trim();
+        if (trimmed) this.debug(`[subprocess stderr] ${trimmed}`);
+      },
+      onExit: (code, signal) => {
+        if (this.subprocess === child) this.handleSubprocessExit(code, signal);
+      },
+      onError: error => {
+        if (this.subprocess !== child) return;
+        this.debug(`Subprocess error: ${error.message}`);
+        this.subprocessReadyReject?.(error);
+        this.resetSubprocessErrorDedup();
+        this.eventQueue.enqueue({ type: 'error', message: `Pi subprocess error: ${error.message}` });
+        this.eventQueue.complete();
+        this.killSubprocess();
+      },
     });
 
     const sessionPath = this.config.session
@@ -727,6 +714,10 @@ export class PiAgent extends BaseAgent {
    * Send a JSONL command to the subprocess stdin.
    */
   private send(cmd: Record<string, unknown>): void {
+    if (this.workerLease) {
+      if (!this.workerLease.send(cmd)) this.debug('Cannot send to subprocess: worker binding unavailable');
+      return;
+    }
     if (!this.subprocess?.stdin?.writable) {
       this.debug('Cannot send to subprocess: stdin not writable');
       return;
@@ -1547,8 +1538,9 @@ export class PiAgent extends BaseAgent {
 
     this.subprocessReadyReject?.(new Error('Pi subprocess exited before ready'));
     this.subprocess = null;
-    this.readline?.close();
-    this.readline = null;
+    this.workerConnection?.close();
+    this.workerConnection = null;
+    this.workerLease = null;
     this.resetSubprocessErrorDedup();
     this.subprocessReady = null;
     this.subprocessReadyResolve = null;
@@ -2291,10 +2283,9 @@ export class PiAgent extends BaseAgent {
     this.pendingPermissions.clear();
     this.eventQueue.complete();
 
-    if (this.readline) {
-      this.readline.close();
-      this.readline = null;
-    }
+    this.workerConnection?.close();
+    this.workerConnection = null;
+    this.workerLease = null;
 
     if (this.subprocess) {
       const child = this.subprocess;

@@ -1699,8 +1699,8 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/pi-agent.ts": {
-      "sha256": "42c5bfad167bd408bcb12879db5d429e2d9a27a4b55ccad50ed2f13da37362d3",
-      "reason": "Retain the Craft-derived Pi/Lite subprocess client and PR handoffs; share startup through credential loading, reject stale child callbacks and late requests, forward browser input classifications, cancel compactions by request ID, block replacement startup until the previous child exits, and reopen the event queue during failed-resume recovery without losing replacement events or user cancellation. Forward the coding profile and resource options through Pi init."
+      "sha256": "a9290794b822e43a23ca244b041c04425c04a5325d25b7600f0635344dce87cf",
+      "reason": "Retain the Craft-derived Pi/Lite subprocess client and PR handoffs; share startup through credential loading, reject stale child callbacks and late requests, forward browser input classifications, cancel compactions by request ID, block replacement startup until the previous child exits, and reopen the event queue during failed-resume recovery without losing replacement events or user cancellation. Forward the coding profile and resource options through Pi init; isolate worker I/O behind generation-checked product-session bindings."
     },
     "packages/shared/src/agent/plan-types.ts": {
       "sha256": "529cc7377490361bef7e742729c31f9adffdadb5b77a8eb0d5eda3ccfa2d9aaf",
@@ -2308,6 +2308,14 @@
     }
   },
   "mkOnly": {
+    "packages/shared/src/agent/__tests__/pi-worker-connection.test.ts": {
+      "sha256": "663af371a59b08cc7fc20d83997e74332441e25cfa6d4e1c86259543f53c6e0d",
+      "reason": "Verify real-process worker rebinding, generation and owner validation, initial unscoped compatibility, stale lease rejection and release isolation."
+    },
+    "packages/shared/src/agent/backend/pi/worker-connection.ts": {
+      "sha256": "0ccca7720320b3249ba6b7b34ffdc30be2718e5b6a403995267f8a9f95cc867b",
+      "reason": "Own Pi worker I/O and generation-checked foreground bindings independently of product agent callbacks."
+    },
     "packages/pi-agent-server/src/coding-host-cache-warming.e2e.test.ts": {
       "sha256": "b4e092c1b40332ca2adb759477091af087d1bd01d02367c0c64f856a7bea6de2",
       "reason": "Verify auxiliary usage commits, foreground rebase, cancellation, failure isolation and receipt publication with deterministic local models."
