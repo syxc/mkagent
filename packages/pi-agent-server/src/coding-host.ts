@@ -53,12 +53,13 @@ export class CodingHost {
   session!: AgentSession;
   private readonly durable: DurableLoopBinding;
   private readonly nativeTools = new Map<string, ToolRegistration>();
-  private readonly jobs = new Set<Promise<void>>();
-  private readonly actionScope = new AsyncLocalStorage<{ job?: Promise<void> }>();
+  private readonly jobs = new Set<Promise<unknown>>();
+  private readonly actionScope = new AsyncLocalStorage<{ job?: Promise<unknown> }>();
   private readonly anchors: Array<{ message: AssistantMessage; id: string; nativeId?: string }> = [];
   private readonly stopAnchors: () => void;
   private stopEvents?: () => void;
   private closed = false;
+  private closing = false;
   private legacy?: LegacyCodingAdoption;
 
   private constructor(private readonly host: CodingHostBindings, journal: NativeSessionJournal, models: ModelRuntime) {
@@ -125,6 +126,7 @@ export class CodingHost {
         thinkingLevel: host.thinkingLevel() as AgentSession['thinkingLevel'],
         wrapTool: (tool, source) => coding.wrapTool(tool, source),
         onAction: work => coding.action(work),
+        onBackgroundAction: work => coding.backgroundAction(work),
         onToolsChanged: tools => host.publishTools(tools.flatMap(tool => {
           const registration = coding.nativeTools.get(tool.name);
           return registration ? [registration] : [];
@@ -219,19 +221,30 @@ export class CodingHost {
     if (!this.closed) await this.flush();
   }
 
-  private action(work: () => Promise<void>): Promise<void> {
-    const scope: { job?: Promise<void> } = {};
+  private action<T>(work: () => Promise<T>, background = false): Promise<T> {
+    const scope: { job?: Promise<unknown> } = {};
     const job = this.actionScope.run(scope, work);
-    scope.job = job;
-    this.track(job);
+    scope.job = this.track(job, background);
     return job;
   }
 
-  private track(job: Promise<void>): void {
-    this.jobs.add(job);
+  private track(job: Promise<unknown>, background = false): Promise<unknown> {
+    const pending = background ? job.catch(() => undefined) : job;
+    this.jobs.add(pending);
     void job.catch(error => this.host.error({
       extensionPath: '<host>', event: 'action', error: error instanceof Error ? error.message : String(error),
-    })).finally(() => { this.jobs.delete(job); });
+    })).finally(() => { this.jobs.delete(pending); }).catch(() => {});
+    return pending;
+  }
+
+  private backgroundAction<T>(work: () => Promise<T>): Promise<T> {
+    if (this.closing || this.closed) return Promise.reject(new Error('Native session is closing'));
+    return this.action(() => this.journal.phase(async () => {
+      const result = await work();
+      await this.host.harness.commit(tx => this.commitChanges(tx), BACKGROUND_CONTEXT);
+      this.host.selection(this.session.model, this.session.thinkingLevel);
+      return result;
+    }), true);
   }
 
   private async persistState(tx: Tx): Promise<void> {
@@ -253,13 +266,15 @@ export class CodingHost {
 
   /** Idle/plugin writes and queue admissions use the same journal, without starting another executor. */
   async flush(): Promise<void> {
-    await this.journal.phase(() => this.host.harness.commit(async tx => {
-      if (this.durable.hasSessionActivity()) {
-        await this.durable.commitChanges(tx);
-        await this.persistSelection(tx);
-      } else await this.durable.commitSession(tx);
-    }, BACKGROUND_CONTEXT));
+    await this.journal.phase(() => this.host.harness.commit(tx => this.commitChanges(tx), BACKGROUND_CONTEXT));
     this.host.selection(this.session.model, this.session.thinkingLevel);
+  }
+
+  private async commitChanges(tx: Tx): Promise<void> {
+    if (this.durable.hasSessionActivity()) {
+      await this.durable.commitChanges(tx);
+      await this.persistSelection(tx);
+    } else await this.durable.commitSession(tx);
   }
 
   async waitForIdle(): Promise<void> {
@@ -283,6 +298,8 @@ export class CodingHost {
 
   async close(): Promise<void> {
     if (this.closed) return;
+    this.closing = true;
+    this.session.cancelCacheWarming();
     await this.abort();
     await this.session.extensionRunner.emit({ type: 'session_shutdown', reason: 'quit' });
     await this.flush();

@@ -54,6 +54,8 @@ export function portAgentSession(source: string): string {
     '\tprivate _baseToolsOverride?: Record<string, AgentTool>;\n\tprivate _wrapTool?: AgentSessionConfig["wrapTool"];\n\tprivate _onAction?: AgentSessionConfig["onAction"];\n\tprivate _onToolsChanged?: AgentSessionConfig["onToolsChanged"];');
   body = edit(body, '\t\tthis._baseToolsOverride = config.baseToolsOverride;',
     '\t\tthis._baseToolsOverride = config.baseToolsOverride;\n\t\tthis._wrapTool = config.wrapTool;\n\t\tthis._onAction = config.onAction;\n\t\tthis._onToolsChanged = config.onToolsChanged;');
+  body = edit(body, '\t\tconst selectedToolsBefore = this._baseSystemPromptOptions.selectedTools;',
+    '\t\tthis._rebuildSystemPrompt(this.getActiveToolNames());\n\n\t\tconst selectedToolsBefore = this._baseSystemPromptOptions.selectedTools;');
   body = edit(body, '\t\tthis._installAgentRequestProjection();',
     `\t\tthis.agent.durable.bindSessionState(() => this.exportDurableState(), state =>
 \t\t\tthis.restoreDurableState(state as ReturnType<AgentSession["exportDurableState"]>));
@@ -213,6 +215,10 @@ export function portAgentSession(source: string): string {
     '\t\t\tawait this._drainQueuedAdmissions();\n\t\t\tthis._commitBoundaryDrafts(result.entries);');
   body = edit(body, '\tprivate _bindExtensionCore(runner: ExtensionRunner): void {',
     '\tprivate _trackHostAction(work: () => Promise<void>): Promise<void> {\n\t\treturn this._onAction ? this._onAction(work) : work();\n\t}\n\n\tprivate _bindExtensionCore(runner: ExtensionRunner): void {');
+  body = edit(body, '\tget cacheWarmingStatus(): CacheWarmingStatus | undefined {',
+    '\t/** Stop auxiliary requests before the host joins background work during shutdown. */\n\tcancelCacheWarming(): void { this._cacheWarmer?.cancel(); }\n\n\tget cacheWarmingStatus(): CacheWarmingStatus | undefined {');
+  body = edit(body, '\t\t\tthis._cacheWarmer.onWarmed = (entry) => this._emit({ type: "entry_appended", entry });',
+    '\t\t\tthis._cacheWarmer.onWarmed = (entry) => {\n\t\t\t\tconst committed = this.sessionManager.getEntry(entry.id);\n\t\t\t\tif (committed?.type === "usage") this._emit({ type: "entry_appended", entry: committed });\n\t\t\t};');
   body = edit(body, 'if (!this._modelRuntime.hasConfiguredAuth(model.provider)) return false;',
     'if (!this._modelRuntime.hasConfiguredAuth(model.provider) && !(await this._modelRuntime.checkAuth(model.provider))) return false;');
   body = edit(body, '\t\tonStarted?.();', '');
@@ -293,11 +299,62 @@ export function portSDK(source: string): string {
   body = edit(body, 'import { AgentSession, markRuntimeStreamFunction }',
     'import { AgentSession, markRuntimeStreamFunction, type AgentSessionConfig }');
   body = edit(body, 'export interface CreateAgentSessionOptions {',
-    'export interface CreateAgentSessionOptions {\n\tdurable?: DurableLoopBinding;\n\tbaseToolsOverride?: AgentSessionConfig["baseToolsOverride"];\n\twrapTool?: AgentSessionConfig["wrapTool"];\n\tonAction?: AgentSessionConfig["onAction"];\n\tonToolsChanged?: AgentSessionConfig["onToolsChanged"];');
+    'export interface CreateAgentSessionOptions {\n\tdurable?: DurableLoopBinding;\n\tbaseToolsOverride?: AgentSessionConfig["baseToolsOverride"];\n\twrapTool?: AgentSessionConfig["wrapTool"];\n\tonAction?: AgentSessionConfig["onAction"];\n\t/** Own auxiliary native writes and commit them before their events are published. */\n\tonBackgroundAction?: <T>(work: () => Promise<T>) => Promise<T>;\n\tonToolsChanged?: AgentSessionConfig["onToolsChanged"];');
+  body = edit(body, '\t\tasync (event) => extensionRunnerRef.current?.emitCacheWarmingDecision(event) ?? event.action,',
+    '\t\tasync (event) => extensionRunnerRef.current?.emitCacheWarmingDecision(event) ?? event.action,\n\t\toptions.onBackgroundAction,');
   body = edit(body, '\tconst agent = new Agent({', '\tconst agent = new Agent({\n\t\tdurable: options.durable,');
   body = edit(body, '\t\tcustomTools: options.customTools,',
     '\t\tcustomTools: options.customTools,\n\t\tbaseToolsOverride: options.baseToolsOverride,\n\t\twrapTool: options.wrapTool,\n\t\tonAction: options.onAction,\n\t\tonToolsChanged: options.onToolsChanged,');
   return body;
+}
+
+/** Timers need fresh journal phases; publish usage only after the host receives its commit. */
+export function portCacheWarmer(source: string): string {
+  let body = edit(source, '\ttype Api,', '\ttype Api,\n\ttype AssistantMessage,');
+  body = edit(body, '\tprivate readonly decide:', '\tprivate readonly runAction: <T>(work: () => Promise<T>) => Promise<T>;\n\tprivate readonly decide:');
+  body = edit(body, '\t\tthis.decide = decide;', '\t\tthis.decide = decide;\n\t\tthis.runAction = runAction;');
+  body = edit(body,
+    '\t\tdecide: (event: CacheWarmingDecisionEvent) => Promise<CacheWarmingAction> = async (event) => event.action,',
+    '\t\tdecide: (event: CacheWarmingDecisionEvent) => Promise<CacheWarmingAction> = async (event) => event.action,\n\t\trunAction: <T>(work: () => Promise<T>) => Promise<T> = work => work(),');
+  body = edit(body, '\tprivate async refresh(run: ActiveRun): Promise<void> {', `\tprivate async refresh(run: ActiveRun): Promise<void> {
+\t\tlet entry: UsageEntry | undefined;
+\t\ttry {
+\t\t\tentry = await this.runAction(() => this.refreshInAction(run));
+\t\t} catch {
+\t\t\tif (this.run === run) this.stop("cache usage persistence failed");
+\t\t\treturn;
+\t\t}
+\t\ttry { if (entry) this.onWarmed?.(entry); } catch { /* Observers do not own warming. */ }
+\t\tif (this.run === run) this.schedule(run);
+\t}
+
+\tprivate async refreshInAction(run: ActiveRun): Promise<UsageEntry | undefined> {`);
+  body = edit(body, '\t\trun.extensionOverride = extensionOverride;\n\t\ttry {',
+    '\t\trun.extensionOverride = extensionOverride;\n\t\tlet message: AssistantMessage;\n\t\ttry {');
+  body = edit(body, '\t\t\tconst message = await this.models', '\t\t\tmessage = await this.models');
+  body = edit(body, `\t\t\tif (!this.validateRun(run)) return;
+\t\t\tif (message.stopReason !== "error" && message.stopReason !== "aborted") {
+\t\t\t\tconst entry = this.sessionManager.appendUsage(
+\t\t\t\t\t"cache_warm",
+\t\t\t\t\tmessage.provider,
+\t\t\t\t\tmessage.responseModel ?? message.model,
+\t\t\t\t\tmessage.usage,
+\t\t\t\t\textensionOverride ? "extension override" : undefined,
+\t\t\t\t);
+\t\t\t\tthis.onWarmed?.(entry);
+\t\t\t}`, '');
+  return edit(body, `\t\t} catch {
+\t\t\t// Cache warming is best-effort and must not affect the active agent run.
+\t\t}
+\t\tif (this.run === run) this.schedule(run);`, `\t\t} catch {
+\t\t\t// Network failures remain best-effort; persistence failures must escape this catch.
+\t\t\treturn;
+\t\t}
+\t\tif (!this.validateRun(run) || message.stopReason === "error" || message.stopReason === "aborted") return;
+\t\treturn this.sessionManager.appendUsage(
+\t\t\t"cache_warm", message.provider, message.responseModel ?? message.model, message.usage,
+\t\t\textensionOverride ? "extension override" : undefined,
+\t\t);`);
 }
 
 /** Share the pinned startup registration order with hosts that supply their own resource loader. */

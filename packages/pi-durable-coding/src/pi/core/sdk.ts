@@ -51,6 +51,8 @@ export interface CreateAgentSessionOptions {
 	baseToolsOverride?: AgentSessionConfig["baseToolsOverride"];
 	wrapTool?: AgentSessionConfig["wrapTool"];
 	onAction?: AgentSessionConfig["onAction"];
+	/** Own auxiliary native writes and commit them before their events are published. */
+	onBackgroundAction?: <T>(work: () => Promise<T>) => Promise<T>;
 	onToolsChanged?: AgentSessionConfig["onToolsChanged"];
 	/** Working directory for project-local discovery. Default: process.cwd() */
 	cwd?: string;
@@ -342,6 +344,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		sessionManager,
 		() => settingsManager.getCacheWarmingMode(),
 		async (event) => extensionRunnerRef.current?.emitCacheWarmingDecision(event) ?? event.action,
+		options.onBackgroundAction,
 	);
 	const buildRequestOptions = (options: ModelsSimpleStreamOptions = {}): ModelsSimpleStreamOptions => {
 		const providerRetrySettings = settingsManager.getProviderRetrySettings();

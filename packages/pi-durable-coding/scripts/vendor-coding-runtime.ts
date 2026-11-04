@@ -8,7 +8,7 @@ import { portModelRuntime } from './model-runtime-port.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portSettingsManager } from './settings-runtime-port.ts';
 import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
-import { portAgentFacade, portAgentSession, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
+import { portAgentFacade, portAgentSession, portCacheWarmer, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const checkout = process.argv[2];
@@ -109,10 +109,15 @@ while (queue.length) {
   if (path === 'core/agent-session.ts') {
     body = portAgentSession(body);
     changes.add('durable-recovery-and-host-tool-policy');
+    changes.add('host-current-system-prompt-before-agent-start');
   }
   if (path === 'core/sdk.ts') {
     body = portSDK(body);
     changes.add('durable-sdk-host-bindings');
+  }
+  if (path === 'core/cache-warmer.ts') {
+    body = portCacheWarmer(body);
+    changes.add('host-background-action-and-usage-receipt');
   }
   if (path === 'core/agent-session-services.ts') {
     body = portSessionServices(body);
@@ -143,6 +148,11 @@ while (queue.length) {
     if (!body.includes(before)) throw new Error('Extension module resolver changed');
     body = body.replace(before, 'const usesEmbeddedModules = true;');
     changes.add('host-independent-extension-modules');
+    const importing = '\tconst module = await jiti.import(extensionPath, { default: true });';
+    if (!body.includes(importing)) throw new Error('Extension transform boundary changed');
+    body = 'import { preparePluginTranspiler } from "../../../plugin-transpiler.ts";\n'
+      + body.replace(importing, '\tpreparePluginTranspiler(jiti);\n' + importing);
+    changes.add('preserve-host-stack-formatting-after-babel-bootstrap');
   }
   if (path === 'config.ts') {
     body = body.replace('export const VERSION: string = pkg.version || "0.0.0";',

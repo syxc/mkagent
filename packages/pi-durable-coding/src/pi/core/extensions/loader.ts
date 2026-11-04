@@ -1,3 +1,4 @@
+import { preparePluginTranspiler } from "../../../plugin-transpiler.ts";
 /**
  * Extension loader - loads TypeScript extension modules using jiti.
  *
@@ -582,6 +583,7 @@ async function loadExtensionModule(extensionPath: string, cacheToken?: Extension
 		...resolutionOptions,
 	});
 
+	preparePluginTranspiler(jiti);
 	const module = await jiti.import(extensionPath, { default: true });
 	const factory = module as ExtensionFactory;
 	if (typeof factory !== "function") {

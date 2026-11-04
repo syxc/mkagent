@@ -190,10 +190,11 @@
       "source": "packages/coding-agent/src/core/agent-session.ts",
       "target": "src/pi/core/agent-session.ts",
       "sha256": "b7c24bf1c1366e931083100d921a80d390d66bacde4acf7472a7b57af1bb69aa",
-      "portSha256": "d3cfd86a184837712c476c768a1d2aef9edbebee758338aa9b9022b9e33f8680",
+      "portSha256": "96384becc92d3bad20d0bb8e376e7fd697fd8b192bfd8b519ed8f4dad81fefcb",
       "changes": [
         "durable-agent-boundary",
-        "durable-recovery-and-host-tool-policy"
+        "durable-recovery-and-host-tool-policy",
+        "host-current-system-prompt-before-agent-start"
       ]
     },
     {
@@ -244,8 +245,10 @@
       "source": "packages/coding-agent/src/core/cache-warmer.ts",
       "target": "src/pi/core/cache-warmer.ts",
       "sha256": "596080fbe60702a44bcd8a31aeca45a5048d24c53fb0f0b40dd8781f776a8842",
-      "portSha256": "596080fbe60702a44bcd8a31aeca45a5048d24c53fb0f0b40dd8781f776a8842",
-      "changes": []
+      "portSha256": "4a23136f9176269bd50bf0a08255013d2fee6b57829980d341cedcb6bce0b6ec",
+      "changes": [
+        "host-background-action-and-usage-receipt"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/client-identity.ts",
@@ -422,9 +425,10 @@
       "source": "packages/coding-agent/src/core/extensions/loader.ts",
       "target": "src/pi/core/extensions/loader.ts",
       "sha256": "873cbe2ae4a15e9563c5a563d447b7aa3a05cca45e145d4250d54ad601bdc85f",
-      "portSha256": "59b2237971c51dddae7cd2e34114378cf0db043e66e529d2b97f934745483c50",
+      "portSha256": "3f2960a4fd6e1dc6ebc05a723883c5b7a55aecc33ed87bbfef9697138f57699d",
       "changes": [
-        "host-independent-extension-modules"
+        "host-independent-extension-modules",
+        "preserve-host-stack-formatting-after-babel-bootstrap"
       ]
     },
     {
@@ -655,7 +659,7 @@
       "source": "packages/coding-agent/src/core/sdk.ts",
       "target": "src/pi/core/sdk.ts",
       "sha256": "f0f6f2b14a61c5c3ebb31d40c97b3f73296a2f0334d582072383302d693714c8",
-      "portSha256": "2f32a65d098969830a365a98775d01fd14daa1c096c8205f771bb9913f16ca3d",
+      "portSha256": "61301837863ed2fc4a7e36bcc85c0c65419a74903891f0b633bf4c701d85c003",
       "changes": [
         "durable-agent-boundary",
         "durable-sdk-host-bindings"

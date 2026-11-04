@@ -1,5 +1,6 @@
 import {
 	type Api,
+	type AssistantMessage,
 	type Context,
 	calculateCost,
 	type Model,
@@ -166,6 +167,7 @@ export class CacheWarmer {
 	private readonly sessionManager: Pick<SessionManager, "appendUsage" | "getBranch">;
 	private readonly getMode: () => CacheWarmingMode;
 	/** Lets extensions override `event.action`; failures fall back to pi's decision. */
+	private readonly runAction: <T>(work: () => Promise<T>) => Promise<T>;
 	private readonly decide: (event: CacheWarmingDecisionEvent) => Promise<CacheWarmingAction>;
 	/** Called with the persisted usage entry after each successful refresh. */
 	onWarmed?: (entry: UsageEntry) => void;
@@ -175,11 +177,13 @@ export class CacheWarmer {
 		sessionManager: Pick<SessionManager, "appendUsage" | "getBranch">,
 		getMode: () => CacheWarmingMode,
 		decide: (event: CacheWarmingDecisionEvent) => Promise<CacheWarmingAction> = async (event) => event.action,
+		runAction: <T>(work: () => Promise<T>) => Promise<T> = work => work(),
 	) {
 		this.models = models;
 		this.sessionManager = sessionManager;
 		this.getMode = getMode;
 		this.decide = decide;
+		this.runAction = runAction;
 		this.inactive = { state: "inactive", reason: "waiting for first request" };
 	}
 
@@ -298,6 +302,18 @@ export class CacheWarmer {
 	}
 
 	private async refresh(run: ActiveRun): Promise<void> {
+		let entry: UsageEntry | undefined;
+		try {
+			entry = await this.runAction(() => this.refreshInAction(run));
+		} catch {
+			if (this.run === run) this.stop("cache usage persistence failed");
+			return;
+		}
+		try { if (entry) this.onWarmed?.(entry); } catch { /* Observers do not own warming. */ }
+		if (this.run === run) this.schedule(run);
+	}
+
+	private async refreshInAction(run: ActiveRun): Promise<UsageEntry | undefined> {
 		run.timer = undefined;
 		if (!this.validateRun(run)) return;
 		if (this.refreshDeadlineMissed(run)) return;
@@ -328,8 +344,9 @@ export class CacheWarmer {
 		}
 
 		run.extensionOverride = extensionOverride;
+		let message: AssistantMessage;
 		try {
-			const message = await this.models
+			message = await this.models
 				.streamSimple(run.model, run.context, {
 					...run.options,
 					maxTokens: 1,
@@ -337,21 +354,16 @@ export class CacheWarmer {
 					signal: run.controller.signal,
 				})
 				.result();
-			if (!this.validateRun(run)) return;
-			if (message.stopReason !== "error" && message.stopReason !== "aborted") {
-				const entry = this.sessionManager.appendUsage(
-					"cache_warm",
-					message.provider,
-					message.responseModel ?? message.model,
-					message.usage,
-					extensionOverride ? "extension override" : undefined,
-				);
-				this.onWarmed?.(entry);
-			}
+
 		} catch {
-			// Cache warming is best-effort and must not affect the active agent run.
+			// Network failures remain best-effort; persistence failures must escape this catch.
+			return;
 		}
-		if (this.run === run) this.schedule(run);
+		if (!this.validateRun(run) || message.stopReason === "error" || message.stopReason === "aborted") return;
+		return this.sessionManager.appendUsage(
+			"cache_warm", message.provider, message.responseModel ?? message.model, message.usage,
+			extensionOverride ? "extension override" : undefined,
+		);
 	}
 
 	private refreshDeadlineMissed(run: ActiveRun): boolean {

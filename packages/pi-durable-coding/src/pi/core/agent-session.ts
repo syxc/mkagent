@@ -516,7 +516,10 @@ export class AgentSession {
 		this._modelRuntime = config.modelRuntime;
 		this._cacheWarmer = config.cacheWarmer;
 		if (this._cacheWarmer) {
-			this._cacheWarmer.onWarmed = (entry) => this._emit({ type: "entry_appended", entry });
+			this._cacheWarmer.onWarmed = (entry) => {
+				const committed = this.sessionManager.getEntry(entry.id);
+				if (committed?.type === "usage") this._emit({ type: "entry_appended", entry: committed });
+			};
 		}
 		this._extensionRunnerRef = config.extensionRunnerRef;
 		this._initialActiveToolNames = config.initialActiveToolNames;
@@ -1518,6 +1521,9 @@ export class AgentSession {
 	}
 
 	/** Current cache-warming state and the policy inputs that produced it. */
+	/** Stop auxiliary requests before the host joins background work during shutdown. */
+	cancelCacheWarming(): void { this._cacheWarmer?.cancel(); }
+
 	get cacheWarmingStatus(): CacheWarmingStatus | undefined {
 		return this._cacheWarmer?.status;
 	}
@@ -2109,6 +2115,8 @@ export class AgentSession {
 		if (lastAssistant) {
 			await this._checkCompaction(lastAssistant, false);
 		}
+
+		this._rebuildSystemPrompt(this.getActiveToolNames());
 
 		const selectedToolsBefore = this._baseSystemPromptOptions.selectedTools;
 		const result = await this._extensionRunner.emitBeforeAgentStart(trigger, this._baseSystemPromptOptions);

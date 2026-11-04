@@ -75,11 +75,16 @@ function port(source: string, target = source, selection?: string[], imports = '
       return !(ts.isFunctionDeclaration(statement) && statement.name && omitted.has(statement.name.text));
     }).map(statement => statement.getFullText(parsed)).join('');
     content = 'import { createJiti } from "jiti/static";\n'
-      + 'import { getExtensionModules } from "../../../extension-modules.ts";\n' + content;
+      + 'import { getExtensionModules } from "../../../extension-modules.ts";\n'
+      + 'import { preparePluginTranspiler } from "../../../plugin-transpiler.ts";\n' + content;
     const originalResolution = /const resolutionOptions = usesEmbeddedModules[\s\S]*?: \{ alias: getAliases\(\) \};/;
     if (!originalResolution.test(content)) throw new Error('Upstream extension resolution changed');
     content = content.replace(originalResolution, 'const resolutionOptions = { virtualModules: getExtensionModules(), tryNative: false };')
       .replace('const createJitiImpl = await getCreateJiti();', 'const createJitiImpl = createJiti;');
+    const importing = '\tconst module = await jiti.import(extensionPath, { default: true });';
+    if (!content.includes(importing)) throw new Error('Upstream extension transform boundary changed');
+    content = content.replace(importing, '\tpreparePluginTranspiler(jiti);\n' + importing);
+    changes.push('preserve-host-stack-formatting-after-babel-bootstrap');
   }
   if (changes?.includes('headless-theme-binding')) {
     const originalImport = '"../../modes/interactive/theme/theme.ts"';

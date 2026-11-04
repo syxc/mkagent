@@ -1,6 +1,7 @@
 // Ported from Pi v1.5.0 (f9a26365568127461c47a07a37dcb42c140a3ac5); MIT. See UPSTREAM.json and LICENSE.pi.
 import { createJiti } from "jiti/static";
 import { getExtensionModules } from "../../../extension-modules.ts";
+import { preparePluginTranspiler } from "../../../plugin-transpiler.ts";
 /**
  * Extension loader - loads TypeScript extension modules using jiti.
  *
@@ -406,6 +407,7 @@ async function loadExtensionModule(extensionPath, cacheToken) {
         moduleCache: false,
         ...resolutionOptions,
     });
+    preparePluginTranspiler(jiti);
     const module = await jiti.import(extensionPath, { default: true });
     const factory = module;
     if (typeof factory !== "function") {

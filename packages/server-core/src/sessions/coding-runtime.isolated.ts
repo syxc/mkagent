@@ -5,6 +5,9 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 it('runs Coding, defaults, frozen settings, forks, background handoffs and restarts through the actual Pi subprocess', async () => {
+  const appRoot = resolve(import.meta.dir, '../../../..')
+  const build = Bun.spawnSync([process.execPath, 'run', 'server:build:subprocess'], { cwd: appRoot, stdout: 'pipe', stderr: 'pipe' })
+  if (build.exitCode !== 0) throw new Error(`Pi subprocess build failed: ${build.stderr.toString()}`)
   const root = mkdtempSync(join(tmpdir(), 'mkagent-coding-runtime-'))
   const previous = process.env.CONFIG_DIR
   process.env.CONFIG_DIR = root
@@ -36,7 +39,7 @@ it('runs Coding, defaults, frozen settings, forks, background handoffs and resta
   const { loadSession } = await import('@mkagent/shared/sessions')
   const { registerSettingsHandlers } = await import('../handlers/rpc/settings')
   const { RPC_CHANNELS } = await import('@mkagent/shared/protocol')
-  const platform = createHeadlessPlatform(); platform.appRootPath = resolve(import.meta.dir, '../../../..'); setSessionPlatform(platform)
+  const platform = createHeadlessPlatform(); platform.appRootPath = appRoot; setSessionPlatform(platform)
   let manager = new SessionManager()
   const events: any[] = []
   try {
