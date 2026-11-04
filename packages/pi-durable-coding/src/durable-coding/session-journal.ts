@@ -14,6 +14,9 @@ import {
 import {
   clipFork, detached, importHistory, JOURNAL_KIND, json, nativeManager, persistProjection, type JournalState,
 } from './session-journal-projection.ts';
+import {
+  apply, committedSnapshot, snapshot, type NativeSessionSnapshot, type Operation, type Snapshot,
+} from './session-journal-state.ts';
 
 const Journal = defineDoc({
   kind: JOURNAL_KIND, version: 1, scope: 'conversation', history: 'rewindable', fork: 'asOf',
@@ -24,15 +27,6 @@ const Journal = defineDoc({
   checkpointWhen: () => false,
 });
 
-interface Snapshot {
-  header: SessionHeader;
-  entries: SessionEntry[];
-  leaf: string | null;
-}
-type Operation =
-  | { type: 'append'; entry: SessionEntry }
-  | { type: 'leaf'; id: string | null }
-  | { type: 'replace'; snapshot: Snapshot };
 interface Stage {
   manager: SessionManager;
   operations: Operation[];
@@ -77,6 +71,7 @@ export class NativeSessionJournal {
   private readonly candidates = new Map<string, Candidate>();
   private readonly stages = new Set<Stage>();
   private readonly messageObservers = new Set<NativeMessageObserver>();
+  private readonly committedObservers = new Set<(snapshot: NativeSessionSnapshot) => void>();
   private readonly messageTags = new WeakMap<object, string>();
   private readonly taggedEntries = new Map<string, string>();
   private readonly observation: CommitObservation;
@@ -193,6 +188,30 @@ export class NativeSessionJournal {
     return () => { this.messageObservers.delete(observer); };
   }
 
+  /** Committed state stays readable after close; local and candidate writes never enter this view. */
+  committedSnapshot(): NativeSessionSnapshot {
+    return committedSnapshot(this.options.conversation.id, this.committed, this.state);
+  }
+
+  /** Receipts only, without an initial replay. Each observer receives its own detached view. */
+  observeCommitted(observer: (snapshot: NativeSessionSnapshot) => void): () => void {
+    this.assertAvailable();
+    this.committedObservers.add(observer);
+    return () => { this.committedObservers.delete(observer); };
+  }
+
+  /** A product identity may cover several native entries, but an entry cannot change identity. */
+  linkMessage(nativeId: string, productMessageId: string): void {
+    if (!productMessageId) throw new Error('Product message identity must not be empty');
+    const stage = this.writable();
+    if (!stage.manager.getEntry(nativeId)) throw new Error(`Native product message target is not visible: ${nativeId}`);
+    const pending = stage.operations.findLast(operation => operation.type === 'link' && operation.nativeId === nativeId);
+    const previous = pending?.type === 'link' ? pending.productMessageId : this.state.productMessages?.[`$${nativeId}`];
+    if (previous !== undefined && previous !== productMessageId) throw new Error(`Native message is already linked: ${nativeId}`);
+    if (previous === productMessageId) return;
+    stage.operations.push({ type: 'link', nativeId, productMessageId });
+  }
+
   tagMessage(message: AgentMessage, tag: string): void { this.messageTags.set(message, tag); }
   messageTag(message: AgentMessage): string | undefined { return this.messageTags.get(message); }
   tagEntry(message: AgentMessage, nativeId: string): void {
@@ -218,7 +237,15 @@ export class NativeSessionJournal {
     const existing = new Set(before.getEntries().map(entry => entry.id));
     const added = merged.entries.filter(entry => !existing.has(entry.id));
     await persistProjection(tx, this.options.conversation.id, state, manager, added,
-      operations.some(operation => operation.type !== 'append'));
+      operations.some(operation => operation.type === 'replace' || operation.type === 'leaf'));
+    for (const operation of operations) {
+      if (operation.type !== 'link') continue;
+      const key = `$${operation.nativeId}`;
+      const previous = state.productMessages?.[key];
+      if (previous !== undefined && previous !== operation.productMessageId) throw new Error(`Native message is already linked: ${operation.nativeId}`);
+      state.productMessages ??= {};
+      state.productMessages[key] = operation.productMessageId;
+    }
     for (const entry of added) {
       const tag = this.taggedEntries.get(entry.id);
       if (tag) {
@@ -266,6 +293,7 @@ export class NativeSessionJournal {
     this.idle = undefined;
     this.candidates.clear();
     this.messageObservers.clear();
+    this.committedObservers.clear();
     this.taggedEntries.clear();
   }
 
@@ -339,12 +367,14 @@ export class NativeSessionJournal {
   }
 
   private publish(publication: CommitPublication): void {
+    let changed = false;
     for (const change of publication.changes) {
       if (change.type !== 'document' || change.kind !== 'change' ||
         change.record.kind !== JOURNAL_KIND || change.conversationId !== this.options.conversation.id) continue;
       const state = detached(change.value) as JournalState;
       const candidate = this.candidates.get(state.nonce);
       this.state = state;
+      changed = true;
       // Never publish the mutable stage itself, even if the callback has already appended more.
       this.committed = this.makeManager(state);
       if (candidate) {
@@ -368,6 +398,12 @@ export class NativeSessionJournal {
       if (change.type !== 'entry' || change.value.conversationId !== this.options.conversation.id) continue;
       for (const nativeId of this.nativeIds(change.value.id)) {
         this.notify(observer => observer.committed(nativeId, change.value.id));
+      }
+    }
+    if (changed) for (const observer of this.committedObservers) {
+      try { observer(this.committedSnapshot()); }
+      catch (error) {
+        try { this.options.onObserverError?.(error); } catch { /* Receipt observers cannot reject storage. */ }
       }
     }
   }
@@ -397,26 +433,4 @@ export class NativeSessionJournal {
     if (this.local.getStore()?.failure) throw this.local.getStore()!.failure;
     if (this.closed) throw new Error('Native session journal is closed');
   }
-}
-
-function snapshot(manager: SessionManager): Snapshot {
-  return { header: manager.getHeader()!, entries: manager.getEntries(), leaf: manager.getLeafId() };
-}
-
-function apply(base: Snapshot, operations: Operation[]): Snapshot {
-  let result = detached(base);
-  for (const operation of operations) {
-    if (operation.type === 'replace') result = detached(operation.snapshot);
-    else if (operation.type === 'leaf') {
-      if (operation.id !== null && !result.entries.some(entry => entry.id === operation.id)) {
-        throw new Error(`Native branch target is no longer visible: ${operation.id}`);
-      }
-      result.leaf = operation.id;
-    } else {
-      if (result.entries.some(entry => entry.id === operation.entry.id)) continue;
-      result.entries.push({ ...detached(operation.entry), parentId: result.leaf });
-      result.leaf = operation.entry.id;
-    }
-  }
-  return result;
 }

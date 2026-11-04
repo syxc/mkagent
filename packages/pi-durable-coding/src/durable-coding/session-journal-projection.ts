@@ -27,6 +27,7 @@ export type JournalState = {
   revision: number;
   nonce: string;
   tags?: Record<string, string>;
+  productMessages?: Record<string, string>;
 };
 
 export function json(value: unknown): JsonValue {
@@ -115,6 +116,8 @@ export function clipFork(state: JournalState, records: EntryRecord[], cwd: strin
   state.ids = Object.fromEntries(Object.entries(state.ids).filter(([, id]) => visible.has(id)));
   if (state.tags) state.tags = Object.fromEntries(Object.entries(state.tags)
     .filter(([, nativeId]) => state.ids[`$${nativeId}`] !== undefined));
+  if (state.productMessages) state.productMessages = Object.fromEntries(Object.entries(state.productMessages)
+    .filter(([nativeId]) => state.ids[nativeId] !== undefined));
   state.records = state.records.filter(record => visible.has(record.id));
   state.overrides = {};
   state.start = 0;
