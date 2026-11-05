@@ -68,6 +68,7 @@ import { wrapToolForKernel, type ToolWrapDeps } from './tools/wrap.ts';
 import { createCodemodeExtensionFor } from './tools/codemode.ts';
 import { loadMcpTools, closeMcpConnections, type McpToolsLoadResult } from './mcp/extension.ts';
 import { createToolSearchExtension } from '@earendil-works/pi-durable/tool-search';
+import type { CodemodeNamespace } from '@earendil-works/pi-durable/codemode';
 import { version as CLIENT_VERSION } from '../package.json';
 import type { PiCompactResult, PiContextUsagePayload, PiProxyToolDefinition, PiWorkerInitConfig, PiWorkerScope } from '../../shared/src/agent/backend/pi/protocol.ts';
 import { adaptCredentialForPiSdk, type PiCredential } from './adapt-credential.ts';
@@ -76,7 +77,7 @@ import { toPiProviderId } from '../../shared/src/config/pi-provider-ids.ts';
 import { ProviderEndpointEnvironment, providerEndpointEnv } from './provider-endpoint-env.ts';
 import { DurableKernel, type KernelHooks, type KernelModelRef } from './kernel.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
-import type { RpcExtensionUIResponse } from '@mkagent/pi-durable-coding/native';
+import { prepareHostResources, type RpcExtensionUIResponse } from '@mkagent/pi-durable-coding/native';
 import { ExtensionUIHost, type ExtensionUIEvent } from './extension-ui.ts';
 import { NativeOwnerExchange } from './native-owner.ts';
 import { NativeHistoryReceipts, type NativeHistoryReceipt, type NativeHistoryRequest } from './native-history-receipts.ts';
@@ -772,28 +773,75 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
   const sessionPath = getSessionPath(config.workspaceRootPath, config.sessionId);
 
   const initGeneration = credentialGeneration;
-  // MCP list changes publish a replacement tool set on the existing kernel.
-  // projectTrusted stays unset: project-scope `.mkagent/mcp.json` is implemented but not
-  // loaded until mkagent grows a project-trust concept (global mcp.json always loads).
-  // Kernel recreation on re-init leaves the previous load behind — close it.
-  if (mcpLoad) await closeMcpConnections(mcpLoad.connections);
+  // Resolve native resources and project MCP under the same trust decision.
+  const previousMcp = mcpLoad;
+  if (previousMcp) await closeMcpConnections(previousMcp.connections);
   assertOwner();
+  if (mcpLoad === previousMcp) mcpLoad = null;
   let openingKernel: DurableKernel | undefined;
-  const loadedMcp = await loadMcpTools({
-    agentDir: resolveCraftAgentDir(config),
-    cwd,
-    version: CLIENT_VERSION,
-    debugLog,
-    onUpdate: tools => openingKernel?.updateTools(buildToolsExtension(cwd, tools)),
-  });
+  let mcpReady = false;
+  let loadedMcp: McpToolsLoadResult = {
+    tools: [], namespaces: [], connections: [], autoEnableCodemode: true, errors: [],
+  };
+  const mcpNamespaces: CodemodeNamespace[] = [];
+  let codemodeExtension: ReturnType<typeof createCodemodeExtensionFor> | undefined;
+  const getCodemodeExtension = () => codemodeExtension
+    ??= createCodemodeExtensionFor(mcpNamespaces, requestPreToolUseApproval);
+  const refreshMcp = async (projectTrusted?: boolean) => {
+    assertOwner();
+    if (mcpLoad === loadedMcp) mcpLoad = null;
+    await closeMcpConnections(loadedMcp.connections);
+    assertOwner();
+    let next: McpToolsLoadResult | undefined;
+    next = await loadMcpTools({
+      agentDir: resolveCraftAgentDir(config),
+      nativeAgentDir: codingProfile?.resourcePolicy !== 'host-only' ? codingProfile?.agentDir : undefined,
+      cwd, projectTrusted, version: CLIENT_VERSION, debugLog,
+      onUpdate: (tools, namespaces) => {
+        if (!next || mcpLoad !== next || epoch !== foregroundEpoch || !isForegroundScope(scope)) return;
+        mcpNamespaces.splice(0, mcpNamespaces.length, ...namespaces);
+        openingKernel?.updateTools(buildToolsExtension(cwd, tools));
+      },
+    });
+    try { assertOwner(); } catch (error) {
+      await closeMcpConnections(next.connections);
+      throw error;
+    }
+    loadedMcp = next;
+    mcpLoad = next;
+    mcpReady = true;
+    mcpNamespaces.splice(0, mcpNamespaces.length, ...next.namespaces);
+    if (next.autoEnableCodemode || codemodeExtension) {
+      openingKernel?.updateExtension(getCodemodeExtension(), next.autoEnableCodemode);
+    }
+    openingKernel?.updateTools(buildToolsExtension(cwd, next.tools));
+    for (const error of next.errors) debugLog(`MCP: ${error}`);
+  };
+  const codingProfile = config.agentProfile === 'coding' || config.codingResources ? {
+    ...config.codingResources,
+    agentDir: config.codingResources?.agentDir
+      ?? (process.env.PI_CODING_AGENT_DIR?.trim() || join(homedir(), '.pi', 'agent')),
+  } : undefined;
+  let preparedResources: Awaited<ReturnType<typeof prepareHostResources>> | undefined;
   try {
+    if (codingProfile) {
+      codingUI?.bind({}, () => {});
+      preparedResources = await prepareHostResources({
+        ...codingProfile, cwd, getSystemPrompt: () => openingKernel?.systemPrompt ?? replacement?.systemPrompt,
+      }, () => (codingUI ?? new ExtensionUIHost(() => {})).projectTrustContext(cwd), debugLog,
+      async trusted => {
+        assertOwner();
+        if (mcpReady) await refreshMcp(trusted);
+      });
+    }
+    await refreshMcp(preparedResources?.settingsManager.isProjectTrusted());
     assertOwner();
   } catch (error) {
     await closeMcpConnections(loadedMcp.connections);
+    if (mcpLoad === loadedMcp) mcpLoad = null;
+    codingUI?.close();
     throw error;
   }
-  mcpLoad = loadedMcp;
-  for (const error of loadedMcp.errors) debugLog(`MCP: ${error}`);
 
   const k = new DurableKernel({
     sessionPath,
@@ -854,18 +902,14 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
         },
       });
     },
-    ...(config.agentProfile === 'coding' || config.codingResources ? {
+    ...(codingProfile ? {
       codingUI,
-      coding: {
-        ...config.codingResources,
-        agentDir: config.codingResources?.agentDir
-          ?? (process.env.PI_CODING_AGENT_DIR?.trim() || join(homedir(), '.pi', 'agent')),
-      },
+      coding: { ...codingProfile, preparedResources },
       wrapCodingTool: tool => wrapToolForKernel(tool, toolWrapDependencies(cwd)),
     } : {}),
     extensions: [
       // Codemode + tool_search default on (mcp.json autoEnableCodemode: false opts out of codemode).
-      ...(loadedMcp.autoEnableCodemode ? [createCodemodeExtensionFor(loadedMcp.namespaces, requestPreToolUseApproval)] : []),
+      ...(loadedMcp.autoEnableCodemode ? [getCodemodeExtension()] : []),
       createToolSearchExtension(),
     ],
   });

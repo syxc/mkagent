@@ -1031,7 +1031,7 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "8de7d0899b816f5b67dc5033b5babdb94dc01f72555bb05b37a341de98111c47",
+      "sha256": "f18db73b450b0f25c81d1ba232eed0465f8cd5e35824a0c0ef974e790051ae03",
       "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining host events, approvals, runtime updates and shutdown cleanup. Capture product ownership and input identity for JSONL calls, reject retired foreground scopes, and preserve source ownership for background notifications and stop requests."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
@@ -2328,6 +2328,22 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/src/host-project-resources.ts": {
+      "sha256": "36b1121fbd2711a960a5f353e90a89796373e15a0f4d42f80467418b1370f201",
+      "reason": "Resolve native project trust hooks, remembered and session-only decisions before project resources and MCP can execute."
+    },
+    "packages/pi-durable-coding/test/host-project-resources.test.ts": {
+      "sha256": "45b459e448d87b4a63e60d5626d7dc5f02bdfb43289cf30ba668b87ec95838df",
+      "reason": "Verify trust ordering, cancellation, headless defaults, native reload, remembered decisions and skipped missing packages."
+    },
+    "packages/pi-agent-server/src/mcp/project-trust.test.ts": {
+      "sha256": "90143210b24c430fdec8e2df97ae59faf2268a97f7efa9aacbcf1f381dd1e5e8",
+      "reason": "Verify shared native and host MCP trust, host configuration precedence and project credential routing rejection."
+    },
+    "packages/server-core/src/sessions/native-project-trust.isolated.ts": {
+      "sha256": "8601a3a4f0985fb4c7aff700d0e833912718092fdc1fe917f6bb633f515f5608",
+      "reason": "Exercise trust approval and revocation through the actual product owner, UI protocol and bundled native worker without model requests."
+    },
     "packages/pi-durable-coding/scripts/native-user-input-port.ts": {
       "sha256": "21756f4b016528e0d16ab7bd80b4f628a9703308302f0c686e817f76f0d61469",
       "reason": "Preserve committed plugin user identity, raw input, attachments and product history receipts."
@@ -2593,11 +2609,11 @@
       "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
     },
     "packages/pi-agent-server/src/extension-ui.e2e.test.ts": {
-      "sha256": "c08f4ac8ce365d3aae4fa16902a199e21f1b1ecb57cf4fde5a77bc689816bf7c",
+      "sha256": "96014fbf938c1a2a1f4d16b575be3730cd0f5a31a8c2c863621148e8c26848cc",
       "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
     },
     "packages/pi-agent-server/src/extension-ui.ts": {
-      "sha256": "5b7d39ae0feeea3f4b73ae5e1b0095be45faeb612106732ac9e42a7fddb24e4c",
+      "sha256": "ce69466907f1af245fcaeb6c2e593fc08841b70cb0af2385e552194a95225018",
       "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
     },
     "packages/pi-durable-coding/src/rpc-ui.ts": {
@@ -3089,15 +3105,15 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "76abe4df1de7d47d61fb952ee7e01f7a3972ebe2a8cc0f3a1e5535e3aa733761",
+      "sha256": "930b837eea72c412742e0f67348d04c6d847e07913a03191b9530f51fd790f9f",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness. Verify copied native journals before Harness opening and reject conflicting legacy target history."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
-      "sha256": "2b2ee30b4478fabc39101535c97668c64a526632849f6e76446d91794360af0e",
-      "reason": "Vendor pi-coding-agent 1.1.0 extensions/mcp/config.js loading and override rules with a configurable .mkagent project directory; omit CLI config writers."
+      "sha256": "ac9ac73a7242d3ea9262b06a11e83f6a04877e2263e0427d8ff9ab6852eced7a",
+      "reason": "Adapt pi-coding-agent 1.1.0 MCP config loading to native coding paths and shared project trust while preserving host precedence and credential routing checks; omit CLI config writers."
     },
     "packages/pi-agent-server/src/mcp/extension.ts": {
-      "sha256": "f5c14e89f9937bbd244e0245eea9afa890cb1567a762d946055c2de8b54a908d",
+      "sha256": "54a40ec5bee685a0b228363318b1eb8bfaaa5bcc5c2127d334d3565a6fd6d971",
       "reason": "Adapt pi-coding-agent 1.1.0 MCP startup and exposure behavior to durable registrations, codemode namespaces, live updates and connection cleanup."
     },
     "packages/pi-agent-server/src/mcp/log.ts": {
@@ -3385,7 +3401,7 @@
       "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery, approved file writes and native plugin execution with host-only resources across restart."
     },
     "packages/pi-agent-server/src/coding-host.ts": {
-      "sha256": "459fb1367afae2e39f737f6741460b7d5b46ef149f54c4a9a2e564cb29f5c4cc",
+      "sha256": "11796947c472a23afcd44156b9bdb75ce8ecd49f36dc013260265fdb6f3af8eb",
       "reason": "Adapt native resources and extension actions to durable host boundaries, including committed auxiliary writes and shutdown."
     },
     "packages/pi-agent-server/test/coding-bundle.e2e.test.ts": {
@@ -3817,7 +3833,7 @@
       "reason": "Provide the independent native coding host adapter and public contracts in durable-loop.ts."
     },
     "packages/pi-durable-coding/src/host-resources.ts": {
-      "sha256": "f618c8a452faa34e53f95333a2fa923f506c65f53068b3741a4f639b69932784",
+      "sha256": "6266b0c90db7f1dda113ed7def0955580b3473c78dd48fd2a54554fb4dc668ff",
       "reason": "Bind the native Pi resource loader to host paths, settings and trust; allow native sessions to disable ambient Pi discovery while retaining explicit host resources."
     },
     "packages/pi-durable-coding/src/host-tool-controls.ts": {
@@ -3837,7 +3853,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent-loop.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/native.ts": {
-      "sha256": "a9ea70b0e99bb3898dabe92e0d7227b1055a94adcf278e2ec8a8ffbf5bc1742d",
+      "sha256": "e5f079c7d291cb8f56cb12986261045702d71318d3e44b8c3187b0ef993418c1",
       "reason": "Provide the independent native coding host adapter and public contracts in native.ts."
     },
     "packages/pi-durable-coding/src/node-process.d.ts": {

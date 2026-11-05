@@ -208,16 +208,19 @@ export class DurableKernel {
   private acceptedInputs = new Set<number>();
   private startedInputs = new Set<number>();
   private coding: CodingHost | undefined;
+  private codingResources: KernelCodingOptions['preparedResources'];
   private codingReload: Promise<void> | undefined;
   private closing: Promise<void> | undefined;
   private nativeTools: ToolRegistration[] = [];
   private hostTools: Extension;
+  private readonly extensions = new Map<string, Extension>();
   private thinkingLevel: ThinkingLevel = 'off';
   private runController = new AbortController();
 
   constructor(options: DurableKernelOptions) {
     this.options = options;
     this.hostTools = options.toolsExtension;
+    for (const extension of options.extensions ?? []) this.extensions.set(extension.name, extension);
   }
 
   private get storeDir(): string {
@@ -629,7 +632,7 @@ export class DurableKernel {
       })],
     }));
     registry.install(this.options.toolsExtension);
-    for (const extension of this.options.extensions ?? []) registry.install(extension);
+    for (const extension of this.extensions.values()) registry.install(extension);
     registry.install(defineExtension({
       name: 'mkagent-cache-warmer',
       hooks: [hook(GenerationTask, {
@@ -734,9 +737,12 @@ export class DurableKernel {
     if (!this.options.wrapCodingTool) throw new Error('Coding extensions require the host tool approval wrapper');
     this.nativeTools = [];
     this.installTools();
+    const reloadResources = this.codingResources !== undefined;
+    this.codingResources ??= profile.preparedResources;
     this.coding = await CodingHost.load({
       harness: this.harness!, conversation: this.conversation!, registry: this.registry!,
-      cwd: this.options.cwd, sessionPath: this.options.sessionPath, id: this.sessionId, profile,
+      cwd: this.options.cwd, sessionPath: this.options.sessionPath, id: this.sessionId,
+      profile: { ...profile, preparedResources: this.codingResources }, reloadResources,
       nativeFork, nativeParent, deferProjection: deferred,
       commitProjection: this.options.commitNativeHistory && (descriptor =>
         this.options.commitNativeHistory!(parseNativeSessionReference(descriptor)!, descriptor.hasName)),
@@ -789,6 +795,7 @@ export class DurableKernel {
         reload: () => this.reloadCodingSession(),
       },
     }, reason);
+    this.codingResources = this.coding.resources;
     if (!deferred) await this.coding.start(reason);
   }
 
@@ -1124,6 +1131,18 @@ export class DurableKernel {
     const nativeNames = new Set(this.nativeTools.map(tool => tool.name));
     this.coding?.updateTools(this.registry!.snapshot().tools()
       .flatMap(({ tool }) => nativeNames.has(tool.name) ? [] : [tool]));
+  }
+
+  /** Keep auxiliary host extensions and native declarations aligned with reloaded configuration. */
+  updateExtension(extension: Extension, enabled: boolean): void {
+    if (enabled) {
+      this.extensions.set(extension.name, extension);
+      this.registry?.install(extension);
+    } else {
+      this.extensions.delete(extension.name);
+      this.registry?.uninstall(extension);
+    }
+    this.updateTools(this.hostTools);
   }
 
   private installTools(): void {

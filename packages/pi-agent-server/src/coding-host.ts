@@ -11,7 +11,7 @@ import {
 import { DurableLoopBinding, NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
 import type { AgentTool } from '@mkagent/pi-durable-coding/agent';
 import {
-  createAgentSession, createHostResources, initializeExtensionModels, initTheme, hostToolToAgent, wrapAgentTool, ModelRuntime, SessionManager,
+  createAgentSession, prepareHostResources, initializeExtensionModels, initTheme, hostToolToAgent, wrapAgentTool, ModelRuntime, SessionManager,
   type AgentSession, type AgentSessionEvent, type ExtensionCommandContextActions, type HostResourceOptions,
   type ModelRuntimeCredentials, type PromptOptions, type SourceInfo, type SessionShutdownEvent,
 } from '@mkagent/pi-durable-coding/native';
@@ -20,7 +20,9 @@ import { NativeSessionProjection, nativeSessionPaths, type NativeSessionDescript
 import { ExtensionUIHost, type ExtensionUIBinding } from './extension-ui.ts';
 import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent/shared/sessions';
 
-export type KernelCodingOptions = Omit<HostResourceOptions, 'cwd' | 'getSystemPrompt'>;
+export type KernelCodingOptions = Omit<HostResourceOptions, 'cwd' | 'getSystemPrompt'> & {
+  preparedResources?: Awaited<ReturnType<typeof prepareHostResources>>;
+};
 
 export interface NativeCodingFork {
   sourceSessionPath: string;
@@ -39,6 +41,7 @@ export interface CodingHostBindings {
   deferProjection?: boolean;
   commitProjection?(descriptor: NativeSessionDescriptor): Promise<void>;
   profile: KernelCodingOptions;
+  reloadResources?: boolean;
   models(): Models;
   credentials?: ModelRuntimeCredentials;
   autoCompactWindow?: number;
@@ -67,6 +70,7 @@ export class CodingHost {
   readonly projection: NativeSessionProjection;
   readonly models: ModelRuntime;
   session!: AgentSession;
+  resources!: Awaited<ReturnType<typeof prepareHostResources>>;
   private readonly durable: DurableLoopBinding;
   private readonly nativeTools = new Map<string, ToolRegistration>();
   private readonly jobs = new Set<Promise<unknown>>();
@@ -156,9 +160,15 @@ export class CodingHost {
         copyReferencedSessionFiles(references.map(content => ({ content })), source, host.sessionPath);
       }
       await coding.projection.flush();
-      const resources = createHostResources({ ...host.profile, cwd: host.cwd, getSystemPrompt: host.getSystemPrompt });
+      if (!host.profile.preparedResources || host.reloadResources) host.ui?.bind({}, () => {});
+      const resources = host.profile.preparedResources ?? await prepareHostResources(
+        { ...host.profile, cwd: host.cwd, getSystemPrompt: host.getSystemPrompt },
+        () => (host.ui ?? new ExtensionUIHost(() => {})).projectTrustContext(host.cwd),
+        message => host.error({ extensionPath: '<host>', event: 'project_trust', error: message }),
+      );
+      coding.resources = resources;
+      if (host.reloadResources) await resources.resourceLoader.reload();
       resources.settingsManager.setHostAutoCompactWindow(host.autoCompactWindow);
-      await resources.resourceLoader.reload();
       for (const error of resources.resourceLoader.getExtensions().errors) {
         host.error({ extensionPath: error.path, event: 'resources', error: error.error });
       }

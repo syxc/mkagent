@@ -16,8 +16,10 @@
  * ```
  *
  * Vendored 1:1 from @earendil-works/pi-coding-agent 1.1.0 extensions/mcp/config.js — behavior must
- * stay identical. Deviations: the project config directory is an option (mkagent's `.mkagent`,
- * defaulting per call), and the `mcp.json` writer helpers (`updateMcpServerConfig`,
+ * stay identical except for host resource integration. Native coding can also read the native
+ * agent directory and trusted `.pi/mcp.json`; host entries retain precedence within each scope.
+ * Other deviations: the project config directory is an option (mkagent's `.mkagent`, defaulting
+ * per call), and the `mcp.json` writer helpers (`updateMcpServerConfig`,
  * `addMcpServerConfig`, `removeMcpServerConfig`) are omitted — they only serve the CLI/UI server
  * manager this kernel does not carry.
  */
@@ -101,6 +103,8 @@ function readConfigFile(path: string, scope: McpServerScope, state: ConfigLoadSt
 export interface McpConfigOptions {
   /** Agent directory holding the global `mcp.json`. */
   agentDir: string;
+  /** Native coding resources, loaded before the existing host configuration. */
+  nativeAgentDir?: string;
   /** Working directory of the session, for the trusted project's `mcp.json`. */
   cwd: string;
   /** Whether `<cwd>/<projectConfigDirName>/mcp.json` is read. */
@@ -122,9 +126,15 @@ export interface LoadedMcpConfig {
  */
 export function loadMcpConfig(options: McpConfigOptions): LoadedMcpConfig {
   const state: ConfigLoadState = { servers: new Map(), errors: [], autoEnableCodemode: undefined };
+  if (options.nativeAgentDir && options.nativeAgentDir !== options.agentDir) {
+    readConfigFile(join(options.nativeAgentDir, 'mcp.json'), 'global', state);
+  }
   readConfigFile(join(options.agentDir, 'mcp.json'), 'global', state);
   const projectDirName = options.projectConfigDirName ?? '.mkagent';
   const projectConfig = options.projectTrusted ? join(options.cwd, projectDirName, 'mcp.json') : undefined;
+  if (options.nativeAgentDir && options.projectTrusted && projectDirName !== '.pi') {
+    readConfigFile(join(options.cwd, '.pi', 'mcp.json'), 'project', state);
+  }
   if (projectConfig) readConfigFile(projectConfig, 'project', state);
   return {
     servers: [...state.servers.values()],

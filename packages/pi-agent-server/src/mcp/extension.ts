@@ -19,6 +19,7 @@ import { createMcpToolDefinition, createMcpToolName } from './tools.ts';
 export interface McpToolsLoadOptions {
   /** Agent directory holding the global `mcp.json` and `mcp.log`. */
   agentDir: string;
+  nativeAgentDir?: string;
   cwd: string;
   /** Whether the trusted project's `<cwd>/.mkagent/mcp.json` is read. */
   projectTrusted?: boolean;
@@ -49,7 +50,8 @@ function exposureOf(entry: McpServerEntry): string {
  * exposing no tools never blocks the others: its error is logged and returned.
  */
 export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToolsLoadResult> {
-  const config = loadMcpConfig({ agentDir: options.agentDir, cwd: options.cwd, projectTrusted: options.projectTrusted });
+  const config = loadMcpConfig({ agentDir: options.agentDir, nativeAgentDir: options.nativeAgentDir,
+    cwd: options.cwd, projectTrusted: options.projectTrusted });
   for (const error of config.errors) options.debugLog(`MCP config: ${error}`);
   const log = new McpServerLog(join(options.agentDir, 'mcp.log'));
   const enabled = config.servers.filter(entry => entry.config.enabled !== false);

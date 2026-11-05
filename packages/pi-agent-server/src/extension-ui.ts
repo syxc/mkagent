@@ -2,7 +2,7 @@
 import { randomUUID } from 'node:crypto';
 import type {
   ExtensionUIContext, ExtensionUIDialogOptions, ExtensionWidgetOptions,
-  RpcExtensionUIRequest, RpcExtensionUIResponse,
+  ProjectTrustContext, RpcExtensionUIRequest, RpcExtensionUIResponse,
 } from '@mkagent/pi-durable-coding/native';
 
 export type ExtensionUIEvent =
@@ -10,25 +10,40 @@ export type ExtensionUIEvent =
   | { type: 'extension_ui_closed'; uiEpoch: string; id: string }
   | { type: 'extension_ui_state'; uiEpoch: string; available: boolean; reset: boolean };
 
-export interface ExtensionUIBinding {
-  readonly context: ExtensionUIContext;
+type RpcUIContext = Pick<ExtensionUIContext,
+  'select' | 'confirm' | 'input' | 'editor' | 'notify' | 'setStatus' | 'setWidget'
+  | 'setTitle' | 'setEditorText' | 'pasteToEditor'>;
+
+export interface ExtensionUIBinding<Context = ExtensionUIContext> {
+  readonly context: Context;
   readonly available: boolean;
   close(): void;
 }
 
 /** Keep transport availability and abort suspension across native session reloads. */
 export class ExtensionUIHost {
-  private binding?: NativeUIBinding;
+  private binding?: NativeUIBinding<object>;
   private available = false;
   private suspended = 0;
   private closed = false;
 
   constructor(private readonly emit: (event: ExtensionUIEvent) => void) {}
 
-  bind(fallback: ExtensionUIContext, onAvailability: (available: boolean) => void): ExtensionUIBinding {
+  bind<Context extends object>(fallback: Context,
+    onAvailability: (available: boolean) => void): ExtensionUIBinding<Context & RpcUIContext> {
     this.binding?.close();
-    this.binding = new NativeUIBinding(fallback, this.enabled(), onAvailability, this.emit);
-    return this.binding;
+    const binding = new NativeUIBinding(fallback, this.enabled(), onAvailability, this.emit);
+    this.binding = binding;
+    return binding;
+  }
+
+  projectTrustContext(cwd: string): ProjectTrustContext {
+    return {
+      cwd, mode: this.binding?.available ? 'rpc' : 'print', hasUI: this.binding?.available ?? false,
+      ui: this.binding?.context ?? {
+        select: async () => undefined, confirm: async () => false, input: async () => undefined, notify() {},
+      },
+    };
   }
 
   setAvailable(available: boolean): void {
@@ -64,8 +79,8 @@ type DialogRequest = Extract<RpcExtensionUIRequest, { method: 'select' | 'confir
 const stringResponse = (response: RpcExtensionUIResponse): string | undefined =>
   'value' in response ? response.value : undefined;
 
-class NativeUIBinding implements ExtensionUIBinding {
-  readonly context: ExtensionUIContext;
+class NativeUIBinding<Context extends object> implements ExtensionUIBinding<Context & RpcUIContext> {
+  readonly context: Context & RpcUIContext;
   private readonly uiEpoch = randomUUID();
   private readonly pending = new Map<string, {
     request: DialogRequest;
@@ -74,7 +89,7 @@ class NativeUIBinding implements ExtensionUIBinding {
   private closed = false;
 
   constructor(
-    fallback: ExtensionUIContext,
+    fallback: Context,
     public available: boolean,
     private readonly onAvailability: (available: boolean) => void,
     private readonly emit: (event: ExtensionUIEvent) => void,

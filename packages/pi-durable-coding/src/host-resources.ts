@@ -8,6 +8,7 @@ import {
   DefaultResourceLoader,
   loadProjectContextFiles,
   type DefaultResourceLoaderOptions,
+  type ResourceLoaderReloadOptions,
 } from './pi/core/resource-loader.ts';
 import {
   FileSettingsStorage,
@@ -35,6 +36,8 @@ export interface HostResourceOptions extends Omit<CodingResourceOptions, 'global
   noPromptTemplates?: boolean;
   noThemes?: boolean;
   disabledBuiltinExtensions?: string[];
+  /** Re-evaluate host trust before each native reload, including newly added project resources. */
+  resolveProjectTrust?: ResourceLoaderReloadOptions['resolveProjectTrust'];
 }
 
 /** Keep native settings methods while choosing host files, profile scopes, or a storage port. */
@@ -65,9 +68,14 @@ export function createHostSettingsManager(options: Pick<HostResourceOptions,
 class HostResourceLoader extends DefaultResourceLoader {
   private readonly hostSystemPrompt?: () => string | undefined;
 
-  constructor(options: DefaultResourceLoaderOptions, hostSystemPrompt?: () => string | undefined) {
+  constructor(options: DefaultResourceLoaderOptions, hostSystemPrompt?: () => string | undefined,
+    private readonly resolveProjectTrust?: ResourceLoaderReloadOptions['resolveProjectTrust']) {
     super(options);
     this.hostSystemPrompt = hostSystemPrompt;
+  }
+
+  override reload(options?: ResourceLoaderReloadOptions): Promise<void> {
+    return super.reload(this.resolveProjectTrust ? { ...options, resolveProjectTrust: this.resolveProjectTrust } : options);
   }
 
   override getSystemPrompt(): string | undefined {
@@ -124,6 +132,6 @@ export function createHostResources(options: HostResourceOptions): {
       const append = promptPath('APPEND_SYSTEM.md');
       return { systemPrompt: promptPath('SYSTEM.md') ?? '', appendSystemPrompt: append ? [append] : [] };
     },
-  }, options.getSystemPrompt);
+  }, options.getSystemPrompt, options.resolveProjectTrust);
   return { resourceLoader, settingsManager };
 }

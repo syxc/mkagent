@@ -7,12 +7,13 @@ import { defineExtension } from '@earendil-works/pi-durable';
 import { durableFixture } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
 import { ExtensionUIHost, type ExtensionUIEvent } from './extension-ui.ts';
 import { DurableKernel } from './kernel.ts';
+import { createHostResources } from '@mkagent/pi-durable-coding/native';
 
 type Request = Extract<ExtensionUIEvent, { type: 'extension_ui_request' }>;
 const cleanup: Array<() => Promise<void> | void> = [];
 afterEach(async () => { for (const operation of cleanup.splice(0).reverse()) await operation(); });
 
-async function fixture(source: string, onEvent?: (event: ExtensionUIEvent, host: ExtensionUIHost) => void) {
+async function fixture(source: string, onEvent?: (event: ExtensionUIEvent, host: ExtensionUIHost) => void, prepared = false) {
   const root = await durableFixture([]);
   await root.harness.close(BACKGROUND_CONTEXT);
   cleanup.push(() => rmSync(root.directory, { recursive: true, force: true }));
@@ -29,22 +30,39 @@ async function fixture(source: string, onEvent?: (event: ExtensionUIEvent, host:
   const ui = new ExtensionUIHost(event => { events.push(event); onEvent?.(event, ui); });
   ui.setAvailable(true);
   const errors: string[] = [];
+  const profile = { agentDir, resourcePolicy: 'host-only' as const, extensionPaths: [plugin],
+    globalSettings: { compaction: { enabled: false }, cacheWarming: 'off' as const }, projectSettings: {} };
+  const preparedResources = prepared ? createHostResources({ ...profile, cwd: root.directory }) : undefined;
+  if (preparedResources) await preparedResources.resourceLoader.reload();
   const kernel = new DurableKernel({
     sessionPath: join(root.directory, 'session'), cwd: root.directory, modelsSource: () => root.models,
     toolsExtension: defineExtension({ name: 'host', tools: [] }),
-    coding: { agentDir, resourcePolicy: 'host-only', extensionPaths: [plugin],
-      globalSettings: { compaction: { enabled: false }, cacheWarming: 'off' }, projectSettings: {} },
+    coding: { ...profile, preparedResources },
     codingUI: ui, wrapCodingTool: tool => tool,
     hooks: { emitEvent: () => {}, sessionToolCompleted: () => {}, prefetchToolCall: () => {},
       isPrefetchableTool: () => false, debugLog: value => errors.push(value) },
   });
   cleanup.push(() => kernel.close());
   return {
-    kernel, ui, events, errors, root,
+    kernel, ui, events, errors, root, plugin,
     open: () => kernel.open({ model: { provider: 'faux', modelId: 'local', contextWindow: 100_000 } }),
     result: (): unknown => JSON.parse(readFileSync(resultPath, 'utf8')),
   };
 }
+
+test('reload refreshes resources prepared before kernel startup', async () => {
+  const f = await fixture(`
+    save({ version: 1 });
+    pi.registerCommand('reload-prepared', { handler: (_, ctx) => ctx.reload() });
+  `, undefined, true);
+  await f.open();
+  expect(f.result()).toEqual({ version: 1 });
+  writeFileSync(f.plugin, readFileSync(f.plugin, 'utf8').replace('version: 1', 'version: 2'));
+  await f.kernel.submitPrompt('/reload-prepared');
+  await f.kernel.waitForIdle();
+  expect(f.result()).toEqual({ version: 2 });
+  expect(f.root.calls).toHaveLength(0);
+});
 
 test('answers a startup hook before kernel.open completes and rejects invalid or repeated responses', async () => {
   const f = await fixture(`
