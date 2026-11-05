@@ -2,7 +2,7 @@
 
 本表逐行对应[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)的 MkAgent 保留清单。它记录当前实现与验收证据，不改变需求。状态使用“已实现且验证”“已实现待验证”“待实现”“外部环境受阻”四类；部分流程已通过而必要组合尚未检查时，整行保留待验证状态。
 
-独立 SDK 输入采集修正已提交为 `a1790ed`，旧协议夹具和普通产品分叉修正已提交为 `4e29c34`。该批完整仓库测试、CI 检查、lint 与来源审计通过；随后新增的搜索、长输出和混合 instructions 定向检查为 7 项、82 项断言通过。最终代码的干净产物与浏览器验收尚未完成，不能据此声明整体完成。
+独立 SDK 输入采集修正为 `a1790ed`，普通产品分叉修正为 `4e29c34`；读取与审批边界修正为 `61fac5d`，PowerShell 产品接线为 `57bbaf5`，定向验收为 `a41e6b5`。该代码的完整仓库主批次为 436 份文件、5096 项通过、11 项跳过、0 失败，后续 35 份串行与隔离文件全部通过。CI、lint、来源审计、固定生成、干净构建、独立消费者和搬迁 headless 产品流程均通过；浏览器与其他平台验收尚未完成，不能据此声明整体完成。
 
 ## 架构与交付约束
 
@@ -10,7 +10,7 @@
 |---|---|---|
 | pi-durable 为唯一执行调度内核 | 已实现且验证 | 普通 profile 使用 GenerationTask，coding 使用 `pi.coding.session/run/tool`；原生 Agent facade、嵌套调用和边界恢复通过实际 Harness 与固定原版行为对照。不同产品模式不要求相同任务类型。 |
 | 允许按需引用 pi-agent-core，禁止生产依赖完整 pi-coding-agent | 已实现且验证 | 当前 coding 包使用独立 Pi 1.5.0 包和本地固定源码闭包；没有生产整包依赖，也没有另启旧 Agent loop。未使用 core 是当前实现选择。 |
-| 独立 coding 模块及公开入口 | 已实现且验证 | `@mkagent/pi-durable-coding` 不依赖 MkAgent shared、server 或 UI。`10cac69` 独立消费者覆盖六个运行时入口及 rpc-ui 类型入口；最新源码仍须随最终产物复核。 |
+| 独立 coding 模块及公开入口 | 已实现且验证 | `@mkagent/pi-durable-coding` 不依赖 MkAgent shared、server 或 UI。`a41e6b5` 干净 checkout 的独立消费者覆盖六个运行时入口及 rpc-ui 类型入口，声明与运行检查均通过。 |
 | 固定来源、许可与可复现转换 | 已实现且验证 | Pi v1.5.0 固定提交、MIT 许可、250 份运行时源码和 9 项资源，另有 40 份公开 fixture。两套生成检查通过。 |
 | 普通模式资源隔离与 coding 项目信任 | 已实现且验证 | `resourcePolicy` 与执行选择分离；普通 profile 和 `host-only` 不自动发现原生资源，项目执行在导入前取得宿主决定。参见 `host-resources.test.ts`、`host-project-resources.test.ts` 和真实产品信任用例。 |
 
@@ -45,7 +45,7 @@
 | Codemode/tool search | 已实现且验证 | 实际 durable 目录覆盖动态插件与 MCP 工具、deferred discovery、移除与 exposure 变化。已对照固定上游：RPC `/mcp` 只有状态和授权操作，启停与 exposure 编辑在原生 TUI manager；终端界面兼容单列环境边界。 |
 | Retry/steer/follow-up/compaction | 已实现且验证 | 实际 Harness、接受队列、重复文本、重试期限、取消、压缩设置与提交边界有回归；摘要由 durable task 调度。 |
 | Resume/branch/usage/export | 已实现且验证 | SQLite/JSONL 恢复、产品完整树、普通 cutoff、原始输入、用量、归档导入导出和搬迁 HTML 资源有证据；分叉发布修正已通过完整仓库回归。 |
-| CLI/JSONL/Desktop/WebUI | 外部环境受阻 | bundled JSONL 与 macOS arm64 headless 的认证 WebSocket 产品入口已执行；最新产物重建待完成，完整 Desktop/WebUI 交互受浏览器授权空间缺失阻塞。 |
+| CLI/JSONL/Desktop/WebUI | 外部环境受阻 | bundled JSONL 与最新 macOS arm64 headless 的认证 WebSocket 产品入口已执行；`a41e6b5` 干净构建与压缩包搬迁通过，完整 Desktop/WebUI 交互受浏览器授权空间缺失阻塞。 |
 | Themes/shortcuts/editor/renderers | 外部环境受阻 | 原生资源与接口保留，RPC 支持按固定契约映射；终端组件依赖 TUI host，不能将源码存在或 print/RPC 模式的取消默认值计为 TUI 交互验收。 |
 
 ## MkAgent 保留清单逐行对照
@@ -59,12 +59,12 @@
 | MCP 与浏览器 | 已实现且验证 | 既有 MCP、codemode、tool search、默认 profile 的浏览器工具与脱敏回归保留。测试使用本地协议替身，不访问用户的真实浏览器空间或代理。 |
 | 后台工作 | 已实现且验证 | 后台 shell、停止归属、完成通知、handoff 和跨 worker generation 保留源会话身份；普通与 coding 的实际协议用例均有覆盖。 |
 | 上下文 | 已实现且验证 | 宿主 prompt、原生资源隔离、压缩阈值、cache 与 usage 有覆盖；本批实际模型请求验证混合 instructions 来源，真实双模式 worker 验证成功读取后的 prerequisites。 |
-| 产品入口 | 外部环境受阻 | headless、CLI 与 bundled subprocess 已有证据，最新产物与完整可视验收尚未完成。Windows/PowerShell 不能由 macOS 的构建结果替代。 |
+| 产品入口 | 外部环境受阻 | 最新干净产物的 headless 启动、health、认证 WebSocket、原生插件命令、dialog、迟到回复拒绝、名称与历史持久化通过，模型请求为 0；完整可视验收未完成。Windows/PowerShell 不能由 macOS 的构建结果替代。 |
 
 ## 后续验收
 
 成功读取 prerequisites 和 PowerShell 产品接线的缺口已修复并定向验证。搜索、长输出、混合 instructions 与原生 MCP 的 RPC 契约已经核对；TUI 环境边界保留在对应能力行，不扩展为全部插件兼容的结论。
 
-最后对完成代码重建干净产物和独立消费者，登记全仓回归与必需检查结果，再处理隔离 WebUI 的 dialog、密码框、焦点、键盘、草稿、树导航、历史和 NEW。可视步骤需要可用且明确授权的浏览器空间；不得借用空间 7 或真实 WebUI。
+干净产物、独立消费者、全仓回归与必需检查已完成。接下来处理隔离 WebUI 的 dialog、密码框、焦点、键盘、草稿、树导航、历史和 NEW。再次检查原授权空间 6 仍返回 `task space not found: 6`；可视步骤需要可用且明确授权的浏览器空间，不得借用空间 7 或真实 WebUI。
 
 PowerShell 实机验收先运行 `pwsh --version`，Windows 若只有系统 PowerShell 则运行 `powershell -NoProfile -Command '$PSVersionTable.PSVersion'`。在隔离 coding 会话中由显式插件调用 `pi.setActiveTools([...pi.getActiveTools(), 'powershell'])`，再经本地确定性模型调用该工具，检查中文输出、非零退出、超时与取消；Ask 拒绝时任务临时文件不得生成，批准后才可生成。该步骤尚未执行。
