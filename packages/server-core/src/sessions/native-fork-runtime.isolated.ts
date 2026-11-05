@@ -7,7 +7,7 @@ import type { Message } from '@mkagent/core/types'
 import type { PiAgent } from '../../../shared/src/agent/pi-agent'
 import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 
-test('real product forks and switches preserve complete history across ownership, failure and restart on both stores', async () => {
+test('real product fork, switch and parent lineage preserve history across ownership and restart on both stores', async () => {
   const appRoot = resolve(import.meta.dir, '../../../..')
   const build = Bun.spawnSync([process.execPath, 'run', 'server:build:subprocess'], { cwd: appRoot, stdout: 'pipe', stderr: 'pipe' })
   if (build.exitCode !== 0) throw new Error(`Pi subprocess build failed: ${build.stderr}`)
@@ -38,6 +38,15 @@ test('real product forks and switches preserve complete history across ownership
       pi.registerCommand('native-switch', { handler: async (sessionPath, ctx) => {
         await ctx.switchSession(sessionPath.trim(), { withSession: async next => {
           await next.sendUserMessage('switch callback marker');
+        } });
+      } });
+      pi.registerCommand('native-parent', { handler: async (sessionPath, ctx) => {
+        const parentSession = sessionPath.trim() || ctx.sessionManager.getSessionFile();
+        await ctx.newSession({ parentSession, setup: async manager => {
+          if (manager.getHeader().parentSession !== parentSession) throw new Error('Missing parent lineage');
+          if (manager.getEntries().some(entry => entry.type === 'message')) throw new Error('Inherited parent history');
+        }, withSession: async next => {
+          await next.sendUserMessage('parent callback marker');
         } });
       } });
       pi.on('session_shutdown', (_, ctx) => {
@@ -111,7 +120,7 @@ test('real product forks and switches preserve complete history across ownership
     manager.setEventSink((_channel, target, event) => {
       if (!event || typeof event !== 'object' || !('type' in event)) return
       if (event.type === 'session_created') created.push(event.sessionId)
-      if (event.type === 'session_created' && operation && event.session.parentSessionId === operation.sourceId) {
+      if (event.type === 'session_created' && operation && operation.targetId === undefined) {
         operation.targetId = event.sessionId
         expect(target).toEqual({ to: 'workspace', workspaceId: workspace.id })
       }
@@ -253,6 +262,43 @@ test('real product forks and switches preserve complete history across ownership
       expect(switchedAgent.getSessionId()).toBe(reserved.tree.reference.nativeSessionId)
       expect(JSON.stringify(requests.at(-1))).toContain('resumed original source marker')
       expect(JSON.stringify(requests.at(-1))).not.toContain('fork callback marker')
+      const parentPid = child(switchedAgent)!.pid
+      const parentCreated = created.length
+      const invalidParent = operation = { sourceId: source.id, done: Promise.withResolvers<string>() }
+      const parentError = invalidParent.done.promise.catch(error => String(error))
+      await deadline(manager.sendMessage(source.id, '/native-parent ../unregistered',
+        undefined, undefined, undefined, undefined, undefined, undefined, { callerClientId: 'fork-client' }))
+      expect(await deadline(parentError)).toContain('canonical registered path')
+      expect(created).toHaveLength(parentCreated)
+      expect(child(switchedAgent)?.pid).toBe(parentPid)
+      operation = undefined
+      for (const from of [source.id, repeatedId]) {
+        const currentParent = operation = { sourceId: from, targetId: undefined as string | undefined,
+          done: Promise.withResolvers<string>() }
+        const sendingParent = manager.sendMessage(from, `/native-parent ${resumed.tree.reference.sessionFile}`,
+          undefined, undefined, undefined, undefined, undefined, undefined, { callerClientId: 'fork-client' })
+        const parentTargetId = await deadline(currentParent.done.promise)
+        await deadline(sendingParent)
+        operation = undefined
+        const parentTarget = await read(parentTargetId)
+        expect(parentTarget.stored.parentSessionId).toBe(source.id)
+        expect(parentTarget.tree.header.parentSession).toBe(resumed.tree.reference.sessionFile)
+        expect(parentTarget.tree.reference.nativeSessionId).not.toBe(resumed.tree.reference.nativeSessionId)
+        expect(parentTarget.stored.nativeSessionOwner?.parent?.sessionId).toBe(source.id)
+        expect(JSON.stringify(requests.at(-1))).toContain('parent callback marker')
+        expect(JSON.stringify(requests.at(-1))).not.toContain('included source marker')
+        expect(JSON.stringify(requests.at(-1))).not.toContain('fork callback marker')
+        expect(child(runtime.sessions.get(from)!.agent)).toBeNull()
+        const parentAgent = runtime.sessions.get(parentTargetId)!.agent
+        const beforeParentPid = child(parentAgent)!.pid
+        if (from === source.id) expect(beforeParentPid).toBe(parentPid)
+        await deadline(parentAgent.nativeSessionOwner!.releaseForOwner())
+        await deadline(manager.sendMessage(parentTargetId, 'cold parent target marker'))
+        expect(child(parentAgent)?.pid).not.toBe(beforeParentPid)
+        expect(parentAgent.getSessionId()).toBe(parentTarget.tree.reference.nativeSessionId)
+        expect(JSON.stringify(requests.at(-1))).toContain('parent callback marker')
+        expect(JSON.stringify(requests.at(-1))).not.toContain('included source marker')
+      }
       await deadline(manager.deleteSession(source.id))
       await deadline(manager.deleteSession(targetId))
       const repeatedAgent = runtime.sessions.get(repeatedId)!.agent

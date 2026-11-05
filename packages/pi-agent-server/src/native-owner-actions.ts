@@ -20,9 +20,16 @@ export function nativeOwnerActions(host: NativeOwnerActionsHost): Pick<Extension
       const source = host.source();
       const before = await source.session.extensionRunner.emit({ type: 'session_before_switch', reason: 'new' });
       if (before?.cancel) return { cancelled: true };
+      let sourceReference: PiNativeOwnerRequest['sourceReference'];
+      if (options?.parentSession) {
+        await source.flush();
+        const { entryIds: _entryIds, ...reference } = await source.projection.flush();
+        sourceReference = reference;
+      }
       await host.replace({
         sourceNativeSessionId: source.session.sessionId,
-        operation: { type: 'new', ...(options?.parentSession !== undefined ? { parentSession: options.parentSession } : {}) },
+        sourceReference,
+        operation: { type: 'new', ...(options?.parentSession ? { parentSession: options.parentSession } : {}) },
       }, async (target, signal) => {
         signal.throwIfAborted();
         if (options?.setup) {

@@ -35,6 +35,7 @@ export interface CodingHostBindings {
   sessionPath: string;
   id: string;
   nativeFork?: NativeCodingFork;
+  nativeParent?: string;
   profile: KernelCodingOptions;
   models(): Models;
   credentials?: ModelRuntimeCredentials;
@@ -127,6 +128,7 @@ export class CodingHost {
     const models = await ModelRuntime.bind({ models: host.models, credentials });
     const header = SessionManager.inMemory(host.cwd, { id: host.id }).getHeader()!;
     if (host.nativeFork) header.parentSession = nativeSessionPaths(host.nativeFork.sourceSessionPath).sessionFile;
+    if (host.nativeParent) header.parentSession = host.nativeParent;
     const journal = await NativeSessionJournal.open({
       harness: host.harness, conversation: host.conversation, context: BACKGROUND_CONTEXT, cwd: host.cwd,
       header, forkLeaf: host.nativeFork?.leaf,

@@ -8,6 +8,7 @@ import { InputOrigins } from './input-origins'
 import { NativeSessionOwner } from './native-session-owner'
 import { closeNativeForkProof, prepareNativeForkProof, verifyNativeForkTarget, type NativeForkProof } from './native-session-fork'
 import { closeNativeSwitchProof, prepareNativeSwitchProof, verifyNativeSwitchTarget, type NativeSwitchProof } from './native-session-switch'
+import { readTrustedNativeSession } from './native-session-source'
 import { partitionNativeProductHistory } from '../../../shared/src/sessions/native-product-history'
 import type { PiNativeOwnerBackend, PiNativeOwnerRequest } from '../../../shared/src/agent/backend/pi/native-owner-protocol'
 import type { BackgroundTaskOutput, StopBackgroundTaskResult } from '@mkagent/shared/protocol'
@@ -401,6 +402,14 @@ export class SessionManager implements ISessionManager {
     bindSwitch: async (targetId, proof, reference) => {
       verifyNativeSwitchTarget(proof, this.nativeForkIdentity(targetId, reference))
     },
+    prepareParent: (sourceId, request) => this.prepareNativeParent(sourceId, request),
+    bindParent: async (targetId, parent, reference) => {
+      const tree = readTrustedNativeSession(this.nativeForkIdentity(targetId, reference))
+      if (tree.header.parentSession !== parent.sessionFile || tree.reference.nativeSessionId === parent.nativeSessionId
+        || tree.entries.some(entry => entry.type === 'message')) {
+        throw new Error('Native parent target must have its own identity and empty history')
+      }
+    },
     createTarget: async (sourceId, record) => {
       const source = this.sessions.get(sourceId)
       if (!source) throw new Error('Native source session was deleted')
@@ -408,7 +417,8 @@ export class SessionManager implements ISessionManager {
         permissionMode: source.permissionMode, workingDirectory: source.workingDirectory ?? 'none',
         model: source.model, llmConnection: source.llmConnection, thinkingLevel: source.thinkingLevel,
         codingMode: source.codingMode,
-        ...(record.operation === 'fork' ? { parentSessionId: sourceId } : {}),
+        ...(record.parent ? { parentSessionId: record.parent.sessionId }
+          : record.operation === 'fork' ? { parentSessionId: sourceId } : {}),
       }, { emitCreatedEvent: false, nativeSessionOwner: { ...record, role: 'target', unpublished: true } })
       return target.id
     },
@@ -1235,30 +1245,44 @@ export class SessionManager implements ISessionManager {
     return proof
   }
 
-  private prepareNativeSwitch(sourceId: string, request: PiNativeOwnerRequest): NativeSwitchProof {
-    if (request.operation.type !== 'switch' || !isAbsolute(request.operation.sessionPath)
-      || resolve(request.operation.sessionPath) !== request.operation.sessionPath) {
-      throw new Error('Native switch requires a canonical registered session path')
-    }
+  private nativeSessionByPath(sourceId: string, path: string): ManagedSession {
+    if (!isAbsolute(path) || resolve(path) !== path) throw new Error('Native session requires a canonical registered path')
     const source = this.sessions.get(sourceId)
-    if (!source) throw new Error('Native switch source was deleted')
-    const path = request.operation.sessionPath
+    if (!source) throw new Error('Native session source was deleted')
     const candidates = [...this.sessions.values()].filter(session =>
       session.workspace.id === source.workspace.id && session.workspace.rootPath === source.workspace.rootPath
       && session.nativeSessionProjection?.sessionFile === path)
-    if (candidates.length !== 1) throw new Error('Native switch target is not uniquely registered in this workspace')
+    if (candidates.length !== 1) throw new Error('Native session path is not uniquely registered in this workspace')
     const target = candidates[0]!
-    if (target.id === sourceId || this.deletingSessions.has(target.id) || this.nativeOwners.isLocked(target.id)
-      || target.isProcessing || this.adoptedTurns.has(target.id) || target.messageQueue.length
-      || target.nativeSessionOwner?.unpublished || target.codingMode !== true) {
-      throw new Error('Native switch target is busy or unavailable')
-    }
+    if (this.deletingSessions.has(target.id)) throw new Error('Native session target is being deleted')
     const reference = target.nativeSessionProjection!
     if ((target.sdkSessionId && target.sdkSessionId !== reference.nativeSessionId)
       || [...this.sessions.values()].some(session => session.id !== target.id
         && session.workspace.id === source.workspace.id
         && session.nativeSessionProjection?.nativeSessionId === reference.nativeSessionId)) {
-      throw new Error('Native switch target identity is not unique')
+      throw new Error('Native session target identity is not unique')
+    }
+    return target
+  }
+
+  private prepareNativeParent(sourceId: string, request: PiNativeOwnerRequest): NativeSessionReference {
+    if (request.operation.type !== 'new' || request.operation.parentSession === undefined) {
+      throw new Error('Native parent session path is missing')
+    }
+    const parent = this.nativeSessionByPath(sourceId, request.operation.parentSession)
+    if (parent.nativeSessionOwner?.unpublished || (parent.id !== sourceId && this.nativeOwners.isLocked(parent.id))) {
+      throw new Error('Native parent session is unavailable')
+    }
+    return readTrustedNativeSession(this.nativeForkIdentity(parent.id)).reference
+  }
+
+  private prepareNativeSwitch(sourceId: string, request: PiNativeOwnerRequest): NativeSwitchProof {
+    if (request.operation.type !== 'switch') throw new Error('Native switch operation is missing')
+    const target = this.nativeSessionByPath(sourceId, request.operation.sessionPath)
+    if (target.id === sourceId || this.nativeOwners.isLocked(target.id)
+      || target.isProcessing || this.adoptedTurns.has(target.id) || target.messageQueue.length
+      || target.nativeSessionOwner?.unpublished || target.codingMode !== true) {
+      throw new Error('Native switch target is busy or unavailable')
     }
     if (target.agent && !target.agent.nativeSessionOwner?.assertAvailable) {
       throw new Error('Native switch target backend cannot validate availability')

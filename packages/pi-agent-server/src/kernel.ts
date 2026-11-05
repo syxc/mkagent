@@ -129,6 +129,7 @@ export interface KernelOpenOptions {
   /** Keep the entire native tree, then select this leaf instead of applying a durable cutoff. */
   nativeFork?: NativeForkSource;
   nativeResume?: NativeSessionReference;
+  nativeParent?: NativeSessionReference;
 }
 
 interface RetrySynthState {
@@ -229,6 +230,10 @@ export class DurableKernel {
   async open(config: KernelOpenOptions): Promise<void> {
     const resuming = existsSync(join(this.storeDir, 'session-id.txt'));
     const branchFrom = config.branchFromSessionPath;
+    if (config.nativeParent && (!this.options.coding || resuming || branchFrom || config.nativeFork || config.nativeResume
+      || !parseNativeSessionReference(config.nativeParent))) {
+      throw new Error('Pi native parent requires a fresh coding session and a trusted parent reference');
+    }
     if (config.nativeResume && (!this.options.coding || !resuming || branchFrom || config.nativeFork
       || !parseNativeSessionReference(config.nativeResume))) {
       throw new Error('Pi native resume requires an existing coding store and a released target reference');
@@ -239,8 +244,10 @@ export class DurableKernel {
       throw new Error('Pi native fork requires a coding profile, a parent session, a leaf and a closed native source reference');
     }
     if (config.nativeFork && existsSync(this.storeDir)) throw new Error('Pi native fork requires an empty target store');
+    if (config.nativeParent && existsSync(this.storeDir)) throw new Error('Pi native parent requires an empty target store');
     const legacyChild = findMostRecentSessionFile(join(this.options.sessionPath, '.pi-sessions'));
     if (config.nativeFork && legacyChild) throw new Error('Pi native fork requires an empty target history');
+    if (config.nativeParent && legacyChild) throw new Error('Pi native parent requires an empty target history');
     const pendingBranch = join(this.options.sessionPath, '.durable-branch-pending');
     if (existsSync(pendingBranch)) {
       throw new Error('Pi branch preflight failed: an incomplete branch store requires recovery');
@@ -391,7 +398,7 @@ export class DurableKernel {
       await this.openCoding(config.codingReplacement?.reason
         ?? (copiedParent ? 'fork' : legacyChild || resuming ? 'resume' : 'startup'), !!config.codingReplacement,
       copiedParent ? { sourceSessionPath: branchFrom!,
-        ...(config.nativeFork ? { leaf: config.nativeFork.leaf } : {}) } : undefined);
+        ...(config.nativeFork ? { leaf: config.nativeFork.leaf } : {}) } : undefined, config.nativeParent?.sessionFile);
       if (!this.harness) return;
       if (!config.codingReplacement) this.harness.resume();
       if (copiedParent) {
@@ -719,6 +726,7 @@ export class DurableKernel {
 
   private async openCoding(
     reason: 'startup' | 'resume' | 'fork' | 'new' | 'reload', deferred = false, nativeFork?: NativeCodingFork,
+    nativeParent?: string,
   ): Promise<void> {
     const profile = this.options.coding;
     if (!profile) return;
@@ -728,7 +736,7 @@ export class DurableKernel {
     this.coding = await CodingHost.load({
       harness: this.harness!, conversation: this.conversation!, registry: this.registry!,
       cwd: this.options.cwd, sessionPath: this.options.sessionPath, id: this.sessionId, profile,
-      nativeFork,
+      nativeFork, nativeParent,
       models: this.options.modelsSource, credentials: this.options.modelCredentialsSource?.(),
       autoCompactWindow: this.options.autoCompactWindow, ui: this.options.codingUI,
       model: async models => {
