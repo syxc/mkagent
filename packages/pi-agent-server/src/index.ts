@@ -79,6 +79,7 @@ import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import type { RpcExtensionUIResponse } from '@mkagent/pi-durable-coding/native';
 import { ExtensionUIHost, type ExtensionUIEvent } from './extension-ui.ts';
 import { NativeOwnerExchange } from './native-owner.ts';
+import { NativeHistoryReceipts, type NativeHistoryReceipt, type NativeHistoryRequest } from './native-history-receipts.ts';
 import type {
   PiNativeOwnerActivation, PiNativeOwnerControl, PiNativeOwnerEventBody,
 } from '../../shared/src/agent/backend/pi/native-owner-protocol.ts';
@@ -124,6 +125,7 @@ type InboundMessage = (
   | { type: 'ensure_session_ready'; id: string }
   | { type: 'set_model'; model: string }
   | { type: 'set_session_name'; id: string; name: string }
+  | NativeHistoryReceipt
   | { type: 'set_thinking_level'; level: string }
   | { type: 'compact'; id: string; customInstructions?: string }
   | { type: 'cancel_compact'; id: string }
@@ -208,6 +210,7 @@ interface OutboundError { type: 'error'; message: string; code?: string; id?: st
 
 type OutboundMessage =
   | PiNativeOwnerEventBody
+  | NativeHistoryRequest
   | { type: 'callback_port'; callbackPort: number }
   | { type: 'owner_released'; id: string; released: boolean; error?: string }
   | { type: 'set_session_name_result'; id: string; success: boolean; errorMessage?: string }
@@ -271,6 +274,7 @@ let foregroundActive = true;
 let foregroundEpoch = 0;
 let foregroundUI: ExtensionUIHost | undefined;
 const workerContext = new AsyncLocalStorage<{ scope?: PiWorkerScope; ui?: ExtensionUIHost; inputId?: string }>();
+const nativeHistory = new NativeHistoryReceipts((request, scope) => sendScoped(request, scope));
 const nativeOwner = new NativeOwnerExchange({
   send: event => sendScoped(event, event),
   withTargetScope: (scope, work) => {
@@ -806,6 +810,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     },
     hooks: createKernelHooks(scope),
     toolsExtension: buildToolsExtension(cwd, loadedMcp.tools),
+    commitNativeHistory: (reference, hasName) => nativeHistory.commit(currentWorkerScope(), reference, hasName),
     replaceNativeSession: (request, runTarget) => {
       let target: DurableKernel | undefined;
       return nativeOwner.replace(currentWorkerScope(), { ...request, inputId: workerContext.getStore()?.inputId }, {
@@ -1608,6 +1613,10 @@ function main(): void {
     try {
       const msg = JSON.parse(line) as InboundMessage;
       const scope = readWorkerScope(msg);
+      if (msg.type === 'native_history_receipt') {
+        nativeHistory.receive(msg, scope);
+        return;
+      }
       if (msg.type === 'owner_prepared' || msg.type === 'owner_activate' ||
           msg.type === 'owner_committed' || msg.type === 'owner_abort') {
         const accepted = nativeOwner.receive(msg, scope);
@@ -1642,7 +1651,10 @@ function main(): void {
         debugLog('Ignoring message from an inactive worker binding');
         return;
       }
-      if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') inputGeneration++;
+      if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') {
+        nativeHistory.cancel(msg.type === 'init' ? undefined : scope, `Native history ${msg.type}`);
+        inputGeneration++;
+      }
       const generation = inputGeneration;
       const ui = foregroundUI;
       if (msg.type === 'init') {

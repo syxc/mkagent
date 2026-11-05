@@ -503,6 +503,23 @@ export class PiAgent extends BaseAgent {
       this.pruneRetainedWorker(lease);
       return;
     }
+    if (message.type === 'native_history_commit' && typeof message.id === 'string') {
+      const reference = parseNativeSessionReference(message.reference);
+      const reply = (success: boolean, error?: string) => {
+        if (this.workerLease === lease) lease.send({ type: 'native_history_receipt', id: message.id, success, error });
+      };
+      const register = this.config.nativeSessionOwner?.onProjection;
+      if (!reference || reference.sessionId !== lease.ownerSessionId || reference.nativeSessionId !== this.piSessionId
+        || this.projectionReadyLease !== lease || !register) {
+        reply(false, 'Native history has no current product projection owner');
+        return;
+      }
+      const receipt = Promise.resolve().then(() => register(reference, this.nativeSessionOwner, connection,
+        typeof message.hasName === 'boolean' ? message.hasName : undefined));
+      this.nativeProjectionReceipt = { lease, promise: receipt };
+      void receipt.then(() => reply(true), error => reply(false, error instanceof Error ? error.message : String(error)));
+      return;
+    }
     if (message.type === 'event' && message.event && typeof message.event === 'object'
       && (message.event as Record<string, unknown>).type === 'native_session_projection') {
       const descriptor = (message.event as Record<string, unknown>).descriptor;

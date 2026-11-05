@@ -25,6 +25,7 @@ export type JournalState = {
   compaction: string | null;
   start: number;
   revision: number;
+  treeRevision?: number;
   nonce: string;
   tags?: Record<string, string>;
   productMessages?: Record<string, string>;

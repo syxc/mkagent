@@ -125,6 +125,7 @@ export type SessionEvent =
   | { type: 'session_model_changed'; sessionId: string; model: string | null }
   | { type: 'session_deleted'; sessionId: string }
   | { type: 'session_created'; sessionId: string; session?: Session }
+  | { type: 'native_history_changed'; sessionId: string; session: Session }
   | { type: 'native_session_redirect'; sessionId: string; targetSessionId: string; transactionId: string }
   | { type: 'usage_update'; sessionId: string; tokenUsage: { inputTokens: number; contextWindow?: number; contextUsage?: ContextUsageSnapshot } }
   | { type: 'message_annotations_updated'; sessionId: string; messageId: string; annotations: AnnotationV1[] }

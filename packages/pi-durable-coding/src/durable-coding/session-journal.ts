@@ -151,6 +151,7 @@ export class NativeSessionJournal {
           importHistory(draft, records);
         } else {
           clipFork(draft, records, options.cwd);
+          delete draft.treeRevision;
           if (options.mapForkEntry) draft.entries = draft.entries.map(value => {
             const entry = detached(value) as unknown as SessionEntry;
             const { id, parentId, type } = entry;
@@ -220,6 +221,11 @@ export class NativeSessionJournal {
     return committedSnapshot(this.options.conversation.id, this.committed, this.state);
   }
 
+  /** Publish a product history boundary in the same receipt as the selected native leaf. */
+  markTreeNavigation(): void {
+    this.writable().operations.push({ type: 'navigation' });
+  }
+
   /** Receipts only, without an initial replay. Each observer receives its own detached view. */
   observeCommitted(observer: (snapshot: NativeSessionSnapshot) => void): () => void {
     this.assertAvailable();
@@ -286,6 +292,7 @@ export class NativeSessionJournal {
     else state.entries.push(...json(added) as typeof state.entries);
     state.leaf = merged.leaf;
     state.revision++;
+    if (operations.some(operation => operation.type === 'navigation')) state.treeRevision = state.revision;
     const nonce = randomUUID();
     state.nonce = nonce;
     this.candidates.set(nonce, { stage, count });

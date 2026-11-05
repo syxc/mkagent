@@ -946,6 +946,14 @@ export default function App() {
         return
       }
 
+      if (event.type === 'native_history_changed') {
+        if (event.session.workspaceId !== workspaceId) return
+        if (store.get(sessionMetaMapAtom).has(sessionId)) replaceLoadedSession(event.session)
+        else addSession(event.session)
+        syncSessionOptionsFromSession(event.session)
+        return
+      }
+
       if (event.type === 'session_created') {
         // Native callbacks can stream immediately after publication. Install
         // their committed snapshot before a later RPC can overwrite live events.

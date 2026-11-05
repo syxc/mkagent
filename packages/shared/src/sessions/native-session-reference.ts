@@ -5,6 +5,7 @@ export interface NativeSessionReference {
   nativeSessionId: string
   conversationId: number
   revision: number
+  treeRevision?: number
   sessionFile: string
   leaf: string | null
   name: string | null
@@ -20,6 +21,8 @@ export function parseNativeSessionReference(value: unknown): NativeSessionRefere
   if (item.version !== 1 || !text('sessionId') || !text('nativeSessionId') || !text('sessionFile')
     || !Number.isSafeInteger(item.conversationId) || Number(item.conversationId) < 0
     || !Number.isSafeInteger(item.revision) || Number(item.revision) < 0
+    || (item.treeRevision !== undefined && (!Number.isSafeInteger(item.treeRevision)
+      || Number(item.treeRevision) < 1 || Number(item.treeRevision) > Number(item.revision)))
     || (item.leaf !== null && !text('leaf')) || (item.name !== null && typeof item.name !== 'string')
     || !hash('digest') || !hash('manifestDigest')) return null
   return {
@@ -27,5 +30,6 @@ export function parseNativeSessionReference(value: unknown): NativeSessionRefere
     conversationId: item.conversationId as number, revision: item.revision as number,
     sessionFile: item.sessionFile as string, leaf: item.leaf as string | null, name: item.name as string | null,
     digest: item.digest as string, manifestDigest: item.manifestDigest as string,
+    ...(item.treeRevision === undefined ? {} : { treeRevision: item.treeRevision as number }),
   }
 }

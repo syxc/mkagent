@@ -8,7 +8,7 @@ import type { Message } from '@mkagent/core/types'
 import type { PiAgent } from '../../../shared/src/agent/pi-agent'
 import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 
-test('real product fork, switch and parent lineage preserve history across ownership and restart on both stores', async () => {
+test('real product native sessions preserve branches, lineage and history across ownership and restart on both stores', async () => {
   const appRoot = resolve(import.meta.dir, '../../../..')
   const build = Bun.spawnSync([process.execPath, 'run', 'server:build:subprocess'], { cwd: appRoot, stdout: 'pipe', stderr: 'pipe' })
   if (build.exitCode !== 0) throw new Error(`Pi subprocess build failed: ${build.stderr}`)
@@ -36,6 +36,16 @@ test('real product fork, switch and parent lineage preserve history across owner
         pi.appendEntry('inactive-file', { path: join(process.env.MKAGENT_SESSION_DIR, 'attachments', 'inactive.md') });
       } });
       pi.registerCommand('native-idle', { handler: async (_args, ctx) => { await ctx.waitForIdle(); } });
+      let cancelTree = false;
+      pi.on('session_before_tree', () => {
+        if (cancelTree) { cancelTree = false; return { cancel: true }; }
+      });
+      pi.registerCommand('native-tree', { handler: async (args, ctx) => {
+        const [mode, entryId] = args.trim().split(/\\s+/);
+        cancelTree = mode === 'cancel';
+        const result = await ctx.navigateTree(entryId, { summarize: mode === 'summarize' });
+        pi.appendEntry('tree-result', { ...result, leaf: ctx.sessionManager.getLeafId() });
+      } });
       pi.registerCommand('native-name', { handler: async name => { pi.setSessionName(name); } });
       pi.registerCommand('native-read-name', { handler: async () => {
         pi.appendEntry('observed-name', { name: pi.getSessionName() ?? null });
@@ -100,6 +110,7 @@ test('real product fork, switch and parent lineage preserve history across owner
   let operation: { sourceId: string; targetId?: string; done: ReturnType<typeof Promise.withResolvers<string>> } | undefined
   const redirected: string[] = []
   const created: string[] = []
+  const historyEvents: Array<{ sessionId: string; ids: string[] }> = []
   const deadline = <T>(promise: Promise<T>) => new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Product fork deadline exceeded')), 20_000)
     promise.then(value => { clearTimeout(timer); resolve(value) }, error => { clearTimeout(timer); reject(error) })
@@ -125,6 +136,11 @@ test('real product fork, switch and parent lineage preserve history across owner
     manager.setEventSink((_channel, target, event) => {
       if (!event || typeof event !== 'object' || !('type' in event)) return
       if (event.type === 'session_created') created.push(event.sessionId)
+      if (event.type === 'native_history_changed') {
+        const stored = loadSession(workspaceRoot, event.sessionId)!
+        expect(stored.messages.map(row => row.id)).toEqual(event.session.messages.map((row: Message) => row.id))
+        historyEvents.push({ sessionId: event.sessionId, ids: event.session.messages.map((row: Message) => row.id) })
+      }
       if (event.type === 'session_created' && operation && operation.targetId === undefined) {
         operation.targetId = event.sessionId
         expect(target).toEqual({ to: 'workspace', workspaceId: workspace.id })
@@ -354,6 +370,93 @@ test('real product fork, switch and parent lineage preserve history across owner
       expect(loadSession(workspaceRoot, repeatedId)?.nativeArchivedMessages?.some(row => row.id === inactiveRow.id)).toBe(true)
       expect(loadSession(workspaceRoot, repeatedId)?.name).toBe('Recovered committed name')
       expect(redirected).toContain(repeatedId)
+
+      const navigating = await manager.createSession(workspace.id, { name: `Tree ${backend}` })
+      const navigationPath = getSessionPath(workspaceRoot, navigating.id)
+      if (backend === 'jsonl') {
+        mkdirSync(join(navigationPath, 'durable-store'), { recursive: true })
+        writeFileSync(join(navigationPath, 'durable-store', 'main.jsonl'), '')
+      }
+      await deadline(manager.sendMessage(navigating.id, 'tree first marker'))
+      await deadline(manager.sendMessage(navigating.id, 'tree second marker'))
+      await deadline(manager.sendMessage(navigating.id, '/native-idle'))
+      const beforeTree = await read(navigating.id)
+      const secondUser = beforeTree.tree.entries.find(entry => entry.type === 'message'
+        && (entry.message as { role: string; content: string }).role === 'user'
+        && JSON.stringify(entry.message).includes('tree second marker'))!
+      const secondReply = beforeTree.tree.entries.findLast(entry => entry.type === 'message'
+        && (entry.message as { role: string }).role === 'assistant')!
+      const secondRow = beforeTree.stored.messages.find(row => row.content === 'tree second marker')!
+      const navigationRequests = requests.length
+      await deadline(manager.sendMessage(navigating.id, `/native-tree plain ${secondUser.id}`))
+      const rewound = await read(navigating.id)
+      expect(requests.length).toBe(navigationRequests)
+      expect(rewound.stored.messages.some(row => row.id === secondRow.id)).toBe(false)
+      expect(rewound.stored.nativeArchivedMessages?.some(row => row.id === secondRow.id)).toBe(true)
+      expect(rewound.tree.entries.findLast(entry => entry.customType === 'tree-result')?.data)
+        .toMatchObject({ cancelled: false, editorText: expect.stringContaining('tree second marker'), leaf: secondUser.parentId })
+      expect(rewound.tree.reference.treeRevision).toBeGreaterThan(0)
+      expect(historyEvents.some(event => event.sessionId === navigating.id)).toBe(true)
+      await deadline(manager.sendMessage(navigating.id, `/native-tree cancel ${secondReply.id}`))
+      const cancelled = await read(navigating.id)
+      expect(cancelled.tree.entries.findLast(entry => entry.customType === 'tree-result')?.data).toMatchObject({ cancelled: true })
+      expect(cancelled.tree.reference.treeRevision).toBe(rewound.tree.reference.treeRevision)
+      expect(cancelled.stored.messages.some(row => row.id === secondRow.id)).toBe(false)
+      await deadline(manager.sendMessage(navigating.id, `/native-tree plain ${secondReply.id}`))
+      const restored = await read(navigating.id)
+      expect(restored.stored.messages.some(row => row.id === secondRow.id)).toBe(true)
+      expect(restored.stored.nativeArchivedMessages?.some(row => row.id === secondRow.id)).toBe(false)
+      await deadline(manager.sendMessage(navigating.id, `/native-tree plain ${restored.tree.reference.leaf}`))
+      const unchanged = await read(navigating.id)
+      expect(unchanged.tree.reference.treeRevision).toBe(restored.tree.reference.treeRevision)
+      const validResults = unchanged.tree.entries.filter(entry => entry.customType === 'tree-result').length
+      await deadline(manager.sendMessage(navigating.id, '/native-tree plain unavailable-tree-entry'))
+      const invalid = await read(navigating.id)
+      expect(invalid.tree.reference.treeRevision).toBe(unchanged.tree.reference.treeRevision)
+      expect(invalid.tree.entries.filter(entry => entry.customType === 'tree-result')).toHaveLength(validResults)
+      expect(requests.length).toBe(navigationRequests)
+      await deadline(manager.sendMessage(navigating.id, `/native-tree summarize ${secondUser.id}`))
+      const summarized = await read(navigating.id)
+      const branchSummary = summarized.tree.entries.findLast(entry => entry.type === 'branch_summary')!
+      expect(branchSummary.summary).toContain('local fork reply')
+      expect(requests.length).toBe(navigationRequests + 1)
+      expect(summarized.stored.messages.some(row => row.id === secondRow.id)).toBe(false)
+      const navigationAgent = runtime.sessions.get(navigating.id)!.agent
+      const navigationPid = child(navigationAgent)!.pid
+      await deadline(navigationAgent.nativeSessionOwner!.releaseForOwner())
+      await deadline(manager.sendMessage(navigating.id, 'cold tree continuation marker'))
+      await deadline(manager.sendMessage(navigating.id, '/native-idle'))
+      expect(child(navigationAgent)?.pid).not.toBe(navigationPid)
+      expect(JSON.stringify(requests.at(-1))).toContain(JSON.stringify(branchSummary.summary).slice(1, -1))
+      expect(JSON.stringify(requests.at(-1))).not.toContain('tree second marker')
+      expect((await read(navigating.id)).stored.nativeArchivedMessages?.some(row => row.id === secondRow.id)).toBe(true)
+
+      const beforeHistoryFailure = await read(navigating.id)
+      const resultsBeforeFailure = beforeHistoryFailure.tree.entries.filter(entry => entry.customType === 'tree-result').length
+      const historySpy = spyOn(fs, 'rename').mockImplementation(async (from, to) => {
+        if (String(to) === getSessionFilePath(workspaceRoot, navigating.id)) {
+          const pending = await fs.readFile(from, 'utf8')
+          const revision = Number(pending.match(/"treeRevision":(\d+)/)?.[1] ?? 0)
+          if (revision > (beforeHistoryFailure.tree.reference.treeRevision ?? 0)) throw new Error('history receipt storage failure')
+        }
+        return rename(from, to)
+      })
+      try {
+        await deadline(manager.sendMessage(navigating.id, `/native-tree plain ${secondReply.id}`))
+        const failedManifest = JSON.parse(readFileSync(join(navigationPath, 'meta', 'native-session.json'), 'utf8'))
+        expect(failedManifest.treeRevision).toBeGreaterThan(beforeHistoryFailure.tree.reference.treeRevision!)
+        expect(loadSession(workspaceRoot, navigating.id)?.nativeSessionProjection?.treeRevision)
+          .toBe(beforeHistoryFailure.tree.reference.treeRevision)
+        await deadline(navigationAgent.nativeSessionOwner!.releaseForOwner()).catch(() => {})
+      } finally { historySpy.mockRestore() }
+      await deadline(manager.sendMessage(navigating.id, 'repaired tree continuation marker'))
+      await deadline(manager.sendMessage(navigating.id, '/native-idle'))
+      const repaired = await read(navigating.id)
+      expect(repaired.stored.messages.some(row => row.id === secondRow.id)).toBe(true)
+      expect(repaired.stored.nativeArchivedMessages?.some(row => row.id === secondRow.id)).toBe(false)
+      expect(repaired.tree.entries.filter(entry => entry.customType === 'tree-result')).toHaveLength(resultsBeforeFailure)
+      expect(JSON.stringify(requests.at(-1))).toContain('tree second marker')
+      expect(JSON.stringify(requests.at(-1))).not.toContain('cold tree continuation marker')
     }
   } finally {
     try { await deadline(manager.flushAllSessions()) }

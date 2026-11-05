@@ -4,7 +4,7 @@ import type { ConversationId, EntryId, EntryRecord, JsonObject, Storage } from '
 import { JOURNAL_KIND, NATIVE_ENTRY_KIND, nativeManager, type JournalState } from './session-journal-projection.ts';
 import { committedSnapshot, type NativeSessionSnapshot } from './session-journal-state.ts';
 
-type JournalView = Pick<JournalState, 'header' | 'entries' | 'leaf' | 'revision' | 'ids' | 'productMessages'>;
+type JournalView = Pick<JournalState, 'header' | 'entries' | 'leaf' | 'revision' | 'ids' | 'productMessages' | 'treeRevision'>;
 
 /** Return detached committed native state; the caller must keep the store paused for the entire read. */
 export async function readNativeSessionSnapshot(
@@ -59,7 +59,9 @@ function journalView(value: JsonObject, conversationId: ConversationId): { state
     || !object(header) || header.type !== 'session' || typeof header.id !== 'string' || !header.id
     || typeof header.cwd !== 'string' || !Number.isSafeInteger(header.version) || Number(header.version) < 1
     || typeof header.timestamp !== 'string' || !Array.isArray(value.entries) || !object(ids)
-    || (products !== undefined && !object(products))) {
+    || (products !== undefined && !object(products))
+    || (value.treeRevision !== undefined && (!Number.isSafeInteger(value.treeRevision)
+      || Number(value.treeRevision) < 1 || Number(value.treeRevision) > Number(value.revision)))) {
     throw new Error('Invalid committed native session journal');
   }
   const seen = new Set<string>();

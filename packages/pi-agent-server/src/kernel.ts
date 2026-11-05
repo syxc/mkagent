@@ -110,6 +110,7 @@ export interface DurableKernelOptions {
   extensions?: readonly Extension[];
   coding?: KernelCodingOptions;
   codingUI?: ExtensionUIHost;
+  commitNativeHistory?(reference: NativeSessionReference, hasName: boolean): Promise<void>;
   /** Apply the same approval and output policy used for the host's own tools. */
   wrapCodingTool?(tool: ToolRegistration): ToolRegistration;
   replaceNativeSession?(
@@ -773,7 +774,16 @@ export class DurableKernel {
             });
           },
         }),
-        navigateTree: async () => { throw new Error('Native tree navigation requires the MkAgent session owner'); },
+        navigateTree: async (...args) => {
+          const source = this.coding;
+          if (!source || !this.options.commitNativeHistory) throw new Error('Native tree navigation requires the MkAgent session owner');
+          const result = await source.navigateTree(...args);
+          if (!result.cancelled) {
+            const descriptor = await source.projection.flush();
+            await this.options.commitNativeHistory(parseNativeSessionReference(descriptor)!, descriptor.hasName);
+          }
+          return result;
+        },
         reload: () => this.reloadCodingSession(),
       },
     }, reason);

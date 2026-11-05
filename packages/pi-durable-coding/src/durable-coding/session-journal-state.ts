@@ -13,11 +13,13 @@ export type Operation =
   | { type: 'append'; entry: SessionEntry }
   | { type: 'leaf'; id: string | null }
   | { type: 'replace'; snapshot: Snapshot }
+  | { type: 'navigation' }
   | { type: 'link'; nativeId: string; productMessageId: string };
 
 export interface NativeSessionSnapshot extends Snapshot {
   conversationId: ConversationId;
   revision: number;
+  treeRevision?: number;
   name: string | null;
   entryIds: Array<{ nativeId: string; durableId: EntryId; productMessageId?: string }>;
 }
@@ -28,11 +30,12 @@ export function snapshot(manager: SessionManager): Snapshot {
 
 export function committedSnapshot(
   conversationId: ConversationId, manager: SessionManager,
-  state: Pick<JournalState, 'revision' | 'ids' | 'productMessages'>,
+  state: Pick<JournalState, 'revision' | 'ids' | 'productMessages' | 'treeRevision'>,
 ): NativeSessionSnapshot {
   const view = snapshot(manager);
   return detached({
     ...view, conversationId, revision: state.revision, name: manager.getSessionName() ?? null,
+    ...(state.treeRevision === undefined ? {} : { treeRevision: state.treeRevision }),
     entryIds: view.entries.map(entry => {
       const key = `$${entry.id}`;
       const durableId = state.ids[key];
@@ -55,7 +58,7 @@ export function apply(base: Snapshot, operations: Operation[]): Snapshot {
       if (result.entries.some(entry => entry.id === operation.entry.id)) continue;
       result.entries.push({ ...detached(operation.entry), parentId: result.leaf });
       result.leaf = operation.entry.id;
-    } else if (!result.entries.some(entry => entry.id === operation.nativeId)) {
+    } else if (operation.type === 'link' && !result.entries.some(entry => entry.id === operation.nativeId)) {
       throw new Error(`Native product message target is not visible: ${operation.nativeId}`);
     }
   }

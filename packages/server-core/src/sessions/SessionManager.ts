@@ -1177,13 +1177,31 @@ export class SessionManager implements ISessionManager {
       }
       const name = reference.name ?? (hasName === true ? '' : undefined)
       const nameChanged = name !== undefined && managed.name !== name
-      if (previous?.manifestDigest === reference.manifestDigest && !nameChanged) return
+      const historyChanged = (reference.treeRevision ?? 0) > (previous?.treeRevision ?? 0)
+      let history: ReturnType<typeof partitionNativeProductHistory> | undefined
+      if (historyChanged) {
+        const tree = readTrustedNativeSession({
+          workspaceRootPath: managed.workspace.rootPath, sessionId,
+          nativeSessionId: reference.nativeSessionId, reference,
+        })
+        history = partitionNativeProductHistory(snapshot, { ...tree, leaf: previous ? previous.leaf : reference.leaf }, {
+          sourceSessionId: sessionId, targetSessionId: sessionId, leaf: reference.leaf,
+        })
+        Object.assign(snapshot, history)
+      }
+      if (previous?.manifestDigest === reference.manifestDigest && !nameChanged && !historyChanged) return
       snapshot.nativeSessionProjection = reference
       if (nameChanged) snapshot.name = name
       return () => {
         managed.nativeSessionProjection = reference
+        if (nameChanged) managed.name = name
+        if (history) {
+          this.applyNativeProductHistory(managed, history)
+          this.emit(managed.workspace.id, {
+            type: 'native_history_changed', sessionId, session: structuredClone(this.toSession(managed, true)),
+          })
+        }
         if (nameChanged) {
-          managed.name = name
           this.emit(managed.workspace.id, { type: 'name_changed', sessionId, name })
         }
       }
@@ -1208,29 +1226,30 @@ export class SessionManager implements ISessionManager {
         sourceOnlyMessageIds: new Set(proof.record.inputId ? [proof.record.inputId] : []),
       })
       Object.assign(snapshot, history)
-      return () => {
-        // Strict metadata IO can overlap new input admission and background events.
-        // Preserve their current fields and placement while applying captured history.
-        const active = new Set(managed.messages.map(row => row.id))
-        const rows = new Map([...(managed.nativeArchivedMessages ?? []), ...managed.messages.map(messageToStored)]
-          .map(row => [row.id, row]))
-        const placement = new Map(history.nativeArchivedMessages.map(row => [row.id, false]))
-        for (const row of history.messages) placement.set(row.id, true)
-        const tags = new Map([...history.messages, ...history.nativeArchivedMessages].map(row => [row.id, row.nativeHistory]))
-        const next: typeof history = { messages: [], nativeArchivedMessages: [] }
-        for (const row of rows.values()) {
-          if (tags.has(row.id)) row.nativeHistory = tags.get(row.id)
-          const destination = (placement.get(row.id) ?? active.has(row.id)) ? next.messages : next.nativeArchivedMessages
-          destination.push(row)
-        }
-        const order = (a: typeof next.messages[number], b: typeof next.messages[number]) =>
-          (a.nativeHistory?.order ?? Number.MAX_SAFE_INTEGER) - (b.nativeHistory?.order ?? Number.MAX_SAFE_INTEGER)
-        managed.messages = next.messages.sort(order).map(storedToMessage)
-        managed.nativeArchivedMessages = next.nativeArchivedMessages.sort(order)
-        const { preview, messageCount, lastMessageRole, lastFinalMessageId } = createSessionHeader(this.toStored(managed))
-        Object.assign(managed, { preview, messageCount, lastMessageRole, lastFinalMessageId })
-      }
+      return () => this.applyNativeProductHistory(managed, history)
     })
+  }
+
+  private applyNativeProductHistory(managed: ManagedSession, history: ReturnType<typeof partitionNativeProductHistory>): void {
+    // Strict metadata IO can overlap input admission and background events.
+    const active = new Set(managed.messages.map(row => row.id))
+    const rows = new Map([...(managed.nativeArchivedMessages ?? []), ...managed.messages.map(messageToStored)]
+      .map(row => [row.id, row]))
+    const placement = new Map(history.nativeArchivedMessages.map(row => [row.id, false]))
+    for (const row of history.messages) placement.set(row.id, true)
+    const tags = new Map([...history.messages, ...history.nativeArchivedMessages].map(row => [row.id, row.nativeHistory]))
+    const next: typeof history = { messages: [], nativeArchivedMessages: [] }
+    for (const row of rows.values()) {
+      if (tags.has(row.id)) row.nativeHistory = tags.get(row.id)
+      const destination = (placement.get(row.id) ?? active.has(row.id)) ? next.messages : next.nativeArchivedMessages
+      destination.push(row)
+    }
+    const order = (a: typeof next.messages[number], b: typeof next.messages[number]) =>
+      (a.nativeHistory?.order ?? Number.MAX_SAFE_INTEGER) - (b.nativeHistory?.order ?? Number.MAX_SAFE_INTEGER)
+    managed.messages = next.messages.sort(order).map(storedToMessage)
+    managed.nativeArchivedMessages = next.nativeArchivedMessages.sort(order)
+    const { preview, messageCount, lastMessageRole, lastFinalMessageId } = createSessionHeader(this.toStored(managed))
+    Object.assign(managed, { preview, messageCount, lastMessageRole, lastFinalMessageId })
   }
 
   private async prepareNativeFork(sessionId: string, request: PiNativeOwnerRequest): Promise<NativeForkProof> {

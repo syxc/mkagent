@@ -281,6 +281,27 @@ export class CodingHost {
     await this.projection.flush();
   }
 
+  async navigateTree(...args: Parameters<AgentSession['navigateTree']>): ReturnType<AgentSession['navigateTree']> {
+    if (this.closing || this.closed) throw new Error('Native session is closing');
+    // Flush the caller's phase before opening a separate navigation phase.
+    await this.host.harness.commit(tx => this.commitChanges(tx), BACKGROUND_CONTEXT);
+    return this.action(async () => {
+      try {
+        return await this.journal.phase(async () => {
+          const before = this.session.sessionManager.getLeafId();
+          const result = await this.session.navigateTree(...args);
+          if (!result.cancelled && before !== this.session.sessionManager.getLeafId()) this.journal.markTreeNavigation();
+          await this.host.harness.commit(tx => this.commitChanges(tx), BACKGROUND_CONTEXT);
+          return result;
+        });
+      } catch (error) {
+        // The journal drops uncommitted candidates; rebuild the native view as well.
+        this.session.refreshContext();
+        throw error;
+      }
+    });
+  }
+
   /** Admit input after native command, input and before-agent-start processing; retain its running promise. */
   async submit(text: string, options: PromptOptions): Promise<boolean> {
     const admitted = Promise.withResolvers<boolean>();

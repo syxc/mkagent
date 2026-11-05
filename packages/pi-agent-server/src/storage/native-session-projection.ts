@@ -10,6 +10,7 @@ interface NativeSessionManifest {
   nativeSessionId: string;
   conversationId: number;
   revision: number;
+  treeRevision?: number;
   sessionFile: string;
   leaf: string | null;
   name: string | null;
@@ -49,6 +50,7 @@ export function encodeNativeSessionProjection(
     conversationId: snapshot.conversationId, revision: snapshot.revision,
     sessionFile: nativeSessionPaths(options.sessionPath).sessionFile, leaf: snapshot.leaf, name: snapshot.name,
     digest: digest(jsonl), entryIds: snapshot.entryIds,
+    ...(snapshot.treeRevision === undefined ? {} : { treeRevision: snapshot.treeRevision }),
   };
   const metadata = JSON.stringify(manifest) + '\n';
   return { jsonl, metadata, descriptor: { ...manifest, manifestDigest: digest(metadata),
@@ -142,6 +144,8 @@ function manifest(value: unknown, sessionFile: string): value is NativeSessionMa
     || typeof item.nativeSessionId !== 'string' || !item.nativeSessionId
     || !Number.isSafeInteger(item.conversationId) || Number(item.conversationId) < 0
     || !Number.isSafeInteger(item.revision) || Number(item.revision) < 0
+    || (item.treeRevision !== undefined && (!Number.isSafeInteger(item.treeRevision)
+      || Number(item.treeRevision) < 1 || Number(item.treeRevision) > Number(item.revision)))
     || item.sessionFile !== sessionFile || (item.leaf !== null && typeof item.leaf !== 'string')
     || (item.name !== null && typeof item.name !== 'string')
     || typeof item.digest !== 'string' || !/^[a-f0-9]{64}$/.test(item.digest)

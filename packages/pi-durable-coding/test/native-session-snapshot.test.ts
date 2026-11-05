@@ -110,6 +110,7 @@ test('full committed trees and many-to-one product links survive JSONL recovery'
     inactive = first.manager.appendMessage(user('repeat'));
     first.journal.linkMessage(inactive, 'product-inactive');
     first.manager.branch(root);
+    first.journal.markTreeNavigation();
     const active = first.manager.appendMessage({
       role: 'user', timestamp: 2,
       content: [{ type: 'text', text: 'attachment' }, { type: 'image', data: 'ZmFrZQ==', mimeType: 'image/png' }],
@@ -120,6 +121,7 @@ test('full committed trees and many-to-one product links survive JSONL recovery'
   });
   const committed = first.journal.committedSnapshot();
   expect(committed.leaf).toBe(root);
+  expect(committed.treeRevision).toBe(committed.revision);
   expect(committed.entries.at(-1)!.id).not.toBe(root);
   expect(committed.entryIds.filter(entry => entry.productMessageId === 'product-shared')).toHaveLength(2);
   first.journal.close();
@@ -156,6 +158,7 @@ test('a refused commit publishes neither a snapshot nor a product association', 
   await expect(write(() => {
     const id = manager.appendMessage(user('refused'));
     journal.linkMessage(id, 'never-published');
+    journal.markTreeNavigation();
   })).rejects.toThrow('snapshot receipt refused');
   expect(observed).toHaveLength(0);
   expect(journal.committedSnapshot()).toEqual(before);
