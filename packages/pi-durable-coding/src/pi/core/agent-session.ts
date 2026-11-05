@@ -582,6 +582,8 @@ export class AgentSession {
 				present.add(input.tag);
 			}
 		});
+		this.agent.durable.bindSummary(async (model, context, options) =>
+			(await this.agent.streamFunction(model, context, options)).result());
 		this._installAgentRequestProjection();
 		this._installAgentBoundaryHooks();
 		this._installHiddenDeclarationsProjection();
@@ -3008,7 +3010,7 @@ export class AgentSession {
 			customInstructions,
 			signal,
 			request.thinkingLevel,
-			this.agent.streamFunction,
+			this.agent.durable.summaryStream,
 			request.env,
 			this.settingsManager.getRetrySettings(),
 			this._summarizationRetryCallbacks({ source: "compaction", reason }),
@@ -4355,7 +4357,7 @@ export class AgentSession {
 					customInstructions,
 					replaceInstructions,
 					reserveTokens: branchSummarySettings.reserveTokens,
-					streamFn: this.agent.streamFunction,
+					streamFn: this.agent.durable.summaryStream,
 					retry: this.settingsManager.getRetrySettings(),
 					callbacks: this._summarizationRetryCallbacks({ source: "branchSummary" }),
 				});
@@ -4621,7 +4623,7 @@ export class AgentSession {
 			messages: this.messages,
 			hint: options.hint,
 			signal: options.signal,
-			streamFn: this.agent.streamFunction,
+			streamFn: this.agent.durable.summaryStream,
 			retry: this.settingsManager.getRetrySettings(),
 			sessionId: this.sessionId,
 		});

@@ -77,7 +77,7 @@ test('shared registry routes each Agent task to its own conversation', async () 
     }
     const definitions = registry.snapshot().tasks().filter(task => task.definition.name.startsWith('pi.coding.'));
     expect(definitions.map(task => task.definition.name).sort()).toEqual([
-      'pi.coding.call', 'pi.coding.run', 'pi.coding.session', 'pi.coding.tool',
+      'pi.coding.call', 'pi.coding.run', 'pi.coding.session', 'pi.coding.summary', 'pi.coding.tool',
     ]);
   } finally {
     await Promise.all(agents.map(agent => agent.durable.close()));

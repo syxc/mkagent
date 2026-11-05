@@ -5,18 +5,21 @@ import { createCodingRunTask, type LoopExecution } from './run-task.ts';
 import { createCodingToolTask, type CodingToolTaskBindings, type CodingToolTaskInput } from './tool-task.ts';
 import { createSingleToolTask, type SingleToolExecution, type SingleToolInput } from './single-tool-task.ts';
 import { createCodingSessionTask, type CodingSessionTaskBindings } from './session-task.ts';
+import { createCodingSummaryTask, type CodingSummaryBindings } from './summary-task.ts';
 
 export interface CodingTaskBinding {
   execution(): LoopExecution;
   tool(input: CodingToolTaskInput): CodingToolTaskBindings;
   call(input: SingleToolInput, owner: TaskId): SingleToolExecution;
   session(): CodingSessionTaskBindings;
+  summary(): CodingSummaryBindings;
 }
 
 export interface CodingTasks {
   run: ReturnType<typeof createCodingRunTask>;
   call: ReturnType<typeof createSingleToolTask>;
   session: ReturnType<typeof createCodingSessionTask>;
+  summary: ReturnType<typeof createCodingSummaryTask>;
   bind(conversation: ConversationId, binding: CodingTaskBinding): () => void;
 }
 
@@ -41,9 +44,10 @@ export function codingTasks(registry: Registry): CodingTasks {
   const run = createCodingRunTask(id => resolve(id).execution(), scheduler);
   const call = createSingleToolTask((input, owner, conversation) => resolve(conversation).call(input, owner), scheduler);
   const session = createCodingSessionTask(id => resolve(id).session());
-  registry.install({ name: 'pi.coding', tasks: [session, run, call, tool] });
+  const summary = createCodingSummaryTask(id => resolve(id).summary());
+  registry.install({ name: 'pi.coding', tasks: [session, run, call, tool, summary] });
   const tasks: CodingTasks = {
-    run, call, session,
+    run, call, session, summary,
     bind: (conversation, binding) => {
       if (bindings.has(conversation)) throw new Error(`Coding conversation ${conversation} already has an Agent`);
       bindings.set(conversation, binding);

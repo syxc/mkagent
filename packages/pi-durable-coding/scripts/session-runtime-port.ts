@@ -316,6 +316,12 @@ export function portAgentSession(source: string): string {
 \t\t\tthis._deferredSettledActions.push(async () => await this.prompt(text, options));`);
   body = edit(body, '\t\t\t\tthis._deferredSettledActions.push(async () => await this.sendCustomMessage(message, options));', `\t\t\t\tif (await this.agent.durable.deferSessionAction({ type: "custom", message, options })) return;
 \t\t\t\tthis._deferredSettledActions.push(async () => await this.sendCustomMessage(message, options));`);
+  body = edit(body, '\t\tthis._installAgentRequestProjection();', `\t\tthis.agent.durable.bindSummary(async (model, context, options) =>
+\t\t\t(await this.agent.streamFunction(model, context, options)).result());
+\t\tthis._installAgentRequestProjection();`);
+  body = edit(body, '\t\t\tthis.agent.streamFunction,', '\t\t\tthis.agent.durable.summaryStream,');
+  body = edit(body, '\t\t\t\t\tstreamFn: this.agent.streamFunction,', '\t\t\t\t\tstreamFn: this.agent.durable.summaryStream,');
+  body = edit(body, '\t\t\tstreamFn: this.agent.streamFunction,', '\t\t\tstreamFn: this.agent.durable.summaryStream,');
   return body;
 }
 

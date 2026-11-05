@@ -23,6 +23,8 @@ import { NativeMessageIdentities } from './message-identities.ts';
 import { NativeSessionBinding, type NativeSessionLifecycle } from './session-binding.ts';
 import type { CodingSessionAction, CodingSessionCompletion, CodingSessionTaskInput } from './session-task.ts';
 import { NativeInputQueues, type InputQueueSnapshot, type QueuedInput } from './input-queues.ts';
+import { NativeSummaryBinding } from './summary-binding.ts';
+import type { SummaryProducer } from './summary-task.ts';
 
 export interface DurableLoopOptions {
   /** A supplied kernel remains owned by its mkagent host. */
@@ -87,6 +89,7 @@ export class DurableLoopBinding {
   private restoreMessages?: (messages: AgentMessage[]) => void;
   private readonly sessionBinding: NativeSessionBinding;
   private readonly inputQueues?: NativeInputQueues;
+  private readonly summaries: NativeSummaryBinding;
 
   constructor(options: DurableLoopOptions = {}) {
     this.options = options;
@@ -97,9 +100,17 @@ export class DurableLoopBinding {
       phase: work => this.options.journal ? this.options.journal.phase(work) : work(),
       complete: options.onSessionComplete,
     });
+    this.summaries = new NativeSummaryBinding({
+      backend: () => this.backend(), tasks: () => codingTasks(this.options.kernel?.registry ?? this.registry!),
+      owner: () => this.sessionBinding.current(),
+      commit: tx => this.commitSession(tx),
+    });
   }
 
   private registry?: Registry;
+
+  bindSummary(producer: SummaryProducer): void { this.summaries.bind(producer); }
+  get summaryStream(): StreamFn { return this.summaries.stream; }
 
   bindSessionState(capture: () => unknown, restore: (state: unknown) => void): void {
     this.sessionBinding.bindState(capture, restore);
@@ -465,6 +476,7 @@ export class DurableLoopBinding {
     this.unbind = definitions.bind(conversation.id, {
       execution,
       session: () => this.sessionBinding.bindings(),
+      summary: () => this.summaries.bindings(),
       tool: input => this.toolBindings(input),
       call: (input, owner) => {
         const host = execution();
