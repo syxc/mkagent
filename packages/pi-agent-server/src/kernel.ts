@@ -39,6 +39,10 @@ import {
 } from '@earendil-works/pi-durable';
 import { watchEvents, type AgentEvent } from './events/watch.ts';
 import { openDurableStorage } from './storage/durable-storage.ts';
+import {
+  assertNativeForkStoreItem, readBranchConversationId, verifyNativeForkStore, type NativeForkSource,
+} from './storage/native-fork-source.ts';
+import { parseNativeSessionReference } from '../../shared/src/sessions/native-session-reference.ts';
 import { discardInheritedWork } from './storage/branch-storage.ts';
 import { migrateLegacyCodingWork } from './storage/coding-migration.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
@@ -123,7 +127,7 @@ export interface KernelOpenOptions {
   /** Old pi entry id of the branch anchor; translated through the id map. */
   branchFromSdkTurnId?: string;
   /** Keep the entire native tree, then select this leaf instead of applying a durable cutoff. */
-  nativeFork?: { leaf: string | null };
+  nativeFork?: NativeForkSource;
 }
 
 interface RetrySynthState {
@@ -225,10 +229,13 @@ export class DurableKernel {
     const resuming = existsSync(join(this.storeDir, 'session-id.txt'));
     const branchFrom = config.branchFromSessionPath;
     if (config.nativeFork && (!this.options.coding || !branchFrom
+      || !parseNativeSessionReference(config.nativeFork.source)
       || (config.nativeFork.leaf !== null && (typeof config.nativeFork.leaf !== 'string' || !config.nativeFork.leaf)))) {
-      throw new Error('Pi native fork requires a coding profile, a parent session and a native leaf');
+      throw new Error('Pi native fork requires a coding profile, a parent session, a leaf and a closed native source reference');
     }
+    if (config.nativeFork && existsSync(this.storeDir)) throw new Error('Pi native fork requires an empty target store');
     const legacyChild = findMostRecentSessionFile(join(this.options.sessionPath, '.pi-sessions'));
+    if (config.nativeFork && legacyChild) throw new Error('Pi native fork requires an empty target history');
     const pendingBranch = join(this.options.sessionPath, '.durable-branch-pending');
     if (existsSync(pendingBranch)) {
       throw new Error('Pi branch preflight failed: an incomplete branch store requires recovery');
@@ -244,6 +251,14 @@ export class DurableKernel {
         // transcript converted in place first, so the copy carries full context.
         if (!config.nativeFork) await migrateParentStore(branchFrom, this.options.hooks.debugLog);
         const parentStore = join(branchFrom, 'durable-store');
+        if (config.nativeFork) {
+          assertNativeForkStoreItem(branchFrom);
+          assertNativeForkStoreItem(parentStore);
+          for (const name of ['main.jsonl', 'store.db', 'store.db-wal', 'store.db-shm']) {
+            const path = join(parentStore, name);
+            if (existsSync(path)) assertNativeForkStoreItem(path);
+          }
+        }
         if (!existsSync(join(parentStore, 'store.db')) && !existsSync(join(parentStore, 'main.jsonl'))) {
           throw new Error(`Pi branch preflight failed: no parent session transcript found in ${branchFrom}`);
         }
@@ -258,7 +273,10 @@ export class DurableKernel {
         const mainBefore = existsSync(parentMain) ? readFileSync(parentMain) : undefined;
         cpSync(parentStore, this.storeDir, {
           recursive: true,
-          filter: source => !['store.db', 'store.db-wal', 'store.db-shm', 'session-id.txt'].includes(source.split(/[\\/]/).at(-1)!),
+          filter: source => {
+            if (config.nativeFork) assertNativeForkStoreItem(source);
+            return !['store.db', 'store.db-wal', 'store.db-shm', 'session-id.txt'].includes(source.split(/[\\/]/).at(-1)!);
+          },
         });
         if (mainBefore) {
           const mainCopied = readFileSync(join(this.storeDir, 'main.jsonl'));
@@ -285,6 +303,10 @@ export class DurableKernel {
         }
       }
 
+      if (config.nativeFork) {
+        if (!copiedParent) throw new Error('Pi fork closed native source was not copied');
+        await verifyNativeForkStore(this.storeDir, branchFrom!, config.nativeFork, BACKGROUND_CONTEXT);
+      }
       if (copiedParent) {
         rewriteStoredModelHistory(this.options.sessionPath,
           value => remapSessionFileReferences(value, branchFrom!, this.options.sessionPath));
@@ -353,7 +375,8 @@ export class DurableKernel {
       this.options.hooks.sessionIdentity?.(this.sessionId);
       await this.openCoding(config.codingReplacement?.reason
         ?? (copiedParent ? 'fork' : legacyChild || resuming ? 'resume' : 'startup'), !!config.codingReplacement,
-      copiedParent ? { ...config.nativeFork, sourceSessionPath: branchFrom! } : undefined);
+      copiedParent ? { sourceSessionPath: branchFrom!,
+        ...(config.nativeFork ? { leaf: config.nativeFork.leaf } : {}) } : undefined);
       if (!this.harness) return;
       if (!config.codingReplacement) this.harness.resume();
       if (copiedParent) {
@@ -538,16 +561,12 @@ export class DurableKernel {
 
   private async openStore(copiedParent: boolean): Promise<void> {
     const storage = await openDurableStorage(this.storeDir, BACKGROUND_CONTEXT);
-    const marker = join(this.storeDir, 'conversation-id.txt');
     let selected: ConversationId | undefined;
-    if (existsSync(marker)) {
-      const rawId = readFileSync(marker, 'utf-8').trim();
-      const parsedId = Number(rawId);
-      if (!Number.isSafeInteger(parsedId) || String(parsedId) !== rawId) {
-        await storage.close(BACKGROUND_CONTEXT);
-        throw new Error('Invalid durable branch conversation id');
-      }
-      selected = parsedId as ConversationId;
+    try {
+      selected = readBranchConversationId(this.storeDir);
+    } catch (error) {
+      await storage.close(BACKGROUND_CONTEXT);
+      throw error;
     }
     if (copiedParent) {
       try {

@@ -2328,13 +2328,25 @@
     }
   },
   "mkOnly": {
+    "packages/pi-agent-server/src/storage/native-fork-source.ts": {
+      "sha256": "8bfd20b4cf8d6b78d89f8d14786ec4e1cfab2ca336bef3ff8f0a40c1306277b7",
+      "reason": "Verify copied native journals against approved closed source references before Harness opening and path rewriting."
+    },
+    "packages/pi-durable-coding/src/durable-coding/session-journal-read.ts": {
+      "sha256": "80db24f75309e4891ba9513b84d9c6e436dfaeae23b88391ed9a3408206843c8",
+      "reason": "Read paused native journal snapshots without initialization or mutation, checking conversation visibility and envelope identities."
+    },
+    "packages/pi-durable-coding/test/native-session-read.test.ts": {
+      "sha256": "1ead17ec0cdbfea2bae83dc0b15ce063c791c4b23c503693a62412b6836f7097",
+      "reason": "Verify read-only journal parsing rejects invalid states and accepts remapped native content with retained envelope data."
+    },
     "packages/pi-agent-server/src/coding-fork.e2e.test.ts": {
-      "sha256": "0e9cc54e39ff2606c1725a3308bc86b0a7fa64675133bf499eaa21da5825c905",
-      "reason": "Verify complete native trees, precise leaves, original identities and all-branch attachments through real SQLite and JSONL kernels."
+      "sha256": "d4b9c4bbd0938ae418d4d864b8e4d4ac28edc664b1c921669a845332799a3e48",
+      "reason": "Verify complete native trees, precise leaves, original identities, all-branch attachments and consecutive verified forks through real SQLite and JSONL kernels."
     },
     "packages/pi-agent-server/src/coding-fork-recovery.e2e.test.ts": {
-      "sha256": "9ec68f7bfad0bf970a1d441807eb217cd62002dd23079132259b991e4ef1e3d0",
-      "reason": "Verify native fork rejection without source changes and empty-tree recovery across isolated processes and SIGKILL."
+      "sha256": "52c7a5d0c2ffc5fe0b6b2b5fba4094f3fdf2fc3115624f5555893a86548c2630",
+      "reason": "Verify closed source references, conversation selection, conflicting legacy target rejection before startup, and empty-tree recovery across isolated processes and SIGKILL."
     },
     "packages/pi-agent-server/src/fixtures/native-fork-reopen.ts": {
       "sha256": "eee7bc1ee649e7ff23b6573b0ab092eb52a6881fea06445ecb6d4f2ec77000f8",
@@ -2369,8 +2381,8 @@
       "reason": "Verify current backend authority, strict receipt retries and concurrent native metadata persistence."
     },
     "packages/pi-durable-coding/src/durable-coding/session-journal-state.ts": {
-      "sha256": "72c5dcde7708f4c7a751a2be419e1d76e32402a59d167eb8d077b88eb74940e2",
-      "reason": "Expose committed native snapshots and verify atomic durable product message associations."
+      "sha256": "cbc64a7825f2a74ec5519787e0af90c0ca0fd6725b9ad9313a30d109a9a9b97d",
+      "reason": "Expose committed native snapshots from minimal journal state for normal receipts and paused read-only verification."
     },
     "packages/pi-durable-coding/test/native-session-snapshot.test.ts": {
       "sha256": "62938649f5ae55a1b80f4379eb0eca0754434fe4824dd1192721557389619a7d",
@@ -2385,8 +2397,8 @@
       "reason": "Project committed native journals and verify stable product input identities without a second writer."
     },
     "packages/pi-agent-server/src/storage/native-session-projection.ts": {
-      "sha256": "b17f8db4d90020316ae415bd618063831f0ae49c8299d61e935c703e63994168",
-      "reason": "Project committed native journals and verify stable product input identities without a second writer."
+      "sha256": "a9692107848ba0401ec08ad5a4da4cee158673811c9f08b5e0a0c8c65404ef97",
+      "reason": "Share native JSONL and manifest encoding between committed projection and closed fork source verification."
     },
     "packages/pi-agent-server/src/native-owner-actions.e2e.test.ts": {
       "sha256": "eb0724acfd8188f2c26859660f99499e7fe2bb8598b82c703534a156aebc3fe4",
@@ -2977,8 +2989,8 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "a5218b39f3477917256fab1c42a056dac82c02136077fae907790a7af4d78ec8",
-      "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness."
+      "sha256": "5ccabd1e048a660602a989ca22980a09aad5a41cf2f179190851d274f8b7a60a",
+      "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness. Verify copied native journals before Harness opening and reject conflicting legacy target history."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
       "sha256": "2b2ee30b4478fabc39101535c97668c64a526632849f6e76446d91794360af0e",
@@ -3649,8 +3661,8 @@
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in engine.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/index.ts": {
-      "sha256": "257722d28f95fd13dc049a1af12088411b4c5736eec1791e7b22bdc6dbdfdc2c",
-      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in index.ts."
+      "sha256": "32898b73b64f687a315137b0f0c33c25961be8b5c825f13437f08a48b7038f71",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler, and export paused journal snapshot verification."
     },
     "packages/pi-durable-coding/src/durable-coding/input-queues.ts": {
       "sha256": "1cd84c233494fe904d6a9cc4233b279239dc421b8e029a40ad96d6f95f3a94a3",

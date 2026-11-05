@@ -37,6 +37,21 @@ export function nativeSessionPaths(sessionPath: string) {
 
 function digest(value: string): string { return createHash('sha256').update(value).digest('hex'); }
 
+/** Encode exactly the bytes used by path projection and paused-store verification. */
+export function encodeNativeSessionProjection(
+  snapshot: NativeSessionSnapshot, options: Pick<ProjectionOptions, 'sessionPath' | 'sessionId'>,
+) {
+  const jsonl = [snapshot.header, ...snapshot.entries].map(value => JSON.stringify(value)).join('\n') + '\n';
+  const manifest: NativeSessionManifest = {
+    version: 1, sessionId: options.sessionId, nativeSessionId: snapshot.header.id,
+    conversationId: snapshot.conversationId, revision: snapshot.revision,
+    sessionFile: nativeSessionPaths(options.sessionPath).sessionFile, leaf: snapshot.leaf, name: snapshot.name,
+    digest: digest(jsonl), entryIds: snapshot.entryIds,
+  };
+  const metadata = JSON.stringify(manifest) + '\n';
+  return { jsonl, metadata, descriptor: { ...manifest, manifestDigest: digest(metadata) } };
+}
+
 async function directory(path: string): Promise<void> {
   await mkdir(path, { recursive: true });
   const stat = await lstat(path);
@@ -74,20 +89,13 @@ export class NativeSessionProjection {
   private enqueue(snapshot: NativeSessionSnapshot): void {
     if (this.closed) return;
     this.pending = this.pending.then(async () => {
-      const jsonl = [snapshot.header, ...snapshot.entries].map(value => JSON.stringify(value)).join('\n') + '\n';
-      const manifest: NativeSessionManifest = {
-        version: 1, sessionId: this.options.sessionId, nativeSessionId: snapshot.header.id,
-        conversationId: snapshot.conversationId, revision: snapshot.revision,
-        sessionFile: this.paths.sessionFile, leaf: snapshot.leaf, name: snapshot.name,
-        digest: digest(jsonl), entryIds: snapshot.entryIds,
-      };
-      const metadata = JSON.stringify(manifest) + '\n';
+      const { jsonl, metadata, descriptor } = encodeNativeSessionProjection(snapshot, this.options);
       await directory(join(this.options.sessionPath, 'native-session'));
       await directory(join(this.options.sessionPath, 'meta'));
       await replace(this.paths.sessionFile, jsonl);
       // A torn pair fails digest validation until a later receipt or explicit rebuild repairs it.
       await replace(this.paths.manifestFile, metadata);
-      this.descriptor = { ...manifest, manifestDigest: digest(metadata) };
+      this.descriptor = descriptor;
       this.failure = undefined;
       try { this.options.published?.(structuredClone(this.descriptor)); }
       catch (error) { this.report(error); }

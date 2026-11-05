@@ -27,7 +27,8 @@ export function snapshot(manager: SessionManager): Snapshot {
 }
 
 export function committedSnapshot(
-  conversationId: ConversationId, manager: SessionManager, state: JournalState,
+  conversationId: ConversationId, manager: SessionManager,
+  state: Pick<JournalState, 'revision' | 'ids' | 'productMessages'>,
 ): NativeSessionSnapshot {
   const view = snapshot(manager);
   return detached({

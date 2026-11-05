@@ -8,7 +8,7 @@ import type { NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
 import { remapSessionFileReferences } from '@mkagent/shared/sessions';
 import { durableFixture } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
 import { DurableKernel } from './kernel.ts';
-import { nativeSessionPaths } from './storage/native-session-projection.ts';
+import { nativeSessionPaths, readNativeSessionDescriptor } from './storage/native-session-projection.ts';
 
 const cleanup: Array<() => Promise<void> | void> = [];
 afterEach(async () => { for (const operation of cleanup.splice(0).reverse()) await operation(); });
@@ -76,7 +76,8 @@ for (const backend of ['sqlite', 'jsonl']) for (const selection of ['left', 'lab
     const sourceNative = readFileSync(nativeSessionPaths(sourcePath).sessionFile);
 
     const target = create(targetPath);
-    const config = { model, branchFromSessionPath: sourcePath, nativeFork: { leaf } };
+    const config = { model, branchFromSessionPath: sourcePath,
+      nativeFork: { leaf, source: await readNativeSessionDescriptor(sourcePath) } };
     await target.open(config);
     const fork = native(target).coding.journal;
     const snapshot = fork.committedSnapshot();
@@ -103,6 +104,16 @@ for (const backend of ['sqlite', 'jsonl']) for (const selection of ['left', 'lab
     await reopened.open({ model });
     expect(reopened.sessionId).toBe(targetId);
     expect(native(reopened).coding.journal.committedSnapshot()).toEqual(snapshot);
+    await reopened.close();
+    const nextPath = join(fixture.directory, 'next-target');
+    const next = create(nextPath);
+    await next.open({ model, branchFromSessionPath: targetPath,
+      nativeFork: { leaf: right, source: await readNativeSessionDescriptor(targetPath) } });
+    const continued = native(next).coding.journal.committedSnapshot();
+    expect(continued.leaf).toBe(right);
+    expect(continued.entries).toEqual(remapSessionFileReferences(snapshot.entries, targetPath, nextPath));
+    expect(continued.entryIds).toEqual(snapshot.entryIds);
+    expect(readFileSync(join(nextPath, 'attachments', 'right.txt'), 'utf8')).toBe('right attachment');
     expect(readFileSync(sourceStoreFile)).toEqual(sourceStore);
     expect(readFileSync(nativeSessionPaths(sourcePath).sessionFile)).toEqual(sourceNative);
     expect(fixture.calls).toHaveLength(0);
