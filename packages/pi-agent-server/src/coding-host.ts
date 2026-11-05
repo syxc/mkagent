@@ -19,6 +19,7 @@ import { LegacyCodingAdoption } from './storage/coding-recovery.ts';
 import { NativeSessionProjection, nativeSessionPaths, type NativeSessionDescriptor } from './storage/native-session-projection.ts';
 import { ExtensionUIHost, type ExtensionUIBinding } from './extension-ui.ts';
 import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent/shared/sessions';
+import { captureNativeUserInput } from './native-user-input.ts';
 
 export type KernelCodingOptions = Omit<HostResourceOptions, 'cwd' | 'getSystemPrompt'> & {
   preparedResources?: Awaited<ReturnType<typeof prepareHostResources>>;
@@ -185,10 +186,7 @@ export class CodingHost {
         initializeSessionMetadata: committed.revision === 0,
         sessionStartEvent: { type: 'session_start', reason },
         sessionManager: journal.manager, baseToolsOverride: tools,
-        captureUserInput: content => ({
-          hostMessageId: `native-user-${randomUUID()}`,
-          hostUserInput: { version: 1, content: structuredClone(content) },
-        }),
+        captureUserInput: captureNativeUserInput,
         // A modifier extends the host catalog while retaining all native extension exposures.
         tools: modelTools.length ? modelTools : undefined,
         thinkingLevel: host.thinkingLevel() as AgentSession['thinkingLevel'],
@@ -394,6 +392,13 @@ export class CodingHost {
   async flush(): Promise<void> {
     await this.flushJournal();
     await this.projection.flush();
+  }
+
+  /** A deferred replacement must persist setup history before target hooks can observe it. */
+  async commitSetup(): Promise<void> {
+    await this.flushJournal();
+    const descriptor = await this.projection.flush();
+    await this.host.commitProjection?.(descriptor);
   }
 
   private async flushJournal(): Promise<void> {

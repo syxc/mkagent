@@ -13,6 +13,7 @@ interface WorkerFixture {
   requests: Array<Record<string, unknown>>;
   toolCalls: Array<{ name: string; arguments: string }>;
   messages: Frame[];
+  historyReceipts: { hold?: (message: Frame) => boolean };
   send(message: Record<string, unknown>): void;
   sendBatch(...messages: Array<Record<string, unknown>>): void;
   waitFor(match: (message: Frame) => boolean): Promise<Frame>;
@@ -48,11 +49,12 @@ async function withWorker(profile: 'default' | 'coding', run: (fixture: WorkerFi
   child.stderr.on('data', (chunk: Buffer) => { stderr = (stderr + chunk.toString()).slice(-4096); });
   const reader = createInterface({ input: child.stdout });
   const messages: Array<Record<string, any>> = [];
+  const historyReceipts: WorkerFixture['historyReceipts'] = {};
   const waiters: Array<{ match: (message: Frame) => boolean; resolve: (message: Frame) => void; timeout: ReturnType<typeof setTimeout> }> = [];
   reader.on('line', line => {
     const message = JSON.parse(line);
     messages.push(message);
-    if (message.type === 'native_history_commit') send({
+    if (message.type === 'native_history_commit' && !historyReceipts.hold?.(message)) send({
       type: 'native_history_receipt', id: message.id, success: true,
       ownerSessionId: message.ownerSessionId, runtimeGeneration: message.runtimeGeneration,
     });
@@ -88,7 +90,7 @@ async function withWorker(profile: 'default' | 'coding', run: (fixture: WorkerFi
     customEndpoint: { api: 'openai-completions' }, customModels: [{ id: 'local-scope', contextWindow: 100_000 }],
   });
   try {
-    await run({ directory, exited, requests, toolCalls, messages, send, sendBatch, waitFor, init });
+    await run({ directory, exited, requests, toolCalls, messages, historyReceipts, send, sendBatch, waitFor, init });
   } finally {
     for (const waiter of waiters) clearTimeout(waiter.timeout);
     child.stdin.end();
@@ -398,7 +400,29 @@ test.each(['prompt', 'startup'] as const)('native owner %s activation keeps hook
     );
     await f.waitFor(message => message.id === 'commit-fence');
     expect(traces()).toHaveLength(3);
+    f.historyReceipts.hold = message => message.ownerSessionId === 'target';
     f.send({ type: 'owner_committed', transactionId, ...target });
+    const setupCommit = await f.waitFor(message => message.type === 'native_history_commit' && message.ownerSessionId === 'target');
+    expect(traces()).toEqual([
+      ['start', 'startup', f.directory], ['before', 'new'], ['shutdown', 'new'], ['setup', targetCwd],
+    ]);
+    expect(f.requests).toHaveLength(0);
+    const setupEntries = readFileSync(join(f.directory, 'sessions/target/native-session/session.jsonl'), 'utf8')
+      .trim().split('\n').map(line => JSON.parse(line));
+    const setupEntry = setupEntries.find(entry => entry.type === 'message' && entry.message.content === 'setup marker');
+    expect(setupEntry.message.hostMessageId).toMatch(/^native-user-/);
+    expect(setupEntry.message.hostUserInput).toEqual({ version: 1, content: 'setup marker' });
+    const setupManifest = JSON.parse(readFileSync(join(f.directory, 'sessions/target/meta/native-session.json'), 'utf8'));
+    expect(setupManifest.entryIds.find((entry: Frame) => entry.nativeId === setupEntry.id)?.productMessageId)
+      .toBe(setupEntry.message.hostMessageId);
+    f.sendBatch(
+      { type: 'native_history_receipt', id: setupCommit.id, success: true, ...source },
+      { type: 'ensure_session_ready', id: 'setup-receipt-fence', ...target },
+    );
+    await f.waitFor(message => message.id === 'setup-receipt-fence');
+    expect(traces()).toHaveLength(4);
+    f.historyReceipts.hold = undefined;
+    f.send({ type: 'native_history_receipt', id: setupCommit.id, success: true, ...target });
     expect(await f.waitFor(message => message.type === 'owner_finished')).toMatchObject({ ...target, outcome: 'complete' });
     expect(traces()).toEqual([
       ['start', 'startup', f.directory], ['before', 'new'], ['shutdown', 'new'],

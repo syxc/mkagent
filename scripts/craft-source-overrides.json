@@ -2549,8 +2549,12 @@
       "reason": "Verify native setup, startup, source closure and cancellation across the durable ownership barrier."
     },
     "packages/pi-agent-server/src/native-owner-actions.ts": {
-      "sha256": "8761647d15faadde41b6ba9737fdb8fbcab56f170d33f8dd3a4276c8314179e2",
-      "reason": "Run native session actions through product ownership while retaining local callbacks and durable execution."
+      "sha256": "8f44d7c98d537afd638f9cbd37b871d22766ad4cfbb44cc9037d3362b20ce42b",
+      "reason": "Run native session actions through product ownership, capture setup user messages before append and await product persistence before target hooks."
+    },
+    "packages/pi-agent-server/src/native-user-input.ts": {
+      "sha256": "583c1346f1d63c61eee8680283bbab840d347dc7503624cdd22553361126373b",
+      "reason": "Capture stable product identities and original input for plugin messages and NEW setup writes without starting another turn."
     },
     "packages/pi-agent-server/src/native-owner.test.ts": {
       "sha256": "118dcaecb42be561865c5bc40af1d9f9eedfacc2e9f11018b32aa6ede54b82cd",
@@ -2561,8 +2565,8 @@
       "reason": "Keep the native command coroutine alive across product prepare, close, activation and commit controls."
     },
     "packages/server-core/src/sessions/native-owner-runtime.isolated.ts": {
-      "sha256": "9e7fd7b60cdd32876dfb4078146b40f679ad15c3e0a45a0cfc860f9aa0a83fd5",
-      "reason": "Exercise the actual product factory, PiAgent and bundled worker with local models and isolated ownership."
+      "sha256": "93fc5cd9cb4e307456b6fba37bd767a49c08b3fdeeb71ad27cbaf3d072f08dde",
+      "reason": "Exercise real product ownership, durable setup history, setup-only NEW without model calls and stable message identity across a cold worker restart."
     },
     "packages/server-core/src/sessions/native-session-owner.isolated.ts": {
       "sha256": "41984e3a3844b8e245f625f8939ae964fa5cbd784e8efaead2435b6bd1fbbecf",
@@ -2685,8 +2689,8 @@
       "reason": "Verify immutable background ownership, exact owner and generation checks for stop requests, and owner-specific disposal."
     },
     "packages/pi-agent-server/src/worker-scope.e2e.test.ts": {
-      "sha256": "6dbe7ce798e91e4786fe8186ab2787e46efa801a63403dc289aa9290de870b4c",
-      "reason": "Run both worker profiles with deterministic local models to verify owned replies, stale foreground rejection, history isolation, source background ownership and cleanup of retired queued compaction IDs across reinitialization."
+      "sha256": "b0277ddef3a58caaefb6a12680cad6820a2db5e3678158d013c85470382f2024",
+      "reason": "Verify owned worker replies, retired work isolation and setup history identity; hold the strict setup receipt to prove target hooks wait and reject receipts from another scope."
     },
     "packages/shared/src/agent/__tests__/pi-worker-connection.test.ts": {
       "sha256": "c4da0079b71982eb23c6a85cb63e196f895a2b87e0cb324c71312e2be533af44",
@@ -3441,8 +3445,8 @@
       "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery, approved file writes and native plugin execution with host-only resources across restart."
     },
     "packages/pi-agent-server/src/coding-host.ts": {
-      "sha256": "2c28bdff926c83733e355f3dd1aa192019aa6c9d065437a3114ecc0cd7502923",
-      "reason": "Adapt native resources and extension actions to durable host boundaries, including committed auxiliary writes and shutdown."
+      "sha256": "cf2afd216058317a6c4801dd3b0c05ab0675233b21dd0b48cb3dddc990673092",
+      "reason": "Adapt native resources and actions to durable boundaries, share host input capture and commit setup projections before deferred target activation."
     },
     "packages/pi-agent-server/test/coding-bundle.e2e.test.ts": {
       "sha256": "ac2e989a11f4a9858017f47bcd93b6db01a279c1337ed0efa49dfe1aa8892957",

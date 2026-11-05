@@ -30,6 +30,9 @@ test('native NEW adopts the actual worker, completes without a target generator 
         setup: async manager => manager.appendMessage({ role: 'user', content: 'target setup marker', timestamp: Date.now() }),
         withSession: async next => next.sendUserMessage('target callback marker'),
       }) });
+      pi.registerCommand('bootstrap-only', { handler: async (_, ctx) => ctx.newSession({
+        setup: manager => manager.appendMessage({ role: 'user', content: 'bootstrap-only marker', timestamp: Date.now() }),
+      }) });
       pi.on('session_start', (_, ctx) => {
         const flag = join(ctx.cwd, '.startup-source');
         if (existsSync(flag) && readFileSync(flag, 'utf8') === basename(process.env.MKAGENT_SESSION_DIR || ''))
@@ -77,6 +80,7 @@ test('native NEW adopts the actual worker, completes without a target generator 
   const manager = new SessionManager()
   const targetDone = Promise.withResolvers<string>()
   const events: Array<{ target: unknown; event: SessionEvent }> = []
+  const publishedSetup = new Set<string>()
   let sourceId = ''
   let targetId = ''
   const completed: string[] = []
@@ -90,6 +94,9 @@ test('native NEW adopts the actual worker, completes without a target generator 
       if (!event || typeof event !== 'object' || !('type' in event)) return
       events.push({ target, event: event as SessionEvent })
       if (event.type === 'session_created' && event.sessionId !== sourceId) targetId = event.sessionId
+      if (event.type === 'native_history_changed' && typeof event.sessionId === 'string'
+        && loadSession(workspaceRoot, event.sessionId)?.messages.some(message =>
+          message.type === 'user' && message.content === 'target setup marker')) publishedSetup.add(event.sessionId)
     })
     manager.onSessionComplete(event => {
       completed.push(event.sessionId)
@@ -136,6 +143,12 @@ test('native NEW adopts the actual worker, completes without a target generator 
     expect((await manager.getSession(sourceId))?.isProcessing).toBe(false)
     const target = (await manager.getSession(targetId))!
     expect(target.isProcessing).toBe(false)
+    const userRows = target.messages.filter(message => message.role === 'user')
+    expect(userRows.map(message => message.content)).toEqual(['target setup marker', 'target callback marker'])
+    expect(loadSession(workspaceRoot, targetId)?.messages.filter(message => message.type === 'user')
+      .map(({ id, content, timestamp }) => ({ id, content, timestamp })))
+      .toEqual(userRows.map(({ id, content, timestamp }) => ({ id, content, timestamp })))
+    expect(publishedSetup.has(targetId)).toBe(true)
     expect(target.messages.filter(message => message.role === 'assistant').map(message => message.content)).toEqual(['local owner reply'])
     expect(completed.filter(id => id === targetId)).toHaveLength(1)
     expect(events.filter(item => item.event.type === 'native_session_redirect')).toEqual([{
@@ -234,6 +247,38 @@ test('native NEW adopts the actual worker, completes without a target generator 
     expect((await manager.getSession(sourceId))?.isProcessing).toBe(false)
     expect((await manager.getSession(targetId))?.isProcessing).toBe(false)
     expect((await manager.getSession(targetId))?.messages.some(message => message.content === 'local owner reply')).toBe(true)
+
+    const bootstrapSource = await manager.createSession(workspace.id, { name: 'Bootstrap-only source' })
+    sourceId = bootstrapSource.id
+    targetId = ''
+    const beforeBootstrap = requests.length
+    const bootstrapDone = Promise.withResolvers<void>()
+    manager.onSessionComplete(event => { if (event.sessionId === targetId) bootstrapDone.resolve() })
+    await deadline(manager.sendMessage(sourceId, '/bootstrap-only'))
+    await deadline(bootstrapDone.promise)
+    const bootstrapTarget = (await manager.getSession(targetId))!
+    expect(bootstrapTarget.isProcessing).toBe(false)
+    expect(bootstrapTarget.messages.filter(message => message.role === 'user').map(message => message.content))
+      .toEqual(['bootstrap-only marker'])
+    expect(requests).toHaveLength(beforeBootstrap)
+    const bootstrapStored = loadSession(workspaceRoot, targetId)!
+    const bootstrapRow = bootstrapStored.messages.find(message => message.type === 'user')!
+    expect(bootstrapRow.content).toBe('bootstrap-only marker')
+    expect(bootstrapTarget.messages.find(message => message.role === 'user')?.id).toBe(bootstrapRow.id)
+    const bootstrapTree = readTrustedNativeSession({
+      workspaceRootPath: workspaceRoot, sessionId: targetId, nativeSessionId: bootstrapStored.sdkSessionId!,
+      reference: bootstrapStored.nativeSessionProjection!,
+    })
+    expect(bootstrapTree.entryIds.filter(link => link.productMessageId === bootstrapRow.id)).toHaveLength(1)
+    const bootstrapAgent = runtime.sessions.get(targetId)!.agent
+    const bootstrapPid = child(bootstrapAgent)!.pid
+    await deadline(bootstrapAgent.nativeSessionOwner!.releaseForOwner())
+    expect(child(bootstrapAgent)).toBeNull()
+    await deadline(manager.sendMessage(targetId, 'post-bootstrap continuation'))
+    expect(child(bootstrapAgent)?.pid).not.toBe(bootstrapPid)
+    expect(JSON.stringify(requests.at(-1)).match(/bootstrap-only marker/g)).toHaveLength(1)
+    const reopenedBootstrap = (await manager.getSession(targetId))!.messages.filter(message => message.content === 'bootstrap-only marker')
+    expect(reopenedBootstrap.map(message => message.id)).toEqual([bootstrapRow.id])
   } finally {
     modelGate?.resolve()
     await manager.flushAllSessions()

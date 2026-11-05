@@ -2,6 +2,7 @@
 import type { AgentSession, ExtensionCommandContextActions } from '@mkagent/pi-durable-coding/native';
 import type { PiNativeOwnerRequest } from '../../shared/src/agent/backend/pi/native-owner-protocol.ts';
 import type { CodingHost } from './coding-host.ts';
+import { setupSessionManager } from './native-user-input.ts';
 
 export interface NativeOwnerActionsHost {
   source(): CodingHost;
@@ -33,10 +34,10 @@ export function nativeOwnerActions(host: NativeOwnerActionsHost): Pick<Extension
       }, async (target, signal) => {
         signal.throwIfAborted();
         if (options?.setup) {
-          await options.setup(target.session.sessionManager);
+          await options.setup(setupSessionManager(target.session.sessionManager));
           signal.throwIfAborted();
           target.session.refreshContext();
-          await target.flush();
+          await target.commitSetup();
         }
         await startTarget(target, 'new', options?.withSession, signal);
       });
