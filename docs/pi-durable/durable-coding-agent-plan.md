@@ -73,7 +73,7 @@ MkAgent 最初以 Pi coding agent 为底层，第一次切换改用 pi-durable�
 | D2 | MkAgent 主链路 | 按保留清单检查模型、审批、代理/会话工具、MCP、浏览器、后台任务、持久化、分支和传输；修复发现的缺口，运行相关产品集成和完整仓库回归。 | 已完成 |
 | D3 | 插件会话与交互 | 补齐由产品会话所有者执行的原生会话操作和插件交互适配；每个 API 组用未修改插件驱动实际效果，检查 reload、取消和恢复。 | 进行中 |
 | D4 | 原生资源与授权 | 补齐项目资源的信任入口、MCP 交互授权和显式包管理路径；继续保持禁止隐式安装及未授权项目执行。 | 进行中 |
-| D5 | 打包与产品验收 | 检查独立包消费者、来源、许可、资源和产物搬迁，在隔离环境运行实际产品入口；区分构建通过、功能通过和平台受阻。 | macOS 构建、协议、选定 WebUI 与 Desktop 流程完成；正式 Desktop 发布安装包及其他平台待验收 |
+| D5 | 打包与产品验收 | 检查独立包消费者、来源、许可、资源和产物搬迁，在隔离环境运行实际产品入口；区分构建通过、功能通过和平台受阻。 | macOS 构建、协议、选定 WebUI 与 Desktop、未签名 .app/ZIP 和隔离 ad-hoc 原生副本完成；正式签名公证安装、系统协议和其他平台待验收 |
 | D6 | 最终需求对照 | 将本文、能力总表、实现、测试与未解决项逐条对应；全部必需项有结果后才声明完成，记录最终本地提交。 | 进行中 |
 
 D1 的已知风险是把原生会话开关直接设为始终启用：它会连带加载普通会话以前隔离的 Pi 资源。现有 `kernel.e2e.test.ts` 的默认 profile 隔离用例是保留契约，不能通过改掉该预期来消除失败。
@@ -466,7 +466,26 @@ PowerShell 核对同时发现真实产品接线缺口：原生 SDK factory 存�
 
 阶段结果为 `denied-result.json`、`result.json`、`metrics.json` 和 `tools.json`，均位于上述任务目录。任务 8 已恰一次等待 `finish({keep:[]})` 完成，不保留页面；随后只对该夹具服务发送 SIGTERM，收到正常退出回执。该批没有修改产品代码，验证文档通过中文标点和 diff 检查；沿用前述已通过的 CI 与代码层回归。
 
-WebUI 项目信任画面的缺口已关闭。Windows、正式 Desktop 发布安装包及本节以外的 SDK TUI 组合仍未验收，D3.6、D4 与 D6 继续保留进行中，不声明全部插件或平台兼容。
+WebUI 项目信任画面的缺口已关闭。该批结束时，Windows、正式 Desktop 发布安装包及本节以外的 SDK TUI 组合仍未验收。Desktop 发布包后续进展见下一节，D3.6、D4 与 D6 继续保留进行中。
+
+## macOS Desktop 发布包补充验收
+
+本批从 `eaa214f` 的任务 worktree 构建，未修改产品代码。复用任务内已有依赖、Electron 39.2.7 分发和此前已验证的 preload/renderer，未重新冻结安装。main 在构建时设置 `MKAGENT_AUTO_UPDATE_ENABLED=false`，再通过 `electron:build:resources` 同步 worker 和资源，使用正式 electron-builder 配置生成 arm64 .app 与 ZIP。任务配置设置 `mac.identity=null`、`CSC_IDENTITY_AUTO_DISCOVERY=false`、`npmRebuild=false` 和 `--publish never`，不发现签名身份或发布产物。
+
+| 范围 | 实际结果与边界 |
+|---|---|
+| 构建与资源 | main、资源同步、electron-builder 的 `--dir` 和 ZIP 均退出 0。ZIP 完整性检查通过，13 项关键文件在构建输出、原始 .app、原生副本与 ZIP 中摘要一致，另核对打包 worker 与最新 `packages/pi-agent-server/dist/index.js` 一致。coding-assets 有 9 份文件，Pi MIT 许可和三份 WASM 均在包内。 |
+| 原生执行入口 | 副本实际执行 `Contents/MacOS/MkAgent`，进程分别为 33000、36576。运行时 `app.isPackaged=true`、`Boolean(process.defaultApp)=false`，appPath、resourcesPath、Bun 和 uv 均指向副本，未覆盖这些 packaged 路径。包内版本为 Bun 1.3.14、uv 0.13.7 和 rg 15.0.0；没有执行 `build-dmg.sh` 的下载与固定工具版本流程。 |
+| 隔离副本 | 保留原始 .app/ZIP 的 `dist/main.cjs` 入口。测试副本改为包内相对 bootstrap，随后调用字节未改的 main；移除副本 URL 声明，抑制协议注册 API，并指定独立 HOME/config、appData、userData、logs、crashDumps 和任务 shell。仅用项目 entitlements 与 ad-hoc 身份签名，深层严格校验在运行前后均通过。 |
+| 信任与 MCP | 全局 ask、项目 always。批准前全局插件已加载，项目插件未加载，两个 MCP 与模型请求均为 0。实际 select 选择仅会话信任并点击 Continue 后，项目插件及 `.pi/mcp.json`、`.mkagent/mcp.json` 的服务各启动 1 次，工具快照含 `mcp__native__hello` 与 `mcp__host__hello`。冷重开再次提示，重新批准前启动次数未增加，批准后各累计 2 次。操作由受限任务 socket 驱动 DOM 与键盘。 |
+| 对话与冷恢复 | 实际输入经包内 worker 的 coding runtime 返回回复，产品头有有效 nativeSessionProjection。冷重开保持相同 nativeSessionId、投影摘要和唯一 assistant ID，DOM 与截图均保留输入和回复。有效验收共 2 次本地模型请求，自动标题与实际对话各 1 次；冷恢复、再次信任和插件确认没有增加模型请求。 |
+| 确认取消 | 首次确认获得按钮焦点，Escape 后关闭；未保留取消通知，不据此断言返回值。冷重开前给测试插件增加结果落盘，再实际打开确认并按 Escape，文件记录 `confirmed=false`，模型请求仍为 2。 |
+| 夹具错误修正 | 首次外置配置从根 cwd 解析 afterPack 失败，改在 Electron 项目 cwd 加载。macOS 截断 105 字节 socket 路径，改为任务内短路径。运行时设置自动更新变量无法覆盖构建时 define，改在构建时关闭。原生 bootstrap 的绝对 main 未到达测试入口，改用包内相对入口后启动。初次候选包还漏跑资源同步，staged worker 与新构建摘要不同，原生插件验收失败；补跑资源构建并加新鲜度断言后通过。旧包及其 1 次本地请求不计最终验收。 |
+| 构建提示与限制 | 保留 CJS import.meta 警告、缺少 Assets.car 的图标回退、asar 关闭和原始包跳过签名提示。本批没有验证 DMG、正式证书签名、公证、Gatekeeper 安装、系统协议、自动更新、Windows 或全部插件，也没有新增浏览器任务或重试密码截图。 |
+
+最终原始 ZIP 为 `macos-acceptance/desktop-release-final/MkAgent-0.2.6-arm64.zip`，186331171 字节，SHA-256 为 `4293b3c7e7d4d508f8dd9fca814084b0b1ee20afb254be047366447578cdefbc`。测试原生副本位于 `desktop-native-final/`；原始 ZIP 不包含测试 bootstrap，保持未签名。夹具及结果位于 `desktop-release-fixture/`，包括 `final-artifact-result.json`、`native-before-trust.json`、`native-approved.json`、`native-first-turn.json`、`native-reopened.json`、`native-cold-trust.json`、`native-confirm-result.json` 和 `native-final-result.json`。
+
+`native-project-trust.png` 与 `native-history-reopened.png` 已读取检查，冷重开截图前 DOM 的 password 输入数为 0。原生两次运行均正常退出 0，任务本地服务已收到 SIGTERM 退出回执。本批重跑产物与选定原生流程，文档另经中文标点和 diff 检查；CI、全仓回归、lint 与来源审计沿用前述未改动层证据，未冒充本批重跑。D3.6、D4 与 D6 继续进行。
 
 ## 验证与完成规则
 

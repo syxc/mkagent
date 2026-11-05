@@ -2,7 +2,7 @@
 
 本表逐行对应[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)的 MkAgent 保留清单。它记录当前实现与验收证据，不改变需求。状态使用“已实现且验证”“已实现待验证”“待实现”“外部环境受阻”四类；部分流程已通过而必要组合尚未检查时，整行保留待验证状态。
 
-独立 SDK 输入采集修正为 `a1790ed`，普通产品分叉修正为 `4e29c34`；读取与审批边界修正为 `61fac5d`，PowerShell 产品接线为 `57bbaf5`，定向验收为 `a41e6b5`。可视验收随后发现并修正确认框焦点和 NEW setup 历史，分别提交为 `9965789`、`640aca6`。后者的完整仓库主批次为 436 份文件、5096 项通过、11 项跳过、0 失败，后续 35 份串行与隔离文件全部通过，CI、lint 与来源审计通过。干净构建的搬迁产物已通过选定 WebUI 流程；固定生成和独立消费者沿用 `a41e6b5` 的未改动层证据。本批另完成 macOS Desktop 选定流程、真实 PowerShell 和独立 SDK 的 PTY TUI 验收，并修复 Electron 子包构建入口。完整兼容和其他平台仍有未验收项。
+独立 SDK 输入采集修正为 `a1790ed`，普通产品分叉修正为 `4e29c34`；读取与审批边界修正为 `61fac5d`，PowerShell 产品接线为 `57bbaf5`，定向验收为 `a41e6b5`。可视验收随后发现并修正确认框焦点和 NEW setup 历史，分别提交为 `9965789`、`640aca6`。后者的完整仓库主批次为 436 份文件、5096 项通过、11 项跳过、0 失败，后续 35 份串行与隔离文件全部通过，CI、lint 与来源审计通过。干净构建的搬迁产物已通过选定 WebUI 流程；固定生成和独立消费者沿用 `a41e6b5` 的未改动层证据。本批另完成 macOS Desktop 选定流程、真实 PowerShell 和独立 SDK 的 PTY TUI 验收，并修复 Electron 子包构建入口。随后补验未签名 macOS .app/ZIP 和隔离 ad-hoc 原生副本。完整兼容和其他平台仍有未验收项。
 
 ## 架构与交付约束
 
@@ -45,7 +45,7 @@
 | Codemode/tool search | 已实现且验证 | 实际 durable 目录覆盖动态插件与 MCP 工具、deferred discovery、移除与 exposure 变化。固定上游 RPC `/mcp` 只有状态和授权操作，启停与 exposure 编辑在原生 TUI manager。本批实际 PTY 验证 manager 的重新连接、direct/deferred 切换、禁用与启用，以及配置保存和进程退出；该 TUI 夹具关闭工具调用，执行证据仍来自产品用例。 |
 | Retry/steer/follow-up/compaction | 已实现且验证 | 实际 Harness、接受队列、重复文本、重试期限、取消、压缩设置与提交边界有回归；摘要由 durable task 调度。 |
 | Resume/branch/usage/export | 已实现且验证 | SQLite/JSONL 恢复、产品完整树、普通 cutoff、原始输入、用量、归档导入导出和搬迁 HTML 资源有证据；分叉发布修正已通过完整仓库回归。 |
-| CLI/JSONL/Desktop/WebUI | 已实现待验证 | bundled JSONL、认证 WebSocket、macOS arm64 干净搬迁包与选定 WebUI 流程已有证据。本批实际启动 Electron 39.2.7 的正式 main/server/worker/renderer，通过 Desktop 选定流程；启动夹具隔离路径并禁止全局 URL 注册，未验正式发布安装包和系统协议注册。SDK TUI 的结果不代表 MkAgent CLI 新增终端界面。Windows 仍未验收。 |
+| CLI/JSONL/Desktop/WebUI | 已实现待验证 | bundled JSONL、认证 WebSocket、macOS arm64 干净搬迁包与选定 WebUI 流程已有证据。Electron 39.2.7 的正式 main/server/worker/renderer 通过 Desktop 选定流程。另完成未签名 .app/ZIP、worker 新鲜度及包内资源检查，并在带隔离 bootstrap 的 ad-hoc 原生副本验证信任、MCP、确认取消和冷重开，回复 ID 保持不变。正式签名公证安装、系统协议和 Windows 仍未验收。SDK TUI 的结果不代表 MkAgent CLI 新增终端界面。 |
 | Themes/shortcuts/editor/renderers | 已实现且验证 | macOS 的独立 SDK 宿主实际运行 ProcessTerminal、InteractiveMode 和 durable binding，regular/fullscreen 均完成。覆盖主题、快捷键、CustomEditor、折叠与展开的 renderer、header/footer、overlay、reload 和两种终端尺寸，截图已检查。仅 SDK TUI，工具关闭且单 journal owner；不计为 MkAgent CLI 产品接线或全部 TUI 插件验收。 |
 
 ## MkAgent 保留清单逐行对照
@@ -59,7 +59,7 @@
 | MCP 与浏览器 | 已实现且验证 | 既有 MCP、codemode、tool search、默认 profile 的浏览器工具与脱敏回归保留。测试使用本地协议替身，不访问用户的真实浏览器空间或代理。 |
 | 后台工作 | 已实现且验证 | 后台 shell、停止归属、完成通知、handoff 和跨 worker generation 保留源会话身份；普通与 coding 的实际协议用例均有覆盖。 |
 | 上下文 | 已实现且验证 | 宿主 prompt、原生资源隔离、压缩阈值、cache 与 usage 有覆盖；本批实际模型请求验证混合 instructions 来源，真实双模式 worker 验证成功读取后的 prerequisites。 |
-| 产品入口 | 已实现待验证 | 搬迁 headless 协议为 0 次模型请求，先前选定 WebUI 为 5 次。本批 Desktop 为 1 次、真实 PowerShell 为 11 次、SDK TUI 的 regular/fullscreen/MCP manager 为 2/1/1 次，另补 WebUI 项目信任为 2 次，均使用本地确定性模型。Windows 和正式 Desktop 发布安装包仍未验收。 |
+| 产品入口 | 已实现待验证 | 搬迁 headless 协议为 0 次模型请求，先前选定 WebUI 为 5 次。前批 Desktop 为 1 次、真实 PowerShell 为 11 次、SDK TUI 的 regular/fullscreen/MCP manager 为 2/1/1 次，WebUI 项目信任为 2 次。原生发布包补验为 2 次，自动标题和实际对话各 1 次；被排除的旧资源候选包另有 1 次请求。全部使用本地确定性模型。Windows、正式签名公证安装和系统协议仍未验收。 |
 
 ## 后续验收
 
@@ -67,6 +67,6 @@
 
 原授权空间 6 缺失是早期阻塞。用户随后明确授权任务 `mkagent-durable-coding-visual-d6-20261104`，编号为 7，仅用该任务完成前批可视流程并关闭。后续用户又明确授权唯一新任务 `mkagent-durable-coding-trust-20261106`，编号为 8，完成 WebUI 项目信任补验。两者均按名称与归属操作，分别恰一次调用 `finish({keep:[]})`，任务服务均已退出，没有借用其他旧空间或真实 WebUI。
 
-当前证据及产物摘要见实施计划的 macOS 实际验收和 WebUI 项目信任补充记录。D3.6、D4 与 D6 仍保留进行中：Windows 和正式 Desktop 发布安装包尚未验收。SDK TUI 仅覆盖选定交互，仍有会话控制等未验组合及 Bun/jiti 的 import.meta 兼容边界。密码遮罩维持 DOM 证据，未重试被拒截图；本批只截取不含密码输入的项目信任界面。
+当前证据及产物摘要见实施计划的 macOS 实际验收、WebUI 项目信任和 Desktop 发布包补充记录。未签名 .app/ZIP 和隔离 ad-hoc 原生副本已有结果，Windows、正式签名公证安装及系统协议仍待验收，D3.6、D4 与 D6 保留进行中。SDK TUI 仅覆盖选定交互，仍有会话控制等未验组合及 Bun/jiti 的 import.meta 兼容边界。密码遮罩维持 DOM 证据，未重试被拒截图；新增截图只包含项目信任和隔离原生历史界面。
 
 macOS 已执行真实 PowerShell 验收。Windows 后续先运行 `pwsh --version`，若只有系统 PowerShell 则运行 `powershell -NoProfile -Command '$PSVersionTable.PSVersion'`。在隔离 coding 会话中由显式插件激活 `powershell`，再经本地确定性模型检查中文输出、非零退出、超时与取消，以及审批前无文件副作用和批准后真实执行。
