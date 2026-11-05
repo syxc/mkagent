@@ -70,6 +70,23 @@ test('projection rebuild repairs tampering without changing the committed journa
   expect(await readNativeSessionDescriptor(state.path)).toEqual(committed);
 });
 
+test('name receipts distinguish unset from clearing and follow the full tree across leaf changes', async () => {
+  const state = await fixture();
+  expect((await state.projection.flush()).hasName).toBe(false);
+  let root = '';
+  await state.write(() => {
+    root = state.manager.appendMessage({ role: 'user', content: 'root', timestamp: 1 });
+    state.manager.appendSessionInfo('Global name');
+    state.manager.branch(root);
+  });
+  expect(await state.projection.flush()).toMatchObject({ name: 'Global name', hasName: true, leaf: root });
+  await state.write(() => { state.manager.appendSessionInfo(''); state.manager.branch(root); });
+  expect(await state.projection.flush()).toMatchObject({ name: null, hasName: true, leaf: root });
+  const manifest = JSON.parse(await readFile(state.paths.manifestFile, 'utf8'));
+  expect(manifest.hasName).toBeUndefined();
+  expect(await readNativeSessionDescriptor(state.path)).toMatchObject({ name: null, hasName: true });
+});
+
 test('a torn manifest fails closed while the durable receipt and recovery identity survive', async () => {
   const state = await fixture();
   await state.projection.flush();

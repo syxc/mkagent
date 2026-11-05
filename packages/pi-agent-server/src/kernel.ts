@@ -866,6 +866,11 @@ export class DurableKernel {
     if (!this.closing) await this.coding?.flush();
   }
 
+  async setSessionName(name: string): Promise<void> {
+    if (!this.coding || this.closing || this.codingReload) throw new Error('Native session naming is unavailable');
+    await this.coding.setSessionName(name);
+  }
+
   private enqueueCodingInput(content: UserMessage['content'], mode: 'steer' | 'followUp',
     options: CodingInputOptions = {}): Promise<boolean> {
     const coding = this.coding;

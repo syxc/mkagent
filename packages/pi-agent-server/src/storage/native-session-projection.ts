@@ -19,6 +19,8 @@ interface NativeSessionManifest {
 
 export interface NativeSessionDescriptor extends NativeSessionManifest {
   manifestDigest: string;
+  /** Receipt metadata, derived from the committed full tree; not part of the v1 manifest. */
+  hasName: boolean;
 }
 
 interface ProjectionOptions {
@@ -49,7 +51,8 @@ export function encodeNativeSessionProjection(
     digest: digest(jsonl), entryIds: snapshot.entryIds,
   };
   const metadata = JSON.stringify(manifest) + '\n';
-  return { jsonl, metadata, descriptor: { ...manifest, manifestDigest: digest(metadata) } };
+  return { jsonl, metadata, descriptor: { ...manifest, manifestDigest: digest(metadata),
+    hasName: snapshot.entries.some(entry => entry.type === 'session_info') } };
 }
 
 async function directory(path: string): Promise<void> {
@@ -166,5 +169,6 @@ export async function readNativeSessionDescriptor(sessionPath: string): Promise<
   if (!header || typeof header !== 'object' || !('id' in header) || header.id !== value.nativeSessionId) {
     throw new Error('Native projection session identity does not match');
   }
-  return { ...value, manifestDigest: digest(metadata) };
+  return { ...value, manifestDigest: digest(metadata),
+    hasName: jsonl.trimEnd().split('\n').slice(1).some(line => JSON.parse(line).type === 'session_info') };
 }

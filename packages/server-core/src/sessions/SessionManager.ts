@@ -243,6 +243,7 @@ interface ManagedSession extends SessionConfig {
   agent: AgentBackend | null
   messageQueue: QueuedMessage[]
   stopEpoch?: number
+  nameChangeVersion?: number
   pendingToolInputs: Map<string, { toolName: string; input: Record<string, unknown> }>
   backgroundTaskOutputs: Map<string, { outputFile?: string }>
   backgroundTaskRegistry: Map<string, RunningBackgroundTask>
@@ -391,7 +392,7 @@ export class SessionManager implements ISessionManager {
       return { nativeSessionId, turnDone: this.turnCompletions.get(sessionId)?.promise ?? Promise.resolve() }
     },
     claim: (sessionId, inputId) => this.inputClients.claim(sessionId, inputId),
-    projection: (sessionId, reference, backend) => this.registerNativeProjection(sessionId, reference, backend),
+    projection: (sessionId, reference, backend, hasName) => this.registerNativeProjection(sessionId, reference, backend, hasName),
     prepareFork: (sessionId, request) => this.prepareNativeFork(sessionId, request),
     closeFork: (sourceId, targetId, proof, reference) => this.closeNativeFork(sourceId, targetId, proof, reference),
     bindFork: async (targetId, proof, reference) => {
@@ -602,7 +603,7 @@ export class SessionManager implements ISessionManager {
       preview: _preview, messageCount: _messageCount,
       lastFinalMessageId: _lastFinalMessageId, lastMessageRole: _lastMessageRole,
       pendingExternalHeader: _pendingExternalHeader,
-      activeTurnSerial: _activeTurnSerial,
+      activeTurnSerial: _activeTurnSerial, nameChangeVersion: _nameChangeVersion,
       pendingHandoffSummary: _pendingHandoffSummary, handoffSummaryExpired: _handoffSummaryExpired, cancelHandoffWait: _cancelHandoffWait,
       messages, nativeArchivedMessages, tokenUsage, ...config } = managed
     return { ...config, messages: messages.map(messageToStored), nativeArchivedMessages, tokenUsage }
@@ -867,7 +868,17 @@ export class SessionManager implements ISessionManager {
     return this.updateMetadata(sessionId, { isArchived: false, archivedAt: undefined }, { type: 'session_unarchived', sessionId })
   }
 
-  renameSession(sessionId: string, name: string): Promise<void> {
+  async renameSession(sessionId: string, name: string): Promise<void> {
+    const managed = this.sessions.get(sessionId)
+    if (managed) managed.nameChangeVersion = (managed.nameChangeVersion ?? 0) + 1
+    if (managed?.codingMode) {
+      if (this.nativeOwners.isLocked(sessionId)) throw new Error('Native session replacement is in progress')
+      const backend = (managed.agent ?? await this.getOrCreateAgent(managed)).nativeSessionOwner
+      if (this.nativeOwners.isLocked(sessionId)) throw new Error('Native session replacement is in progress')
+      if (!backend?.setSessionName) throw new Error('Native session naming is unavailable')
+      await backend.setSessionName(name.trim())
+      return
+    }
     return this.updateMetadata(sessionId, { name: name.trim() || undefined }, { type: 'name_changed', sessionId, name: name.trim() || undefined })
   }
 
@@ -956,7 +967,7 @@ export class SessionManager implements ISessionManager {
       })
 
       const isFirstUserMessage = managed.messages.filter(item => item.role === 'user').length === 1
-      if (isFirstUserMessage && !managed.name && !options?.hidden) {
+      if (isFirstUserMessage && managed.name === undefined && !options?.hidden) {
         let titleSource = message
         for (const badge of options?.badges ?? []) {
           if (badge.rawText && badge.label) titleSource = titleSource.replace(badge.rawText, badge.label)
@@ -977,11 +988,17 @@ export class SessionManager implements ISessionManager {
 
   private async generateTitle(managed: ManagedSession, userMessage: string): Promise<void> {
     try {
+      if (managed.nativeSessionProjection && (managed.nativeSessionProjection.name !== null || managed.name === '')) return
+      const precedingName = managed.name
+      const nameVersion = managed.nameChangeVersion ?? 0
       const agent = await this.getOrCreateAgent(managed)
       const title = await agent.generateTitle(userMessage, { language: resolveTitleLanguageName() })
-      if (!title) return
-      managed.name = title
-      await this.flushSession(managed.id)
+      if (!title || managed.name !== precedingName || (managed.nameChangeVersion ?? 0) !== nameVersion) return
+      if (managed.codingMode && managed.nativeSessionProjection) await this.renameSession(managed.id, title)
+      else {
+        managed.name = title
+        await this.flushSession(managed.id)
+      }
       this.emit(managed.workspace.id, { type: 'title_generated', sessionId: managed.id, title })
     } catch { return }
   }
@@ -1134,9 +1151,15 @@ export class SessionManager implements ISessionManager {
     })
   }
 
-  private registerNativeProjection(sessionId: string, value: unknown, backend: PiNativeOwnerBackend): Promise<void> {
+  private registerNativeProjection(sessionId: string, value: unknown, backend: PiNativeOwnerBackend, hasName?: boolean): Promise<void> {
     const reference = parseNativeSessionReference(value)
     if (!reference) return Promise.reject(new Error('Invalid native projection reference'))
+    const current = this.sessions.get(sessionId)
+    if (current?.agent?.nativeSessionOwner === backend && (reference.name !== null || hasName === true)
+      && reference.revision >= (current.nativeSessionProjection?.revision ?? -1)) {
+      // Invalidate pending automatic titles at admission, before strict IO updates the visible name.
+      current.nameChangeVersion = (current.nameChangeVersion ?? 0) + 1
+    }
     return this.persistNativeMetadata(sessionId, (snapshot, managed) => {
       if (!managed.agent || managed.agent.nativeSessionOwner !== backend) throw new Error('Native projection backend is no longer current')
       if (reference.sessionId !== sessionId || reference.nativeSessionId !== managed.agent.getSessionId()) {
@@ -1150,11 +1173,20 @@ export class SessionManager implements ISessionManager {
         if (reference.revision < previous.revision) return
         if (reference.revision === previous.revision) {
           if (reference.manifestDigest !== previous.manifestDigest) throw new Error('Native projection changed within one revision')
-          return
         }
       }
+      const name = reference.name ?? (hasName === true ? '' : undefined)
+      const nameChanged = name !== undefined && managed.name !== name
+      if (previous?.manifestDigest === reference.manifestDigest && !nameChanged) return
       snapshot.nativeSessionProjection = reference
-      return () => { managed.nativeSessionProjection = reference }
+      if (nameChanged) snapshot.name = name
+      return () => {
+        managed.nativeSessionProjection = reference
+        if (nameChanged) {
+          managed.name = name
+          this.emit(managed.workspace.id, { type: 'name_changed', sessionId, name })
+        }
+      }
     })
   }
 

@@ -123,6 +123,7 @@ type InboundMessage = (
   | { type: 'cancel_ephemeral_query'; id: string }
   | { type: 'ensure_session_ready'; id: string }
   | { type: 'set_model'; model: string }
+  | { type: 'set_session_name'; id: string; name: string }
   | { type: 'set_thinking_level'; level: string }
   | { type: 'compact'; id: string; customInstructions?: string }
   | { type: 'cancel_compact'; id: string }
@@ -209,6 +210,7 @@ type OutboundMessage =
   | PiNativeOwnerEventBody
   | { type: 'callback_port'; callbackPort: number }
   | { type: 'owner_released'; id: string; released: boolean; error?: string }
+  | { type: 'set_session_name_result'; id: string; success: boolean; errorMessage?: string }
   | ExtensionUIEvent
   | { type: 'extension_ui_response_result'; id: string; accepted: boolean }
   | { type: 'prompt_result'; id: string; handled: boolean; completed: boolean }
@@ -1533,6 +1535,18 @@ async function processMessage(msg: InboundMessage, compactController?: AbortCont
 
     case 'set_auto_compaction':
       await handleSetAutoCompaction(msg);
+      break;
+
+    case 'set_session_name':
+      try {
+        if (typeof msg.name !== 'string') throw new Error('Invalid native session name');
+        const active = await ensureKernel();
+        await active.setSessionName(msg.name);
+        send({ type: 'set_session_name_result', id: msg.id, success: true });
+      } catch (error) {
+        send({ type: 'set_session_name_result', id: msg.id, success: false,
+          errorMessage: error instanceof Error ? error.message : String(error) });
+      }
       break;
 
     case 'update_runtime_config':

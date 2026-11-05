@@ -276,6 +276,11 @@ export class CodingHost {
 
   get isStreaming(): boolean { return this.session.isStreaming; }
 
+  async setSessionName(name: string): Promise<void> {
+    await this.backgroundAction(async () => { this.session.setSessionName(name); });
+    await this.projection.flush();
+  }
+
   /** Admit input after native command, input and before-agent-start processing; retain its running promise. */
   async submit(text: string, options: PromptOptions): Promise<boolean> {
     const admitted = Promise.withResolvers<boolean>();

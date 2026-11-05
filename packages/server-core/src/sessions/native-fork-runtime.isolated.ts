@@ -1,5 +1,6 @@
 /** Real product fork, native journal, archive, callback and process restart. */
-import { expect, test } from 'bun:test'
+import { expect, spyOn, test } from 'bun:test'
+import * as fs from 'node:fs/promises'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -35,6 +36,10 @@ test('real product fork, switch and parent lineage preserve history across owner
         pi.appendEntry('inactive-file', { path: join(process.env.MKAGENT_SESSION_DIR, 'attachments', 'inactive.md') });
       } });
       pi.registerCommand('native-idle', { handler: async (_args, ctx) => { await ctx.waitForIdle(); } });
+      pi.registerCommand('native-name', { handler: async name => { pi.setSessionName(name); } });
+      pi.registerCommand('native-read-name', { handler: async () => {
+        pi.appendEntry('observed-name', { name: pi.getSessionName() ?? null });
+      } });
       pi.registerCommand('native-switch', { handler: async (sessionPath, ctx) => {
         await ctx.switchSession(sessionPath.trim(), { withSession: async next => {
           await next.sendUserMessage('switch callback marker');
@@ -84,7 +89,7 @@ test('real product fork, switch and parent lineage preserve history across owner
   ensureConfigDir()
   const { SessionManager, setSessionPlatform } = await import('./SessionManager')
   const { createHeadlessPlatform } = await import('../runtime/platform-headless')
-  const { getSessionPath, loadSession } = await import('@mkagent/shared/sessions')
+  const { getSessionPath, getSessionFilePath, loadSession } = await import('@mkagent/shared/sessions')
   const { readTrustedNativeSession } = await import('./native-session-source')
   const platform = createHeadlessPlatform()
   platform.appRootPath = appRoot
@@ -143,9 +148,25 @@ test('real product fork, switch and parent lineage preserve history across owner
         mkdirSync(join(sourcePath, 'durable-store'), { recursive: true })
         writeFileSync(join(sourcePath, 'durable-store', 'main.jsonl'), '')
       }
+      const requestsBeforeOpen = requests.length
+      await deadline(manager.renameSession(source.id, ''))
+      expect(loadSession(workspaceRoot, source.id)?.name).toBe('')
+      expect(requests.length).toBe(requestsBeforeOpen)
       await deadline(manager.sendMessage(source.id, 'included source marker'))
+      expect(loadSession(workspaceRoot, source.id)?.name).toBe('')
       expect(existsSync(join(sourcePath, 'durable-store', backend === 'jsonl' ? 'main.jsonl' : 'store.db'))).toBe(true)
       await deadline(manager.sendMessage(source.id, 'excluded source marker'))
+      const nameRequests = requests.length
+      await deadline(manager.sendMessage(source.id, '/native-name Plugin committed name'))
+      expect((await read(source.id)).stored.name).toBe('Plugin committed name')
+      await deadline(manager.renameSession(source.id, 'Product manual name'))
+      await deadline(manager.sendMessage(source.id, '/native-read-name'))
+      const named = await read(source.id)
+      expect(named.tree.entries.findLast(entry => entry.customType === 'observed-name')?.data).toEqual({ name: 'Product manual name' })
+      expect(named.stored.name).toBe('Product manual name')
+      await deadline(manager.renameSession(source.id, ''))
+      expect((await read(source.id)).stored.name).toBe('')
+      expect(requests.length).toBe(nameRequests)
       const path = join(sourcePath, 'attachments', 'inactive.md')
       mkdirSync(join(sourcePath, 'attachments'), { recursive: true })
       writeFileSync(path, 'archived file contents')
@@ -190,6 +211,14 @@ test('real product fork, switch and parent lineage preserve history across owner
       const waiting = held = { entered: Promise.withResolvers<void>(), release: Promise.withResolvers<void>() }
       const busyTarget = manager.sendMessage(source.id, 'held target marker')
       await deadline(waiting.entered.promise)
+      try {
+        await deadline(manager.renameSession(source.id, 'Renamed during streaming'))
+        expect(loadSession(workspaceRoot, source.id)?.name).toBe('Renamed during streaming')
+      } catch (error) {
+        waiting.release.resolve()
+        await busyTarget
+        throw error
+      }
       const busySwitch = operation = { sourceId: repeatedId, targetId: source.id, done: Promise.withResolvers<string>() }
       const busyError = busySwitch.done.promise.catch(error => String(error))
       const sourcePid = child(runtime.sessions.get(repeatedId)!.agent)!.pid
@@ -302,7 +331,20 @@ test('real product fork, switch and parent lineage preserve history across owner
       await deadline(manager.deleteSession(source.id))
       await deadline(manager.deleteSession(targetId))
       const repeatedAgent = runtime.sessions.get(repeatedId)!.agent
-      await deadline(repeatedAgent.nativeSessionOwner!.releaseForOwner())
+      const beforeNameFailure = loadSession(workspaceRoot, repeatedId)!.name
+      const rename = fs.rename
+      const spy = spyOn(fs, 'rename').mockImplementation(async (from, to) => {
+        if (String(to) === getSessionFilePath(workspaceRoot, repeatedId)) throw new Error('name receipt storage failure')
+        return rename(from, to)
+      })
+      try {
+        await expect(deadline(manager.renameSession(repeatedId, 'Recovered committed name'))).rejects.toThrow('name receipt storage failure')
+      } finally { spy.mockRestore() }
+      expect(loadSession(workspaceRoot, repeatedId)?.name).toBe(beforeNameFailure)
+      expect(JSON.parse(readFileSync(join(getSessionPath(workspaceRoot, repeatedId), 'meta', 'native-session.json'), 'utf8')).name)
+        .toBe('Recovered committed name')
+      await deadline(repeatedAgent.nativeSessionOwner!.releaseForOwner()).catch(() => {})
+      expect(child(repeatedAgent)).toBeNull()
       await deadline(manager.sendMessage(repeatedId, 'cold fork continuation marker'))
       expect(child(repeatedAgent)?.pid).not.toBe(originalPid)
       expect(JSON.stringify(requests.at(-1))).toContain('cold fork continuation marker')
@@ -310,6 +352,7 @@ test('real product fork, switch and parent lineage preserve history across owner
       expect(JSON.stringify(requests.at(-1))).not.toContain('excluded source marker')
       await manager.flushSession(repeatedId)
       expect(loadSession(workspaceRoot, repeatedId)?.nativeArchivedMessages?.some(row => row.id === inactiveRow.id)).toBe(true)
+      expect(loadSession(workspaceRoot, repeatedId)?.name).toBe('Recovered committed name')
       expect(redirected).toContain(repeatedId)
     }
   } finally {

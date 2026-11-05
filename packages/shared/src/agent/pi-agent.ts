@@ -177,7 +177,7 @@ export class PiAgent extends BaseAgent {
   private workerConnection: PiWorkerConnection | null = null;
   private workerLease: PiWorkerLease | null = null;
   private projectionReadyLease?: PiWorkerLease;
-  private pendingNativeProjection?: NativeSessionReference;
+  private pendingNativeProjection?: { reference: NativeSessionReference; hasName?: boolean };
   private nativeProjectionReceipt?: { lease: PiWorkerLease; promise: Promise<void> };
   private subprocessReady: Promise<void> | null = null;
   private subprocessStarting: Promise<void> | null = null;
@@ -192,6 +192,7 @@ export class PiAgent extends BaseAgent {
     adoptForOwner: (transfer, transactionId) => this.adoptForOwner(transfer, transactionId),
     sendOwnerControl: control => this.sendOwnerControl(control),
     releaseForOwner: () => this.releaseForOwner(),
+    setSessionName: name => this.setNativeSessionName(name),
   };
   private ownerPreparing = false;
   private detachedOwner?: { transactionId: string; completed: boolean };
@@ -200,6 +201,8 @@ export class PiAgent extends BaseAgent {
   private sourceTransfer?: PiNativeWorkerTransfer;
   private ownerReleaseTimeoutMs = 15_000;
   private pendingOwnerReleases = new Map<string, PendingEphemeralRequest<void> & { lease: PiWorkerLease }>();
+  private pendingSessionNames = new Map<string, PendingEphemeralRequest<void>>();
+  private sessionNameUpdatesPending = 0;
   private readonly extensionUI: PiExtensionUITransport;
 
   // Pi session ID (managed by subprocess, reported back)
@@ -502,9 +505,11 @@ export class PiAgent extends BaseAgent {
     }
     if (message.type === 'event' && message.event && typeof message.event === 'object'
       && (message.event as Record<string, unknown>).type === 'native_session_projection') {
-      const reference = parseNativeSessionReference((message.event as Record<string, unknown>).descriptor);
+      const descriptor = (message.event as Record<string, unknown>).descriptor;
+      const reference = parseNativeSessionReference(descriptor);
       if (reference?.sessionId === lease.ownerSessionId) {
-        this.pendingNativeProjection = reference;
+        const hasName = (descriptor as Record<string, unknown>).hasName;
+        this.pendingNativeProjection = { reference, hasName: typeof hasName === 'boolean' ? hasName : undefined };
         this.publishNativeProjection(connection, lease);
       }
       return;
@@ -516,14 +521,15 @@ export class PiAgent extends BaseAgent {
 
   private publishNativeProjection(connection: PiWorkerConnection, lease: PiWorkerLease): void {
     if (this.workerLease !== lease || this.projectionReadyLease !== lease) return;
-    const reference = this.pendingNativeProjection;
+    const publication = this.pendingNativeProjection;
     this.pendingNativeProjection = undefined;
+    const reference = publication?.reference;
     if (!reference || reference.nativeSessionId !== this.piSessionId) return;
     const host = this.config.nativeSessionOwner;
     if (!host?.onProjection) return;
     const report = (error: unknown) => this.debug(`Native projection registration failed: ${error instanceof Error ? error.message : String(error)}`);
     const register = host.onProjection;
-    const receipt = Promise.resolve().then(() => register(reference, this.nativeSessionOwner, connection));
+    const receipt = Promise.resolve().then(() => register(reference, this.nativeSessionOwner, connection, publication?.hasName));
     this.nativeProjectionReceipt = { lease, promise: receipt };
     void receipt.catch(report);
   }
@@ -592,7 +598,7 @@ export class PiAgent extends BaseAgent {
 
   private assertNativeOwnerAvailable(): void {
     if (this.disposed) throw new Error('PiAgent is disposed');
-    if (this.ownerPreparing || this._isProcessing || this.detachedOwner || this.subprocessStarting || this.pendingCompactions.size
+    if (this.ownerPreparing || this._isProcessing || this.detachedOwner || this.subprocessStarting || this.pendingCompactions.size || this.sessionNameUpdatesPending
       || this.pendingMiniCompletions.size || this.pendingLlmQueries.size || this.pendingPermissions.size || this.runtimeConfigUpdatesPending) {
       throw new Error('Native session target is busy');
     }
@@ -1279,6 +1285,13 @@ export class PiAgent extends BaseAgent {
         this.handleRuntimeConfigUpdateResult(msg);
         break;
 
+      case 'set_session_name_result': {
+        const pending = this.takePendingEphemeral(this.pendingSessionNames, String(msg.id));
+        if (msg.success === true) pending?.resolve();
+        else pending?.reject(new Error(String(msg.errorMessage || 'Native session rename failed')));
+        break;
+      }
+
       case 'session_id_update':
         // Pi session ID changed
         if (msg.sessionId) {
@@ -1886,6 +1899,7 @@ export class PiAgent extends BaseAgent {
   }
 
   private rejectAllPendingEphemeral(error: Error): void {
+    this.rejectPendingEphemeralMap(this.pendingSessionNames, error);
     for (const pending of this.pendingBackgroundStops.values()) { clearTimeout(pending.timer); pending.reject(error); }
     this.pendingBackgroundStops.clear();
     this.rejectPendingEphemeralMap(this.pendingMiniCompletions, error);
@@ -2079,6 +2093,32 @@ export class PiAgent extends BaseAgent {
 
       this.send({ type: 'ensure_session_ready', id });
     });
+  }
+
+  private async setNativeSessionName(name: string): Promise<void> {
+    this.sessionNameUpdatesPending++;
+    try {
+      await this.requestNativeSessionName(name);
+    } finally { this.sessionNameUpdatesPending--; }
+  }
+
+  private async requestNativeSessionName(name: string): Promise<void> {
+    await this.requestEnsureSessionReady();
+    const lease = this.workerLease;
+    if (!lease || this.ownerControls.size || this.detachedOwner) throw new Error('Native session replacement is in progress');
+    const id = `session-name-${++this.rpcIdCounter}`;
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        this.takePendingEphemeral(this.pendingSessionNames, id)?.reject(new Error('Native session rename timed out'));
+      }, 15_000);
+      this.pendingSessionNames.set(id, { resolve, reject, timeout });
+      if (!lease.send({ type: 'set_session_name', id, name })) {
+        this.takePendingEphemeral(this.pendingSessionNames, id)?.reject(new Error('Native session rename delivery failed'));
+      }
+    });
+    const receipt = this.nativeProjectionReceipt;
+    if (this.workerLease !== lease || receipt?.lease !== lease) throw new Error('Native session rename lost its product receipt');
+    await receipt.promise;
   }
 
   /**

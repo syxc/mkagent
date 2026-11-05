@@ -58,6 +58,7 @@ export interface PiNativeWorkerTransfer {
 /** Product-facing operations; physical process ownership remains inside the backend. */
 export interface PiNativeOwnerBackend {
   assertAvailable?(): void;
+  setSessionName?(name: string): Promise<void>;
   prepareActivation(): Promise<PiNativeOwnerActivation>;
   detachForOwner(): Promise<PiNativeWorkerTransfer>;
   adoptForOwner(transfer: PiNativeWorkerTransfer, transactionId: string): PiWorkerScope;
@@ -68,7 +69,7 @@ export interface PiNativeOwnerBackend {
 export interface PiNativeOwnerHostPort {
   /** Suppress automatic UI startup while an unpublished target is being prepared. */
   readonly deferStartup?: boolean;
-  onProjection?(reference: NativeSessionReference, backend: PiNativeOwnerBackend, transport: object): Promise<void>;
+  onProjection?(reference: NativeSessionReference, backend: PiNativeOwnerBackend, transport: object, hasName?: boolean): Promise<void>;
   onEvent(event: PiNativeOwnerEvent, backend: PiNativeOwnerBackend, transport: object): Promise<void>;
   onExit(backend: PiNativeOwnerBackend, transport: object, error: Error): Promise<void>;
 }

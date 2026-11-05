@@ -11,7 +11,7 @@ import type { NativeSwitchProof } from './native-session-switch'
 
 interface NativeOwnerHost {
   source(sessionId: string, backend: PiNativeOwnerBackend): { nativeSessionId: string; turnDone: Promise<void> }
-  projection?(sessionId: string, reference: NativeSessionReference, backend: PiNativeOwnerBackend): Promise<void>
+  projection?(sessionId: string, reference: NativeSessionReference, backend: PiNativeOwnerBackend, hasName?: boolean): Promise<void>
   prepareFork?(sessionId: string, request: PiNativeOwnerRequest): Promise<NativeForkProof>
   closeFork?(sourceId: string, targetId: string, proof: NativeForkProof, reference: NativeSessionReference): Promise<NativeForkProof>
   bindFork?(targetId: string, proof: NativeForkProof, reference: NativeSessionReference): Promise<void>
@@ -72,7 +72,7 @@ export class NativeSessionOwner {
   port(sessionId: string, deferStartup = false): PiNativeOwnerHostPort {
     return {
       deferStartup,
-      onProjection: (reference, backend) => this.host.projection?.(sessionId, reference, backend) ?? Promise.resolve(),
+      onProjection: (reference, backend, _transport, hasName) => this.host.projection?.(sessionId, reference, backend, hasName) ?? Promise.resolve(),
       onEvent: (event, backend, transport) => this.receive(sessionId, event, backend, transport),
       onExit: (backend, transport, error) => this.exit(backend, transport, error),
     }
