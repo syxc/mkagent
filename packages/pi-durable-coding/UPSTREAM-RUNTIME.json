@@ -579,7 +579,7 @@
       "source": "packages/coding-agent/src/core/package-manager.ts",
       "target": "src/pi/core/package-manager.ts",
       "sha256": "117f6a99c323c4284a905d1731756f745f435e11f82912b44363301f7b698fa0",
-      "portSha256": "f1e1644d9d889fc0ab760346853941d43433323a5df56de7820efee3c75a290c",
+      "portSha256": "c9bbc38fe83a4d9528eb8e6fd55855e936a2bffe9ef1d59e715728c68e9ff4c2",
       "changes": [
         "host-resource-trust-and-installed-package-policy"
       ]

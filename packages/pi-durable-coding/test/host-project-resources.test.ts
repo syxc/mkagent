@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, expect, test } from 'bun:test';
+import { afterEach, beforeEach, expect, spyOn, test } from 'bun:test';
+import * as childProcess from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -31,6 +32,9 @@ const options = () => ({ cwd, agentDir, globalSettings: { defaultProjectTrust: '
 const failed = (message: string) => errors.push(message);
 
 test('project code waits for the trust response, loads once and never installs missing packages', async () => {
+  using cleanup = new DisposableStack();
+  const spawn = spyOn(childProcess, 'spawn').mockImplementation(() => { throw new Error('Unexpected package subprocess'); });
+  cleanup.defer(() => spawn.mockRestore());
   const marker = join(root, 'executed');
   const globalMarker = join(root, 'global-executed');
   put(join(cwd, '.pi', 'extensions', 'project.ts'),
@@ -38,7 +42,7 @@ test('project code waits for the trust response, loads once and never installs m
   put(join(agentDir, 'extensions', 'global.ts'),
     `import { appendFileSync } from 'node:fs'; export default function() { appendFileSync(${JSON.stringify(globalMarker)}, 'loaded\\n'); }`);
   put(join(cwd, '.pi', 'settings.json'), JSON.stringify({
-    defaultProjectTrust: 'always', packages: ['git:https://invalid.example/must-not-fetch'],
+    defaultProjectTrust: 'always', packages: ['git:https://invalid.example/owner/must-not-fetch'],
   }));
   const asked = Promise.withResolvers<void>();
   const decision = Promise.withResolvers<string | undefined>();
@@ -56,6 +60,7 @@ test('project code waits for the trust response, loads once and never installs m
   expect(readFileSync(globalMarker, 'utf8')).toBe('loaded\n');
   expect(new ProjectTrustStore(agentDir).get(cwd)).toBeNull();
   expect(errors).toEqual([]);
+  expect(spawn).not.toHaveBeenCalled();
 });
 
 test('headless startup and cancelled prompts cannot take trust from project settings', async () => {

@@ -33,6 +33,7 @@ test('product startup gates native extensions and both project MCP files, and re
   const globalMarker = join(root, 'global-loaded')
   const projectMarker = join(root, 'project-loaded')
   const probe = join(root, 'probe.json')
+  const commandsProbe = join(root, 'commands.json')
   writeFileSync(join(extensions, 'trust-probe.ts'), `
     import { appendFileSync, writeFileSync } from 'node:fs';
     export default function(pi) {
@@ -41,6 +42,8 @@ test('product startup gates native extensions and both project MCP files, and re
         writeFileSync(${JSON.stringify(probe)}, JSON.stringify(pi.getAllTools().map(tool => tool.name))) });
       pi.registerCommand('trust-reload', { handler: (_, ctx) => ctx.reload() });
       pi.registerCommand('trust-idle', { handler: (_, ctx) => ctx.waitForIdle() });
+      pi.registerCommand('trust-commands', { handler: () =>
+        writeFileSync(${JSON.stringify(commandsProbe)}, JSON.stringify(pi.getCommands().map(command => command.name))) });
     }
   `)
   writeFileSync(join(cwd, '.pi', 'extensions', 'project.ts'), `
@@ -169,5 +172,31 @@ test('product startup gates native extensions and both project MCP files, and re
   expect(tools()).toEqual(expect.arrayContaining(['mcp__global__hello', 'mcp__native__hello', 'mcp__host__hello']))
   expect(readFileSync(projectMarker, 'utf8')).toBe('loaded\nloaded\n')
   expect(dialogs).toBeGreaterThan(0)
+  const localPackage = join(root, 'local package')
+  const packageMarker = join(root, 'package-invoked')
+  mkdirSync(localPackage)
+  writeFileSync(join(localPackage, 'package.json'), '{"name":"local-package","pi":{"extensions":["index.ts"]}}')
+  writeFileSync(join(localPackage, 'index.ts'), `
+    import { writeFileSync } from 'node:fs';
+    export default function(pi) {
+      pi.registerCommand('package-probe', { handler: () => writeFileSync(${JSON.stringify(packageMarker)}, 'called') });
+    }
+  `)
+  await run(session.id, '/packages list')
+  await run(session.id, `/packages install "${localPackage}"`)
+  expect(JSON.parse(readFileSync(join(agentDir, 'settings.json'), 'utf8')).packages).toHaveLength(1)
+  await run(session.id, '/package-probe')
+  expect(readFileSync(packageMarker, 'utf8')).toBe('called')
+  await run(session.id, `/packages remove "${localPackage}"`)
+  expect(JSON.parse(readFileSync(join(agentDir, 'settings.json'), 'utf8')).packages).toEqual([])
+  expect(existsSync(localPackage)).toBe(true)
+  await run(session.id, '/trust-commands')
+  const commandNames: string[] = JSON.parse(readFileSync(commandsProbe, 'utf8'))
+  expect(commandNames).toContain('packages')
+  expect(commandNames).not.toContain('package-probe')
+  new ProjectTrustStore(agentDir).set(cwd, false)
+  await run(session.id, '/trust-reload')
+  await run(session.id, `/packages install --local "${localPackage}"`)
+  expect(JSON.parse(readFileSync(join(cwd, '.pi', 'settings.json'), 'utf8')).packages).toBeUndefined()
   expect(modelRequests).toBe(0)
 }, 120_000)

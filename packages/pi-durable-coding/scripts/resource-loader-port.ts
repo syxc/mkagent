@@ -58,6 +58,8 @@ export function portResourceLoader(path: string, source: string): string {
 \tlegacyGlobalPackages?: boolean;
 \t/** Disable implicit HOME/.agents/skills discovery. Explicit configured paths still work. */
 \tincludeHomeSkills?: boolean;
+\t/** Keep package subprocess output out of the host protocol stream. */
+\tcommandOutput?: "stderr";
 }
 
 interface PackageManagerOptions {
@@ -66,6 +68,24 @@ interface PackageManagerOptions {
       '\tprivate builtinExtensions: string[];\n\tprivate resolutionPolicy: PackageResolutionPolicy;');
     replace('\t\tthis.builtinExtensions = options.builtinExtensions ?? [];',
       '\t\tthis.builtinExtensions = options.builtinExtensions ?? [];\n\t\tthis.resolutionPolicy = options.resolutionPolicy ?? {};');
+    replace('stdio: isStdoutTakenOver() ? ["ignore", 2, 2] : "inherit",',
+      'stdio: this.resolutionPolicy.commandOutput === "stderr" || isStdoutTakenOver() ? ["ignore", 2, 2] : "inherit",');
+    replace('update(source?: string): Promise<void>', 'update(source?: string, options?: { local?: boolean }): Promise<void>', 2);
+    replace('\t\tconst projectSettings = this.settingsManager.getProjectSettings();\n\t\tconst identity = source ? this.getPackageIdentity(source) : undefined;',
+      '\t\tif (options?.local) this.assertProjectTrustedForScope("project");\n\t\tconst projectSettings = options?.local === false ? {} : this.settingsManager.getProjectSettings();\n\t\tconst identity = source ? this.getPackageIdentity(source) : undefined;');
+    replace('\tasync update(source?: string, options?: { local?: boolean }): Promise<void> {\n\t\tconst globalSettings = this.settingsManager.getGlobalSettings();',
+      '\tasync update(source?: string, options?: { local?: boolean }): Promise<void> {\n\t\tconst globalSettings = options?.local === true ? {} : this.settingsManager.getGlobalSettings();');
+    replace('\t\tawait Promise.all(tasks);', '\t\tawait this.settleTasks(tasks);');
+    replace('\t\tawait Promise.all(Array.from({ length: workerCount }, () => worker()));',
+      '\t\tawait this.settleTasks(Array.from({ length: workerCount }, () => worker()));');
+    replace('\tprivate async runWithConcurrency<T>', `\t/** Drain every started installer before reporting a batch failure to its owner. */
+\tprivate async settleTasks(tasks: Promise<unknown>[]): Promise<void> {
+\t\tfor (const result of await Promise.allSettled(tasks)) {
+\t\t\tif (result.status === "rejected") throw result.reason;
+\t\t}
+\t}
+
+\tprivate async runWithConcurrency<T>`);
     replace('\t\tconst packageSources = this.dedupePackages(allPackages);\n\t\tconst installFailures',
       '\t\tfor (const pkg of additionalSources ?? []) allPackages.push({ pkg, scope: "user" });\n\t\tconst packageSources = this.dedupePackages(allPackages);\n\t\tconst installFailures');
     replace('this.resolvePackageSources(packageSources, accumulator);',

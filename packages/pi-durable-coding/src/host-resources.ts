@@ -2,6 +2,7 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { CodingResourceOptions } from './resources.ts';
+import { createHostPackageExtension } from './host-package-commands.ts';
 import type { EventBus } from './pi/core/event-bus.ts';
 import type { InlineExtension } from './pi/core/extensions/types.ts';
 import {
@@ -106,7 +107,10 @@ export function createHostResources(options: HostResourceOptions): {
   const resourceLoader = new HostResourceLoader({
     cwd, agentDir, settingsManager,
     eventBus: options.eventBus,
-    extensionFactories: options.extensionFactories,
+    extensionFactories: [
+      ...(options.extensionFactories ?? []),
+      ...(discover ? [createHostPackageExtension({ cwd, agentDir, settingsManager })] : []),
+    ],
     additionalPackageSources: options.packagePaths,
     additionalExtensionPaths: options.extensionPaths,
     additionalSkillPaths: options.skillPaths,
@@ -119,7 +123,7 @@ export function createHostResources(options: HostResourceOptions): {
     disabledBuiltinExtensions: options.disabledBuiltinExtensions,
     onMissingPackage: async () => 'skip',
     packageResolutionPolicy: {
-      refreshTemporary: false, legacyGlobalPackages: false, includeHomeSkills: false,
+      refreshTemporary: false, legacyGlobalPackages: false, includeHomeSkills: false, commandOutput: 'stderr',
     },
     noContextFiles: true,
     agentsFilesOverride: () => ({

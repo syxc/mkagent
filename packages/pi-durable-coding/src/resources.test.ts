@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test';
+import * as childProcess from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -85,17 +86,21 @@ describe('ported native resource behavior', () => {
   });
 
   test('does not load untrusted project resources or fetch a missing git package', async () => {
+    using cleanup = new DisposableStack();
+    const spawn = spyOn(childProcess, 'spawn').mockImplementation(() => { throw new Error('Unexpected package subprocess'); });
+    cleanup.defer(() => spawn.mockRestore());
     put(join(cwd, '.pi', 'extensions', 'blocked.ts'), 'throw new Error("UNTRUSTED");');
     put(join(cwd, '.pi', 'SYSTEM.md'), 'untrusted prompt');
     const resources = await loadCodingResources({
       cwd, agentDir, projectTrusted: false,
-      projectSettings: { packages: ['git:https://invalid.example/never-connect'] },
-      packagePaths: ['git:https://invalid.example/also-never-connect'],
+      projectSettings: { packages: ['git:https://invalid.example/owner/never-connect'] },
+      packagePaths: ['git:https://invalid.example/owner/also-never-connect'],
     });
     expect(resources.extensions).toEqual([]);
     expect(resources.systemPrompt).toBeUndefined();
     expect(existsSync(join(agentDir, 'git'))).toBe(false);
     expect(existsSync(join(cwd, '.pi', 'git'))).toBe(false);
+    expect(spawn).not.toHaveBeenCalled();
   });
 
   test('preserves global, ancestor, cwd and override precedence', () => {

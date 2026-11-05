@@ -117,7 +117,7 @@ describe('host native resources', () => {
     expect(settingsManager).toBeInstanceOf(SettingsManager);
     expect(settingsManager.isProjectTrusted()).toBe(false);
     expect(settingsManager.drainErrors()).toEqual([]);
-    expect(resourceLoader.getExtensions().extensions).toEqual([]);
+    expect(resourceLoader.getExtensions().extensions.map(extension => [...extension.commands.keys()])).toEqual([['packages']]);
     expect(resourceLoader.getExtensions().errors).toEqual([]);
     expect(resourceLoader.getSkills().skills).toEqual([]);
     expect(resourceLoader.getAgentsFiles().agentsFiles).toEqual([{ path: join(agentDir, 'AGENTS.md'), content: 'global context' }]);
@@ -253,7 +253,7 @@ describe('host native resources', () => {
       const warnings = resourceLoader.getExtensions().warnings ?? [];
       expect(warnings.map(value => value.path).sort()).toEqual([configured, explicit, 'npm:host-extra-missing@1.0.0'].sort());
       expect(warnings.every(value => value.warning.includes('skipped by the host resource policy'))).toBe(true);
-      expect(resourceLoader.getExtensions().extensions).toEqual([]);
+      expect(resourceLoader.getExtensions().extensions.map(extension => [...extension.commands.keys()])).toEqual([['packages']]);
     }
     const previousOffline = process.env.PI_OFFLINE;
     process.env.PI_OFFLINE = '1';

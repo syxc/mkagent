@@ -2333,16 +2333,16 @@
       "reason": "Resolve native project trust hooks, remembered and session-only decisions before project resources and MCP can execute."
     },
     "packages/pi-durable-coding/test/host-project-resources.test.ts": {
-      "sha256": "45b459e448d87b4a63e60d5626d7dc5f02bdfb43289cf30ba668b87ec95838df",
-      "reason": "Verify trust ordering, cancellation, headless defaults, native reload, remembered decisions and skipped missing packages."
+      "sha256": "85e8206a69510b71360b325297c33841696b58f0fe5bd5167b20032f223f2309",
+      "reason": "Verify project trust and prove valid missing git sources cannot spawn an implicit installer after approval."
     },
     "packages/pi-agent-server/src/mcp/project-trust.test.ts": {
       "sha256": "90143210b24c430fdec8e2df97ae59faf2268a97f7efa9aacbcf1f381dd1e5e8",
       "reason": "Verify shared native and host MCP trust, host configuration precedence and project credential routing rejection."
     },
     "packages/server-core/src/sessions/native-project-trust.isolated.ts": {
-      "sha256": "8601a3a4f0985fb4c7aff700d0e833912718092fdc1fe917f6bb633f515f5608",
-      "reason": "Exercise trust approval and revocation through the actual product owner, UI protocol and bundled native worker without model requests."
+      "sha256": "7182404f7b4da1f3812f8e95f11d4918c1ab18d09b7b4be7f03c48556e342c74",
+      "reason": "Exercise project resource trust, native MCP revocation and explicit local package install and remove through the actual product owner."
     },
     "packages/pi-durable-coding/scripts/native-user-input-port.ts": {
       "sha256": "21756f4b016528e0d16ab7bd80b4f628a9703308302f0c686e817f76f0d61469",
@@ -3485,8 +3485,8 @@
       "reason": "Resolve installed package resources offline and require explicit installation."
     },
     "packages/pi-durable-coding/src/resources.test.ts": {
-      "sha256": "d425c9c3467a2686f0a64c391ee871f1cb6fc9ee7d3ec3e38d32491d38292d8b",
-      "reason": "Verify resource precedence, packages, collisions and project execution trust."
+      "sha256": "ae5fc0865801502c0ad69f72986d5de4c11d33a3caf82fdf26c23239c6cdede3",
+      "reason": "Exercise ported resource behavior and reject subprocess discovery for valid missing git sources."
     },
     "packages/pi-durable-coding/src/resources.ts": {
       "sha256": "938bb6cf6e73b634639bb5ba0de776ae3b6df148aa79468f8680b2b590c94d24",
@@ -3733,8 +3733,8 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "77bcab3e755855195c0513e5a7d5180b9be60e0f3850ba5e9884dcc3e687334b",
-      "reason": "Record pinned Pi v1.5.0 source and output hashes, complete public closure, asset origins and controlled runtime transformations."
+      "sha256": "ef749c4574e20766f7cd94852d16dcc9f1632107106f3911d62355034bc3e483",
+      "reason": "Record reproducible pinned coding-runtime source hashes after the scoped package-manager port."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "b8c97d0c1abaafc1908c4f40b427742e3ee10a78c3e17949aae9e92e473d0f29",
@@ -3745,8 +3745,8 @@
       "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in model-runtime-port.ts."
     },
     "packages/pi-durable-coding/scripts/resource-loader-port.ts": {
-      "sha256": "bc8fc4ba0b5d1e2555e2fed5ab1ee7bdcd5df92a7a7555ade1b992d4ed4c4d7a",
-      "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in resource-loader-port.ts."
+      "sha256": "55b7b133bc5eadc6acba0675d290baf90c2a20b969e5c1a7d064b5d21cd8adc0",
+      "reason": "Port explicit package update scope, stderr output and batch failure draining while retaining pinned discovery and trust policies."
     },
     "packages/pi-durable-coding/scripts/session-runtime-port.ts": {
       "sha256": "8be8f80017ef169af92606ab8468c8c8599fcfd482cde7eb0bf08a1eb12c6fea",
@@ -3833,8 +3833,8 @@
       "reason": "Provide the independent native coding host adapter and public contracts in durable-loop.ts."
     },
     "packages/pi-durable-coding/src/host-resources.ts": {
-      "sha256": "6266b0c90db7f1dda113ed7def0955580b3473c78dd48fd2a54554fb4dc668ff",
-      "reason": "Bind the native Pi resource loader to host paths, settings and trust; allow native sessions to disable ambient Pi discovery while retaining explicit host resources."
+      "sha256": "c531e838444ec25c24df6b6f9db8b9af4c6f90341797eab8f41239f1765f6e14",
+      "reason": "Keep native resource and settings policies while registering explicit package commands only for native discovery."
     },
     "packages/pi-durable-coding/src/host-tool-controls.ts": {
       "sha256": "1c938cad3214fb6020a8f1ef12b3af617d8978251df578cfda8b889d936c1ec6",
@@ -4117,8 +4117,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/output-guard.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/package-manager.ts": {
-      "sha256": "f1e1644d9d889fc0ab760346853941d43433323a5df56de7820efee3c75a290c",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/package-manager.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "c9bbc38fe83a4d9528eb8e6fd55855e936a2bffe9ef1d59e715728c68e9ff4c2",
+      "reason": "Generate pinned package discovery and installation with optional scope, stderr output and complete draining of failed update batches."
     },
     "packages/pi-durable-coding/src/pi/core/pi-ai-schemas.ts": {
       "sha256": "ba5a59729646209cbfa870d8a9b3def24d51c2eb21b1ea6a6a331690c35cddd8",
@@ -4897,8 +4897,8 @@
       "reason": "Exercise durable native coding behavior and isolated recovery through the host-model-runtime.test.ts fixture."
     },
     "packages/pi-durable-coding/test/host-resources.test.ts": {
-      "sha256": "b27dd86c558d33734260411c9c2461acc8c744ee9e98c2047f9c36b6ef6d7e31",
-      "reason": "Exercise native resource trust, provenance, explicit packages and reload; prove host-only sessions do not read ambient Pi settings or execute discovered extensions."
+      "sha256": "6dfe6874b774967c38f8fdcca6221846e790fd93a7c3c5918daf1b52f5d79173",
+      "reason": "Verify native resource isolation and missing-package skips while allowing the explicitly registered host package command."
     },
     "packages/pi-durable-coding/test/host-tools.test.ts": {
       "sha256": "bdc9a5c6fe69134c47b8a46e434ee030e62738fdcccd7688c4370a03d70f7b40",
@@ -4999,6 +4999,18 @@
     "packages/pi-agent-server/src/test-fixtures/mcp-provider-server.ts": {
       "sha256": "8fdcaf7433ca34ede9519ca0c7f009d6e4abbebc7041193fe606de300fa3c349",
       "reason": "Provide a deterministic loopback MCP server that records authorization outcomes without retaining fixture token values."
+    },
+    "packages/pi-durable-coding/src/host-package-commands.ts": {
+      "sha256": "96f96859d91e2aba14d6a58714eb936ce28e27e895b655d1a7b3a51854856fcc",
+      "reason": "Expose explicit native package commands with project trust, fresh saved settings, manual retry recovery and shutdown draining."
+    },
+    "packages/pi-durable-coding/test/fixtures/host-package-runner.ts": {
+      "sha256": "fa01bef90cf517ffe63d63a1e15aa2ca28086be6e131298085156c8c9c9825b6",
+      "reason": "Exercise real native package commands with in-memory credentials, failing model transport and a standalone JSON protocol probe."
+    },
+    "packages/pi-durable-coding/test/host-package-commands.test.ts": {
+      "sha256": "a36088312c2202c8efb143721d40792c210a777f4f054dbc4716f0f61d4655c4",
+      "reason": "Verify native npm/git commands, scope and streams, fresh shared settings, manual write-failure recovery and partial update shutdown draining."
     }
   },
   "deleted": {

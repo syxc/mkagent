@@ -156,7 +156,7 @@ The table records current evidence and gaps. It does not waive the target.
 | Extensions: session control | Native APIs are retained. Production managed operations use host bindings. Every navigation, fork and concurrent close combination is not exercised. |
 | Extensions: UI | Native RPC dialogs, notifications, widgets and cancellation have production coverage. Terminal components require a TUI host. Browser acceptance remains pending. |
 | Local package resources | Native installed-manifest discovery, filters and diagnostics are used. |
-| npm/git package management | Opening host resources does not install missing packages. Host install and remove commands remain pending. |
+| npm/git package management | Native coding sessions expose `/packages` for explicit list, install, remove and update. User scope is the default; `--local` selects a trusted project. Tests cover npm/git, reload, write failures, protocol output and shutdown draining. Operations are not atomic or replayed after a crash. `host-only` omits this command. Discovery still skips missing sources. |
 | Project MCP | Native and host project configurations share explicit host trust, including revocation on reload. The product approval path has coverage. |
 | Native MCP registrations | Plugin registrations update host connections and durable tools at startup, change and reload. Tests cover namespace priority, failure recovery, immediate tool and resource revocation, and removal during login. |
 | MCP provider credentials | Global configuration and trusted plugins read current provider tokens through host models or the bound native model registry. Product tests cover startup, rotation, unregister, re-register and reload. Project configuration cannot select host providers. Interactive login for plugin providers is not exercised. |
@@ -167,12 +167,10 @@ The table records current evidence and gaps. It does not waive the target.
 | CLI/JSONL/Desktop/WebUI | Packaged subprocess and JSONL checks run locally. The macOS arm64 headless launcher, health endpoint and authenticated WebSocket were exercised. Real Desktop and browser interaction were not exercised. |
 | Themes/shortcuts/editor/renderers | Native sources and resources are retained and packaged. Interactive terminal behavior was not exercised. |
 
-The native `AgentSession` is currently selected by the coding profile or
-explicit coding resources. Normal sessions retain the durable GenerationTask
-path and their Pi-resource isolation. The next implementation must separate
-runtime integration from resource policy and verify the intended behavior of
-both profiles. The existence of profiles or distinct durable task types alone
-does not establish a second execution kernel.
+The coding profile or explicit coding resources select the native
+`AgentSession`. Both profiles execute through pi-durable. Normal sessions use
+the durable GenerationTask path and keep their Pi-resource isolation.
+`resourcePolicy` controls native discovery separately from execution.
 
 Whole-product acceptance is still open. The checks above do not cover every
 MkAgent default-profile feature, product session operation or Desktop/WebUI

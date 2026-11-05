@@ -137,7 +137,7 @@ export interface PackageManager {
 	installAndPersist(source: string, options?: { local?: boolean }): Promise<void>;
 	remove(source: string, options?: { local?: boolean }): Promise<void>;
 	removeAndPersist(source: string, options?: { local?: boolean }): Promise<boolean>;
-	update(source?: string): Promise<void>;
+	update(source?: string, options?: { local?: boolean }): Promise<void>;
 	listConfiguredPackages(): ConfiguredPackage[];
 	resolveExtensionSources(
 		sources: string[],
@@ -156,6 +156,8 @@ export interface PackageResolutionPolicy {
 	legacyGlobalPackages?: boolean;
 	/** Disable implicit HOME/.agents/skills discovery. Explicit configured paths still work. */
 	includeHomeSkills?: boolean;
+	/** Keep package subprocess output out of the host protocol stream. */
+	commandOutput?: "stderr";
 }
 
 interface PackageManagerOptions {
@@ -1155,9 +1157,10 @@ export class DefaultPackageManager implements PackageManager {
 		return this.removeSourceFromSettings(source, options);
 	}
 
-	async update(source?: string): Promise<void> {
-		const globalSettings = this.settingsManager.getGlobalSettings();
-		const projectSettings = this.settingsManager.getProjectSettings();
+	async update(source?: string, options?: { local?: boolean }): Promise<void> {
+		const globalSettings = options?.local === true ? {} : this.settingsManager.getGlobalSettings();
+		if (options?.local) this.assertProjectTrustedForScope("project");
+		const projectSettings = options?.local === false ? {} : this.settingsManager.getProjectSettings();
 		const identity = source ? this.getPackageIdentity(source) : undefined;
 		let matched = false;
 		const updateSources: ConfiguredUpdateSource[] = [];
@@ -1246,7 +1249,7 @@ export class DefaultPackageManager implements PackageManager {
 			tasks.push(this.runWithConcurrency(gitTasks, GIT_UPDATE_CONCURRENCY).then(() => {}));
 		}
 
-		await Promise.all(tasks);
+		await this.settleTasks(tasks);
 	}
 
 	private async shouldUpdateNpmSource(
@@ -1821,6 +1824,13 @@ export class DefaultPackageManager implements PackageManager {
 		});
 	}
 
+	/** Drain every started installer before reporting a batch failure to its owner. */
+	private async settleTasks(tasks: Promise<unknown>[]): Promise<void> {
+		for (const result of await Promise.allSettled(tasks)) {
+			if (result.status === "rejected") throw result.reason;
+		}
+	}
+
 	private async runWithConcurrency<T>(tasks: Array<() => Promise<T>>, limit: number): Promise<T[]> {
 		if (tasks.length === 0) {
 			return [];
@@ -1841,7 +1851,7 @@ export class DefaultPackageManager implements PackageManager {
 			}
 		};
 
-		await Promise.all(Array.from({ length: workerCount }, () => worker()));
+		await this.settleTasks(Array.from({ length: workerCount }, () => worker()));
 		return results;
 	}
 
@@ -2833,7 +2843,7 @@ export class DefaultPackageManager implements PackageManager {
 		const env = getEnv();
 		return spawnProcess(command, args, {
 			cwd: options?.cwd,
-			stdio: isStdoutTakenOver() ? ["ignore", 2, 2] : "inherit",
+			stdio: this.resolutionPolicy.commandOutput === "stderr" || isStdoutTakenOver() ? ["ignore", 2, 2] : "inherit",
 			env,
 		});
 	}
