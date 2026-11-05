@@ -691,7 +691,7 @@ function toolWrapDependencies(cwd: string): ToolWrapDeps {
 }
 
 function buildToolsExtension(cwd: string, mcpTools: readonly ToolRegistration[]): Extension {
-  const builtinTools = createBuiltinTools(cwd);
+  const builtinTools = createBuiltinTools(cwd, { powerShell: initConfig?.agentProfile === 'coding' });
   const searchTool = createSearchTool(searchProvider);
   const webFetchTool = createWebFetchTool(() =>
     initConfig ? getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId) : null

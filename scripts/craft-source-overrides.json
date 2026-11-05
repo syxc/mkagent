@@ -1031,7 +1031,7 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "689903ed27a4633e59168459bdcbdd4a9261867d27d5c75f3c53712ca04b6eea",
+      "sha256": "72e00c0dab3313118859f16cf504ae600bddbaf576cb75b86fcff14576c4a8b5",
       "reason": "Preserve native resource, UI and session ownership; coordinate explicit provider and MCP authentication through current model credentials and owner-scoped cancellation."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
@@ -3185,8 +3185,8 @@
       "reason": "Retire inherited tasks, submissions and runtime documents atomically through Storage before opening a copied branch; preserve committed history and usage without scheduling inherited work."
     },
     "packages/pi-agent-server/src/tools/builtin.ts": {
-      "sha256": "b80a2c8856a215e311a8b59356898b0b05d3798690fe3d015abea018ee9e5d08",
-      "reason": "Combine pi-durable coding tools and Photon image processing with adapted pi-coding-agent 1.1.0 find, grep and ls tools."
+      "sha256": "b8445c7a2f96c34bdff2748a2ddbc886620207894e2e145646f15fb852f754a9",
+      "reason": "Combine durable coding tools, Photon and adapted search tools; offer PowerShell as a deferred coding-profile tool routed through host approval."
     },
     "packages/pi-agent-server/src/tools/codemode.ts": {
       "sha256": "a6066d75853ab6887e7380e245b359585e87567502a23870b6664275bb1721d1",
@@ -5059,6 +5059,10 @@
     "packages/shared/src/agent/__tests__/pi-prerequisite-runtime.isolated.ts": {
       "sha256": "b85c74eff3c206d9795da1d1767be8c97f6080a15ae103aff02dde64496b6bd6",
       "reason": "Run real default and coding workers with local models to verify successful reads and reject missing, masked-failure and denied reads."
+    },
+    "packages/shared/src/agent/__tests__/pi-powershell-runtime.isolated.ts": {
+      "sha256": "3bf95005af8cc4594c773749f33cb0f492a8189ce164a78932573b6126c59f1c",
+      "reason": "Verify opt-in native PowerShell discovery and host allow/deny through a real coding worker and deterministic process fixture, without claiming a real interpreter."
     }
   },
   "deleted": {
