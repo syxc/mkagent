@@ -70,6 +70,7 @@ test('native NEW adopts the actual worker, completes without a target generator 
   const { SessionManager, setSessionPlatform } = await import('./SessionManager')
   const { createHeadlessPlatform } = await import('../runtime/platform-headless')
   const { loadSession } = await import('@mkagent/shared/sessions')
+  const { nativeForkPlan, readTrustedNativeSession } = await import('./native-session-source')
   const platform = createHeadlessPlatform()
   platform.appRootPath = appRoot
   setSessionPlatform(platform)
@@ -117,6 +118,17 @@ test('native NEW adopts the actual worker, completes without a target generator 
       expect(reference).toEqual({ ...manifest, manifestDigest: createHash('sha256').update(metadata).digest('hex') })
       expect(reference?.nativeSessionId).toBe(stored.sdkSessionId)
       expect(reference).not.toHaveProperty('entryIds')
+      const verified = readTrustedNativeSession({
+        workspaceRootPath: workspaceRoot, sessionId: id, nativeSessionId: stored.sdkSessionId!, reference: reference!,
+      })
+      expect(verified.entryIds).toEqual(entryIds)
+      expect(verified.entries).toHaveLength(entryIds.length)
+      const user = verified.entries.find(entry => entry.type === 'message'
+        && entry.message && typeof entry.message === 'object' && 'role' in entry.message && entry.message.role === 'user')!
+      expect(user).toBeDefined()
+      expect(nativeForkPlan(verified, user.id, 'at')).toEqual({
+        nativeLeafId: user.id, durableEntryId: entryIds.find((entry: { nativeId: string }) => entry.nativeId === user.id).durableId,
+      })
     }
     const targetAgent = runtime.sessions.get(targetId)!.agent
     expect(child(targetAgent)?.pid).toBe(sourcePid)

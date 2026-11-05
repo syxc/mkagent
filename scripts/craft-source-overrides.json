@@ -2340,6 +2340,14 @@
       "sha256": "eee7bc1ee649e7ff23b6573b0ab092eb52a6881fea06445ecb6d4f2ec77000f8",
       "reason": "Open native fork stores in a cold process using deterministic models and test-owned paths."
     },
+    "packages/server-core/src/sessions/native-session-source.ts": {
+      "sha256": "d323a02d4fb574574d6509d58b03a3f30acc054543cedd2a15d03570f9ce686e",
+      "reason": "Verify native source identity, physical child paths, committed projection bytes and exact fork anchors without opening a writer."
+    },
+    "packages/server-core/src/sessions/native-session-source.test.ts": {
+      "sha256": "a4679d01628e649a980b62411311dee85d098cbc623d5173532bc67e2a97d13f",
+      "reason": "Test read-only native source verification, symlink rejection, corrupt projections and exact branch and name semantics."
+    },
     "packages/shared/src/sessions/native-session-reference.ts": {
       "sha256": "2a6bb2e478d2dde96296b2e72e9a1b68c203937ccb3302ad7c6b9d3e4a1edc81",
       "reason": "Define and validate minimal committed native projection identity references without transcript mappings."
@@ -2385,7 +2393,7 @@
       "reason": "Keep the native command coroutine alive across product prepare, close, activation and commit controls."
     },
     "packages/server-core/src/sessions/native-owner-runtime.isolated.ts": {
-      "sha256": "c659e22353d7438bc4e70c55f69f57c0224aa5672ada5fc7327a46150c76717d",
+      "sha256": "9e7fd7b60cdd32876dfb4078146b40f679ad15c3e0a45a0cfc860f9aa0a83fd5",
       "reason": "Exercise the actual product factory, PiAgent and bundled worker with local models and isolated ownership."
     },
     "packages/server-core/src/sessions/native-session-owner.isolated.ts": {
