@@ -339,7 +339,26 @@ provider 凭据提交未包含显式包管理，后续进展见下一节。OAuth
 | 独立复核 | 只读复核指出回调 HTTP 错误误计为关闭、再次初始化掩盖 release 清理，以及取消可能早于锁等待三处证据缺口，主线程逐项收紧。独立原始端口探针确认 HTTP 400 会正常返回，关闭后才产生 `ConnectionRefused`，修正后的 MCP 回归全部通过。复核未执行测试或构建。 |
 | 产品及必需检查 | 实际 SessionManager、PiAgent 与重新构建 bundled worker 的 MCP 产品用例重新运行，1 项测试、42 项断言通过。两套固定生成检查通过，仍为 250 份运行时源码、9 项资源与 40 份公开 fixture；隔离 Craft 审计覆盖 2131 份文件，lint 为 0 错误、107 项既有警告，中英文标点检查通过。 |
 
-原生插件 provider 自身的交互登录和可视验收仍待完成，D4、D3.6 与 D5-D6 继续进行。本批尚未运行全仓 `bun run test`。
+本批之后的原生插件 provider 交互登录见下一节。可视验收仍待完成，D4、D3.6 与 D5-D6 继续进行。本批尚未运行全仓 `bun run test`。
+
+## D4 原生 provider 交互登录
+
+coding 模式提供 `/login [provider]` 和 `/logout [provider]`，通过当前 kernel 的公开 `Models` 接口登录和退出。没有 provider 参数时使用已有 RPC select；同时支持 OAuth 与 API key 的 provider 另选认证方式。原生 provider 对象与兼容 `pi.registerProvider(name, config)` 共用该入口和既有凭据存储，不建立第二个模型注册表或执行调度器。
+
+宿主接通 `AuthInteraction` 的 text、secret、select、manual-code、URL、device-code、info links 和 progress。选择项显示名称与说明，使用唯一序号映射回原始 ID。secret 使用独立的宿主密码输入标记，关闭自动补全、拼写检查和自动大写；回答只走 UI 响应协议，不写入产品消息或插件通知。provider 错误可能包含输入值，宿主仅报告通用失败状态，不回显原始错误。凭据同步失败时提示凭据可能已变化，保留原生存储语义。
+
+Stop、UI 失效、reload、所有者释放、re-init 和 shutdown 与 MCP 授权共用取消、等待入口。单个 manual-code prompt 的取消不等于整个登录取消，允许回调先完成原生流程。成功登录会重新连接引用该 provider 的 MCP 服务；退出先完成原生凭据删除，再关闭这些连接并撤下工具。该同步不重放工具请求。受信任插件仍须遵守取消契约，宿主不把任意 Node 回调当作可强制终止的沙箱。
+
+| 验证 | 实际结果 |
+|---|---|
+| 原生 host 与 UI | provider 5 项测试与既有 UI 19 项测试合跑通过，共 160 项断言。覆盖重复 label 的 ID 映射、说明、secret 标记、API key、兼容 OAuth、重载后凭据、单 prompt 取消、选择前取消、Stop、断开、无 dialog 回调等待及错误中的 secret。 |
+| 真实产品入口 | `native-provider-auth.isolated.ts` 经 SessionManager、PiAgent、重新构建 bundled worker 和实际 UI 协议通过，1 项测试、53 项断言。登录恢复 MCP 工具，reload 保留凭据，退出撤下工具；取消、Stop、断开和插件触发 reload 均拒绝迟到 secret 回答。产品历史与 UI 更新不含合成凭据，模型请求为 0。 |
+| 独立复核与修正 | 只读复核指出兼容 provider 在登录和退出后正常重组对象，会被引用检查误判为取消，跳过 MCP 同步。主线程先复现凭据已保存但同步回调缺失，再用稳定的注册声明检查修正；登录与退出回调均通过。复核未运行测试，修正后的动态检查由主线程完成。 |
+| 夹具边界 | 首次重载检查失败，因为 host 夹具没有像产品一样复用 `modelCredentialsSource`；补齐公开凭据接口后原生重载检查通过，没有据此修改生产存储。真实产品独立覆盖重载后的登录状态。 |
+| 相关回归 | MCP 和两层 UI 传输共 58 项测试、369 项断言，host 模型与目录共 15 项测试、114 项断言，均通过。既有 MCP OAuth、项目信任与原样上游插件三个产品用例分别为 42、32、65 项断言，均重新运行并通过。 |
+| 必需检查 | `validate:ci` 与 server 类型检查通过。两套固定生成检查通过，仍为 250 份运行时源码、9 项资源与 40 份公开 fixture。隔离 Craft 来源审计覆盖 2135 份文件，lint 为 0 错误、107 项既有警告，中英文标点及 diff 检查通过。初次 lint 因漏更新独立 UI 来源哈希停止，补齐两层来源登记后重新通过。 |
+
+该批不包含浏览器可视验收，原授权空间仍缺失；密码框的实际显示、焦点及键盘行为仍列入隔离 WebUI 验收。D4、D3.6 与 D5-D6 尚未整体完成，本批尚未运行全仓 `bun run test`。
 
 ## 验证与完成规则
 

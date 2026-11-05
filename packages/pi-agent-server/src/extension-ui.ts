@@ -6,7 +6,7 @@ import type {
 } from '@mkagent/pi-durable-coding/native';
 
 export type ExtensionUIEvent =
-  | (RpcExtensionUIRequest & { uiEpoch: string })
+  | (RpcExtensionUIRequest & { uiEpoch: string; sensitive?: boolean })
   | { type: 'extension_ui_closed'; uiEpoch: string; id: string }
   | { type: 'extension_ui_state'; uiEpoch: string; available: boolean; reset: boolean };
 
@@ -52,6 +52,10 @@ export class ExtensionUIHost {
     };
   }
 
+  inputSecret(title: string, placeholder: string | undefined, signal: AbortSignal): Promise<string | undefined> {
+    return this.binding?.inputSecret(title, placeholder, signal) ?? Promise.resolve(undefined);
+  }
+
   setAvailable(available: boolean): void {
     this.available = available;
     if (!available) for (const listener of this.unavailable) listener();
@@ -85,7 +89,8 @@ export class ExtensionUIHost {
   private enabled(): boolean { return !this.closed && this.available && this.suspended === 0; }
 }
 
-type DialogRequest = Extract<RpcExtensionUIRequest, { method: 'select' | 'confirm' | 'input' | 'editor' }>;
+type DialogRequest = Extract<RpcExtensionUIRequest, { method: 'select' | 'confirm' | 'input' | 'editor' }>
+  & { sensitive?: boolean };
 const stringResponse = (response: RpcExtensionUIResponse): string | undefined =>
   'value' in response ? response.value : undefined;
 
@@ -148,6 +153,12 @@ class NativeUIBinding<Context extends object> implements ExtensionUIBinding<Cont
     if (!next) this.cancelPending();
     this.onAvailability(next);
     this.emit({ type: 'extension_ui_state', uiEpoch: this.uiEpoch, available: next, reset: false });
+  }
+
+  inputSecret(title: string, placeholder: string | undefined, signal: AbortSignal): Promise<string | undefined> {
+    return this.dialog({
+      type: 'extension_ui_request', id: randomUUID(), method: 'input', title, placeholder, sensitive: true,
+    }, undefined, stringResponse, { signal });
   }
 
   respond(uiEpoch: string, response: RpcExtensionUIResponse): boolean {

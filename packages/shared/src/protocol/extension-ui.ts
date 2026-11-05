@@ -3,7 +3,7 @@ import type { RpcExtensionUIRequest, RpcExtensionUIResponse } from '@mkagent/pi-
 
 export type ExtensionUIResponse = RpcExtensionUIResponse;
 export type ExtensionUIEvent =
-  | (RpcExtensionUIRequest & { uiEpoch: string })
+  | (RpcExtensionUIRequest & { uiEpoch: string; sensitive?: boolean })
   | { type: 'extension_ui_closed'; uiEpoch: string; id: string }
   | { type: 'extension_ui_state'; uiEpoch: string; available: boolean; reset: boolean };
 
@@ -56,7 +56,9 @@ export function isExtensionUIEvent(value: Record<string, unknown>): value is Rec
     case 'select':
       return typeof value.title === 'string' && Array.isArray(value.options) && value.options.every(option => typeof option === 'string');
     case 'confirm': return typeof value.title === 'string' && typeof value.message === 'string';
-    case 'input': return typeof value.title === 'string' && (value.placeholder === undefined || typeof value.placeholder === 'string');
+    case 'input': return typeof value.title === 'string'
+      && (value.placeholder === undefined || typeof value.placeholder === 'string')
+      && (value.sensitive === undefined || typeof value.sensitive === 'boolean');
     case 'editor': return typeof value.title === 'string' && (value.prefill === undefined || typeof value.prefill === 'string');
     case 'notify':
       return typeof value.message === 'string' &&

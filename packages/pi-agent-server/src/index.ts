@@ -69,6 +69,7 @@ import { createCodemodeExtensionFor } from './tools/codemode.ts';
 import { loadMcpTools, type McpToolsLoadResult } from './mcp/extension.ts';
 import { createNativeMcpExtension } from './mcp/native-extension.ts';
 import { McpAuthorization } from './mcp/authorization.ts';
+import { ProviderAuthorization } from './provider-authorization.ts';
 import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/pi-durable-coding/mcp-oauth';
 import { createToolSearchExtension } from '@earendil-works/pi-durable/tool-search';
 import type { CodemodeNamespace } from '@earendil-works/pi-durable/codemode';
@@ -252,7 +253,7 @@ let inputGeneration = 0;
 let reinitializing = false;
 let shuttingDown: Promise<void> | undefined;
 let mcpLoad: McpToolsLoadResult | null = null;
-let mcpAuthorization: McpAuthorization | undefined;
+let foregroundAuthorization: { cancelAll(): Promise<void> } | undefined;
 let modelRuntime: ModelRuntime | null = null;
 let modelRuntimePromise: Promise<ModelRuntime> | null = null;
 
@@ -777,9 +778,9 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
   const sessionPath = getSessionPath(config.workspaceRootPath, config.sessionId);
 
   const initGeneration = credentialGeneration;
-  const previousAuthorization = mcpAuthorization;
+  const previousAuthorization = foregroundAuthorization;
   await previousAuthorization?.cancelAll();
-  if (mcpAuthorization === previousAuthorization) mcpAuthorization = undefined;
+  if (foregroundAuthorization === previousAuthorization) foregroundAuthorization = undefined;
   // Resolve native resources and project MCP under the same trust decision.
   const previousMcp = mcpLoad;
   if (previousMcp) await previousMcp.close();
@@ -804,17 +805,42 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     new FileAuthStorageBackend(join(credentialDir, 'mcp-auth.json')), credentialDir,
   );
   const authorization = new McpAuthorization({ credentials, connections: () => loadedMcp.connections, assertOwner });
+  const providerAuthorization = new ProviderAuthorization({
+    models: () => {
+      assertOwner();
+      if (!openingKernel) throw new Error('Native model runtime is unavailable');
+      return openingKernel.currentModels();
+    },
+    assertOwner,
+    inputSecret: (title, placeholder, signal) => codingUI?.inputSecret(title, placeholder, signal)
+      ?? Promise.resolve(undefined),
+    loginOptions: { agentName: 'MkAgent', getDeviceId: () => {
+      if (!preparedResources) throw new Error('Native settings are unavailable');
+      return preparedResources.settingsManager.getOrCreateDeviceId();
+    } },
+    changed: async (provider, action, signal) => {
+      assertOwner();
+      const results = await Promise.allSettled(loadedMcp.connections
+        .filter(connection => connection.entry.config.auth?.provider === provider)
+        .map(connection => action === 'login' ? connection.reconnect(signal) : connection.signOut()));
+      assertOwner();
+      if (results.some(result => result.status === 'rejected')) throw new Error('MCP authentication refresh failed');
+    },
+  });
+  const cancelAuthorization = async () => {
+    await Promise.all([authorization.cancelAll(), providerAuthorization.cancelAll()]);
+  };
   let nativeModelRegistry: ExtensionContext['modelRegistry'] | undefined;
   const nativeMcp = createNativeMcpExtension({ runtime: () => loadedMcp, assertOwner,
     bindModelRegistry: registry => { nativeModelRegistry = registry; },
   });
-  mcpAuthorization = authorization;
-  codingUI?.onUnavailable(() => { void authorization.cancelAll(); });
+  foregroundAuthorization = { cancelAll: cancelAuthorization };
+  codingUI?.onUnavailable(() => { void cancelAuthorization(); });
   const getCodemodeExtension = () => codemodeExtension
     ??= createCodemodeExtensionFor(mcpNamespaces, requestPreToolUseApproval);
   const refreshMcp = async (projectTrusted?: boolean) => {
     assertOwner();
-    await authorization.cancelAll();
+    await cancelAuthorization();
     if (mcpLoad === loadedMcp) mcpLoad = null;
     await loadedMcp.close();
     assertOwner();
@@ -863,7 +889,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
       codingUI?.bind({}, () => {});
       preparedResources = await prepareHostResources({
         ...codingProfile, cwd, getSystemPrompt: () => openingKernel?.systemPrompt ?? replacement?.systemPrompt,
-        extensionFactories: [authorization.extension(), nativeMcp],
+        extensionFactories: [authorization.extension(), providerAuthorization.extension(), nativeMcp],
       }, () => (codingUI ?? new ExtensionUIHost(() => {})).projectTrustContext(cwd), debugLog,
       async trusted => {
         assertOwner();
@@ -873,7 +899,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     await refreshMcp(preparedResources?.settingsManager.isProjectTrusted());
     assertOwner();
   } catch (error) {
-    await authorization.cancelAll();
+    await cancelAuthorization();
     await loadedMcp.close();
     if (mcpLoad === loadedMcp) mcpLoad = null;
     codingUI?.close();
@@ -904,7 +930,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
           inputGeneration++;
           const callbacksClosed = stopCallbackServer();
           releaseForegroundRequests('Native session replaced');
-          await authorization.cancelAll();
+          await cancelAuthorization();
           await callbacksClosed;
           await k.close(request.operation.type === 'switch' ? 'resume' : request.operation.type);
           openingKernel = undefined;
@@ -986,7 +1012,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     }
   } catch (error) {
     openingKernel = undefined;
-    await authorization.cancelAll();
+    await cancelAuthorization();
     await k.close().catch(() => {});
     await loadedMcp.close();
     if (mcpLoad === loadedMcp) mcpLoad = null;
@@ -1742,7 +1768,7 @@ function main(): void {
         return;
       }
       if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') {
-        void mcpAuthorization?.cancelAll();
+        void foregroundAuthorization?.cancelAll();
         // Stopping execution does not revoke persistence of an already committed native tree.
         if (msg.type !== 'abort') nativeHistory.cancel(msg.type === 'init' ? undefined : scope, `Native history ${msg.type}`);
         inputGeneration++;

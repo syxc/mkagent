@@ -29,7 +29,7 @@ plugin integration acceptance stay open.
 The coding profile uses the existing `DurableKernel` and its Harness.
 `@mkagent/pi-durable-coding` contains the complete public Pi coding source
 closure from v1.5.0, commit `f9a26365568127461c47a07a37dcb42c140a3ac5`.
-`UPSTREAM-RUNTIME.json` records 249 source files, 9 assets, source hashes and
+`UPSTREAM-RUNTIME.json` records 250 source files, 9 assets, source hashes and
 controlled transformations. `UPSTREAM.json` records the earlier compatibility
 helpers. The package retains the upstream MIT license.
 
@@ -152,14 +152,14 @@ The table records current evidence and gaps. It does not waive the target.
 | Extensions: events | Native run, turn, message, tool and settlement events are retained. Oracle scenarios check order and effects. Crash tests check uncertain delivery. |
 | Extensions: context | Native transforms, boundary drafts and journal projection are used. Complex mixed provenance combinations are not all exercised. |
 | Extensions: state | Custom entries, labels, IDs, committed restore, edits and forks have coverage. |
-| Extensions: models | Host models, extension providers, virtual models, selection, reload, reopen and auth availability have coverage. Interactive OAuth was not exercised. |
+| Extensions: models | Host models, extension providers, virtual models, selection, reload, reopen and auth availability have coverage. Native `/login` and `/logout` support interactive OAuth and API keys through the active model runtime. Tests cover native and compatibility providers, secret prompts and cancellation. |
 | Extensions: session control | Native APIs are retained. Production managed operations use host bindings. Every navigation, fork and concurrent close combination is not exercised. |
 | Extensions: UI | Native RPC dialogs, notifications, widgets and cancellation have production coverage. Terminal components require a TUI host. Browser acceptance remains pending. |
 | Local package resources | Native installed-manifest discovery, filters and diagnostics are used. |
 | npm/git package management | Native coding sessions expose `/packages` for explicit list, install, remove and update. User scope is the default; `--local` selects a trusted project. Tests cover npm/git, reload, write failures, protocol output and shutdown draining. Operations are not atomic or replayed after a crash. `host-only` omits this command. Discovery still skips missing sources. |
 | Project MCP | Native and host project configurations share explicit host trust, including revocation on reload. The product approval path has coverage. |
 | Native MCP registrations | Plugin registrations update host connections and durable tools at startup, change and reload. Tests cover namespace priority, failure recovery, immediate tool and resource revocation, and removal during login. |
-| MCP provider credentials | Global configuration and trusted plugins read current provider tokens through host models or the bound native model registry. Product tests cover startup, rotation, unregister, re-register and reload. Project configuration cannot select host providers. Interactive login for plugin providers is not exercised. |
+| MCP provider credentials | Global configuration and trusted plugins read current provider tokens through host models or the bound native model registry. Product tests cover startup, rotation, unregister, re-register, reload and interactive provider login. Login reconnects dependent MCP services; logout withdraws their tools. Project configuration cannot select host providers. |
 | MCP OAuth | Coding mode provides explicit status, login, logout and reconnect through native RPC. Tests cover PKCE, redirect validation, scope escalation without tool replay, token rotation, TLS admission and two-process login or cancellation. Real worker checks cover re-init, owner release, shutdown and late replies. Browser acceptance remains pending. |
 | Codemode/tool search | Official host integrations and native tools share durable execution. Dynamic catalogs, deferred activation and handoff context through restart have coverage. |
 | Retry/steer/follow-up/compaction | Native callbacks use durable phases. Accepted queues, cancellation, repeated text, retry deadlines and compaction thresholds have coverage. |

@@ -10,8 +10,8 @@
       "reason": "Keep permission mode shortcuts outside open dialogs so native controls retain keyboard navigation."
     },
     "apps/electron/src/renderer/components/app-shell/input/ExtensionUI.tsx": {
-      "sha256": "fd6c59f1f66afb83910e9bf6ef6a40e4c6a4dca60f8e7ef0798938f99ed0678e",
-      "reason": "Render native RPC dialogs and widgets; open standalone HTTP(S) authorization links through the existing platform handler."
+      "sha256": "77dedb981a5323dca6f440d696f3a3576ad7fc4283615185ca18bb08e55587f7",
+      "reason": "Render native RPC dialogs, widgets and authorization links; use password fields without autocomplete, spelling or capitalization for provider secrets."
     },
     "apps/electron/src/renderer/hooks/useExtensionUI.ts": {
       "sha256": "113b4b9c3c7f64c4996f7ff5e14df649776716b23ce0358f3f9ac02a4bc61e8f",

@@ -969,7 +969,8 @@ export class DurableKernel {
     }
   }
 
-  private currentModels(): Models {
+  /** Use the active native overlays for host authentication as well as model requests. */
+  currentModels(): Models {
     return this.coding?.models ?? this.options.modelsSource();
   }
 

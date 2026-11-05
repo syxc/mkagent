@@ -1031,8 +1031,8 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "024f40cb343a7e4f74d3cbba4f4e431ab21c9bc458ed946a88e70ba420e91934",
-      "reason": "Preserve native resource, UI and session ownership and resolve MCP credentials from the current host or native model registry."
+      "sha256": "689903ed27a4633e59168459bdcbdd4a9261867d27d5c75f3c53712ca04b6eea",
+      "reason": "Preserve native resource, UI and session ownership; coordinate explicit provider and MCP authentication through current model credentials and owner-scoped cancellation."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
       "sha256": "dcd8c54fb1a0eb73a1b6f3984fe2dae176929c76b03bfb52323ad440fe23084c",
@@ -2328,6 +2328,22 @@
     }
   },
   "mkOnly": {
+    "packages/pi-agent-server/src/provider-authorization.ts": {
+      "sha256": "d7c175cdce8a1a342677e63df212534ce798da65bde86e0440d2c58b4ef9862f",
+      "reason": "Expose explicit native provider login and logout through active Models, cancellable auth prompts and coordinated MCP credential changes."
+    },
+    "packages/pi-agent-server/src/provider-authorization.e2e.test.ts": {
+      "sha256": "e53e72a657c50d24f4118fa600722d6513287eda70026e106710ec71b4b139c9",
+      "reason": "Verify native and compatibility provider login, stable registration identity, credential reuse, secret errors and prompt or callback cancellation."
+    },
+    "packages/pi-agent-server/src/test-fixtures/provider-login.ts": {
+      "sha256": "46fc860928b687aa783567db7917013a7925f30fe72753fa5f4f759ec5fdafc5",
+      "reason": "Provide deterministic native and compatibility authentication providers with synthetic credentials and no external requests."
+    },
+    "packages/server-core/src/sessions/native-provider-auth.isolated.ts": {
+      "sha256": "7d35fc6e06ef629fdfc4644316229c83a1fc77f279de8293d95ad6cbcbf809d2",
+      "reason": "Exercise provider login through the real product, bundled worker and UI, including MCP restoration, reload, cancellation and history isolation."
+    },
     "packages/pi-durable-coding/src/host-project-resources.ts": {
       "sha256": "36b1121fbd2711a960a5f353e90a89796373e15a0f4d42f80467418b1370f201",
       "reason": "Resolve native project trust hooks, remembered and session-only decisions before project resources and MCP can execute."
@@ -2589,8 +2605,8 @@
       "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
     },
     "apps/electron/src/renderer/components/app-shell/input/ExtensionUI.tsx": {
-      "sha256": "fd6c59f1f66afb83910e9bf6ef6a40e4c6a4dca60f8e7ef0798938f99ed0678e",
-      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+      "sha256": "77dedb981a5323dca6f440d696f3a3576ad7fc4283615185ca18bb08e55587f7",
+      "reason": "Render owned native RPC UI and use password fields without spelling, capitalization or autocomplete for provider secrets."
     },
     "apps/electron/src/renderer/hooks/useExtensionUI.ts": {
       "sha256": "113b4b9c3c7f64c4996f7ff5e14df649776716b23ce0358f3f9ac02a4bc61e8f",
@@ -2613,8 +2629,8 @@
       "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
     },
     "packages/pi-agent-server/src/extension-ui.ts": {
-      "sha256": "bc83f72b1c4e78f106dcc19e95bc66059bf61d8913a7727c3945236277baf867",
-      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+      "sha256": "68f6ae5deadd05e1761d518c833ac554b1c4b034fa5223db1297a520b388b14a",
+      "reason": "Scope native RPC dialogs to the active owner and expose a cancellable host secret-input contract for provider authentication."
     },
     "packages/pi-durable-coding/src/rpc-ui.ts": {
       "sha256": "1b753278961cb97ac8f3e66bbf4ecf832ee8b2dfcab9374d6e689c3ac5db9b46",
@@ -2645,8 +2661,8 @@
       "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
     },
     "packages/shared/src/protocol/extension-ui.ts": {
-      "sha256": "fa20bf3e35eeb0f87ae16e83542aaa46bf7715f1e0f41a9c80a45efa21703a9e",
-      "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
+      "sha256": "a49c6a8d316a4d575779da8b5bf274a6c92664df6d73ff263c9eb024ffc83ccb",
+      "reason": "Validate and carry native UI ownership and the host sensitive-input flag across product RPC."
     },
     "packages/pi-agent-server/src/background-shell-owner.test.ts": {
       "sha256": "8586784a03e673b72bb8c67df14361880a8ccfb9107b3073f80931d113b06ccd",
@@ -2997,7 +3013,7 @@
       "reason": "Shared MkAgent audit preflight resolves the Craft reference, validates the checkout root and pinned HEAD, and reports setup instructions before comparisons."
     },
     "scripts/craft-ui-overrides.json": {
-      "sha256": "407a731023e2cefa8f451af96c27d3251c8775a3691f0fb2802083ff37e3fdfd",
+      "sha256": "2349322537f87e5e6ba505f0a02c1a62a759f27a278ecbb2b3cd85af0db70475",
       "reason": "MkAgent renderer lineage ledger records the selective Craft v0.13.3 retry synchronization; v0.15.3: apply applicable retained feature changes and preserve Pi/Lite seams (see docs/sync/0.15.3-inventory.json and validation). Register the per-locale starter-prompt regression added in 20fb16d."
     },
     "scripts/release-workflow.test.ts": {
@@ -3105,7 +3121,7 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "930b837eea72c412742e0f67348d04c6d847e07913a03191b9530f51fd790f9f",
+      "sha256": "99416eccd04367ee4be2549207922a77a75bc3fc8aa7693e36b42d0fe6ea8d79",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness. Verify copied native journals before Harness opening and reject conflicting legacy target history."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {

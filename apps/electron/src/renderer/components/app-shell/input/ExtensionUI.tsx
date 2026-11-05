@@ -128,6 +128,10 @@ export function ExtensionUIDialogCard({ request, blocked, focused, respond, onSt
                 )}
                 {request.method === 'input' && (
                   <input
+                    type={request.sensitive ? 'password' : 'text'}
+                    autoComplete={request.sensitive ? 'off' : undefined}
+                    autoCapitalize={request.sensitive ? 'none' : undefined}
+                    spellCheck={request.sensitive ? false : undefined}
                     ref={element => { inputRef.current = element }}
                     aria-label={request.title}
                     className={fieldClass}
