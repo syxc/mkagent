@@ -16,7 +16,7 @@ import {
   type ModelRuntimeCredentials, type PromptOptions, type SourceInfo, type SessionShutdownEvent,
 } from '@mkagent/pi-durable-coding/native';
 import { LegacyCodingAdoption } from './storage/coding-recovery.ts';
-import { NativeSessionProjection, nativeSessionPaths } from './storage/native-session-projection.ts';
+import { NativeSessionProjection, nativeSessionPaths, type NativeSessionDescriptor } from './storage/native-session-projection.ts';
 import { ExtensionUIHost, type ExtensionUIBinding } from './extension-ui.ts';
 import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent/shared/sessions';
 
@@ -36,6 +36,8 @@ export interface CodingHostBindings {
   id: string;
   nativeFork?: NativeCodingFork;
   nativeParent?: string;
+  deferProjection?: boolean;
+  commitProjection?(descriptor: NativeSessionDescriptor): Promise<void>;
   profile: KernelCodingOptions;
   models(): Models;
   credentials?: ModelRuntimeCredentials;
@@ -86,7 +88,11 @@ export class CodingHost {
     this.models = models;
     this.projection = new NativeSessionProjection(journal, {
       sessionPath: host.sessionPath, sessionId: basename(host.sessionPath),
-      published: descriptor => host.event({ type: 'native_session_projection', descriptor }),
+      published: async descriptor => {
+        if (host.commitProjection && (this.started || !host.deferProjection)) {
+          await host.commitProjection(descriptor);
+        } else host.event({ type: 'native_session_projection', descriptor });
+      },
       error: error => host.error({
         extensionPath: '<host>', event: 'projection', error: error instanceof Error ? error.message : String(error),
       }),
@@ -94,6 +100,7 @@ export class CodingHost {
     this.durable = new DurableLoopBinding({
       kernel: host, journal, models,
       commitState: tx => this.persistState(tx),
+      beforeAssistantMessage: async () => { await this.projection.flush(); },
       finalArguments: scope => scope.runtime.memo('mkagent.tool.approved-arguments', scope.context),
       activateTools: names => this.session.setActiveToolsByName([...this.session.getActiveToolNames(), ...names]),
       onSessionComplete: completion => this.legacy?.onSettled(completion),

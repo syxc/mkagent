@@ -27,7 +27,7 @@ export interface NativeSessionDescriptor extends NativeSessionManifest {
 interface ProjectionOptions {
   sessionPath: string;
   sessionId: string;
-  published?(descriptor: NativeSessionDescriptor): void;
+  published?(descriptor: NativeSessionDescriptor): void | Promise<void>;
   error?(error: unknown): void;
 }
 
@@ -73,6 +73,15 @@ async function replace(path: string, content: string): Promise<void> {
   }
 }
 
+/** The journal receipt is safe even when its disposable file/product view could not be published. */
+export class NativeSessionProjectionError extends Error {
+  constructor(cause: unknown) {
+    const detail = cause instanceof Error ? `: ${cause.message}` : '';
+    super(`Native session projection failed; its journal commit remains authoritative${detail}`, { cause });
+    this.name = 'NativeSessionProjectionError';
+  }
+}
+
 export class NativeSessionProjection {
   readonly paths;
   private pending = Promise.resolve();
@@ -94,6 +103,8 @@ export class NativeSessionProjection {
   private enqueue(snapshot: NativeSessionSnapshot): void {
     if (this.closed) return;
     this.pending = this.pending.then(async () => {
+      // Keep the failed revision's files fixed until an explicit journal rebuild.
+      if (this.failure !== undefined) return;
       const { jsonl, metadata, descriptor } = encodeNativeSessionProjection(snapshot, this.options);
       await directory(join(this.options.sessionPath, 'native-session'));
       await directory(join(this.options.sessionPath, 'meta'));
@@ -101,9 +112,7 @@ export class NativeSessionProjection {
       // A torn pair fails digest validation until a later receipt or explicit rebuild repairs it.
       await replace(this.paths.manifestFile, metadata);
       this.descriptor = descriptor;
-      this.failure = undefined;
-      try { this.options.published?.(structuredClone(this.descriptor)); }
-      catch (error) { this.report(error); }
+      await this.options.published?.(structuredClone(this.descriptor));
     }).catch(error => {
       this.failure = error;
       this.report(error);
@@ -118,7 +127,7 @@ export class NativeSessionProjection {
       await pending;
     } while (pending !== this.pending);
     if (this.failure !== undefined || !this.descriptor) {
-      throw new Error('Native session projection failed; its journal commit remains authoritative', { cause: this.failure });
+      throw new NativeSessionProjectionError(this.failure);
     }
     return structuredClone(this.descriptor);
   }
@@ -126,6 +135,7 @@ export class NativeSessionProjection {
   /** Retrying projection IO never runs a native hook or repeats an already committed task. */
   rebuild(): Promise<NativeSessionDescriptor> {
     if (this.closed) return Promise.reject(new Error('Native session projection is closed'));
+    this.pending = this.pending.then(() => { this.failure = undefined; });
     this.enqueue(this.journal.committedSnapshot());
     return this.flush();
   }

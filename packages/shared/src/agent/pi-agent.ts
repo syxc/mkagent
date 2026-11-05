@@ -200,7 +200,7 @@ export class PiAgent extends BaseAgent {
   private retainedWorkers = new Map<PiWorkerLease, { connection: PiWorkerConnection; tasks: Set<string> }>();
   private sourceTransfer?: PiNativeWorkerTransfer;
   private ownerReleaseTimeoutMs = 15_000;
-  private pendingOwnerReleases = new Map<string, PendingEphemeralRequest<void> & { lease: PiWorkerLease }>();
+  private pendingOwnerReleases = new Map<string, PendingEphemeralRequest<Error | undefined> & { lease: PiWorkerLease }>();
   private pendingSessionNames = new Map<string, PendingEphemeralRequest<void>>();
   private sessionNameUpdatesPending = 0;
   private readonly extensionUI: PiExtensionUITransport;
@@ -712,9 +712,10 @@ export class PiAgent extends BaseAgent {
     const lease = this.workerLease;
     if (!lease) return;
     if (this.detachedOwner) this.cancelOwnerOperations('Pi owner released');
-    await this.requestOwnerRelease(lease);
+    const releaseError = await this.requestOwnerRelease(lease);
     const receipt = this.nativeProjectionReceipt;
     try {
+      if (releaseError) throw releaseError;
       if (receipt?.lease === lease) await receipt.promise;
     } finally {
       lease.release();
@@ -732,8 +733,8 @@ export class PiAgent extends BaseAgent {
     }
   }
 
-  private requestOwnerRelease(lease: PiWorkerLease): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+  private requestOwnerRelease(lease: PiWorkerLease): Promise<Error | undefined> {
+    return new Promise<Error | undefined>((resolve, reject) => {
       const id = `release-owner-${++this.rpcIdCounter}`;
       const timeout = setTimeout(() => {
         this.pendingOwnerReleases.delete(id);
@@ -1226,7 +1227,7 @@ export class PiAgent extends BaseAgent {
         if (typeof msg.id !== 'string' || typeof msg.released !== 'boolean') break;
         const pending = this.takePendingEphemeral(this.pendingOwnerReleases, msg.id);
         if (pending) {
-          if (msg.released && msg.error === undefined) pending.resolve();
+          if (msg.released) pending.resolve(typeof msg.error === 'string' ? new Error(msg.error) : undefined);
           else pending.reject(new Error(typeof msg.error === 'string' ? msg.error : 'Pi owner release rejected'));
         }
         break;

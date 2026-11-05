@@ -11,7 +11,8 @@ import { NativeSessionProjection, nativeSessionPaths, readNativeSessionDescripto
 const cleanup: Array<() => Promise<unknown>> = [];
 afterEach(async () => { for (const close of cleanup.splice(0).reverse()) await close(); });
 
-async function fixture(before?: (path: string) => Promise<void>) {
+async function fixture(before?: (path: string) => Promise<void>,
+  published?: ConstructorParameters<typeof NativeSessionProjection>[1]['published']) {
   const path = await mkdtemp(join(tmpdir(), 'native-path-'));
   cleanup.push(() => rm(path, { recursive: true, force: true }));
   const harness = await Harness.open(new MemoryStorage(), {
@@ -25,7 +26,7 @@ async function fixture(before?: (path: string) => Promise<void>) {
   });
   cleanup.push(async () => journal.close());
   await before?.(path);
-  const projection = new NativeSessionProjection(journal, { sessionPath: path, sessionId: 'product-fixture' });
+  const projection = new NativeSessionProjection(journal, { sessionPath: path, sessionId: 'product-fixture', published });
   cleanup.push(() => projection.close());
   const write = (work: () => void) => journal.phase(async () => {
     work();
@@ -118,4 +119,37 @@ test('projection refuses child directory symlinks before writing through them', 
   await expect(state.projection.flush()).rejects.toThrow('journal commit remains authoritative');
   await expect(readFile(join(other, 'session.jsonl'))).rejects.toMatchObject({ code: 'ENOENT' });
   expect(state.journal.committedSnapshot().entries).toHaveLength(0);
+});
+
+test('a delayed product receipt keeps its exact projection files fixed before later revisions', async () => {
+  const admitted = Promise.withResolvers<void>();
+  const receipt = Promise.withResolvers<void>();
+  const state = await fixture(undefined, async descriptor => {
+    if (descriptor.revision === 1) { admitted.resolve(); await receipt.promise; }
+  });
+  await state.projection.flush();
+  try {
+    await state.write(() => { state.manager.appendMessage({ role: 'user', content: 'first', timestamp: 1 }); });
+    await admitted.promise;
+    await state.write(() => { state.manager.appendMessage({ role: 'user', content: 'second', timestamp: 2 }); });
+    expect((await readNativeSessionDescriptor(state.path)).revision).toBe(1);
+    expect(state.journal.committedSnapshot().revision).toBe(2);
+  } finally { receipt.resolve(); }
+  expect((await state.projection.flush()).revision).toBe(2);
+});
+
+test('a failed product receipt blocks overwrites until explicit idempotent rebuild', async () => {
+  let fail = true;
+  const state = await fixture(undefined, async descriptor => {
+    if (descriptor.revision > 0 && fail) throw new Error('Product storage unavailable');
+  });
+  await state.projection.flush();
+  await state.write(() => { state.manager.appendMessage({ role: 'user', content: 'committed', timestamp: 1 }); });
+  await expect(state.projection.flush()).rejects.toThrow('journal commit remains authoritative');
+  await state.write(() => { state.manager.appendMessage({ role: 'user', content: 'later', timestamp: 2 }); });
+  await expect(state.projection.flush()).rejects.toThrow('journal commit remains authoritative');
+  expect((await readNativeSessionDescriptor(state.path)).revision).toBe(1);
+  fail = false;
+  expect((await state.projection.rebuild()).revision).toBe(2);
+  expect((await state.projection.rebuild()).revision).toBe(2);
 });

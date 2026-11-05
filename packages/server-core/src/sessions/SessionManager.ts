@@ -9,6 +9,7 @@ import { NativeSessionOwner } from './native-session-owner'
 import { closeNativeForkProof, prepareNativeForkProof, verifyNativeForkTarget, type NativeForkProof } from './native-session-fork'
 import { closeNativeSwitchProof, prepareNativeSwitchProof, verifyNativeSwitchTarget, type NativeSwitchProof } from './native-session-switch'
 import { readTrustedNativeSession } from './native-session-source'
+import { materializeNativeUserHistory } from './native-user-history'
 import { partitionNativeProductHistory } from '../../../shared/src/sessions/native-product-history'
 import type { PiNativeOwnerBackend, PiNativeOwnerRequest } from '../../../shared/src/agent/backend/pi/native-owner-protocol'
 import type { BackgroundTaskOutput, StopBackgroundTaskResult } from '@mkagent/shared/protocol'
@@ -1179,23 +1180,27 @@ export class SessionManager implements ISessionManager {
       const nameChanged = name !== undefined && managed.name !== name
       const historyChanged = (reference.treeRevision ?? 0) > (previous?.treeRevision ?? 0)
       let history: ReturnType<typeof partitionNativeProductHistory> | undefined
-      if (historyChanged) {
+      if (historyChanged || reference.revision >= (previous?.revision ?? -1)) {
         const tree = readTrustedNativeSession({
           workspaceRootPath: managed.workspace.rootPath, sessionId,
           nativeSessionId: reference.nativeSessionId, reference,
         })
         history = partitionNativeProductHistory(snapshot, { ...tree, leaf: previous ? previous.leaf : reference.leaf }, {
           sourceSessionId: sessionId, targetSessionId: sessionId, leaf: reference.leaf,
+          additionalMessages: materializeNativeUserHistory(tree, managed.workspace.rootPath, sessionId,
+            [...snapshot.messages, ...(snapshot.nativeArchivedMessages ?? [])]),
         })
         Object.assign(snapshot, history)
       }
-      if (previous?.manifestDigest === reference.manifestDigest && !nameChanged && !historyChanged) return
+      const rowsChanged = history && (!isDeepStrictEqual(history.messages, managed.messages.map(messageToStored))
+        || !isDeepStrictEqual(history.nativeArchivedMessages, managed.nativeArchivedMessages ?? []))
+      if (previous?.manifestDigest === reference.manifestDigest && !nameChanged && !rowsChanged) return
       snapshot.nativeSessionProjection = reference
       if (nameChanged) snapshot.name = name
       return () => {
         managed.nativeSessionProjection = reference
         if (nameChanged) managed.name = name
-        if (history) {
+        if (history && rowsChanged) {
           this.applyNativeProductHistory(managed, history)
           this.emit(managed.workspace.id, {
             type: 'native_history_changed', sessionId, session: structuredClone(this.toSession(managed, true)),
@@ -1235,6 +1240,9 @@ export class SessionManager implements ISessionManager {
     const active = new Set(managed.messages.map(row => row.id))
     const rows = new Map([...(managed.nativeArchivedMessages ?? []), ...managed.messages.map(messageToStored)]
       .map(row => [row.id, row]))
+    for (const row of [...history.messages, ...history.nativeArchivedMessages]) {
+      if (!rows.has(row.id)) rows.set(row.id, structuredClone(row))
+    }
     const placement = new Map(history.nativeArchivedMessages.map(row => [row.id, false]))
     for (const row of history.messages) placement.set(row.id, true)
     const tags = new Map([...history.messages, ...history.nativeArchivedMessages].map(row => [row.id, row.nativeHistory]))

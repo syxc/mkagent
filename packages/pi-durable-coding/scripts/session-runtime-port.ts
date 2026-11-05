@@ -1,4 +1,5 @@
 /** Keep the host's durable state and tool boundaries reproducible from pinned native sources. */
+import { portNativeUserInput } from './native-user-input-port.ts';
 function edit(source: string, before: string, after: string): string {
   if (!source.includes(before)) throw new Error('Pinned native session boundary changed: ' + before);
   return source.replace(before, after);
@@ -322,12 +323,12 @@ export function portAgentSession(source: string): string {
   body = edit(body, '\t\t\tthis.agent.streamFunction,', '\t\t\tthis.agent.durable.summaryStream,');
   body = edit(body, '\t\t\t\t\tstreamFn: this.agent.streamFunction,', '\t\t\t\t\tstreamFn: this.agent.durable.summaryStream,');
   body = edit(body, '\t\t\tstreamFn: this.agent.streamFunction,', '\t\t\tstreamFn: this.agent.durable.summaryStream,');
-  return body;
+  return portNativeUserInput(body);
 }
 
 export function portNativeMessages(source: string): string {
   return edit(source, '\t\t\t\tcase "toolResult":\n\t\t\t\t\treturn m;',
-    '\t\t\t\tcase "toolResult":\n\t\t\t\t\t// Host correlation survives native persistence but never enters model context.\n\t\t\t\t\tif ("hostMessageId" in m) {\n\t\t\t\t\t\tconst { hostMessageId: _hostMessageId, ...message } = m;\n\t\t\t\t\t\treturn message;\n\t\t\t\t\t}\n\t\t\t\t\treturn m;');
+    '\t\t\t\tcase "toolResult":\n\t\t\t\t\t// Host metadata survives native persistence but never enters model context.\n\t\t\t\t\tif ("hostMessageId" in m || "hostUserInput" in m) {\n\t\t\t\t\t\tconst message = { ...m };\n\t\t\t\t\t\tReflect.deleteProperty(message, "hostMessageId");\n\t\t\t\t\t\tReflect.deleteProperty(message, "hostUserInput");\n\t\t\t\t\t\treturn message;\n\t\t\t\t\t}\n\t\t\t\t\treturn m;');
 }
 
 export function portSDK(source: string): string {

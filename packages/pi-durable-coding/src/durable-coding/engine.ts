@@ -36,6 +36,8 @@ export interface DurableLoopOptions {
   journal?: NativeSessionJournal;
   /** Save native queues and lifecycle metadata in the same transaction as each run transition. */
   commitState?(tx: Tx): Promise<void>;
+  /** Await committed product input before publishing an assistant message. */
+  beforeAssistantMessage?(): Promise<void>;
   finalArguments?(scope: CodingToolInvocation): Promise<unknown>;
   activateTools?(names: string[]): void;
   onSessionComplete?(completion: CodingSessionCompletion): void;
@@ -323,6 +325,9 @@ export class DurableLoopBinding {
     const host: LoopExecution = {
       config, context: initial, streamFn, signal,
       emit: async event => {
+        if (event.type === 'message_start' && event.message.role === 'assistant') {
+          await this.options.beforeAssistantMessage?.();
+        }
         if (event.type === 'message_end') await host.beforeMessageEnd?.();
         await emit(event);
         if (this.options.journal) {

@@ -87,6 +87,10 @@ const script = `
     } else if (command.type === 'release_owner') {
       if (releaseMode === 'error') send({ type: 'error', id: command.id, message: 'fixture release rejected' }, scope);
       if (releaseMode === 'ack') send({ type: 'owner_released', id: command.id, released: true }, scope);
+      if (releaseMode === 'projection-error') send({ type: 'owner_released', id: command.id, released: true,
+        error: 'fixture closed writer projection failed' }, scope);
+      if (releaseMode === 'rejected') send({ type: 'owner_released', id: command.id, released: false,
+        error: 'fixture writer still active' }, scope);
     } else if (command.type === 'fixture_release_mode') {
       releaseMode = command.mode;
     } else if (command.type === 'stop_background_task') {
@@ -491,6 +495,20 @@ test('acknowledged writer release detaches even when its final projection receip
   observe(target);
   await expect(target.nativeSessionOwner.releaseForOwner()).rejects.toThrow('fixture projection receipt failed');
   expect(target.subprocess).toBeNull();
+});
+
+test('closed writer errors detach the lease while rejected release keeps it available', async () => {
+  const target = agent('release-projection-error');
+  await target.ensureSubprocess();
+  const wire = observe(target);
+  const lease: PiWorkerLease = target.workerLease;
+  wire.command({ type: 'fixture_release_mode', mode: 'rejected' });
+  await expect(target.nativeSessionOwner.releaseForOwner()).rejects.toThrow('fixture writer still active');
+  expect(target.subprocess).toBe(wire.child);
+  wire.command({ type: 'fixture_release_mode', mode: 'projection-error' });
+  await expect(target.nativeSessionOwner.releaseForOwner()).rejects.toThrow('fixture closed writer projection failed');
+  expect(target.subprocess).toBeNull();
+  expect(lease.send({ type: 'abort' })).toBe(false);
 });
 
 test('rejects fabricated tokens and preserves source control until adoption', async () => {

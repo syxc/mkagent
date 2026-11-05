@@ -737,7 +737,9 @@ export class DurableKernel {
     this.coding = await CodingHost.load({
       harness: this.harness!, conversation: this.conversation!, registry: this.registry!,
       cwd: this.options.cwd, sessionPath: this.options.sessionPath, id: this.sessionId, profile,
-      nativeFork, nativeParent,
+      nativeFork, nativeParent, deferProjection: deferred,
+      commitProjection: this.options.commitNativeHistory && (descriptor =>
+        this.options.commitNativeHistory!(parseNativeSessionReference(descriptor)!, descriptor.hasName)),
       models: this.options.modelsSource, credentials: this.options.modelCredentialsSource?.(),
       autoCompactWindow: this.options.autoCompactWindow, ui: this.options.codingUI,
       model: async models => {

@@ -190,7 +190,7 @@
       "source": "packages/coding-agent/src/core/agent-session.ts",
       "target": "src/pi/core/agent-session.ts",
       "sha256": "b7c24bf1c1366e931083100d921a80d390d66bacde4acf7472a7b57af1bb69aa",
-      "portSha256": "78897fa7eaba49de8d6855f9b5b6ddbaad864746bc9750689535dedf085ac2f7",
+      "portSha256": "6e054a8dc1a6cb0b15531bffe8b188bd2301d7390da90802cde5cae59b293a47",
       "changes": [
         "durable-agent-boundary",
         "durable-recovery-and-host-tool-policy",
@@ -514,7 +514,7 @@
       "source": "packages/coding-agent/src/core/messages.ts",
       "target": "src/pi/core/messages.ts",
       "sha256": "5397e3c96c9504266e4ee8b6e88d5098b3280ee7dbb0c687b74708c62a06c8d4",
-      "portSha256": "1be002d2c77323e6abb2d3ceef6c4802234ebb57e9b9b8d8122cbf73a3f7183f",
+      "portSha256": "ab3babd6030bd4f3eeabcbbd0bfd1dfe278d6fcc5a01c0dcd7c656588604552a",
       "changes": [
         "durable-agent-boundary",
         "exclude-host-correlation-from-model-context"

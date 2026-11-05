@@ -185,9 +185,11 @@ export function convertToLlm(messages: AgentMessage[]): Message[] {
 				case "user":
 				case "assistant":
 				case "toolResult":
-					// Host correlation survives native persistence but never enters model context.
-					if ("hostMessageId" in m) {
-						const { hostMessageId: _hostMessageId, ...message } = m;
+					// Host metadata survives native persistence but never enters model context.
+					if ("hostMessageId" in m || "hostUserInput" in m) {
+						const message = { ...m };
+						Reflect.deleteProperty(message, "hostMessageId");
+						Reflect.deleteProperty(message, "hostUserInput");
 						return message;
 					}
 					return m;

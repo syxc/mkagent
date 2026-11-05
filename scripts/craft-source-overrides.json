@@ -1031,7 +1031,7 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "8c82a63dded49f92da4ed0c751a054f5406d6b6071b0259fe0f40cacc0689f0b",
+      "sha256": "8de7d0899b816f5b67dc5033b5babdb94dc01f72555bb05b37a341de98111c47",
       "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining host events, approvals, runtime updates and shutdown cleanup. Capture product ownership and input identity for JSONL calls, reject retired foreground scopes, and preserve source ownership for background notifications and stop requests."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
@@ -1251,7 +1251,7 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/server-core/src/sessions/SessionManager.ts": {
-      "sha256": "4cc5bd2bbad2175b6f8d167d7b12b82469c1b57020d5c240faefa12095e70c12",
+      "sha256": "60c3331bce167f5ba68bf2d6f432050ca3f2a29cafbf90c9a334aaf724317bbb",
       "reason": "Retain the Craft-derived Pi/Lite lifecycle, permissions, persistence, imported sdkSessionId and PR handoffs. Require a strict final creation receipt with rollback. Preserve product input identity and caller provenance; settle completed inputs, retain the product queue and retire invalid client or session context. Serialize native projection registration and owner metadata behind strict receipts. Preserve inactive native product rows through lazy loading, metadata saves and import; omit source display caches on ordinary cutoff copies."
     },
     "packages/server-core/src/sessions/background-task-stop.test.ts": {
@@ -1719,7 +1719,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/pi-agent.ts": {
-      "sha256": "62daefd01277c0337c7ee6fa8468f023f6294db2b8adf5bb7a9ce7ff8b93edca",
+      "sha256": "2c7e5767be1d709c3238354de386dc91818677b45b342d309f4c97de1ea5e880",
       "reason": "Retain the Craft-derived Pi/Lite client, startup, permissions, runtime updates, compaction, recovery and PR handoffs. Use generation-checked worker bindings, preserve stable product prompt and steer identities, retain shutdown scope, and release abandoned background stop requests. Route projection references through the current lease after native readiness."
     },
     "packages/shared/src/agent/plan-types.ts": {
@@ -2328,6 +2328,22 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/scripts/native-user-input-port.ts": {
+      "sha256": "21756f4b016528e0d16ab7bd80b4f628a9703308302f0c686e817f76f0d61469",
+      "reason": "Preserve committed plugin user identity, raw input, attachments and product history receipts."
+    },
+    "packages/pi-durable-coding/test/native-user-input.test.ts": {
+      "sha256": "8f052560307848e47bfd4ef8f9131c71be5b36dca381b6a3a4126c4d69fb6989",
+      "reason": "Preserve committed plugin user identity, raw input, attachments and product history receipts."
+    },
+    "packages/server-core/src/sessions/native-user-history.test.ts": {
+      "sha256": "908483ef7640fc1b51fae3768470b1df4b073e541afa3e3404a0aad2d0cc9875",
+      "reason": "Preserve committed plugin user identity, raw input, attachments and product history receipts."
+    },
+    "packages/server-core/src/sessions/native-user-history.ts": {
+      "sha256": "62741f7ac4e78b8bbb2aad2c2a417bab6ac869fe51f3f0fb64cf04dfa6118ea8",
+      "reason": "Preserve committed plugin user identity, raw input, attachments and product history receipts."
+    },
     "packages/pi-durable-coding/test/reference/plugin-contract.ts": {
       "sha256": "8e7be2fd68fb6cb1d7a6c9544eb756b404d20e5d42038a7f8ce7f027f873bcae",
       "reason": "Run unchanged upstream plugins and the shared session contract against isolated pinned native Pi."
@@ -2353,7 +2369,7 @@
       "reason": "Preserve the pinned Pi v1.5.0 session naming fixture byte-for-byte under its MIT license."
     },
     "packages/server-core/src/sessions/native-plugin-runtime.isolated.ts": {
-      "sha256": "0c6dcd0b966ff16e5d18c91ee687e443bcd76572278a940fd8de8b1d23f6ff21",
+      "sha256": "e9defa284ae26600e792b417e0ab9fdf2e5e6000352964b132b3c0b9a91c3d24",
       "reason": "Exercise unchanged plugins through the real product owner, native worker, UI responses and cold restart."
     },
     "packages/pi-agent-server/src/native-history-receipts.ts": {
@@ -2437,7 +2453,7 @@
       "reason": "Open native fork stores in a cold process using deterministic models and test-owned paths."
     },
     "packages/shared/src/sessions/native-product-history.ts": {
-      "sha256": "176daba73b193f5e7ffc5c77a1068a7d233523cbeb12e5d7718db932e675ab22",
+      "sha256": "84e5645ee2ed0fd89a21fca25e98f61a29d7d05412e3c67a5df8fcbeb65ecb24",
       "reason": "Retain complete product message metadata and derive active or archived rows from verified native identity and leaf ancestry."
     },
     "packages/shared/src/sessions/native-product-history.test.ts": {
@@ -2461,7 +2477,7 @@
       "reason": "Define and validate minimal committed native projection identity references without transcript mappings."
     },
     "packages/server-core/src/sessions/native-session-registration.isolated.ts": {
-      "sha256": "aef4682fe9d9bef3c35b767f15ccace8db06761105a9cb013230998ca4da3296",
+      "sha256": "8d7911b749d552d9b335f58d0f33885d62ef189519813c2ae011960100cc48a9",
       "reason": "Verify current backend authority, strict receipt retries and concurrent native metadata persistence."
     },
     "packages/pi-durable-coding/src/durable-coding/session-journal-state.ts": {
@@ -2477,11 +2493,11 @@
       "reason": "Project committed native journals and verify stable product input identities without a second writer."
     },
     "packages/pi-agent-server/src/storage/native-session-projection.test.ts": {
-      "sha256": "df798f252c402a9b28bfbb205257a2c695ff767fad644f3d93375a48e5cb6b96",
+      "sha256": "44967c752cef7610f88c3995e20107c1ece30bb1f78357b1cb5d9436a01cb5f9",
       "reason": "Project committed native journals and verify stable product input identities without a second writer."
     },
     "packages/pi-agent-server/src/storage/native-session-projection.ts": {
-      "sha256": "982925d2b89a835e4fc67e2684051aa7cb74ab8fe0091d88522a61b99d7151ee",
+      "sha256": "c6154485566781654662f205c8501ef2478426e8e8445ccab87b34906a52844d",
       "reason": "Share native JSONL and manifest encoding between committed projection and closed fork source verification."
     },
     "packages/pi-agent-server/src/native-owner-actions.e2e.test.ts": {
@@ -2521,7 +2537,7 @@
       "reason": "Reproduce delayed Request validation across ownership changes and retain each owner's API error file."
     },
     "packages/shared/src/agent/__tests__/pi-native-owner.test.ts": {
-      "sha256": "a33f147c047055529653e2d75d989007edf2630c7b09b7d9791329f4764a8c72",
+      "sha256": "fdd148d3733910bf8851bd1eebe32ad3ebc68d0098f908c1ea3ae6eef6459a52",
       "reason": "Verify physical worker adoption, scoped release and final projection receipts, including failed registration cleanup."
     },
     "packages/shared/src/agent/backend/pi/native-owner-protocol.ts": {
@@ -3073,7 +3089,7 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "407802e9f9b89d5fc85cdad42faa229c7fda6c65b5166ef7c1ee97356d5a8013",
+      "sha256": "76abe4df1de7d47d61fb952ee7e01f7a3972ebe2a8cc0f3a1e5535e3aa733761",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness. Verify copied native journals before Harness opening and reject conflicting legacy target history."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
@@ -3369,7 +3385,7 @@
       "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery, approved file writes and native plugin execution with host-only resources across restart."
     },
     "packages/pi-agent-server/src/coding-host.ts": {
-      "sha256": "85561b0ef2c2e0e4eb838c56dc8d9f6804c9fce59eb1529efed7bb0e52e45cb3",
+      "sha256": "459fb1367afae2e39f737f6741460b7d5b46ef149f54c4a9a2e564cb29f5c4cc",
       "reason": "Adapt native resources and extension actions to durable host boundaries, including committed auxiliary writes and shutdown."
     },
     "packages/pi-agent-server/test/coding-bundle.e2e.test.ts": {
@@ -3701,7 +3717,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "467d447ff0460a43e03708d7a76b64934fe678bb448acae05968b94591cf0e48",
+      "sha256": "74ace4a28de9666a23b56aef432f57e9438cc0a385156e0e7f20fe1bfa14fdf7",
       "reason": "Record pinned Pi v1.5.0 source and output hashes, complete public closure, asset origins and controlled runtime transformations."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3717,7 +3733,7 @@
       "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in resource-loader-port.ts."
     },
     "packages/pi-durable-coding/scripts/session-runtime-port.ts": {
-      "sha256": "310ddb46ca635e9a65d0baaf1942c4a525a0245dea23ec7d2b769e60c738d4d7",
+      "sha256": "8be8f80017ef169af92606ab8468c8c8599fcfd482cde7eb0bf08a1eb12c6fea",
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks."
     },
     "packages/pi-durable-coding/scripts/settings-runtime-port.ts": {
@@ -3741,7 +3757,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
-      "sha256": "f356603bdb367bf9f0d55d4eb587735a1140d07ffdeedb4a45093385c16be851",
+      "sha256": "111f563091638f5decb50f446b7f6048bfdcdf5a0a4d084cffba88a4b078f661",
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in engine.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/index.ts": {
@@ -3885,7 +3901,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/agent-session-services.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/agent-session.ts": {
-      "sha256": "78897fa7eaba49de8d6855f9b5b6ddbaad864746bc9750689535dedf085ac2f7",
+      "sha256": "6e054a8dc1a6cb0b15531bffe8b188bd2301d7390da90802cde5cae59b293a47",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/agent-session.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/auth-guidance.ts": {
@@ -4053,7 +4069,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/mcp-servers.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/messages.ts": {
-      "sha256": "1be002d2c77323e6abb2d3ceef6c4802234ebb57e9b9b8d8122cbf73a3f7183f",
+      "sha256": "ab3babd6030bd4f3eeabcbbd0bfd1dfe278d6fcc5a01c0dcd7c656588604552a",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/messages.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/model-config.ts": {

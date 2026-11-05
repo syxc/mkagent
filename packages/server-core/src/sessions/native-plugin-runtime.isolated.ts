@@ -1,5 +1,6 @@
 /** Unchanged upstream plugins exercise the actual product owner and native worker. */
-import { expect, test } from 'bun:test'
+import { expect, spyOn, test } from 'bun:test'
+import * as files from 'node:fs/promises'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -31,6 +32,31 @@ test('unchanged upstream RPC, confirmation and naming plugins work through the p
     writeFileSync(join(extensions, name), readFileSync(join(fixtures, 'upstream', name)))
   }
   writeFileSync(join(extensions, 'session-contract.ts'), readFileSync(join(fixtures, 'session-contract.ts')))
+  const pluginImage = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAEElEQVR4AQEFAPr/AP8AAP8FAAH/+lyI0QAAAABJRU5ErkJggg=='
+  writeFileSync(join(extensions, 'input-contract.ts'), `
+    export default function(pi) {
+      const image = { type: 'image', mimeType: 'image/png', data: ${JSON.stringify(pluginImage)} };
+      let queueInputs = false;
+      pi.on('agent_start', () => {
+        if (!queueInputs) return;
+        queueInputs = false;
+        pi.sendUserMessage('queued plugin steering', { deliverAs: 'steer' });
+        pi.sendUserMessage('queued plugin followup', { deliverAs: 'followUp' });
+      });
+      pi.on('input', event => event.text === '原始输入\\nsecond line'
+        ? { action: 'transform', text: 'transformed plugin input' } : { action: 'continue' });
+      pi.registerCommand('input-contract', { handler: () => {
+        pi.sendUserMessage([{ type: 'text', text: '原始输入\\nsecond line' }, image, image]);
+      } });
+      pi.registerCommand('image-contract', { handler: () => { pi.sendUserMessage([image]); } });
+      pi.registerCommand('repeat-contract', { handler: () => { pi.sendUserMessage('same plugin text'); } });
+      pi.registerCommand('stop-contract', { handler: () => { pi.sendUserMessage('stop-boundary input'); } });
+      pi.registerCommand('queue-contract', { handler: () => {
+        queueInputs = true;
+        pi.sendUserMessage('queue seed');
+      } });
+    }
+  `)
   const sentinel = join(cwd, 'retained')
   mkdirSync(sentinel)
   writeFileSync(join(sentinel, 'marker.txt'), 'retain')
@@ -67,7 +93,7 @@ test('unchanged upstream RPC, confirmation and naming plugins work through the p
   ensureConfigDir()
   const { SessionManager, setSessionPlatform } = await import('./SessionManager')
   const { createHeadlessPlatform } = await import('../runtime/platform-headless')
-  const { loadSession } = await import('@mkagent/shared/sessions')
+  const { loadSession, getSessionFilePath } = await import('@mkagent/shared/sessions')
   const { readTrustedNativeSession } = await import('./native-session-source')
   const { RPC_CHANNELS } = await import('@mkagent/shared/protocol')
   const platform = createHeadlessPlatform()
@@ -76,12 +102,14 @@ test('unchanged upstream RPC, confirmation and naming plugins work through the p
   const manager = new SessionManager()
   cleanup.defer(() => manager.cleanup())
   const runtime = manager as unknown as {
-    sessions: Map<string, { agent: PiAgent; isProcessing: boolean; messageQueue: unknown[] }>
+    sessions: Map<string, { agent: PiAgent; isProcessing: boolean; messageQueue: unknown[];
+      messages: Array<{ id: string }> }>
   }
   const updates: ExtensionUIUpdate[] = []
   const replies: Array<Promise<boolean>> = []
   const answered = new Set<string>()
   const created: string[] = []
+  const productEvents: Array<{ type: string; sessionId?: string; session?: { messages: Array<{ id: string; content: string }> } }> = []
   let replacement: { id?: string; done: ReturnType<typeof Promise.withResolvers<string>> } | undefined
   let allow = false
   const deadline = <T>(promise: Promise<T>) => new Promise<T>((resolve, reject) => {
@@ -89,8 +117,8 @@ test('unchanged upstream RPC, confirmation and naming plugins work through the p
     promise.then(value => { clearTimeout(timer); resolve(value) }, error => { clearTimeout(timer); reject(error) })
   })
   const attach = (id: string) => manager.attachExtensionUI(id, workspace.id, 'plugin-client', `lease-${id}`)
-  const run = async (id: string, text: string) => {
-    await deadline(manager.sendMessage(id, text, undefined, undefined, undefined, undefined, undefined, undefined,
+  const run = async (id: string, text: string, options?: { hidden?: boolean }) => {
+    await deadline(manager.sendMessage(id, text, undefined, undefined, options, undefined, undefined, undefined,
       { callerClientId: 'plugin-client' }))
     await deadline(manager.sendMessage(id, '/contract-idle'))
     const idle = Promise.withResolvers<void>()
@@ -113,6 +141,7 @@ test('unchanged upstream RPC, confirmation and naming plugins work through the p
   try {
     await manager.initialize()
     manager.setEventSink((channel, _target, event) => {
+      if (event && typeof event.type === 'string') productEvents.push(event)
       if (channel === RPC_CHANNELS.sessions.EXTENSION_UI_UPDATED) {
         const update = event as ExtensionUIUpdate
         updates.push(update)
@@ -154,6 +183,7 @@ test('unchanged upstream RPC, confirmation and naming plugins work through the p
     expect(requests).toBe(0)
     await run(source.id, 'source plugin marker')
     const history = await read(source.id)
+    expect(history.stored.messages.filter(row => row.type === 'user' && row.content === 'source plugin marker')).toHaveLength(1)
     const user = history.tree.entries.find(entry => entry.type === 'message'
       && (entry.message as { role: string }).role === 'user')!
     const count = created.length
@@ -192,13 +222,84 @@ test('unchanged upstream RPC, confirmation and naming plugins work through the p
     expect(target.tree.entries.some(entry => entry.type === 'message'
       && (entry.message as { role: string }).role === 'user'
       && JSON.stringify(entry.message).includes('contract new callback'))).toBe(true)
+    expect(target.stored.messages.filter(row => row.type === 'user'
+      && row.content === 'contract new callback')).toHaveLength(1)
+    const callbackRow = target.stored.messages.find(row => row.content === 'contract new callback')!
+    expect(target.stored.messages.findIndex(row => row.id === callbackRow.id)).toBeLessThan(
+      target.stored.messages.findIndex(row => row.type === 'assistant' && row.content === 'local plugin reply'))
+    const callbackEvent = productEvents.findIndex(event => event.type === 'native_history_changed'
+      && event.sessionId === targetId && event.session?.messages.some(row => row.id === callbackRow.id))
+    expect(callbackEvent).toBeGreaterThanOrEqual(0)
+    expect(callbackEvent).toBeLessThan(productEvents.findIndex(event => event.type === 'text_delta' && event.sessionId === targetId))
     expect(target.stored.messages.some(row => row.type === 'assistant' && row.content === 'local plugin reply')).toBe(true)
     expect(target.stored.messages.some(row => row.content.includes('source plugin marker'))).toBe(false)
     const targetAgent = runtime.sessions.get(targetId)!.agent
     await deadline(targetAgent.nativeSessionOwner!.releaseForOwner())
+    // Keep the exact product reference while simulating an older transcript after a crash.
+    const managedTarget = runtime.sessions.get(targetId)!
+    managedTarget.messages = managedTarget.messages.filter(row => row.id !== callbackRow.id)
+    await manager.flushSession(targetId)
+    expect(loadSession(workspaceRoot, targetId)!.messages.some(row => row.id === callbackRow.id)).toBe(false)
+    const beforeRecoveryRequests = requests
+    await deadline((targetAgent as unknown as { requestEnsureSessionReady(): Promise<string | null> }).requestEnsureSessionReady())
+    expect(requests).toBe(beforeRecoveryRequests)
+    expect((await read(targetId)).stored.messages.filter(row => row.id === callbackRow.id)).toHaveLength(1)
     await run(targetId, '/session-name Cold upstream target')
     expect((await read(targetId)).stored.name).toBe('Cold upstream target')
     expect((await attach(targetId)).widgets.some(widget => widget.key === 'rpc-demo')).toBe(true)
+    expect((await read(targetId)).stored.messages.filter(row => row.id === callbackRow.id)).toHaveLength(1)
+    await run(targetId, '/input-contract')
+    await run(targetId, '/image-contract')
+    await run(targetId, '/repeat-contract')
+    await run(targetId, '/repeat-contract')
+    const inputs = await read(targetId)
+    const raw = inputs.stored.messages.find(row => row.content === '原始输入\nsecond line')!
+    expect(raw?.attachments).toHaveLength(2)
+    expect(inputs.stored.messages.filter(row => row.content === 'same plugin text')).toHaveLength(2)
+    expect(inputs.stored.messages.find(row => row.type === 'user' && !row.content)?.attachments).toHaveLength(1)
+    for (const attachment of raw.attachments!) {
+      expect(readFileSync(attachment.storedPath).toString('base64')).toBe(pluginImage)
+      expect(attachment.size).toBe(Buffer.from(pluginImage, 'base64').length)
+    }
+    expect(inputs.tree.entries.some(entry => entry.type === 'message'
+      && (entry.message as { role: string }).role === 'user'
+      && JSON.stringify((entry.message as { content: unknown }).content).includes('transformed plugin input'))).toBe(true)
+    await run(targetId, 'hidden product input', { hidden: true })
+    const hiddenRows = (await read(targetId)).stored.messages.filter(row => row.content === 'hidden product input')
+    expect(hiddenRows).toHaveLength(1)
+    expect(hiddenRows[0]!.hidden).toBe(true)
+    await run(targetId, '/queue-contract')
+    const queued = await read(targetId)
+    for (const content of ['queue seed', 'queued plugin steering', 'queued plugin followup']) {
+      expect(queued.stored.messages.filter(row => row.type === 'user' && row.content === content)).toHaveLength(1)
+    }
+    const persistedInput = Promise.withResolvers<void>()
+    const permitInput = Promise.withResolvers<void>()
+    const rename = files.rename
+    let delayed = false
+    const saving = spyOn(files, 'rename').mockImplementation(async (from, to) => {
+      if (!delayed && String(to) === getSessionFilePath(workspaceRoot, targetId)
+        && readFileSync(String(from), 'utf8').includes('stop-boundary input')) {
+        delayed = true
+        persistedInput.resolve()
+        await permitInput.promise
+      }
+      return rename(from, to)
+    })
+    const stopping = run(targetId, '/stop-contract')
+    void stopping.catch(error => persistedInput.reject(error))
+    try {
+      await deadline(persistedInput.promise)
+      await targetAgent.abort()
+      permitInput.resolve()
+      await deadline(stopping)
+    } finally {
+      permitInput.resolve()
+      await stopping.catch(() => {})
+      saving.mockRestore()
+    }
+    await run(targetId, '/repeat-contract')
+    expect((await read(targetId)).stored.messages.filter(row => row.content === 'same plugin text')).toHaveLength(3)
     allow = false
     const sourceFile = (await read(source.id)).stored.nativeSessionProjection!.sessionFile
     await run(targetId, `/contract-switch ${sourceFile}`)
@@ -215,6 +316,7 @@ test('unchanged upstream RPC, confirmation and naming plugins work through the p
     expect(switched.stored.name).toBe('Switched upstream source')
     expect(switched.tree.entries.some(entry => entry.type === 'message'
       && JSON.stringify(entry.message).includes('contract switch callback'))).toBe(true)
+    expect(switched.stored.messages.filter(row => row.content === 'contract switch callback')).toHaveLength(1)
     const forking = replacement = { done: Promise.withResolvers<string>() }
     await run(source.id, `/contract-fork ${user.id}`)
     const forkId = await deadline(forking.done.promise)
@@ -226,7 +328,21 @@ test('unchanged upstream RPC, confirmation and naming plugins work through the p
     expect(forked.stored.name).toBe('Forked upstream target')
     expect(forked.tree.entries.some(entry => entry.type === 'message'
       && JSON.stringify(entry.message).includes('contract fork callback'))).toBe(true)
+    expect(forked.stored.messages.filter(row => row.content === 'contract fork callback')).toHaveLength(1)
     expect(forked.stored.messages.some(row => row.content.includes('source plugin marker'))).toBe(true)
+    const imageEntry = inputs.tree.entryIds.find(link => link.productMessageId === raw.id)!
+    const imageFork = replacement = { done: Promise.withResolvers<string>() }
+    await run(targetId, `/contract-fork ${imageEntry.nativeId}`)
+    const imageForkId = await deadline(imageFork.done.promise)
+    replacement = undefined
+    await attach(imageForkId)
+    await run(imageForkId, '/contract-idle')
+    const copiedImages = (await read(imageForkId)).stored.messages.find(row => row.id === raw.id)!.attachments!
+    expect(copiedImages.map(attachment => attachment.id)).toEqual(raw.attachments!.map(attachment => attachment.id))
+    for (const [index, attachment] of copiedImages.entries()) {
+      expect(attachment.storedPath).not.toBe(raw.attachments![index]!.storedPath)
+      expect(readFileSync(attachment.storedPath).toString('base64')).toBe(pluginImage)
+    }
     expect(replies.length).toBeGreaterThan(0)
     expect((await Promise.all(replies)).every(Boolean)).toBe(true)
   } finally {

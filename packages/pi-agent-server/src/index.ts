@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { BackgroundShells } from './background-shell.ts';
-import { readNativeSessionDescriptor } from './storage/native-session-projection.ts';
+import { NativeSessionProjectionError, readNativeSessionDescriptor } from './storage/native-session-projection.ts';
 import type { AgentEvent } from '@mkagent/core/types';
 /**
  * Pi Agent Server
@@ -810,7 +810,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     },
     hooks: createKernelHooks(scope),
     toolsExtension: buildToolsExtension(cwd, loadedMcp.tools),
-    commitNativeHistory: (reference, hasName) => nativeHistory.commit(currentWorkerScope(), reference, hasName),
+    commitNativeHistory: (reference, hasName) => nativeHistory.commit(scope, reference, hasName),
     replaceNativeSession: (request, runTarget) => {
       let target: DurableKernel | undefined;
       return nativeOwner.replace(currentWorkerScope(), { ...request, inputId: workerContext.getStore()?.inputId }, {
@@ -1459,13 +1459,20 @@ async function processMessage(msg: InboundMessage, compactController?: AbortCont
         workerContext.getStore()?.ui?.close();
         await callbacksClosed;
         if (loading) await loading.catch(() => undefined);
-        await active?.close();
+        let projectionError: NativeSessionProjectionError | undefined;
+        try { await active?.close(); }
+        catch (error) {
+          // Kernel.close has completed durable cleanup before a projection error escapes.
+          if (!(error instanceof NativeSessionProjectionError)) throw error;
+          projectionError = error;
+        }
         if (kernel === active) kernel = null;
         if (loaded && mcpLoad === loaded) {
           await closeMcpConnections(loaded.connections);
           if (mcpLoad === loaded) mcpLoad = null;
         }
-        send({ type: 'owner_released', id: msg.id, released: true });
+        send({ type: 'owner_released', id: msg.id, released: true,
+          ...(projectionError ? { error: projectionError.message } : {}) });
       } catch (error) {
         send({ type: 'owner_released', id: msg.id, released: false,
           error: error instanceof Error ? error.message : String(error) });
@@ -1652,7 +1659,8 @@ function main(): void {
         return;
       }
       if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') {
-        nativeHistory.cancel(msg.type === 'init' ? undefined : scope, `Native history ${msg.type}`);
+        // Stopping execution does not revoke persistence of an already committed native tree.
+        if (msg.type !== 'abort') nativeHistory.cancel(msg.type === 'init' ? undefined : scope, `Native history ${msg.type}`);
         inputGeneration++;
       }
       const generation = inputGeneration;

@@ -3,9 +3,11 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
+import { createHash } from 'node:crypto'
 import type { AgentBackend } from '@mkagent/shared/agent/backend'
 import type { NativeSessionOwnerRecord, NativeSessionReference } from '@mkagent/shared/sessions'
 import type { NativeForkProof } from './native-session-fork'
+import type { NativeSourceEntry } from './native-session-source'
 
 const root = mkdtempSync(join(tmpdir(), 'native-registration-'))
 const previous = { HOME: process.env.HOME, CONFIG_DIR: process.env.CONFIG_DIR }
@@ -48,7 +50,8 @@ async function fixture() {
   let revision = 1
   const backend = { setSessionName: async (name: string) => {
     revision++
-    await register({ ...reference, revision, name, digest: String(revision).repeat(64), manifestDigest: String(revision + 1).repeat(64) })
+    await register({ ...reference, revision, name: name.trim() || null,
+      digest: String(revision).repeat(64), manifestDigest: String(revision + 1).repeat(64) }, backend, true)
   } }
   managed.agent = { nativeSessionOwner: backend, getSessionId: () => 'native-source', destroy() {} } as unknown as AgentBackend
   managed.sdkSessionId = 'native-source'
@@ -57,9 +60,36 @@ async function fixture() {
     revision: 1, sessionFile: join(getSessionPath(workspaceRoot, source.id), 'native-session', 'session.jsonl'),
     leaf: null, name: null, digest: 'a'.repeat(64), manifestDigest: 'b'.repeat(64),
   }
-  const register = (ref: unknown = reference, owner: unknown = backend) =>
-    harness.nativeOwners.port(source.id).onProjection(ref, owner, {})
-  return { manager, harness, managed, source, workspace, workspaceRoot, reference, register }
+  let history: NativeSourceEntry[] = []
+  const project = (ref: NativeSessionReference, hasName?: boolean) => {
+    const entries = [...history, ...(ref.name !== null || hasName ? [{
+      type: 'session_info', id: 'name', parentId: history.at(-1)?.id ?? null,
+      timestamp: new Date(1).toISOString(), name: ref.name ?? '',
+    }] : [])]
+    const jsonl = [{ type: 'session', version: 3, id: 'native-source', cwd: workspaceRoot,
+      timestamp: new Date(1).toISOString() }, ...entries].map(value => JSON.stringify(value)).join('\n') + '\n'
+    ref.digest = createHash('sha256').update(jsonl).digest('hex')
+    const { manifestDigest: _digest, ...fields } = ref
+    const metadata = JSON.stringify({ ...fields, entryIds: entries.map((entry, durableId) => ({
+      nativeId: entry.id, durableId, ...(entry.type === 'message' && entry.id === 'plugin-input'
+        ? { productMessageId: 'native-user-plugin-input' } : {}),
+    })) }) + '\n'
+    ref.manifestDigest = createHash('sha256').update(metadata).digest('hex')
+    const path = getSessionPath(workspaceRoot, source.id)
+    mkdirSync(join(path, 'native-session'), { recursive: true })
+    mkdirSync(join(path, 'meta'), { recursive: true })
+    writeFileSync(reference.sessionFile, jsonl)
+    writeFileSync(join(path, 'meta', 'native-session.json'), metadata)
+  }
+  const register = (ref: unknown = reference, owner: unknown = backend, hasName?: boolean) => {
+    if (ref && typeof ref === 'object' && 'sessionFile' in ref && ref.sessionFile === reference.sessionFile
+      && 'sessionId' in ref && ref.sessionId === source.id && 'nativeSessionId' in ref && ref.nativeSessionId === 'native-source') {
+      project(ref as NativeSessionReference, hasName)
+    }
+    return harness.nativeOwners.port(source.id).onProjection(ref, owner, {}, hasName)
+  }
+  return { manager, harness, managed, source, workspace, workspaceRoot, reference, register,
+    setHistory: (entries: NativeSourceEntry[]) => { history = entries } }
 }
 
 test('only the current product backend can register its canonical native reference', async () => {
@@ -89,14 +119,14 @@ test('committed names save before broadcast, clear explicitly and repair an equa
   await f.register(named)
   expect(f.managed.name).toBe('Native name')
   const clear = { ...f.reference, revision: 2, digest: 'c'.repeat(64), manifestDigest: 'd'.repeat(64) }
-  await f.harness.nativeOwners.port(f.source.id).onProjection(clear, f.managed.agent!.nativeSessionOwner, {}, true)
+  await f.register(clear, f.managed.agent!.nativeSessionOwner, true)
   expect(loadSession(f.workspaceRoot, f.source.id)?.name).toBe('')
   expect(createManagedSession(loadSession(f.workspaceRoot, f.source.id)!, f.workspace).name).toBe('')
   await f.register(named)
   expect(f.managed.name).toBe('')
   // The pointer may already be saved when upgrading or retrying a name receipt.
   f.managed.name = 'Unsynchronized product title'
-  await f.harness.nativeOwners.port(f.source.id).onProjection(clear, f.managed.agent!.nativeSessionOwner, {}, true)
+  await f.register(clear, f.managed.agent!.nativeSessionOwner, true)
   expect(f.managed.name).toBe('')
   expect(broadcasts).toEqual(['Native name', '', ''])
 })
@@ -138,7 +168,7 @@ test('renaming an unopened coding session commits an explicit clear instead of l
   try {
     await f.manager.renameSession(f.source.id, '')
     expect(loadSession(f.workspaceRoot, f.source.id)?.name).toBe('')
-    expect(loadSession(f.workspaceRoot, f.source.id)?.nativeSessionProjection?.name).toBe('')
+    expect(loadSession(f.workspaceRoot, f.source.id)?.nativeSessionProjection?.name).toBeNull()
     expect(opening).toHaveBeenCalledTimes(1)
   } finally { opening.mockRestore() }
 })
@@ -262,4 +292,59 @@ test('flushAllSessions waits for metadata admitted before its file writer starts
     await f.manager.flushAllSessions()
     expect(loadSession(f.workspaceRoot, f.source.id)?.nativeSessionProjection).toEqual(f.reference)
   } finally { await registration }
+})
+
+function pluginInput(): NativeSourceEntry {
+  return { id: 'plugin-input', parentId: null, type: 'message', timestamp: new Date(1).toISOString(),
+    message: { role: 'user', hostMessageId: 'native-user-plugin-input', timestamp: 1, content: 'native transformed',
+      hostUserInput: { version: 1, content: 'original plugin input' } } }
+}
+
+test('equal-revision receipt repairs missing plugin input after strict failure and preserves concurrent edits', async () => {
+  const f = await fixture()
+  f.setHistory([pluginInput()])
+  f.reference.leaf = 'plugin-input'
+  const rename = fs.rename
+  const failure = spyOn(fs, 'rename').mockImplementation(async (from, to) => {
+    if (String(to) === getSessionFilePath(f.workspaceRoot, f.source.id)) throw new Error('plugin row storage failure')
+    return rename(from, to)
+  })
+  try { await expect(f.register()).rejects.toThrow('plugin row storage failure') }
+  finally { failure.mockRestore() }
+  expect(f.managed.messages.some(row => row.id === 'native-user-plugin-input')).toBe(false)
+  expect(loadSession(f.workspaceRoot, f.source.id)!.messages.some(row => row.id === 'native-user-plugin-input')).toBe(false)
+  await f.register()
+  expect(f.managed.messages.filter(row => row.id === 'native-user-plugin-input')).toHaveLength(1)
+  // Simulate an older product transcript retaining the exact committed reference.
+  f.managed.messages = []
+  await f.manager.flushSession(f.source.id)
+  const entered = Promise.withResolvers<void>()
+  const release = Promise.withResolvers<void>()
+  const delayed = spyOn(fs, 'rename').mockImplementation(async (from, to) => {
+    if (String(to) === getSessionFilePath(f.workspaceRoot, f.source.id)) {
+      entered.resolve()
+      await release.promise
+    }
+    return rename(from, to)
+  })
+  const receipt = f.register()
+  void receipt.catch(error => entered.reject(error))
+  try {
+    await entered.promise
+    f.managed.messages.push({ id: 'late-queue', role: 'user', content: 'concurrent product input', timestamp: 2, isQueued: true })
+    f.harness.persistSession(f.managed)
+    release.resolve()
+    await receipt
+    await f.manager.flushSession(f.source.id)
+    const stored = loadSession(f.workspaceRoot, f.source.id)!
+    expect(stored.nativeSessionProjection).toEqual(f.reference)
+    expect(stored.messages.filter(row => row.id === 'native-user-plugin-input')).toHaveLength(1)
+    expect(stored.messages.find(row => row.id === 'late-queue')?.isQueued).toBe(true)
+    await f.register()
+    expect(f.managed.messages.filter(row => row.id === 'native-user-plugin-input')).toHaveLength(1)
+  } finally {
+    release.resolve()
+    await receipt.catch(() => {})
+    delayed.mockRestore()
+  }
 })

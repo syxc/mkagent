@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 /**
  * AgentSession - Core abstraction for agent lifecycle and session management.
  *
@@ -340,6 +341,8 @@ export interface PromptOptions {
 	source?: InputSource;
 	/** Product identity is metadata, separate from durable admission deduplication. */
 	hostMessageId?: string;
+	/** Original plugin input, retained only for committed product display. */
+	hostUserInput?: { version: 1; content: string | (TextContent | ImageContent)[] };
 	/** Host context is added after native commands, input hooks and resource expansion. */
 	hostContextPrefix?: string;
 	/** Internal hook used by RPC mode to observe how an accepted prompt was dispatched. Not called if the prompt is rejected. */
@@ -1374,6 +1377,7 @@ export class AgentSession {
 
 		const targetRecord = target as unknown as Record<string, unknown>;
 		const hostMessageId = targetRecord.hostMessageId;
+		const hostUserInput = targetRecord.hostUserInput;
 		for (const key of Object.keys(targetRecord)) {
 			delete targetRecord[key];
 		}
@@ -1381,6 +1385,8 @@ export class AgentSession {
 		// A plugin may replace content without replacing the accepted product identity.
 		if (typeof hostMessageId === "string") targetRecord.hostMessageId = hostMessageId;
 		else delete targetRecord.hostMessageId;
+		if (hostUserInput !== undefined) targetRecord.hostUserInput = hostUserInput;
+		else delete targetRecord.hostUserInput;
 	}
 
 	/** Emit extension events based on agent events */
@@ -1962,12 +1968,12 @@ export class AgentSession {
 	 * starting another, and an abort requested meanwhile aborts the run as soon as it exists.
 	 * @param onStarted Called once the run's messages are prepared, before the first request.
 	 */
-	private async _startRun(trigger: BeforeAgentStartTrigger, onStarted?: () => void, hostMessageId?: string): Promise<void> {
+	private async _startRun(trigger: BeforeAgentStartTrigger, onStarted?: () => void, hostMessageId?: string, hostUserInput?: PromptOptions["hostUserInput"]): Promise<void> {
 		this._isAgentRunActive = true;
 		this._agentRunAbortRequested = false;
 		let messages: AgentMessage[];
 		try {
-			messages = await this._prepareRun(trigger, hostMessageId);
+			messages = await this._prepareRun(trigger, hostMessageId, hostUserInput);
 		} catch (error) {
 			this._isAgentRunActive = false;
 			this._flushPendingBashMessages();
@@ -2118,7 +2124,7 @@ export class AgentSession {
 	 * message followed by pending nextTurn messages (consumed here) and handler messages, with a
 	 * system patch first when the prompt changed.
 	 */
-	private async _prepareRun(trigger: BeforeAgentStartTrigger, hostMessageId?: string): Promise<AgentMessage[]> {
+	private async _prepareRun(trigger: BeforeAgentStartTrigger, hostMessageId?: string, hostUserInput?: PromptOptions["hostUserInput"]): Promise<AgentMessage[]> {
 		// Check if we need to compact before sending (catches aborted responses).
 		// The starting message is sent below, so do not call agent.continue() here.
 		const lastAssistant = this._findLastAssistantMessage();
@@ -2150,6 +2156,7 @@ export class AgentSession {
 			messages.push({
 				role: "user",
 				...(hostMessageId ? { hostMessageId } : {}),
+				...(hostUserInput ? { hostUserInput } : {}),
 				content: [{ type: "text", text }, ...normalized.images],
 				timestamp: Date.now(),
 			});
@@ -2347,9 +2354,9 @@ export class AgentSession {
 				);
 			}
 			if (options.streamingBehavior === "followUp") {
-				await this._queueFollowUp(expandedText, currentImages, options?.hostMessageId);
+				await this._queueFollowUp(expandedText, currentImages, options?.hostMessageId, options?.hostUserInput);
 			} else {
-				await this._queueSteer(expandedText, currentImages, options?.hostMessageId);
+				await this._queueSteer(expandedText, currentImages, options?.hostMessageId, options?.hostUserInput);
 			}
 			preflightResult?.("queued");
 			return;
@@ -2376,7 +2383,7 @@ export class AgentSession {
 		}
 
 		await this._startRun({ messageType: "user", prompt: expandedText, images: currentImages }, () =>
-			preflightResult?.("started"), options?.hostMessageId,
+			preflightResult?.("started"), options?.hostMessageId, options?.hostUserInput,
 		);
 	}
 
@@ -2505,13 +2512,13 @@ export class AgentSession {
 	/**
 	 * Internal: Queue a steering message (already expanded, no extension command check).
 	 */
-	private async _queueSteer(text: string, images?: ImageContent[], hostMessageId?: string): Promise<void> {
+	private async _queueSteer(text: string, images?: ImageContent[], hostMessageId?: string, hostUserInput?: PromptOptions["hostUserInput"]): Promise<void> {
 
 		const content: (TextContent | ImageContent)[] = [{ type: "text", text }];
 		if (images) {
 			content.push(...images);
 		}
-		const message: AgentMessage = { role: "user", content, timestamp: Date.now(), ...(hostMessageId ? { hostMessageId } : {}) };
+		const message: AgentMessage = { role: "user", content, timestamp: Date.now(), ...(hostMessageId ? { hostMessageId } : {}), ...(hostUserInput ? { hostUserInput } : {}) };
 		await this._acceptQueuedInput("steering", message, text);
 		this._steeringMessages.push(text);
 		this._emitQueueUpdate();
@@ -2521,13 +2528,13 @@ export class AgentSession {
 	/**
 	 * Internal: Queue a follow-up message (already expanded, no extension command check).
 	 */
-	private async _queueFollowUp(text: string, images?: ImageContent[], hostMessageId?: string): Promise<void> {
+	private async _queueFollowUp(text: string, images?: ImageContent[], hostMessageId?: string, hostUserInput?: PromptOptions["hostUserInput"]): Promise<void> {
 
 		const content: (TextContent | ImageContent)[] = [{ type: "text", text }];
 		if (images) {
 			content.push(...images);
 		}
-		const message: AgentMessage = { role: "user", content, timestamp: Date.now(), ...(hostMessageId ? { hostMessageId } : {}) };
+		const message: AgentMessage = { role: "user", content, timestamp: Date.now(), ...(hostMessageId ? { hostMessageId } : {}), ...(hostUserInput ? { hostUserInput } : {}) };
 		await this._acceptQueuedInput("followUp", message, text);
 		this._followUpMessages.push(text);
 		this._emitQueueUpdate();
@@ -2643,6 +2650,8 @@ export class AgentSession {
 		content: string | (TextContent | ImageContent)[],
 		options?: { deliverAs?: "steer" | "followUp"; expandPromptTemplates?: boolean },
 	): Promise<void> {
+		const hostMessageId = `native-user-${randomUUID()}`;
+		const hostUserInput = { version: 1 as const, content: structuredClone(content) };
 		// Normalize content to text string + optional images
 		let text: string;
 		let images: ImageContent[] | undefined;
@@ -2668,6 +2677,8 @@ export class AgentSession {
 			streamingBehavior: options?.deliverAs,
 			images,
 			source: "extension",
+			hostMessageId,
+			hostUserInput,
 		});
 	}
 

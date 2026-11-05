@@ -20,6 +20,7 @@ export function partitionNativeProductHistory(
     targetSessionId: string
     leaf: string | null
     sourceOnlyMessageIds?: ReadonlySet<string>
+    additionalMessages?: readonly StoredMessage[]
   },
 ): Required<Pick<StoredSession, 'messages' | 'nativeArchivedMessages'>> {
   const rows = new Map<string, StoredMessage>()
@@ -93,6 +94,31 @@ export function partitionNativeProductHistory(
       }
     }
     if (matched.length === 1) addLink(toolRows[0]!.id, matched[0]!)
+  }
+
+  if (options.additionalMessages?.length) {
+    const ordered = [...rows.values()]
+    for (const row of ordered) row.nativeHistory ??= { order: nextOrder++ }
+    ordered.sort((a, b) => a.nativeHistory!.order - b.nativeHistory!.order)
+    const indices = new Map(tree.entries.map((entry, index) => [entry.id, index]))
+    const rank = (row: StoredMessage) => Math.min(...[...(links.get(row.id) ?? [])]
+      .map(id => indices.get(id) ?? Number.POSITIVE_INFINITY))
+    const additions = [...options.additionalMessages].sort((a, b) => rank(a) - rank(b))
+    for (const original of additions) {
+      if (rows.has(original.id)) throw new Error('Additional native product message already exists')
+      const row = structuredClone(original)
+      const position = rank(row)
+      if (!Number.isFinite(position)) throw new Error('Additional native product message has no committed link')
+      const successor = ordered.findIndex(existing => rank(existing) > position && Number.isFinite(rank(existing)))
+      ordered.splice(successor < 0 ? ordered.length : successor, 0, row)
+      rows.set(row.id, row)
+    }
+    // Re-number the merged sequence, preserving every existing row's relative position.
+    rows.clear()
+    ordered.forEach((row, order) => {
+      row.nativeHistory = { ...row.nativeHistory, order }
+      rows.set(row.id, row)
+    })
   }
 
   const messages: StoredMessage[] = []
