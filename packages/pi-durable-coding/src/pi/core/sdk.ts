@@ -56,6 +56,7 @@ export interface CreateAgentSessionOptions {
 	/** Own auxiliary native writes and commit them before their events are published. */
 	onBackgroundAction?: <T>(work: () => Promise<T>) => Promise<T>;
 	onToolsChanged?: AgentSessionConfig["onToolsChanged"];
+	captureUserInput?: AgentSessionConfig["captureUserInput"];
 	/** Working directory for project-local discovery. Default: process.cwd() */
 	cwd?: string;
 	/** Global config directory. Default: ~/.pi/agent */
@@ -476,6 +477,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		wrapTool: options.wrapTool,
 		onAction: options.onAction,
 		onToolsChanged: options.onToolsChanged,
+		captureUserInput: options.captureUserInput,
 		modelRuntime,
 		cacheWarmer,
 		initialActiveToolNames,

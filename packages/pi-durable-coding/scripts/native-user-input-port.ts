@@ -1,12 +1,18 @@
 /** Preserve plugin input before native transformations, without changing model-visible messages. */
 export function portNativeUserInput(source: string): string {
-  let body = 'import { randomUUID } from "node:crypto";\n' + source;
+  let body = source;
   const edit = (before: string, after: string) => {
     if (!body.includes(before)) throw new Error('Pinned native user input boundary changed: ' + before);
     body = body.replace(before, after);
   };
   edit('\thostMessageId?: string;',
     '\thostMessageId?: string;\n\t/** Original plugin input, retained only for committed product display. */\n\thostUserInput?: { version: 1; content: string | (TextContent | ImageContent)[] };');
+  edit('\tonToolsChanged?: (tools: AgentTool[]) => void;',
+    '\tonToolsChanged?: (tools: AgentTool[]) => void;\n\t/** Capture original plugin input only when a product host owns its projection. */\n\tcaptureUserInput?: (content: string | (TextContent | ImageContent)[]) => Pick<PromptOptions, "hostMessageId" | "hostUserInput">;');
+  edit('\tprivate _onToolsChanged?: AgentSessionConfig["onToolsChanged"];',
+    '\tprivate _onToolsChanged?: AgentSessionConfig["onToolsChanged"];\n\tprivate _captureUserInput?: AgentSessionConfig["captureUserInput"];');
+  edit('\t\tthis._onToolsChanged = config.onToolsChanged;',
+    '\t\tthis._onToolsChanged = config.onToolsChanged;\n\t\tthis._captureUserInput = config.captureUserInput;');
   for (const method of ['_startRun', '_prepareRun']) {
     const before = method === '_startRun'
       ? 'private async _startRun(trigger: BeforeAgentStartTrigger, onStarted?: () => void, hostMessageId?: string)'
@@ -27,7 +33,7 @@ export function portNativeUserInput(source: string): string {
       'const message: AgentMessage = { role: "user", content, timestamp: Date.now(), ...(hostMessageId ? { hostMessageId } : {}), ...(hostUserInput ? { hostUserInput } : {}) };');
   }
   edit('\t\t// Normalize content to text string + optional images',
-    '\t\tconst hostMessageId = `native-user-${randomUUID()}`;\n\t\tconst hostUserInput = { version: 1 as const, content: structuredClone(content) };\n\t\t// Normalize content to text string + optional images');
+    '\t\tconst { hostMessageId, hostUserInput } = this._captureUserInput?.(content) ?? {};\n\t\t// Normalize content to text string + optional images');
   edit('\t\t\timages,\n\t\t\tsource: "extension",',
     '\t\t\timages,\n\t\t\tsource: "extension",\n\t\t\thostMessageId,\n\t\t\thostUserInput,');
   edit('const hostMessageId = targetRecord.hostMessageId;',

@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 /**
  * AgentSession - Core abstraction for agent lifecycle and session management.
  *
@@ -311,6 +310,8 @@ export interface AgentSessionConfig {
 	wrapTool?: (tool: AgentTool, source?: SourceInfo) => AgentTool;
 	onAction?: (work: () => Promise<void>) => Promise<void>;
 	onToolsChanged?: (tools: AgentTool[]) => void;
+	/** Capture original plugin input only when a product host owns its projection. */
+	captureUserInput?: (content: string | (TextContent | ImageContent)[]) => Pick<PromptOptions, "hostMessageId" | "hostUserInput">;
 	/** Mutable ref used by Agent to access the current ExtensionRunner */
 	extensionRunnerRef?: { current?: ExtensionRunner };
 	/** Session start event metadata emitted when extensions bind to this runtime. */
@@ -486,6 +487,7 @@ export class AgentSession {
 	private _wrapTool?: AgentSessionConfig["wrapTool"];
 	private _onAction?: AgentSessionConfig["onAction"];
 	private _onToolsChanged?: AgentSessionConfig["onToolsChanged"];
+	private _captureUserInput?: AgentSessionConfig["captureUserInput"];
 	private _sessionStartEvent: SessionStartEvent;
 	private _extensionUIContext?: ExtensionUIContext;
 	private _extensionMode: ExtensionMode = "print";
@@ -542,6 +544,7 @@ export class AgentSession {
 		this._wrapTool = config.wrapTool;
 		this._onAction = config.onAction;
 		this._onToolsChanged = config.onToolsChanged;
+		this._captureUserInput = config.captureUserInput;
 		this._sessionStartEvent = config.sessionStartEvent ?? { type: "session_start", reason: "startup" };
 
 		// Always subscribe to agent events for internal handling
@@ -2650,8 +2653,7 @@ export class AgentSession {
 		content: string | (TextContent | ImageContent)[],
 		options?: { deliverAs?: "steer" | "followUp"; expandPromptTemplates?: boolean },
 	): Promise<void> {
-		const hostMessageId = `native-user-${randomUUID()}`;
-		const hostUserInput = { version: 1 as const, content: structuredClone(content) };
+		const { hostMessageId, hostUserInput } = this._captureUserInput?.(content) ?? {};
 		// Normalize content to text string + optional images
 		let text: string;
 		let images: ImageContent[] | undefined;

@@ -185,6 +185,10 @@ export class CodingHost {
         initializeSessionMetadata: committed.revision === 0,
         sessionStartEvent: { type: 'session_start', reason },
         sessionManager: journal.manager, baseToolsOverride: tools,
+        captureUserInput: content => ({
+          hostMessageId: `native-user-${randomUUID()}`,
+          hostUserInput: { version: 1, content: structuredClone(content) },
+        }),
         // A modifier extends the host catalog while retaining all native extension exposures.
         tools: modelTools.length ? modelTools : undefined,
         thinkingLevel: host.thinkingLevel() as AgentSession['thinkingLevel'],

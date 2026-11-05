@@ -336,7 +336,7 @@ export function portSDK(source: string): string {
   body = edit(body, 'import { AgentSession, markRuntimeStreamFunction }',
     'import { AgentSession, markRuntimeStreamFunction, type AgentSessionConfig }');
   body = edit(body, 'export interface CreateAgentSessionOptions {',
-    'export interface CreateAgentSessionOptions {\n\tdurable?: DurableLoopBinding;\n\tbaseToolsOverride?: AgentSessionConfig["baseToolsOverride"];\n\twrapTool?: AgentSessionConfig["wrapTool"];\n\tonAction?: AgentSessionConfig["onAction"];\n\t/** Own auxiliary native writes and commit them before their events are published. */\n\tonBackgroundAction?: <T>(work: () => Promise<T>) => Promise<T>;\n\tonToolsChanged?: AgentSessionConfig["onToolsChanged"];');
+    'export interface CreateAgentSessionOptions {\n\tdurable?: DurableLoopBinding;\n\tbaseToolsOverride?: AgentSessionConfig["baseToolsOverride"];\n\twrapTool?: AgentSessionConfig["wrapTool"];\n\tonAction?: AgentSessionConfig["onAction"];\n\t/** Own auxiliary native writes and commit them before their events are published. */\n\tonBackgroundAction?: <T>(work: () => Promise<T>) => Promise<T>;\n\tonToolsChanged?: AgentSessionConfig["onToolsChanged"];\n\tcaptureUserInput?: AgentSessionConfig["captureUserInput"];');
   body = edit(body, '\t\tasync (event) => extensionRunnerRef.current?.emitCacheWarmingDecision(event) ?? event.action,',
     '\t\tasync (event) => extensionRunnerRef.current?.emitCacheWarmingDecision(event) ?? event.action,\n\t\toptions.onBackgroundAction,');
   body = edit(body, '\tdurable?: DurableLoopBinding;',
@@ -347,7 +347,7 @@ export function portSDK(source: string): string {
     '\t} else if (options.initializeSessionMetadata !== false) {\n\t\t// Save initial model and thinking level for new sessions');
   body = edit(body, '\tconst agent = new Agent({', '\tconst agent = new Agent({\n\t\tdurable: options.durable,');
   body = edit(body, '\t\tcustomTools: options.customTools,',
-    '\t\tcustomTools: options.customTools,\n\t\tbaseToolsOverride: options.baseToolsOverride,\n\t\twrapTool: options.wrapTool,\n\t\tonAction: options.onAction,\n\t\tonToolsChanged: options.onToolsChanged,');
+    '\t\tcustomTools: options.customTools,\n\t\tbaseToolsOverride: options.baseToolsOverride,\n\t\twrapTool: options.wrapTool,\n\t\tonAction: options.onAction,\n\t\tonToolsChanged: options.onToolsChanged,\n\t\tcaptureUserInput: options.captureUserInput,');
   return body;
 }
 
