@@ -2328,6 +2328,34 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/test/reference/plugin-contract.ts": {
+      "sha256": "8e7be2fd68fb6cb1d7a6c9544eb756b404d20e5d42038a7f8ce7f027f873bcae",
+      "reason": "Run unchanged upstream plugins and the shared session contract against isolated pinned native Pi."
+    },
+    "packages/pi-durable-coding/test/reference/plugin-worker.mjs": {
+      "sha256": "1ed7f47c530a3d925061d900365b2b5171a48903a90945cd7e6d7efde1836718",
+      "reason": "Verify native plugin UI and session replacement behavior with an explicit deterministic local model transport."
+    },
+    "packages/pi-durable-coding/test/fixtures/session-contract.ts": {
+      "sha256": "cb72210f9212cfbeb8f440dfe94155197d69ad93aca2f69af08216b1287d423d",
+      "reason": "Share unchanged plugin commands between the native reference and the actual durable product owner."
+    },
+    "packages/pi-durable-coding/test/fixtures/upstream/rpc-demo.ts": {
+      "sha256": "3d54a396eee12eb04ea12d0ea03716a6edd3e8743502b6a529e3b8d429ae640d",
+      "reason": "Preserve the pinned Pi v1.5.0 RPC demo fixture byte-for-byte under its MIT license."
+    },
+    "packages/pi-durable-coding/test/fixtures/upstream/confirm-destructive.ts": {
+      "sha256": "55502f82109df07e922ef3ec41af1b1a5ed33d4d6d56076654ab2bc88e2e0888",
+      "reason": "Preserve the pinned Pi v1.5.0 session confirmation fixture byte-for-byte under its MIT license."
+    },
+    "packages/pi-durable-coding/test/fixtures/upstream/session-name.ts": {
+      "sha256": "a0b9fd94e2cc827931150cc409238b473da635ab1a1cddce633cae5937a3ae24",
+      "reason": "Preserve the pinned Pi v1.5.0 session naming fixture byte-for-byte under its MIT license."
+    },
+    "packages/server-core/src/sessions/native-plugin-runtime.isolated.ts": {
+      "sha256": "0c6dcd0b966ff16e5d18c91ee687e443bcd76572278a940fd8de8b1d23f6ff21",
+      "reason": "Exercise unchanged plugins through the real product owner, native worker, UI responses and cold restart."
+    },
     "packages/pi-agent-server/src/native-history-receipts.ts": {
       "sha256": "3eeeb63f1321336d956c2c90e865906984e09813aae2ee875b68a6accfd1ae45",
       "reason": "Persist native tree navigation through the durable journal and wait for scoped product history receipts."
@@ -3357,7 +3385,7 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "cd60c5f6144d052d0522c28aa2b0958259a9fae8b06c1eeb29e0b62a3464d4eb",
+      "sha256": "de6fa8aa084a8d9bd824bddea533bf8e5bc57de7e3f82ca498e77a8c3776a2ec",
       "reason": "Record pinned source selections, transformations and generated output hashes."
     },
     "packages/pi-durable-coding/package.json": {
@@ -3373,7 +3401,7 @@
       "reason": "Generate and semantically type-check the patch against pristine pinned inputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "991586dd926e9b787b7412c25fc5bb39cdc9e223dd41bbd2e54f741e9a4cd436",
+      "sha256": "ebaa3289be103590bc8265b7548cd97956bf869a5f298c0682199d65f775375f",
       "reason": "Reproduce selected pinned Pi sources with guarded Bun transpiler initialization and no legacy Agent scheduler."
     },
     "packages/pi-durable-coding/src/compat.ts": {
@@ -4865,7 +4893,7 @@
       "reason": "Compare native coding behavior with the independent pinned upstream process through harness.ts."
     },
     "packages/pi-durable-coding/test/reference/native-worker.mjs": {
-      "sha256": "406e8075a56cc29d79ac2d7cd69e1002d590be107f177ec888656a1a46195144",
+      "sha256": "6c7995475c6149b3917ba2c1b191f8d7f8b590c43eca75e113f5180a5fc98ef9",
       "reason": "Compare native coding behavior with the independent pinned upstream process through native-worker.mjs."
     },
     "packages/pi-durable-coding/test/reference/parity.ts": {

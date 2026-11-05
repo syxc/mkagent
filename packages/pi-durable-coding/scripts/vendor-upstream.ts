@@ -199,7 +199,7 @@ port('../../durable/src/harness/context.ts', 'durable/context.js', [
   + 'export { findBaseline, leadWithSystem, contribute };\n\n', ['erase-types']);
 
 // Keep official fixtures byte-for-byte so compatibility tests exercise real imports.
-for (const name of ['hello.ts', 'input-transform.ts']) {
+for (const name of ['hello.ts', 'input-transform.ts', 'rpc-demo.ts', 'confirm-destructive.ts', 'session-name.ts']) {
   const source = `packages/coding-agent/examples/extensions/${name}`;
   const target = `test/fixtures/upstream/${name}`;
   const content = readFileSync(join(upstream, source), 'utf8');

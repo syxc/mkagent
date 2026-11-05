@@ -324,6 +324,24 @@
       "target": "test/fixtures/upstream/input-transform.ts",
       "sha256": "cf0f65d610631ca75d18aae1c8f1408139702f674cb2835f8c009b943776474b",
       "portSha256": "cf0f65d610631ca75d18aae1c8f1408139702f674cb2835f8c009b943776474b"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/rpc-demo.ts",
+      "target": "test/fixtures/upstream/rpc-demo.ts",
+      "sha256": "3d54a396eee12eb04ea12d0ea03716a6edd3e8743502b6a529e3b8d429ae640d",
+      "portSha256": "3d54a396eee12eb04ea12d0ea03716a6edd3e8743502b6a529e3b8d429ae640d"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/confirm-destructive.ts",
+      "target": "test/fixtures/upstream/confirm-destructive.ts",
+      "sha256": "55502f82109df07e922ef3ec41af1b1a5ed33d4d6d56076654ab2bc88e2e0888",
+      "portSha256": "55502f82109df07e922ef3ec41af1b1a5ed33d4d6d56076654ab2bc88e2e0888"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/session-name.ts",
+      "target": "test/fixtures/upstream/session-name.ts",
+      "sha256": "a0b9fd94e2cc827931150cc409238b473da635ab1a1cddce633cae5937a3ae24",
+      "portSha256": "a0b9fd94e2cc827931150cc409238b473da635ab1a1cddce633cae5937a3ae24"
     }
   ]
 }
