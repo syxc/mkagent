@@ -48,6 +48,8 @@ setDefaultStreamFn(streamSimple);
 
 export interface CreateAgentSessionOptions {
 	durable?: DurableLoopBinding;
+	/** A host restoring a committed tree can suppress SDK bootstrap writes. */
+	initializeSessionMetadata?: boolean;
 	baseToolsOverride?: AgentSessionConfig["baseToolsOverride"];
 	wrapTool?: AgentSessionConfig["wrapTool"];
 	onAction?: AgentSessionConfig["onAction"];
@@ -450,11 +452,11 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	markRuntimeStreamFunction(agent.streamFunction, modelRuntime);
 
 	// Restore missing settings metadata for older sessions.
-	if (hasExistingSession) {
+	if (options.initializeSessionMetadata !== false && hasExistingSession) {
 		if (!hasThinkingEntry) {
 			sessionManager.appendThinkingLevelChange(thinkingLevel);
 		}
-	} else {
+	} else if (options.initializeSessionMetadata !== false) {
 		// Save initial model and thinking level for new sessions so they can be restored on resume
 		if (model) {
 			sessionManager.appendModelChange(model.provider, model.id);

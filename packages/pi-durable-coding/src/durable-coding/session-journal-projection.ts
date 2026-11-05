@@ -108,7 +108,7 @@ export function importHistory(state: JournalState, records: EntryRecord[]): void
 
 /** A rewindable document is transaction-granular; a fork can cut inside that transaction. */
 export function clipFork(state: JournalState, records: EntryRecord[], cwd: string): void {
-  const visible = new Set(records.map(record => record.id));
+  const visible = new Map(records.map(record => [record.id, record]));
   const entries = state.entries as unknown as SessionEntry[];
   const kept = entries.filter(entry => visible.has(state.ids[`$${entry.id}`]));
   if (kept.length !== entries.length) state.leaf = kept.at(-1)?.id ?? null;
@@ -118,7 +118,10 @@ export function clipFork(state: JournalState, records: EntryRecord[], cwd: strin
     .filter(([, nativeId]) => state.ids[`$${nativeId}`] !== undefined));
   if (state.productMessages) state.productMessages = Object.fromEntries(Object.entries(state.productMessages)
     .filter(([nativeId]) => state.ids[nativeId] !== undefined));
-  state.records = state.records.filter(record => visible.has(record.id));
+  // A host may remap model file references in a copied store before opening it.
+  state.records = state.records.filter(record => visible.has(record.id)).map(record => ({
+    ...record, model: json(visible.get(record.id)!.model ?? []) as JsonValue[],
+  }));
   state.overrides = {};
   state.start = 0;
   for (const record of records) {

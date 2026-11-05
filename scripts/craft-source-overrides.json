@@ -2328,6 +2328,18 @@
     }
   },
   "mkOnly": {
+    "packages/pi-agent-server/src/coding-fork.e2e.test.ts": {
+      "sha256": "0e9cc54e39ff2606c1725a3308bc86b0a7fa64675133bf499eaa21da5825c905",
+      "reason": "Verify complete native trees, precise leaves, original identities and all-branch attachments through real SQLite and JSONL kernels."
+    },
+    "packages/pi-agent-server/src/coding-fork-recovery.e2e.test.ts": {
+      "sha256": "9ec68f7bfad0bf970a1d441807eb217cd62002dd23079132259b991e4ef1e3d0",
+      "reason": "Verify native fork rejection without source changes and empty-tree recovery across isolated processes and SIGKILL."
+    },
+    "packages/pi-agent-server/src/fixtures/native-fork-reopen.ts": {
+      "sha256": "eee7bc1ee649e7ff23b6573b0ab092eb52a6881fea06445ecb6d4f2ec77000f8",
+      "reason": "Open native fork stores in a cold process using deterministic models and test-owned paths."
+    },
     "packages/shared/src/sessions/native-session-reference.ts": {
       "sha256": "2a6bb2e478d2dde96296b2e72e9a1b68c203937ccb3302ad7c6b9d3e4a1edc81",
       "reason": "Define and validate minimal committed native projection identity references without transcript mappings."
@@ -2945,7 +2957,7 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "a5f94c29ad3d540e83ff1d55d6e67d9577531059b839fb2f09b4513248c05465",
+      "sha256": "a5218b39f3477917256fab1c42a056dac82c02136077fae907790a7af4d78ec8",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
@@ -3241,7 +3253,7 @@
       "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery, approved file writes and native plugin execution with host-only resources across restart."
     },
     "packages/pi-agent-server/src/coding-host.ts": {
-      "sha256": "637956ac406ddb5bd43c152a66b0d951c4ecb61849691bf6ba6369cb492c02f9",
+      "sha256": "f463144296bf6430858f1b93980d4c23f58d5d7cd698aebacdaa8d430d71861e",
       "reason": "Adapt native resources and extension actions to durable host boundaries, including committed auxiliary writes and shutdown."
     },
     "packages/pi-agent-server/test/coding-bundle.e2e.test.ts": {
@@ -3573,7 +3585,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "e29a9e41d2817a7b4ac3825ae0d0ca03d278d762bb3fb425d3598920a1a305bc",
+      "sha256": "64ae6896bfe0779007e3bad129e4f8ca68868eea75a236c1dc8752b5ccb9fb83",
       "reason": "Record pinned Pi v1.5.0 source and output hashes, complete public closure, asset origins and controlled runtime transformations."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3589,7 +3601,7 @@
       "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in resource-loader-port.ts."
     },
     "packages/pi-durable-coding/scripts/session-runtime-port.ts": {
-      "sha256": "1d722e934c6e6e02dc4873306d4232207c32453dc6499c26a5ffa0315d5276a3",
+      "sha256": "c1ad98d4693cbcb062466ef67734067ba367d732d8e40b1dac2011b195aee8f9",
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks."
     },
     "packages/pi-durable-coding/scripts/settings-runtime-port.ts": {
@@ -3641,11 +3653,11 @@
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in session-binding.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/session-journal-projection.ts": {
-      "sha256": "42f6960c75cf0c8160c291161287995f2325f9e70d0ae671790ace78c499e7ca",
+      "sha256": "0df9ac23a43cf04479c887b6345feb04982f221022df1cf8d23d1cc4e044dea5",
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in session-journal-projection.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/session-journal.ts": {
-      "sha256": "1615841fdb143b8dbb9b92cd6e93d08064703b3950957a637e7a0efb3ca909a3",
+      "sha256": "e1e5a6f9e12365c0e06662ca84617d9fcecd1d342cebb43a3fb75772e49ffbb7",
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in session-journal.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/session-task.ts": {
@@ -4001,7 +4013,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/runtime-credentials.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/sdk.ts": {
-      "sha256": "61301837863ed2fc4a7e36bcc85c0c65419a74903891f0b633bf4c701d85c003",
+      "sha256": "55547fb2190db337ec6f5c01b615f7dc41c27ed6232853cecf46a733646eb860",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/sdk.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/session-cwd.ts": {
@@ -4745,7 +4757,7 @@
       "reason": "Exercise durable native coding behavior and isolated recovery through the host-tools.test.ts fixture."
     },
     "packages/pi-durable-coding/test/native-session-journal.test.ts": {
-      "sha256": "2c81ccd7656b7ce171198f2964b153c389b60bde10244d3bc0bfffa348abeaa6",
+      "sha256": "ddd81eebca131bfbeed3134c4f17dbcde0cf02440a6c911ab234863d2788711b",
       "reason": "Exercise durable native coding behavior and isolated recovery through the native-session-journal.test.ts fixture."
     },
     "packages/pi-durable-coding/test/native-session-recovery.test.ts": {

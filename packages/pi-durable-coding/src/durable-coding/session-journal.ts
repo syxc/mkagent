@@ -45,8 +45,12 @@ export interface NativeSessionJournalOptions {
   conversation: Conversation;
   context: Context;
   cwd: string;
-  /** Used only when no journal has been stored yet, including legacy envelope migration. */
+  /** Seeds fresh sessions and durable forks; ordinary reopen preserves the committed header. */
   header?: SessionHeader;
+  /** Selects the native leaf on a new durable fork. Fork the latest durable entry to retain the full tree. */
+  forkLeaf?: string | null;
+  /** Map copied entry values without changing their identity or tree structure. Never runs on reopen. */
+  mapForkEntry?(entry: SessionEntry): SessionEntry;
   /** Stable host projection path; the native manager remains in-memory and never writes this file. */
   sessionFile?: string;
   onObserverError?(error: unknown): void;
@@ -147,7 +151,25 @@ export class NativeSessionJournal {
           importHistory(draft, records);
         } else {
           clipFork(draft, records, options.cwd);
+          if (options.mapForkEntry) draft.entries = draft.entries.map(value => {
+            const entry = detached(value) as unknown as SessionEntry;
+            const { id, parentId, type } = entry;
+            const mapped = options.mapForkEntry!(entry);
+            if (mapped.id !== id || mapped.parentId !== parentId || mapped.type !== type) {
+              throw new Error('Native fork mapping cannot change entry identity or tree structure');
+            }
+            return json(mapped);
+          });
+          draft.header = json(options.header ??
+            SessionManager.inMemory(options.cwd, { id: String(options.conversation.id) }).getHeader());
           draft.revision++;
+        }
+        if (options.forkLeaf !== undefined) {
+          const manager = nativeManager(draft, options.cwd);
+          if (options.forkLeaf === null) manager.resetLeaf();
+          else manager.branch(options.forkLeaf);
+          await persistProjection(tx, options.conversation.id, draft, manager, [], true);
+          draft.leaf = manager.getLeafId();
         }
         draft.owner = options.conversation.id;
       }

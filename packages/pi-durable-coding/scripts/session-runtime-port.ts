@@ -332,6 +332,12 @@ export function portSDK(source: string): string {
     'export interface CreateAgentSessionOptions {\n\tdurable?: DurableLoopBinding;\n\tbaseToolsOverride?: AgentSessionConfig["baseToolsOverride"];\n\twrapTool?: AgentSessionConfig["wrapTool"];\n\tonAction?: AgentSessionConfig["onAction"];\n\t/** Own auxiliary native writes and commit them before their events are published. */\n\tonBackgroundAction?: <T>(work: () => Promise<T>) => Promise<T>;\n\tonToolsChanged?: AgentSessionConfig["onToolsChanged"];');
   body = edit(body, '\t\tasync (event) => extensionRunnerRef.current?.emitCacheWarmingDecision(event) ?? event.action,',
     '\t\tasync (event) => extensionRunnerRef.current?.emitCacheWarmingDecision(event) ?? event.action,\n\t\toptions.onBackgroundAction,');
+  body = edit(body, '\tdurable?: DurableLoopBinding;',
+    '\tdurable?: DurableLoopBinding;\n\t/** A host restoring a committed tree can suppress SDK bootstrap writes. */\n\tinitializeSessionMetadata?: boolean;');
+  body = edit(body, '\tif (hasExistingSession) {\n\t\tif (!hasThinkingEntry) {',
+    '\tif (options.initializeSessionMetadata !== false && hasExistingSession) {\n\t\tif (!hasThinkingEntry) {');
+  body = edit(body, '\t} else {\n\t\t// Save initial model and thinking level for new sessions',
+    '\t} else if (options.initializeSessionMetadata !== false) {\n\t\t// Save initial model and thinking level for new sessions');
   body = edit(body, '\tconst agent = new Agent({', '\tconst agent = new Agent({\n\t\tdurable: options.durable,');
   body = edit(body, '\t\tcustomTools: options.customTools,',
     '\t\tcustomTools: options.customTools,\n\t\tbaseToolsOverride: options.baseToolsOverride,\n\t\twrapTool: options.wrapTool,\n\t\tonAction: options.onAction,\n\t\tonToolsChanged: options.onToolsChanged,');

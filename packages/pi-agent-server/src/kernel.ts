@@ -52,7 +52,7 @@ import { compactionReserveFor } from './compaction-reserve.ts';
 import { CacheWarmer } from './cache-warmer.ts';
 import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent/shared/sessions';
 import { rewriteStoredModelHistory } from '@mkagent/shared/sessions/model-history-paths';
-import { CodingHost, type KernelCodingOptions } from './coding-host.ts';
+import { CodingHost, type KernelCodingOptions, type NativeCodingFork } from './coding-host.ts';
 import type { ExtensionUIHost } from './extension-ui.ts';
 import { nativeOwnerActions } from './native-owner-actions.ts';
 import type { PiNativeOwnerRequest } from '../../shared/src/agent/backend/pi/native-owner-protocol.ts';
@@ -122,6 +122,8 @@ export interface KernelOpenOptions {
   branchFromSessionPath?: string;
   /** Old pi entry id of the branch anchor; translated through the id map. */
   branchFromSdkTurnId?: string;
+  /** Keep the entire native tree, then select this leaf instead of applying a durable cutoff. */
+  nativeFork?: { leaf: string | null };
 }
 
 interface RetrySynthState {
@@ -222,6 +224,10 @@ export class DurableKernel {
   async open(config: KernelOpenOptions): Promise<void> {
     const resuming = existsSync(join(this.storeDir, 'session-id.txt'));
     const branchFrom = config.branchFromSessionPath;
+    if (config.nativeFork && (!this.options.coding || !branchFrom
+      || (config.nativeFork.leaf !== null && (typeof config.nativeFork.leaf !== 'string' || !config.nativeFork.leaf)))) {
+      throw new Error('Pi native fork requires a coding profile, a parent session and a native leaf');
+    }
     const legacyChild = findMostRecentSessionFile(join(this.options.sessionPath, '.pi-sessions'));
     const pendingBranch = join(this.options.sessionPath, '.durable-branch-pending');
     if (existsSync(pendingBranch)) {
@@ -231,12 +237,12 @@ export class DurableKernel {
     let ownsPendingBranch = false;
     try {
       if (branchFrom && !existsSync(this.storeDir) && !legacyChild) {
-        if (!config.branchFromSdkTurnId) {
+        if (!config.branchFromSdkTurnId && !config.nativeFork) {
           throw new Error('Pi branch preflight failed: a branch turn anchor is required');
         }
         // A parent that has never opened under this kernel gets its legacy
         // transcript converted in place first, so the copy carries full context.
-        await migrateParentStore(branchFrom, this.options.hooks.debugLog);
+        if (!config.nativeFork) await migrateParentStore(branchFrom, this.options.hooks.debugLog);
         const parentStore = join(branchFrom, 'durable-store');
         if (!existsSync(join(parentStore, 'store.db')) && !existsSync(join(parentStore, 'main.jsonl'))) {
           throw new Error(`Pi branch preflight failed: no parent session transcript found in ${branchFrom}`);
@@ -290,34 +296,41 @@ export class DurableKernel {
       const legacy = await migrateLegacySession(this.harness!, this.options.sessionPath, this.options.hooks.debugLog,
         copiedParent ? branchFrom : undefined);
 
-      // Branch cutoff: fork the copied conversation at the anchor entry, dropping
-      // everything after it. Missing and unresolvable cutoffs must not silently
-      // resume the parent's later context.
       if (copiedParent) {
-        const anchor = config.branchFromSdkTurnId ? this.resolveBranchAnchor(config.branchFromSdkTurnId) : undefined;
-        if (config.branchFromSdkTurnId && anchor === undefined) {
-          throw new Error(`Pi branch preflight failed: branch anchor not found: ${config.branchFromSdkTurnId}`);
-        }
-        if (anchor !== undefined && this.conversation) {
+        let source = this.conversation!;
+        let anchor: EntryId | undefined;
+        if (config.nativeFork) {
+          // The marker lives only in the copy. It includes document-only receipts
+          // after the last native entry and also gives an empty session a fork point.
+          const marker = await source.commit(tx => tx.appendEntry(source.id, {
+            kind: 'mkagent.coding.fork', data: { leaf: config.nativeFork!.leaf },
+          }), BACKGROUND_CONTEXT);
+          anchor = marker.id;
+        } else {
+          anchor = config.branchFromSdkTurnId ? this.resolveBranchAnchor(config.branchFromSdkTurnId) : undefined;
+          if (config.branchFromSdkTurnId && anchor === undefined) {
+            throw new Error(`Pi branch preflight failed: branch anchor not found: ${config.branchFromSdkTurnId}`);
+          }
           const branchConversation = config.branchFromSdkTurnId
             ? await readLegacyBranchConversation(this.harness!, config.branchFromSdkTurnId)
             : undefined;
-          let source = this.conversation;
           if (branchConversation !== undefined && !existsSync(join(branchFrom!, 'durable-store', 'conversation-id.txt'))) {
             const migrated = await this.harness!.conversation(branchConversation, BACKGROUND_CONTEXT);
             if (!migrated) throw new Error('Pi branch preflight failed: migrated conversation not found');
             source = migrated;
           }
+        }
+        if (anchor !== undefined && this.conversation) {
           const forked = await source.fork(anchor, { ownership: { kind: 'ownerless' } }, BACKGROUND_CONTEXT);
           this.conversation = forked;
           writeFileSync(join(this.storeDir, 'conversation-id.txt'), String(forked.id));
           this.detachWatch?.();
           await this.attachWatch(forked.id);
-          this.options.hooks.debugLog(`Applied branch cutoff at durable entry ${anchor}`);
+          this.options.hooks.debugLog(`Applied ${config.nativeFork ? 'native tree fork' : 'branch cutoff'} at durable entry ${anchor}`);
         }
       }
 
-      if (copiedParent && this.conversation) {
+      if (copiedParent && !config.nativeFork && this.conversation) {
         const view = await this.conversation.context(BACKGROUND_CONTEXT);
         const sourceReferences = remapSessionFileReferences(view.contributions.flat(), this.options.sessionPath, branchFrom!);
         copyReferencedSessionFiles(sourceReferences, branchFrom!, this.options.sessionPath);
@@ -339,7 +352,8 @@ export class DurableKernel {
       this.thinkingLevel = (await this.conversation!.agent(BACKGROUND_CONTEXT)).thinkingLevel as ThinkingLevel;
       this.options.hooks.sessionIdentity?.(this.sessionId);
       await this.openCoding(config.codingReplacement?.reason
-        ?? (copiedParent ? 'fork' : legacyChild || resuming ? 'resume' : 'startup'), !!config.codingReplacement);
+        ?? (copiedParent ? 'fork' : legacyChild || resuming ? 'resume' : 'startup'), !!config.codingReplacement,
+      copiedParent ? { ...config.nativeFork, sourceSessionPath: branchFrom! } : undefined);
       if (!this.harness) return;
       if (!config.codingReplacement) this.harness.resume();
       if (copiedParent) {
@@ -669,7 +683,9 @@ export class DurableKernel {
   // Conversation commands
   // ============================================================
 
-  private async openCoding(reason: 'startup' | 'resume' | 'fork' | 'new' | 'reload', deferred = false): Promise<void> {
+  private async openCoding(
+    reason: 'startup' | 'resume' | 'fork' | 'new' | 'reload', deferred = false, nativeFork?: NativeCodingFork,
+  ): Promise<void> {
     const profile = this.options.coding;
     if (!profile) return;
     if (!this.options.wrapCodingTool) throw new Error('Coding extensions require the host tool approval wrapper');
@@ -678,6 +694,7 @@ export class DurableKernel {
     this.coding = await CodingHost.load({
       harness: this.harness!, conversation: this.conversation!, registry: this.registry!,
       cwd: this.options.cwd, sessionPath: this.options.sessionPath, id: this.sessionId, profile,
+      nativeFork,
       models: this.options.modelsSource, credentials: this.options.modelCredentialsSource?.(),
       autoCompactWindow: this.options.autoCompactWindow, ui: this.options.codingUI,
       model: async models => {

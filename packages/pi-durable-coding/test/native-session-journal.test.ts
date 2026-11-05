@@ -402,6 +402,7 @@ describe('transactional native session journal', () => {
     const child = await conversation.fork(journal.durableId(forkAt)!, { ownership: { kind: 'ownerless' } }, context);
     const fork = await NativeSessionJournal.open({ harness, conversation: child, context, cwd: '/tmp/native-journal-fixture' });
     journals.push(fork);
+    expect(fork.manager.getSessionId()).not.toBe(manager.getSessionId());
     expect(fork.manager.getLeafId()).toBe(forkAt);
     expect(fork.manager.getLabel(root)).toBe('inherited label');
     expect(fork.durableId(root)).toBe(journal.durableId(root));
@@ -409,6 +410,84 @@ describe('transactional native session journal', () => {
     await fork.flush();
     expect((await child.context(context)).messages).toEqual(convertToLlm(fork.manager.buildSessionContext().messages));
     expect(manager.buildSessionContext().messages.map(message => message.content)).toEqual(['inherited', 'parent only']);
+  });
+
+  for (const rootOnly of [false, true]) test(`opens a complete native fork at ${rootOnly ? 'the empty root' : 'an inactive leaf'}`, async () => {
+    const { harness, manager, journal, conversation, write } = await setup();
+    let root = '';
+    let left = '';
+    let right = '';
+    await write(() => {
+      root = manager.appendMessage(user('root'));
+      journal.linkMessage(root, 'product-root');
+      left = manager.appendMessage(user('left'));
+      journal.linkMessage(left, 'product-left');
+      manager.appendLabelChange(left, 'preserved left label');
+    });
+    await write(() => {
+      manager.branch(root);
+      right = manager.appendMessage(user('right'));
+      journal.linkMessage(right, 'product-right');
+    });
+    const before = journal.committedSnapshot();
+    const child = await conversation.fork(journal.durableId(right)!, { ownership: { kind: 'ownerless' } }, context);
+    const header = SessionManager.inMemory('/tmp/native-journal-fixture', { id: `fork-${rootOnly}` }).getHeader()!;
+    const leaf = rootOnly ? null : left;
+    const fork = await NativeSessionJournal.open({
+      harness, conversation: child, context, cwd: '/tmp/native-journal-fixture', header, forkLeaf: leaf,
+    });
+    journals.push(fork);
+    expect(fork.manager.getLeafId()).toBe(leaf);
+    expect(fork.manager.getSessionId()).toBe(header.id);
+    expect(fork.manager.getEntries()).toEqual(before.entries);
+    expect(fork.manager.getLabel(left)).toBe('preserved left label');
+    expect(fork.committedSnapshot().entryIds).toEqual(before.entryIds);
+    expect((await child.context(context)).messages).toEqual(rootOnly ? [] : [user('root'), user('left')]);
+    expect(journal.committedSnapshot()).toEqual(before);
+    fork.close();
+    const reopened = await NativeSessionJournal.open({ harness, conversation: child, context, cwd: '/tmp/native-journal-fixture' });
+    journals.push(reopened);
+    expect(reopened.manager.getSessionId()).toBe(header.id);
+    expect(reopened.manager.getLeafId()).toBe(leaf);
+    expect(reopened.manager.getEntry(right)).toEqual(manager.getEntry(right));
+  });
+
+  test('an invalid fork leaf cannot commit its replacement header or discard inherited state', async () => {
+    const { harness, manager, journal, conversation, write } = await setup();
+    let root = '';
+    await write(() => { root = manager.appendMessage(user('inherited')); });
+    const before = journal.committedSnapshot();
+    const child = await conversation.fork(journal.durableId(root)!, { ownership: { kind: 'ownerless' } }, context);
+    const header = SessionManager.inMemory('/tmp/native-journal-fixture', { id: 'valid-retry' }).getHeader()!;
+    await expect(NativeSessionJournal.open({
+      harness, conversation: child, context, cwd: '/tmp/native-journal-fixture', header, forkLeaf: 'missing-leaf',
+    })).rejects.toThrow();
+    const fork = await NativeSessionJournal.open({
+      harness, conversation: child, context, cwd: '/tmp/native-journal-fixture', header, forkLeaf: root,
+    });
+    journals.push(fork);
+    expect(fork.manager.getSessionId()).toBe(header.id);
+    expect(fork.manager.getLeafId()).toBe(root);
+    expect(fork.committedSnapshot().entries).toEqual(before.entries);
+    expect(journal.committedSnapshot()).toEqual(before);
+  });
+
+  test('fork value mapping preserves identity even when the mapper mutates its input', async () => {
+    const { harness, manager, journal, conversation, write } = await setup();
+    let id = '';
+    await write(() => { id = manager.appendMessage(user('inherited')); });
+    const before = journal.committedSnapshot();
+    const child = await conversation.fork(journal.durableId(id)!, { ownership: { kind: 'ownerless' } }, context);
+    await expect(NativeSessionJournal.open({
+      harness, conversation: child, context, cwd: '/tmp/native-journal-fixture', forkLeaf: id,
+      mapForkEntry: entry => { entry.id = 'changed'; return entry; },
+    })).rejects.toThrow('cannot change entry identity');
+    const fork = await NativeSessionJournal.open({
+      harness, conversation: child, context, cwd: '/tmp/native-journal-fixture', forkLeaf: id,
+    });
+    journals.push(fork);
+    expect(fork.committedSnapshot().entries).toEqual(before.entries);
+    expect(journal.committedSnapshot()).toEqual(before);
   });
 
   test('cuts a durable fork at the selected entry inside one multi-entry transaction', async () => {

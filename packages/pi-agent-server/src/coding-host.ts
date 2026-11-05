@@ -18,8 +18,14 @@ import {
 import { LegacyCodingAdoption } from './storage/coding-recovery.ts';
 import { NativeSessionProjection, nativeSessionPaths } from './storage/native-session-projection.ts';
 import { ExtensionUIHost, type ExtensionUIBinding } from './extension-ui.ts';
+import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent/shared/sessions';
 
 export type KernelCodingOptions = Omit<HostResourceOptions, 'cwd' | 'getSystemPrompt'>;
+
+export interface NativeCodingFork {
+  sourceSessionPath: string;
+  leaf?: string | null;
+}
 
 export interface CodingHostBindings {
   harness: Harness;
@@ -28,6 +34,7 @@ export interface CodingHostBindings {
   cwd: string;
   sessionPath: string;
   id: string;
+  nativeFork?: NativeCodingFork;
   profile: KernelCodingOptions;
   models(): Models;
   credentials?: ModelRuntimeCredentials;
@@ -116,16 +123,27 @@ export class CodingHost {
     // Programmatic anonymous providers need no file-backed store. Production supplies its existing shared port.
     const credentials = host.credentials ?? ModelRuntime.createCredentials(new InMemoryCredentialStore());
     const models = await ModelRuntime.bind({ models: host.models, credentials });
+    const header = SessionManager.inMemory(host.cwd, { id: host.id }).getHeader()!;
+    if (host.nativeFork) header.parentSession = nativeSessionPaths(host.nativeFork.sourceSessionPath).sessionFile;
     const journal = await NativeSessionJournal.open({
       harness: host.harness, conversation: host.conversation, context: BACKGROUND_CONTEXT, cwd: host.cwd,
-      header: SessionManager.inMemory(host.cwd, { id: host.id }).getHeader()!,
+      header, forkLeaf: host.nativeFork?.leaf,
+      mapForkEntry: host.nativeFork
+        ? entry => remapSessionFileReferences(entry, host.nativeFork!.sourceSessionPath, host.sessionPath)
+        : undefined,
       sessionFile: nativeSessionPaths(host.sessionPath).sessionFile,
       onObserverError: error => host.error({
         extensionPath: '<host>', event: 'journal', error: error instanceof Error ? error.message : String(error),
       }),
     });
+    const committed = journal.committedSnapshot();
     const coding = new CodingHost(host, journal, models);
     try {
+      if (host.nativeFork) {
+        const source = host.nativeFork.sourceSessionPath;
+        const references = remapSessionFileReferences(committed.entries, host.sessionPath, source);
+        copyReferencedSessionFiles(references.map(content => ({ content })), source, host.sessionPath);
+      }
       await coding.projection.flush();
       const resources = createHostResources({ ...host.profile, cwd: host.cwd, getSystemPrompt: host.getSystemPrompt });
       resources.settingsManager.setHostAutoCompactWindow(host.autoCompactWindow);
@@ -143,6 +161,7 @@ export class CodingHost {
       const created = await createAgentSession({
         ...resources, cwd: host.cwd, agentDir: host.profile.agentDir,
         modelRuntime: models, model: await host.model(models), durable: coding.durable,
+        initializeSessionMetadata: committed.revision === 0,
         sessionStartEvent: { type: 'session_start', reason },
         sessionManager: journal.manager, baseToolsOverride: tools,
         // A modifier extends the host catalog while retaining all native extension exposures.

@@ -124,6 +124,8 @@ D2 的最小入口包括 `pi-conversation-flow.integration.test.ts`、`pi-permis
 | D3.4 输入关联 | worker 的独立 inputId 进入原生普通输入、steer 和 follow-up admission，并与 native entry 在同一次 journal 事务关联；handled 命令不伪造 user entry。独立复核发现 message_end 完整替换会丢身份、provider context 会携带宿主字段；新增断言实际复现后，移植转换保留替换前身份并在统一 LLM 转换边界剥离该字段。真实 worker 夹具验证三种输入、重复文本、插件 transform 和完整替换、重开后关联保持，模型请求仅访问本地替身。两个输入文件共 21 项、152 个断言通过；server 类型及生成声明通过。fork/switch、parentSession、名称同步与 D3.4 整体验收继续进行。 |
 | D3.4 投影回归 | 首次 coding/host 全目录检查在 240 秒上限处终止，无最终汇总；延长时限后，64 份文件、848 项测试通过，0 失败。投影前置的 `validate:ci`、lint、固定生成检查和隔离 Craft 来源审计通过；lint 为 0 错误、107 项警告，来源清单覆盖 2070 份文件，并补齐上一笔快照提交的四处清单漏项。这些结果对应投影前置，当时尚未接线的产品登记不在该结论内。投影前置已提交为 `83ef885`。 |
 | D3.4 产品登记前置 | 当前 worker 的 committed 投影通过活跃 lease 和 native ready 身份校验后登记，产品仅保存固定身份、规范路径和摘要字段，省略完整 entry 映射。登记与 owner 回执在同一会话串行链内构造快照，严格替换成功后更新内存，普通保存等待已受理的元数据写入。缺失路由及 `flushAllSessions()` 提前返回均有先红后绿证据。登记 4 项、15 个断言，worker/owner 36 项、244 个断言，产品 owner 14 项、154 个断言通过；真实产品 NEW 链路 1 项、57 个断言核对源和目标的磁盘 manifest、摘要、持久化引用及 SDK 身份。会话与共享存储 36 份文件、265 项回归通过。首次 CI 因测试夹具的 version 字段扩大为 number 而未通过，显式标注引用类型后 `validate:ci` 通过；lint 为 0 错误、107 项警告，隔离来源审计覆盖 2072 份文件。独立源码复核未见高置信度缺陷，但未独立核验 Git 或执行测试；主线程复核了完整生产补丁并执行上述检查。后续 fork/switch 仍须验证物理路径、摘要和可信产品登记，当前尚未开放。 |
+| D3.4 fork kernel 前置 | 新增独立的完整树分叉路径，普通产品分叉仍按 durable cutoff 截断。在目标副本内追加 durable marker，再从该边界分叉，包含最后一条 native entry 之后的文档回执，也支持没有 entry 的源。journal 在同一事务内分配目标 header、映射文件引用并选择准确 leaf，保留全部原始 entry ID、label、产品关联和非活动分支附件。已提交树加载时跳过 SDK 初始化元数据，避免改变空 root 或元数据 leaf。 |
+| D3.4 fork kernel 定向证据 | 新 kernel 文件的 6 项用例先因缺少旧 cutoff anchor 失败，接线后又实际发现 journal 附件路径未映射及 SDK 改变空 root，两处修正后通过。SQLite、JSONL 的完整树、附件、重开、缺失 leaf、非活动分支 symlink 拒绝和冷进程 SIGKILL 恢复共 12 项、156 个断言通过；拒绝路径核对源 store 和原生投影字节不变。journal 的身份、完整树和映射事务回滚用例通过，两个相关包类型检查通过。独立静态复核未发现高置信度问题，没有独立核验 Git 或执行测试；后加的冷进程与拒绝测试由主线程验证。首次既有 kernel 回归在 60 秒限时终止，没有最终汇总；增加时限后，coding 包、新增 fork 文件、既有 coding host 和 kernel 共 21 份文件、363 项、3402 个断言通过，0 失败，耗时约 219 秒。`validate:ci`、lint、固定上游 250 份源码和 9 项资源的生成检查、2075 份文件的隔离来源审计通过；lint 为 0 错误、107 项既有警告。本轮未运行全仓 `bun run test`。产品 owner 接线、可信物理路径验证、switch、parentSession 和名称同步仍待完成，原生 fork/switch 入口继续拒绝。 |
 
 ## D3 实施顺序
 
@@ -163,6 +165,8 @@ Web 与 RPC 的交互能力按固定上游 RPC 契约实现。自定义终端组
 journal 是唯一权威。已提交快照包含 header、完整 entries、活动 leaf、revision、native/durable ID 映射和产品消息关联；回执到达前不发布候选状态。固定原生路径为产品会话目录中的 `native-session/session.jsonl`，配套 `meta/native-session.json` 保存身份、映射、leaf、revision 和摘要。原生 proxy 只暴露这些路径，不开启第二个文件 writer；宿主恢复仍使用 journal。原生 JSONL 没有独立 leaf 字段，不能重排 entries 或制造 entry 来伪装活动分支。投影失败只触发重建，不重跑已提交回调。
 
 fork 在目标 durable 事务中复制完整已提交树并选择准确 before/at leaf，重新分配目标 header 身份，保留原始 entry ID、parent anchors、非活动分支及其附件。null leaf 明确表示活动空根。固定 Pi 的分支文件只抽取活动路径并重建 labels，本任务保留完整树及原始身份，须在行为对照中记录该差异。`new(parentSession)` 只记录可信来源关系，目标历史保持空。
+
+kernel 的完整树分叉在目标副本中创建 durable marker，以纳入文档单独提交的最后状态；该 marker 不进入 native entries。journal 的分叉映射不得改变 entry ID、parentId 或类型。宿主使用 journal revision 判断是否需要 SDK 初始化元数据，已提交的空树与空 root 在重开时保持原样。普通 cutoff 分叉仍保留截断语义。
 
 switch 仅解析同工作区已登记且身份、revision、摘要一致的规范路径，拒绝忙、删除中、越界、缺失或重复身份的目标。源关闭后才释放目标旧 writer 并激活。owner 记录区分新建与既有目标；switch 失败或重启不能删除、隐藏或重新创建既有目标。shutdown/start 的来源与目标路径使用稳定原生路径。
 

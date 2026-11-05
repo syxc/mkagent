@@ -660,7 +660,7 @@
       "source": "packages/coding-agent/src/core/sdk.ts",
       "target": "src/pi/core/sdk.ts",
       "sha256": "f0f6f2b14a61c5c3ebb31d40c97b3f73296a2f0334d582072383302d693714c8",
-      "portSha256": "61301837863ed2fc4a7e36bcc85c0c65419a74903891f0b633bf4c701d85c003",
+      "portSha256": "55547fb2190db337ec6f5c01b615f7dc41c27ed6232853cecf46a733646eb860",
       "changes": [
         "durable-agent-boundary",
         "durable-sdk-host-bindings"
