@@ -73,8 +73,8 @@ MkAgent 最初以 Pi coding agent 为底层，第一次切换改用 pi-durable�
 | D2 | MkAgent 主链路 | 按保留清单检查模型、审批、代理/会话工具、MCP、浏览器、后台任务、持久化、分支和传输；修复发现的缺口，运行相关产品集成和完整仓库回归。 | 已完成 |
 | D3 | 插件会话与交互 | 补齐由产品会话所有者执行的原生会话操作和插件交互适配；每个 API 组用未修改插件驱动实际效果，检查 reload、取消和恢复。 | 进行中 |
 | D4 | 原生资源与授权 | 补齐项目资源的信任入口、MCP 交互授权和显式包管理路径；继续保持禁止隐式安装及未授权项目执行。 | 进行中 |
-| D5 | 打包与产品验收 | 检查独立包消费者、来源、许可、资源和产物搬迁，在隔离环境运行实际产品入口；区分构建通过、功能通过和平台受阻。 | 待执行 |
-| D6 | 最终需求对照 | 将本文、能力总表、实现、测试与未解决项逐条对应；全部必需项有结果后才声明完成，记录最终本地提交。 | 待执行 |
+| D5 | 打包与产品验收 | 检查独立包消费者、来源、许可、资源和产物搬迁，在隔离环境运行实际产品入口；区分构建通过、功能通过和平台受阻。 | 进行中 |
+| D6 | 最终需求对照 | 将本文、能力总表、实现、测试与未解决项逐条对应；全部必需项有结果后才声明完成，记录最终本地提交。 | 进行中 |
 
 D1 的已知风险是把原生会话开关直接设为始终启用：它会连带加载普通会话以前隔离的 Pi 资源。现有 `kernel.e2e.test.ts` 的默认 profile 隔离用例是保留契约，不能通过改掉该预期来消除失败。
 
@@ -359,6 +359,37 @@ Stop、UI 失效、reload、所有者释放、re-init 和 shutdown 与 MCP 授�
 | 必需检查 | `validate:ci` 与 server 类型检查通过。两套固定生成检查通过，仍为 250 份运行时源码、9 项资源与 40 份公开 fixture。隔离 Craft 来源审计覆盖 2135 份文件，lint 为 0 错误、107 项既有警告，中英文标点及 diff 检查通过。初次 lint 因漏更新独立 UI 来源哈希停止，补齐两层来源登记后重新通过。 |
 
 该批不包含浏览器可视验收，原授权空间仍缺失；密码框的实际显示、焦点及键盘行为仍列入隔离 WebUI 验收。D4、D3.6 与 D5-D6 尚未整体完成，本批尚未运行全仓 `bun run test`。
+
+## D5 干净构建与最终回归
+
+本批先在 `10cac69` 的干净 detached worktree 冻结安装，再检查独立消费者和搬迁后的 headless 入口。以下产物证据对应 `10cac69`，不包含随后发现的 SDK 输入标记与普通产品分叉修正。最终提交的产物仍须重新构建。
+
+| 验证 | 实际结果 |
+|---|---|
+| 干净安装与声明 | `bun install --frozen-lockfile --ignore-scripts` 成功安装 1419 个包，coding 声明构建通过。首次 headless 构建因禁用生命周期脚本而缺少 `@vscode/ripgrep/bin/rg`；核对已有 `trustedDependencies` 和该依赖脚本后，在隔离环境执行其 postinstall，取得公开 ripgrep 15.0.1，随后构建通过。没有修改依赖或 lockfile。 |
+| 独立消费者 | 使用 `file:` 安装干净 checkout 的 coding 包，root、compat、native、agent、durable、mcp-oauth 六个运行时入口及 rpc-ui 类型入口通过检查。 |
+| 搬迁产物 | macOS arm64 压缩包解压至新的任务目录后，许可、两个 WASM、theme、HTML template 和 launcher 检查通过。随机回环端口的 HTTP health 为 200，认证 WebSocket 握手通过。 |
+| 实际 headless 产品入口 | 通过搬迁产物的认证 WebSocket 创建会话、执行原生插件命令、答复 dialog、拒绝迟到回答，并检查名称与历史持久化；模型请求为 0。消息 ACK 只确认用户行已保存，名称检查改为等待实际 `session:event complete`，没有扩大 ACK 的含义。 |
+| 独立 SDK 行为修正 | 原生对照的 `agent-end-follow-up` 场景先失败：独立 SDK 的 `sendUserMessage` 被无条件添加产品投影字段。原始输入采集现由 `CodingHost` 显式注入，SDK 默认不添加产品标记；固定生成后，原版与 durable 的 17 个场景全部通过，没有修改 oracle 的归一化或断言。 |
+| direct-worker 夹具迁移 | 三份旧夹具补齐匹配归属的 `native_history_commit` 回执及必要 scope。worker-scope 为 18 项、137 项断言，kernel 定向用例为 1 项、8 项断言，bundle 为 1 项、6 项断言，均通过。模拟回执只验证协议，不替代产品持久化。 |
+| 独立产品夹具迁移 | renderer bridge、shared UI 和 PR 工具夹具直接创建 coding `PiAgent`，须提供明确的 fixture history owner。补齐后分别通过 2、11、1 项测试；回执校验 session 身份，拒绝非预期会话替换。非 coding 的 Anthropic schema 夹具保持原契约。 |
+| 普通产品分叉修正 | 全部隔离文件逐项运行时，真实产品用例暴露初始化错序：worker 的首次投影早于新产品会话登记。现先登记内部 owner，再完成预检与最终严格保存；公开列表、读取、输入、事件及活动统计在创建完成前保持未发布。失败先阻止新写入，等待原生写入并取消排队保存，再销毁 backend 和删除记录。 |
+| 分叉红绿证据 | 原始 bundled-worker 用例先失败，修正后 1 项、43 项断言通过，包含普通 cutoff 分叉、继承 coding mode、导出导入、导入后再分叉、后台交接与重开。新增 `session-branch-preflight.isolated.ts` 的三个场景共 35 项断言通过，覆盖严格回执、发布前隔离、写入后的失败清理，以及阻塞真实 rename 时等待并取消实际排队保存。 |
+| 独立复核 | 只读诊断确认普通 branch API 与原生 `ctx.fork()` 的生命周期不同。只读复核另发现提前登记会暴露未提交分支，主线程先复现后补齐发布保护；故障夹具也补上 cleanup 入口信号及真实排队保存。复核未运行测试或构建。 |
+
+发布保护修正后的完整 `bun run test` 已退出 0：主批次 433 份文件、5084 项通过、11 项跳过、0 失败，后续 33 份串行与隔离文件全部通过。`validate:ci`、隔离 Craft 来源审计及 lint 均退出 0，lint 为 0 错误、107 项警告；两套固定生成检查通过。独立 SDK 修正提交为 `a1790ed`，普通分叉与回执夹具迁移提交为 `4e29c34`。这些结果尚不包含随后新增的 D6 定向用例，最终产物仍须重建。此前主动停止或退出 1 的运行保留为排错记录，不计为通过。
+
+## D6 定向能力核对
+
+`search-output.test.ts` 实际调用本地 rg、fd 与目录工具，检查中文路径和文本、隐藏文件、ignore、上下文、空结果、路径错误与限制提示。`coding-output.e2e.test.ts` 经真实 durable coding host 产生超过窗口的 UTF-8 shell 输出，核对完整 spill 文件、保留尾部、关闭重开后的历史引用，以及 read 的前两行窗口。`coding-host-prompt.e2e.test.ts` 组合宿主文件发现与原生 global、ancestor、cwd instructions，再经 reload、before-start 和 context hook 检查模型实际收到的内容。不同文件即使内容相同也保留各自来源；宿主只列路径，没有再次注入文件正文。三份文件合跑为 7 项、82 项断言通过，server 类型检查通过。
+
+固定上游 `extensions/mcp/index.ts` 的 `/mcp` 在无参数且 `ctx.mode === "tui"` 时打开管理界面，RPC 模式列状态；命令参数只支持 `login`、`logout`、`reconnect`。现有宿主命令覆盖这一 RPC 契约，并提供状态与原生 RPC select。启停与 exposure 的原生交互编辑属于 TUI manager，不是缺失的 RPC 子命令；现有配置、项目信任及插件注册驱动的启停和动态 exposure 已有产品证据。TUI manager 的可视兼容仍随终端组件列为环境边界，不据此宣布全部 TUI 插件已验收。
+
+skill 前置读取发现两个提前登记点：`Read` 的开始事件，以及审批前的 Bash 检查。已将准入与成功确认分离，按 call ID、审批输入及当前 worker 归属关联完成；失败、后台、复杂 shell 和生命周期失效均不登记。普通 kernel 的 orphan 完成事件也明确为错误。原红测 3 项失败，修后通过；独立复核另指出 `cat 3< guide` 仅打开 fd 3，新增红测复现后限制为唯一 stdin 输入重定向。manager 为 68 项、160 项断言通过，真实双模式 worker 为 2 项、132 项断言通过。skill 的一次拒绝后降级保持原行为，strict browser 仍要求成功读取。`.isolated.ts` 由仓库 runner 自动发现，不需要另加显式清单。
+
+PowerShell 核对同时发现真实产品接线缺口：原生 SDK factory 存在，但宿主覆盖工具表没有注册。现只在 coding profile 注册 deferred 工具，由原生插件显式激活，并沿用 durable 工具任务。宿主将其识别为 `PowerShell`，不套用 Bash 语法或记忆键；Explore 拒绝，Ask 每次确认，Allow All 可执行。真实 worker 以任务临时 `pwsh` 进程替身验证发现、拒绝无启动、批准后的 UTF-8 设置及参数，1 项、20 项断言通过；权限用例 11 项、27 项断言通过。替身不是 PowerShell 解释器，当前 macOS 无 `pwsh`，实际 PowerShell 和 Windows 执行仍单列环境限制。
+
+原浏览器空间缺失仍单独记账，不由协议用例替代。
 
 ## 验证与完成规则
 

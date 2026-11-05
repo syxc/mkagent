@@ -134,18 +134,21 @@ test in the repository that passed after its correction.
 
 Retaining native source does not establish all host and platform combinations.
 The table records current evidence and gaps. It does not waive the target.
+The [acceptance crosswalk](coding-acceptance.md) tracks every specification row
+and MkAgent retention area during D6. It separates pending behavior checks from
+environment blocks.
 
 | Inventory area | Behavior and limits |
 | --- | --- |
 | read/write/edit/bash | Production tools keep host approval. Native implementations and public SDK exports are retained. Filesystem, approval and timeout regressions use local fixtures. |
-| grep/find/ls | Host tools keep their cancellation adaptations. Native SDK tools remain available. Cross-platform Unicode and ignore-rule combinations are not all exercised. |
-| Images and long output | Native image conversion, truncation and output code are retained. Relocated native PNG processing and durable BMP reads use their respective packaged WASM files. Every spill and recovery combination is not exercised. |
-| PowerShell | Sources are retained. Windows execution was not exercised. |
+| grep/find/ls | Host tools keep their cancellation adaptations. Actual macOS rg/fd/ls checks cover Unicode, hidden files, ignore rules, limits and failures. Other platforms remain open. |
+| Images and long output | Relocated native PNG processing and durable BMP reads use their respective packaged WASM files. A real coding host checks a complete UTF-8 spill, tail window and reads after durable reopen. |
+| PowerShell | Coding sessions expose a deferred named tool for explicit activation. Host Ask mode requires each approval; Explore blocks it. A real worker uses a local process fixture to check wiring and arguments. This host has no `pwsh`; real PowerShell and Windows execution remain open. |
 | Permissions and metadata | Allow, deny, modified arguments, nested calls, visibility and durable ownership have coverage. Trusted Node plugins are not sandboxed. |
-| Project instructions | Native parsing and source identity are retained. Project execution requires host trust. Host-rendered and native instruction deduplication still depends on shared source metadata. |
+| Project instructions | Native parsing and source identity are retained. Project execution requires host trust. Mixed host path discovery and native global/ancestor/cwd content reach model requests after reload and context hooks without duplicate content injection. Separate files retain their source paths even when their text is equal. |
 | SYSTEM/APPEND files | Native precedence and composition have coverage. The host base prompt remains present. |
 | Native skills | Native parsing, explicit invocation, collisions and installed resources have coverage. |
-| Skill activation | Native expansion is retained. Every shared mention and successful-read prerequisite combination is not exercised. |
+| Skill activation | Native expansion and shared mention discovery are retained. Read/Bash prerequisites clear only after approved foreground completion. Real default and coding workers cover failed, denied, masked-failure and successful reads, including stdin versus fd 3 redirection. Bounded skill fallback remains; strict browser prerequisites do not fall back. |
 | Prompt templates | Native parsing, quoting, defaults, slices, collisions and input transforms have coverage. |
 | Extensions: tools | Unmodified plugins, structured results, nested calls, progress, cancellation and deferred discovery have coverage. |
 | Extensions: commands/input | Native command and input processing are used. Production reload and handled-input cases have coverage. |

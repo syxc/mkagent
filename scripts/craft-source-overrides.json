@@ -2328,6 +2328,18 @@
     }
   },
   "mkOnly": {
+    "packages/shared/src/agent/__tests__/pi-powershell-runtime.isolated.ts": {
+      "sha256": "3bf95005af8cc4594c773749f33cb0f492a8189ce164a78932573b6126c59f1c",
+      "reason": "Verify opt-in native PowerShell discovery and host allow/deny through a real coding worker and deterministic process fixture, without claiming a real interpreter."
+    },
+    "packages/shared/src/agent/__tests__/pi-prerequisite-reads.test.ts": {
+      "sha256": "9a49ed14c0cf6ab8b37c5d85c1cf8b84c21f09c31c8bf0436c4b174915cfca15",
+      "reason": "Verify approved read correlation, failures, complex shell commands, bounded fallback, concurrent completion and stale lifecycle results."
+    },
+    "packages/shared/src/agent/__tests__/pi-prerequisite-runtime.isolated.ts": {
+      "sha256": "b85c74eff3c206d9795da1d1767be8c97f6080a15ae103aff02dde64496b6bd6",
+      "reason": "Run real default and coding workers with local models to verify successful reads and reject missing, masked-failure and denied reads."
+    },
     "packages/pi-agent-server/src/provider-authorization.ts": {
       "sha256": "d7c175cdce8a1a342677e63df212534ce798da65bde86e0440d2c58b4ef9862f",
       "reason": "Expose explicit native provider login and logout through active Models, cancellable auth prompts and coordinated MCP credential changes."
@@ -2689,8 +2701,16 @@
       "reason": "Verify auxiliary usage commits, foreground rebase, cancellation, failure isolation and receipt publication with deterministic local models."
     },
     "packages/pi-agent-server/src/coding-host-prompt.e2e.test.ts": {
-      "sha256": "697e0fce86ef1b1460059ebdcf01bd536a803a90cb756db5ef5f90acc1a4d22b",
-      "reason": "Verify late and replaced host prompts reach native plugin hooks and local model calls while resource policy and tool declarations remain intact."
+      "sha256": "0bcc33ecc5ce1e0b28881f8c8059b6e3eed24c2ffa6e2be2412b10df9fef68bb",
+      "reason": "Verify late host prompts, mixed instruction source scopes, reload and context hooks reach local model calls without duplicating file content."
+    },
+    "packages/pi-agent-server/src/coding-output.e2e.test.ts": {
+      "sha256": "ce58855c5d1091ce4f87ff8c0835350d1d2c0395de733525f06d000a53135fd0",
+      "reason": "Verify complete UTF-8 shell output spills and remains readable through the native coding host after durable reopen."
+    },
+    "packages/pi-agent-server/src/tools/local/search-output.test.ts": {
+      "sha256": "518f7efae09ca1fcce5137cedf9c107e457e8e637c4516902d868e363a147f1a",
+      "reason": "Exercise actual local rg, fd and directory tools for Unicode, ignore rules, output limits, empty results and path failures."
     },
     "packages/pi-durable-coding/src/plugin-transpiler.ts": {
       "sha256": "6f3226db5d89653ef5b5f349bac3cf7d0d9150cdaf0adb353f31a820f5a26819",
@@ -5051,18 +5071,6 @@
     "packages/pi-agent-server/src/test-fixtures/mcp-oauth-worker.ts": {
       "sha256": "9c8fb50d1b47c94399fdc6712e47dcdfed0c7c7302cd1c4fd372800e87963101",
       "reason": "Supply isolated native worker protocol receipts, temporary credentials and a model endpoint that rejects every request."
-    },
-    "packages/shared/src/agent/__tests__/pi-prerequisite-reads.test.ts": {
-      "sha256": "9a49ed14c0cf6ab8b37c5d85c1cf8b84c21f09c31c8bf0436c4b174915cfca15",
-      "reason": "Verify approved read correlation, failures, complex shell commands, bounded fallback, concurrent completion and stale lifecycle results."
-    },
-    "packages/shared/src/agent/__tests__/pi-prerequisite-runtime.isolated.ts": {
-      "sha256": "b85c74eff3c206d9795da1d1767be8c97f6080a15ae103aff02dde64496b6bd6",
-      "reason": "Run real default and coding workers with local models to verify successful reads and reject missing, masked-failure and denied reads."
-    },
-    "packages/shared/src/agent/__tests__/pi-powershell-runtime.isolated.ts": {
-      "sha256": "3bf95005af8cc4594c773749f33cb0f492a8189ce164a78932573b6126c59f1c",
-      "reason": "Verify opt-in native PowerShell discovery and host allow/deny through a real coding worker and deterministic process fixture, without claiming a real interpreter."
     }
   },
   "deleted": {
