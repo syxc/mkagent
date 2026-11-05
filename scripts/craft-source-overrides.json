@@ -5011,6 +5011,26 @@
     "packages/pi-durable-coding/test/host-package-commands.test.ts": {
       "sha256": "a36088312c2202c8efb143721d40792c210a777f4f054dbc4716f0f61d4655c4",
       "reason": "Verify native npm/git commands, scope and streams, fresh shared settings, manual write-failure recovery and partial update shutdown draining."
+    },
+    "packages/pi-agent-server/src/mcp/oauth-step-up.test.ts": {
+      "sha256": "c872131ca03e9c9e94458c6746961b95f32228604762b1689721b0353430c22c",
+      "reason": "Verify insufficient-scope challenges withdraw tools, preserve explicit login scopes and never replay the rejected tool call."
+    },
+    "packages/pi-agent-server/src/mcp/oauth-process-login.test.ts": {
+      "sha256": "98407708172a532a09e6db34596af82886a12d8118bf70e7ad2f7be982948da3",
+      "reason": "Verify two independent login processes serialize shared grants and allow a waiting process to cancel without mutation."
+    },
+    "packages/pi-agent-server/src/mcp/oauth-worker-lifecycle.e2e.test.ts": {
+      "sha256": "76befbadd43003e5b9961d3ac4d4b31f48000ac39e507918cdb572e0e82c222e",
+      "reason": "Exercise native worker reinitialization, owner release and shutdown with pending OAuth callbacks and late RPC replies."
+    },
+    "packages/pi-agent-server/src/test-fixtures/mcp-login-process.ts": {
+      "sha256": "218a4a4f2be587dd2bcb2240e354f736d4652a2039600075edf18e0b58d26a7b",
+      "reason": "Run isolated explicit MCP login commands with cancellable stdin control and structured process evidence."
+    },
+    "packages/pi-agent-server/src/test-fixtures/mcp-oauth-worker.ts": {
+      "sha256": "9c8fb50d1b47c94399fdc6712e47dcdfed0c7c7302cd1c4fd372800e87963101",
+      "reason": "Supply isolated native worker protocol receipts, temporary credentials and a model endpoint that rejects every request."
     }
   },
   "deleted": {
