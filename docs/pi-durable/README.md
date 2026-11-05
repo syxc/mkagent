@@ -6,6 +6,7 @@
 
 | 文档 | 内容 |
 |---|---|
+| [Coding agent 精简架构](coding-architecture.md) | 执行链路、上游包依赖、源码移植清单及 MkAgent 自有适配边界 |
 | [Durable coding agent 实施计划](durable-coding-agent-plan.md) | 用户澄清后的目标、职责边界、产品保留清单、逐项修正顺序及验收条件 |
 | [Coding 能力与插件兼容规格](coding-capabilities-spec.md) | 固定上游基线、依赖规则、能力清单和宿主契约 |
 | [Coding 验证与剩余工作](coding-validation.md) | `4776fe1` 的验证证据、当前实现状态及未完成项 |

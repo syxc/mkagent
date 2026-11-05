@@ -11,7 +11,7 @@
 | pi-durable 为唯一执行调度内核 | 已实现且验证 | 普通 profile 使用 GenerationTask，coding 使用 `pi.coding.session/run/tool`；原生 Agent facade、嵌套调用和边界恢复通过实际 Harness 与固定原版行为对照。不同产品模式不要求相同任务类型。 |
 | 允许按需引用 pi-agent-core，禁止生产依赖完整 pi-coding-agent | 已实现且验证 | 当前 coding 包使用独立 Pi 1.5.0 包和本地固定源码闭包；没有生产整包依赖，也没有另启旧 Agent loop。未使用 core 是当前实现选择。 |
 | 独立 coding 模块及公开入口 | 已实现且验证 | `@mkagent/pi-durable-coding` 不依赖 MkAgent shared、server 或 UI。`a41e6b5` 干净 checkout 的独立消费者覆盖六个运行时入口及 rpc-ui 类型入口，声明与运行检查均通过。 |
-| 固定来源、许可与可复现转换 | 已实现且验证 | Pi v1.5.0 固定提交、MIT 许可、250 份运行时源码和 9 项资源，另有 40 份公开 fixture。两套生成检查通过。 |
+| 固定来源、许可与可复现转换 | 已实现且验证 | Pi v1.5.0 固定提交、MIT 许可、250 份运行时源码和 9 项资源，另有 34 项辅助与兼容源码和 6 项原样测试夹具。两套生成检查通过；分类见[精简架构](coding-architecture.md)。 |
 | 普通模式资源隔离与 coding 项目信任 | 已实现且验证 | `resourcePolicy` 与执行选择分离；普通 profile 和 `host-only` 不自动发现原生资源，项目执行在导入前取得宿主决定。参见 `host-resources.test.ts`、`host-project-resources.test.ts` 和真实产品信任用例。 |
 
 ## 能力规格逐行对照

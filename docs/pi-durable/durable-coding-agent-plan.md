@@ -2,6 +2,8 @@
 
 状态：按 2026-11-04 用户澄清修订，先完成文档基线，再按本文顺序修正实现。实现起点为 `4776fe1`；该提交的检查结果保留为既有证据，不代表本文全部验收条件已经完成。
 
+当前实现与来源分类见[精简架构](coding-architecture.md)。后文历史检查记录中的“40 份公开 fixture”指 `UPSTREAM.json` 的 40 项产物，实际为 34 项辅助与兼容源码及 6 项原样测试夹具，并非 40 个测试夹具。
+
 ## 目标与名称
 
 MkAgent 最初以 Pi coding agent 为底层，第一次切换改用 pi-durable。此次工作补回 Pi coding agent 独有的 coding 能力和插件生态，形成 `pi-durable coding agent`，简称 `durable coding agent`。MkAgent 现有全部上层功能须保持完整且正常。
