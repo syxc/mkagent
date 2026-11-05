@@ -103,6 +103,8 @@ export interface SessionConfig {
 
 export interface StoredSession extends SessionConfig {
   messages: StoredMessage[];
+  /** Inactive product rows stay outside header metadata and the active transcript. */
+  nativeArchivedMessages?: StoredMessage[];
   tokenUsage: SessionTokenUsage;
 }
 

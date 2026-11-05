@@ -438,6 +438,7 @@ export async function clearSessionMessages(workspaceRootPath: string, sessionId:
   if (session) {
     // Clear messages and SDK session ID but preserve metadata
     session.messages = [];
+    session.nativeArchivedMessages = undefined;
     session.sdkSessionId = undefined;
     // Reset token usage to zero
     session.tokenUsage = {
@@ -503,7 +504,7 @@ export function canUpdateSdkCwd(session: StoredSession): boolean {
   // Safe to update if:
   // 1. No messages have been sent yet (no conversation to preserve)
   // 2. No SDK session ID (no transcript exists at the sdkCwd path)
-  return session.messages.length === 0 && !session.sdkSessionId;
+  return session.messages.length === 0 && !session.nativeArchivedMessages?.length && !session.sdkSessionId;
 }
 
 /**

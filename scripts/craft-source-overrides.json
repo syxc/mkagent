@@ -995,8 +995,8 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "packages/core/src/types/message.ts": {
-      "sha256": "4ee8f6104ffce82371ec4635a6d8e007e0b6de66beb8b9ccda64e3da97732f80",
-      "reason": "Declare the already-persisted hidden notice flag on StoredMessage, so PR Auto notices stay excluded from previews after restart."
+      "sha256": "d5beaf3d504c9c6f95848c016efe62f397325ae0b78d5b87277ed3f0695d4232",
+      "reason": "Declare the already-persisted hidden notice flag on StoredMessage, so PR Auto notices stay excluded from previews after restart. Retain stable native product row order and conservative branch ownership metadata."
     },
     "packages/core/src/types/server.ts": {
       "sha256": "f219afff9bc08a40cca3f555190ae53625fddab8fbc5f20553bd9bf0a3252897",
@@ -1251,8 +1251,8 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/server-core/src/sessions/SessionManager.ts": {
-      "sha256": "14ed8082d6627e9635ff0611da5e18290b24b64c5048c88b692d8c961137b5d7",
-      "reason": "Retain the Craft-derived Pi/Lite lifecycle, permissions, persistence, imported sdkSessionId and PR handoffs. Require a strict final creation receipt with rollback. Preserve product input identity and caller provenance; settle completed inputs, retain the product queue and retire invalid client or session context. Serialize native projection registration and owner metadata behind strict receipts."
+      "sha256": "e6a83a0c4fb4f7879d8f42cb75749c011726c42fce7303ca2a2d9b05e2c4d9aa",
+      "reason": "Retain the Craft-derived Pi/Lite lifecycle, permissions, persistence, imported sdkSessionId and PR handoffs. Require a strict final creation receipt with rollback. Preserve product input identity and caller provenance; settle completed inputs, retain the product queue and retire invalid client or session context. Serialize native projection registration and owner metadata behind strict receipts. Preserve inactive native product rows through lazy loading, metadata saves and import; omit source display caches on ordinary cutoff copies."
     },
     "packages/server-core/src/sessions/background-task-stop.test.ts": {
       "sha256": "342eb29a494100b86413319250f10d587b041bd6d6aa0640d4c56333f995b872",
@@ -1959,7 +1959,7 @@
       "reason": "Craft v0.13.3 semver-only release-note discovery is retained so MkAgent ignores pending templates"
     },
     "packages/shared/src/sessions/__tests__/bundle.test.ts": {
-      "sha256": "43add65486fa24282c40427c5dda94e298cce4dc5f638c72ce6b60561e72d2f2",
+      "sha256": "5303ddf4df8186f01e180e27d8ff3c56ac57a501ef8a9b1d49eda0faaf6914e7",
       "reason": "Extend Craft session-bundle regressions for durable history validation and browser secret removal: legacy field uncertainty, marker-shaped and multiword array inputs, retained copies in session data, metadata and attachments, command association, JSONL sidecar integrity and nested attachment directories."
     },
     "packages/shared/src/sessions/__tests__/persistence-queue.test.ts": {
@@ -1967,24 +1967,24 @@
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "packages/shared/src/sessions/index.ts": {
-      "sha256": "28c214f606ee804f14ae48b7823e8d798d35a6b18926a3f6e2e762b30567286b",
-      "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior. Export the minimal native projection reference contract."
+      "sha256": "980b9881bf2d64dd0f388b77b27b4b4de80be1b37181ef65146f372c2253fbab",
+      "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior. Export the minimal native projection reference contract. Expose the archived native product message import helper."
     },
     "packages/shared/src/sessions/jsonl.ts": {
-      "sha256": "bd83227a16e7bcbcfd104634221d1b9a9f33c0ddec9afe36b37fec25fd3a3f54",
-      "reason": "Read complete first-line metadata for many pinned PRs/cursors beyond 8KB, preserve multibyte text, and exclude app-generated hidden notices from sidebar preview."
+      "sha256": "b73e64b5f2a60f5319e2f1af9f5320bbbf2464b8442cb28f8bc6f6833a0fb66c",
+      "reason": "Read complete first-line metadata for many pinned PRs/cursors beyond 8KB, preserve multibyte text, and exclude app-generated hidden notices from sidebar preview. Keep archived native product rows in session bodies and return active messages to transcript readers."
     },
     "packages/shared/src/sessions/persistence-queue.ts": {
-      "sha256": "5f985cfb54be3c623008c07e95bfb4ce0643c7dd938898f36c121a880a8083f6",
-      "reason": "Retain debounced persistence, metadata merging and active-write draining. Share the serial writer with strict receipts, preserve the prior record and signature on failure, and cancel unstarted writes without admitting stale snapshots."
+      "sha256": "e336bda7a952995633fba908b7f6f6e505cd7533bb892218c063e1fa1b5aa721",
+      "reason": "Retain debounced persistence, metadata merging and active-write draining. Share the serial writer with strict receipts, preserve the prior record and signature on failure, and cancel unstarted writes without admitting stale snapshots. Write both native product history partitions through the shared body serializer."
     },
     "packages/shared/src/sessions/storage.ts": {
-      "sha256": "4d2a70445af8603b134089ecb2873c5e21fe96fdf430d8dd3d0dd2a41c8df174",
-      "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
+      "sha256": "f40bc80bbbed1f1261460332d6e96bf3a110a7e78399f76400c509efc388b080",
+      "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior. Preserve inactive native rows in metadata saves and cwd guards; clear both message partitions explicitly."
     },
     "packages/shared/src/sessions/types.ts": {
-      "sha256": "76ed836c41aa237e15662b0c902e82afe45d1fa7575dbe649421a0caeec8938d",
-      "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions. Retain native projection references in product persistence."
+      "sha256": "fbd5105e20e99cc36d730afd170cae6fa6d65bf4942f0c3b74d4d99485aee3d5",
+      "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions. Retain native projection references in product persistence. Keep inactive native product rows outside the session header schema."
     },
     "packages/shared/src/skills/__tests__/storage.test.ts": {
       "sha256": "115889b1766bcac097277b820a5780d9106daf06fe59d2c3773fd89a0d91fd4b",
@@ -2279,8 +2279,8 @@
       "reason": "Extend Craft's browser-command redactor with optional processing of existing password markers, configurable replacement text and callbacks that report removed values for durable export checks; preserve default idempotent session redaction."
     },
     "packages/shared/src/sessions/bundle.ts": {
-      "sha256": "f4284c77bfd69623dedc8f7bb1a72278184e02f8b416fca386981ea9bb9cbb35",
-      "reason": "Extend Craft session export with a validated, redacted durable snapshot and exclude the raw root store; reject secret copies in session data, metadata, attachment contents and file paths, returning null when safe export cannot be established."
+      "sha256": "3b990b7a1e2835d0d17fb97df5402b71d6b42d4f2874a163c4512eb331d10388",
+      "reason": "Extend Craft session export with a validated, redacted durable snapshot and exclude the raw root store; reject secret copies in session data, metadata, attachment contents and file paths, returning null when safe export cannot be established. Use version 2 to retain both native product history partitions and their files."
     },
     "packages/shared/src/utils/bundle-files.ts": {
       "sha256": "a34556457c460b3cb9cb0b04c3c8e011e7ee7ebda921bdecf706074935c53b4b",
@@ -2339,6 +2339,18 @@
     "packages/pi-agent-server/src/fixtures/native-fork-reopen.ts": {
       "sha256": "eee7bc1ee649e7ff23b6573b0ab092eb52a6881fea06445ecb6d4f2ec77000f8",
       "reason": "Open native fork stores in a cold process using deterministic models and test-owned paths."
+    },
+    "packages/shared/src/sessions/native-product-history.ts": {
+      "sha256": "176daba73b193f5e7ffc5c77a1068a7d233523cbeb12e5d7718db932e675ab22",
+      "reason": "Retain complete product message metadata and derive active or archived rows from verified native identity and leaf ancestry."
+    },
+    "packages/shared/src/sessions/native-product-history.test.ts": {
+      "sha256": "1f8318ab486930ac49aa0012dab4d3ae4fe22b047a5b833bee969d6be16e4607",
+      "reason": "Verify native product history partitioning, input consumption, stable order, both writers and versioned lossless bundle roundtrips."
+    },
+    "packages/server-core/src/sessions/native-product-history.isolated.ts": {
+      "sha256": "f2875ac5086b425ff5b24efa3c18f1399ec467bdf4fa7a17b67907060e9e8d0b",
+      "reason": "Exercise actual product lazy loading, metadata saves and archive export/import without starting an agent or model."
     },
     "packages/server-core/src/sessions/native-session-source.ts": {
       "sha256": "d323a02d4fb574574d6509d58b03a3f30acc054543cedd2a15d03570f9ce686e",
@@ -2721,8 +2733,8 @@
       "reason": "Retained event regressions now assert owned-backend task cancellation rather than global process command matching"
     },
     "packages/server-core/src/sessions/session-branching.test.ts": {
-      "sha256": "cd8fb645e49c2cd4524985ba09ad4d1b41a0ee513efbc3b4465ee330fe11366b",
-      "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path"
+      "sha256": "9e1ecdcafa832667167a919ef3f32d791b25ca45deaa3aff0f26acc8bac2d1fe",
+      "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path. Verify ordinary cutoff copies exclude source native display caches and inactive product rows."
     },
     "packages/server-core/src/utils/chat-starters.test.ts": {
       "sha256": "17c8bf494a50ec3becdc5182e1cced66c3d458a386839bdf143a2f1feb5da87a",
@@ -3133,8 +3145,8 @@
       "reason": "Map model contributions and replacement edits in private history copies while preserving IDs, anchors, and document deltas."
     },
     "packages/shared/src/sessions/session-files.ts": {
-      "sha256": "2c80717dfa1d077fef7417e4faa29a47fae0054c4ca751525cca67748ff0fe90",
-      "reason": "Copy and remap retained session files and display or model references across export, import, and branches."
+      "sha256": "a22bdd11aeca34958884a6bbd191d77b699a353271d044487960c53efb8ea202",
+      "reason": "Copy and remap retained session files and display or model references across export, import, and branches. Include archived native product rows in file discovery and import."
     },
     "packages/pi-agent-server/src/events/translate.ts": {
       "sha256": "e6ab037a92210355207e5d973094fecb6a5e6383234b6e90111a3240998d7419",

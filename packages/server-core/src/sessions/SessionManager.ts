@@ -75,6 +75,7 @@ import {
   serializeSession,
   copyReferencedSessionFiles,
   importSessionMessages,
+  importNativeArchivedMessages,
   restoreSessionBundleFiles,
   remapSessionFileReferences,
   setPendingPlanExecution as setStoredPendingPlanExecution,
@@ -228,6 +229,7 @@ interface RunningBackgroundTask {
 interface ManagedSession extends SessionConfig {
   workspace: Workspace
   messages: Message[]
+  nativeArchivedMessages?: StoredSession['nativeArchivedMessages']
   tokenUsage: SessionTokenUsage
   messagesLoaded: boolean
   isProcessing: boolean
@@ -311,6 +313,7 @@ export function createManagedSession(
     lastMessageRole: session.lastMessageRole,
     lastFinalMessageId: session.lastFinalMessageId,
     messages: (session.messages ?? []).map(storedToMessage),
+    nativeArchivedMessages: session.nativeArchivedMessages,
     tokenUsage: session.tokenUsage ?? { ...EMPTY_USAGE },
     messagesLoaded: options.messagesLoaded ?? Boolean(session.messages),
     isProcessing: false,
@@ -556,6 +559,7 @@ export class SessionManager implements ISessionManager {
     const stored = loadStoredSession(managed.workspace.rootPath, managed.id)
     if (stored) {
       managed.messages = stored.messages.map(storedToMessage)
+      managed.nativeArchivedMessages = stored.nativeArchivedMessages
       managed.tokenUsage = stored.tokenUsage
     }
     managed.messagesLoaded = true
@@ -573,8 +577,8 @@ export class SessionManager implements ISessionManager {
       pendingExternalHeader: _pendingExternalHeader,
       activeTurnSerial: _activeTurnSerial,
       pendingHandoffSummary: _pendingHandoffSummary, handoffSummaryExpired: _handoffSummaryExpired, cancelHandoffWait: _cancelHandoffWait,
-      messages, tokenUsage, ...config } = managed
-    return { ...config, messages: messages.map(messageToStored), tokenUsage }
+      messages, nativeArchivedMessages, tokenUsage, ...config } = managed
+    return { ...config, messages: messages.map(messageToStored), nativeArchivedMessages, tokenUsage }
   }
 
   private persistSession(managed: ManagedSession): void {
@@ -616,7 +620,7 @@ export class SessionManager implements ISessionManager {
   }
 
   private toSession(managed: ManagedSession, includeMessages: boolean): Session {
-    const messages = includeMessages ? managed.messages : []
+    const messages = includeMessages ? managed.messages.map(({ nativeHistory: _history, ...message }) => message) : []
     return {
       id: managed.id,
       workspaceId: managed.workspace.id,
@@ -720,7 +724,9 @@ export class SessionManager implements ISessionManager {
         const branched = loadStoredSession(workspace.rootPath, stored.id)
         if (!branched) throw new Error(`Failed to load newly created session ${stored.id} for branch copy`)
 
+        // A cutoff copy excludes native branches that its source display cache may reference.
         const sourceMessages = branchSource.messages.slice(0, branchIndex + 1)
+          .map(({ nativeHistory: _history, ...message }) => message)
         copyReferencedSessionFiles(sourceMessages, sourcePath, branchPath)
         branched.messages = remapSessionFileReferences(sourceMessages, sourcePath, branchPath)
         branched.branchFromMessageId = options.branchFromMessageId
@@ -2469,6 +2475,7 @@ export class SessionManager implements ISessionManager {
       stored.transferredSessionSummaryApplied = bundle.session.header.transferredSessionSummaryApplied
       const targetPath = getSessionStoragePath(workspace.rootPath, created.id)
       stored.messages = importSessionMessages(bundle, targetPath)
+      stored.nativeArchivedMessages = importNativeArchivedMessages(bundle, targetPath)
       stored.tokenUsage = bundle.session.header.tokenUsage
       restoreSessionBundleFiles(bundle, targetPath)
       await saveStoredSession(stored)

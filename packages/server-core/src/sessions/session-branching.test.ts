@@ -33,10 +33,11 @@ describe('SessionManager branching', () => {
         source.sdkSessionId = 'pi-session-parent';
         source.sdkCwd = '/tmp/pi-parent';
         source.messages = [
-          { id: 'user-1', role: 'user', content: 'first', timestamp: 1 },
+          { id: 'user-1', role: 'user', content: 'first', timestamp: 1, nativeHistory: { order: 0, anchor: 'native-leaf-after-cutoff' } },
           { id: 'assistant-1', role: 'assistant', content: 'answer', timestamp: 2 },
           { id: 'user-2', role: 'user', content: 'later', timestamp: 3 },
         ];
+        source.nativeArchivedMessages = [{ id: 'inactive', type: 'info', content: 'inactive branch', nativeHistory: { order: 1, anchor: 'native-leaf-after-cutoff' } }];
         source.tokenUsage = { inputTokens: 1000, outputTokens: 800, totalTokens: 1800, contextTokens: 0, costUsd: 9 };
         await saveSession(source);
         const manager = new SessionManager();
@@ -81,6 +82,8 @@ describe('SessionManager branching', () => {
       expect(storedBranch.branchFromSdkSessionId).toBe('pi-session-parent')
       expect(storedBranch.branchFromSdkCwd).toBe('/tmp/pi-parent')
       expect(storedBranch.branchFromSdkTurnId).toBe('pi-entry-1')
+      expect(storedBranch.nativeArchivedMessages).toBeUndefined()
+      expect(storedBranch.messages.some((message: { nativeHistory?: unknown }) => message.nativeHistory)).toBe(false)
       expect(anchors.anchors).toEqual({ 'assistant-1': 'pi-entry-1' })
     } finally {
       rmSync(configDir, { recursive: true, force: true })

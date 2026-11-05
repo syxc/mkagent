@@ -62,13 +62,15 @@ export interface BundleBranchInfo {
  */
 export interface SessionBundle {
   /** Bundle format version */
-  version: 1
+  version: 1 | 2
   /** Session data (header metadata + full message history) */
   session: {
     /** Session metadata (id, name, timestamps, config) */
     header: SessionHeader
-    /** Full message history */
+    /** Active product transcript. Version 2 retains inactive rows separately. */
     messages: StoredMessage[]
+    /** Version 2 retains inactive native product history. */
+    nativeArchivedMessages?: StoredMessage[]
   }
   /** All files from the session directory (attachments, plans, data, downloads, etc.) */
   files: BundleFile[]
@@ -148,7 +150,11 @@ export function serializeSession(
     return false
   }
   const messages = JSON.parse(makeSessionPathPortable(JSON.stringify(stored.messages), sessionDir)) as StoredMessage[]
-  if (containsSecret({ header, messages: stored.messages, portableMessages: messages })) {
+  const nativeArchivedMessages = stored.nativeArchivedMessages?.length
+    ? JSON.parse(makeSessionPathPortable(JSON.stringify(stored.nativeArchivedMessages), sessionDir)) as StoredMessage[]
+    : undefined
+  if (containsSecret({ header, messages: stored.messages, portableMessages: messages,
+    nativeArchivedMessages: stored.nativeArchivedMessages, portableArchive: nativeArchivedMessages })) {
     debug('[bundle] Cannot safely export a browser password copy')
     return null
   }
@@ -172,10 +178,11 @@ export function serializeSession(
   }
 
   return {
-    version: 1,
+    version: nativeArchivedMessages?.length || messages.some(message => message.nativeHistory) ? 2 : 1,
     session: {
       header,
       messages,
+      ...(nativeArchivedMessages ? { nativeArchivedMessages } : {}),
     },
     files,
   }
@@ -189,12 +196,14 @@ export function validateBundle(bundle: unknown): bundle is SessionBundle {
   if (!bundle || typeof bundle !== 'object') return false
   const b = bundle as Record<string, unknown>
 
-  if (b.version !== 1) return false
+  if (b.version !== 1 && b.version !== 2) return false
   if (!b.session || typeof b.session !== 'object') return false
 
   const session = b.session as Record<string, unknown>
   if (!session.header || typeof session.header !== 'object') return false
   if (!Array.isArray(session.messages)) return false
+  if (session.nativeArchivedMessages !== undefined
+    && (b.version !== 2 || !Array.isArray(session.nativeArchivedMessages))) return false
 
   const header = session.header as Record<string, unknown>
   if (typeof header.id !== 'string') return false

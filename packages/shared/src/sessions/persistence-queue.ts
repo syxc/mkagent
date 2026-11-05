@@ -3,7 +3,7 @@ import { dirname } from 'path'
 import type { StoredSession, SessionHeader } from './types.js'
 import { getSessionFilePath, ensureSessionsDir, ensureSessionDir } from './storage.js'
 import { toPortablePath } from '../utils/paths.js'
-import { createSessionHeader, makeSessionPathPortable, readSessionHeader } from './jsonl.js'
+import { createSessionHeader, makeSessionPathPortable, readSessionHeader, serializeSessionMessages } from './jsonl.js'
 import { debug } from '../utils/debug.js'
 
 interface PendingWrite {
@@ -149,7 +149,7 @@ class SessionPersistenceQueue {
       }
 
       // Create JSONL content: header + messages (one per line)
-      // Filter out intermediate messages - they're transient streaming status updates
+      // Keep intermediate and archived rows; only active rows contribute header metadata.
       const localHeader = createSessionHeader(storageSession)
       const localSig = getHeaderMetadataSignature(localHeader)
       const diskHeader = readSessionHeader(filePath)
@@ -173,12 +173,11 @@ class SessionPersistenceQueue {
         debug(`[PersistenceQueue] Session ${sessionId} metadata mismatch detected (${mode}${baseline})`)
       }
 
-      const persistableMessages = storageSession.messages
       // Use original absolute sessionDir (before toPortablePath) for path replacement
       const sessionDir = dirname(filePath)
       const lines = [
         makeSessionPathPortable(JSON.stringify(header), sessionDir),
-        ...persistableMessages.map(m => makeSessionPathPortable(JSON.stringify(m), sessionDir)),
+        ...serializeSessionMessages(storageSession, sessionDir),
       ]
 
       // Atomic write: write to .tmp then rename over the real file.
