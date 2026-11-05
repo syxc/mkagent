@@ -73,7 +73,7 @@ MkAgent 最初以 Pi coding agent 为底层，第一次切换改用 pi-durable�
 | D2 | MkAgent 主链路 | 按保留清单检查模型、审批、代理/会话工具、MCP、浏览器、后台任务、持久化、分支和传输；修复发现的缺口，运行相关产品集成和完整仓库回归。 | 已完成 |
 | D3 | 插件会话与交互 | 补齐由产品会话所有者执行的原生会话操作和插件交互适配；每个 API 组用未修改插件驱动实际效果，检查 reload、取消和恢复。 | 进行中 |
 | D4 | 原生资源与授权 | 补齐项目资源的信任入口、MCP 交互授权和显式包管理路径；继续保持禁止隐式安装及未授权项目执行。 | 进行中 |
-| D5 | 打包与产品验收 | 检查独立包消费者、来源、许可、资源和产物搬迁，在隔离环境运行实际产品入口；区分构建通过、功能通过和平台受阻。 | macOS 构建、协议及选定 WebUI 流程完成，Desktop 与其他平台待验收 |
+| D5 | 打包与产品验收 | 检查独立包消费者、来源、许可、资源和产物搬迁，在隔离环境运行实际产品入口；区分构建通过、功能通过和平台受阻。 | macOS 构建、协议、选定 WebUI 与 Desktop 流程完成；正式 Desktop 发布安装包及其他平台待验收 |
 | D6 | 最终需求对照 | 将本文、能力总表、实现、测试与未解决项逐条对应；全部必需项有结果后才声明完成，记录最终本地提交。 | 进行中 |
 
 D1 的已知风险是把原生会话开关直接设为始终启用：它会连带加载普通会话以前隔离的 Pi 资源。现有 `kernel.e2e.test.ts` 的默认 profile 隔离用例是保留契约，不能通过改掉该预期来消除失败。
@@ -387,7 +387,7 @@ Stop、UI 失效、reload、所有者释放、re-init 和 shutdown 与 MCP 授�
 
 skill 前置读取发现两个提前登记点：`Read` 的开始事件，以及审批前的 Bash 检查。已将准入与成功确认分离，按 call ID、审批输入及当前 worker 归属关联完成；失败、后台、复杂 shell 和生命周期失效均不登记。普通 kernel 的 orphan 完成事件也明确为错误。原红测 3 项失败，修后通过；独立复核另指出 `cat 3< guide` 仅打开 fd 3，新增红测复现后限制为唯一 stdin 输入重定向。manager 为 68 项、160 项断言通过，真实双模式 worker 为 2 项、132 项断言通过。skill 的一次拒绝后降级保持原行为，strict browser 仍要求成功读取。`.isolated.ts` 由仓库 runner 自动发现，不需要另加显式清单。
 
-PowerShell 核对同时发现真实产品接线缺口：原生 SDK factory 存在，但宿主覆盖工具表没有注册。现只在 coding profile 注册 deferred 工具，由原生插件显式激活，并沿用 durable 工具任务。宿主将其识别为 `PowerShell`，不套用 Bash 语法或记忆键；Explore 拒绝，Ask 每次确认，Allow All 可执行。真实 worker 以任务临时 `pwsh` 进程替身验证发现、拒绝无启动、批准后的 UTF-8 设置及参数，1 项、20 项断言通过；权限用例 11 项、27 项断言通过。替身不是 PowerShell 解释器，当前 macOS 无 `pwsh`，实际 PowerShell 和 Windows 执行仍单列环境限制。
+PowerShell 核对同时发现真实产品接线缺口：原生 SDK factory 存在，但宿主覆盖工具表没有注册。现只在 coding profile 注册 deferred 工具，由原生插件显式激活，并沿用 durable 工具任务。宿主将其识别为 `PowerShell`，不套用 Bash 语法或记忆键；Explore 拒绝，Ask 每次确认，Allow All 可执行。真实 worker 以任务临时 `pwsh` 进程替身验证发现、拒绝无启动、批准后的 UTF-8 设置及参数，1 项、20 项断言通过；权限用例 11 项、27 项断言通过。当时尚未准备真实 `pwsh`，替身结果不计实机通过；后续 macOS 实机结果见下方记录，Windows 仍未验收。
 
 原浏览器空间缺失是本批当时的阻塞，后续已在用户明确授权的新任务中完成选定 WebUI 验收，见最新可视验收记录。
 
@@ -428,7 +428,29 @@ PowerShell 核对同时发现真实产品接线缺口：原生 SDK factory 存�
 
 最新可视批次共 5 次本地确定性模型请求，与历史 headless 协议批次的 0 请求分开计数。多面板探针曾错误要求未聚焦源面板自动跳转，按现有焦点导航契约修正验收条件后通过；首批夹具跨 NEW 读取旧 context 的失败只记为夹具错误，不计产品失败。单独的 fork 隔离文件与其他文件合跑时曾受配置模块缓存影响，重新按独立进程运行通过，不更改产品断言。
 
-该任务已恰一次完成 `finish({keep:[]})`，随后停止任务服务进程组，收到 SIGTERM 退出回执。D3.6、D4、D6 仍保留进行中：项目信任选择的实际 WebUI 画面、Desktop、TUI 专属交互、Windows 和真实 PowerShell 尚未验收。旧空间缺失已不是当前 WebUI 阻塞，已通过的选定流程不扩展为全部插件与平台兼容。
+该任务已恰一次完成 `finish({keep:[]})`，随后停止任务服务进程组，收到 SIGTERM 退出回执。该批结束时，项目信任选择的实际 WebUI 画面、Desktop、TUI 专属交互、Windows 和真实 PowerShell 尚未验收。后续进展见下一节，D3.6、D4、D6 仍保留进行中；已通过的选定流程不扩展为全部插件与平台兼容。
+
+## macOS 实际验收记录
+
+本批在原任务目录下新增 `macos-acceptance/`，继续使用隔离 HOME/config、随机回环端口与本地确定性模型。以下结果补充前一节，不把 SDK TUI 计为 MkAgent CLI 的产品界面，也不把 Desktop 流程计为 Windows 结果。D3.6、D4、D6 继续进行。
+
+| 范围 | 实际结果与边界 |
+|---|---|
+| 真实 PowerShell | 官方 PowerShell 7.6.9 macOS arm64 归档仅解压至任务工具目录，SHA256 为 `a1c7e98ac403da4be5ba75c1c5855af272de7787a91d478c4267466fe58fc1af`。`powershell-real.test.ts` 为 1 项、51 项断言，通过真实 PiAgent coding owner、显式激活、durable 工具与宿主审批执行。Ask 拒绝无文件，批准后真实中文输出和文件、exit 7、超时、Explore 拒绝、取消均通过；超时与取消的真实进程退出，延迟副作用未发生。共 11 次模型请求、5 次审批、26 次产品投影回执。原替身用例单独回归为 1 项、20 项断言。Windows 未验收。 |
+| PowerShell 夹具修正 | 新隔离 config 起初未调用 `ensureConfigDir()`，导致启用命令先因缺少 `config-defaults.json` 失败，随后两次调用显示工具未找到。初始化夹具后通过，未把这两次失败误报为产品工具注册缺陷。 |
+| 真实 PTY TUI | `tui.ts` 和 `tui-probe.ts` 通过 tuistory 0.12.0 实际运行 ProcessTerminal、InteractiveMode、AgentSession.prompt、durable session/run 和指定 DurableLoopBinding。regular/fullscreen 两个会话均显式完成并关闭，模型请求分别为 2/1。模型为内存 provider，禁止网络请求，工具关闭，只有一个 journal owner。 |
+| TUI 交互 | 原样 rpc-demo 与 session-name 加任务插件，验证中文 prompt、输入与 Escape、多行编辑及 Ctrl+J、widget、overlay 的 Escape/Enter、CustomEditor、renderer 的 Ctrl+O 展开、主题、header/footer、reload 和 Alt+J。两种模式按 70×22 与 120×40 调整 PTY 并检查截图。PNG 包含回滚内容，不据其高度声称全部内容适配可见视口。Ctrl+Alt+字母在测试工具编码时丢失 Alt，夹具改用 Alt+J，不改产品。未验 TUI 的 new/fork/resume/import、剪贴板、外部 editor 或真实模型。 |
+| 原生 MCP TUI manager | 另开同一 durable SDK 宿主的 PTY 会话，加载固定原生 MCP factory 和任务本地 stdio JSON-RPC 服务，实际操作重新连接、direct→deferred→direct、禁用和启用。配置文件分别保存 exposure 与 enabled，禁用结束首个子进程，启用生成新进程。真实中文 prompt 完成 1 次本地模型请求后正常退出，两个服务进程均有退出记录且 PID 已不存在。截图为 `tui-mcp/exposure-narrow.png`、`reenabled-wide.png`。工具调用保持关闭，deferred 时如实显示没有激活 codemode/tool_search 的诊断，不计为 TUI 中的工具执行或 OAuth 登录验收。 |
+| MCP TUI 夹具限制 | 初次启动漏传 PI_OFFLINE，守卫在 runtime 创建前终止。包装插件在 reload 时使用 Bun 的 `import.meta.dir` 触发 jiti 的 NameTooLong，改为显式隔离 agentDir 后加载成功；没有据此修改产品或宣称通用 import.meta 兼容。任务服务起初引用不存在的 SDK，单独启动证实模块缺失后改用 Node 标准库的本地 JSON-RPC 服务。截图历史区仍含早期失败与工具关闭诊断，当前 manager 的 connected 状态、配置及进程记录另行核对。 |
+| Electron 构建修复 | `846029f` 修复子包两个独立 esbuild 命令遗漏 `bun:sqlite` external、在两个条件 require 处报错的问题。根项目共用构建器已有正确 external、worker 和 interceptor 构建。子包 `build:main` 改为调用该构建器，`build:main:win` 复用前者，避免参数分叉。旧命令实际失败，新命令与 win 别名在 macOS 均成功，preload 和 renderer 构建成功，实际 Electron 可启动。win 别名通过不表示 Windows 执行通过。共用构建器可能加载仓库 `.env`，已核对隔离 worktree 没有该文件。 |
+| Desktop 隔离范围 | 实际运行 Electron 39.2.7、Node 22.21.1 与正式 main/server/worker/renderer。测试 bootstrap 指定独立 home、appData、userData、logs、crashDumps 和任务 shell，禁止全局 URL handler 注册，未验系统协议注册或正式发布安装包。操作只针对任务窗口，未访问真实 WebUI、HOME、凭据、代理或 Craft 目录。 |
+| Desktop 项目信任 | 项目设置故意声明 always，仍在导入前显示真实信任提示。批准前只有 global 插件加载，项目插件未加载且 MCP 启动次数为 0。通过真实 React select 的 change 选择仅会话信任，再点击 Continue，项目插件和 `.pi/mcp.json`、`.mkagent/mcp.json` 的两个本地服务加载。冷重开再次询问信任，批准后两类服务各累计启动 2 次，符合仅会话决定。选择使用受限任务 Unix socket 驱动 DOM，并非鼠标选择；实际选择画面已截图检查。 |
+| Desktop 交互与历史 | 真实 confirm 获得按钮焦点，Escape 后返回 false。普通输入经本地模型显示回复，冷重开后回复仍在产品历史中，共 1 次模型请求。早期 capturePage 因窗口未置前取得旧帧，不计证据；测试 bootstrap 置前并等待绘制后取得有效信任选择和重开历史截图。 |
+| 本批定向检查 | `interceptor-packaging-contract.test.ts` 为 1 项、3 项断言通过。两个构建入口、preload、renderer、diff 检查和 2142 份文件的隔离 Craft 来源审计通过；首次来源审计指出 package.json 摘要未更新，完成实际 diff 复核并更新来源摘要后通过。同类扫描未发现其他直接打包 main 入口的重复命令。另实际重跑 `validate:ci`，含全部类型检查、shared/doc-tools 测试及 i18n 检查，退出 0。完整仓库、lint、固定生成与消费者证据沿用前述未改动层记录，不冒充本批重跑。 |
+
+证据位于任务目录的 `macos-acceptance/`：`powershell-result.json`、`tui-regular/result.json`、`tui-fullscreen/result.json`、`tui-mcp/result.json`、`tui-mcp/server-lifecycle.jsonl`、三个 TUI 目录的 PNG，以及 `desktop/metrics.json`、`desktop/project-trust.png` 和 `desktop/history-reopened.png`。Desktop 窗口已正常退出，任务本地服务已结束，三个 TUI 会话均已关闭；保留夹具、产物和日志用于复核。
+
+仍需 WebUI 项目信任专属画面、Windows 和正式 Desktop 发布安装包验收，SDK TUI 也仅覆盖本节列出的组合。原浏览器任务 7 已恰一次关闭，用户限定只用该任务，补充 WebUI 流程前需要新隔离任务的明确授权，未自行新建或重新占用。密码遮罩仍只有 DOM 证据，未重试此前被拒的截图。已有结果不扩展为所有插件、产品入口和平台全部兼容。
 
 ## 验证与完成规则
 
