@@ -67,7 +67,9 @@ export class CodingHost {
   private readonly durable: DurableLoopBinding;
   private readonly nativeTools = new Map<string, ToolRegistration>();
   private readonly jobs = new Set<Promise<unknown>>();
-  private readonly actionScope = new AsyncLocalStorage<{ job?: Promise<unknown> }>();
+  private readonly actionScope = new AsyncLocalStorage<{
+    job?: Promise<unknown>; inputActions?: Set<Promise<unknown>>;
+  }>();
   private readonly anchors: Array<{ message: AssistantMessage; id: string; nativeId?: string }> = [];
   private readonly stopAnchors: () => void;
   private stopEvents?: () => void;
@@ -275,19 +277,31 @@ export class CodingHost {
   /** Admit input after native command, input and before-agent-start processing; retain its running promise. */
   async submit(text: string, options: PromptOptions): Promise<boolean> {
     const admitted = Promise.withResolvers<boolean>();
+    const inputActions = new Set<Promise<unknown>>();
     const run = this.action(() => this.session.prompt(text, {
       ...options, preflightResult: disposition => admitted.resolve(disposition === 'handled'),
-    }));
+    }), false, inputActions);
     void run.catch(error => admitted.reject(error));
     const handled = await admitted.promise;
+    // A handled command may start foreground work through the native extension API.
+    // Wait for its own actions without joining a preceding run or background work.
+    if (handled) while (inputActions.size) await Promise.all([...inputActions]);
     if (!this.closed) await this.flush();
     return handled;
   }
 
-  private action<T>(work: () => Promise<T>, background = false): Promise<T> {
-    const scope: { job?: Promise<unknown> } = {};
+  private action<T>(work: () => Promise<T>, background = false,
+    inputActions = this.actionScope.getStore()?.inputActions): Promise<T> {
+    const scope: { job?: Promise<unknown>; inputActions?: Set<Promise<unknown>> } = {
+      inputActions: background ? undefined : inputActions,
+    };
     const job = this.actionScope.run(scope, work);
     scope.job = this.track(job, background);
+    if (scope.inputActions) {
+      const actions = scope.inputActions;
+      actions.add(job);
+      void job.finally(() => actions.delete(job)).catch(() => {});
+    }
     return job;
   }
 

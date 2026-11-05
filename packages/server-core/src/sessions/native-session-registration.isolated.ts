@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import type { AgentBackend } from '@mkagent/shared/agent/backend'
 import type { NativeSessionOwnerRecord, NativeSessionReference } from '@mkagent/shared/sessions'
+import type { NativeForkProof } from './native-session-fork'
 
 const root = mkdtempSync(join(tmpdir(), 'native-registration-'))
 const previous = { HOME: process.env.HOME, CONFIG_DIR: process.env.CONFIG_DIR }
@@ -18,6 +19,8 @@ type Harness = {
   sessions: Map<string, Managed>
   nativeOwners: { port(id: string): { onProjection(ref: unknown, backend: unknown, transport: object): Promise<void> } }
   persistNativeOwner(id: string, record: NativeSessionOwnerRecord): Promise<void>
+  persistNativeForkHistory(id: string, proof: NativeForkProof): Promise<void>
+  persistSession(managed: Managed): void
 }
 const cleanup: Array<() => Promise<void>> = []
 afterEach(async () => { for (const close of cleanup.splice(0).reverse()) await close() })
@@ -115,6 +118,52 @@ test('native reference and owner receipts serialize snapshots without losing eit
     expect(stored.nativeSessionOwner).toEqual(record)
     expect(stored.name).toBe('Concurrent name')
   } finally { release.resolve(); spy.mockRestore() }
+})
+
+test('fork history receipts retain input admitted and message updates arriving during strict IO', async () => {
+  const f = await fixture()
+  const early = { id: 'early', role: 'user' as const, content: 'initial text', timestamp: 1 }
+  f.managed.messagesLoaded = true
+  f.managed.messages.push(early)
+  await f.manager.flushSession(f.source.id)
+  const proof: NativeForkProof = {
+    sourcePath: getSessionPath(f.workspaceRoot, f.source.id),
+    tree: { reference: f.reference, header: {}, entries: [], entryIds: [], hasName: false },
+    record: { entryId: 'prepared-root', position: 'before', nativeLeafId: null, durableEntryId: null,
+      source: f.reference, inputId: early.id },
+  }
+  const entered = Promise.withResolvers<void>()
+  const release = Promise.withResolvers<void>()
+  const rename = fs.rename
+  const spy = spyOn(fs, 'rename').mockImplementation(async (from, to) => {
+    if (String(to) === getSessionFilePath(f.workspaceRoot, f.source.id)) {
+      entered.resolve()
+      await release.promise
+    }
+    return rename(from, to)
+  })
+  const writing = f.harness.persistNativeForkHistory(f.source.id, proof)
+  void writing.catch(error => entered.reject(error))
+  try {
+    await entered.promise
+    early.content = 'updated while persisting'
+    f.managed.messages.push({ id: 'late', role: 'user', content: 'late queued input', timestamp: 2, isQueued: true })
+    f.harness.persistSession(f.managed)
+    release.resolve()
+    await writing
+    await f.manager.flushSession(f.source.id)
+    const saved = loadSession(f.workspaceRoot, f.source.id)!
+    expect(saved.messages.map(row => row.id)).toEqual(['early', 'late'])
+    expect(saved.messages[0]?.content).toBe('updated while persisting')
+    expect(saved.messages[0]?.nativeHistory).toMatchObject({ order: 0, anchor: null, sourceSessionId: f.source.id })
+    expect(saved.messages[1]?.isQueued).toBe(true)
+    expect(f.managed.messageCount).toBe(2)
+    expect(f.managed.messageQueue).toHaveLength(0)
+  } finally {
+    release.resolve()
+    await writing.catch(() => {})
+    spy.mockRestore()
+  }
 })
 
 test('flushAllSessions waits for metadata admitted before its file writer starts', async () => {

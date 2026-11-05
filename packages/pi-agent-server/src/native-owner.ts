@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { PiWorkerScope } from '../../shared/src/agent/backend/pi/protocol.ts';
+import type { NativeSessionReference } from '../../shared/src/sessions/native-session-reference.ts';
 import type {
   PiNativeOwnerActivation, PiNativeOwnerControl, PiNativeOwnerEvent, PiNativeOwnerEventBody,
   PiNativeOwnerPhase, PiNativeOwnerRequest,
@@ -27,8 +28,11 @@ interface Transaction {
 }
 
 export interface NativeOwnerWork {
-  closeSource(signal: AbortSignal): Promise<void>;
-  bindTarget(activation: PiNativeOwnerActivation, signal: AbortSignal): Promise<string>;
+  closeSource(signal: AbortSignal): Promise<NativeSessionReference | void>;
+  bindTarget(activation: PiNativeOwnerActivation, signal: AbortSignal): Promise<{
+    nativeSessionId: string;
+    reference?: NativeSessionReference;
+  }>;
   runTarget(activation: PiNativeOwnerActivation, signal: AbortSignal): Promise<void>;
 }
 
@@ -72,18 +76,20 @@ export class NativeOwnerExchange {
       this.send(tx, { type: 'owner_prepare', transactionId: tx.id, ...request });
       await tx.prepared.promise;
       signal.throwIfAborted();
-      await work.closeSource(signal);
+      const closedReference = await work.closeSource(signal);
       tx.sourceClosed = true;
       signal.throwIfAborted();
       tx.phase = 'source_closed';
-      this.send(tx, { type: 'owner_source_closed', transactionId: tx.id });
+      this.send(tx, { type: 'owner_source_closed', transactionId: tx.id,
+        ...(closedReference ? { reference: closedReference } : {}) });
       const activated = await tx.activated.promise;
       signal.throwIfAborted();
       await this.transport.withTargetScope(activated.scope, async () => {
-        const nativeSessionId = await work.bindTarget(activated.value, signal);
+        const { nativeSessionId, reference } = await work.bindTarget(activated.value, signal);
         signal.throwIfAborted();
         tx.phase = 'target_bound';
-        this.send(tx, { type: 'owner_target_bound', transactionId: tx.id, nativeSessionId });
+        this.send(tx, { type: 'owner_target_bound', transactionId: tx.id, nativeSessionId,
+          ...(reference ? { reference } : {}) });
         await tx.committed.promise;
         signal.throwIfAborted();
         await work.runTarget(activated.value, signal);

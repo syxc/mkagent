@@ -2,13 +2,18 @@ import type { NativeSessionOwnerRecord, NativeSessionReference } from '@mkagent/
 import type {
   PiNativeOwnerBackend, PiNativeOwnerControl, PiNativeOwnerEvent, PiNativeOwnerHostPort,
   PiNativeWorkerTransfer,
+  PiNativeOwnerRequest,
 } from '../../../shared/src/agent/backend/pi/native-owner-protocol'
 import type { PiWorkerScope } from '../../../shared/src/agent/backend/pi/protocol'
 import type { InputOriginLease } from './input-origins'
+import type { NativeForkProof } from './native-session-fork'
 
 interface NativeOwnerHost {
   source(sessionId: string, backend: PiNativeOwnerBackend): { nativeSessionId: string; turnDone: Promise<void> }
   projection?(sessionId: string, reference: NativeSessionReference, backend: PiNativeOwnerBackend): Promise<void>
+  prepareFork?(sessionId: string, request: PiNativeOwnerRequest): Promise<NativeForkProof>
+  closeFork?(sourceId: string, targetId: string, proof: NativeForkProof, reference: NativeSessionReference): Promise<NativeForkProof>
+  bindFork?(targetId: string, proof: NativeForkProof, reference: NativeSessionReference): Promise<void>
   claim(sessionId: string, inputId: string): InputOriginLease | undefined
   createTarget(sourceSessionId: string, record: NativeSessionOwnerRecord): Promise<string>
   backend(sessionId: string): Promise<PiNativeOwnerBackend>
@@ -34,6 +39,7 @@ interface Transaction {
   target?: PiNativeOwnerBackend
   targetScope?: PiWorkerScope
   transfer?: PiNativeWorkerTransfer
+  fork?: NativeForkProof
   queue: Promise<void>
   cancelled: boolean
   committed: boolean
@@ -106,14 +112,18 @@ export class NativeSessionOwner {
       try {
         const source = this.host.source(sessionId, backend)
         if (!event.sourceNativeSessionId || source.nativeSessionId !== event.sourceNativeSessionId) throw new Error('Native source session identity does not match')
-        if (event.operation.type !== 'new') throw new Error('Native fork and switch require a stable session path and anchor projection (D3.4)')
-        if (event.operation.parentSession !== undefined) throw new Error('Native parentSession requires a stable native path mapping (D3.4)')
+        if (event.operation.type === 'switch') throw new Error('Native switch requires a stable session path and owner release (D3.4)')
+        if (event.operation.type === 'new' && event.operation.parentSession !== undefined) throw new Error('Native parentSession requires a stable native path mapping (D3.4)')
+        if (event.operation.type === 'fork' && (!event.sourceReference || !this.host.projection
+          || !this.host.prepareFork || !this.host.closeFork || !this.host.bindFork)) {
+          throw new Error('Native fork requires a registered projection and exact anchor (D3.4)')
+        }
         let interrupt!: () => void
         const interrupted = new Promise<void>(done => { interrupt = done })
         const tx: Transaction = {
           record: {
             transactionId: event.transactionId, role: 'source', sourceSessionId: sessionId,
-            sourceNativeSessionId: event.sourceNativeSessionId, operation: 'new', phase: 'preparing',
+            sourceNativeSessionId: event.sourceNativeSessionId, operation: event.operation.type, phase: 'preparing',
             committed: false, callbacks: 'blocked',
           },
           source: backend, sourceScope: { ownerSessionId: sessionId, runtimeGeneration: event.runtimeGeneration },
@@ -124,6 +134,12 @@ export class NativeSessionOwner {
         this.transactions.set(event.transactionId, tx)
         this.locks.set(sessionId, tx)
         return this.enqueue(tx, async () => {
+          if (event.operation.type === 'fork') {
+            await this.host.projection!(sessionId, event.sourceReference!, backend)
+            this.check(tx)
+            tx.fork = await this.host.prepareFork!(sessionId, event)
+            tx.record = { ...tx.record, fork: tx.fork.record }
+          }
           await this.save(tx, 'source', 'preparing')
           const targetId = await this.host.createTarget(sessionId, tx.record)
           tx.record = { ...tx.record, targetSessionId: targetId }
@@ -146,16 +162,28 @@ export class NativeSessionOwner {
     if (!fromSource && !fromTarget) return
     return this.enqueue(tx, async () => {
       if (event.type === 'owner_source_closed' && fromSource && tx.record.phase === 'prepared') {
+        if (tx.fork && !event.reference) throw new Error('Native fork is missing its closed source reference')
+        if (event.reference) await this.host.projection?.(sessionId, event.reference, backend)
+        this.check(tx)
         // Detaching pins the closed source connection and finishes its generator.
         // Adoption still waits for product persistence, listeners and runtime hooks.
         tx.transfer = await tx.source.detachForOwner()
         if (tx.transfer.transport !== transport || !sameScope(tx.transfer.sourceScope, tx.sourceScope)) throw new Error('Native transfer identity does not match')
         await Promise.race([tx.sourceDone, tx.interrupted])
         this.check(tx)
-        await this.save(tx, 'source', 'source_closed')
         const targetId = tx.record.targetSessionId!
+        if (tx.fork) {
+          tx.fork = await this.host.closeFork!(sessionId, targetId, tx.fork, event.reference!)
+          tx.record = { ...tx.record, fork: tx.fork.record }
+        }
+        await this.save(tx, 'source', 'source_closed')
         tx.target = await this.host.backend(targetId)
         const activation = await tx.target.prepareActivation()
+        if (tx.fork) {
+          activation.reason = 'fork'
+          activation.config = { ...activation.config, branchFromSessionPath: tx.fork.sourcePath,
+            nativeFork: { leaf: tx.fork.record.nativeLeafId, source: tx.fork.record.source } }
+        }
         this.check(tx)
         tx.targetScope = tx.target.adoptForOwner(tx.transfer, tx.record.transactionId)
         if (tx.targetScope.ownerSessionId !== targetId || tx.targetScope.runtimeGeneration <= tx.sourceScope.runtimeGeneration) throw new Error('Native adoption must advance target generation')
@@ -166,6 +194,12 @@ export class NativeSessionOwner {
         this.send(tx, { type: 'owner_activate', transactionId: tx.record.transactionId, activation })
       } else if (event.type === 'owner_target_bound' && fromTarget && tx.record.phase === 'activating') {
         if (!event.nativeSessionId) throw new Error('Native target session identity is missing')
+        if (tx.fork && (!event.reference || event.reference.nativeSessionId !== event.nativeSessionId)) {
+          throw new Error('Native fork is missing its bound target reference')
+        }
+        if (event.reference) await this.host.projection?.(sessionId, event.reference, backend)
+        this.check(tx)
+        if (tx.fork) await this.host.bindFork!(sessionId, tx.fork, event.reference!)
         // The target now holds the foreground lease. The gap pin and original
         // source control must not block another transfer on a fresh connection.
         tx.transfer?.release()

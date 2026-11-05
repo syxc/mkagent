@@ -6,7 +6,9 @@ import { addTurnUsage } from './turn-usage'
 import { SessionExtensionUI } from './extension-ui'
 import { InputOrigins } from './input-origins'
 import { NativeSessionOwner } from './native-session-owner'
-import type { PiNativeOwnerBackend } from '../../../shared/src/agent/backend/pi/native-owner-protocol'
+import { closeNativeForkProof, prepareNativeForkProof, verifyNativeForkTarget, type NativeForkProof } from './native-session-fork'
+import { partitionNativeProductHistory } from '../../../shared/src/sessions/native-product-history'
+import type { PiNativeOwnerBackend, PiNativeOwnerRequest } from '../../../shared/src/agent/backend/pi/native-owner-protocol'
 import type { BackgroundTaskOutput, StopBackgroundTaskResult } from '@mkagent/shared/protocol'
 import { launchOutputFile, readBackgroundTaskOutput } from './background-task-output'
 import type { EventSink, RpcServer } from '@mkagent/server-core/transport'
@@ -64,6 +66,7 @@ import { loadWorkspaceConfig } from '@mkagent/shared/workspaces'
 import {
   clearPendingPlanExecution as clearStoredPendingPlanExecution,
   createSession as createStoredSession,
+  createSessionHeader,
   deleteSession as deleteStoredSession,
   getPendingPlanExecution as getStoredPendingPlanExecution,
   getSessionPath as getSessionStoragePath,
@@ -88,6 +91,7 @@ import {
   type SessionTokenUsage,
   type StoredSession,
   type NativeSessionOwnerRecord,
+  type NativeSessionReference,
   parseNativeSessionReference,
 } from '@mkagent/shared/sessions'
 import { readFileAttachment } from '@mkagent/shared/utils'
@@ -99,6 +103,7 @@ import { rollbackFailedBranchCreation, sanitizeForTitle } from '@mkagent/server-
 import { validateArchiveTarget } from './archive-guards'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { isDeepStrictEqual } from 'node:util'
 import { generateConversationSummary } from '@mkagent/shared/agent/conversation-summary'
 
 let platform: PlatformServices | null = null
@@ -385,6 +390,11 @@ export class SessionManager implements ISessionManager {
     },
     claim: (sessionId, inputId) => this.inputClients.claim(sessionId, inputId),
     projection: (sessionId, reference, backend) => this.registerNativeProjection(sessionId, reference, backend),
+    prepareFork: (sessionId, request) => this.prepareNativeFork(sessionId, request),
+    closeFork: (sourceId, targetId, proof, reference) => this.closeNativeFork(sourceId, targetId, proof, reference),
+    bindFork: async (targetId, proof, reference) => {
+      verifyNativeForkTarget(proof, this.nativeForkIdentity(targetId, reference))
+    },
     createTarget: async (sourceId, record) => {
       const source = this.sessions.get(sourceId)
       if (!source) throw new Error('Native source session was deleted')
@@ -392,6 +402,7 @@ export class SessionManager implements ISessionManager {
         permissionMode: source.permissionMode, workingDirectory: source.workingDirectory ?? 'none',
         model: source.model, llmConnection: source.llmConnection, thinkingLevel: source.thinkingLevel,
         codingMode: source.codingMode,
+        ...(record.operation === 'fork' ? { parentSessionId: sourceId } : {}),
       }, { emitCreatedEvent: false, nativeSessionOwner: { ...record, role: 'target', unpublished: true } })
       return target.id
     },
@@ -1129,6 +1140,93 @@ export class SessionManager implements ISessionManager {
       snapshot.nativeSessionProjection = reference
       return () => { managed.nativeSessionProjection = reference }
     })
+  }
+
+  private nativeForkIdentity(sessionId: string, expected?: NativeSessionReference) {
+    const managed = this.sessions.get(sessionId)
+    const reference = managed?.nativeSessionProjection
+    if (!managed || this.deletingSessions.has(sessionId) || !reference
+      || (expected && !isDeepStrictEqual(reference, parseNativeSessionReference(expected)))) {
+      throw new Error('Native fork projection has no matching strict product receipt')
+    }
+    return { workspaceRootPath: managed.workspace.rootPath, sessionId,
+      nativeSessionId: reference.nativeSessionId, reference }
+  }
+
+  private async persistNativeForkHistory(sessionId: string, proof: NativeForkProof): Promise<void> {
+    await this.persistNativeMetadata(sessionId, (snapshot, managed) => {
+      const history = partitionNativeProductHistory(snapshot, { ...proof.tree, leaf: proof.tree.reference.leaf }, {
+        sourceSessionId: sessionId, targetSessionId: sessionId, leaf: proof.tree.reference.leaf,
+        sourceOnlyMessageIds: new Set(proof.record.inputId ? [proof.record.inputId] : []),
+      })
+      Object.assign(snapshot, history)
+      return () => {
+        // Strict metadata IO can overlap new input admission and background events.
+        // Preserve their current fields and placement while applying captured history.
+        const active = new Set(managed.messages.map(row => row.id))
+        const rows = new Map([...(managed.nativeArchivedMessages ?? []), ...managed.messages.map(messageToStored)]
+          .map(row => [row.id, row]))
+        const placement = new Map(history.nativeArchivedMessages.map(row => [row.id, false]))
+        for (const row of history.messages) placement.set(row.id, true)
+        const tags = new Map([...history.messages, ...history.nativeArchivedMessages].map(row => [row.id, row.nativeHistory]))
+        const next: typeof history = { messages: [], nativeArchivedMessages: [] }
+        for (const row of rows.values()) {
+          if (tags.has(row.id)) row.nativeHistory = tags.get(row.id)
+          const destination = (placement.get(row.id) ?? active.has(row.id)) ? next.messages : next.nativeArchivedMessages
+          destination.push(row)
+        }
+        const order = (a: typeof next.messages[number], b: typeof next.messages[number]) =>
+          (a.nativeHistory?.order ?? Number.MAX_SAFE_INTEGER) - (b.nativeHistory?.order ?? Number.MAX_SAFE_INTEGER)
+        managed.messages = next.messages.sort(order).map(storedToMessage)
+        managed.nativeArchivedMessages = next.nativeArchivedMessages.sort(order)
+        const { preview, messageCount, lastMessageRole, lastFinalMessageId } = createSessionHeader(this.toStored(managed))
+        Object.assign(managed, { preview, messageCount, lastMessageRole, lastFinalMessageId })
+      }
+    })
+  }
+
+  private async prepareNativeFork(sessionId: string, request: PiNativeOwnerRequest): Promise<NativeForkProof> {
+    const proof = prepareNativeForkProof(this.nativeForkIdentity(sessionId), request)
+    await this.persistNativeForkHistory(sessionId, proof)
+    return proof
+  }
+
+  private async closeNativeFork(sourceId: string, targetId: string, prepared: NativeForkProof,
+    reference: NativeSessionReference): Promise<NativeForkProof> {
+    const source = this.sessions.get(sourceId)
+    const target = this.sessions.get(targetId)
+    if (!source || !target || source.workspace.id !== target.workspace.id
+      || source.workspace.rootPath !== target.workspace.rootPath
+      || target.nativeSessionOwner?.transactionId !== source.nativeSessionOwner?.transactionId
+      || !target.nativeSessionOwner?.unpublished) throw new Error('Native fork target is outside its prepared owner')
+    const proof = closeNativeForkProof(prepared, this.nativeForkIdentity(sourceId, reference))
+    await this.persistNativeForkHistory(sourceId, proof)
+    this.ensureMessagesLoaded(source)
+    const history = partitionNativeProductHistory(this.toStored(source), { ...proof.tree, leaf: proof.tree.reference.leaf }, {
+      sourceSessionId: sourceId, targetSessionId: targetId, leaf: proof.record.nativeLeafId,
+      sourceOnlyMessageIds: new Set(proof.record.inputId ? [proof.record.inputId] : []),
+    })
+    const targetPath = getSessionStoragePath(target.workspace.rootPath, targetId)
+    copyReferencedSessionFiles([...history.messages, ...history.nativeArchivedMessages], proof.sourcePath, targetPath)
+    const copied = remapSessionFileReferences(history, proof.sourcePath, targetPath)
+    await this.persistNativeMetadata(targetId, (snapshot, managed) => {
+      if (managed !== target || snapshot.messages.length || snapshot.nativeArchivedMessages?.length) {
+        throw new Error('Native fork target already has product history')
+      }
+      Object.assign(snapshot, copied)
+      snapshot.name = proof.tree.hasName ? proof.tree.reference.name ?? '' : source.name
+      snapshot.lastMessageAt = copied.messages.at(-1)?.timestamp
+      const { preview, messageCount, lastMessageRole, lastFinalMessageId } = createSessionHeader(snapshot)
+      return () => {
+        managed.messages = copied.messages.map(storedToMessage)
+        managed.nativeArchivedMessages = copied.nativeArchivedMessages
+        managed.messagesLoaded = true
+        managed.name = snapshot.name
+        managed.lastMessageAt = snapshot.lastMessageAt
+        Object.assign(managed, { preview, messageCount, lastMessageRole, lastFinalMessageId })
+      }
+    })
+    return proof
   }
 
   private async rollbackNativeTarget(sessionId: string, transactionId: string): Promise<void> {

@@ -7,6 +7,37 @@ import { defineExtension } from '@earendil-works/pi-durable';
 import { DurableKernel, type DurableKernelOptions } from './kernel.ts';
 import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
 
+test('handled commands complete while a preceding agent run is settling', async () => {
+  const root = await durableFixture([]);
+  await root.harness.close(BACKGROUND_CONTEXT);
+  const agentDir = join(root.directory, 'agent');
+  mkdirSync(agentDir);
+  const plugin = join(agentDir, 'marker.ts');
+  writeFileSync(plugin, `export default function(pi) {
+    pi.registerCommand('marker', { handler: async () => { pi.appendEntry('fixture-marker', {}); } });
+  }`);
+  const kernel = new DurableKernel({
+    sessionPath: join(root.directory, 'source'), cwd: root.directory, modelsSource: () => root.models,
+    toolsExtension: defineExtension({ name: 'empty' }), wrapCodingTool: tool => tool,
+    coding: { agentDir, resourcePolicy: 'host-only', extensionPaths: [plugin],
+      globalSettings: { cacheWarming: 'off', compaction: { enabled: false } } },
+    hooks: { emitEvent: () => {}, sessionToolCompleted: () => {}, prefetchToolCall: () => {},
+      isPrefetchableTool: () => false, debugLog: () => {} },
+  });
+  const native = kernel as unknown as { coding: { session: { isStreaming: boolean } } };
+  try {
+    await kernel.open({ model: { provider: 'faux', modelId: 'local' } });
+    // agent_end precedes settlement. A handled command can run in that interval.
+    Object.defineProperty(native.coding.session, 'isStreaming', { configurable: true, get: () => true });
+    expect(await kernel.submitPrompt('/marker')).toEqual({ handled: true, completed: true });
+    expect(root.calls).toHaveLength(0);
+  } finally {
+    Reflect.deleteProperty(native.coding.session, 'isStreaming');
+    await kernel.close();
+    rmSync(root.directory, { recursive: true, force: true });
+  }
+}, 15_000);
+
 test('native new preserves the command coroutine and setup/start/withSession order across a commit barrier', async () => {
   const root = await durableFixture([response('target answer')]);
   await root.harness.close(BACKGROUND_CONTEXT);

@@ -136,6 +136,12 @@ D2 的最小入口包括 `pi-conversation-flow.integration.test.ts`、`pi-permis
 | D3.4 关闭后副本前置 | kernel 原生 fork 必须携带关闭后引用，在路径改写、继承任务处理和 Harness 打开前验证复制的 journal。公开读取接口检查完整树、owner、版本、leaf 与 durable 映射可见性，复用投影编码核对身份和摘要。目标已有 durable store 或旧 transcript 时明确拒绝，所有原生 fork 均须经过复制与验证。产品关闭 ACK 接线仍待后续完成。 |
 | D3.4 关闭后副本证据 | SQLite、JSONL 的 store 替换和伪造摘要共 4 项用例先失败后通过。独立静态复核指出旧 transcript 目标会绕过验证，主线程另以合法及伪造引用的 4 项用例复现并修正，拒绝时未调用 startup。完整树、连续 fork、错 conversation 标记、伪造来源路径及冷进程恢复共 24 项、268 个断言通过。journal、投影和真实 host 集成共 22 份文件、231 项、1631 个断言通过；另筛选普通 kernel 分叉、旧历史、附件和恢复用例，38 项、360 个断言通过。 |
 | D3.4 关闭后副本检查 | 修正旁路后的 `validate:ci` 退出 0，lint 为 0 错误、107 项既有警告，隔离 Craft 来源审计覆盖 2083 份文件。首次服务类型检查误用引用缺失 base 配置的遗留 tsconfig，改用包内 CI typecheck 命令后通过，未修改遗留配置。未改固定上游生成层，沿用 `e964d3b` 的生成检查；本轮未运行全仓 `bun run test`。复核仅静态覆盖，没有独立执行测试或核验 Git；产品 fork/switch 继续拒绝。 |
+| D3.4 产品 fork | 已接通 prepare、source closed、target bound 三道严格产品引用校验。产品独立推导并核对 leaf、durable 锚点和 selectedText，关闭后允许合法 shutdown 追加，拒绝改写已准备的历史。激活前归档源产品行，复制完整活动与非活动附件；目标严格保存完整分区和最终名称，再经既有双边提交、独立发布回执与回调授权流程发布。此前“产品 native fork 继续拒绝”是前置阶段的状态，现已完成这一接线。 |
+| D3.4 产品 fork 证据 | proof、owner 和 JSONL parser 共 50 项、195 个断言通过；元数据登记文件的 5 项、21 个断言包含严格 IO 期间的新输入和消息更新。真实产品加 bundled worker 在 SQLite、JSONL 上通过 1 项、66 个断言，覆盖完整树、非活动产品附件、shutdown 追加及清空名称、同 PID 回调、连续 fork、删除源和中间目标后冷 worker 续谈。既有 NEW 独立进程用例为 1 项、65 个断言通过。 |
+| D3.4 命令完成修正 | 已复现 `agent_end` 早于 `agent_settled` 时，上一轮的 streaming 标志压住纯 handled 命令的完成回执。直接删除判断又会提前结束命令本轮发起的模型，新增断言实际发现该回归。现按原有 action scope 跟踪本轮前台 actions，handled 命令等待它们结束，再独立确认完成，不加入上一轮或后台工作。命令、原样扩展和 worker owner 共 15 项、129 个断言通过，包含受控旧 streaming 标志及模型命令收到本轮 settled 后才完成。该标志用例模拟条件，不声称复现了完整调度交错。 |
+| D3.4 检查与限制 | 最终 `validate:ci` 退出 0，隔离 Craft 来源审计覆盖 2088 份文件。Lint 为 0 错误、107 项既有警告；固定上游生成层没有改动。取消、reload 和输入身份另有 21 项、96 个断言通过。本轮没有运行全仓 `bun run test`。首次 CI 因新增 parser 测试的字面量类型被拓宽而失败，补充显式类型后通过。两份 `.isolated.ts` 误放在同一进程时 NEW 用例因配置缓存而失败，按独立进程重跑通过；不将合跑结果算作通过。 |
+| D3.4 产品 fork 复核 | 独立静态复核覆盖 fork proof、产品 owner 与 SessionManager 接线，以及本轮 host action scope 和 kernel 完成边界，未发现高置信阻断问题。复核核对了相关测试源码，没有独立运行测试；上述运行结果由主线程取得。 |
+| D3.4 后续边界 | 普通完成事件后投影文件与异步产品登记可以暂时不同步；fork 的三道严格回执单独构成屏障，冷续谈用例不据此声称普通完成已同步登记。独立静态分析另提出 release 与 fork 关闭可能互等，尚无运行复现，本轮记账并停止扩展排查。可信来源仍要求工作区所有者、操作锁与关闭后复核，不声称防住任意目录交换。switch、带 parentSession 的 new、全局名称同步及 D3.5 后续工作仍未完成。 |
 
 ## D3 实施顺序
 
@@ -191,6 +197,8 @@ switch 仅解析同工作区已登记且身份、revision、摘要一致的规�
 产品 fork 的关闭 ACK 须携带最终投影引用，并等待产品严格保存后再激活目标。复制后的 store 在路径改写、Harness 打开、继承任务处理和恢复前，须通过公开只读接口解析 journal，校验版本、owner、完整树、leaf、名称与映射，并以投影共用编码核对已登记摘要。不得调用会初始化或迁移状态的 `NativeSessionJournal.open()` 来验算副本。随后还须验证 durable 映射在所选 conversation 中可见，以及原生 envelope 的 ID、parentId 和 type；连续 fork 可能只改写 journal 的文件路径，不能要求旧 envelope 的全部 data 与当前 journal 相等。该检查不声称证明整个 store 的逐字节身份或任意目录交换安全。
 
 原生 fork 只接受全新目标历史，不能因目标存在旧 transcript 而退化为 resume，也不能跳过源复制与验证。验证只对副本打开存储适配器，公开 journal 解析本身不写入；适配器初始化和关闭可能改变副本元数据，不视为物理文件只读。
+
+产品 owner 在 prepare 阶段严格登记引用，读取可信完整树，独立推导并逐字段核对 worker 的 native leaf、durable 锚点及 selectedText。源关闭后允许 shutdown 合法追加 entry 和名称，但原有 entry 与 durable 映射保持不变。最终引用严格保存并结束源 generator 后，再复制全部产品活动、归档行及其文件。目标绑定后严格登记新引用，验证新 native 身份、源父路径、准确 leaf、完整重映射树及原始映射，再保存双边提交和独立发布回执。
 
 ## 验证与完成规则
 

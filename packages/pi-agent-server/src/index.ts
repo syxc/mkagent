@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { BackgroundShells } from './background-shell.ts';
+import { readNativeSessionDescriptor } from './storage/native-session-projection.ts';
 import type { AgentEvent } from '@mkagent/core/types';
 /**
  * Pi Agent Server
@@ -818,6 +819,8 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
           await closeMcpConnections(loadedMcp.connections);
           if (mcpLoad === loadedMcp) mcpLoad = null;
           codingUI?.close();
+          const { entryIds: _entryIds, ...reference } = await readNativeSessionDescriptor(sessionPath);
+          return reference;
         },
         bindTarget: async (activation, signal) => {
           // Register before initialize's first await. Never join source kernelPromise
@@ -832,7 +835,8 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
           ownerLoading = loading;
           try {
             target = await loading;
-            return target.sessionId!;
+            const { entryIds: _entryIds, ...reference } = await readNativeSessionDescriptor(activation.config.sessionPath);
+            return { nativeSessionId: target.sessionId!, reference };
           } finally {
             if (ownerLoading === loading) ownerLoading = null;
           }
@@ -877,6 +881,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
       thinkingLevel: THINKING_TO_PI[config.thinkingLevel as keyof typeof THINKING_TO_PI],
       ...(config.branchFromSessionPath ? { branchFromSessionPath: config.branchFromSessionPath } : {}),
       ...(config.branchFromSdkTurnId ? { branchFromSdkTurnId: config.branchFromSdkTurnId } : {}),
+      ...(config.nativeFork ? { nativeFork: config.nativeFork } : {}),
     });
     assertOwner();
     k.updateTools(buildToolsExtension(cwd, loadedMcp.tools));

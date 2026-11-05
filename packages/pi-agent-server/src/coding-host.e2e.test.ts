@@ -342,13 +342,15 @@ describe('coding extensions on the production durable host', () => {
       getSessionPath: () => sessionPath, debugLog: () => {},
     });
     const errors: string[] = [];
+    let settled = 0;
     const options = {
       sessionPath, cwd: root.directory, modelsSource: () => root.models,
       toolsExtension: defineExtension({ name: 'mkagent-tools', tools: createBuiltinTools(root.directory).map(wrap) }),
       coding: { agentDir, extensionPaths: [resolve(import.meta.dir, '../../pi-durable-coding/test/fixtures/upstream/hello.ts'), plugin] },
       wrapCodingTool: wrap,
       hooks: {
-        emitEvent: () => {}, sessionToolCompleted: () => {}, prefetchToolCall: () => {},
+        emitEvent: event => { if (event.type === 'agent_settled') settled++; },
+        sessionToolCompleted: () => {}, prefetchToolCall: () => {},
         isPrefetchableTool: () => false, debugLog: (message: string) => errors.push(message),
       },
     };
@@ -390,11 +392,15 @@ describe('coding extensions on the production durable host', () => {
     expect(entries.find(entry => entry.customType === 'approved-input'
       && (entry.data as { tool: string }).tool === 'hello')?.data)
       .toEqual({ tool: 'hello', input: { name: 'approved-name' } });
-    await kernel.submitPrompt('/extension-raw');
+    const beforeRaw = settled;
+    expect(await kernel.submitPrompt('/extension-raw')).toEqual({ handled: true, completed: true });
+    expect(settled).toBe(beforeRaw + 1);
     await kernel.waitForIdle();
     expect(root.calls[3].messages.filter(message => message.role !== 'system').slice(-2).map(message => message.content))
       .toEqual([[{ type: 'text', text: '/say transformed' }], [{ type: 'text', text: 'before-agent-message' }]]);
-    await kernel.submitPrompt('/extension-expanded');
+    const beforeExpanded = settled;
+    expect(await kernel.submitPrompt('/extension-expanded')).toEqual({ handled: true, completed: true });
+    expect(settled).toBe(beforeExpanded + 1);
     await kernel.waitForIdle();
     expect(root.calls[4].messages.filter(message => message.role !== 'system').slice(-2).map(message => message.content))
       .toEqual([[{ type: 'text', text: 'Say transformed' }], [{ type: 'text', text: 'before-agent-message' }]]);

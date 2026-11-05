@@ -833,7 +833,9 @@ export class DurableKernel {
       completed = await tail;
     }
     if (!this.closing) await this.coding?.flush();
-    return { handled, completed: completed && !this.coding?.isStreaming };
+    // A preceding run can still be settling after agent_end. Its streaming
+    // flag must not suppress completion of this command's finished admission.
+    return { handled, completed };
   }
 
   async steer(message: string, hostMessageId?: string): Promise<void> {

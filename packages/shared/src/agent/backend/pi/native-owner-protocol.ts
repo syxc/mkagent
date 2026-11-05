@@ -19,6 +19,7 @@ export type PiNativeOwnerPhase =
 export interface PiNativeOwnerRequest {
   inputId?: string;
   sourceNativeSessionId: string;
+  sourceReference?: NativeSessionReference;
   operation: PiNativeOwnerOperation;
   fork?: PiNativeForkPlan;
 }
@@ -39,8 +40,8 @@ export type PiNativeOwnerControl =
 
 export type PiNativeOwnerEventBody =
   | ({ type: 'owner_prepare'; transactionId: string } & PiNativeOwnerRequest)
-  | { type: 'owner_source_closed'; transactionId: string }
-  | { type: 'owner_target_bound'; transactionId: string; nativeSessionId: string }
+  | { type: 'owner_source_closed'; transactionId: string; reference?: NativeSessionReference }
+  | { type: 'owner_target_bound'; transactionId: string; nativeSessionId: string; reference?: NativeSessionReference }
   | { type: 'owner_finished'; transactionId: string; outcome: 'complete' | 'error' | 'cancelled'; error?: string }
   | { type: 'owner_failed'; transactionId: string; phase: PiNativeOwnerPhase; sourceClosed: boolean; error: string };
 

@@ -50,9 +50,10 @@ export function nativeOwnerActions(host: NativeOwnerActionsHost): Pick<Extension
       if (durableEntryId === undefined) throw new Error(`Native branch anchor not persisted: ${nativeLeafId}`);
       const selectedText = position === 'before' && entry.type === 'message' && entry.message.role === 'user'
         ? textContent(entry.message.content) : undefined;
+      const { entryIds: _entryIds, ...sourceReference } = await source.projection.flush();
       await host.replace({
         sourceNativeSessionId: source.session.sessionId, operation: { type: 'fork', entryId, position },
-        fork: { nativeLeafId, durableEntryId, selectedText },
+        sourceReference, fork: { nativeLeafId, durableEntryId, selectedText },
       }, (target, signal) => startTarget(target, 'fork', options?.withSession, signal));
       return { cancelled: false, selectedText };
     },

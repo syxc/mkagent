@@ -1,4 +1,5 @@
 import type { PiNativeOwnerControl, PiNativeOwnerEvent, PiNativeWorkerTransfer } from './native-owner-protocol.ts';
+import { parseNativeSessionReference } from '../../../sessions/native-session-reference.ts';
 import type { PiWorkerScope } from './protocol.ts';
 import type { PiWorkerConnection, PiWorkerLease } from './worker-connection.ts';
 
@@ -61,10 +62,14 @@ export function parseOwnerEvent(message: Record<string, unknown>, scope: PiWorke
   const base = { ...scope, transactionId: message.transactionId };
   switch (message.type) {
     case 'owner_source_closed':
-      return { ...base, type: message.type };
-    case 'owner_target_bound':
+    case 'owner_target_bound': {
+      const reference = parseNativeSessionReference(message.reference);
+      if (message.reference !== undefined && !reference) return null;
+      const projection = reference ? { reference } : {};
+      if (message.type === 'owner_source_closed') return { ...base, type: message.type, ...projection };
       return typeof message.nativeSessionId === 'string' && message.nativeSessionId
-        ? { ...base, type: message.type, nativeSessionId: message.nativeSessionId } : null;
+        ? { ...base, type: message.type, nativeSessionId: message.nativeSessionId, ...projection } : null;
+    }
     case 'owner_finished':
       if (message.outcome !== 'complete' && message.outcome !== 'error' && message.outcome !== 'cancelled') return null;
       if (message.error !== undefined && typeof message.error !== 'string') return null;
@@ -95,7 +100,10 @@ export function parseOwnerEvent(message: Record<string, unknown>, scope: PiWorke
           || (value.selectedText !== undefined && typeof value.selectedText !== 'string')) return null;
         fork = { nativeLeafId: value.nativeLeafId, durableEntryId: value.durableEntryId, selectedText: value.selectedText };
       }
-      return { ...base, type: message.type, operation, fork, inputId: message.inputId, sourceNativeSessionId: message.sourceNativeSessionId };
+      const sourceReference = parseNativeSessionReference(message.sourceReference);
+      if (message.sourceReference !== undefined && !sourceReference) return null;
+      return { ...base, type: message.type, operation, fork, inputId: message.inputId, sourceNativeSessionId: message.sourceNativeSessionId,
+        ...(sourceReference ? { sourceReference } : {}) };
     }
     default:
       return null;

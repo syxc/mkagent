@@ -55,7 +55,15 @@ export interface NativeSessionOwnerRecord {
   targetSessionId?: string;
   sourceNativeSessionId: string;
   targetNativeSessionId?: string;
-  operation: 'new';
+  operation: 'new' | 'fork';
+  fork?: {
+    entryId: string;
+    position: 'before' | 'at';
+    nativeLeafId: string | null;
+    durableEntryId: number | null;
+    source: NativeSessionReference;
+    inputId?: string;
+  };
   phase: 'preparing' | 'prepared' | 'source_closed' | 'activating' | 'target_bound' | 'committed' | 'finished' | 'aborted' | 'failed';
   committed: boolean;
   callbacks: 'blocked' | 'authorized' | 'finished' | 'interrupted';

@@ -1,4 +1,5 @@
 import type { CustomEndpointConfig } from '../../../config/llm-connections.ts';
+import type { NativeSessionReference } from '../../../sessions/native-session-reference.ts';
 
 export type PiWorkerCredential =
   | { type: 'api_key'; key: string }
@@ -28,6 +29,7 @@ export interface PiWorkerInitConfig {
   branchFromSdkSessionId?: string;
   branchFromSessionPath?: string;
   branchFromSdkTurnId?: string;
+  nativeFork?: { leaf: string | null; source: NativeSessionReference };
   customEndpoint?: CustomEndpointConfig;
   customModels?: Array<string | { id: string; contextWindow?: number; supportsImages?: boolean }>;
   autoCompactWindow?: number;

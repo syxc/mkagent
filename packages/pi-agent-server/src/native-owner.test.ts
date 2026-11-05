@@ -32,7 +32,7 @@ function fixture(overrides: Partial<NativeOwnerWork> = {}) {
   });
   const work: NativeOwnerWork = {
     async closeSource() { expect(scopes.getStore()).toEqual(source); calls.push('close'); },
-    async bindTarget() { expect(scopes.getStore()).toEqual(target); calls.push('bind'); return 'native-target'; },
+    async bindTarget() { expect(scopes.getStore()).toEqual(target); calls.push('bind'); return { nativeSessionId: 'native-target' }; },
     async runTarget() { expect(scopes.getStore()).toEqual(target); calls.push('callbacks'); },
     ...overrides,
   };
@@ -122,7 +122,7 @@ test('abort during source teardown records the completed close without activatin
 test('an uncommitted target abort cannot run callbacks or roll a new request into the old coroutine', async () => {
   const f = fixture();
   await expect(f.exchange.replace(source, request, {
-    async closeSource() {}, async bindTarget() { return 'unexpected'; }, async runTarget() {},
+    async closeSource() {}, async bindTarget() { return { nativeSessionId: 'unexpected' }; }, async runTarget() {},
   })).rejects.toThrow('already in progress');
   f.prepare();
   await f.next('owner_source_closed');
