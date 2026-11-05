@@ -29,10 +29,20 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
   writeFileSync(join(agentDir, 'settings.json'), '{"cacheWarming":"off","compaction":{"enabled":false}}')
   const probe = join(root, 'probe.json')
   const reloadTrigger = join(root, 'reload-trigger')
+  const removeTrigger = join(root, 'remove-trigger')
+  const nativeServer = { command: process.execPath,
+    args: [join(appRoot, 'packages/pi-agent-server/src/test-fixtures/mcp-server-resources.ts')], exposure: 'direct' }
   writeFileSync(join(extensions, 'oauth-probe.ts'), `
     import { watch, writeFileSync } from 'node:fs';
     export default function(pi) {
       let watcher;
+      const nativeServer = ${JSON.stringify(nativeServer)};
+      pi.registerMcpServer('native', nativeServer);
+      pi.registerMcpServer('issues', nativeServer);
+      pi.registerCommand('oauth-native-hide', { handler: () =>
+        pi.registerMcpServer('native', { ...nativeServer, exposure: 'hidden' }) });
+      pi.registerCommand('oauth-native-remove', { handler: () => pi.unregisterMcpServer('native') });
+      pi.registerCommand('oauth-native-add', { handler: () => pi.registerMcpServer('native', nativeServer) });
       pi.registerCommand('oauth-probe', { handler: () =>
         writeFileSync(${JSON.stringify(probe)}, JSON.stringify(pi.getAllTools().map(tool => tool.name))) });
       pi.registerCommand('oauth-arm-reload', { handler: (_, ctx) => {
@@ -48,6 +58,22 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
   `)
   const oauth = await startOAuthMcpServer()
   cleanup.defer(() => { void oauth.close() })
+  writeFileSync(join(extensions, 'native-login.ts'), `
+    import { watch } from 'node:fs';
+    export default function(pi) {
+      let watcher;
+      pi.registerCommand('oauth-native-login-add', { handler: () =>
+        pi.registerMcpServer('native-login', { url: ${JSON.stringify(oauth.url)}, exposure: 'direct' }) });
+      pi.registerCommand('oauth-native-login-arm-remove', { handler: () => {
+        watcher = watch(${JSON.stringify(root)}, (_, name) => {
+          if (name !== 'remove-trigger') return;
+          watcher.close();
+          pi.unregisterMcpServer('native-login');
+        });
+      } });
+      pi.on('session_shutdown', () => watcher?.close());
+    }
+  `)
   writeFileSync(join(agentDir, 'mcp.json'), JSON.stringify({
     mcpServers: { issues: { url: oauth.url, exposure: 'direct' } },
   }))
@@ -110,19 +136,27 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
     await run('/oauth-probe')
     return JSON.parse(readFileSync(probe, 'utf8')) as string[]
   }
+  const waitTools = async (present: boolean) => {
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const names = await tools()
+      if (names.includes('mcp__native__hello') === present) return names
+      await Bun.sleep(10)
+    }
+    throw new Error(`Native MCP tool presence did not become ${present}`)
+  }
   const status = async () => {
     const start = updates.length
     await run('/mcp status')
     return updates.slice(start).flatMap(update => update.snapshot.widgets)
       .findLast(widget => widget.key === 'mcp-status')?.lines.join('\n')
   }
-  const beginLogin = async () => {
+  const beginLogin = async (server = 'issues') => {
     const start = updates.length
-    const pending = run('/mcp login issues')
+    const pending = run(`/mcp login ${server}`)
     const update = await waitUpdate(start, update => update.snapshot.requests.some(request =>
-      request.method === 'input' && request.title === 'MCP sign-in: issues'))
+      request.method === 'input' && request.title === `MCP sign-in: ${server}`))
     const request = update.snapshot.requests.find(request => request.method === 'input')!
-    const url = update.snapshot.widgets.find(widget => widget.key === 'mcp-login-issues')!.lines[1]!
+    const url = update.snapshot.widgets.find(widget => widget.key === `mcp-login-${server}`)!.lines[1]!
     return { pending, update, request, url }
   }
   const respond = (login: Awaited<ReturnType<typeof beginLogin>>, value?: string) =>
@@ -131,6 +165,13 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
         ...(value === undefined ? { cancelled: true } : { value }) })
   expect(await status()).toContain('issues: needs-auth')
   expect(await tools()).not.toContain('mcp__issues__whoami')
+  expect(await tools()).toContain('mcp__native__hello')
+  expect(await tools()).not.toContain('mcp__issues__hello')
+  await run('/oauth-native-hide')
+  expect(await waitTools(false)).not.toContain('mcp__native__hello')
+  await run('/oauth-native-remove')
+  await run('/oauth-native-add')
+  expect(await waitTools(true)).toContain('mcp__native__hello')
   expect(oauth.authorizations).toHaveLength(0)
   expect(oauth.registrations).toHaveLength(0)
   let login = await beginLogin()
@@ -141,6 +182,7 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
   await run('/mcp logout issues')
   expect(await status()).toContain('issues: needs-auth')
   expect(await tools()).not.toContain('mcp__issues__whoami')
+  expect(await tools()).toContain('mcp__native__hello')
   expect(readFileSync(join(agentDir, 'mcp-auth.json'), 'utf8').trim()).toBe('{}')
 
   login = await beginLogin()
@@ -177,5 +219,20 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
   expect(await status()).toContain('issues: needs-auth')
   expect(await tools()).not.toContain('mcp__issues__whoami')
   expect(oauth.tokenRequests.filter(request => request.get('grant_type') === 'authorization_code')).toHaveLength(2)
+  expect(await tools()).toContain('mcp__native__hello')
+  await run('/oauth-native-login-add')
+  for (let attempt = 0; !(await status())?.includes('native-login: needs-auth'); attempt++) {
+    if (attempt >= 50) throw new Error('Native registered OAuth server never required sign-in')
+    await Bun.sleep(10)
+  }
+  await run('/oauth-native-login-arm-remove')
+  login = await beginLogin('native-login')
+  writeFileSync(removeTrigger, '')
+  await login.pending
+  expect(await status()).not.toContain('native-login:')
+  expect(await respond(login, 'http://127.0.0.1/callback?code=late')).toBe(false)
+  const nativeAuth = JSON.parse(readFileSync(join(agentDir, 'mcp-auth.json'), 'utf8'))
+  expect(nativeAuth[`mcp__native_login|${oauth.url}`]).toBeDefined()
+  expect(nativeAuth[`mcp__native_login|${oauth.url}`].tokens).toBeUndefined()
   expect(modelRequests).toBe(0)
 }, 120_000)

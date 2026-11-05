@@ -7,10 +7,11 @@
  */
 import { join } from 'node:path';
 import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/pi-durable-coding/mcp-oauth';
+import type { RegisteredMcpServer } from '@mkagent/pi-durable-coding/native';
 import type { ToolRegistration } from '@earendil-works/pi-durable';
 import type { CodemodeNamespace } from '@earendil-works/pi-durable/codemode';
 import { loadMcpConfig } from './config.ts';
-import { getMcpToolExposure, mcpNamespace, type McpServerEntry } from './mcp-servers.ts';
+import { getMcpToolExposure, mcpNamespace, validateMcpServerConfig, type McpServerEntry } from './mcp-servers.ts';
 import { McpServerConnection, createDefaultTransport } from './runtime.ts';
 import { McpServerLog } from './log.ts';
 import { createMcpResourceToolDefinitions } from './resources.ts';
@@ -27,6 +28,7 @@ export interface McpToolsLoadOptions {
   version: string;
   debugLog: (message: string) => void;
   credentials?: McpOAuthCredentialStore;
+  beforeDisconnect?: (connections: readonly McpServerConnection[]) => Promise<void>;
   onUpdate?: (tools: ToolRegistration[], namespaces: CodemodeNamespace[]) => void;
 }
 
@@ -39,6 +41,9 @@ export interface McpToolsLoadResult {
   /** Whether the config enables the codemode tool for MCP tools (default true). */
   autoEnableCodemode: boolean;
   errors: string[];
+  readonly closed: boolean;
+  updateRegisteredServers(servers: readonly RegisteredMcpServer[]): Promise<void>;
+  close(): Promise<void>;
 }
 
 /** Server-level exposure of an entry, before per-tool overrides. */
@@ -63,40 +68,46 @@ export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToo
 
   const connections: McpServerConnection[] = [];
   const errors: string[] = [];
+  let closed = false;
+  let closing: Promise<void> | undefined;
+  let changes = Promise.resolve();
   let update: (() => void) | undefined;
-  await Promise.all(
-    enabled.map(async entry => {
-      const connection = new McpServerConnection({
-        entry,
-        cwd: options.cwd,
-        createTransport: createDefaultTransport,
-        onTools: () => update?.(),
-        onChange: () => update?.(),
-        log,
-        version: options.version,
-        credentials,
-      });
-      try {
-        await connection.getClient();
-        connections.push(connection);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (connection.state === 'needs-auth') {
-          connections.push(connection);
-          options.debugLog(`MCP server "${entry.name}" needs sign-in`);
-          return;
-        }
-        errors.push(`MCP server "${entry.name}": ${message}`);
-        options.debugLog(`MCP server "${entry.name}" unavailable: ${message}`);
-        await connection.close().catch(() => undefined);
+  const connect = async (entry: McpServerEntry) => {
+    if (closed) return;
+    const connection = new McpServerConnection({
+      entry,
+      cwd: options.cwd,
+      createTransport: createDefaultTransport,
+      onTools: () => update?.(),
+      onChange: () => update?.(),
+      log,
+      version: options.version,
+      credentials,
+    });
+    connections.push(connection);
+    try {
+      await connection.getClient();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (connection.state === 'needs-auth') {
+        options.debugLog(`MCP server "${entry.name}" needs sign-in`);
+        return;
       }
-    }),
-  );
+      const index = connections.indexOf(connection);
+      if (index !== -1) connections.splice(index, 1);
+      if (closed) return;
+      errors.push(`MCP server "${entry.name}": ${message}`);
+      options.debugLog(`MCP server "${entry.name}" unavailable: ${message}`);
+      await connection.close().catch(() => undefined);
+    }
+  };
+  await Promise.all(enabled.map(connect));
   connections.sort((a, b) => a.name.localeCompare(b.name));
 
   const tools: ToolRegistration[] = [];
   const namespaces: CodemodeNamespace[] = [];
   update = () => {
+    if (closed) return;
     try {
       const registrations = buildMcpRegistrations(connections, config.autoEnableCodemode ?? true);
       options.onUpdate?.(registrations.tools, registrations.namespaces);
@@ -108,12 +119,82 @@ export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToo
   };
   update();
 
+  const sameEntry = (left: McpServerEntry | undefined, right: McpServerEntry | undefined) =>
+    left !== undefined && right !== undefined && left.source === right.source
+      && JSON.stringify(left.config) === JSON.stringify(right.config);
+  const updateRegisteredServers = (servers: readonly RegisteredMcpServer[]) => {
+    if (closed) return Promise.reject(new Error('MCP runtime is closed'));
+    const captured = structuredClone(servers);
+    const apply = changes.then(async () => {
+      if (closed) return;
+      const next = new Map<string, McpServerEntry>();
+      for (const { name, config: raw, extensionPath } of captured) {
+        if (config.servers.some(entry => mcpNamespace(entry.name) === mcpNamespace(name))) continue;
+        const configEntry = validateMcpServerConfig(name, raw);
+        if (typeof configEntry === 'string' || configEntry.auth) {
+          const message = typeof configEntry === 'string' ? configEntry
+            : `server "${name}": auth is only allowed in the global mcp.json`;
+          if (!errors.includes(message)) {
+            errors.push(message);
+            options.debugLog(`MCP extension config: ${message}`);
+          }
+          continue;
+        }
+        next.set(name, { name, config: configEntry, source: extensionPath, scope: 'extension' });
+      }
+      // Only retained connections count as applied; declarations survive failed attempts.
+      const current = new Map(connections.filter(connection => connection.entry.scope === 'extension'
+        && !connection.closed).map(connection => [connection.name, connection.entry]));
+      const removed = connections.filter(connection => connection.entry.scope === 'extension'
+        && (connection.closed || !sameEntry(connection.entry, next.get(connection.name))));
+      const added = [...next.values()].filter(entry => entry.config.enabled !== false
+        && !sameEntry(current.get(entry.name), entry));
+      if (!removed.length && !added.length) return;
+      if (removed.length) {
+        for (const connection of removed) connections.splice(connections.indexOf(connection), 1);
+        update?.();
+        try {
+          await options.beforeDisconnect?.(removed);
+        } finally {
+          await closeMcpConnections(removed);
+        }
+      }
+      if (closed) return;
+      await Promise.all(added.map(connect));
+      connections.sort((a, b) => a.name.localeCompare(b.name));
+      update?.();
+    });
+    changes = apply.catch(error => {
+      options.debugLog(`MCP registration change failed: ${error instanceof Error ? error.message : String(error)}`);
+    });
+    return apply;
+  };
+
   return {
     tools,
     namespaces,
     connections,
     autoEnableCodemode: config.autoEnableCodemode ?? true,
     errors,
+    get closed() { return closed; },
+    updateRegisteredServers,
+    close() {
+      if (closing) return closing;
+      closed = true;
+      const pending = [...connections];
+      connections.splice(0);
+      tools.splice(0);
+      namespaces.splice(0);
+      closing = Promise.resolve().then(async () => {
+        try {
+          await options.beforeDisconnect?.(pending);
+        } finally {
+          await closeMcpConnections(pending);
+          await changes;
+        }
+      });
+      return closing;
+    },
   };
 }
 
@@ -169,7 +250,7 @@ function buildMcpRegistrations(connections: McpServerConnection[], codemodeEnabl
           getClient: async () => {
             // Resolve the live connection at execution time, so reconnects apply.
             const live = connectionsByName.get(server);
-            if (!live || live.closed) throw new Error(`MCP server "${server}" is disabled.`);
+            if (!live || live.closed || !connections.includes(live)) throw new Error(`MCP server "${server}" is disabled.`);
             if (
               getMcpToolExposure(live.entry.config, tool.name) === 'hidden' ||
               (live.state === 'connected' && !live.tools.some(offered => offered.name === tool.name))
@@ -195,7 +276,8 @@ function buildMcpRegistrations(connections: McpServerConnection[], codemodeEnabl
     const exposures = new Set(serversWithResources.map(connection => exposureOf(connection.entry)));
     const exposure = (['direct', 'codemode', 'deferred'] as const).find(candidate => exposures.has(candidate));
     if (exposure) {
-      const resourceConnections = () => [...serversWithResources];
+      const resourceConnections = () => serversWithResources.filter(connection =>
+        connections.includes(connection) && !connection.closed && connection.hasResources);
       tools.push(...createMcpResourceToolDefinitions({ exposure: exposure === 'codemode' && !codemodeEnabled ? 'deferred' : exposure, servers: resourceConnections }));
     }
   }

@@ -16,6 +16,12 @@ export class McpAuthorization {
 
   constructor(private readonly options: McpAuthorizationOptions) {}
 
+  async cancelServer(name: string): Promise<void> {
+    const operation = this.pending.get(name);
+    operation?.controller.abort();
+    await operation?.done.catch(() => undefined);
+  }
+
   extension(): ExtensionFactory {
     return pi => {
       pi.registerCommand('mcp', {

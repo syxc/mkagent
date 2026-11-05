@@ -158,7 +158,8 @@ The table records current evidence and gaps. It does not waive the target.
 | Local package resources | Native installed-manifest discovery, filters and diagnostics are used. |
 | npm/git package management | Opening host resources does not install missing packages. Host install and remove commands remain pending. |
 | Project MCP | Native and host project configurations share explicit host trust, including revocation on reload. The product approval path has coverage. |
-| MCP OAuth | Coding mode provides explicit status, login, logout and reconnect through native RPC. Tests cover PKCE, redirect validation, cancellation, token rotation, TLS admission and shared process locks. Plugin registrations and host credential providers remain pending. Browser acceptance remains pending. |
+| Native MCP registrations | Plugin registrations update host connections and durable tools at startup, change and reload. Tests cover namespace priority, failure recovery, immediate tool and resource revocation, and removal during login. |
+| MCP OAuth | Coding mode provides explicit status, login, logout and reconnect through native RPC. Tests cover PKCE, redirect validation, cancellation, token rotation, TLS admission and shared process locks. Host credential providers remain pending. Browser acceptance remains pending. |
 | Codemode/tool search | Official host integrations and native tools share durable execution. Dynamic catalogs, deferred activation and handoff context through restart have coverage. |
 | Retry/steer/follow-up/compaction | Native callbacks use durable phases. Accepted queues, cancellation, repeated text, retry deadlines and compaction thresholds have coverage. |
 | Resume/branch/usage/export | Journal and legacy projection tests cover history, edits, branches, forks and usage. Native HTML export works with relocated templates and themes. All combinations of multiple heads and managed navigation are not exercised. |

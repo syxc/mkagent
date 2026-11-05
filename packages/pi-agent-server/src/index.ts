@@ -66,7 +66,8 @@ import { createSearchTool } from './tools/search/create-search-tool.ts';
 import { createBuiltinTools } from './tools/builtin.ts';
 import { wrapToolForKernel, type ToolWrapDeps } from './tools/wrap.ts';
 import { createCodemodeExtensionFor } from './tools/codemode.ts';
-import { loadMcpTools, closeMcpConnections, type McpToolsLoadResult } from './mcp/extension.ts';
+import { loadMcpTools, type McpToolsLoadResult } from './mcp/extension.ts';
+import { createNativeMcpExtension } from './mcp/native-extension.ts';
 import { McpAuthorization } from './mcp/authorization.ts';
 import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/pi-durable-coding/mcp-oauth';
 import { createToolSearchExtension } from '@earendil-works/pi-durable/tool-search';
@@ -781,13 +782,14 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
   if (mcpAuthorization === previousAuthorization) mcpAuthorization = undefined;
   // Resolve native resources and project MCP under the same trust decision.
   const previousMcp = mcpLoad;
-  if (previousMcp) await closeMcpConnections(previousMcp.connections);
+  if (previousMcp) await previousMcp.close();
   assertOwner();
   if (mcpLoad === previousMcp) mcpLoad = null;
   let openingKernel: DurableKernel | undefined;
   let mcpReady = false;
   let loadedMcp: McpToolsLoadResult = {
     tools: [], namespaces: [], connections: [], autoEnableCodemode: true, errors: [],
+    closed: false, async close() {}, async updateRegisteredServers() { throw new Error('MCP runtime is not ready'); },
   };
   const mcpNamespaces: CodemodeNamespace[] = [];
   let codemodeExtension: ReturnType<typeof createCodemodeExtensionFor> | undefined;
@@ -802,6 +804,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     new FileAuthStorageBackend(join(credentialDir, 'mcp-auth.json')), credentialDir,
   );
   const authorization = new McpAuthorization({ credentials, connections: () => loadedMcp.connections, assertOwner });
+  const nativeMcp = createNativeMcpExtension({ runtime: () => loadedMcp, assertOwner });
   mcpAuthorization = authorization;
   codingUI?.onUnavailable(() => { void authorization.cancelAll(); });
   const getCodemodeExtension = () => codemodeExtension
@@ -810,13 +813,16 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     assertOwner();
     await authorization.cancelAll();
     if (mcpLoad === loadedMcp) mcpLoad = null;
-    await closeMcpConnections(loadedMcp.connections);
+    await loadedMcp.close();
     assertOwner();
     let next: McpToolsLoadResult | undefined;
     next = await loadMcpTools({
       agentDir: resolveCraftAgentDir(config),
       nativeAgentDir: codingProfile?.resourcePolicy !== 'host-only' ? codingProfile?.agentDir : undefined,
       cwd, projectTrusted, version: CLIENT_VERSION, debugLog, credentials,
+      beforeDisconnect: async connections => {
+        await Promise.all(connections.map(connection => authorization.cancelServer(connection.name)));
+      },
       onUpdate: (tools, namespaces) => {
         if (!next || mcpLoad !== next || epoch !== foregroundEpoch || !isForegroundScope(scope)) return;
         mcpNamespaces.splice(0, mcpNamespaces.length, ...namespaces);
@@ -824,7 +830,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
       },
     });
     try { assertOwner(); } catch (error) {
-      await closeMcpConnections(next.connections);
+      await next.close();
       throw error;
     }
     loadedMcp = next;
@@ -843,7 +849,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
       codingUI?.bind({}, () => {});
       preparedResources = await prepareHostResources({
         ...codingProfile, cwd, getSystemPrompt: () => openingKernel?.systemPrompt ?? replacement?.systemPrompt,
-        extensionFactories: [authorization.extension()],
+        extensionFactories: [authorization.extension(), nativeMcp],
       }, () => (codingUI ?? new ExtensionUIHost(() => {})).projectTrustContext(cwd), debugLog,
       async trusted => {
         assertOwner();
@@ -854,7 +860,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     assertOwner();
   } catch (error) {
     await authorization.cancelAll();
-    await closeMcpConnections(loadedMcp.connections);
+    await loadedMcp.close();
     if (mcpLoad === loadedMcp) mcpLoad = null;
     codingUI?.close();
     throw error;
@@ -889,7 +895,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
           await k.close(request.operation.type === 'switch' ? 'resume' : request.operation.type);
           openingKernel = undefined;
           if (kernel === k) kernel = null;
-          await closeMcpConnections(loadedMcp.connections);
+          await loadedMcp.close();
           if (mcpLoad === loadedMcp) mcpLoad = null;
           codingUI?.close();
           const { entryIds: _entryIds, ...reference } = await readNativeSessionDescriptor(sessionPath);
@@ -968,7 +974,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     openingKernel = undefined;
     await authorization.cancelAll();
     await k.close().catch(() => {});
-    await closeMcpConnections(loadedMcp.connections);
+    await loadedMcp.close();
     if (mcpLoad === loadedMcp) mcpLoad = null;
     throw error;
   }
@@ -1100,7 +1106,7 @@ async function initialize(
 
   // Re-init invalidates the old MCP connections; a new kernel opens lazily below.
   if (mcpLoad) {
-    await closeMcpConnections(mcpLoad.connections);
+    await mcpLoad.close();
     mcpLoad = null;
   }
   assertOwner();
@@ -1488,7 +1494,7 @@ async function shutdown(): Promise<void> {
 
   // Disconnect MCP servers
   if (mcpLoad) {
-    await closeMcpConnections(mcpLoad.connections);
+    await mcpLoad.close();
     mcpLoad = null;
   }
 
@@ -1531,7 +1537,7 @@ async function processMessage(msg: InboundMessage, compactController?: AbortCont
         }
         if (kernel === active) kernel = null;
         if (loaded && mcpLoad === loaded) {
-          await closeMcpConnections(loaded.connections);
+          await loaded.close();
           if (mcpLoad === loaded) mcpLoad = null;
         }
         send({ type: 'owner_released', id: msg.id, released: true,

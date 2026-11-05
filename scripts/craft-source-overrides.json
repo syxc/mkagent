@@ -1031,8 +1031,8 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "ba73d09d7e682aa58f4b436739cf8f219651287967d8a2e19368308fa725f5fd",
-      "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining host events, approvals, runtime updates and shutdown cleanup. Capture product ownership and input identity for JSONL calls, reject retired foreground scopes, and preserve source ownership for background notifications and stop requests."
+      "sha256": "e468088fd15a1fdeeffd186007b6b1d73f088d07d51fbc8fe0f540a93212f4ca",
+      "reason": "Preserve native resource, UI and session ownership while connecting plugin MCP registrations to the owning durable kernel."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
       "sha256": "dcd8c54fb1a0eb73a1b6f3984fe2dae176929c76b03bfb52323ad440fe23084c",
@@ -3113,8 +3113,8 @@
       "reason": "Adapt pi-coding-agent 1.1.0 MCP config loading to native coding paths and shared project trust while preserving host precedence and credential routing checks; omit CLI config writers."
     },
     "packages/pi-agent-server/src/mcp/extension.ts": {
-      "sha256": "f9fdce4d7ce71d2d6ec21e3c456913d78d79130eb46e82239c00a9a865274999",
-      "reason": "Adapt pi-coding-agent 1.1.0 MCP startup and exposure behavior to durable registrations, codemode namespaces, live updates and connection cleanup."
+      "sha256": "95ab815b049ceefd1c608252eb1f04d5222ec73e5c0a69f43d7a997db0fba804",
+      "reason": "Merge native plugin MCP registrations with configured namespace precedence and serialize connection, tool and shutdown updates."
     },
     "packages/pi-agent-server/src/mcp/log.ts": {
       "sha256": "d2c4f1e25fe42b995a695da6f5a950c76195e7f35dcc3cee9280852c43b36747",
@@ -4957,8 +4957,8 @@
       "reason": "Emit independent package declarations for the native coding API and durable host bindings."
     },
     "packages/pi-agent-server/src/mcp/authorization.ts": {
-      "sha256": "c9c3e99c7c4cbe0ec3418be8b457d760e5af198b9651b4d7fe6ffff0e2bb8e51",
-      "reason": "Provide owner-scoped MCP commands, cancellable native RPC authorization and cross-process grant coordination."
+      "sha256": "3d225c7be2d0c5a932ae0011a23c2c981d18546fb3a7f8407ded9c010fc2c40d",
+      "reason": "Provide owner-scoped MCP commands and drain cancellable authorization before registered servers are removed."
     },
     "packages/pi-agent-server/src/mcp/oauth.test.ts": {
       "sha256": "bdad6349e80c746065b494908146b5a3f3f310b31a8ee2edf60b9eb2dddb84c6",
@@ -4973,8 +4973,8 @@
       "reason": "Retain the pinned upstream deterministic OAuth MCP server verbatim with its source hash and MIT license."
     },
     "packages/server-core/src/sessions/native-mcp-oauth.isolated.ts": {
-      "sha256": "3607f6cfc074f2e10d17eb111b066278bf34d59c72c8f8184388803f04c2d408",
-      "reason": "Verify explicit OAuth callbacks, pasted redirects, cancellation and reload through the actual isolated product owner and bundled worker."
+      "sha256": "a8107c37af56abf63241faa6a513acf66a272bf41b901ffbdc3830b5b53ab7cb",
+      "reason": "Exercise explicit OAuth and native plugin MCP registration, reload and login revocation through the isolated product owner and bundled worker."
     },
     "packages/pi-agent-server/src/mcp/authorization.test.ts": {
       "sha256": "9c3db860f83fa7711fd949d9d3f3021ab5db3c0c217c303d2f8e5278be23e8e8",
@@ -4983,6 +4983,14 @@
     "packages/pi-durable-coding/scripts/mcp-oauth-port.ts": {
       "sha256": "c0fa4142887da3d9a8be6647ce1c0d496f723e95e8a5b9ebca74afe66cccaa28",
       "reason": "Reproduce optional cancellation for the pinned cross-process OAuth lock without changing automatic refresh draining."
+    },
+    "packages/pi-agent-server/src/mcp/native-extension.ts": {
+      "sha256": "02d55bdb5524d87997380b74fc634bbb66fe40375e821dbe000b12910799a07f",
+      "reason": "Bridge native MCP registry initialization, changes, reload and shutdown into the existing host MCP runtime."
+    },
+    "packages/pi-agent-server/src/mcp/registrations.test.ts": {
+      "sha256": "ad18a4c691841d17115401976c5dbd48592a474b6c6396f0b75189e7811774b7",
+      "reason": "Verify native MCP namespace priority, dynamic replacement, tool revocation and close while connection updates are pending."
     }
   },
   "deleted": {
