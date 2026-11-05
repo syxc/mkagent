@@ -19,7 +19,7 @@
     "@earendil-works/pi-ai": "1.5.0",
     "@earendil-works/pi-codemode": "1.5.0",
     "@earendil-works/pi-durable": "1.5.0",
-    "@earendil-works/pi-mcp": "1.1.0",
+    "@earendil-works/pi-mcp": "1.5.0",
     "@earendil-works/pi-schema": "1.5.0",
     "duck-duck-scrape": "^2.2.7",
     "node-html-parser": "^6.1.0",

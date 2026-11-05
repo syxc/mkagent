@@ -342,6 +342,12 @@
       "target": "test/fixtures/upstream/session-name.ts",
       "sha256": "a0b9fd94e2cc827931150cc409238b473da635ab1a1cddce633cae5937a3ae24",
       "portSha256": "a0b9fd94e2cc827931150cc409238b473da635ab1a1cddce633cae5937a3ae24"
+    },
+    {
+      "source": "packages/coding-agent/test/suite/mcp-oauth-server.ts",
+      "target": "test/fixtures/upstream/mcp-oauth-server.ts",
+      "sha256": "c92e904082949668fcc63de3ecec5a0a82499cff35e4e27514a68015d5596bed",
+      "portSha256": "c92e904082949668fcc63de3ecec5a0a82499cff35e4e27514a68015d5596bed"
     }
   ]
 }

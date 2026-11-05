@@ -9,6 +9,7 @@
     "./compat": { "types": "./types/compat.d.ts", "default": "./src/compat.ts" },
     "./native": { "types": "./types/native.d.ts", "default": "./src/native.ts" },
     "./rpc-ui": "./src/rpc-ui.ts",
+    "./mcp-oauth": { "types": "./types/mcp-oauth.d.ts", "default": "./src/mcp-oauth.ts" },
     "./agent": { "types": "./types/agent-runtime.d.ts", "default": "./src/agent-runtime.ts" },
     "./durable": { "types": "./types/durable-coding/index.d.ts", "default": "./src/durable-coding/index.ts" }
   },

@@ -26,8 +26,14 @@ export class ExtensionUIHost {
   private available = false;
   private suspended = 0;
   private closed = false;
+  private readonly unavailable = new Set<() => void>();
 
   constructor(private readonly emit: (event: ExtensionUIEvent) => void) {}
+
+  onUnavailable(listener: () => void): () => void {
+    this.unavailable.add(listener);
+    return () => this.unavailable.delete(listener);
+  }
 
   bind<Context extends object>(fallback: Context,
     onAvailability: (available: boolean) => void): ExtensionUIBinding<Context & RpcUIContext> {
@@ -48,6 +54,7 @@ export class ExtensionUIHost {
 
   setAvailable(available: boolean): void {
     this.available = available;
+    if (!available) for (const listener of this.unavailable) listener();
     this.binding?.setAvailable(this.enabled());
   }
 
@@ -57,6 +64,7 @@ export class ExtensionUIHost {
 
   suspend(): () => void {
     this.suspended++;
+    for (const listener of this.unavailable) listener();
     this.binding?.setAvailable(false);
     let released = false;
     return () => {
@@ -69,6 +77,8 @@ export class ExtensionUIHost {
 
   close(): void {
     this.closed = true;
+    for (const listener of this.unavailable) listener();
+    this.unavailable.clear();
     this.binding?.close();
   }
 

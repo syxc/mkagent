@@ -7,6 +7,7 @@ import ts from 'typescript';
 import { portModelRuntime } from './model-runtime-port.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portSettingsManager } from './settings-runtime-port.ts';
+import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
 import { portAgentFacade, portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
 
@@ -130,6 +131,10 @@ while (queue.length) {
   if (path === 'core/settings-manager.ts') {
     body = portSettingsManager(body);
     changes.add('host-compaction-threshold-policy');
+  }
+  if (path === 'extensions/mcp/oauth.ts') {
+    body = portMcpOAuth(body);
+    changes.add('cancellable-host-oauth-refresh-lock');
   }
   if (path === 'utils/image-resize.ts' || path === 'utils/photon.ts') {
     body = portImageAssets(path, body);

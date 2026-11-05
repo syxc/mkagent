@@ -1087,8 +1087,10 @@
       "source": "packages/coding-agent/src/extensions/mcp/oauth.ts",
       "target": "src/pi/extensions/mcp/oauth.ts",
       "sha256": "12fc5abb9185e291a5528f3312733a8e7f0028d1caeeb1bcf9f99a8979f10949",
-      "portSha256": "12fc5abb9185e291a5528f3312733a8e7f0028d1caeeb1bcf9f99a8979f10949",
-      "changes": []
+      "portSha256": "bb656ec459dea727ba54b31809fbb5e07beaac10ac890a524b2b1ab871de5948",
+      "changes": [
+        "cancellable-host-oauth-refresh-lock"
+      ]
     },
     {
       "source": "packages/coding-agent/src/extensions/mcp/resources.ts",

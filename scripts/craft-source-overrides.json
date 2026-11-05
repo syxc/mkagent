@@ -971,7 +971,7 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "3815921d703c7a586d93d577be3c9414a3ca2726cf3522ec863af4ac8f83417d",
+      "sha256": "016042048dae4a7f7093f7afc6775139e75fbbfbc120c732bf20cc575139816d",
       "reason": "Lock the complete native coding dependency closure and independent official Pi packages without the old coding-agent or agent-core runtime."
     },
     "package.json": {
@@ -1011,7 +1011,7 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "packages/pi-agent-server/package.json": {
-      "sha256": "e0439a79ae45c9537db4dd57f90598bb742020aafcf0cb5095a72a7febe7e043",
+      "sha256": "d6df4a0d5f1fb02294bf4b8f214b90b800477f4114d7ec00a41f171f93b93533",
       "reason": "Replace Craft's coding-agent runtime with pi-durable, pi-ai, chord, codemode and schema 1.5.0, retain pi-mcp 1.1.0, and build the subprocess with its worker and WASM assets. Depend on the local coding package with one durable engine."
     },
     "packages/pi-agent-server/src/adapt-credential.test.ts": {
@@ -1031,7 +1031,7 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "f18db73b450b0f25c81d1ba232eed0465f8cd5e35824a0c0ef974e790051ae03",
+      "sha256": "ba73d09d7e682aa58f4b436739cf8f219651287967d8a2e19368308fa725f5fd",
       "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining host events, approvals, runtime updates and shutdown cleanup. Capture product ownership and input identity for JSONL calls, reject retired foreground scopes, and preserve source ownership for background notifications and stop requests."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
@@ -2589,7 +2589,7 @@
       "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
     },
     "apps/electron/src/renderer/components/app-shell/input/ExtensionUI.tsx": {
-      "sha256": "4db84ec5a509c51a833c88b485e1093846119e5a20dac49d577fed1ae90f5eb0",
+      "sha256": "fd6c59f1f66afb83910e9bf6ef6a40e4c6a4dca60f8e7ef0798938f99ed0678e",
       "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
     },
     "apps/electron/src/renderer/hooks/useExtensionUI.ts": {
@@ -2613,7 +2613,7 @@
       "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
     },
     "packages/pi-agent-server/src/extension-ui.ts": {
-      "sha256": "ce69466907f1af245fcaeb6c2e593fc08841b70cb0af2385e552194a95225018",
+      "sha256": "bc83f72b1c4e78f106dcc19e95bc66059bf61d8913a7727c3945236277baf867",
       "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
     },
     "packages/pi-durable-coding/src/rpc-ui.ts": {
@@ -2997,7 +2997,7 @@
       "reason": "Shared MkAgent audit preflight resolves the Craft reference, validates the checkout root and pinned HEAD, and reports setup instructions before comparisons."
     },
     "scripts/craft-ui-overrides.json": {
-      "sha256": "e4415955a7b0942f017c8a352bf220cea55426fd50101243bf783670dffe63d3",
+      "sha256": "407a731023e2cefa8f451af96c27d3251c8775a3691f0fb2802083ff37e3fdfd",
       "reason": "MkAgent renderer lineage ledger records the selective Craft v0.13.3 retry synchronization; v0.15.3: apply applicable retained feature changes and preserve Pi/Lite seams (see docs/sync/0.15.3-inventory.json and validation). Register the per-locale starter-prompt regression added in 20fb16d."
     },
     "scripts/release-workflow.test.ts": {
@@ -3113,7 +3113,7 @@
       "reason": "Adapt pi-coding-agent 1.1.0 MCP config loading to native coding paths and shared project trust while preserving host precedence and credential routing checks; omit CLI config writers."
     },
     "packages/pi-agent-server/src/mcp/extension.ts": {
-      "sha256": "54a40ec5bee685a0b228363318b1eb8bfaaa5bcc5c2127d334d3565a6fd6d971",
+      "sha256": "f9fdce4d7ce71d2d6ec21e3c456913d78d79130eb46e82239c00a9a865274999",
       "reason": "Adapt pi-coding-agent 1.1.0 MCP startup and exposure behavior to durable registrations, codemode namespaces, live updates and connection cleanup."
     },
     "packages/pi-agent-server/src/mcp/log.ts": {
@@ -3121,7 +3121,7 @@
       "reason": "Vendor pi-coding-agent 1.1.0 extensions/mcp/log.js formatting, synchronous append and log rotation behavior."
     },
     "packages/pi-agent-server/src/mcp/mcp-servers.ts": {
-      "sha256": "70a462e15441e413d6315fec34c1a09428ff3862df1ec983e663d15a9e1a33b7",
+      "sha256": "d96737cdb414da6d9c251bbc06d6955ac79e14dc380a78e961fd11fc0c446833",
       "reason": "Vendor pi-coding-agent 1.1.0 core/mcp-servers.js validation, exposure matching, namespaces and extension registration types."
     },
     "packages/pi-agent-server/src/mcp/output-files.ts": {
@@ -3137,8 +3137,8 @@
       "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/resources.js resource listing and reading to durable tool registration and visibility."
     },
     "packages/pi-agent-server/src/mcp/runtime.ts": {
-      "sha256": "8112d959496661a66f3af3f9f137376919464c5baa399e0ea4b8cb7fb5722a70",
-      "reason": "Port pi-coding-agent 1.1.0 extensions/mcp/runtime.js transport, reconnect, retry and logging behavior; report unsupported OAuth sign-in explicitly."
+      "sha256": "ea99b63d676b6d0a3cae9cb4dbe689d781d043299941eb9db746d7195f77b0e3",
+      "reason": "Preserve host MCP transport/retry behavior and integrate pinned OAuth tokens, explicit sign-out admission, cancellation and refresh draining."
     },
     "packages/pi-agent-server/src/mcp/tools.ts": {
       "sha256": "664d87b1785584dcf1ebb2bf6ce0eb66ca8c703c5b17424b182be1a3822d6feb",
@@ -3417,11 +3417,11 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "de6fa8aa084a8d9bd824bddea533bf8e5bc57de7e3f82ca498e77a8c3776a2ec",
+      "sha256": "5941ad22868e4585aabab0439d92fdfece9b9bbeb493b715ea5b98b32f42bf03",
       "reason": "Record pinned source selections, transformations and generated output hashes."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "a0fdd922b8892b68470b95ebf142783752beac4f2f43ce84e0b49590c1f18073",
+      "sha256": "45de69637a2881d50ec797425b461ea85afddd55ea0bc0a8845942f054dd4b5d",
       "reason": "Declare independent coding capabilities using official Pi libraries and loader dependencies."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
@@ -3433,7 +3433,7 @@
       "reason": "Generate and semantically type-check the patch against pristine pinned inputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "ebaa3289be103590bc8265b7548cd97956bf869a5f298c0682199d65f775375f",
+      "sha256": "57be9a556b51a4cc3cc683411e14847926142697f99d71936ae84946feb40273",
       "reason": "Reproduce selected pinned Pi sources with guarded Bun transpiler initialization and no legacy Agent scheduler."
     },
     "packages/pi-durable-coding/src/compat.ts": {
@@ -3733,7 +3733,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "74ace4a28de9666a23b56aef432f57e9438cc0a385156e0e7f20fe1bfa14fdf7",
+      "sha256": "77bcab3e755855195c0513e5a7d5180b9be60e0f3850ba5e9884dcc3e687334b",
       "reason": "Record pinned Pi v1.5.0 source and output hashes, complete public closure, asset origins and controlled runtime transformations."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3757,7 +3757,7 @@
       "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in settings-runtime-port.ts."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "3d77fe1dbdd676dff2b4f2bd179b3bd044beb226c88317bb416d8b2e445240a3",
+      "sha256": "3649369b426ca8446fda85c4eab6d694fe43f4012471698680506867ae1ad5e6",
       "reason": "Reproduce pinned native coding sources and preserve host stack formatting during extension transpiler initialization."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4393,7 +4393,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/log.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/oauth.ts": {
-      "sha256": "12fc5abb9185e291a5528f3312733a8e7f0028d1caeeb1bcf9f99a8979f10949",
+      "sha256": "bb656ec459dea727ba54b31809fbb5e07beaac10ac890a524b2b1ab871de5948",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/oauth.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/resources.ts": {
@@ -4955,6 +4955,34 @@
     "packages/pi-durable-coding/tsconfig.types.json": {
       "sha256": "ec5d8fd6ee0dcacb67a98fc5dbcc91a90eac66393cf4ca72e77f8566d5bfeec0",
       "reason": "Emit independent package declarations for the native coding API and durable host bindings."
+    },
+    "packages/pi-agent-server/src/mcp/authorization.ts": {
+      "sha256": "c9c3e99c7c4cbe0ec3418be8b457d760e5af198b9651b4d7fe6ffff0e2bb8e51",
+      "reason": "Provide owner-scoped MCP commands, cancellable native RPC authorization and cross-process grant coordination."
+    },
+    "packages/pi-agent-server/src/mcp/oauth.test.ts": {
+      "sha256": "bdad6349e80c746065b494908146b5a3f3f310b31a8ee2edf60b9eb2dddb84c6",
+      "reason": "Verify real PKCE login, refresh serialization, redirect rejection, early cancellation, logout admission and token persistence on close."
+    },
+    "packages/pi-durable-coding/src/mcp-oauth.ts": {
+      "sha256": "bf89991376f48ba3c14613eb648b37688356f0468d1baca8a312375eb5016eed",
+      "reason": "Expose pinned standalone MCP OAuth, storage backends and matching error identity without the upstream CLI or execution loop."
+    },
+    "packages/pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts": {
+      "sha256": "c92e904082949668fcc63de3ecec5a0a82499cff35e4e27514a68015d5596bed",
+      "reason": "Retain the pinned upstream deterministic OAuth MCP server verbatim with its source hash and MIT license."
+    },
+    "packages/server-core/src/sessions/native-mcp-oauth.isolated.ts": {
+      "sha256": "3607f6cfc074f2e10d17eb111b066278bf34d59c72c8f8184388803f04c2d408",
+      "reason": "Verify explicit OAuth callbacks, pasted redirects, cancellation and reload through the actual isolated product owner and bundled worker."
+    },
+    "packages/pi-agent-server/src/mcp/authorization.test.ts": {
+      "sha256": "9c3db860f83fa7711fd949d9d3f3021ab5db3c0c217c303d2f8e5278be23e8e8",
+      "reason": "Verify shared OAuth rotation, cancellation and logout ordering across credential stores and actual Bun subprocesses."
+    },
+    "packages/pi-durable-coding/scripts/mcp-oauth-port.ts": {
+      "sha256": "c0fa4142887da3d9a8be6647ce1c0d496f723e95e8a5b9ebca74afe66cccaa28",
+      "reason": "Reproduce optional cancellation for the pinned cross-process OAuth lock without changing automatic refresh draining."
     }
   },
   "deleted": {

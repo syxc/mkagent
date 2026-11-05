@@ -2,6 +2,7 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Puzzle, Square } from 'lucide-react'
 import type { ExtensionUIDialog, ExtensionUIResponse, ExtensionUISnapshot } from '@mkagent/shared/protocol'
+import { usePlatform } from '@mkagent/ui'
 import { Button } from '@/components/ui/button'
 import {
   DECISION_ACTION, DecisionActions, DecisionBody, DecisionCard, DecisionDetails,
@@ -12,13 +13,24 @@ export function ExtensionUIWidgets({ snapshot, placement }: {
   snapshot?: ExtensionUISnapshot
   placement: 'aboveEditor' | 'belowEditor'
 }) {
+  const { onOpenUrl } = usePlatform()
   const widgets = snapshot?.widgets.filter(widget => (widget.placement ?? 'aboveEditor') === placement) ?? []
   if (widgets.length === 0) return null
   return (
     <div className="my-2 space-y-1 text-label text-secondary">
       {widgets.map(widget => (
         <pre key={widget.key} aria-label={widget.key} className="whitespace-pre-wrap break-words font-mono text-mono-ui">
-          {widget.lines.join('\n')}
+          {widget.lines.map((line, index) => (
+            <React.Fragment key={index}>
+              {index > 0 && '\n'}
+              {/^https?:\/\/\S+$/u.test(line) && URL.canParse(line) ? (
+                <a href={line} target="_blank" rel="noopener noreferrer" className="underline"
+                  onClick={event => { if (onOpenUrl) { event.preventDefault(); onOpenUrl(line) } }}>
+                  {line}
+                </a>
+              ) : line}
+            </React.Fragment>
+          ))}
         </pre>
       ))}
     </div>

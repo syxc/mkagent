@@ -67,6 +67,8 @@ import { createBuiltinTools } from './tools/builtin.ts';
 import { wrapToolForKernel, type ToolWrapDeps } from './tools/wrap.ts';
 import { createCodemodeExtensionFor } from './tools/codemode.ts';
 import { loadMcpTools, closeMcpConnections, type McpToolsLoadResult } from './mcp/extension.ts';
+import { McpAuthorization } from './mcp/authorization.ts';
+import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/pi-durable-coding/mcp-oauth';
 import { createToolSearchExtension } from '@earendil-works/pi-durable/tool-search';
 import type { CodemodeNamespace } from '@earendil-works/pi-durable/codemode';
 import { version as CLIENT_VERSION } from '../package.json';
@@ -249,6 +251,7 @@ let inputGeneration = 0;
 let reinitializing = false;
 let shuttingDown: Promise<void> | undefined;
 let mcpLoad: McpToolsLoadResult | null = null;
+let mcpAuthorization: McpAuthorization | undefined;
 let modelRuntime: ModelRuntime | null = null;
 let modelRuntimePromise: Promise<ModelRuntime> | null = null;
 
@@ -773,6 +776,9 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
   const sessionPath = getSessionPath(config.workspaceRootPath, config.sessionId);
 
   const initGeneration = credentialGeneration;
+  const previousAuthorization = mcpAuthorization;
+  await previousAuthorization?.cancelAll();
+  if (mcpAuthorization === previousAuthorization) mcpAuthorization = undefined;
   // Resolve native resources and project MCP under the same trust decision.
   const previousMcp = mcpLoad;
   if (previousMcp) await closeMcpConnections(previousMcp.connections);
@@ -785,10 +791,24 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
   };
   const mcpNamespaces: CodemodeNamespace[] = [];
   let codemodeExtension: ReturnType<typeof createCodemodeExtensionFor> | undefined;
+  const codingProfile = config.agentProfile === 'coding' || config.codingResources ? {
+    ...config.codingResources,
+    agentDir: config.codingResources?.agentDir
+      ?? (process.env.PI_CODING_AGENT_DIR?.trim() || join(homedir(), '.pi', 'agent')),
+  } : undefined;
+  const credentialDir = codingProfile?.resourcePolicy !== 'host-only' && codingProfile?.agentDir
+    ? codingProfile.agentDir : resolveCraftAgentDir(config);
+  const credentials = new McpOAuthCredentialStore(
+    new FileAuthStorageBackend(join(credentialDir, 'mcp-auth.json')), credentialDir,
+  );
+  const authorization = new McpAuthorization({ credentials, connections: () => loadedMcp.connections, assertOwner });
+  mcpAuthorization = authorization;
+  codingUI?.onUnavailable(() => { void authorization.cancelAll(); });
   const getCodemodeExtension = () => codemodeExtension
     ??= createCodemodeExtensionFor(mcpNamespaces, requestPreToolUseApproval);
   const refreshMcp = async (projectTrusted?: boolean) => {
     assertOwner();
+    await authorization.cancelAll();
     if (mcpLoad === loadedMcp) mcpLoad = null;
     await closeMcpConnections(loadedMcp.connections);
     assertOwner();
@@ -796,7 +816,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     next = await loadMcpTools({
       agentDir: resolveCraftAgentDir(config),
       nativeAgentDir: codingProfile?.resourcePolicy !== 'host-only' ? codingProfile?.agentDir : undefined,
-      cwd, projectTrusted, version: CLIENT_VERSION, debugLog,
+      cwd, projectTrusted, version: CLIENT_VERSION, debugLog, credentials,
       onUpdate: (tools, namespaces) => {
         if (!next || mcpLoad !== next || epoch !== foregroundEpoch || !isForegroundScope(scope)) return;
         mcpNamespaces.splice(0, mcpNamespaces.length, ...namespaces);
@@ -817,17 +837,13 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     openingKernel?.updateTools(buildToolsExtension(cwd, next.tools));
     for (const error of next.errors) debugLog(`MCP: ${error}`);
   };
-  const codingProfile = config.agentProfile === 'coding' || config.codingResources ? {
-    ...config.codingResources,
-    agentDir: config.codingResources?.agentDir
-      ?? (process.env.PI_CODING_AGENT_DIR?.trim() || join(homedir(), '.pi', 'agent')),
-  } : undefined;
   let preparedResources: Awaited<ReturnType<typeof prepareHostResources>> | undefined;
   try {
     if (codingProfile) {
       codingUI?.bind({}, () => {});
       preparedResources = await prepareHostResources({
         ...codingProfile, cwd, getSystemPrompt: () => openingKernel?.systemPrompt ?? replacement?.systemPrompt,
+        extensionFactories: [authorization.extension()],
       }, () => (codingUI ?? new ExtensionUIHost(() => {})).projectTrustContext(cwd), debugLog,
       async trusted => {
         assertOwner();
@@ -837,6 +853,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     await refreshMcp(preparedResources?.settingsManager.isProjectTrusted());
     assertOwner();
   } catch (error) {
+    await authorization.cancelAll();
     await closeMcpConnections(loadedMcp.connections);
     if (mcpLoad === loadedMcp) mcpLoad = null;
     codingUI?.close();
@@ -867,6 +884,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
           inputGeneration++;
           const callbacksClosed = stopCallbackServer();
           releaseForegroundRequests('Native session replaced');
+          await authorization.cancelAll();
           await callbacksClosed;
           await k.close(request.operation.type === 'switch' ? 'resume' : request.operation.type);
           openingKernel = undefined;
@@ -948,6 +966,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     }
   } catch (error) {
     openingKernel = undefined;
+    await authorization.cancelAll();
     await k.close().catch(() => {});
     await closeMcpConnections(loadedMcp.connections);
     if (mcpLoad === loadedMcp) mcpLoad = null;
@@ -1703,6 +1722,7 @@ function main(): void {
         return;
       }
       if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') {
+        void mcpAuthorization?.cancelAll();
         // Stopping execution does not revoke persistence of an already committed native tree.
         if (msg.type !== 'abort') nativeHistory.cancel(msg.type === 'init' ? undefined : scope, `Native history ${msg.type}`);
         inputGeneration++;

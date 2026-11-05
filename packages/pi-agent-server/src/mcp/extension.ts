@@ -3,10 +3,10 @@
  * servers, and turn each server's tools into durable `ToolRegistration`s plus the codemode
  * namespaces scripts see them through.
  *
- * Server tool-list changes rebuild the registrations and notify the owning kernel. OAuth exposure
- * is deferred — those servers fail loudly in the runtime.
+ * Server tool-list and authorization changes rebuild registrations for the owning kernel.
  */
 import { join } from 'node:path';
+import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/pi-durable-coding/mcp-oauth';
 import type { ToolRegistration } from '@earendil-works/pi-durable';
 import type { CodemodeNamespace } from '@earendil-works/pi-durable/codemode';
 import { loadMcpConfig } from './config.ts';
@@ -26,6 +26,7 @@ export interface McpToolsLoadOptions {
   /** Client version reported to servers at `initialize`. */
   version: string;
   debugLog: (message: string) => void;
+  credentials?: McpOAuthCredentialStore;
   onUpdate?: (tools: ToolRegistration[], namespaces: CodemodeNamespace[]) => void;
 }
 
@@ -55,6 +56,10 @@ export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToo
   for (const error of config.errors) options.debugLog(`MCP config: ${error}`);
   const log = new McpServerLog(join(options.agentDir, 'mcp.log'));
   const enabled = config.servers.filter(entry => entry.config.enabled !== false);
+  const credentialDir = options.nativeAgentDir ?? options.agentDir;
+  const credentials = options.credentials ?? new McpOAuthCredentialStore(
+    new FileAuthStorageBackend(join(credentialDir, 'mcp-auth.json')), credentialDir,
+  );
 
   const connections: McpServerConnection[] = [];
   const errors: string[] = [];
@@ -66,15 +71,21 @@ export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToo
         cwd: options.cwd,
         createTransport: createDefaultTransport,
         onTools: () => update?.(),
-        onChange: () => {},
+        onChange: () => update?.(),
         log,
         version: options.version,
+        credentials,
       });
       try {
         await connection.getClient();
         connections.push(connection);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        if (connection.state === 'needs-auth') {
+          connections.push(connection);
+          options.debugLog(`MCP server "${entry.name}" needs sign-in`);
+          return;
+        }
         errors.push(`MCP server "${entry.name}": ${message}`);
         options.debugLog(`MCP server "${entry.name}" unavailable: ${message}`);
         await connection.close().catch(() => undefined);

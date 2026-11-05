@@ -154,11 +154,11 @@ The table records current evidence and gaps. It does not waive the target.
 | Extensions: state | Custom entries, labels, IDs, committed restore, edits and forks have coverage. |
 | Extensions: models | Host models, extension providers, virtual models, selection, reload, reopen and auth availability have coverage. Interactive OAuth was not exercised. |
 | Extensions: session control | Native APIs are retained. Production managed operations use host bindings. Every navigation, fork and concurrent close combination is not exercised. |
-| Extensions: UI | Production reports print mode and no interactive UI. Native TUI sources remain available to SDK consumers. |
+| Extensions: UI | Native RPC dialogs, notifications, widgets and cancellation have production coverage. Terminal components require a TUI host. Browser acceptance remains pending. |
 | Local package resources | Native installed-manifest discovery, filters and diagnostics are used. |
-| npm/git package management | Opening host resources does not install missing packages. Explicit installation workflows are not all exercised. |
-| Project MCP | The loader requires explicit host trust. The product trust-approval path still needs integration and validation. |
-| MCP OAuth | Production interactive authorization is not provided. Host integration remains open. |
+| npm/git package management | Opening host resources does not install missing packages. Host install and remove commands remain pending. |
+| Project MCP | Native and host project configurations share explicit host trust, including revocation on reload. The product approval path has coverage. |
+| MCP OAuth | Coding mode provides explicit status, login, logout and reconnect through native RPC. Tests cover PKCE, redirect validation, cancellation, token rotation, TLS admission and shared process locks. Plugin registrations and host credential providers remain pending. Browser acceptance remains pending. |
 | Codemode/tool search | Official host integrations and native tools share durable execution. Dynamic catalogs, deferred activation and handoff context through restart have coverage. |
 | Retry/steer/follow-up/compaction | Native callbacks use durable phases. Accepted queues, cancellation, repeated text, retry deadlines and compaction thresholds have coverage. |
 | Resume/branch/usage/export | Journal and legacy projection tests cover history, edits, branches, forks and usage. Native HTML export works with relocated templates and themes. All combinations of multiple heads and managed navigation are not exercised. |

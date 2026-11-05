@@ -12,7 +12,7 @@ const git = Bun.spawnSync(['git', '-C', upstream, 'rev-parse', 'HEAD']);
 if (git.exitCode || git.stdout.toString().trim() !== revision) {
   throw new Error(`Expected Pi v1.5.0 at ${revision}`);
 }
-const dirty = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--', 'packages/coding-agent/src', 'packages/coding-agent/examples', 'packages/durable/src/harness/context.ts', 'LICENSE']);
+const dirty = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--', 'packages/coding-agent/src', 'packages/coding-agent/examples', 'packages/coding-agent/test/suite/mcp-oauth-server.ts', 'packages/durable/src/harness/context.ts', 'LICENSE']);
 if (dirty.exitCode || dirty.stdout.toString().trim()) throw new Error('Upstream sources must be clean');
 const destination = resolve(import.meta.dir, '..');
 const sourceRoot = join(upstream, 'packages/coding-agent/src');
@@ -202,6 +202,15 @@ port('../../durable/src/harness/context.ts', 'durable/context.js', [
 for (const name of ['hello.ts', 'input-transform.ts', 'rpc-demo.ts', 'confirm-destructive.ts', 'session-name.ts']) {
   const source = `packages/coding-agent/examples/extensions/${name}`;
   const target = `test/fixtures/upstream/${name}`;
+  const content = readFileSync(join(upstream, source), 'utf8');
+  const sha256 = createHash('sha256').update(content).digest('hex');
+  save(target, content);
+  manifest.push({ source, target, sha256, portSha256: sha256 });
+}
+
+{
+  const source = 'packages/coding-agent/test/suite/mcp-oauth-server.ts';
+  const target = 'test/fixtures/upstream/mcp-oauth-server.ts';
   const content = readFileSync(join(upstream, source), 'utf8');
   const sha256 = createHash('sha256').update(content).digest('hex');
   save(target, content);
