@@ -83,8 +83,8 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "apps/electron/package.json": {
-      "sha256": "2ff72cbc19eb78c569ebecad9be268d8bb1824f861bf6b295b0e2a20b681c5ab",
-      "reason": "MkAgent 0.2.6 versions/lock and shared pr-watch export; upstream only changes versions/exports, Pi remains pinned to 1.1.0."
+      "sha256": "9ad5a8bf812473fb5b5cc941fac63c582e3ca0adf3e0e879a0b4e9c9ff02087c",
+      "reason": "MkAgent 0.2.6 desktop dependency boundary; reuse the shared verified main-process builder for durable SQLite externals and worker resources."
     },
     "apps/electron/resources/bin/doc-diff": {
       "sha256": "2a50d0f63bf51453801e6c222b73d742a03111175a46d5e30dfbb0f364fbc98e",
