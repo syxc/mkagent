@@ -92,6 +92,7 @@ export interface ConfigValidationResult {
 /** SDK built-in tools that should NOT have metadata stripped */
 export const BUILT_IN_TOOLS = new Set([
   'Bash',
+  'PowerShell',
   'Read',
   'Write',
   'Edit',
@@ -586,7 +587,7 @@ export interface PermissionManagerLike {
  */
 export interface PrerequisiteManagerLike {
   checkPrerequisites(toolName: string): PrerequisiteCheckResult;
-  /** Bash's check: files the command prints (cat, head, sed -n …) count as read. */
+  /** Admit reading attempts; only the tool's successful completion confirms a read. */
   checkBashPrerequisites(command: string): PrerequisiteCheckResult;
 }
 
@@ -954,6 +955,12 @@ export function shouldPromptInAskMode(
       command: filePath,
       remember: rememberKey ? { kind: 'command', key: rememberKey } : undefined,
     };
+  }
+
+  // PowerShell syntax must not pass through Bash's parser or remembered command keys.
+  if (toolName === 'PowerShell') {
+    const command = typeof input.command === 'string' ? input.command : '';
+    return { promptType: 'bash', description: `Execute PowerShell: ${command}`, command };
   }
 
   // --- Bash commands ---

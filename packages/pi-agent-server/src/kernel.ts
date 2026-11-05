@@ -1463,6 +1463,7 @@ export class DurableKernel {
         } else {
           // Faulted or orphaned call: its slot left the live view unfinished.
           result = { content: [{ type: 'text', text: '' }] };
+          isError = true;
         }
         this.toolOutputBuffers.delete(event.toolCallId);
 

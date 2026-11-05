@@ -137,6 +137,42 @@ function getBashReadPaths(command: string): string[] {
   return paths;
 }
 
+/** A shell's final status proves a read only for one foreground reader, not a chain or pipeline. */
+function getSuccessfulBashReadPaths(command: string): string[] {
+  if (!MENTIONS_FILE_READER.test(command) || command.includes('<<')) return [];
+  try {
+    const script = bashParser(command) as ShellNode;
+    if (script.commands?.length !== 1) return [];
+    const node = script.commands[0]!;
+    if (node.type !== 'Command' || node.async || node.prefix?.length || !node.name) return [];
+    const suffix = node.suffix ?? [];
+    const redirects = suffix.filter((item): item is ShellRedirect => item.type === 'Redirect');
+    if (redirects.length > 1 || redirects.some(item =>
+      item.op.text !== '<' || (item.numberIo?.text ?? '0') !== '0')) return [];
+    const words = suffix.filter((item): item is ShellWord => item.type === 'Word');
+    let argv = [node.name, ...words].map(shellWordText);
+    if (argv.some(word => word === null)) return [];
+    if (argv[0] === 'command') argv = argv.slice(argv[1] === '-p' ? 2 : 1);
+    const name = basename(argv[0] ?? '');
+    const paths = readerFiles(node);
+    if (paths?.length !== 1) return [];
+    const args = argv.slice(1) as string[];
+    const hasFileOperand = args.length > 0 && toReadPath(args.at(-1)!) === paths[0];
+    const options = hasFileOperand ? args.slice(0, -1) : args;
+    const flags = options.join(' ');
+    const valid = name === 'cat' ? /^(?:(?:-[benstuvAET]+|--)(?: |$))*$/.test(flags)
+      : name === 'bat' ? /^(?:--paging=never)?$/.test(flags)
+      : name === 'nl' ? /^(?:-ba)?$/.test(flags)
+      : name === 'head' || name === 'tail'
+        ? /^(?:(?:-n |--lines(?:=| ))\+?[1-9]\d*|-[1-9]\d*)?$/.test(flags)
+      : name === 'sed' ? /^(?:-n (?:-e )?)?(?:[1-9]\d*(?:,(?:[1-9]\d*|\$))?)?p$/.test(flags)
+      : false;
+    return valid ? paths : [];
+  } catch {
+    return [];
+  }
+}
+
 function collectReads(node: ShellNode, paths: string[]): void {
   switch (node.type) {
     case 'Script':
@@ -345,7 +381,7 @@ export class PrerequisiteManager {
   private checkSkillPrerequisites(toolName: string): PrerequisiteCheckResult {
     if (this.pendingSkillPaths.size === 0) return { allowed: true };
 
-    // Allow Read tool through — trackReadTool will clear the prerequisite
+    // Allow Read through; its successful completion clears the prerequisite.
     if (toolName === 'Read') return { allowed: true };
 
     const pendingList = [...this.pendingSkillPaths].join(', ');
@@ -366,7 +402,7 @@ export class PrerequisiteManager {
   }
 
   /**
-   * Track a Read tool call. Extracts file_path from tool input,
+   * Track a successfully completed Read. Extracts file_path from approved input,
    * normalizes it, and adds to the read set.
    * Also clears matching pending skill paths.
    */
@@ -378,9 +414,7 @@ export class PrerequisiteManager {
 
   /**
    * Prerequisite check for a Bash call, run from the pre-tool-use pipeline.
-   * Files the command prints with a reader (cat, head, sed -n …) count as read,
-   * like the Read tool. Reading a pending skill file is how the agent clears it,
-   * so such a call gets past the skill gate.
+   * A reading attempt may pass the skill gate. This does not confirm execution.
    */
   checkBashPrerequisites(command: string): PrerequisiteCheckResult {
     const paths = getBashReadPaths(command);
@@ -388,8 +422,12 @@ export class PrerequisiteManager {
       const result = this.checkPrerequisites('Bash');
       if (!result.allowed) return result; // held at the skill gate, so nothing was read
     }
-    for (const path of paths) this.markRead(path, 'Bash');
     return { allowed: true };
+  }
+
+  /** Confirm only an unambiguous reader after the matching foreground call succeeds. */
+  trackSuccessfulBashRead(command: string): void {
+    for (const path of getSuccessfulBashReadPaths(command)) this.markRead(path, 'Bash');
   }
 
   /** Add a file to the read set and clear its skill prerequisite. */

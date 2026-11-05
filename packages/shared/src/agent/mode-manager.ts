@@ -1805,6 +1805,11 @@ export function shouldAllowToolInMode(
     return { allowed: true };
   }
 
+  // PowerShell has a separate grammar; do not apply Bash's read-only allowlist.
+  if (toolName === 'PowerShell') {
+    return { allowed: false, reason: `PowerShell requires Ask or Allow All mode (${config.shortcutHint}).` };
+  }
+
   // Handle Bash - check if command is read-only
   // Uses detailed rejection reasons to provide helpful error messages
   if (toolName === 'Bash') {

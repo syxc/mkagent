@@ -33,6 +33,7 @@ export const THINKING_TO_PI: Record<ThinkingLevel, PiThinkingLevel> = {
  */
 export const PI_TOOL_NAME_MAP: Record<string, string> = {
   bash: 'Bash',
+  powershell: 'PowerShell',
   read: 'Read',
   write: 'Write',
   edit: 'Edit',

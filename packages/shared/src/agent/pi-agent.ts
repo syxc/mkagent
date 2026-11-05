@@ -215,6 +215,13 @@ export class PiAgent extends BaseAgent {
   private _isProcessing: boolean = false;
   private abortReason?: AbortReason;
   private turnEpoch = 0;
+  private prerequisiteReadEpoch = 0;
+  private pendingPrerequisiteReads = new Map<string, {
+    toolName: 'Read' | 'Bash';
+    input: Record<string, unknown>;
+    child: ChildProcess | null;
+    lease: PiWorkerLease | null;
+  }>();
 
   // Event adapter
   private adapter: PiEventAdapter;
@@ -748,6 +755,7 @@ export class PiAgent extends BaseAgent {
   }
 
   private clearForeground(): void {
+    this.invalidatePrerequisiteReads();
     this.subprocess = null;
     this.workerConnection = null;
     this.workerLease = null;
@@ -1477,6 +1485,16 @@ export class PiAgent extends BaseAgent {
     if (eventType === 'tool_execution_end') {
       const toolCallId = event.toolCallId as string | undefined;
       if (toolCallId) {
+        const read = this.pendingPrerequisiteReads.get(toolCallId);
+        this.pendingPrerequisiteReads.delete(toolCallId);
+        const result = event.result as { content?: unknown[]; isError?: boolean; structuredContent?: { exitCode?: unknown } } | undefined;
+        if (read && read.child === this.subprocess && read.lease === this.workerLease
+          && event.toolName === read.toolName.toLowerCase() && event.isError === false
+          && Array.isArray(result?.content) && result.isError !== true
+          && (result.structuredContent?.exitCode === undefined || result.structuredContent.exitCode === 0)) {
+          if (read.toolName === 'Read') this.prerequisiteManager.trackReadTool(read.input);
+          else this.prerequisiteManager.trackSuccessfulBashRead(String(read.input.command ?? ''));
+        }
         this.preToolMetadataByCallId.delete(toolCallId);
         this.prCreateCommands.delete(toolCallId);
       }
@@ -1486,9 +1504,6 @@ export class PiAgent extends BaseAgent {
     // The event adapter expects typed PiAgentEvent/AgentSessionEvent objects,
     // but since we're receiving plain JSON, we cast through unknown.
     for (const agentEvent of this.adapter.adaptEvent(adaptedEvent as any)) {
-      if (agentEvent.type === 'tool_start' && agentEvent.toolName === 'Read') {
-        this.prerequisiteManager.trackReadTool(agentEvent.input as Record<string, unknown>);
-      }
       if (agentEvent.type === 'tool_result' && !agentEvent.isError && agentEvent.toolName === 'Bash') {
         void this.pinCreatedPr(completedCommand ?? (agentEvent.input as { command?: unknown } | undefined)?.command, typeof agentEvent.result === 'string' ? agentEvent.result : '');
       }
@@ -1515,6 +1530,7 @@ export class PiAgent extends BaseAgent {
     // a compaction_end failure that drains a held overflow, or a cancelled
     // auto-retry.
     if (this.adapter.shouldCompleteQueue(eventType === 'agent_end')) {
+      this.invalidatePrerequisiteReads();
       this.prCreateCommands.clear();
       this.completeDelivery();
     }
@@ -1522,6 +1538,16 @@ export class PiAgent extends BaseAgent {
 
   setBackgroundEventSink(sink: ((event: AgentEvent) => void) | null): void {
     this.backgroundEventSink = sink;
+  }
+
+  private invalidatePrerequisiteReads(): void {
+    this.prerequisiteReadEpoch++;
+    this.pendingPrerequisiteReads.clear();
+  }
+
+  override resetPrerequisiteState(): void {
+    this.invalidatePrerequisiteReads();
+    super.resetPrerequisiteState();
   }
 
   /**
@@ -1536,8 +1562,16 @@ export class PiAgent extends BaseAgent {
   }): Promise<void> {
     const child = this.subprocess;
     const lease = this.workerLease;
+    const prerequisiteEpoch = this.prerequisiteReadEpoch;
     if (this.disposed) return;
     const { requestId, toolName, toolCallId, input } = req;
+    const captureRead = (approvedInput: Record<string, unknown>) => {
+      if (toolCallId && (toolName === 'Read' || toolName === 'Bash')
+        && approvedInput.run_in_background !== true && prerequisiteEpoch === this.prerequisiteReadEpoch
+        && !this.disposed && child === this.subprocess && lease === this.workerLease) {
+        this.pendingPrerequisiteReads.set(toolCallId, { toolName, input: structuredClone(approvedInput), child, lease });
+      }
+    };
     const debugSessionId = this.config.session?.id || this._sessionId;
     this.debug(`PreToolUse request from subprocess: ${toolName} (${requestId}, sessionId=${debugSessionId})`);
 
@@ -1588,10 +1622,12 @@ export class PiAgent extends BaseAgent {
 
     switch (checkResult.type) {
       case 'allow':
+        captureRead(input);
         this.send({ type: 'pre_tool_use_response', requestId, action: 'allow' });
         return;
 
       case 'modify':
+        captureRead(checkResult.input);
         this.send({ type: 'pre_tool_use_response', requestId, action: 'modify', input: checkResult.input });
         return;
 
@@ -1663,8 +1699,10 @@ export class PiAgent extends BaseAgent {
         }
 
         if (checkResult.modifiedInput) {
+          captureRead(checkResult.modifiedInput);
           this.send({ type: 'pre_tool_use_response', requestId, action: 'modify', input: checkResult.modifiedInput });
         } else {
+          captureRead(input);
           this.send({ type: 'pre_tool_use_response', requestId, action: 'allow' });
         }
         return;
@@ -2021,6 +2059,7 @@ export class PiAgent extends BaseAgent {
    * Handle subprocess exit.
    */
   private handleSubprocessExit(code: number | null, signal: string | null): void {
+    this.invalidatePrerequisiteReads();
     this.debug(`Pi subprocess exited: code=${code}, signal=${signal}`);
     this.extensionUI.reset();
     this.activeHostContext = undefined;
@@ -2298,6 +2337,7 @@ export class PiAgent extends BaseAgent {
     let compactEpoch = this.compactionEpoch;
     const turnEpoch = this.turnEpoch;
     // Reset state for new turn
+    this.invalidatePrerequisiteReads();
     this._isProcessing = true;
     this.abortReason = undefined;
     this.eventQueue.reset();
@@ -2644,6 +2684,7 @@ export class PiAgent extends BaseAgent {
   }
 
   async abort(reason?: string): Promise<void> {
+    this.invalidatePrerequisiteReads();
     this.cancelOwnerOperations(reason || 'Pi turn aborted');
     this.turnEpoch++;
     this.activeHostContext = undefined;
@@ -2670,6 +2711,7 @@ export class PiAgent extends BaseAgent {
   }
 
   forceAbort(reason: AbortReason): void {
+    this.invalidatePrerequisiteReads();
     this.cancelOwnerOperations(`Pi turn aborted: ${reason}`);
     this.turnEpoch++;
     this.activeHostContext = undefined;
@@ -2838,6 +2880,7 @@ export class PiAgent extends BaseAgent {
   }
 
   private killSubprocess(timeoutMs = 2_000): void {
+    this.invalidatePrerequisiteReads();
     this.cancelOwnerOperations('Pi subprocess stopped');
     this.extensionUI.reset();
     this.activeHostContext = undefined;

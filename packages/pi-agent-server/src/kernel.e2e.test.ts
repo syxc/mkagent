@@ -258,6 +258,17 @@ describe('DurableKernel end-to-end', () => {
     for (const dir of scratchDirs) rmSync(dir, { recursive: true, force: true });
   });
 
+  it('marks orphaned tool completions as errors while preserving successful nested results', async () => {
+    const { kernel } = createKernel({ sessionPath: scratch(), script: [] });
+    const synthesizer = kernel as unknown as { synthesizeEvent(event: Record<string, unknown>): Record<string, unknown>[] };
+    const orphan = synthesizer.synthesizeEvent({ type: 'tool_execution_end', toolCallId: 'orphan', toolName: 'read' });
+    expect(orphan[0]).toMatchObject({ type: 'tool_execution_end', isError: true });
+    const success = synthesizer.synthesizeEvent({ type: 'tool_execution_end', toolCallId: 'nested', toolName: 'read',
+      result: { structuredOutput: 'actual instructions', isError: false } });
+    expect(success[0]).toMatchObject({ isError: false, result: { content: [{ type: 'text', text: 'actual instructions' }] } });
+    await kernel.close();
+  });
+
   it('resolves MiniMax and reports missing models through the JSONL protocol', async () => {
     const dir = scratch();
     const agentDir = join(dir, 'agent');

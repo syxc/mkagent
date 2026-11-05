@@ -1603,7 +1603,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/backend/pi/constants.ts": {
-      "sha256": "15af6bb6e0bc96718a6c7bf39eddca2353789d6cdee89c1919263590d064a9ee",
+      "sha256": "36d2c3064b1d61dfa79a707b4ef0dc3a27d741d3824ae15e17ca45657123ffc7",
       "reason": "Craft v0.13.3 retry, failed-text discard, and bounded query contracts are adapted to the MkAgent Pi-only agent path Use independent pi-ai thinking-level types without a legacy agent dependency."
     },
     "packages/shared/src/agent/backend/pi/event-adapter.ts": {
@@ -1639,11 +1639,11 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/shared/src/agent/core/__tests__/pre-tool-use-checks.isolated.ts": {
-      "sha256": "c751942a9f4997f6c9155593f59050b0dc169a17df8175eb2a3bc9e790731fa0",
+      "sha256": "c1ce2c42c3a7d971d50a7daac96282929e860b1714d10b8fd37566356814e409",
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior; v0.15.1: Adapt prerequisite regression mocks only; upstream Sources/Guarded cases remain excluded."
     },
     "packages/shared/src/agent/core/__tests__/prerequisite-manager.isolated.ts": {
-      "sha256": "9169ba0a1af6ed3fb6212610699017f411ff65f70773a0bb95a1b8ab6ce01ce9",
+      "sha256": "01e572848bd4f7ec2fbbcac99555e40b9edfff5660199abf553dde153543ee68",
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/shared/src/agent/core/__tests__/session-lifecycle.test.ts": {
@@ -1671,12 +1671,12 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/core/pre-tool-use.ts": {
-      "sha256": "35ee28d9f9b38d720cf561b469570bbcbdf40aec08d5428ecef283cec4df5560",
+      "sha256": "d6a6c9d230f625447953f3ee197c99ddcf0e31fbbbbb26b8c561efb764a26033",
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/shared/src/agent/core/prerequisite-manager.ts": {
-      "sha256": "c6af7a52a030d119b2f373cad3a9974630a0deabceff04e556f846b0c5d85dfa",
-      "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
+      "sha256": "cf299efda1804ffde3615c34f970c815fe5d0af3ddd9cf58a0129209d75f5d10",
+      "reason": "Retain Browser and Skill gates and bounded fallback. Admit shell reading attempts separately from confirmed successful foreground reads."
     },
     "packages/shared/src/agent/core/prompt-builder.ts": {
       "sha256": "e256a345d9c31d36f3a7c895ad6b3ca79d7358e5027f55e2baa27c32cd975132",
@@ -1707,7 +1707,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/mode-manager.ts": {
-      "sha256": "751962336af879f635c210a449a61781b2b3bbccb5da8cdc0360a38b792f3b1c",
+      "sha256": "b015671c68a0eb048a4d16ec85fea3e7b5affc94c2c05037dbbad66a9a08918c",
       "reason": "Keep read-only Coding pr_status available in Explore; write PR tools remain blocked. Actual Pi RPC regression verifies no mutation."
     },
     "packages/shared/src/agent/mode-types.ts": {
@@ -1719,8 +1719,8 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/pi-agent.ts": {
-      "sha256": "2c7e5767be1d709c3238354de386dc91818677b45b342d309f4c97de1ea5e880",
-      "reason": "Retain the Craft-derived Pi/Lite client, startup, permissions, runtime updates, compaction, recovery and PR handoffs. Use generation-checked worker bindings, preserve stable product prompt and steer identities, retain shutdown scope, and release abandoned background stop requests. Route projection references through the current lease after native readiness."
+      "sha256": "37efcd4833a0dcd23b2283ab9b69d4858f40eb78bbcee4548deb074b9403a353",
+      "reason": "Retain the Craft-derived Pi client and generation-checked worker bindings, product identities, permissions, recovery and PR handoffs. Confirm prerequisite reads only from approved inputs and matching successful completions; invalidate pending reads on context and owner lifecycle changes."
     },
     "packages/shared/src/agent/plan-types.ts": {
       "sha256": "529cc7377490361bef7e742729c31f9adffdadb5b77a8eb0d5eda3ccfa2d9aaf",
@@ -2921,7 +2921,7 @@
       "reason": "Real subprocess and local streaming endpoint verify successful session tools, model-visible tool failures, and permission-gated background shell stop delivery"
     },
     "packages/shared/src/agent/__tests__/pi-permission-sync.test.ts": {
-      "sha256": "2b0396dea7c09e201543cfe21e362a0d563f75dcb141448789892c7c9b032067",
+      "sha256": "229cd663d0538c553c1226db6edf31f49cb911a7adf90a8d3a1ee337ba21e316",
       "reason": "Retain Lite permission modes and precise approvals; Guarded and decision configuration deferred"
     },
     "packages/shared/src/agent/core/__tests__/config-dir-paths.test.ts": {
@@ -2993,7 +2993,7 @@
       "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path"
     },
     "scripts/check-craft-test-coverage.ts": {
-      "sha256": "60c7ec9df6a4cd11415bb24ce510233b4537cdd78e4b013d874e6b19e80d4eb1",
+      "sha256": "92dbd578d8370af46a84fb8379acf84925ae34c1984ed3cdb3f80c21e3cd61ad",
       "reason": "Retain Craft test classification and map seven replaced Pi SDK test files to durable kernel.e2e.test.ts coverage without asserting equivalent coverage of every retired assertion. Validate the pinned reference first and register the added translated-prompt regression in the static test-declaration count."
     },
     "scripts/check-craft-ui-sync.ts": {
@@ -3121,11 +3121,11 @@
       "reason": "Migrate local main index.ts queryLlm behavior from temporary AgentSessions to pi-ai completeSimple while retaining mini-model recovery and cancellation."
     },
     "packages/pi-agent-server/src/kernel.e2e.test.ts": {
-      "sha256": "77654ec805f1ac73f996e0cb159159568d8ccc8982652624fbe558691ac2aeff",
+      "sha256": "e24f9172cdae3c77dcc5d59bdd3946a8270cb42cd1409dc8c1fd82bd6425e5dd",
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "99416eccd04367ee4be2549207922a77a75bc3fc8aa7693e36b42d0fe6ea8d79",
+      "sha256": "aee6145236ad2b884aec8d0a9c83501fb172953ec309ee3a5d27ef343cdc567c",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness. Verify copied native journals before Harness opening and reject conflicting legacy target history."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
@@ -5051,6 +5051,14 @@
     "packages/pi-agent-server/src/test-fixtures/mcp-oauth-worker.ts": {
       "sha256": "9c8fb50d1b47c94399fdc6712e47dcdfed0c7c7302cd1c4fd372800e87963101",
       "reason": "Supply isolated native worker protocol receipts, temporary credentials and a model endpoint that rejects every request."
+    },
+    "packages/shared/src/agent/__tests__/pi-prerequisite-reads.test.ts": {
+      "sha256": "9a49ed14c0cf6ab8b37c5d85c1cf8b84c21f09c31c8bf0436c4b174915cfca15",
+      "reason": "Verify approved read correlation, failures, complex shell commands, bounded fallback, concurrent completion and stale lifecycle results."
+    },
+    "packages/shared/src/agent/__tests__/pi-prerequisite-runtime.isolated.ts": {
+      "sha256": "b85c74eff3c206d9795da1d1767be8c97f6080a15ae103aff02dde64496b6bd6",
+      "reason": "Run real default and coding workers with local models to verify successful reads and reject missing, masked-failure and denied reads."
     }
   },
   "deleted": {
