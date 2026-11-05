@@ -1031,7 +1031,7 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "c8f0e19f0da923ed708c96493a2e159f4e9519daf77703955b19c2907df40ff6",
+      "sha256": "dce80b88a5bd361db726117c2e1cc66281f1deeebcac7aa95a930f511ce92e9f",
       "reason": "Replace Craft AgentSession wiring with DurableKernel while retaining host events, approvals, runtime updates and shutdown cleanup. Capture product ownership and input identity for JSONL calls, reject retired foreground scopes, and preserve source ownership for background notifications and stop requests."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
@@ -1251,7 +1251,7 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/server-core/src/sessions/SessionManager.ts": {
-      "sha256": "d2c1c8e29e90ec76947133683c0b475ad3ee2a7ce303e3ade1fff121a134d6f4",
+      "sha256": "4febcdcea8fbe8a01854de6937fc8f5a20ae5d177dbfd93b2978894de02e7243",
       "reason": "Retain the Craft-derived Pi/Lite lifecycle, permissions, persistence, imported sdkSessionId and PR handoffs. Require a strict final creation receipt with rollback. Preserve product input identity and caller provenance; settle completed inputs, retain the product queue and retire invalid client or session context. Serialize native projection registration and owner metadata behind strict receipts. Preserve inactive native product rows through lazy loading, metadata saves and import; omit source display caches on ordinary cutoff copies."
     },
     "packages/server-core/src/sessions/background-task-stop.test.ts": {
@@ -1611,7 +1611,7 @@
       "reason": "Retain Craft event conversion with MkAgent turn billing, message deduplication and retry queue handling; import the vendored host event contract and hold retryable failures when durable announces backoff before message_end. Read the retained host event contract from local wire types."
     },
     "packages/shared/src/agent/backend/pi/protocol.ts": {
-      "sha256": "adc2b74f880ca8e9c3d77a2b097c09cce8efb9e6fd3e79e77d86a4a6d18e677e",
+      "sha256": "5e0339062744f762e0c5791c97ec06b025be138b7ed9cf278b6d57716a3b0ce0",
       "reason": "Retain Pi/Lite protocol and tools. Carry explicit coding resources, independent native-session resource policy, and the product session and generation ownership scope through the subprocess protocol."
     },
     "packages/shared/src/agent/backend/pi/session-tool-defs.ts": {
@@ -1719,7 +1719,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/pi-agent.ts": {
-      "sha256": "5076c899f1591bcf274bdd3714ae3d372eb5a7cbabc282cdc330eba521219252",
+      "sha256": "e28ee2a98edfcde1f05e7faa57d3acb2b07bb48b9ef2a1d1f2ef56cbbc6acf7d",
       "reason": "Retain the Craft-derived Pi/Lite client, startup, permissions, runtime updates, compaction, recovery and PR handoffs. Use generation-checked worker bindings, preserve stable product prompt and steer identities, retain shutdown scope, and release abandoned background stop requests. Route projection references through the current lease after native readiness."
     },
     "packages/shared/src/agent/plan-types.ts": {
@@ -1983,7 +1983,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior. Preserve inactive native rows in metadata saves and cwd guards; clear both message partitions explicitly."
     },
     "packages/shared/src/sessions/types.ts": {
-      "sha256": "86ee4f9aa32e8a3142c42ebffb50583d1b90f133d4a2eb8c65f7285ea7476ffc",
+      "sha256": "2ab736f5bc65a082850ddea34bfaf1a2f2b5aa760451c9c333ed3d2895718810",
       "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions. Retain native projection references in product persistence. Keep inactive native product rows outside the session header schema."
     },
     "packages/shared/src/skills/__tests__/storage.test.ts": {
@@ -2328,9 +2328,17 @@
     }
   },
   "mkOnly": {
+    "packages/server-core/src/sessions/native-session-switch.ts": {
+      "sha256": "ff2fc4fb196d0ddb7525a6f19c90dda5555d4eb97c9a85cd791094a439f88f13",
+      "reason": "Verify the complete reserved, released and bound native target at each product switch barrier."
+    },
+    "packages/server-core/src/sessions/native-session-switch.test.ts": {
+      "sha256": "1c990365e153918bbb7f64f50fdfd9f8251dc46860fe123db1e4e1d4bbcc240b",
+      "reason": "Verify shutdown additions, identity continuity and rejection of changed target trees, mappings, names or leaves."
+    },
     "packages/server-core/src/sessions/native-fork-runtime.isolated.ts": {
-      "sha256": "f025f0deb71fc79cc1a49f18115d8f6c7e2adaee70cee103c4d79c8548cfc3f3",
-      "reason": "Verify product forks on SQLite and JSONL with full native trees, archived attachments, repeated transfers, source deletion and cold restart."
+      "sha256": "0b55a8bc23350e3786e3410878a570deecd7e94f21dd6fd81341f3518f5edc9b",
+      "reason": "Verify product forks and switches on both stores with complete native trees, archived files, busy-target refusal, activation rollback and cold restart."
     },
     "packages/server-core/src/sessions/native-session-fork.test.ts": {
       "sha256": "fe88ad1a48fb46fc8d10b610597997ef0a38b4996cb81444536aa350c484ad7c",
@@ -2441,27 +2449,27 @@
       "reason": "Exercise the actual product factory, PiAgent and bundled worker with local models and isolated ownership."
     },
     "packages/server-core/src/sessions/native-session-owner.isolated.ts": {
-      "sha256": "fb7783fd43453f06f99cc6911ad4826301f380c97104d8d1ee9a28856f2dcce8",
-      "reason": "Verify product persistence receipts, caller navigation, adopted completion and recovery without callback replay."
+      "sha256": "41984e3a3844b8e245f625f8939ae964fa5cbd784e8efaead2435b6bd1fbbecf",
+      "reason": "Verify strict product receipts, caller navigation and recovery that preserves existing switch targets without callback replay."
     },
     "packages/server-core/src/sessions/native-session-owner.test.ts": {
       "sha256": "7ebe68c74d67134282a24571677cb8453d809bef228f8e0388d65fc03cb6c4ac",
       "reason": "Verify product ownership phase ordering, caller leases, stale controls and scoped cancellation."
     },
     "packages/server-core/src/sessions/native-session-owner.ts": {
-      "sha256": "5c6f8b4c3af6553fd979818c498fe75e3bf7678a50b6d2df06b29e63f1fdf5b4",
-      "reason": "Coordinate live native ownership with durable product receipts and independent source and target lifetimes."
+      "sha256": "7dca48bf585d9682b9fae3b7133b8c622f21ff63608cb139c88a954aceafb613",
+      "reason": "Coordinate native ownership with strict product receipts, reserved existing switch targets and independent source and target lifetimes."
     },
     "packages/shared/src/__tests__/unified-network-interceptor.owner.isolated.ts": {
       "sha256": "5cf345364abd82c817c4e029defe00385f2596467cdafbecb9454a9cff14c527",
       "reason": "Reproduce delayed Request validation across ownership changes and retain each owner's API error file."
     },
     "packages/shared/src/agent/__tests__/pi-native-owner.test.ts": {
-      "sha256": "dee9333b2981f4413fb5543a5437472b9e47f6bd1d2b7860ee41dcb40bdbf013",
-      "reason": "Verify physical worker adoption, scoped release, startup recovery and source background task isolation."
+      "sha256": "a33f147c047055529653e2d75d989007edf2630c7b09b7d9791329f4764a8c72",
+      "reason": "Verify physical worker adoption, scoped release and final projection receipts, including failed registration cleanup."
     },
     "packages/shared/src/agent/backend/pi/native-owner-protocol.ts": {
-      "sha256": "bb998772994180c096ecca63e45d89c6c5c6b61dc17f8e0a2fb4ed325b331d3f",
+      "sha256": "0b3a9c2f9acdd518fd51749acdaff6159b36eb2bdafc44267724252e998c027d",
       "reason": "Define live native ownership controls and host ports separately from persistent recovery records."
     },
     "packages/shared/src/agent/backend/pi/native-owner-runtime.ts": {
@@ -3009,7 +3017,7 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "5d8ae528ca147c397a36483b8951f90baa79c5a20ff5c2b8561e530e115e2cca",
+      "sha256": "965d18656f0e67488510fe9ddc61d35c092e6a7274934b493f8aea6f52dbc98b",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness. Verify copied native journals before Harness opening and reject conflicting legacy target history."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {

@@ -7,6 +7,7 @@ import type {
 import type { PiWorkerScope } from '../../../shared/src/agent/backend/pi/protocol'
 import type { InputOriginLease } from './input-origins'
 import type { NativeForkProof } from './native-session-fork'
+import type { NativeSwitchProof } from './native-session-switch'
 
 interface NativeOwnerHost {
   source(sessionId: string, backend: PiNativeOwnerBackend): { nativeSessionId: string; turnDone: Promise<void> }
@@ -14,6 +15,9 @@ interface NativeOwnerHost {
   prepareFork?(sessionId: string, request: PiNativeOwnerRequest): Promise<NativeForkProof>
   closeFork?(sourceId: string, targetId: string, proof: NativeForkProof, reference: NativeSessionReference): Promise<NativeForkProof>
   bindFork?(targetId: string, proof: NativeForkProof, reference: NativeSessionReference): Promise<void>
+  prepareSwitch?(sourceId: string, request: PiNativeOwnerRequest): NativeSwitchProof
+  closeSwitch?(targetId: string, proof: NativeSwitchProof): Promise<NativeSwitchProof>
+  bindSwitch?(targetId: string, proof: NativeSwitchProof, reference: NativeSessionReference): Promise<void>
   claim(sessionId: string, inputId: string): InputOriginLease | undefined
   createTarget(sourceSessionId: string, record: NativeSessionOwnerRecord): Promise<string>
   backend(sessionId: string): Promise<PiNativeOwnerBackend>
@@ -40,6 +44,7 @@ interface Transaction {
   targetScope?: PiWorkerScope
   transfer?: PiNativeWorkerTransfer
   fork?: NativeForkProof
+  resume?: NativeSwitchProof
   queue: Promise<void>
   cancelled: boolean
   committed: boolean
@@ -90,7 +95,8 @@ export class NativeSessionOwner {
     tx.record = { ...tx.record, phase, ...extra }
     const id = role === 'source' ? tx.record.sourceSessionId : tx.record.targetSessionId
     if (!id) throw new Error('Native session target is missing')
-    const record = { ...tx.record, role, ...(role === 'target' ? { unpublished: tx.committed ? undefined : true } : {}) }
+    const record = { ...tx.record, role, ...(role === 'target'
+      ? { unpublished: tx.record.operation === 'switch' || tx.committed ? undefined : true } : {}) }
     if (role === 'source' && phase === 'finished') await this.host.finalizeSource(id, record)
     else await this.host.persist(id, record)
     if (role === 'source' && phase === 'committed') tx.committed = true
@@ -112,7 +118,8 @@ export class NativeSessionOwner {
       try {
         const source = this.host.source(sessionId, backend)
         if (!event.sourceNativeSessionId || source.nativeSessionId !== event.sourceNativeSessionId) throw new Error('Native source session identity does not match')
-        if (event.operation.type === 'switch') throw new Error('Native switch requires a stable session path and owner release (D3.4)')
+        if (event.operation.type === 'switch' && (!this.host.prepareSwitch || !this.host.closeSwitch
+          || !this.host.bindSwitch || !this.host.projection)) throw new Error('Native switch requires a registered target and owner release (D3.4)')
         if (event.operation.type === 'new' && event.operation.parentSession !== undefined) throw new Error('Native parentSession requires a stable native path mapping (D3.4)')
         if (event.operation.type === 'fork' && (!event.sourceReference || !this.host.projection
           || !this.host.prepareFork || !this.host.closeFork || !this.host.bindFork)) {
@@ -134,6 +141,13 @@ export class NativeSessionOwner {
         this.transactions.set(event.transactionId, tx)
         this.locks.set(sessionId, tx)
         return this.enqueue(tx, async () => {
+          if (event.operation.type === 'switch') {
+            tx.resume = this.host.prepareSwitch!(sessionId, event)
+            const targetId = tx.resume.tree.reference.sessionId
+            if (targetId === sessionId || this.locks.has(targetId)) throw new Error('Native switch target is already owned')
+            tx.record = { ...tx.record, targetSessionId: targetId, targetReference: tx.resume.tree.reference }
+            this.locks.set(targetId, tx)
+          }
           if (event.operation.type === 'fork') {
             await this.host.projection!(sessionId, event.sourceReference!, backend)
             this.check(tx)
@@ -141,7 +155,7 @@ export class NativeSessionOwner {
             tx.record = { ...tx.record, fork: tx.fork.record }
           }
           await this.save(tx, 'source', 'preparing')
-          const targetId = await this.host.createTarget(sessionId, tx.record)
+          const targetId = tx.record.targetSessionId ?? await this.host.createTarget(sessionId, tx.record)
           tx.record = { ...tx.record, targetSessionId: targetId }
           this.locks.set(targetId, tx)
           this.check(tx)
@@ -162,7 +176,7 @@ export class NativeSessionOwner {
     if (!fromSource && !fromTarget) return
     return this.enqueue(tx, async () => {
       if (event.type === 'owner_source_closed' && fromSource && tx.record.phase === 'prepared') {
-        if (tx.fork && !event.reference) throw new Error('Native fork is missing its closed source reference')
+        if ((tx.fork || tx.resume) && !event.reference) throw new Error('Native replacement is missing its closed source reference')
         if (event.reference) await this.host.projection?.(sessionId, event.reference, backend)
         this.check(tx)
         // Detaching pins the closed source connection and finishes its generator.
@@ -179,6 +193,14 @@ export class NativeSessionOwner {
         await this.save(tx, 'source', 'source_closed')
         tx.target = await this.host.backend(targetId)
         const activation = await tx.target.prepareActivation()
+        if (tx.resume) {
+          this.check(tx)
+          tx.resume = await this.host.closeSwitch!(targetId, tx.resume)
+          tx.record = { ...tx.record, targetReference: tx.resume.tree.reference }
+          activation.reason = 'resume'
+          activation.config = { ...activation.config, branchFromSessionPath: undefined, branchFromSdkSessionId: undefined,
+            branchFromSdkTurnId: undefined, nativeFork: undefined, nativeResume: tx.resume.tree.reference }
+        }
         if (tx.fork) {
           activation.reason = 'fork'
           activation.config = { ...activation.config, branchFromSessionPath: tx.fork.sourcePath,
@@ -194,12 +216,13 @@ export class NativeSessionOwner {
         this.send(tx, { type: 'owner_activate', transactionId: tx.record.transactionId, activation })
       } else if (event.type === 'owner_target_bound' && fromTarget && tx.record.phase === 'activating') {
         if (!event.nativeSessionId) throw new Error('Native target session identity is missing')
-        if (tx.fork && (!event.reference || event.reference.nativeSessionId !== event.nativeSessionId)) {
-          throw new Error('Native fork is missing its bound target reference')
+        if ((tx.fork || tx.resume) && (!event.reference || event.reference.nativeSessionId !== event.nativeSessionId)) {
+          throw new Error('Native replacement is missing its bound target reference')
         }
         if (event.reference) await this.host.projection?.(sessionId, event.reference, backend)
         this.check(tx)
         if (tx.fork) await this.host.bindFork!(sessionId, tx.fork, event.reference!)
+        if (tx.resume) await this.host.bindSwitch!(sessionId, tx.resume, event.reference!)
         // The target now holds the foreground lease. The gap pin and original
         // source control must not block another transfer on a fresh connection.
         tx.transfer?.release()
@@ -268,7 +291,7 @@ export class NativeSessionOwner {
     let released = true
     try {
       try { this.send(tx, { type: 'owner_abort', transactionId: tx.record.transactionId, error: message }) } catch {}
-      if (tx.target) {
+      if (tx.target && (tx.record.operation !== 'switch' || tx.targetScope)) {
         try { await tx.target.releaseForOwner() }
         catch (releaseError) { released = false; this.report(tx, releaseError) }
       }
@@ -290,7 +313,8 @@ export class NativeSessionOwner {
           try {
             const publish = tx.committed && !tx.published
             // Error publication needs the same independent receipt as success.
-            await this.host.persist(tx.record.targetSessionId, { ...tx.record, role: 'target', unpublished: publish ? false : !tx.published })
+            await this.host.persist(tx.record.targetSessionId, { ...tx.record, role: 'target',
+              unpublished: tx.record.operation === 'switch' ? undefined : publish ? false : !tx.published })
             if (publish) {
               this.host.publish(tx.record.sourceSessionId, tx.record.targetSessionId, tx.record.transactionId)
               tx.published = true

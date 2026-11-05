@@ -178,6 +178,7 @@ export class PiAgent extends BaseAgent {
   private workerLease: PiWorkerLease | null = null;
   private projectionReadyLease?: PiWorkerLease;
   private pendingNativeProjection?: NativeSessionReference;
+  private nativeProjectionReceipt?: { lease: PiWorkerLease; promise: Promise<void> };
   private subprocessReady: Promise<void> | null = null;
   private subprocessStarting: Promise<void> | null = null;
   private subprocessStopping: Promise<boolean> | null = null;
@@ -185,6 +186,7 @@ export class PiAgent extends BaseAgent {
   private subprocessReadyReject: ((error: Error) => void) | null = null;
   private disposed = false;
   readonly nativeSessionOwner: PiNativeOwnerBackend = {
+    assertAvailable: () => this.assertNativeOwnerAvailable(),
     prepareActivation: () => this.prepareActivation(),
     detachForOwner: () => this.detachForOwner(),
     adoptForOwner: (transfer, transactionId) => this.adoptForOwner(transfer, transactionId),
@@ -456,6 +458,7 @@ export class PiAgent extends BaseAgent {
     this.workerLease = lease;
     this.projectionReadyLease = undefined;
     this.pendingNativeProjection = undefined;
+    this.nativeProjectionReceipt = undefined;
     this.subprocess = connection.child;
     return lease;
   }
@@ -519,8 +522,10 @@ export class PiAgent extends BaseAgent {
     const host = this.config.nativeSessionOwner;
     if (!host?.onProjection) return;
     const report = (error: unknown) => this.debug(`Native projection registration failed: ${error instanceof Error ? error.message : String(error)}`);
-    try { void host.onProjection(reference, this.nativeSessionOwner, connection).catch(report); }
-    catch (error) { report(error); }
+    const register = host.onProjection;
+    const receipt = Promise.resolve().then(() => register(reference, this.nativeSessionOwner, connection));
+    this.nativeProjectionReceipt = { lease, promise: receipt };
+    void receipt.catch(report);
   }
 
   private handleOwnerEvent(event: PiNativeOwnerEvent, connection: PiWorkerConnection, lease: PiWorkerLease): void {
@@ -585,12 +590,16 @@ export class PiAgent extends BaseAgent {
     });
   }
 
-  private async prepareActivation(): Promise<PiNativeOwnerActivation> {
+  private assertNativeOwnerAvailable(): void {
     if (this.disposed) throw new Error('PiAgent is disposed');
     if (this.ownerPreparing || this._isProcessing || this.detachedOwner || this.subprocessStarting || this.pendingCompactions.size
       || this.pendingMiniCompletions.size || this.pendingLlmQueries.size || this.pendingPermissions.size || this.runtimeConfigUpdatesPending) {
       throw new Error('Native session target is busy');
     }
+  }
+
+  private async prepareActivation(): Promise<PiNativeOwnerActivation> {
+    this.assertNativeOwnerAvailable();
     this.ownerPreparing = true;
     const epoch = this.compactionEpoch;
     try {
@@ -681,18 +690,23 @@ export class PiAgent extends BaseAgent {
     if (!lease) return;
     if (this.detachedOwner) this.cancelOwnerOperations('Pi owner released');
     await this.requestOwnerRelease(lease);
-    lease.release();
-    if (this.workerLease === lease) {
-      this.finishDetachedOwner();
-      this.extensionUI.reset();
-      this.subprocessReadyReject?.(new Error('Pi owner released before ready'));
-      this.clearForeground();
-      this.detachedOwner = undefined;
+    const receipt = this.nativeProjectionReceipt;
+    try {
+      if (receipt?.lease === lease) await receipt.promise;
+    } finally {
+      lease.release();
+      if (this.workerLease === lease) {
+        this.finishDetachedOwner();
+        this.extensionUI.reset();
+        this.subprocessReadyReject?.(new Error('Pi owner released before ready'));
+        this.clearForeground();
+        this.detachedOwner = undefined;
+      }
+      for (const [id, binding] of this.ownerControls) {
+        if (binding.lease === lease) this.ownerControls.delete(id);
+      }
+      this.pruneRetainedWorker(lease);
     }
-    for (const [id, binding] of this.ownerControls) {
-      if (binding.lease === lease) this.ownerControls.delete(id);
-    }
-    this.pruneRetainedWorker(lease);
   }
 
   private requestOwnerRelease(lease: PiWorkerLease): Promise<void> {
@@ -715,6 +729,7 @@ export class PiAgent extends BaseAgent {
     this.workerLease = null;
     this.projectionReadyLease = undefined;
     this.pendingNativeProjection = undefined;
+    this.nativeProjectionReceipt = undefined;
     this.subprocessReady = null;
     this.subprocessReadyResolve = null;
     this.subprocessReadyReject = null;

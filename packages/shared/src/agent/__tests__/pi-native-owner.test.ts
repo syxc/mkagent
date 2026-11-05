@@ -465,6 +465,34 @@ for (const mode of ['error', 'timeout', 'exit']) test(`rejects owner release on 
   expect(target.pendingOwnerReleases.size).toBe(0);
 });
 
+test('acknowledged writer release waits for its final projection receipt', async () => {
+  const owner = host();
+  const gate = Promise.withResolvers<void>();
+  owner.port.onProjection = () => gate.promise;
+  const target = agent('projection-gate', owner.port);
+  target.config.envOverrides = { FIXTURE_PROJECTION: '1' };
+  await target.ensureSubprocess();
+  const wire = observe(target);
+  let released = false;
+  const release = target.nativeSessionOwner.releaseForOwner().then(() => { released = true; });
+  await wire.inject([]);
+  expect(released).toBe(false);
+  gate.resolve();
+  await deadline(release);
+  expect(target.subprocess).toBeNull();
+});
+
+test('acknowledged writer release detaches even when its final projection receipt failed', async () => {
+  const owner = host();
+  owner.port.onProjection = async () => { throw new Error('fixture projection receipt failed'); };
+  const target = agent('projection-failure', owner.port);
+  target.config.envOverrides = { FIXTURE_PROJECTION: '1' };
+  await target.ensureSubprocess();
+  observe(target);
+  await expect(target.nativeSessionOwner.releaseForOwner()).rejects.toThrow('fixture projection receipt failed');
+  expect(target.subprocess).toBeNull();
+});
+
 test('rejects fabricated tokens and preserves source control until adoption', async () => {
   const source = agent('unbound-source');
   const target = agent('unbound-target');

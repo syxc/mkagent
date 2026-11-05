@@ -882,6 +882,7 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
       ...(config.branchFromSessionPath ? { branchFromSessionPath: config.branchFromSessionPath } : {}),
       ...(config.branchFromSdkTurnId ? { branchFromSdkTurnId: config.branchFromSdkTurnId } : {}),
       ...(config.nativeFork ? { nativeFork: config.nativeFork } : {}),
+      ...(config.nativeResume ? { nativeResume: config.nativeResume } : {}),
     });
     assertOwner();
     k.updateTools(buildToolsExtension(cwd, loadedMcp.tools));

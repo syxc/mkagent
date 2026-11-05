@@ -57,6 +57,7 @@ export interface PiNativeWorkerTransfer {
 
 /** Product-facing operations; physical process ownership remains inside the backend. */
 export interface PiNativeOwnerBackend {
+  assertAvailable?(): void;
   prepareActivation(): Promise<PiNativeOwnerActivation>;
   detachForOwner(): Promise<PiNativeWorkerTransfer>;
   adoptForOwner(transfer: PiNativeWorkerTransfer, transactionId: string): PiWorkerScope;

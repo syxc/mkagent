@@ -7,7 +7,7 @@ import type { Message } from '@mkagent/core/types'
 import type { PiAgent } from '../../../shared/src/agent/pi-agent'
 import type { ChildProcessWithoutNullStreams } from 'node:child_process'
 
-test('real product forks preserve full trees and archived files across repeated ownership and restart on both stores', async () => {
+test('real product forks and switches preserve complete history across ownership, failure and restart on both stores', async () => {
   const appRoot = resolve(import.meta.dir, '../../../..')
   const build = Bun.spawnSync([process.execPath, 'run', 'server:build:subprocess'], { cwd: appRoot, stdout: 'pipe', stderr: 'pipe' })
   if (build.exitCode !== 0) throw new Error(`Pi subprocess build failed: ${build.stderr}`)
@@ -34,6 +34,12 @@ test('real product forks preserve full trees and archived files across repeated 
       pi.registerCommand('archive-marker', { handler: async () => {
         pi.appendEntry('inactive-file', { path: join(process.env.MKAGENT_SESSION_DIR, 'attachments', 'inactive.md') });
       } });
+      pi.registerCommand('native-idle', { handler: async (_args, ctx) => { await ctx.waitForIdle(); } });
+      pi.registerCommand('native-switch', { handler: async (sessionPath, ctx) => {
+        await ctx.switchSession(sessionPath.trim(), { withSession: async next => {
+          await next.sendUserMessage('switch callback marker');
+        } });
+      } });
       pi.on('session_shutdown', (_, ctx) => {
         if (basename(process.env.MKAGENT_SESSION_DIR || '') !== readFileSync(join(ctx.cwd, '.fork-source'), 'utf8')) return;
         pi.appendEntry('shutdown-marker', { marker: 'closed source marker' });
@@ -42,8 +48,12 @@ test('real product forks preserve full trees and archived files across repeated 
     }
   `)
   const requests: Array<Record<string, unknown>> = []
+  let held: { entered: ReturnType<typeof Promise.withResolvers<void>>; release: ReturnType<typeof Promise.withResolvers<void>> } | undefined
   const endpoint = Bun.serve({ hostname: '127.0.0.1', port: 0, async fetch(request) {
     requests.push(await request.json() as Record<string, unknown>)
+    const waiting = held
+    held = undefined
+    if (waiting) { waiting.entered.resolve(); await waiting.release.promise }
     const id = `local-${requests.length}`
     return new Response([
       { id, choices: [{ index: 0, delta: { role: 'assistant', content: `local fork reply ${requests.length}` }, finish_reason: null }] },
@@ -75,6 +85,7 @@ test('real product forks preserve full trees and archived files across repeated 
   const child = (agent: PiAgent) => (agent as unknown as { subprocess: ChildProcessWithoutNullStreams | null }).subprocess
   let operation: { sourceId: string; targetId?: string; done: ReturnType<typeof Promise.withResolvers<string>> } | undefined
   const redirected: string[] = []
+  const created: string[] = []
   const deadline = <T>(promise: Promise<T>) => new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Product fork deadline exceeded')), 20_000)
     promise.then(value => { clearTimeout(timer); resolve(value) }, error => { clearTimeout(timer); reject(error) })
@@ -99,6 +110,7 @@ test('real product forks preserve full trees and archived files across repeated 
     await manager.initialize()
     manager.setEventSink((_channel, target, event) => {
       if (!event || typeof event !== 'object' || !('type' in event)) return
+      if (event.type === 'session_created') created.push(event.sessionId)
       if (event.type === 'session_created' && operation && event.session.parentSessionId === operation.sourceId) {
         operation.targetId = event.sessionId
         expect(target).toEqual({ to: 'workspace', workspaceId: workspace.id })
@@ -164,6 +176,83 @@ test('real product forks preserve full trees and archived files across repeated 
       const repeated = await read(repeatedId)
       expect(repeated.tree.header.parentSession).toBe(target.tree.reference.sessionFile)
       expect(repeated.stored.nativeArchivedMessages?.some(row => row.id === inactiveRow.id)).toBe(true)
+      await deadline(manager.sendMessage(source.id, 'resumed original source marker'))
+      await deadline(manager.sendMessage(source.id, '/native-idle'))
+      const waiting = held = { entered: Promise.withResolvers<void>(), release: Promise.withResolvers<void>() }
+      const busyTarget = manager.sendMessage(source.id, 'held target marker')
+      await deadline(waiting.entered.promise)
+      const busySwitch = operation = { sourceId: repeatedId, targetId: source.id, done: Promise.withResolvers<string>() }
+      const busyError = busySwitch.done.promise.catch(error => String(error))
+      const sourcePid = child(runtime.sessions.get(repeatedId)!.agent)!.pid
+      try {
+        await deadline(manager.sendMessage(repeatedId, `/native-switch ${before.tree.reference.sessionFile}`,
+          undefined, undefined, undefined, undefined, undefined, undefined, { callerClientId: 'fork-client' }))
+        expect(await deadline(busyError)).toContain('busy or unavailable')
+        expect(child(runtime.sessions.get(repeatedId)!.agent)?.pid).toBe(sourcePid)
+      } finally {
+        operation = undefined
+        waiting.release.resolve()
+        await deadline(busyTarget)
+      }
+      await deadline(manager.sendMessage(source.id, '/native-idle'))
+      const reserved = await read(source.id)
+      const oldTargetPid = child(runtime.sessions.get(source.id)!.agent)!.pid
+      expect(oldTargetPid).not.toBe(originalPid)
+      const createdBeforeSwitch = created.length
+      const existingTarget = runtime.sessions.get(source.id)!.agent.nativeSessionOwner!
+      const prepareActivation = existingTarget.prepareActivation
+      existingTarget.prepareActivation = async () => { throw new Error('intentional switch activation rejection') }
+      const failedSwitch = operation = { sourceId: repeatedId, targetId: source.id, done: Promise.withResolvers<string>() }
+      const failed = failedSwitch.done.promise.catch(error => String(error))
+      const rejected = manager.sendMessage(repeatedId, `/native-switch ${reserved.tree.reference.sessionFile}`,
+        undefined, undefined, undefined, undefined, undefined, undefined, { callerClientId: 'fork-client' })
+      try {
+        expect(await deadline(failed)).toContain('intentional switch activation rejection')
+        await deadline(rejected)
+      } finally {
+        existingTarget.prepareActivation = prepareActivation
+        operation = undefined
+      }
+      const retained = await read(source.id)
+      expect(retained.tree).toEqual(reserved.tree)
+      expect(retained.stored.messages).toEqual(reserved.stored.messages)
+      expect(retained.stored.nativeArchivedMessages).toEqual(reserved.stored.nativeArchivedMessages)
+      expect(retained.stored.nativeSessionOwner?.unpublished).not.toBe(true)
+      expect(await manager.getSession(source.id)).not.toBeNull()
+      expect(child(runtime.sessions.get(source.id)!.agent)?.pid).toBe(oldTargetPid)
+      expect(child(runtime.sessions.get(repeatedId)!.agent)).toBeNull()
+      await deadline(manager.sendMessage(repeatedId, '/native-idle'))
+      const switchPid = child(runtime.sessions.get(repeatedId)!.agent)!.pid
+      const currentSwitch = operation = { sourceId: repeatedId, targetId: source.id, done: Promise.withResolvers<string>() }
+      const switching = manager.sendMessage(repeatedId, `/native-switch ${reserved.tree.reference.sessionFile}`,
+        undefined, undefined, undefined, undefined, undefined, undefined, { callerClientId: 'fork-client' })
+      expect(await deadline(currentSwitch.done.promise)).toBe(source.id)
+      await deadline(switching)
+      operation = undefined
+      const resumed = await read(source.id)
+      expect(created).toHaveLength(createdBeforeSwitch)
+      expect(resumed.tree.reference.nativeSessionId).toBe(reserved.tree.reference.nativeSessionId)
+      expect(resumed.tree.reference.conversationId).toBe(reserved.tree.reference.conversationId)
+      expect(resumed.tree.header).toEqual(reserved.tree.header)
+      expect(resumed.tree.entries.slice(0, reserved.tree.entries.length)).toEqual(reserved.tree.entries)
+      expect(resumed.stored.nativeSessionOwner?.operation).toBe('switch')
+      expect(resumed.stored.nativeSessionOwner?.committed).toBe(true)
+      expect(resumed.stored.name).toBe('')
+      expect(resumed.stored.messages.some(row => row.content === 'excluded source marker')).toBe(true)
+      expect(child(runtime.sessions.get(source.id)!.agent)?.pid).toBe(switchPid)
+      expect(child(runtime.sessions.get(repeatedId)!.agent)).toBeNull()
+      expect(JSON.stringify(requests.at(-1))).toContain('excluded source marker')
+      expect(JSON.stringify(requests.at(-1))).toContain('resumed original source marker')
+      expect(JSON.stringify(requests.at(-1))).toContain('switch callback marker')
+      expect(JSON.stringify(requests.at(-1))).not.toContain('fork callback marker')
+      const switchedAgent = runtime.sessions.get(source.id)!.agent
+      await deadline(switchedAgent.nativeSessionOwner!.releaseForOwner())
+      expect(child(switchedAgent)).toBeNull()
+      await deadline(manager.sendMessage(source.id, 'cold switched target marker'))
+      expect(child(switchedAgent)?.pid).not.toBe(switchPid)
+      expect(switchedAgent.getSessionId()).toBe(reserved.tree.reference.nativeSessionId)
+      expect(JSON.stringify(requests.at(-1))).toContain('resumed original source marker')
+      expect(JSON.stringify(requests.at(-1))).not.toContain('fork callback marker')
       await deadline(manager.deleteSession(source.id))
       await deadline(manager.deleteSession(targetId))
       const repeatedAgent = runtime.sessions.get(repeatedId)!.agent

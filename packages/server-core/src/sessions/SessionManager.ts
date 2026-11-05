@@ -7,6 +7,7 @@ import { SessionExtensionUI } from './extension-ui'
 import { InputOrigins } from './input-origins'
 import { NativeSessionOwner } from './native-session-owner'
 import { closeNativeForkProof, prepareNativeForkProof, verifyNativeForkTarget, type NativeForkProof } from './native-session-fork'
+import { closeNativeSwitchProof, prepareNativeSwitchProof, verifyNativeSwitchTarget, type NativeSwitchProof } from './native-session-switch'
 import { partitionNativeProductHistory } from '../../../shared/src/sessions/native-product-history'
 import type { PiNativeOwnerBackend, PiNativeOwnerRequest } from '../../../shared/src/agent/backend/pi/native-owner-protocol'
 import type { BackgroundTaskOutput, StopBackgroundTaskResult } from '@mkagent/shared/protocol'
@@ -102,7 +103,7 @@ import { buildBackendRuntimeSignature, buildRestartRequiredSignature } from './r
 import { rollbackFailedBranchCreation, sanitizeForTitle } from '@mkagent/server-core/domain'
 import { validateArchiveTarget } from './archive-guards'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { isAbsolute, join, resolve } from 'node:path'
 import { isDeepStrictEqual } from 'node:util'
 import { generateConversationSummary } from '@mkagent/shared/agent/conversation-summary'
 
@@ -395,6 +396,11 @@ export class SessionManager implements ISessionManager {
     bindFork: async (targetId, proof, reference) => {
       verifyNativeForkTarget(proof, this.nativeForkIdentity(targetId, reference))
     },
+    prepareSwitch: (sourceId, request) => this.prepareNativeSwitch(sourceId, request),
+    closeSwitch: (targetId, proof) => this.closeNativeSwitch(targetId, proof),
+    bindSwitch: async (targetId, proof, reference) => {
+      verifyNativeSwitchTarget(proof, this.nativeForkIdentity(targetId, reference))
+    },
     createTarget: async (sourceId, record) => {
       const source = this.sessions.get(sourceId)
       if (!source) throw new Error('Native source session was deleted')
@@ -432,7 +438,7 @@ export class SessionManager implements ISessionManager {
       const target = this.sessions.get(targetId)
       if (!target?.nativeSessionOwner) throw new Error('Native target session was deleted')
       target.nativeSessionOwner = { ...target.nativeSessionOwner, unpublished: undefined }
-      this.emit(target.workspace.id, {
+      if (target.nativeSessionOwner.operation !== 'switch') this.emit(target.workspace.id, {
         type: 'session_created', sessionId: targetId, session: structuredClone(this.toSession(target, true)),
       })
       if (clientId) this.eventSink(RPC_CHANNELS.sessions.EVENT, { to: 'client', clientId }, {
@@ -1229,10 +1235,59 @@ export class SessionManager implements ISessionManager {
     return proof
   }
 
+  private prepareNativeSwitch(sourceId: string, request: PiNativeOwnerRequest): NativeSwitchProof {
+    if (request.operation.type !== 'switch' || !isAbsolute(request.operation.sessionPath)
+      || resolve(request.operation.sessionPath) !== request.operation.sessionPath) {
+      throw new Error('Native switch requires a canonical registered session path')
+    }
+    const source = this.sessions.get(sourceId)
+    if (!source) throw new Error('Native switch source was deleted')
+    const path = request.operation.sessionPath
+    const candidates = [...this.sessions.values()].filter(session =>
+      session.workspace.id === source.workspace.id && session.workspace.rootPath === source.workspace.rootPath
+      && session.nativeSessionProjection?.sessionFile === path)
+    if (candidates.length !== 1) throw new Error('Native switch target is not uniquely registered in this workspace')
+    const target = candidates[0]!
+    if (target.id === sourceId || this.deletingSessions.has(target.id) || this.nativeOwners.isLocked(target.id)
+      || target.isProcessing || this.adoptedTurns.has(target.id) || target.messageQueue.length
+      || target.nativeSessionOwner?.unpublished || target.codingMode !== true) {
+      throw new Error('Native switch target is busy or unavailable')
+    }
+    const reference = target.nativeSessionProjection!
+    if ((target.sdkSessionId && target.sdkSessionId !== reference.nativeSessionId)
+      || [...this.sessions.values()].some(session => session.id !== target.id
+        && session.workspace.id === source.workspace.id
+        && session.nativeSessionProjection?.nativeSessionId === reference.nativeSessionId)) {
+      throw new Error('Native switch target identity is not unique')
+    }
+    if (target.agent && !target.agent.nativeSessionOwner?.assertAvailable) {
+      throw new Error('Native switch target backend cannot validate availability')
+    }
+    target.agent?.nativeSessionOwner?.assertAvailable?.()
+    return prepareNativeSwitchProof(this.nativeForkIdentity(target.id))
+  }
+
+  private async closeNativeSwitch(targetId: string, prepared: NativeSwitchProof): Promise<NativeSwitchProof> {
+    const proof = closeNativeSwitchProof(prepared, this.nativeForkIdentity(targetId))
+    if (proof.tree.hasName) await this.persistNativeMetadata(targetId, (snapshot, managed) => {
+      snapshot.name = proof.tree.reference.name ?? ''
+      return () => { managed.name = snapshot.name }
+    })
+    return proof
+  }
+
   private async rollbackNativeTarget(sessionId: string, transactionId: string): Promise<void> {
     const managed = this.sessions.get(sessionId)
     const record = managed?.nativeSessionOwner
-    if (!managed || record?.role !== 'target' || record.transactionId !== transactionId || !record.unpublished) return
+    if (!managed || record?.role !== 'target' || record.transactionId !== transactionId) return
+    if (record.operation === 'switch') {
+      const source = this.sessions.get(record.sourceSessionId)?.nativeSessionOwner
+      const failed = source?.transactionId === transactionId ? source : record
+      await this.persistNativeOwner(sessionId, { ...failed, role: 'target',
+        phase: failed.phase === 'aborted' ? 'aborted' : 'failed', callbacks: 'interrupted', unpublished: undefined }, transactionId)
+      return
+    }
+    if (!record.unpublished) return
     sessionPersistenceQueue.cancel(sessionId)
     await sessionPersistenceQueue.flush(sessionId)
     this.extensionUI.remove(sessionId)

@@ -8,6 +8,7 @@ import type { AgentEvent } from '@mkagent/core/types'
 import type { SessionEvent } from '@mkagent/shared/protocol'
 import type { PiNativeOwnerActivation, PiNativeOwnerBackend, PiNativeOwnerControl, PiNativeOwnerEventBody } from '../../../shared/src/agent/backend/pi/native-owner-protocol'
 import type { NativeSessionOwner } from './native-session-owner'
+import type { NativeSessionOwnerRecord } from '@mkagent/shared/sessions'
 
 // Run in a separate process: config paths are fixed when their modules load.
 const root = mkdtempSync(join(tmpdir(), 'product-native-owner-'))
@@ -404,6 +405,38 @@ test('an old target finalization cannot overwrite the source next transaction', 
   expect(loadSession(f.workspaceRoot, f.source.id)?.nativeSessionOwner).toMatchObject({
     transactionId: 'next-source-transaction', phase: 'prepared', committed: false,
   })
+})
+
+for (const committed of [false, true]) test(`restart preserves an existing switch target with committed=${committed}`, async () => {
+  const f = await fixture()
+  const target = await f.manager.createSession('owner-ws', { name: 'Existing target', codingMode: true })
+  const before = loadSession(f.workspaceRoot, target.id)!
+  const nativePath = join(f.workspaceRoot, 'sessions', target.id, 'native-session')
+  mkdirSync(nativePath, { recursive: true })
+  writeFileSync(join(nativePath, 'history.fixture'), 'existing durable history')
+  const record: NativeSessionOwnerRecord = {
+    transactionId: 'switch-recovery', role: 'source', sourceSessionId: f.source.id, targetSessionId: target.id,
+    sourceNativeSessionId: 'native-source', targetNativeSessionId: 'native-existing',
+    operation: 'switch', phase: committed ? 'committed' : 'prepared', committed, callbacks: 'blocked',
+  }
+  await sessionPersistenceQueue.persist({ ...loadSession(f.workspaceRoot, f.source.id)!, nativeSessionOwner: record })
+  await sessionPersistenceQueue.persist({ ...before, nativeSessionOwner: { ...record, role: 'target' } })
+  const restarted = new SessionManager()
+  ;(restarted as unknown as Harness).setupConfigWatcher = () => {}
+  try {
+    await restarted.initialize()
+    expect(restarted.getSessions().map(session => session.id).sort()).toEqual([f.source.id, target.id].sort())
+    const after = loadSession(f.workspaceRoot, target.id)!
+    expect(after.name).toBe(before.name)
+    expect(after.messages).toEqual(before.messages)
+    expect(after.nativeSessionOwner).toMatchObject({
+      operation: 'switch', phase: committed ? 'committed' : 'aborted', committed, callbacks: 'interrupted',
+    })
+    expect(after.nativeSessionOwner?.unpublished).toBeUndefined()
+    expect(readFileSync(join(nativePath, 'history.fixture'), 'utf8')).toBe('existing durable history')
+    expect(f.counts.started).toBe(0)
+    expect(f.counts.targetChats).toBe(0)
+  } finally { restarted.cleanup() }
 })
 
 for (const committed of [false, true]) {

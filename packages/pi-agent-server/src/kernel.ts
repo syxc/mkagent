@@ -42,7 +42,7 @@ import { openDurableStorage } from './storage/durable-storage.ts';
 import {
   assertNativeForkStoreItem, readBranchConversationId, verifyNativeForkStore, type NativeForkSource,
 } from './storage/native-fork-source.ts';
-import { parseNativeSessionReference } from '../../shared/src/sessions/native-session-reference.ts';
+import { parseNativeSessionReference, type NativeSessionReference } from '../../shared/src/sessions/native-session-reference.ts';
 import { discardInheritedWork } from './storage/branch-storage.ts';
 import { migrateLegacyCodingWork } from './storage/coding-migration.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
@@ -128,6 +128,7 @@ export interface KernelOpenOptions {
   branchFromSdkTurnId?: string;
   /** Keep the entire native tree, then select this leaf instead of applying a durable cutoff. */
   nativeFork?: NativeForkSource;
+  nativeResume?: NativeSessionReference;
 }
 
 interface RetrySynthState {
@@ -228,6 +229,10 @@ export class DurableKernel {
   async open(config: KernelOpenOptions): Promise<void> {
     const resuming = existsSync(join(this.storeDir, 'session-id.txt'));
     const branchFrom = config.branchFromSessionPath;
+    if (config.nativeResume && (!this.options.coding || !resuming || branchFrom || config.nativeFork
+      || !parseNativeSessionReference(config.nativeResume))) {
+      throw new Error('Pi native resume requires an existing coding store and a released target reference');
+    }
     if (config.nativeFork && (!this.options.coding || !branchFrom
       || !parseNativeSessionReference(config.nativeFork.source)
       || (config.nativeFork.leaf !== null && (typeof config.nativeFork.leaf !== 'string' || !config.nativeFork.leaf)))) {
@@ -306,6 +311,16 @@ export class DurableKernel {
       if (config.nativeFork) {
         if (!copiedParent) throw new Error('Pi fork closed native source was not copied');
         await verifyNativeForkStore(this.storeDir, branchFrom!, config.nativeFork, BACKGROUND_CONTEXT);
+      }
+      if (config.nativeResume) {
+        assertNativeForkStoreItem(this.options.sessionPath);
+        assertNativeForkStoreItem(this.storeDir);
+        for (const name of ['main.jsonl', 'store.db', 'store.db-wal', 'store.db-shm', 'session-id.txt', 'conversation-id.txt']) {
+          const path = join(this.storeDir, name);
+          if (existsSync(path)) assertNativeForkStoreItem(path);
+        }
+        await verifyNativeForkStore(this.storeDir, this.options.sessionPath,
+          { leaf: config.nativeResume.leaf, source: config.nativeResume }, BACKGROUND_CONTEXT);
       }
       if (copiedParent) {
         rewriteStoredModelHistory(this.options.sessionPath,

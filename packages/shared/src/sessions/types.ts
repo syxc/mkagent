@@ -55,7 +55,8 @@ export interface NativeSessionOwnerRecord {
   targetSessionId?: string;
   sourceNativeSessionId: string;
   targetNativeSessionId?: string;
-  operation: 'new' | 'fork';
+  operation: 'new' | 'fork' | 'switch';
+  targetReference?: NativeSessionReference;
   fork?: {
     entryId: string;
     position: 'before' | 'at';

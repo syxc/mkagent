@@ -30,6 +30,7 @@ export interface PiWorkerInitConfig {
   branchFromSessionPath?: string;
   branchFromSdkTurnId?: string;
   nativeFork?: { leaf: string | null; source: NativeSessionReference };
+  nativeResume?: NativeSessionReference;
   customEndpoint?: CustomEndpointConfig;
   customModels?: Array<string | { id: string; contextWindow?: number; supportsImages?: boolean }>;
   autoCompactWindow?: number;
