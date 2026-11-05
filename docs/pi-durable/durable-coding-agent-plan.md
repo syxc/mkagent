@@ -450,7 +450,23 @@ PowerShell 核对同时发现真实产品接线缺口：原生 SDK factory 存�
 
 证据位于任务目录的 `macos-acceptance/`：`powershell-result.json`、`tui-regular/result.json`、`tui-fullscreen/result.json`、`tui-mcp/result.json`、`tui-mcp/server-lifecycle.jsonl`、三个 TUI 目录的 PNG，以及 `desktop/metrics.json`、`desktop/project-trust.png` 和 `desktop/history-reopened.png`。Desktop 窗口已正常退出，任务本地服务已结束，三个 TUI 会话均已关闭；保留夹具、产物和日志用于复核。
 
-仍需 WebUI 项目信任专属画面、Windows 和正式 Desktop 发布安装包验收，SDK TUI 也仅覆盖本节列出的组合。原浏览器任务 7 已恰一次关闭，用户限定只用该任务，补充 WebUI 流程前需要新隔离任务的明确授权，未自行新建或重新占用。密码遮罩仍只有 DOM 证据，未重试此前被拒的截图。已有结果不扩展为所有插件、产品入口和平台全部兼容。
+该批结束时仍需 WebUI 项目信任专属画面、Windows 和正式 Desktop 发布安装包验收，SDK TUI 也仅覆盖本节列出的组合。原浏览器任务 7 已恰一次关闭，用户限定只用该任务，当时没有自行新建或重新占用；随后取得新任务授权并补验 WebUI，见下一节。密码遮罩仍只有 DOM 证据，未重试此前被拒的截图。
+
+## WebUI 项目信任补充验收
+
+用户明确授权唯一新隔离任务 `mkagent-durable-coding-trust-20261106`，实际编号为 8。只使用该任务的 p1，访问任务搬迁包的随机回环地址，配置、HOME、项目、服务与数据独立放在 `macos-acceptance/webui-trust/`。复用的搬迁包来自 `640aca6`，此后产品运行时未改；`846029f` 只修改 Electron 子包构建入口。
+
+| 实际流程 | 证据 |
+|---|---|
+| 导入前信任提示 | 全局 ask、项目 settings 故意声明 always。真实 WebUI 仍显示项目信任 select；批准前 global 插件已加载，项目插件未加载，两个项目 MCP 均没有启动，模型请求为 0。 |
+| 仅会话拒绝 | 实际选择 Do not trust (this session only)，再点击 Continue。项目插件保持未加载、两个 MCP 均未启动、两个项目命名空间没有工具。宿主原有 6 个会话工具正常保留，共 1 次本地模型请求。 |
+| 新会话批准 | 新建真实 coding 会话后仍显示信任选择。选择 Trust (this session only)，再点击 Continue，项目插件加载，`.pi/mcp.json` 与 `.mkagent/mcp.json` 的两个服务各启动 1 次。实际通知 DOM 与工具快照均包含 `mcp__host__hello` 和 `mcp__native__hello`，合计 2 次本地模型请求。 |
+| 可视证据 | `deny-selected.png`、`trust-selected.png` 和 `approved-tools.png` 已读取检查。选择项在像素画面中可见；批准后通知存在文字截断，不用该截图证明完整工具名称可读，名称另由通知 DOM 与 `tools.json` 确认。截图前检查没有 password 输入，未触及此前被拒的密码截图目标。 |
+| 夹具与观察修正 | 首次路径守卫因 `/tmp` 与 `/private/tmp` 的字符串不同，在产品启动前终止，统一任务路径后启动。初次等待错误要求通知为 TRUST_TOOLS none，忽略了正确保留的宿主会话工具；改按两个项目命名空间核验后通过，无产品补丁。启动日志把 WebUI 地址固定打印为 0.0.0.0，实际用 lsof 核对监听为 127.0.0.1；这是既存日志显示差异，本批没有修改。 |
+
+阶段结果为 `denied-result.json`、`result.json`、`metrics.json` 和 `tools.json`，均位于上述任务目录。任务 8 已恰一次等待 `finish({keep:[]})` 完成，不保留页面；随后只对该夹具服务发送 SIGTERM，收到正常退出回执。该批没有修改产品代码，验证文档通过中文标点和 diff 检查；沿用前述已通过的 CI 与代码层回归。
+
+WebUI 项目信任画面的缺口已关闭。Windows、正式 Desktop 发布安装包及本节以外的 SDK TUI 组合仍未验收，D3.6、D4 与 D6 继续保留进行中，不声明全部插件或平台兼容。
 
 ## 验证与完成规则
 
