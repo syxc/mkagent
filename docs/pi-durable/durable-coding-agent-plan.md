@@ -73,7 +73,7 @@ MkAgent 最初以 Pi coding agent 为底层，第一次切换改用 pi-durable�
 | D2 | MkAgent 主链路 | 按保留清单检查模型、审批、代理/会话工具、MCP、浏览器、后台任务、持久化、分支和传输；修复发现的缺口，运行相关产品集成和完整仓库回归。 | 已完成 |
 | D3 | 插件会话与交互 | 补齐由产品会话所有者执行的原生会话操作和插件交互适配；每个 API 组用未修改插件驱动实际效果，检查 reload、取消和恢复。 | 进行中 |
 | D4 | 原生资源与授权 | 补齐项目资源的信任入口、MCP 交互授权和显式包管理路径；继续保持禁止隐式安装及未授权项目执行。 | 进行中 |
-| D5 | 打包与产品验收 | 检查独立包消费者、来源、许可、资源和产物搬迁，在隔离环境运行实际产品入口；区分构建通过、功能通过和平台受阻。 | macOS 构建与协议验收完成，可视及其他平台受阻 |
+| D5 | 打包与产品验收 | 检查独立包消费者、来源、许可、资源和产物搬迁，在隔离环境运行实际产品入口；区分构建通过、功能通过和平台受阻。 | macOS 构建、协议及选定 WebUI 流程完成，Desktop 与其他平台待验收 |
 | D6 | 最终需求对照 | 将本文、能力总表、实现、测试与未解决项逐条对应；全部必需项有结果后才声明完成，记录最终本地提交。 | 进行中 |
 
 D1 的已知风险是把原生会话开关直接设为始终启用：它会连带加载普通会话以前隔离的 Pi 资源。现有 `kernel.e2e.test.ts` 的默认 profile 隔离用例是保留契约，不能通过改掉该预期来消除失败。
@@ -172,7 +172,7 @@ D2 的最小入口包括 `pi-conversation-flow.integration.test.ts`、`pi-permis
 | D3.6 输入恢复界限 | 完全冷的 `getSession()` 不启动 worker，不能据此声称打开会话即补齐；当前证据仅覆盖显式启动 worker。旧记录若没有原始输入标记，不凭空重建未知原文。图片文件检查拒绝符号链接、冲突字节和无效目录，并可重试补回缺失文件；仍依赖可信工作区及操作锁，不声称抵御任意目录交换。并发、故障及可视产品验收继续按 D3.6 补齐。 |
 | D3.6 输入检查 | 最终 `validate:ci` 退出 0，coding 包为 205 项、1309 个断言，真实 host 的 hooks、提示词及输入身份为 11 项、114 个断言，产品登记为 9 项、48 个断言，均通过。两套固定上游生成检查通过，运行时仍为 250 份源码和 9 项资源；隔离 Craft 来源审计覆盖 2108 份文件，lint 为 0 错误、107 项既有警告，中文标点检查通过。此前合跑命令中的一个 host 文件名不存在，Bun 忽略该路径；205 项只计 coding 包，11 项 host 另用真实文件路径验证。本轮未运行全仓 `bun run test`。 |
 | D3.6 输入复核 | 独立静态复核覆盖输入身份、分支、图片、并发回执及释放边界，发现 workspace 尾部分隔符导致图片路径被错误截取。新增用例实际先失败，改用 `relative()` 后，标准、尾部分隔符、重复分隔符及末尾点路径的图片与重试身份检查通过；检索仅发现该处同形切片。修正后再次通过 `validate:ci` 及上述 30 项定向用例。复核未运行测试或取得完整 Git diff；主线程核对本批全部生产补丁与四个新增文件，不将其称为全面审计。 |
-| D3.6 可视验收受阻 | 原授权浏览器空间 6 及任务名均已不存在，未新建恢复空间，也未访问空间 7 或真实 WebUI。可视验收仍未完成，保留后续隔离 WebUI 的 dialog、草稿、树导航、历史和 NEW 检查。D3.6 继续进行。 |
+| D3.6 早期可视阻塞 | 当时原授权浏览器空间 6 及任务名均已不存在，没有借用其他空间或真实 WebUI。用户随后明确授权新任务，选定 WebUI 验收及修复见最新可视验收记录；原空间缺失不再作为当前阻塞。D3.6 继续进行。 |
 | D3.6 基线检查 | `validate:ci`、两套固定上游生成检查和 17 项既有原生行为对照通过。Lint 为 0 错误、107 项既有警告，隔离 Craft 来源审计覆盖 2104 份文件，中文标点检查通过。本轮未运行全仓 `bun run test`。独立静态复核确认两端使用相同插件，指出夹具初始化失败会绕过清理，现按资源创建顺序登记清理，使复制、服务启动和导入失败也会释放已有资源并恢复隔离环境。复核未执行测试，修正和验证由主线程完成。 |
 
 ## D3 实施顺序
@@ -362,7 +362,7 @@ Stop、UI 失效、reload、所有者释放、re-init 和 shutdown 与 MCP 授�
 
 ## D5 干净构建与最终回归
 
-本批先在 `10cac69` 的干净 detached worktree 冻结安装，再检查独立消费者和搬迁后的 headless 入口。以下产物证据对应 `10cac69`，不包含随后发现的 SDK 输入标记与普通产品分叉修正。最终提交的产物仍须重新构建。
+本批先在 `10cac69` 的干净 detached worktree 冻结安装，再检查独立消费者和搬迁后的 headless 入口。以下产物证据对应 `10cac69`，不包含随后发现的 SDK 输入标记与普通产品分叉修正。当时最终提交的产物仍须重新构建，后续结果见最新可视验收记录。
 
 | 验证 | 实际结果 |
 |---|---|
@@ -377,7 +377,7 @@ Stop、UI 失效、reload、所有者释放、re-init 和 shutdown 与 MCP 授�
 | 分叉红绿证据 | 原始 bundled-worker 用例先失败，修正后 1 项、43 项断言通过，包含普通 cutoff 分叉、继承 coding mode、导出导入、导入后再分叉、后台交接与重开。新增 `session-branch-preflight.isolated.ts` 的三个场景共 35 项断言通过，覆盖严格回执、发布前隔离、写入后的失败清理，以及阻塞真实 rename 时等待并取消实际排队保存。 |
 | 独立复核 | 只读诊断确认普通 branch API 与原生 `ctx.fork()` 的生命周期不同。只读复核另发现提前登记会暴露未提交分支，主线程先复现后补齐发布保护；故障夹具也补上 cleanup 入口信号及真实排队保存。复核未运行测试或构建。 |
 
-发布保护修正后的完整 `bun run test` 已退出 0：主批次 433 份文件、5084 项通过、11 项跳过、0 失败，后续 33 份串行与隔离文件全部通过。`validate:ci`、隔离 Craft 来源审计及 lint 均退出 0，lint 为 0 错误、107 项警告；两套固定生成检查通过。独立 SDK 修正提交为 `a1790ed`，普通分叉与回执夹具迁移提交为 `4e29c34`。这些结果尚不包含随后新增的 D6 定向用例，最终产物仍须重建。此前主动停止或退出 1 的运行保留为排错记录，不计为通过。
+发布保护修正后的完整 `bun run test` 已退出 0：主批次 433 份文件、5084 项通过、11 项跳过、0 失败，后续 33 份串行与隔离文件全部通过。`validate:ci`、隔离 Craft 来源审计及 lint 均退出 0，lint 为 0 错误、107 项警告；两套固定生成检查通过。独立 SDK 修正提交为 `a1790ed`，普通分叉与回执夹具迁移提交为 `4e29c34`。这些结果不包含随后新增的 D6 定向用例，该批结束时最终产物仍须重建。此前主动停止或退出 1 的运行保留为排错记录，不计为通过。
 
 ## D6 定向能力核对
 
@@ -389,9 +389,9 @@ skill 前置读取发现两个提前登记点：`Read` 的开始事件，以及�
 
 PowerShell 核对同时发现真实产品接线缺口：原生 SDK factory 存在，但宿主覆盖工具表没有注册。现只在 coding profile 注册 deferred 工具，由原生插件显式激活，并沿用 durable 工具任务。宿主将其识别为 `PowerShell`，不套用 Bash 语法或记忆键；Explore 拒绝，Ask 每次确认，Allow All 可执行。真实 worker 以任务临时 `pwsh` 进程替身验证发现、拒绝无启动、批准后的 UTF-8 设置及参数，1 项、20 项断言通过；权限用例 11 项、27 项断言通过。替身不是 PowerShell 解释器，当前 macOS 无 `pwsh`，实际 PowerShell 和 Windows 执行仍单列环境限制。
 
-原浏览器空间缺失仍单独记账，不由协议用例替代。
+原浏览器空间缺失是本批当时的阻塞，后续已在用户明确授权的新任务中完成选定 WebUI 验收，见最新可视验收记录。
 
-## 最终代码验证（`a41e6b5`）
+## 历史代码与产物验证（`a41e6b5`）
 
 本轮本地提交为 `61fac5d`（读取确认与命名 PowerShell 审批）、`57bbaf5`（coding profile 的 PowerShell 接线）和 `a41e6b5`（搜索、长输出、instructions 与需求对照）。没有 push、PR、merge 或对外消息。
 
@@ -406,7 +406,29 @@ PowerShell 核对同时发现真实产品接线缺口：原生 SDK factory 存�
 
 完整测试首轮命令因 PATH 未加引号而未启动；随后全局设置 `PI_OFFLINE=1` 的运行禁用了本地包替身要验证的显式更新，主动停止且不计通过。最终完整运行移除该全局变量，使用明确的工具路径，通过全部文件。新增成功确认用例使来源覆盖登记从 26 项增至 27 项，已同步静态计数及来源摘要。
 
-日志保留于任务目录的 `d6-verified-repository.log`、`d6-final-ci.log`、`d6-final-lint.log`、`d6-final-audit.log`、`d6-clean-headless.log`、`d6-consumer-runtime.log`、`d6-headless-relocated.log` 和 `d6-headless-product.log`。工作树在三个提交后保持干净。再次检查原浏览器空间 6 仍不存在，剩余可视验收需要明确授权可用的隔离空间；Windows、真实 PowerShell 和终端专属交互仍未验收。D3.6、D4 和 D6 不据此标记整体完成。
+日志保留于任务目录的 `d6-verified-repository.log`、`d6-final-ci.log`、`d6-final-lint.log`、`d6-final-audit.log`、`d6-clean-headless.log`、`d6-consumer-runtime.log`、`d6-headless-relocated.log` 和 `d6-headless-product.log`。工作树在三个提交后保持干净。该批结束时原浏览器空间 6 仍不存在，后续授权及验收见下一节；Windows、真实 PowerShell 和终端专属交互仍未验收。D3.6、D4 和 D6 不据此标记整体完成。
+
+## 最新可视验收与修复（`9965789`、`640aca6`）
+
+用户在原空间 6 缺失后明确授权新建任务 `mkagent-durable-coding-visual-d6-20261104`，并确认仅使用这个新任务。它获得编号 7；所有浏览器操作均按该名称恢复并核对归属，没有访问其他旧空间、真实 WebUI、真实 HOME 凭据或付费模型。以下两批均使用任务目录、隔离 HOME/config 和本地确定性服务。
+
+| 验证 | 实际结果 |
+|---|---|
+| 确认框焦点修复 | `9965789` 修复仅寻找 input 的初始焦点逻辑：确认框没有 input，焦点原来落在 body，Escape 无效；现在在所属面板聚焦时回退到 Cancel。真实 WebUI 修前复现失败，修后验证 Cancel 获得焦点、Escape 取消，以及 Shift+Tab 后 Enter 确认，原样 rpc-demo 的 NEW 确认也通过。没有新增该确认框的专门自动化用例。 |
+| 首批 WebUI | 同一隔离任务验证原样 input 的中文输入、自动聚焦及 Enter，多行 editor 的 Enter 换行及 Tab 聚焦 Continue 后 Enter 提交，select 第二项、预填、Escape 取消及未发送中文草稿保留。树导航移除后来消息并返回成功。合成 provider 的 API key 与 OAuth secret 为 password 输入，获得焦点、关闭自动完成与拼写检查，提交后页面不回显；OAuth 的选择、code 和 secret 返回均符合预期，帮助链接带安全的新窗口属性。 |
+| 密码证据边界 | 密码截图读取被自动审批拒绝，未重试或绕过。password 类型和其他属性只计 DOM 证据，不声称已人工检查遮罩截图，也不代表请求过真实外部 provider。 |
+| NEW setup 根因与修复 | 首批发现 setup 的 `manager.appendMessage(user)` 已进入 journal 和模型上下文，却没有产品输入身份，被严格历史投影过滤。`640aca6` 抽取共同原始输入捕获，仅代理 setup 新增 user 的 append，其余方法绑定真实 manager；`commitSetup()` 在目标 hooks 和 callback 前等待 journal、投影及当前 scope 的严格产品回执，保留旧无标记记录的过滤。 |
+| NEW 红绿与恢复 | 产品红测先复现 setup 历史缺失，两种 worker 启动路径先复现 hooks 提前运行。修后 `native-owner-runtime.isolated.ts` 为 1 项、78 个断言，覆盖 setup、callback 顺序、已保存事件、setup-only 无模型请求及冷 worker 后 ID 不变且无重复。18 项 worker 用例通过，含错误 scope 回执拒绝及正确回执才放行；两种存储的产品 fork 回归单独运行通过。 |
+| 最新干净产物 | 干净 detached checkout 对齐 `640aca6`，冻结安装及 headless 构建通过，工作树干净。构建复用任务内同版本 `@vscode/ripgrep` 依赖的已验证二进制，实际为 rg 15.0.0。压缩包 `final-headless-visual.tar.gz` 搬迁至新目录，SHA-256 为 `a246541401b6b6b8eec161040aceb985375dfb1f6126a5e09fb3908325dfb172`。 |
+| 最新 WebUI 与多面板 | 实际运行该搬迁产物，重新验证确认框键盘行为。NEW 的 setup、callback 及回复均在产品历史可见，刷新仍保留。另在 before-switch hook 暂停 NEW，切至另一面板输入中文草稿后释放：目标发布并完成，另一面板草稿和焦点保持，未聚焦的源面板保持原会话；新目标在列表中，显式打开后消息完整。 |
+| 最新 MCP OAuth | `/mcp login issues` 的输入获得焦点，授权链接包含 PKCE S256 和 state。实际点击链接，在同一任务 popup 完成本地回环并显示成功；原表单关闭，`mcp__issues__whoami` 随登录出现、随登出移除。再次登录按 Escape，表单和链接清理且提示取消。最终计数为 2 次注册、1 次授权、1 次令牌请求，第二次取消没有新增令牌请求。 |
+| 最新完整回归 | `640aca6` 的 `bun run test` 主批次为 436 份文件、5096 项通过、11 项跳过、0 失败，后续 35 份串行与隔离文件全部通过。`validate:ci`、类型检查、lint 与隔离 Craft 来源审计通过；lint 为 0 错误、107 项警告，审计覆盖 2142 份文件。固定生成层和独立 SDK 未改，沿用 `a41e6b5` 的生成与消费者证据，不计为本批重跑。 |
+
+首批截图保留为 `visual-d6/input.png`、`draft-retained.png` 和 `tree-projection.png`；最新批次为 `visual-final/new-setup.png`、`new-panels.png` 和 `mcp-cancelled.png`，均位于任务目录。旧 NEW 截图不作为 setup 修复的证据。红绿、完整回归与检查日志为 `setup-product-red.log`、`setup-product-green.log`、`setup-worker-red.log`、`setup-worker-green.log`、`setup-fork-green.log`、`setup-final-repository-tests.log`、`setup-final-ci.log`、`setup-final-lint.log`、`setup-final-audit.log` 和 `visual-clean-headless.log`。
+
+最新可视批次共 5 次本地确定性模型请求，与历史 headless 协议批次的 0 请求分开计数。多面板探针曾错误要求未聚焦源面板自动跳转，按现有焦点导航契约修正验收条件后通过；首批夹具跨 NEW 读取旧 context 的失败只记为夹具错误，不计产品失败。单独的 fork 隔离文件与其他文件合跑时曾受配置模块缓存影响，重新按独立进程运行通过，不更改产品断言。
+
+该任务已恰一次完成 `finish({keep:[]})`，随后停止任务服务进程组，收到 SIGTERM 退出回执。D3.6、D4、D6 仍保留进行中：项目信任选择的实际 WebUI 画面、Desktop、TUI 专属交互、Windows 和真实 PowerShell 尚未验收。旧空间缺失已不是当前 WebUI 阻塞，已通过的选定流程不扩展为全部插件与平台兼容。
 
 ## 验证与完成规则
 
@@ -416,6 +438,6 @@ PowerShell 核对同时发现真实产品接线缺口：原生 SDK factory 存�
 
 平台或交互环境不能实际运行时，明确列为受阻，并给出可执行的验收步骤。不能用单元或协议测试替代已经要求的产品交互验收，也不能仅因测试受阻就声称功能不存在。
 
-仅在任务 worktree、临时 HOME/config、任务专属目录、随机回环端口和本地确定性模型中执行。不接触真实 WebUI `127.0.0.1:9100`、浏览器空间 7、真实凭据、代理和真实 Craft 参考目录，不使用付费模型。
+仅在任务 worktree、临时 HOME/config、任务专属目录、随机回环端口和本地确定性模型中执行。不接触真实 WebUI `127.0.0.1:9100`、真实凭据、代理和真实 Craft 参考目录，不使用付费模型。浏览器按用户明确授权的任务名称与归属核对，不能依据旧编号借用其他空间；可视任务完成后关闭。
 
 按既有授权创建本地原子提交，不 push、不创建 PR 或 issue、不 merge、不发对外消息。涉及危险旧 checkpoint 时保留数据并明确诊断，迁移与回退都必须有相应版本和事务边界，不能静默丢弃工作。

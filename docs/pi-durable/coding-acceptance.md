@@ -2,7 +2,7 @@
 
 本表逐行对应[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)的 MkAgent 保留清单。它记录当前实现与验收证据，不改变需求。状态使用“已实现且验证”“已实现待验证”“待实现”“外部环境受阻”四类；部分流程已通过而必要组合尚未检查时，整行保留待验证状态。
 
-独立 SDK 输入采集修正为 `a1790ed`，普通产品分叉修正为 `4e29c34`；读取与审批边界修正为 `61fac5d`，PowerShell 产品接线为 `57bbaf5`，定向验收为 `a41e6b5`。该代码的完整仓库主批次为 436 份文件、5096 项通过、11 项跳过、0 失败，后续 35 份串行与隔离文件全部通过。CI、lint、来源审计、固定生成、干净构建、独立消费者和搬迁 headless 产品流程均通过；浏览器与其他平台验收尚未完成，不能据此声明整体完成。
+独立 SDK 输入采集修正为 `a1790ed`，普通产品分叉修正为 `4e29c34`；读取与审批边界修正为 `61fac5d`，PowerShell 产品接线为 `57bbaf5`，定向验收为 `a41e6b5`。可视验收随后发现并修正确认框焦点和 NEW setup 历史，分别提交为 `9965789`、`640aca6`。后者的完整仓库主批次为 436 份文件、5096 项通过、11 项跳过、0 失败，后续 35 份串行与隔离文件全部通过，CI、lint 与来源审计通过。最新干净构建的搬迁产物已通过选定 WebUI 流程；固定生成和独立消费者沿用 `a41e6b5` 的未改动层证据。Desktop、TUI 和其他平台仍有未验收项，不能据此声明整体完成。
 
 ## 架构与交付约束
 
@@ -16,7 +16,7 @@
 
 ## 能力规格逐行对照
 
-下表沿用规格中的能力名称，Baseline 列只描述迁移前状态。测试路径相对于仓库根；详细命令、次数与失败修正见实施账本。
+下表沿用规格中的能力名称，规格的 Baseline 列只描述迁移前状态。测试路径相对于仓库根；详细命令、次数与失败修正见实施账本。
 
 | Capability | 状态 | 实际证据与剩余工作 |
 |---|---|---|
@@ -35,17 +35,17 @@
 | Extensions: events | 已实现且验证 | 固定原版 oracle 比较 run、turn、message、tool 与 settlement 的顺序及实际效果；真实 SIGKILL 检查不确定回调的恢复。 |
 | Extensions: context | 已实现且验证 | before-start、context transform、cache warming 和 durable draft 已验证；混合 instructions 经 reload 和两类 hook 后到达实际模型请求。 |
 | Extensions: state | 已实现且验证 | 自定义 entries、labels、名称清空、原始身份、完整树、分叉和冷恢复有 journal 及真实产品证据。 |
-| Extensions: models | 已实现且验证 | 注册 provider、virtual model、model/thinking、目录替换、reload、reopen、OAuth/API key 登录与退出已有公开接口和真实产品验证。密码框显示另列浏览器验收。 |
-| Extensions: session control | 已实现且验证 | 产品 owner 执行 new/fork/tree/switch/parent/name，取消和未支持的参数明确失败；完整原生 fork 与普通 cutoff fork 分别验证，后者本批补齐初始化回执。 |
-| Extensions: UI | 外部环境受阻 | 真实产品 UI 协议覆盖 dialog、状态、widget、标题、草稿和迟到回答；原授权浏览器空间缺失，完整 WebUI 与 Desktop 可视验收未完成。 |
+| Extensions: models | 已实现且验证 | 注册 provider、virtual model、model/thinking、目录替换、reload、reopen、OAuth/API key 登录与退出已有公开接口和真实产品验证。隔离 WebUI 的合成 provider 验证 secret 输入为 password、获得焦点、关闭自动完成和拼写检查，提交后不在页面回显；遮罩仅有 DOM 证据，不计为截图验收。 |
+| Extensions: session control | 已实现且验证 | 产品 owner 执行 new/fork/tree/switch/parent/name，取消和未支持的参数明确失败；完整原生 fork 与普通 cutoff fork 分别验证。`640aca6` 为 setup 新增 user 行保存原始身份，并在目标 hooks 前等待严格产品回执；真实产品、冷 worker 和最新 WebUI 刷新均保留 setup 与 callback 消息。 |
+| Extensions: UI | 已实现待验证 | 真实产品协议覆盖 dialog、状态、widget、标题、草稿和迟到回答。唯一授权隔离任务已验证 WebUI 的输入、多行编辑、选择、确认、键盘、草稿、树导航、NEW、刷新和多面板焦点；确认框默认聚焦 Cancel。项目信任选择的实际画面、Desktop 与终端专属组合尚未验收。 |
 | Local package resources | 已实现且验证 | 原生 manifest、filters、来源诊断、离线已安装资源和扩展加载后追加资源有覆盖；发现阶段不导入未信任模块。 |
 | npm/git package management | 已实现且验证 | 显式 `/packages` 通过原生 package manager 和本地 npm/git fixture 验证安装、移除、更新、scope、失败与关闭等待。发现或 reload 不隐式安装。 |
 | Project MCP | 已实现且验证 | `.pi/mcp.json` 与 `.mkagent/mcp.json` 共用宿主信任，拒绝项目凭据路由，撤销后关闭连接并移除工具；实际产品信任用例通过。 |
-| MCP OAuth | 外部环境受阻 | 显式登录、PKCE、scope 升级、轮换、跨进程锁、取消及真实 worker 生命周期已有证据；浏览器中的链接、输入和键盘流程仍待验收。 |
+| MCP OAuth | 已实现且验证 | 显式登录、PKCE、scope 升级、轮换、跨进程锁、取消及真实 worker 生命周期已有证据。最新搬迁产物的 WebUI 已实际点击本地授权链接，在同一任务的 popup 完成回环，登录后动态出现工具，登出后移除；再次登录按 Escape 清理表单和链接，未新增令牌请求。 |
 | Codemode/tool search | 已实现且验证 | 实际 durable 目录覆盖动态插件与 MCP 工具、deferred discovery、移除与 exposure 变化。已对照固定上游：RPC `/mcp` 只有状态和授权操作，启停与 exposure 编辑在原生 TUI manager；终端界面兼容单列环境边界。 |
 | Retry/steer/follow-up/compaction | 已实现且验证 | 实际 Harness、接受队列、重复文本、重试期限、取消、压缩设置与提交边界有回归；摘要由 durable task 调度。 |
 | Resume/branch/usage/export | 已实现且验证 | SQLite/JSONL 恢复、产品完整树、普通 cutoff、原始输入、用量、归档导入导出和搬迁 HTML 资源有证据；分叉发布修正已通过完整仓库回归。 |
-| CLI/JSONL/Desktop/WebUI | 外部环境受阻 | bundled JSONL 与最新 macOS arm64 headless 的认证 WebSocket 产品入口已执行；`a41e6b5` 干净构建与压缩包搬迁通过，完整 Desktop/WebUI 交互受浏览器授权空间缺失阻塞。 |
+| CLI/JSONL/Desktop/WebUI | 已实现待验证 | bundled JSONL 和 `a41e6b5` 搬迁包的认证 WebSocket 产品入口已执行；`640aca6` 的 macOS arm64 干净重建与搬迁通过，并实际运行上述 WebUI 流程。Desktop、TUI 与其他平台未验收，原浏览器空间缺失已不是当前 WebUI 阻塞。 |
 | Themes/shortcuts/editor/renderers | 外部环境受阻 | 原生资源与接口保留，RPC 支持按固定契约映射；终端组件依赖 TUI host，不能将源码存在或 print/RPC 模式的取消默认值计为 TUI 交互验收。 |
 
 ## MkAgent 保留清单逐行对照
@@ -59,12 +59,14 @@
 | MCP 与浏览器 | 已实现且验证 | 既有 MCP、codemode、tool search、默认 profile 的浏览器工具与脱敏回归保留。测试使用本地协议替身，不访问用户的真实浏览器空间或代理。 |
 | 后台工作 | 已实现且验证 | 后台 shell、停止归属、完成通知、handoff 和跨 worker generation 保留源会话身份；普通与 coding 的实际协议用例均有覆盖。 |
 | 上下文 | 已实现且验证 | 宿主 prompt、原生资源隔离、压缩阈值、cache 与 usage 有覆盖；本批实际模型请求验证混合 instructions 来源，真实双模式 worker 验证成功读取后的 prerequisites。 |
-| 产品入口 | 外部环境受阻 | 最新干净产物的 headless 启动、health、认证 WebSocket、原生插件命令、dialog、迟到回复拒绝、名称与历史持久化通过，模型请求为 0；完整可视验收未完成。Windows/PowerShell 不能由 macOS 的构建结果替代。 |
+| 产品入口 | 已实现待验证 | `a41e6b5` 的搬迁 headless 协议验收通过，模型请求为 0。`640aca6` 干净搬迁产物的 WebUI 已验证 NEW setup 历史、刷新、多面板和 MCP OAuth，共 5 次本地确定性模型请求。Desktop、TUI、Windows 与真实 PowerShell 仍未验收，不能由 macOS 构建替代。 |
 
 ## 后续验收
 
 成功读取 prerequisites 和 PowerShell 产品接线的缺口已修复并定向验证。搜索、长输出、混合 instructions 与原生 MCP 的 RPC 契约已经核对；TUI 环境边界保留在对应能力行，不扩展为全部插件兼容的结论。
 
-干净产物、独立消费者、全仓回归与必需检查已完成。接下来处理隔离 WebUI 的 dialog、密码框、焦点、键盘、草稿、树导航、历史和 NEW。再次检查原授权空间 6 仍返回 `task space not found: 6`；可视步骤需要可用且明确授权的浏览器空间，不得借用空间 7 或真实 WebUI。
+原授权空间 6 缺失是早期阻塞。用户随后明确授权任务 `mkagent-durable-coding-visual-d6-20261104`，其编号为 7，并再次确认仅使用该新任务；本批始终按名称与归属恢复，没有借用其他旧空间或真实 WebUI。任务已恰一次调用 `finish({keep:[]})` 关闭，隔离夹具进程组收到 SIGTERM 后退出。
+
+当前证据及产物摘要见实施计划的最新可视验收记录。D3.6、D4 与 D6 仍保留进行中：项目信任选择的实际 WebUI 画面、Desktop 与 TUI 专属交互、Windows 和真实 PowerShell 尚未验收；已有协议结果不能替代这些画面和平台检查。
 
 PowerShell 实机验收先运行 `pwsh --version`，Windows 若只有系统 PowerShell 则运行 `powershell -NoProfile -Command '$PSVersionTable.PSVersion'`。在隔离 coding 会话中由显式插件调用 `pi.setActiveTools([...pi.getActiveTools(), 'powershell'])`，再经本地确定性模型调用该工具，检查中文输出、非零退出、超时与取消；Ask 拒绝时任务临时文件不得生成，批准后才可生成。该步骤尚未执行。
