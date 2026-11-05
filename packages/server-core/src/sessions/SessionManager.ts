@@ -362,6 +362,7 @@ export function resolveMidStreamDeliveryOutcome(
 export class SessionManager implements ISessionManager {
   private handoffSummaryWaitMs = 30_000
   private sessions = new Map<string, ManagedSession>()
+  private readonly creatingSessions = new Set<string>()
   private configWatchers = new Map<string, ConfigWatcher>()
   private eventSink: EventSink = () => {}
   private readonly extensionUI = new SessionExtensionUI((clientId, update) => {
@@ -556,7 +557,7 @@ export class SessionManager implements ISessionManager {
   }
 
   private emit(workspaceId: string, event: SessionEvent): void {
-    if (this.sessions.get(event.sessionId)?.nativeSessionOwner?.unpublished) return
+    if (this.isSessionUnpublished(event.sessionId)) return
     if (['session_deleted', 'session_archived', 'session_unarchived', 'working_directory_changed', 'coding_mode_changed'].includes(event.type)) {
       for (const listener of this.prWatchSessionListeners) listener(event.sessionId)
     }
@@ -575,7 +576,7 @@ export class SessionManager implements ISessionManager {
   /** Craft-compatible event helper retained for isolated domain testing. */
   private sendEvent(event: SessionEvent, workspaceId?: string): void {
     if (!workspaceId || !this.eventSink) return
-    if (this.sessions.get(event.sessionId)?.nativeSessionOwner?.unpublished) return
+    if (this.isSessionUnpublished(event.sessionId)) return
     this.eventSink(RPC_CHANNELS.sessions.EVENT, { to: 'workspace', workspaceId }, event)
   }
 
@@ -635,7 +636,7 @@ export class SessionManager implements ISessionManager {
 
   getSessions(workspaceId?: string): Session[] {
     return [...this.sessions.values()]
-      .filter(managed => !managed.nativeSessionOwner?.unpublished)
+      .filter(managed => !this.isSessionUnpublished(managed.id))
       .filter(managed => !workspaceId || managed.workspace.id === workspaceId)
       .map(managed => this.toSession(managed, false))
       .sort((a, b) => b.lastMessageAt - a.lastMessageAt)
@@ -643,9 +644,13 @@ export class SessionManager implements ISessionManager {
 
   async getSession(sessionId: string): Promise<Session | null> {
     const managed = this.sessions.get(sessionId)
-    if (!managed || managed.nativeSessionOwner?.unpublished) return null
+    if (!managed || this.isSessionUnpublished(sessionId)) return null
     this.ensureMessagesLoaded(managed)
     return this.toSession(managed, true)
+  }
+
+  private isSessionUnpublished(sessionId: string): boolean {
+    return this.creatingSessions.has(sessionId) || !!this.sessions.get(sessionId)?.nativeSessionOwner?.unpublished
   }
 
   private toSession(managed: ManagedSession, includeMessages: boolean): Session {
@@ -775,37 +780,43 @@ export class SessionManager implements ISessionManager {
     stored.codingMode = (branchSource ? branchSource.codingMode : options.codingMode ?? workspaceConfig?.defaults?.codingMode) || undefined
     const managed = createManagedSession(stored, workspace, { messagesLoaded: true })
     managed.thinkingLevel = normalizeThinkingLevel(options.thinkingLevel ?? workspaceConfig?.defaults?.thinkingLevel)
-    if (branchSource) {
-      try {
+    // Native initialization commits projection receipts before branch readiness returns.
+    this.creatingSessions.add(managed.id)
+    this.sessions.set(managed.id, managed)
+    try {
+      if (branchSource) {
         const agent = await this.getOrCreateAgent(managed)
         await agent.ensureBranchReady()
-      } catch (error) {
+      }
+      if (this.sessions.get(managed.id) !== managed || this.deletingSessions.has(managed.id)) {
+        throw new Error('Session creation cancelled')
+      }
+      await sessionPersistenceQueue.persist(this.toStored(managed))
+      if (this.sessions.get(managed.id) !== managed || this.deletingSessions.has(managed.id)) {
+        throw new Error('Session creation cancelled')
+      }
+    } catch (error) {
+      const alreadyDeleting = this.deletingSessions.has(managed.id)
+      this.deletingSessions.add(managed.id)
+      try {
+        await this.waitForNativeWrites(managed.id)
+        sessionPersistenceQueue.cancel(managed.id)
+        await sessionPersistenceQueue.flush(managed.id)
+        this.extensionUI.remove(managed.id)
         await rollbackFailedBranchCreation({
           managed,
           workspaceRootPath: workspace.rootPath,
-          sessionId: stored.id,
+          sessionId: managed.id,
           deleteFromRuntimeSessions: id => this.sessions.delete(id),
           deleteStoredSession,
         })
-        throw new Error(`Could not create branch: ${error instanceof Error ? error.message : String(error)}`)
+      } finally {
+        if (!alreadyDeleting) this.deletingSessions.delete(managed.id)
       }
-    }
-
-    this.sessions.set(managed.id, managed)
-    try {
-      await sessionPersistenceQueue.persist(this.toStored(managed))
-    } catch (error) {
-      sessionPersistenceQueue.cancel(managed.id)
-      await sessionPersistenceQueue.flush(managed.id)
-      this.extensionUI.remove(managed.id)
-      await rollbackFailedBranchCreation({
-        managed,
-        workspaceRootPath: workspace.rootPath,
-        sessionId: managed.id,
-        deleteFromRuntimeSessions: id => this.sessions.delete(id),
-        deleteStoredSession,
-      })
+      if (branchSource) throw new Error(`Could not create branch: ${error instanceof Error ? error.message : String(error)}`)
       throw error
+    } finally {
+      this.creatingSessions.delete(managed.id)
     }
     if (internal.emitCreatedEvent !== false) this.notifySessionCreated(workspace.id, managed.id)
     return this.toSession(managed, true)
@@ -896,6 +907,7 @@ export class SessionManager implements ISessionManager {
   ): Promise<void> {
     const managed = this.sessions.get(sessionId)
     if (!managed) throw new Error(`Session not found: ${sessionId}`)
+    if (this.creatingSessions.has(sessionId)) throw new Error('Session is initializing')
     if (this.deletingSessions.has(sessionId)) throw new Error('Session is being deleted')
     if (managed.nativeSessionOwner?.unpublished) throw new Error('Native target session has not committed')
     this.ensureMessagesLoaded(managed)
@@ -1969,7 +1981,7 @@ export class SessionManager implements ISessionManager {
 
   private processNextQueuedMessage(sessionId: string): void {
     const managed = this.sessions.get(sessionId)
-    if (!managed || managed.isProcessing || this.deletingSessions.has(sessionId) || this.nativeOwners.isLocked(sessionId) || managed.nativeSessionOwner?.unpublished) return
+    if (!managed || managed.isProcessing || this.deletingSessions.has(sessionId) || this.nativeOwners.isLocked(sessionId) || this.isSessionUnpublished(sessionId)) return
     const queued = managed.messageQueue.shift()
     if (!queued) return
     const existing = managed.messages.find(item => item.id === queued.messageId)
@@ -2658,11 +2670,11 @@ export class SessionManager implements ISessionManager {
   }
 
   getActiveSessionCount(workspaceId?: string): number {
-    return [...this.sessions.values()].filter(managed => !managed.nativeSessionOwner?.unpublished && managed.isProcessing && (!workspaceId || managed.workspace.id === workspaceId)).length
+    return [...this.sessions.values()].filter(managed => !this.isSessionUnpublished(managed.id) && managed.isProcessing && (!workspaceId || managed.workspace.id === workspaceId)).length
   }
 
   getActiveSessionsInfo(): ActiveSessionInfo[] {
-    return [...this.sessions.values()].filter(managed => !managed.nativeSessionOwner?.unpublished && managed.isProcessing).map(managed => ({
+    return [...this.sessions.values()].filter(managed => !this.isSessionUnpublished(managed.id) && managed.isProcessing).map(managed => ({
       sessionId: managed.id,
       workspaceId: managed.workspace.id,
       workspaceName: managed.workspace.name,

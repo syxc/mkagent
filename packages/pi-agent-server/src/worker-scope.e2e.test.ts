@@ -52,6 +52,10 @@ async function withWorker(profile: 'default' | 'coding', run: (fixture: WorkerFi
   reader.on('line', line => {
     const message = JSON.parse(line);
     messages.push(message);
+    if (message.type === 'native_history_commit') send({
+      type: 'native_history_receipt', id: message.id, success: true,
+      ownerSessionId: message.ownerSessionId, runtimeGeneration: message.runtimeGeneration,
+    });
     for (const waiter of [...waiters]) if (waiter.match(message)) {
       waiters.splice(waiters.indexOf(waiter), 1);
       clearTimeout(waiter.timeout);
@@ -154,15 +158,23 @@ test('real worker preserves transformed prompt, steer and follow-up identities a
     await f.waitFor(message => message.type === 'prompt_result' && message.id === 'follow-rpc');
     f.send({ type: 'pre_tool_use_response', requestId: approval.requestId, action: 'allow', ...scope });
     await f.waitFor(message => message.type === 'event' && message.event.type === 'agent_end' && f.requests.length === 3);
-    await f.waitFor(message => message.type === 'event' && message.event.type === 'native_session_projection'
-      && message.event.descriptor.entryIds.some((entry: Frame) => entry.productMessageId === 'host-follow'));
     const sessionPath = join(f.directory, 'sessions', 'source');
     const readManifest = () => JSON.parse(readFileSync(join(sessionPath, 'meta', 'native-session.json'), 'utf8')) as Frame;
+    const committed = await f.waitFor(message => {
+      if (message.type !== 'native_history_commit') return false;
+      const manifest = readManifest();
+      return message.reference.revision === manifest.revision
+        && manifest.entryIds.some((entry: Frame) => entry.productMessageId === 'host-follow');
+    });
     const rows = readFileSync(join(sessionPath, 'native-session', 'session.jsonl'), 'utf8').trim().split('\n')
       .map(line => JSON.parse(line) as Frame);
     const users = rows.filter(entry => entry.type === 'message' && entry.message.role === 'user');
     const manifest = readManifest();
     expect(manifest.sessionId).toBe('source');
+    expect(manifest).toMatchObject({
+      revision: committed.reference.revision, digest: committed.reference.digest,
+    });
+    expect(manifest.treeRevision).toBe(committed.reference.treeRevision);
     expect(users).toHaveLength(3);
     expect(users.map(user => manifest.entryIds.find((entry: Frame) => entry.nativeId === user.id)?.productMessageId))
       .toEqual(['host-first', 'host-steer', 'host-follow']);

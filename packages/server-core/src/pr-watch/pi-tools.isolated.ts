@@ -48,7 +48,14 @@ it('executes the Coding PR tools through real Pi RPC and persists pins/cursors a
     const delta = finished ? { content: 'Fixture tool complete.' } : { tool_calls: [{ index: 0, id: `call-${bodies.length}`, type: 'function', function: { name: action === 'read-image' ? 'read' : action === 'bash-create' ? 'bash' : `mcp__session__${action}`, arguments: JSON.stringify(args) } }] }
     return new Response(`data: ${JSON.stringify({ id: 'fixture', choices: [{ index: 0, delta, finish_reason: null }] })}\n\ndata: ${JSON.stringify({ id: 'fixture', choices: [{ index: 0, delta: {}, finish_reason: finished ? 'stop' : 'tool_calls' }] })}\n\ndata: [DONE]\n\n`, { headers: { 'content-type': 'text/event-stream' } })
   } })
-  const agent = new PiAgent({ provider: 'pi', providerType: 'pi_compat', authType: 'none', model: 'fixture', workspace: ws, session: { id: session.id, workspaceRootPath: ws.rootPath, createdAt: 1, lastUsedAt: 1, permissionMode: 'safe', workingDirectory: repo }, agentProfile: 'coding', isHeadless: true, skipConfigWatcher: true, runtime: { paths: { node: process.execPath, piServer: resolve(import.meta.dir, '../../../pi-agent-server/src/index.ts') }, baseUrl: `http://127.0.0.1:${endpoint.port}/v1`, customEndpoint: { api: 'openai-completions' }, customModels: [{ id: 'fixture', contextWindow: 131072, supportsImages: true }] } })
+  // The PR persistence assertions below are independent of this direct agent's history receipts.
+  const agent = new PiAgent({ provider: 'pi', providerType: 'pi_compat', authType: 'none', model: 'fixture', workspace: ws, session: { id: session.id, workspaceRootPath: ws.rootPath, createdAt: 1, lastUsedAt: 1, permissionMode: 'safe', workingDirectory: repo }, agentProfile: 'coding', isHeadless: true, skipConfigWatcher: true,
+    nativeSessionOwner: {
+      onProjection: async reference => { expect(reference.sessionId).toBe(session.id) },
+      onEvent: async () => { throw new Error('Unexpected session replacement in PR fixture') },
+      onExit: async () => {},
+    },
+    runtime: { paths: { node: process.execPath, piServer: resolve(import.meta.dir, '../../../pi-agent-server/src/index.ts') }, baseUrl: `http://127.0.0.1:${endpoint.port}/v1`, customEndpoint: { api: 'openai-completions' }, customModels: [{ id: 'fixture', contextWindow: 131072, supportsImages: true }] } })
   const call = async (name: string) => { action = name; const events = []; for await (const event of agent.chat(`Fixture ${name}`)) events.push(event); return events }
   try {
     mergeSessionScopedToolCallbacks(session.id, { prWatch: buildPrWatchToolCallbacks({ sessionId: session.id, sessionManager: sm, getRegistry: () => registry }) })

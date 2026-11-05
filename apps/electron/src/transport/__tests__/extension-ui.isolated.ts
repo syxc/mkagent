@@ -1,4 +1,4 @@
-/** Real product RPC, client bridge, owner and native worker, with no external model. */
+/** Real RPC, client bridge and native worker; history receipts use a fixture owner. */
 import { afterEach, expect, test } from 'bun:test'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -112,10 +112,19 @@ test('product RPC and renderer bridge answer a real native startup and reject ot
   const agentDir = join(f.directory, 'agent')
   mkdirSync(agentDir)
   writeFileSync(join(agentDir, 'settings.json'), '{"cacheWarming":"off"}')
+  let projections = 0
   const agent = new PiAgent({
     provider: 'pi', providerType: 'pi_compat', authType: 'none', model: 'ui-local', agentProfile: 'coding',
     workspace: f.workspace, session: { id: f.managed.id, workspaceRootPath: f.directory, createdAt: 1, lastUsedAt: 1 },
     isHeadless: true, skipConfigWatcher: true, extensionUI: f.port,
+    nativeSessionOwner: {
+      onProjection: async reference => {
+        expect(reference.sessionId).toBe(f.managed.id)
+        projections++
+      },
+      onEvent: async () => { throw new Error('Unexpected session replacement in UI fixture') },
+      onExit: async () => {},
+    },
     codingResources: { agentDir, resourcePolicy: 'host-only', extensionPaths: [plugin] },
     runtime: { paths: { node: process.execPath, piServer: resolve(import.meta.dir, '../../../../../packages/pi-agent-server/src/index.ts') },
       baseUrl: `http://127.0.0.1:${model.port}/v1`, customEndpoint: { api: 'openai-completions' },
@@ -150,6 +159,7 @@ test('product RPC and renderer bridge answer a real native startup and reject ot
   await waiting
   expect(JSON.parse(readFileSync(result, 'utf8'))).toEqual({ value: null, hasUI: false })
   expect(modelRequests).toBe(0)
+  expect(projections).toBeGreaterThan(0)
 }, 30_000)
 
 test('a workspace switch invalidates an attach that is still waiting for SessionManager initialization', async () => {

@@ -312,10 +312,20 @@ describe('DurableKernel end-to-end', () => {
       stdout += chunk.toString();
       const lines = stdout.split('\n');
       stdout = lines.pop() ?? '';
-      for (const line of lines) messages.push(JSON.parse(line));
+      for (const line of lines) {
+        const message = JSON.parse(line);
+        messages.push(message);
+        if (message.type === 'native_history_commit') send({
+          type: 'native_history_receipt', id: message.id, success: true,
+          ownerSessionId: message.ownerSessionId, runtimeGeneration: message.runtimeGeneration,
+        });
+      }
     });
     const exited = new Promise<number | null>(resolve => child.once('exit', code => resolve(code)));
-    const send = (message: Record<string, unknown>) => child.stdin.write(`${JSON.stringify(message)}\n`);
+    let runtimeGeneration = 0;
+    const send = (message: Record<string, unknown>) => child.stdin.write(`${JSON.stringify({
+      ownerSessionId: 'model-protocol', runtimeGeneration, ...message,
+    })}\n`);
     const wait = async (predicate: (message: Record<string, any>) => boolean) => {
       for (let attempt = 0; attempt < 250; attempt++) {
         const index = messages.findIndex(predicate);
@@ -325,12 +335,15 @@ describe('DurableKernel end-to-end', () => {
       }
       throw new Error(`Protocol timeout: ${JSON.stringify(messages)} ${stderr}`);
     };
-    const initialize = (model: string) => send({
-      type: 'init', model, cwd: dir, thinkingLevel: 'off', workspaceRootPath: dir,
-      agentProfile: 'coding',
-      sessionId: 'model-protocol', agentDir, sessionPath: dir, workingDirectory: dir,
-      plansFolderPath: join(dir, 'plans'), piAuth: { provider: 'minimax-cn', credential: { type: 'api_key', key: 'fake' } },
-    });
+    const initialize = (model: string) => {
+      runtimeGeneration++;
+      send({
+        type: 'init', model, cwd: dir, thinkingLevel: 'off', workspaceRootPath: dir,
+        agentProfile: 'coding',
+        sessionId: 'model-protocol', agentDir, sessionPath: dir, workingDirectory: dir,
+        plansFolderPath: join(dir, 'plans'), piAuth: { provider: 'minimax-cn', credential: { type: 'api_key', key: 'fake' } },
+      });
+    };
     try {
       initialize('pi/missing');
       await wait(message => message.type === 'ready');

@@ -1,4 +1,4 @@
-/** Run real native startup UI before a chat generator exists. */
+/** Run native startup UI with a fixture history owner before a chat generator exists. */
 import { afterAll, afterEach, expect, spyOn, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -135,6 +135,11 @@ async function fixture(automaticStartup = true, hostSeeds = false) {
     workspace: { id: sessionId, name: 'UI fixture', slug: sessionId, rootPath: directory, createdAt: Date.now() },
     session: { id: sessionId, workspaceRootPath: directory, createdAt: Date.now(), lastUsedAt: Date.now(), permissionMode: 'allow-all' },
     isHeadless: true, skipConfigWatcher: true, extensionUI: port,
+    nativeSessionOwner: {
+      onProjection: async reference => { expect(reference.sessionId).toBe(sessionId); },
+      onEvent: async () => { throw new Error('Unexpected session replacement in UI fixture'); },
+      onExit: async () => {},
+    },
     getBranchSeedMessages: () => hostSeeds && !contexts.branch ? [{ type: 'user', content: 'Host branch sentinel' }] : [],
     markBranchSeedApplied: () => { contexts.branch++; },
     getTransferredSessionSummary: () => hostSeeds && !contexts.handoff ? 'Host handoff sentinel' : null,

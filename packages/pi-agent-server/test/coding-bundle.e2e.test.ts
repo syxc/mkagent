@@ -48,11 +48,19 @@ test('runs a standalone bundled coding subprocess with an unchanged Pi extension
     buffer += chunk.toString();
     const lines = buffer.split('\n');
     buffer = lines.pop() ?? '';
-    for (const line of lines) messages.push(JSON.parse(line));
+    for (const line of lines) {
+      const message = JSON.parse(line);
+      messages.push(message);
+      if (message.type === 'native_history_commit') send({
+        type: 'native_history_receipt', id: message.id, success: true,
+        ownerSessionId: message.ownerSessionId, runtimeGeneration: message.runtimeGeneration,
+      });
+    }
   });
   child.stderr.on('data', (chunk: Buffer) => { errors += chunk.toString(); });
   const exited = new Promise<number | null>(resolve => child.once('exit', resolve));
-  const send = (message: Record<string, unknown>) => child.stdin.write(`${JSON.stringify(message)}\n`);
+  const scope = { ownerSessionId: 'bundle', runtimeGeneration: 1 };
+  const send = (message: Record<string, unknown>) => child.stdin.write(`${JSON.stringify({ ...scope, ...message })}\n`);
   const wait = async (predicate: (message: Record<string, any>) => boolean) => {
     for (let attempt = 0; attempt < 250; attempt++) {
       const index = messages.findIndex(predicate);
