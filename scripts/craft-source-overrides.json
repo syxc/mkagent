@@ -2621,8 +2621,8 @@
       "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
     },
     "apps/electron/src/renderer/components/app-shell/input/ExtensionUI.tsx": {
-      "sha256": "77dedb981a5323dca6f440d696f3a3576ad7fc4283615185ca18bb08e55587f7",
-      "reason": "Render owned native RPC UI and use password fields without spelling, capitalization or autocomplete for provider secrets."
+      "sha256": "d4c7b17c7d05648b522efe934b8cc6a9e21b7d16ff295789267b7678af917443",
+      "reason": "Render owned native RPC UI, mask provider secrets and focus Cancel for confirmations without editable controls so keyboard cancellation works."
     },
     "apps/electron/src/renderer/hooks/useExtensionUI.ts": {
       "sha256": "113b4b9c3c7f64c4996f7ff5e14df649776716b23ce0358f3f9ac02a4bc61e8f",
@@ -3037,7 +3037,7 @@
       "reason": "Shared MkAgent audit preflight resolves the Craft reference, validates the checkout root and pinned HEAD, and reports setup instructions before comparisons."
     },
     "scripts/craft-ui-overrides.json": {
-      "sha256": "2349322537f87e5e6ba505f0a02c1a62a759f27a278ecbb2b3cd85af0db70475",
+      "sha256": "f984b95b72abef26374719e6bf89872f46d2700c5c4955930af0e14c15940ad6",
       "reason": "MkAgent renderer lineage ledger records the selective Craft v0.13.3 retry synchronization; v0.15.3: apply applicable retained feature changes and preserve Pi/Lite seams (see docs/sync/0.15.3-inventory.json and validation). Register the per-locale starter-prompt regression added in 20fb16d."
     },
     "scripts/release-workflow.test.ts": {

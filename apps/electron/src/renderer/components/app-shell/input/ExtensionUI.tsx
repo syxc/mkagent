@@ -59,10 +59,11 @@ export function ExtensionUIDialogCard({ request, blocked, focused, respond, onSt
   const [selection, setSelection] = React.useState('-1')
   const [busy, setBusy] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null>(null)
+  const cancelRef = React.useRef<HTMLButtonElement | null>(null)
   const inFlight = React.useRef(false)
   const composing = React.useRef(false)
   React.useEffect(() => {
-    if (!blocked && focused) inputRef.current?.focus({ preventScroll: true })
+    if (!blocked && focused) (inputRef.current ?? cancelRef.current)?.focus({ preventScroll: true })
   }, [blocked, focused])
 
   const send = async (response: ExtensionUIResponse) => {
@@ -155,7 +156,7 @@ export function ExtensionUIDialogCard({ request, blocked, focused, respond, onSt
               <Button type="submit" variant="primary" size="lg" className={DECISION_ACTION} disabled={value === undefined}>
                 {t('common.continue')}
               </Button>
-              <Button type="button" variant="ghost" size="lg" className={DECISION_ACTION} onClick={cancel}>
+              <Button ref={cancelRef} type="button" variant="ghost" size="lg" className={DECISION_ACTION} onClick={cancel}>
                 {t('common.cancel')}
               </Button>
               <DecisionSpacer />
