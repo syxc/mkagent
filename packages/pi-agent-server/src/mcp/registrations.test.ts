@@ -43,17 +43,17 @@ test('native server changes preserve configured connections, honor namespace pre
   } finally { await mcp.close(); rmSync(root, { recursive: true, force: true }); }
 });
 
-test('native server declarations cannot route host providers or enable plaintext OAuth', async () => {
+test('native server declarations reject plaintext provider and OAuth credentials', async () => {
   const root = mkdtempSync(join(tmpdir(), 'mcp-registration-auth-'));
   const mcp = await loadMcpTools({ agentDir: root, cwd: root, version: 'test', debugLog() {} });
   try {
     await mcp.updateRegisteredServers([
-      { ...registration('provider'), config: { url: 'https://example.invalid/mcp', auth: { provider: 'fixture' } } },
+      { ...registration('provider'), config: { url: 'http://example.invalid/mcp', auth: { provider: 'fixture' } } },
       { ...registration('insecure'), config: { url: 'http://example.invalid/mcp', oauth: {} } },
     ]);
     expect(mcp.connections).toEqual([]);
     expect(mcp.errors).toHaveLength(2);
-    expect(mcp.errors[0]).toContain('global mcp.json');
+    expect(mcp.errors[0]).toContain('auth requires an https URL');
     expect(mcp.errors[1]).toContain('oauth requires an https URL');
   } finally { await mcp.close(); rmSync(root, { recursive: true, force: true }); }
 });

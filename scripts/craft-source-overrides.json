@@ -1031,8 +1031,8 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "e468088fd15a1fdeeffd186007b6b1d73f088d07d51fbc8fe0f540a93212f4ca",
-      "reason": "Preserve native resource, UI and session ownership while connecting plugin MCP registrations to the owning durable kernel."
+      "sha256": "024f40cb343a7e4f74d3cbba4f4e431ab21c9bc458ed946a88e70ba420e91934",
+      "reason": "Preserve native resource, UI and session ownership and resolve MCP credentials from the current host or native model registry."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
       "sha256": "dcd8c54fb1a0eb73a1b6f3984fe2dae176929c76b03bfb52323ad440fe23084c",
@@ -3113,8 +3113,8 @@
       "reason": "Adapt pi-coding-agent 1.1.0 MCP config loading to native coding paths and shared project trust while preserving host precedence and credential routing checks; omit CLI config writers."
     },
     "packages/pi-agent-server/src/mcp/extension.ts": {
-      "sha256": "95ab815b049ceefd1c608252eb1f04d5222ec73e5c0a69f43d7a997db0fba804",
-      "reason": "Merge native plugin MCP registrations with configured namespace precedence and serialize connection, tool and shutdown updates."
+      "sha256": "22cb52f122ef0d5c0464031f027a2549018d621b691b880bfab84e033895a4cc",
+      "reason": "Integrate native plugin MCP declarations, configured namespace priority, dynamic tools and live provider credential callbacks."
     },
     "packages/pi-agent-server/src/mcp/log.ts": {
       "sha256": "d2c4f1e25fe42b995a695da6f5a950c76195e7f35dcc3cee9280852c43b36747",
@@ -3137,8 +3137,8 @@
       "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/resources.js resource listing and reading to durable tool registration and visibility."
     },
     "packages/pi-agent-server/src/mcp/runtime.ts": {
-      "sha256": "ea99b63d676b6d0a3cae9cb4dbe689d781d043299941eb9db746d7195f77b0e3",
-      "reason": "Preserve host MCP transport/retry behavior and integrate pinned OAuth tokens, explicit sign-out admission, cancellation and refresh draining."
+      "sha256": "356581071d8acd986773fc7acff5e8f729b22dafff3422b88da5798205c9bed6",
+      "reason": "Preserve host MCP retry and OAuth rotation behavior while reading provider tokens per request and rejecting retired or unsafe credential dispatch."
     },
     "packages/pi-agent-server/src/mcp/tools.ts": {
       "sha256": "664d87b1785584dcf1ebb2bf6ce0eb66ca8c703c5b17424b182be1a3822d6feb",
@@ -4961,8 +4961,8 @@
       "reason": "Provide owner-scoped MCP commands and drain cancellable authorization before registered servers are removed."
     },
     "packages/pi-agent-server/src/mcp/oauth.test.ts": {
-      "sha256": "bdad6349e80c746065b494908146b5a3f3f310b31a8ee2edf60b9eb2dddb84c6",
-      "reason": "Verify real PKCE login, refresh serialization, redirect rejection, early cancellation, logout admission and token persistence on close."
+      "sha256": "940b768d44c925be3c900a7a147447ef31bf54a2d1699e0221bfae27432f5b54",
+      "reason": "Verify pinned OAuth flow, redirect validation, cancellation and rotation, while keeping explicit headers and provider credentials outside the OAuth store."
     },
     "packages/pi-durable-coding/src/mcp-oauth.ts": {
       "sha256": "bf89991376f48ba3c14613eb648b37688356f0468d1baca8a312375eb5016eed",
@@ -4973,8 +4973,8 @@
       "reason": "Retain the pinned upstream deterministic OAuth MCP server verbatim with its source hash and MIT license."
     },
     "packages/server-core/src/sessions/native-mcp-oauth.isolated.ts": {
-      "sha256": "a8107c37af56abf63241faa6a513acf66a272bf41b901ffbdc3830b5b53ab7cb",
-      "reason": "Exercise explicit OAuth and native plugin MCP registration, reload and login revocation through the isolated product owner and bundled worker."
+      "sha256": "4e23fc255c7be4bc6592efcf9cc2c4e3b305a8f68420ded02a1e7ed0b10392f2",
+      "reason": "Exercise native MCP registration, OAuth and live plugin provider credentials through the isolated product owner and freshly bundled worker."
     },
     "packages/pi-agent-server/src/mcp/authorization.test.ts": {
       "sha256": "9c3db860f83fa7711fd949d9d3f3021ab5db3c0c217c303d2f8e5278be23e8e8",
@@ -4985,12 +4985,20 @@
       "reason": "Reproduce optional cancellation for the pinned cross-process OAuth lock without changing automatic refresh draining."
     },
     "packages/pi-agent-server/src/mcp/native-extension.ts": {
-      "sha256": "02d55bdb5524d87997380b74fc634bbb66fe40375e821dbe000b12910799a07f",
-      "reason": "Bridge native MCP registry initialization, changes, reload and shutdown into the existing host MCP runtime."
+      "sha256": "bde4328bd0ce641e831b69260a16d489fedaf4c8f9df969fe0938f852f1fd877",
+      "reason": "Bind native model credentials and plugin MCP declarations at startup, then clear the binding during shutdown and reload."
     },
     "packages/pi-agent-server/src/mcp/registrations.test.ts": {
-      "sha256": "ad18a4c691841d17115401976c5dbd48592a474b6c6396f0b75189e7811774b7",
-      "reason": "Verify native MCP namespace priority, dynamic replacement, tool revocation and close while connection updates are pending."
+      "sha256": "6d0e8b4c9a1ff812d4a92b7a3dacc223b175acc2091a42b292fef61f2593baf5",
+      "reason": "Verify native MCP namespace priority, failure recovery, immediate tool revocation and rejection of plaintext credentials."
+    },
+    "packages/pi-agent-server/src/mcp/provider.test.ts": {
+      "sha256": "20a4ae8fe198383a67c6f6f27cf147f35864c1b801aea7b8dd9459a0ed5f7924",
+      "reason": "Exercise live provider tokens, header precedence, rejection without tool replay, close during token resolution and project or URL credential boundaries."
+    },
+    "packages/pi-agent-server/src/test-fixtures/mcp-provider-server.ts": {
+      "sha256": "8fdcaf7433ca34ede9519ca0c7f009d6e4abbebc7041193fe606de300fa3c349",
+      "reason": "Provide a deterministic loopback MCP server that records authorization outcomes without retaining fixture token values."
     }
   },
   "deleted": {

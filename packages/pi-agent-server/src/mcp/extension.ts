@@ -28,6 +28,7 @@ export interface McpToolsLoadOptions {
   version: string;
   debugLog: (message: string) => void;
   credentials?: McpOAuthCredentialStore;
+  providerToken?: (provider: string) => Promise<string | undefined>;
   beforeDisconnect?: (connections: readonly McpServerConnection[]) => Promise<void>;
   onUpdate?: (tools: ToolRegistration[], namespaces: CodemodeNamespace[]) => void;
 }
@@ -83,6 +84,7 @@ export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToo
       log,
       version: options.version,
       credentials,
+      providerToken: options.providerToken,
     });
     connections.push(connection);
     try {
@@ -131,9 +133,8 @@ export async function loadMcpTools(options: McpToolsLoadOptions): Promise<McpToo
       for (const { name, config: raw, extensionPath } of captured) {
         if (config.servers.some(entry => mcpNamespace(entry.name) === mcpNamespace(name))) continue;
         const configEntry = validateMcpServerConfig(name, raw);
-        if (typeof configEntry === 'string' || configEntry.auth) {
-          const message = typeof configEntry === 'string' ? configEntry
-            : `server "${name}": auth is only allowed in the global mcp.json`;
+        if (typeof configEntry === 'string') {
+          const message = configEntry;
           if (!errors.includes(message)) {
             errors.push(message);
             options.debugLog(`MCP extension config: ${message}`);

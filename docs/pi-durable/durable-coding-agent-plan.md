@@ -285,7 +285,25 @@ kernel 持有原生资源，首次启动复用信任预加载结果，后续 rel
 | 既有产品回归 | 修正后重新运行项目信任及原样上游插件产品用例，分别为 1 项测试、25 项断言，以及 1 项测试、65 项断言，均通过。 |
 | 必需检查 | 修正后 MCP 合跑 32 项测试、181 项断言通过；`validate:ci` 退出 0，隔离 Craft 来源审计覆盖 2121 份文件。两套固定上游生成检查通过，运行时仍为 250 份源码和 9 项资源，公开 fixture 为 40 份源码。Lint 为 0 错误、107 项既有警告，中英文标点检查通过。 |
 
-插件 `auth.provider` 尚未接通，本批明确拒绝该声明；这不是最终兼容边界。下一步补齐 provider 凭据来源及其生命周期，并保留两种项目 MCP 配置禁止选择宿主凭据的约束。显式包管理、OAuth 其余故障证据及可视验收仍待完成，D4 继续进行中。本批未运行全仓 `bun run test`。
+该插件注册提交尚未接通 `auth.provider`，当时明确拒绝该声明，后续接线见下一节。显式包管理、OAuth 其余故障证据及可视验收仍待完成，D4 继续进行中。本批未运行全仓 `bun run test`。
+
+## D4 MCP provider 凭据
+
+全局 MCP 配置及已加载的受信任插件可以按原生 API 声明 `auth.provider`。coding 模式在 `session_start` 绑定当前 `ctx.modelRegistry`，shutdown 时清除绑定；原生绑定前及普通模式使用宿主 models 的公开凭据接口。每次请求重新读取 token，MCP 不保存副本；读取前后检查产品所有者及原生注册表身份，连接关闭后不发放迟到 token。
+
+配置服务先于原生注册表启动，需要凭据的服务在绑定后再连接一次。插件声明则直接使用已绑定的注册表。provider 返回 token 时，固定上游 transport 用它覆盖显式 Authorization header；缺少 provider token 时保留显式 header 的原生行为。provider 401 不进入 MCP OAuth discovery，也不重放工具调用，保留 `needs-auth` 并允许修正凭据后显式重连。
+
+两种项目 MCP 配置仍不能选择宿主 provider；runtime 也不为 project scope 或非回环明文 HTTP 发放 provider token。受信任 Node 插件已经可以执行代码并使用公开 modelRegistry API，其显式 MCP 注册复用同一权限，不将项目配置的声明限制当作插件沙箱。本批提供已有 provider 凭据的读取，插件 provider 自身的交互登录尚未验收。
+
+| 验证 | 实际结果 |
+|---|---|
+| 凭据与 MCP 回归 | 38 项测试、217 项断言通过。新增用例覆盖全局和插件服务的逐请求 token 更新、原生 header 优先级、OAuth store 隔离、401 不重放、关闭期间迟到 token，以及 project scope 和明文 URL 的凭据拒绝。 |
+| 真实产品入口 | `native-mcp-oauth.isolated.ts` 经 SessionManager、PiAgent 和重新构建的 bundled worker 验证插件 provider 启动、全局配置引用插件 provider、轮换、注销、重新注册及 reload，1 项测试、42 项断言通过，模型请求为 0。 |
+| 既有产品回归 | 项目信任产品用例 1 项测试、25 项断言，以及原样上游插件产品用例 1 项测试、65 项断言，均重新运行并通过。 |
+| 独立复核 | 只读复核覆盖九份源码和测试变更及必要调用链，未发现新增高置信度缺陷。复核未执行测试或构建；header 优先级由主线程对照固定 transport 源码及本地请求结果核实。 |
+| 必需检查 | `validate:ci` 退出 0；两套固定上游生成检查通过，仍为 250 份运行时源码、9 项资源和 40 份公开 fixture 源码。隔离 Craft 来源审计覆盖 2123 份文件，lint 为 0 错误、107 项既有警告，中英文标点及 diff 检查通过。 |
+
+显式包管理、OAuth 其余故障证据及可视验收继续保留为待办，D4、D3.6 和 D5-D6 尚未整体完成。本批未运行全仓 `bun run test`。
 
 ## 验证与完成规则
 

@@ -80,7 +80,7 @@ import { toPiProviderId } from '../../shared/src/config/pi-provider-ids.ts';
 import { ProviderEndpointEnvironment, providerEndpointEnv } from './provider-endpoint-env.ts';
 import { DurableKernel, type KernelHooks, type KernelModelRef } from './kernel.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
-import { prepareHostResources, type RpcExtensionUIResponse } from '@mkagent/pi-durable-coding/native';
+import { prepareHostResources, type ExtensionContext, type RpcExtensionUIResponse } from '@mkagent/pi-durable-coding/native';
 import { ExtensionUIHost, type ExtensionUIEvent } from './extension-ui.ts';
 import { NativeOwnerExchange } from './native-owner.ts';
 import { NativeHistoryReceipts, type NativeHistoryReceipt, type NativeHistoryRequest } from './native-history-receipts.ts';
@@ -804,7 +804,10 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
     new FileAuthStorageBackend(join(credentialDir, 'mcp-auth.json')), credentialDir,
   );
   const authorization = new McpAuthorization({ credentials, connections: () => loadedMcp.connections, assertOwner });
-  const nativeMcp = createNativeMcpExtension({ runtime: () => loadedMcp, assertOwner });
+  let nativeModelRegistry: ExtensionContext['modelRegistry'] | undefined;
+  const nativeMcp = createNativeMcpExtension({ runtime: () => loadedMcp, assertOwner,
+    bindModelRegistry: registry => { nativeModelRegistry = registry; },
+  });
   mcpAuthorization = authorization;
   codingUI?.onUnavailable(() => { void authorization.cancelAll(); });
   const getCodemodeExtension = () => codemodeExtension
@@ -820,6 +823,17 @@ async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortS
       agentDir: resolveCraftAgentDir(config),
       nativeAgentDir: codingProfile?.resourcePolicy !== 'host-only' ? codingProfile?.agentDir : undefined,
       cwd, projectTrusted, version: CLIENT_VERSION, debugLog, credentials,
+      providerToken: async provider => {
+        assertOwner();
+        const registry = nativeModelRegistry;
+        let token: string | undefined;
+        try {
+          token = registry ? await registry.getApiKeyForProvider(provider)
+            : (await (await ensureModelRuntime()).models.getAuth(provider))?.auth.apiKey;
+        } catch { return undefined; }
+        assertOwner();
+        return registry === nativeModelRegistry ? token : undefined;
+      },
       beforeDisconnect: async connections => {
         await Promise.all(connections.map(connection => authorization.cancelServer(connection.name)));
       },

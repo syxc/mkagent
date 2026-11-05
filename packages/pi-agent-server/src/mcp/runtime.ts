@@ -51,6 +51,9 @@ function isTransientError(error: unknown): boolean {
 }
 
 function signInRequiredMessage(entry: McpServerEntry): string {
+  if (entry.config.auth?.provider) {
+    return `MCP server "${entry.name}" requires credentials for provider "${entry.config.auth.provider}". Check the provider's credentials, then use /mcp reconnect ${entry.name}`;
+  }
   return `MCP server "${entry.name}" requires OAuth sign-in. Use /mcp login ${entry.name}`;
 }
 
@@ -126,6 +129,8 @@ export interface McpServerConnectionOptions {
   cwd: string;
   createTransport: typeof createDefaultTransport;
   credentials?: McpOAuthCredentialStore;
+  /** Read the provider's current token on each request; MCP stores no copy. */
+  providerToken?: (provider: string) => Promise<string | undefined>;
   onTools: (connection: McpServerConnection) => void;
   onChange: (connection: McpServerConnection) => void;
   log: McpServerLog | undefined;
@@ -176,22 +181,29 @@ export class McpServerConnection {
     this.log = options.log;
     this.version = options.version;
     const url = this.oauthUrl;
-    const provider = url && options.credentials ? createMcpAuthProvider({
+    const providerName = this.entry.scope !== 'project' && typeof this.entry.config.url === 'string'
+      && isSecureMcpUrl(this.entry.config.url) ? this.entry.config.auth?.provider : undefined;
+    const provider: McpAuthProvider | undefined = url && options.credentials ? createMcpAuthProvider({
       serverUrl: url,
       store: options.credentials.forServer(this.name, url),
       settings: () => this.oauthSettings(),
       onChallenge: challenge => { this.challenge = challenge; },
-    }) : undefined;
+    }) : providerName ? {
+      token: async () => options.providerToken?.(providerName),
+      settled: async () => {},
+    } : undefined;
     this.authProvider = provider ? {
       token: async () => {
-        if (this.signedOut) return undefined;
+        if (this.signedOut || this.closed) return undefined;
         const token = await provider.token();
-        return this.signedOut ? undefined : token;
+        return this.signedOut || this.closed ? undefined : token;
       },
-      onUnauthorized: async context => {
-        if (this.signedOut) throw new McpOAuthAuthorizationRequiredError();
-        await provider.onUnauthorized?.(context);
-      },
+      ...(provider.onUnauthorized ? {
+        onUnauthorized: async context => {
+          if (this.signedOut || this.closed) throw new McpOAuthAuthorizationRequiredError();
+          await provider.onUnauthorized?.(context);
+        },
+      } : {}),
       settled: () => provider.settled(),
     } : undefined;
   }

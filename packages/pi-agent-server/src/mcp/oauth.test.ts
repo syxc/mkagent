@@ -207,15 +207,21 @@ test('explicit Authorization headers and provider references do not read the OAu
   writeFileSync(join(root, 'mcp.json'), JSON.stringify({ mcpServers: {
     header: { url, headers: { aUtHoRiZaTiOn: 'Bearer fixture-header' } },
     provider: { url, auth: { provider: 'fixture-provider' } },
+    missing: { url, auth: { provider: 'missing-provider' } },
   } }));
+  let mcp: Awaited<ReturnType<typeof loadMcpTools>> | undefined;
   try {
-    const mcp = await loadMcpTools({ agentDir: root, cwd: root, credentials, version: 'test', debugLog() {} });
-    expect(mcp.connections).toEqual([]);
-    expect(mcp.errors).toHaveLength(2);
+    mcp = await loadMcpTools({ agentDir: root, cwd: root, credentials, version: 'test', debugLog() {},
+      providerToken: async provider => provider === 'fixture-provider' ? 'fixture-provider-token' : undefined,
+    });
+    expect(mcp.connections.map(connection => [connection.name, connection.state]))
+      .toEqual([['missing', 'needs-auth'], ['provider', 'needs-auth']]);
+    expect(mcp.errors).toHaveLength(1);
     expect(headers).toContain('Bearer fixture-header');
+    expect(headers).toContain('Bearer fixture-provider-token');
     expect(headers).toContain(null);
     expect(reads).toBe(0);
-  } finally { server.stop(true); rmSync(root, { recursive: true, force: true }); }
+  } finally { await mcp?.close(); server.stop(true); rmSync(root, { recursive: true, force: true }); }
 });
 
 test('remote plaintext HTTP cannot acquire or send OAuth tokens', async () => {

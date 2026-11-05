@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import type { ExtensionUIUpdate } from '@mkagent/shared/protocol'
 import { startOAuthMcpServer } from '../../../pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts'
+import { startProviderMcpServer } from '../../../pi-agent-server/src/test-fixtures/mcp-provider-server.ts'
 
 test('product MCP login supports callbacks and pasted redirects, and cancels on stop, disconnect, and reload', async () => {
   const appRoot = resolve(import.meta.dir, '../../../..')
@@ -58,6 +59,23 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
   `)
   const oauth = await startOAuthMcpServer()
   cleanup.defer(() => { void oauth.close() })
+  let providerToken = 'fixture-native-provider-1'
+  const provider = startProviderMcpServer(() => providerToken)
+  cleanup.defer(() => provider.close())
+  writeFileSync(join(extensions, 'native-provider.ts'), `
+    export default function(pi) {
+      const register = apiKey => pi.registerProvider('fixture-native', {
+        baseUrl: ${JSON.stringify(provider.url)}, api: 'openai-completions', apiKey,
+        models: [{ id: 'fixture-native-model', name: 'Fixture native', reasoning: false, input: ['text'],
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 100000, maxTokens: 1024 }],
+      });
+      register('fixture-native-provider-1');
+      pi.registerMcpServer('provider-native', { url: ${JSON.stringify(provider.url)},
+        auth: { provider: 'fixture-native' }, exposure: 'direct' });
+      pi.registerCommand('oauth-provider-rotate', { handler: () => register('fixture-native-provider-2') });
+      pi.registerCommand('oauth-provider-remove', { handler: () => pi.unregisterProvider('fixture-native') });
+    }
+  `)
   writeFileSync(join(extensions, 'native-login.ts'), `
     import { watch } from 'node:fs';
     export default function(pi) {
@@ -75,7 +93,10 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
     }
   `)
   writeFileSync(join(agentDir, 'mcp.json'), JSON.stringify({
-    mcpServers: { issues: { url: oauth.url, exposure: 'direct' } },
+    mcpServers: {
+      issues: { url: oauth.url, exposure: 'direct' },
+      'provider-config': { url: provider.url, auth: { provider: 'fixture-native' }, exposure: 'direct' },
+    },
   }))
   let modelRequests = 0
   const endpoint = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch() {
@@ -167,6 +188,24 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
   expect(await tools()).not.toContain('mcp__issues__whoami')
   expect(await tools()).toContain('mcp__native__hello')
   expect(await tools()).not.toContain('mcp__issues__hello')
+  expect(await tools()).toContain('mcp__provider_native__hello')
+  expect(await tools()).toContain('mcp__provider_config__hello')
+  providerToken = 'fixture-native-provider-2'
+  await run('/oauth-provider-rotate')
+  const rotationStart = provider.requests.length
+  await run('/mcp reconnect provider-native')
+  await run('/mcp reconnect provider-config')
+  expect(await status()).toContain('provider-native: connected')
+  expect(await status()).toContain('provider-config: connected')
+  expect(provider.requests.slice(rotationStart).filter(request => request.method === 'initialize')).toHaveLength(2)
+  expect(provider.requests.slice(rotationStart).every(request => request.authorized)).toBe(true)
+  await run('/oauth-provider-remove')
+  await run('/mcp reconnect provider-native')
+  expect(await status()).toContain('provider-native: needs-auth')
+  expect(await tools()).not.toContain('mcp__provider_native__hello')
+  await run('/oauth-provider-rotate')
+  await run('/mcp reconnect provider-native')
+  expect(await tools()).toContain('mcp__provider_native__hello')
   await run('/oauth-native-hide')
   expect(await waitTools(false)).not.toContain('mcp__native__hello')
   await run('/oauth-native-remove')
@@ -210,6 +249,7 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
   expect(await status()).toContain('issues: needs-auth')
 
   await run('/oauth-arm-reload')
+  providerToken = 'fixture-native-provider-1'
   login = await beginLogin()
   const reloading = updates.length
   writeFileSync(reloadTrigger, '')
@@ -220,6 +260,8 @@ test('product MCP login supports callbacks and pasted redirects, and cancels on 
   expect(await tools()).not.toContain('mcp__issues__whoami')
   expect(oauth.tokenRequests.filter(request => request.get('grant_type') === 'authorization_code')).toHaveLength(2)
   expect(await tools()).toContain('mcp__native__hello')
+  expect(await tools()).toContain('mcp__provider_native__hello')
+  expect(await tools()).toContain('mcp__provider_config__hello')
   await run('/oauth-native-login-add')
   for (let attempt = 0; !(await status())?.includes('native-login: needs-auth'); attempt++) {
     if (attempt >= 50) throw new Error('Native registered OAuth server never required sign-in')
