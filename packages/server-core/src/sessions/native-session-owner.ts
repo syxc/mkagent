@@ -1,4 +1,4 @@
-import type { NativeSessionOwnerRecord } from '@mkagent/shared/sessions'
+import type { NativeSessionOwnerRecord, NativeSessionReference } from '@mkagent/shared/sessions'
 import type {
   PiNativeOwnerBackend, PiNativeOwnerControl, PiNativeOwnerEvent, PiNativeOwnerHostPort,
   PiNativeWorkerTransfer,
@@ -8,6 +8,7 @@ import type { InputOriginLease } from './input-origins'
 
 interface NativeOwnerHost {
   source(sessionId: string, backend: PiNativeOwnerBackend): { nativeSessionId: string; turnDone: Promise<void> }
+  projection?(sessionId: string, reference: NativeSessionReference, backend: PiNativeOwnerBackend): Promise<void>
   claim(sessionId: string, inputId: string): InputOriginLease | undefined
   createTarget(sourceSessionId: string, record: NativeSessionOwnerRecord): Promise<string>
   backend(sessionId: string): Promise<PiNativeOwnerBackend>
@@ -58,6 +59,7 @@ export class NativeSessionOwner {
   port(sessionId: string, deferStartup = false): PiNativeOwnerHostPort {
     return {
       deferStartup,
+      onProjection: (reference, backend) => this.host.projection?.(sessionId, reference, backend) ?? Promise.resolve(),
       onEvent: (event, backend, transport) => this.receive(sessionId, event, backend, transport),
       onExit: (backend, transport, error) => this.exit(backend, transport, error),
     }

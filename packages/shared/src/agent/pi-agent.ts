@@ -45,6 +45,7 @@ import type { Workspace } from '../config/storage.ts';
 import { PiEventAdapter } from './backend/pi/event-adapter.ts';
 import { PiWorkerConnection, type PiWorkerLease } from './backend/pi/worker-connection.ts';
 import { PiExtensionUITransport } from './backend/pi/extension-ui-transport.ts';
+import { parseNativeSessionReference, type NativeSessionReference } from '../sessions/native-session-reference.ts';
 import type { PiCompactResult, PiWorkerInitConfig, PiWorkerScope } from './backend/pi/protocol.ts';
 import type { PiNativeOwnerActivation, PiNativeOwnerBackend, PiNativeOwnerControl, PiNativeOwnerEvent, PiNativeWorkerTransfer } from './backend/pi/native-owner-protocol.ts';
 import { createOwnerTransfer, isOwnerTransferConnection, ownerTransferState, parseOwnerEvent, workerScope } from './backend/pi/native-owner-runtime.ts';
@@ -175,6 +176,8 @@ export class PiAgent extends BaseAgent {
   private subprocess: ChildProcess | null = null;
   private workerConnection: PiWorkerConnection | null = null;
   private workerLease: PiWorkerLease | null = null;
+  private projectionReadyLease?: PiWorkerLease;
+  private pendingNativeProjection?: NativeSessionReference;
   private subprocessReady: Promise<void> | null = null;
   private subprocessStarting: Promise<void> | null = null;
   private subprocessStopping: Promise<boolean> | null = null;
@@ -451,6 +454,8 @@ export class PiAgent extends BaseAgent {
     this.retainedWorkers.set(lease, { connection, tasks });
     this.workerConnection = connection;
     this.workerLease = lease;
+    this.projectionReadyLease = undefined;
+    this.pendingNativeProjection = undefined;
     this.subprocess = connection.child;
     return lease;
   }
@@ -492,7 +497,30 @@ export class PiAgent extends BaseAgent {
       this.pruneRetainedWorker(lease);
       return;
     }
+    if (message.type === 'event' && message.event && typeof message.event === 'object'
+      && (message.event as Record<string, unknown>).type === 'native_session_projection') {
+      const reference = parseNativeSessionReference((message.event as Record<string, unknown>).descriptor);
+      if (reference?.sessionId === lease.ownerSessionId) {
+        this.pendingNativeProjection = reference;
+        this.publishNativeProjection(connection, lease);
+      }
+      return;
+    }
     this.handleLine(line);
+    if (message.type === 'ready') this.projectionReadyLease = lease;
+    if (message.type === 'ready' || message.type === 'session_id_update') this.publishNativeProjection(connection, lease);
+  }
+
+  private publishNativeProjection(connection: PiWorkerConnection, lease: PiWorkerLease): void {
+    if (this.workerLease !== lease || this.projectionReadyLease !== lease) return;
+    const reference = this.pendingNativeProjection;
+    this.pendingNativeProjection = undefined;
+    if (!reference || reference.nativeSessionId !== this.piSessionId) return;
+    const host = this.config.nativeSessionOwner;
+    if (!host?.onProjection) return;
+    const report = (error: unknown) => this.debug(`Native projection registration failed: ${error instanceof Error ? error.message : String(error)}`);
+    try { void host.onProjection(reference, this.nativeSessionOwner, connection).catch(report); }
+    catch (error) { report(error); }
   }
 
   private handleOwnerEvent(event: PiNativeOwnerEvent, connection: PiWorkerConnection, lease: PiWorkerLease): void {
@@ -512,6 +540,8 @@ export class PiAgent extends BaseAgent {
       if (!target) return;
       this.piSessionId = event.nativeSessionId;
       this.config.onSdkSessionIdUpdate?.(event.nativeSessionId);
+      this.projectionReadyLease = lease;
+      this.publishNativeProjection(connection, lease);
       this.subprocessReadyResolve?.();
     }
     if (event.type === 'owner_finished' || event.type === 'owner_failed') {
@@ -683,6 +713,8 @@ export class PiAgent extends BaseAgent {
     this.subprocess = null;
     this.workerConnection = null;
     this.workerLease = null;
+    this.projectionReadyLease = undefined;
+    this.pendingNativeProjection = undefined;
     this.subprocessReady = null;
     this.subprocessReadyResolve = null;
     this.subprocessReadyReject = null;

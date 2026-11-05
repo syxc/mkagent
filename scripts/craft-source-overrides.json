@@ -1251,8 +1251,8 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/server-core/src/sessions/SessionManager.ts": {
-      "sha256": "375060a4e87dff1be66c6ca2f9ec56504a23fa5ee5a0778e9481829750d7fc1c",
-      "reason": "Retain the Craft-derived Pi/Lite lifecycle, permissions, persistence, imported sdkSessionId and PR handoffs. Require a strict final creation receipt with rollback. Preserve product input identity and caller provenance; settle completed inputs, retain the product queue and retire invalid client or session context."
+      "sha256": "14ed8082d6627e9635ff0611da5e18290b24b64c5048c88b692d8c961137b5d7",
+      "reason": "Retain the Craft-derived Pi/Lite lifecycle, permissions, persistence, imported sdkSessionId and PR handoffs. Require a strict final creation receipt with rollback. Preserve product input identity and caller provenance; settle completed inputs, retain the product queue and retire invalid client or session context. Serialize native projection registration and owner metadata behind strict receipts."
     },
     "packages/server-core/src/sessions/background-task-stop.test.ts": {
       "sha256": "342eb29a494100b86413319250f10d587b041bd6d6aa0640d4c56333f995b872",
@@ -1719,8 +1719,8 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/agent/pi-agent.ts": {
-      "sha256": "3c91596e525f6540312e88ed2f10db94c0ac5c14df43786d079272fbdc66e235",
-      "reason": "Retain the Craft-derived Pi/Lite client, startup, permissions, runtime updates, compaction, recovery and PR handoffs. Use generation-checked worker bindings, preserve stable product prompt and steer identities, retain shutdown scope, and release abandoned background stop requests."
+      "sha256": "5076c899f1591bcf274bdd3714ae3d372eb5a7cbabc282cdc330eba521219252",
+      "reason": "Retain the Craft-derived Pi/Lite client, startup, permissions, runtime updates, compaction, recovery and PR handoffs. Use generation-checked worker bindings, preserve stable product prompt and steer identities, retain shutdown scope, and release abandoned background stop requests. Route projection references through the current lease after native readiness."
     },
     "packages/shared/src/agent/plan-types.ts": {
       "sha256": "529cc7377490361bef7e742729c31f9adffdadb5b77a8eb0d5eda3ccfa2d9aaf",
@@ -1967,8 +1967,8 @@
       "reason": "Craft test adapted to the retained Lite feature set or strengthened for retained behavior"
     },
     "packages/shared/src/sessions/index.ts": {
-      "sha256": "8e4bd837758e4ba7c673d6a1c67823ac801d641bb5e72becd1862172c4207585",
-      "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
+      "sha256": "28c214f606ee804f14ae48b7823e8d798d35a6b18926a3f6e2e762b30567286b",
+      "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior. Export the minimal native projection reference contract."
     },
     "packages/shared/src/sessions/jsonl.ts": {
       "sha256": "bd83227a16e7bcbcfd104634221d1b9a9f33c0ddec9afe36b37fec25fd3a3f54",
@@ -1983,8 +1983,8 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/src/sessions/types.ts": {
-      "sha256": "03b5dc2570ab93826b73460d7afaec12cca8dd5a98ea738b30fe33897de489da",
-      "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions."
+      "sha256": "76ed836c41aa237e15662b0c902e82afe45d1fa7575dbe649421a0caeec8938d",
+      "reason": "Merge applicable PR/handoff contracts into the existing Pi/Lite architecture; retain local context/permissions, persistence and removed-product seams. Strengthen profile routing, snapshot reuse, ordered first-send waiting and lifecycle regressions. Retain native projection references in product persistence."
     },
     "packages/shared/src/skills/__tests__/storage.test.ts": {
       "sha256": "115889b1766bcac097277b820a5780d9106daf06fe59d2c3773fd89a0d91fd4b",
@@ -2328,6 +2328,14 @@
     }
   },
   "mkOnly": {
+    "packages/shared/src/sessions/native-session-reference.ts": {
+      "sha256": "2a6bb2e478d2dde96296b2e72e9a1b68c203937ccb3302ad7c6b9d3e4a1edc81",
+      "reason": "Define and validate minimal committed native projection identity references without transcript mappings."
+    },
+    "packages/server-core/src/sessions/native-session-registration.isolated.ts": {
+      "sha256": "9ac6f6e4bac3fa1e1da0dd0367f15d9107be90a371c415d5550535e6e2f4dab0",
+      "reason": "Verify current backend authority, strict receipt retries and concurrent native metadata persistence."
+    },
     "packages/pi-durable-coding/src/durable-coding/session-journal-state.ts": {
       "sha256": "72c5dcde7708f4c7a751a2be419e1d76e32402a59d167eb8d077b88eb74940e2",
       "reason": "Expose committed native snapshots and verify atomic durable product message associations."
@@ -2365,7 +2373,7 @@
       "reason": "Keep the native command coroutine alive across product prepare, close, activation and commit controls."
     },
     "packages/server-core/src/sessions/native-owner-runtime.isolated.ts": {
-      "sha256": "3894c24e476b4853a55ab8d74c08593954fe1b6ad604d0ae2da79b6ee6274999",
+      "sha256": "c659e22353d7438bc4e70c55f69f57c0224aa5672ada5fc7327a46150c76717d",
       "reason": "Exercise the actual product factory, PiAgent and bundled worker with local models and isolated ownership."
     },
     "packages/server-core/src/sessions/native-session-owner.isolated.ts": {
@@ -2377,7 +2385,7 @@
       "reason": "Verify product ownership phase ordering, caller leases, stale controls and scoped cancellation."
     },
     "packages/server-core/src/sessions/native-session-owner.ts": {
-      "sha256": "9d03f11b714a8038086a33996ed0aea3d229fb914fa7cd5f675059f89f21abde",
+      "sha256": "375bb994388fbf6e6946e4af073b303067c3aa4c17c81568b4742389e3f93be5",
       "reason": "Coordinate live native ownership with durable product receipts and independent source and target lifetimes."
     },
     "packages/shared/src/__tests__/unified-network-interceptor.owner.isolated.ts": {
@@ -2385,11 +2393,11 @@
       "reason": "Reproduce delayed Request validation across ownership changes and retain each owner's API error file."
     },
     "packages/shared/src/agent/__tests__/pi-native-owner.test.ts": {
-      "sha256": "1ceb319997736d36a79f28e57e6408db7194ae915d57fd1fee0fdb68b9fe9c78",
+      "sha256": "dee9333b2981f4413fb5543a5437472b9e47f6bd1d2b7860ee41dcb40bdbf013",
       "reason": "Verify physical worker adoption, scoped release, startup recovery and source background task isolation."
     },
     "packages/shared/src/agent/backend/pi/native-owner-protocol.ts": {
-      "sha256": "b37bef390bbc6fd2dbb0165094a946cf1b06a06c4dceaed75b2c6eb0dd59de8f",
+      "sha256": "dde77a7f24034ad87b9c91734a956cb94d322b7d75e52ef4301f668328cbb4c7",
       "reason": "Define live native ownership controls and host ports separately from persistent recovery records."
     },
     "packages/shared/src/agent/backend/pi/native-owner-runtime.ts": {

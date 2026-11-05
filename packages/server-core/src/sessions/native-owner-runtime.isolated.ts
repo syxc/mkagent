@@ -1,5 +1,6 @@
 /** Exercise product ownership against the actual PiAgent and bundled durable worker. */
 import { expect, test } from 'bun:test'
+import { createHash } from 'node:crypto'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -105,6 +106,18 @@ test('native NEW adopts the actual worker, completes without a target generator 
     await manager.sendMessage(sourceId, '/fresh', undefined, undefined, undefined, undefined, undefined, undefined,
       { callerClientId: 'originating-client' })
     expect(await deadline(targetDone.promise)).toBe(targetId)
+    for (const id of [sourceId, targetId]) {
+      await manager.flushSession(id)
+      const stored = loadSession(workspaceRoot, id)!
+      const reference = stored.nativeSessionProjection
+      expect(reference).toBeDefined()
+      const metadata = await Bun.file(join(workspaceRoot, 'sessions', id, 'meta', 'native-session.json')).text()
+      const { entryIds, ...manifest } = JSON.parse(metadata)
+      expect(entryIds.length).toBeGreaterThan(0)
+      expect(reference).toEqual({ ...manifest, manifestDigest: createHash('sha256').update(metadata).digest('hex') })
+      expect(reference?.nativeSessionId).toBe(stored.sdkSessionId)
+      expect(reference).not.toHaveProperty('entryIds')
+    }
     const targetAgent = runtime.sessions.get(targetId)!.agent
     expect(child(targetAgent)?.pid).toBe(sourcePid)
     expect(child(sourceAgent)).toBeNull()

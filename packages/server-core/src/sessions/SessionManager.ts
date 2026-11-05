@@ -6,6 +6,7 @@ import { addTurnUsage } from './turn-usage'
 import { SessionExtensionUI } from './extension-ui'
 import { InputOrigins } from './input-origins'
 import { NativeSessionOwner } from './native-session-owner'
+import type { PiNativeOwnerBackend } from '../../../shared/src/agent/backend/pi/native-owner-protocol'
 import type { BackgroundTaskOutput, StopBackgroundTaskResult } from '@mkagent/shared/protocol'
 import { launchOutputFile, readBackgroundTaskOutput } from './background-task-output'
 import type { EventSink, RpcServer } from '@mkagent/server-core/transport'
@@ -86,6 +87,7 @@ import {
   type SessionTokenUsage,
   type StoredSession,
   type NativeSessionOwnerRecord,
+  parseNativeSessionReference,
 } from '@mkagent/shared/sessions'
 import { readFileAttachment } from '@mkagent/shared/utils'
 import { getWorkspaceAllowedDirs, validateFilePath } from '@mkagent/server-core/handlers'
@@ -303,6 +305,7 @@ export function createManagedSession(
     branchFromSdkTurnId: session.branchFromSdkTurnId,
     parentSessionId: session.parentSessionId,
     nativeSessionOwner: session.nativeSessionOwner,
+    nativeSessionProjection: session.nativeSessionProjection,
     preview: session.preview,
     messageCount: session.messageCount ?? session.messages?.length ?? 0,
     lastMessageRole: session.lastMessageRole,
@@ -378,6 +381,7 @@ export class SessionManager implements ISessionManager {
       return { nativeSessionId, turnDone: this.turnCompletions.get(sessionId)?.promise ?? Promise.resolve() }
     },
     claim: (sessionId, inputId) => this.inputClients.claim(sessionId, inputId),
+    projection: (sessionId, reference, backend) => this.registerNativeProjection(sessionId, reference, backend),
     createTarget: async (sourceId, record) => {
       const source = this.sessions.get(sourceId)
       if (!source) throw new Error('Native source session was deleted')
@@ -401,7 +405,7 @@ export class SessionManager implements ISessionManager {
       // A committed target owns its lifetime. Never recreate a deleted source
       // or overwrite the authority of a later transfer from that source.
       if (!source || this.deletingSessions.has(sessionId) || source.nativeSessionOwner?.transactionId !== record.transactionId) return
-      try { await this.persistNativeOwner(sessionId, record) }
+      try { await this.persistNativeOwner(sessionId, record, record.transactionId) }
       catch (error) {
         if (this.sessions.get(sessionId) !== source || this.deletingSessions.has(sessionId)
           || source.nativeSessionOwner?.transactionId !== record.transactionId) return
@@ -583,7 +587,7 @@ export class SessionManager implements ISessionManager {
   async flushSession(sessionId: string): Promise<void> {
     const managed = this.sessions.get(sessionId)
     if (!managed || this.deletingSessions.has(sessionId)) return
-    await this.nativeOwnerWrites.get(sessionId)?.catch(() => {})
+    await this.waitForNativeWrites(sessionId)
     if (this.sessions.get(sessionId) !== managed || this.deletingSessions.has(sessionId)) return
     this.ensureMessagesLoaded(managed)
     sessionPersistenceQueue.enqueue(this.toStored(managed))
@@ -592,6 +596,7 @@ export class SessionManager implements ISessionManager {
 
   async flushAllSessions(): Promise<void> {
     for (const managed of this.sessions.values()) this.persistSession(managed)
+    await Promise.all([...this.nativeOwnerWrites.keys()].map(id => this.waitForNativeWrites(id)))
     await sessionPersistenceQueue.flushAll()
   }
 
@@ -1047,30 +1052,77 @@ export class SessionManager implements ISessionManager {
     }
   }
 
-  private async persistNativeOwner(sessionId: string, record: NativeSessionOwnerRecord): Promise<void> {
-    const managed = this.sessions.get(sessionId)
-    if (!managed) throw new Error('Native owner session was deleted')
-    this.ensureMessagesLoaded(managed)
-    if (record.role === 'target' && record.targetNativeSessionId) {
-      const actualId = managed.agent?.getSessionId()
-      if (actualId && actualId !== record.targetNativeSessionId) throw new Error('Native target metadata does not match backend')
+  private async waitForNativeWrites(sessionId: string): Promise<void> {
+    for (;;) {
+      const pending = this.nativeOwnerWrites.get(sessionId)
+      if (!pending) return
+      await pending.catch(() => {})
+      if (this.nativeOwnerWrites.get(sessionId) === pending) return
     }
-    // Ordinary saves must neither publish a phase whose receipt failed nor
-    // enqueue an older marker behind a successful strict transaction write.
-    const snapshot = structuredClone(this.toStored(managed))
-    snapshot.nativeSessionOwner = { ...record }
-    if (record.role === 'target' && record.targetNativeSessionId) snapshot.sdkSessionId = record.targetNativeSessionId
-    const writing = sessionPersistenceQueue.persist(snapshot).then(() => {
-      if (this.sessions.get(sessionId) !== managed) return
-      managed.nativeSessionOwner = { ...record }
-      if (record.role === 'target' && record.targetNativeSessionId) managed.sdkSessionId = record.targetNativeSessionId
+  }
+
+  private persistNativeMetadata(sessionId: string,
+    prepare: (snapshot: StoredSession, managed: ManagedSession) => (() => void) | undefined): Promise<void> {
+    // Capture each snapshot after the preceding strict receipt has updated memory.
+    const preceding = this.nativeOwnerWrites.get(sessionId) ?? Promise.resolve()
+    const writing = preceding.catch(() => {}).then(async () => {
+      const managed = this.sessions.get(sessionId)
+      if (!managed || this.deletingSessions.has(sessionId)) throw new Error('Native owner session was deleted')
+      this.ensureMessagesLoaded(managed)
+      const snapshot = structuredClone(this.toStored(managed))
+      const apply = prepare(snapshot, managed)
+      if (!apply) return
+      await sessionPersistenceQueue.persist(snapshot)
+      if (this.sessions.get(sessionId) === managed && !this.deletingSessions.has(sessionId)) apply()
     })
     this.nativeOwnerWrites.set(sessionId, writing)
-    try { await writing }
-    finally {
-      if (this.nativeOwnerWrites.get(sessionId) === writing) this.nativeOwnerWrites.delete(sessionId)
-      if (this.nativeOwnerDirty.delete(sessionId) && this.sessions.get(sessionId) === managed) this.persistSession(managed)
-    }
+    return writing.finally(() => {
+      if (this.nativeOwnerWrites.get(sessionId) !== writing) return
+      this.nativeOwnerWrites.delete(sessionId)
+      const managed = this.sessions.get(sessionId)
+      if (this.nativeOwnerDirty.delete(sessionId) && managed) this.persistSession(managed)
+    })
+  }
+
+  private persistNativeOwner(sessionId: string, record: NativeSessionOwnerRecord, expectedTransactionId?: string): Promise<void> {
+    const saved = { ...record }
+    return this.persistNativeMetadata(sessionId, (snapshot, managed) => {
+      if (expectedTransactionId && managed.nativeSessionOwner?.transactionId !== expectedTransactionId) return
+      if (saved.role === 'target' && saved.targetNativeSessionId) {
+        const actualId = managed.agent?.getSessionId()
+        if (actualId && actualId !== saved.targetNativeSessionId) throw new Error('Native target metadata does not match backend')
+        snapshot.sdkSessionId = saved.targetNativeSessionId
+      }
+      snapshot.nativeSessionOwner = saved
+      return () => {
+        managed.nativeSessionOwner = saved
+        if (saved.role === 'target' && saved.targetNativeSessionId) managed.sdkSessionId = saved.targetNativeSessionId
+      }
+    })
+  }
+
+  private registerNativeProjection(sessionId: string, value: unknown, backend: PiNativeOwnerBackend): Promise<void> {
+    const reference = parseNativeSessionReference(value)
+    if (!reference) return Promise.reject(new Error('Invalid native projection reference'))
+    return this.persistNativeMetadata(sessionId, (snapshot, managed) => {
+      if (!managed.agent || managed.agent.nativeSessionOwner !== backend) throw new Error('Native projection backend is no longer current')
+      if (reference.sessionId !== sessionId || reference.nativeSessionId !== managed.agent.getSessionId()) {
+        throw new Error('Native projection identity does not match its product owner')
+      }
+      const expected = join(getSessionStoragePath(managed.workspace.rootPath, sessionId), 'native-session', 'session.jsonl')
+      if (reference.sessionFile !== expected) throw new Error('Native projection path does not match its product owner')
+      const previous = managed.nativeSessionProjection
+      if (previous?.sessionId === sessionId && previous.sessionFile === expected) {
+        if (previous.nativeSessionId !== reference.nativeSessionId) throw new Error('Native projection identity changed')
+        if (reference.revision < previous.revision) return
+        if (reference.revision === previous.revision) {
+          if (reference.manifestDigest !== previous.manifestDigest) throw new Error('Native projection changed within one revision')
+          return
+        }
+      }
+      snapshot.nativeSessionProjection = reference
+      return () => { managed.nativeSessionProjection = reference }
+    })
   }
 
   private async rollbackNativeTarget(sessionId: string, transactionId: string): Promise<void> {

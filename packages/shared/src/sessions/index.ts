@@ -21,6 +21,8 @@ export type {
 } from './types.ts';
 
 // Field constants
+export type { NativeSessionReference } from './native-session-reference.ts';
+export { parseNativeSessionReference } from './native-session-reference.ts';
 export { SESSION_PERSISTENT_FIELDS } from './types.ts';
 
 // Storage functions

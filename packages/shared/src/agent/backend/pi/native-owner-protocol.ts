@@ -1,4 +1,5 @@
 import type { PiProxyToolDefinition, PiWorkerInitConfig, PiWorkerScope } from './protocol.ts';
+import type { NativeSessionReference } from '../../../sessions/native-session-reference.ts';
 
 export type PiNativeOwnerOperation =
   | { type: 'new'; parentSession?: string }
@@ -65,6 +66,7 @@ export interface PiNativeOwnerBackend {
 export interface PiNativeOwnerHostPort {
   /** Suppress automatic UI startup while an unpublished target is being prepared. */
   readonly deferStartup?: boolean;
+  onProjection?(reference: NativeSessionReference, backend: PiNativeOwnerBackend, transport: object): Promise<void>;
   onEvent(event: PiNativeOwnerEvent, backend: PiNativeOwnerBackend, transport: object): Promise<void>;
   onExit(backend: PiNativeOwnerBackend, transport: object, error: Error): Promise<void>;
 }

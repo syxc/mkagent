@@ -8,6 +8,7 @@ import type {
 } from '@mkagent/core/types';
 import type { PermissionMode } from '../agent/mode-manager.ts';
 import type { ThinkingLevel } from '../agent/thinking-levels.ts';
+import type { NativeSessionReference } from './native-session-reference.ts';
 
 export const SESSION_PERSISTENT_FIELDS = [
   'id', 'workspaceRootPath', 'sdkSessionId', 'sdkCwd',
@@ -16,7 +17,7 @@ export const SESSION_PERSISTENT_FIELDS = [
   'lastReadMessageId', 'hasUnread',
   'permissionMode', 'previousPermissionMode', 'workingDirectory',
   'model', 'llmConnection', 'connectionLocked', 'thinkingLevel',
-  'pendingPlanExecution', 'nativeSessionOwner',
+  'pendingPlanExecution', 'nativeSessionOwner', 'nativeSessionProjection',
   'isArchived', 'archivedAt',
   'branchFromMessageId', 'branchFromSdkSessionId', 'branchFromSessionPath',
   'branchFromSdkCwd', 'branchFromSdkTurnId',
@@ -97,6 +98,7 @@ export interface SessionConfig {
   branchFromSdkTurnId?: string;
   parentSessionId?: string;
   nativeSessionOwner?: NativeSessionOwnerRecord;
+  nativeSessionProjection?: NativeSessionReference;
 }
 
 export interface StoredSession extends SessionConfig {

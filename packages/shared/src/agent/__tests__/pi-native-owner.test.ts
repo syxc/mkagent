@@ -47,6 +47,13 @@ const script = `
       send({ type: 'fixture_barrier', id: command.id }, scope);
     } else if (command.type === 'init') {
       owner = scope;
+      if (process.env.FIXTURE_PROJECTION === '1') send({ type: 'event', event: {
+        type: 'native_session_projection', descriptor: {
+          version: 1, sessionId: command.sessionId, nativeSessionId: 'native-' + command.sessionId,
+          conversationId: 1, revision: 1, sessionFile: command.sessionPath + '/native-session/session.jsonl',
+          leaf: null, name: null, digest: 'a'.repeat(64), manifestDigest: 'b'.repeat(64), entryIds: [],
+        },
+      } });
       send({ type: 'ready', sessionId: 'native-' + command.sessionId });
     } else if (command.type === 'set_auto_compaction') {
       if (process.env.FIXTURE_STARTUP_OWNER === '1') {
@@ -99,10 +106,12 @@ const script = `
 
 function host() {
   const events: Array<{ event: PiNativeOwnerEvent; transport: object }> = [];
+  const projections: unknown[] = [];
   const exits: Array<{ transport: object; error: Error }> = [];
   const waits = new Map<string, ReturnType<typeof Promise.withResolvers<PiNativeOwnerEvent>>>();
   const port: PiNativeOwnerHostPort = {
     deferStartup: true,
+    async onProjection(reference) { projections.push(reference); },
     async onEvent(event, _backend, transport) {
       events.push({ event, transport });
       waits.get(event.type)?.resolve(event);
@@ -110,7 +119,7 @@ function host() {
     async onExit(_backend, transport, error) { exits.push({ transport, error }); },
   };
   return {
-    port, events, exits,
+    port, events, exits, projections,
     wait(type: PiNativeOwnerEvent['type']) {
       const existing = events.find(item => item.event.type === type)?.event;
       if (existing) return Promise.resolve(existing);
@@ -177,6 +186,45 @@ function message(id: string, output: number, error?: string) {
     },
   };
 }
+
+function projection(id: string) {
+  return {
+    type: 'native_session_projection', descriptor: {
+      version: 1, sessionId: id, nativeSessionId: `native-${id}`, conversationId: 1, revision: 1,
+      sessionFile: `/fixture/${id}/native-session/session.jsonl`, leaf: null, name: null,
+      digest: 'a'.repeat(64), manifestDigest: 'b'.repeat(64), entryIds: [{ nativeId: 'large-mapping' }],
+    },
+  };
+}
+
+test('native projection received before ready waits for the worker native identity', async () => {
+  const sourceHost = host();
+  const source = agent('source', sourceHost.port);
+  source.config.envOverrides = { FIXTURE_PROJECTION: '1' };
+  const registered: unknown[] = [];
+  sourceHost.port.onProjection = async reference => {
+    expect(source.getSessionId()).toBe(reference.nativeSessionId);
+    registered.push(reference);
+  };
+  await source.ensureSubprocess();
+  expect(registered).toHaveLength(1);
+  expect(registered[0]).not.toHaveProperty('entryIds');
+});
+
+test('native projection routes only from the active owner generation and matching native identity', async () => {
+  const f = await adopted();
+  await f.wire.inject([
+    event(f.oldScope, projection('source')),
+    event(f.scope, projection('source')),
+    event(f.scope, { ...projection('target'), descriptor: { ...projection('target').descriptor, digest: 'bad' } }),
+    event(f.scope, { ...projection('target'), descriptor: { ...projection('target').descriptor, nativeSessionId: 'foreign' } }),
+    event(f.scope, projection('target')),
+  ]);
+  expect(f.sourceHost.projections).toHaveLength(0);
+  expect(f.targetHost.projections).toHaveLength(1);
+  expect(f.targetHost.projections[0]).toMatchObject({ sessionId: 'target', nativeSessionId: 'native-target' });
+  expect(f.targetHost.projections[0]).not.toHaveProperty('entryIds');
+});
 
 async function adopted() {
   const sourceHost = host();
