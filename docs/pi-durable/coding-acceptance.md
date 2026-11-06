@@ -9,9 +9,9 @@
 | 要求 | 状态 | 实现与证据 |
 |---|---|---|
 | pi-durable 为唯一执行调度内核 | 已实现且验证 | 普通 profile 使用 GenerationTask，coding 使用 `pi.coding.session/run/tool`；原生 Agent facade、嵌套调用和边界恢复通过实际 Harness 与固定原版行为对照。不同产品模式不要求相同任务类型。 |
-| 允许按需引用 pi-agent-core，禁止生产依赖完整 pi-coding-agent | 已实现且验证 | 当前 coding 包使用独立 Pi 1.5.0 包和本地固定源码闭包；没有生产整包依赖，也没有另启旧 Agent loop。未使用 core 是当前实现选择。 |
+| 允许按需引用 pi-agent-core，禁止生产依赖完整 pi-coding-agent | 已实现且验证 | 当前 coding 包使用独立 Pi 1.5.0 包和本地固定源码闭包；core 的公开协议类型和 `streamProxy` 已替代源码副本，没有生产整包依赖，也没有另启旧 Agent loop。 |
 | 独立 coding 模块及公开入口 | 已实现且验证 | `@mkagent/pi-durable-coding` 不依赖 MkAgent shared、server 或 UI。`a41e6b5` 干净 checkout 的独立消费者覆盖六个运行时入口及 rpc-ui 类型入口，声明与运行检查均通过。 |
-| 固定来源、许可与可复现转换 | 已实现且验证 | Pi v1.5.0 固定提交、MIT 许可、250 份运行时源码和 9 项资源，另有 34 项辅助与兼容源码和 6 项原样测试夹具。两套生成检查通过；分类见[精简架构](coding-architecture.md)。 |
+| 固定来源、许可与可复现转换 | 已实现待验证 | Pi v1.5.0 固定提交、MIT 许可、248 份运行时源码和 9 项资源，另有 27 项辅助与兼容源码、6 项原样测试夹具及 7 个共享转发入口。辅助层生成检查通过；本轮仅核对获准文件的运行时清单变化，受限凭据源码未读取，完整运行时生成检查未重跑。分类见[精简架构](coding-architecture.md)。 |
 | 普通模式资源隔离与 coding 项目信任 | 已实现且验证 | `resourcePolicy` 与执行选择分离；普通 profile 和 `host-only` 不自动发现原生资源，项目执行在导入前取得宿主决定。参见 `host-resources.test.ts`、`host-project-resources.test.ts` 和真实产品信任用例。 |
 
 ## 能力规格逐行对照
@@ -30,7 +30,7 @@
 | Native skills | 已实现且验证 | 真实 native loader、显式路径、manifest、collision 和 disable-model-invocation 有覆盖；真实产品 `/skill:` 展开保持原始 input 与宿主前缀。 |
 | Skill activation | 已实现且验证 | 原生 skill 命令、MkAgent mention discovery 和 prerequisites 保留。已修正提前登记：仅审批后的同一前台调用成功结束才计读取；真实双模式 worker 覆盖失败 Read、隐藏失败的 shell、相对 Read、cat、fd 3 与 stdin 重定向及拒绝审批，共 2 项、132 项断言。skill 的有界降级保留，strict browser 不降级。 |
 | Prompt templates | 已实现且验证 | `resources.test.ts` 检查 quoting、空参数、defaults、slices 和 collision；实际 PiAgent 检查原始输入、未知命令及 transform。 |
-| Extensions: tools | 已实现且验证 | 原样公开插件与宿主工具集成覆盖注册、schema、结构化输出、进度、嵌套、审批和取消。 |
+| Extensions: tools | 已实现且验证 | 原样公开插件与宿主工具集成覆盖注册、schema、结构化输出、进度、嵌套、审批和取消。两个加载入口的元数据回归验证 Bun `import.meta.dir/path/file`、标准 metadata、计算属性、中文嵌套模块、相邻资源、旧缓存和重复加载，8 项含堆栈格式化用例通过。 |
 | Extensions: commands/input | 已实现且验证 | 实际产品与 shared UI 用例覆盖命令优先级、transform、handled、reload、follow-up 与稳定输入身份；独立 SDK oracle 的 17 个场景通过。 |
 | Extensions: events | 已实现且验证 | 固定原版 oracle 比较 run、turn、message、tool 与 settlement 的顺序及实际效果；真实 SIGKILL 检查不确定回调的恢复。 |
 | Extensions: context | 已实现且验证 | before-start、context transform、cache warming 和 durable draft 已验证；混合 instructions 经 reload 和两类 hook 后到达实际模型请求。 |
@@ -67,6 +67,6 @@
 
 原授权空间 6 缺失是早期阻塞。用户随后明确授权任务 `mkagent-durable-coding-visual-d6-20261104`，编号为 7，仅用该任务完成前批可视流程并关闭。后续用户又明确授权唯一新任务 `mkagent-durable-coding-trust-20261106`，编号为 8，完成 WebUI 项目信任补验。两者均按名称与归属操作，分别恰一次调用 `finish({keep:[]})`，任务服务均已退出，没有借用其他旧空间或真实 WebUI。
 
-当前证据及产物摘要见实施计划的 macOS 实际验收、WebUI 项目信任和 Desktop 发布包补充记录。未签名 .app/ZIP 和隔离 ad-hoc 原生副本已有结果，Windows、正式签名公证安装及系统协议仍待验收，D3.6、D4 与 D6 保留进行中。SDK TUI 仅覆盖选定交互，仍有会话控制等未验组合及 Bun/jiti 的 import.meta 兼容边界。密码遮罩维持 DOM 证据，未重试被拒截图；新增截图只包含项目信任和隔离原生历史界面。
+当前证据及产物摘要见实施计划的 macOS 实际验收、WebUI 项目信任和 Desktop 发布包补充记录。未签名 .app/ZIP 和隔离 ad-hoc 原生副本已有结果，Windows、正式签名公证安装及系统协议仍待验收，D3.6、D4 与 D6 保留进行中。本轮按用户要求优先处理插件和升级维护，只核查平台及发布链路所受影响。SDK TUI 仅覆盖选定交互，仍有会话控制等未验组合；Bun/Jiti 的常用文件元数据边界已用两个真实加载入口修正。密码遮罩维持 DOM 证据，未重试被拒截图；新增截图只包含项目信任和隔离原生历史界面。
 
 macOS 已执行真实 PowerShell 验收。Windows 后续先运行 `pwsh --version`，若只有系统 PowerShell 则运行 `powershell -NoProfile -Command '$PSVersionTable.PSVersion'`。在隔离 coding 会话中由显式插件激活 `powershell`，再经本地确定性模型检查中文输出、非零退出、超时与取消，以及审批前无文件副作用和批准后真实执行。

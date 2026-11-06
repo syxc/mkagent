@@ -142,10 +142,22 @@ function port(source: string, target = source, selection?: string[], imports = '
     sha256: sha256(original), portSha256: sha256(content), ...(selection ? { selection } : {}), ...(changes ? { changes } : {}) });
 }
 
+// These public helpers need one implementation, including when old entry points import them.
+const forwarded = [
+  'core/source-info.ts', 'core/diagnostics.ts', 'core/event-bus.ts', 'core/pi-manifest.ts',
+  'utils/frontmatter.ts', 'utils/text.ts', 'utils/paths.ts',
+].map(file => ({
+  target: 'src/upstream/' + file,
+  implementation: 'src/pi/' + file,
+}));
+for (const item of forwarded) {
+  const path = item.implementation.slice('src/pi/'.length);
+  save(item.target, '// Shared native implementation; keep legacy imports without another source copy.\n'
+    + `export * from "../../pi/${path}";\n`);
+}
+
 for (const file of [
-  'core/skills.ts', 'core/prompt-templates.ts', 'core/source-info.ts', 'core/diagnostics.ts',
-  'core/event-bus.ts', 'core/pi-manifest.ts', 'utils/frontmatter.ts', 'utils/text.ts',
-  'utils/paths.ts', 'utils/child-process.ts',
+  'core/skills.ts', 'core/prompt-templates.ts', 'utils/child-process.ts',
   'core/package-manager.ts', 'utils/git.ts', 'core/output-guard.ts',
   'core/system-prompt.ts', 'core/exec.ts', 'core/timings.ts', 'core/mcp-servers.ts',
 ]) port(file);
@@ -221,8 +233,9 @@ save('LICENSE.pi', readFileSync(join(upstream, 'LICENSE'), 'utf8'));
 save('UPSTREAM.json', JSON.stringify({
   repository: 'https://github.com/earendil-works/pi',
   version: '1.5.0', revision,
-  policy: 'Source port. No pi-coding-agent or pi-agent-core package imports. Generated files are reproduced by scripts/vendor-upstream.ts.',
+  policy: 'Selected source ports and forwards to shared implementations. No full pi-coding-agent package dependency. Reproduced by scripts/vendor-upstream.ts.',
   typescript: ts.version,
   files: manifest,
+  forwarded,
 }, null, 2) + '\n');
-console.log(`${checking ? 'Verified' : 'Ported'} ${manifest.length} source files from Pi v1.5.0`);
+console.log(`${checking ? 'Verified' : 'Ported'} ${manifest.length} source files and ${forwarded.length} shared forwards from Pi v1.5.0`);

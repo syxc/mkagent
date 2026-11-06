@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { CodingResourceOptions } from './resources.ts';
 import { createHostPackageExtension } from './host-package-commands.ts';
+import { withHostCompactionPolicy, type HostSettingsManager } from './host-settings.ts';
 import type { EventBus } from './pi/core/event-bus.ts';
 import type { InlineExtension } from './pi/core/extensions/types.ts';
 import {
@@ -44,11 +45,11 @@ export interface HostResourceOptions extends Omit<CodingResourceOptions, 'global
 /** Keep native settings methods while choosing host files, profile scopes, or a storage port. */
 export function createHostSettingsManager(options: Pick<HostResourceOptions,
   'cwd' | 'agentDir' | 'projectTrusted' | 'globalSettings' | 'projectSettings' | 'settingsStorage' | 'resourcePolicy'
->): SettingsManager {
+>): HostSettingsManager {
   const trust = { projectTrusted: options.projectTrusted === true };
   const hostOnly = options.resourcePolicy === 'host-only';
   if (!hostOnly && !options.settingsStorage && options.globalSettings === undefined && options.projectSettings === undefined) {
-    return SettingsManager.create(options.cwd, options.agentDir, trust);
+    return withHostCompactionPolicy(SettingsManager.create(options.cwd, options.agentDir, trust));
   }
   const files = options.settingsStorage ?? new FileSettingsStorage(options.cwd, options.agentDir);
   const profiles: Partial<Record<SettingsScope, string>> = {};
@@ -57,13 +58,13 @@ export function createHostSettingsManager(options: Pick<HostResourceOptions,
     if (supplied !== undefined) profiles[scope] = JSON.stringify(supplied);
     else if (hostOnly && !options.settingsStorage) profiles[scope] = '{}';
   }
-  return SettingsManager.fromStorage({
+  return withHostCompactionPolicy(SettingsManager.fromStorage({
     withLock(scope, fn) {
       if (profiles[scope] === undefined) return files.withLock(scope, fn);
       const next = fn(profiles[scope]);
       if (next !== undefined) profiles[scope] = next;
     },
-  }, trust);
+  }, trust));
 }
 
 class HostResourceLoader extends DefaultResourceLoader {
@@ -90,7 +91,7 @@ class HostResourceLoader extends DefaultResourceLoader {
 /** Construct without loading; the session owner calls reload() and owns extension lifecycle events. */
 export function createHostResources(options: HostResourceOptions): {
   resourceLoader: DefaultResourceLoader;
-  settingsManager: SettingsManager;
+  settingsManager: HostSettingsManager;
 } {
   const cwd = resolve(options.cwd);
   const agentDir = resolve(options.agentDir);

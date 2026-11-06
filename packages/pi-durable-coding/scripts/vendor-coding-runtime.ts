@@ -6,7 +6,6 @@ import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { portModelRuntime } from './model-runtime-port.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
-import { portSettingsManager } from './settings-runtime-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
 import { portAgentFacade, portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
@@ -88,7 +87,9 @@ while (queue.length) {
     } else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) {
       inspect(node.arguments[0]);
     } else if (ts.isModuleDeclaration(node) && ts.isStringLiteral(node.name)) {
-      inspect(node.name);
+      // Message declaration merging belongs to the public protocol package.
+      if (node.name.text === '@earendil-works/pi-agent-core') dependencies.add(node.name.text);
+      else inspect(node.name);
     } else if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'resolve' &&
       node.arguments[0] && ts.isStringLiteral(node.arguments[0]) && !node.arguments[0].text.startsWith('.')) {
       const name = node.arguments[0].text.split('/')[0]!;
@@ -127,10 +128,6 @@ while (queue.length) {
   if (path === 'core/agent-session-services.ts') {
     body = portSessionServices(body);
     changes.add('shared-extension-model-initialization');
-  }
-  if (path === 'core/settings-manager.ts') {
-    body = portSettingsManager(body);
-    changes.add('host-compaction-threshold-policy');
   }
   if (path === 'extensions/mcp/oauth.ts') {
     body = portMcpOAuth(body);
@@ -198,19 +195,12 @@ for (const directory of ['modes/interactive/theme', 'modes/interactive/assets', 
 // Reuse the public state facade and protocol, while replacing its execution implementation.
 // The native agent-loop implementation is deliberately outside this source closure.
 for (const [path, target] of [
-  ['types.ts', 'src/agent-runtime.ts'],
   ['agent.ts', 'src/durable-agent.ts'],
   ['stream-fn.ts', 'src/stream-fn.ts'],
-  ['proxy.ts', 'src/stream-proxy.ts'],
 ] as const) {
   const original = readFileSync(join(upstream, 'packages/agent/src', path), 'utf8');
   let body = original.replaceAll('"./types.ts"', '"./agent-runtime.ts"');
   const changes = ['local-agent-protocol'];
-  if (path === 'proxy.ts') {
-    body = body.replace('ReadableStreamDefaultReader<Uint8Array> | undefined',
-      'Pick<ReadableStreamDefaultReader<Uint8Array>, "read" | "cancel" | "releaseLock"> | undefined');
-    changes.push('portable-fetch-reader-type');
-  }
   if (path === 'agent.ts') {
     body = body.replace('"./agent-loop.ts"', '"./durable-loop.ts"');
     body = 'import { DurableLoopBinding } from "./durable-coding/engine.ts";\n' + body;
@@ -222,15 +212,6 @@ for (const [path, target] of [
     changes.push('durable-loop-backend');
     body = portAgentFacade(body);
     changes.push('durable-state-recovery');
-  }
-  if (path === 'types.ts') {
-    body = 'import type { DurableLoopBinding } from "./durable-coding/engine.ts";\n' + body;
-    body = body.replace('export interface AgentLoopConfig extends SimpleStreamOptions {', 'export interface AgentLoopConfig extends SimpleStreamOptions {\n\tdurable?: DurableLoopBinding;');
-    body += '\nexport * from "./durable-agent.ts";\n'
-      + 'export * from "./durable-loop.ts";\n'
-      + 'export * from "./stream-proxy.ts";\n'
-      + 'export { setDefaultStreamFn } from "./stream-fn.ts";\n';
-    changes.push('complete-public-agent-exports');
   }
   save(target, body);
   records.push({ source: 'packages/agent/src/' + path, target, sha256: hash(original), portSha256: hash(body), changes });

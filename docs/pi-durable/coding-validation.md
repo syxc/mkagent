@@ -7,6 +7,41 @@ plugin compatibility, with all existing MkAgent features preserved. The
 corrections and acceptance gates after the user's clarification on 2026-11-04.
 An unimplemented operation or an unverified product path remains open work.
 
+The current package-assembly changes use public core protocol types and
+`streamProxy`, move host compaction policy outside native settings, and replace
+seven duplicate helper implementations with forwards. The runtime inventory is
+now 248 source files and 9 assets. The earlier helper inventory contains 27
+source ports, 6 unchanged fixtures and 7 forwards. Historical counts below
+remain evidence for the revision where they were measured.
+
+Both extension loaders now receive Bun file metadata through Jiti's public
+transform and Babel plugin APIs. A separate cache namespace prevents old
+transforms from bypassing the adapter. The metadata regression failed before
+the fix; all 8 loader and stack tests then passed with 24 assertions. Source
+generation was checked for the helper layer. The runtime manifest was updated
+only for permitted files; its complete generator check was not rerun because
+it reads the restricted credential source.
+
+The combined coding/worker test command reached its 300-second limit after
+829 passes and no failures. Its first 73 completed files contain 820 passes;
+the incomplete file and the next 10 files passed separately with 151 tests.
+Together these runs cover 84 files and 971 tests without counting the 9
+repeated passes. The combined command itself did not complete. The 17 pinned
+behavior scenarios and the unchanged plugin reference contract also passed.
+The latter recorded 28 UI effects, 4 local replies and an idle session.
+
+Current product checks passed: 1 plugin test with 65 assertions, 1 coding and
+default-profile test with 43 assertions, and 4 default conversation tests with
+22 assertions. The worker build and `validate:ci` passed. Lint first stopped
+because the isolated Craft reference path was missing; after setting the
+existing pinned mirror it passed with 0 errors and 107 existing warnings.
+Documentation punctuation and diff checks passed. The full repository test
+suite was not rerun. Craft lineage entries were updated for the changed files;
+the complete audit was not run because it also reads the restricted source.
+The independent static review found no actionable issue but did not obtain a
+complete Git diff or execute tests; the main thread reviewed the implementation
+diff and ran the checks above.
+
 ## Corrections after the clarified documentation baseline
 
 D1 changes after documentation commit `f7a33eb` separate native execution from
@@ -29,7 +64,7 @@ plugin integration acceptance stay open.
 The coding profile uses the existing `DurableKernel` and its Harness.
 `@mkagent/pi-durable-coding` contains the complete public Pi coding source
 closure from v1.5.0, commit `f9a26365568127461c47a07a37dcb42c140a3ac5`.
-`UPSTREAM-RUNTIME.json` records 250 source files, 9 assets, source hashes and
+`UPSTREAM-RUNTIME.json` records 248 source files, 9 assets, source hashes and
 controlled transformations. `UPSTREAM.json` records the earlier compatibility
 helpers. The package retains the upstream MIT license.
 
@@ -73,9 +108,9 @@ license. Headless archives also include the root LICENSE and NOTICE. Image
 workers resolve from the installed module; the project directory cannot
 supply an executable worker.
 
-The current production dependency graph excludes both `pi-coding-agent` and
-`pi-agent-core`. The dependency policy prohibits the complete `pi-coding-agent`
-package and permits `pi-agent-core` when useful within the durable boundary.
+The current production dependency graph uses the public `pi-agent-core`
+protocol and proxy APIs. The dependency policy prohibits the complete
+`pi-coding-agent` package and keeps execution within the durable boundary.
 The `./native`, `./agent` and `./durable` exports expose the native coding layer,
 durable Agent facade and host bindings. Declaration files come from the same
 sources. The shared transport retains its existing wire contract.

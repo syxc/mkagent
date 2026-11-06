@@ -4,6 +4,7 @@
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "policy": "Complete public coding source, preserved TypeScript declarations; execution binds to the local durable Agent boundary.",
   "dependencies": {
+    "@earendil-works/pi-agent-core": "1.5.0",
     "@earendil-works/pi-ai": "1.5.0",
     "@earendil-works/pi-codemode": "1.5.0",
     "@earendil-works/pi-mcp": "1.5.0",
@@ -49,16 +50,6 @@
     "setDefaultStreamFn"
   ],
   "files": [
-    {
-      "source": "packages/agent/src/types.ts",
-      "target": "src/agent-runtime.ts",
-      "sha256": "6ad1a3e1ea6cfa0770421aca9a23726061d8d31fdeb5c17c8acd5d7cea0e74b1",
-      "portSha256": "9a1c83c9a6564a15ad922dfd5f6249a94abf2b24331ef9877e279afac5be135d",
-      "changes": [
-        "local-agent-protocol",
-        "complete-public-agent-exports"
-      ]
-    },
     {
       "source": "packages/agent/src/agent.ts",
       "target": "src/durable-agent.ts",
@@ -514,7 +505,7 @@
       "source": "packages/coding-agent/src/core/messages.ts",
       "target": "src/pi/core/messages.ts",
       "sha256": "5397e3c96c9504266e4ee8b6e88d5098b3280ee7dbb0c687b74708c62a06c8d4",
-      "portSha256": "ab3babd6030bd4f3eeabcbbd0bfd1dfe278d6fcc5a01c0dcd7c656588604552a",
+      "portSha256": "e4e3869fb9038cabb0565a1140dd0aa98b512468bbc726230b11564c536ccb7e",
       "changes": [
         "durable-agent-boundary",
         "exclude-host-correlation-from-model-context"
@@ -707,10 +698,9 @@
       "source": "packages/coding-agent/src/core/settings-manager.ts",
       "target": "src/pi/core/settings-manager.ts",
       "sha256": "7b21f0900b96b8b11751c046cc009bdbd62b2a6f579a96e9727c737d0dd5e62d",
-      "portSha256": "eab399c599821b1d0c152a974f77286f4a55470c067309562146e17c4ed06be0",
+      "portSha256": "81d95105d236ff8c42b072e377b9ec094fd9914ef2d51fc41af9be099c903e25",
       "changes": [
-        "durable-agent-boundary",
-        "host-compaction-threshold-policy"
+        "durable-agent-boundary"
       ]
     },
     {
@@ -1964,16 +1954,6 @@
       "portSha256": "a6b2cce7515e43411f9b3469225d39712508542d86bc3e806a9f39b57808454f",
       "changes": [
         "local-agent-protocol"
-      ]
-    },
-    {
-      "source": "packages/agent/src/proxy.ts",
-      "target": "src/stream-proxy.ts",
-      "sha256": "36a4b80e8c0233400c5c237b51de1b48642a7fb9ed87572fedaa7d9cede9f2d3",
-      "portSha256": "5d61a1de581c13272e0155d8f05ca42632745ef1e8ac433a9c93c2e21b884453",
-      "changes": [
-        "local-agent-protocol",
-        "portable-fetch-reader-type"
       ]
     }
   ]

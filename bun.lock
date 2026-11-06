@@ -217,6 +217,7 @@
       "version": "0.2.6",
       "dependencies": {
         "@earendil-works/chord": "1.5.0",
+        "@earendil-works/pi-agent-core": "1.5.0",
         "@earendil-works/pi-ai": "1.5.0",
         "@earendil-works/pi-codemode": "1.5.0",
         "@earendil-works/pi-durable": "1.5.0",
@@ -506,6 +507,8 @@
     "@develar/schema-utils": ["@develar/schema-utils@2.6.5", "https://repo.huaweicloud.com/repository/npm/@develar/schema-utils/-/schema-utils-2.6.5.tgz", { "dependencies": { "ajv": "^6.12.0", "ajv-keywords": "^3.4.1" } }, "sha512-0cp4PsWQ/9avqTVMCtZ+GirikIA36ikvjtHweU4/j8yLtgObI0+JUPhYFScgwlteveGB1rt3Cm8UhN04XayDig=="],
 
     "@earendil-works/chord": ["@earendil-works/chord@1.5.0", "", { "dependencies": { "@earendil-works/pi-schema": "1.5.0", "@earendil-works/pi-telemetry": "1.5.0" }, "peerDependencies": { "esbuild": "0.28.2", "ws": "8.21.0" }, "optionalPeers": ["esbuild", "ws"] }, "sha512-jf555zbCM21E03DVBDPD/Tuae0lz64YjaHx/athUxNZ/H7phVVb0dWfZsaYnxaXPQ1odW8iHEoVLOlE/prvUPg=="],
+
+    "@earendil-works/pi-agent-core": ["@earendil-works/pi-agent-core@1.5.0", "", { "dependencies": { "@earendil-works/pi-ai": "1.5.0", "@earendil-works/pi-schema": "1.5.0" } }, "sha512-FOj+jXj48DbzMycR/ghNa2KcsqWmvOln24e0FnQOVgnd8vn5H79g335WdHaZUVdRo+zCeogb40/qPPlCWFuvmA=="],
 
     "@earendil-works/pi-ai": ["@earendil-works/pi-ai@1.1.0", "", { "dependencies": { "@anthropic-ai/sdk": "0.129.0", "@aws-sdk/client-bedrock-runtime": "3.1127.0", "@earendil-works/pi-telemetry": "^1.1.0", "@google/genai": "2.21.0", "@smithy/node-http-handler": "4.12.1", "http-proxy-agent": "9.1.0", "https-proxy-agent": "9.1.0", "openai": "7.19.0", "partial-json": "0.1.7", "typebox": "1.3.27" }, "bin": { "pi-ai": "dist/cli.js" } }, "sha512-1T7LAkc/5Bvc0v6w4vAGVdCrli0o/E0pEmYKTnixu95vSFArBjvbhS/G4ZwI0RUePgf0Imcu0VyqlM4EcXxqfw=="],
 
@@ -3133,6 +3136,8 @@
 
     "@earendil-works/chord/@earendil-works/pi-telemetry": ["@earendil-works/pi-telemetry@1.5.0", "", {}, "sha512-VW3tcVdnNfl/Vk8wHPTzZdKkxcsCOM12ppiO4DXnd9wMxUCmOfLt/wvUnWeKWbTVlVSRg0uqKtnnhE2UCsG2Bw=="],
 
+    "@earendil-works/pi-agent-core/@earendil-works/pi-ai": ["@earendil-works/pi-ai@1.5.0", "", { "dependencies": { "@anthropic-ai/sdk": "0.129.0", "@aws-sdk/client-bedrock-runtime": "3.1127.0", "@earendil-works/pi-schema": "1.5.0", "@earendil-works/pi-telemetry": "1.5.0", "@google/genai": "2.21.0", "@smithy/node-http-handler": "4.12.1", "http-proxy-agent": "9.1.0", "https-proxy-agent": "9.1.0", "openai": "7.19.0", "partial-json": "0.1.7" }, "bin": { "pi-ai": "dist/cli.js" } }, "sha512-VeWxNqTHSqRCf8AcY/6kvNwh+neRL6MPxZPePVztIQy6qqK9MR/YoCSN/ZgDnIyCD3pqEXgRyQbzk4KV4uvjbg=="],
+
     "@earendil-works/pi-ai/openai": ["openai@7.19.0", "", { "peerDependencies": { "@aws-sdk/credential-provider-node": ">=3.972.0 <4", "@smithy/hash-node": ">=4.3.0 <5", "@smithy/signature-v4": ">=5.4.0 <6", "undici": ">=5 <9", "ws": "^8.21.0", "zod": "^3.25 || ^4.0" }, "optionalPeers": ["@aws-sdk/credential-provider-node", "@smithy/hash-node", "@smithy/signature-v4", "undici", "ws", "zod"] }, "sha512-MX2s3u2L5racTO0CC/SWpCOasJQBCJrqLKXK+l82cAhdeF8mPMBEe/gxMm0ZFa2xpKpOFLRjxv5afYEZbBXmbQ=="],
 
     "@earendil-works/pi-durable/@earendil-works/pi-ai": ["@earendil-works/pi-ai@1.5.0", "", { "dependencies": { "@anthropic-ai/sdk": "0.129.0", "@aws-sdk/client-bedrock-runtime": "3.1127.0", "@earendil-works/pi-schema": "1.5.0", "@earendil-works/pi-telemetry": "1.5.0", "@google/genai": "2.21.0", "@smithy/node-http-handler": "4.12.1", "http-proxy-agent": "9.1.0", "https-proxy-agent": "9.1.0", "openai": "7.19.0", "partial-json": "0.1.7" }, "bin": { "pi-ai": "dist/cli.js" } }, "sha512-VeWxNqTHSqRCf8AcY/6kvNwh+neRL6MPxZPePVztIQy6qqK9MR/YoCSN/ZgDnIyCD3pqEXgRyQbzk4KV4uvjbg=="],
@@ -3526,6 +3531,10 @@
     "@babel/highlight/chalk/escape-string-regexp": ["escape-string-regexp@1.0.5", "https://repo.huaweicloud.com/repository/npm/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz", {}, "sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg=="],
 
     "@babel/highlight/chalk/supports-color": ["supports-color@5.5.0", "https://repo.huaweicloud.com/repository/npm/supports-color/-/supports-color-5.5.0.tgz", { "dependencies": { "has-flag": "^3.0.0" } }, "sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow=="],
+
+    "@earendil-works/pi-agent-core/@earendil-works/pi-ai/@earendil-works/pi-telemetry": ["@earendil-works/pi-telemetry@1.5.0", "", {}, "sha512-VW3tcVdnNfl/Vk8wHPTzZdKkxcsCOM12ppiO4DXnd9wMxUCmOfLt/wvUnWeKWbTVlVSRg0uqKtnnhE2UCsG2Bw=="],
+
+    "@earendil-works/pi-agent-core/@earendil-works/pi-ai/openai": ["openai@7.19.0", "", { "peerDependencies": { "@aws-sdk/credential-provider-node": ">=3.972.0 <4", "@smithy/hash-node": ">=4.3.0 <5", "@smithy/signature-v4": ">=5.4.0 <6", "undici": ">=5 <9", "ws": "^8.21.0", "zod": "^3.25 || ^4.0" }, "optionalPeers": ["@aws-sdk/credential-provider-node", "@smithy/hash-node", "@smithy/signature-v4", "undici", "ws", "zod"] }, "sha512-MX2s3u2L5racTO0CC/SWpCOasJQBCJrqLKXK+l82cAhdeF8mPMBEe/gxMm0ZFa2xpKpOFLRjxv5afYEZbBXmbQ=="],
 
     "@earendil-works/pi-durable/@earendil-works/pi-ai/openai": ["openai@7.19.0", "", { "peerDependencies": { "@aws-sdk/credential-provider-node": ">=3.972.0 <4", "@smithy/hash-node": ">=4.3.0 <5", "@smithy/signature-v4": ">=5.4.0 <6", "undici": ">=5 <9", "ws": "^8.21.0", "zod": "^3.25 || ^4.0" }, "optionalPeers": ["@aws-sdk/credential-provider-node", "@smithy/hash-node", "@smithy/signature-v4", "undici", "ws", "zod"] }, "sha512-MX2s3u2L5racTO0CC/SWpCOasJQBCJrqLKXK+l82cAhdeF8mPMBEe/gxMm0ZFa2xpKpOFLRjxv5afYEZbBXmbQ=="],
 

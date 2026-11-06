@@ -1,4 +1,3 @@
-import { compactionReserveFor } from "../../compaction-reserve.ts";
 import type { ThinkingLevel } from "../../agent-runtime.ts";
 import type { Model } from "@earendil-works/pi-ai";
 import type { ScrollViewScrollbar, TerminalCapabilities, WheelScrollLines } from "@earendil-works/pi-tui";
@@ -271,13 +270,6 @@ export class InMemorySettingsStorage implements SettingsStorage {
 }
 
 export class SettingsManager {
-	private hostAutoCompactWindow: number | undefined;
-
-	/** Memory-only host policy survives native save/reload and is resolved for each model. */
-	setHostAutoCompactWindow(window: number | undefined): void {
-		this.hostAutoCompactWindow = window;
-	}
-
 	private storage: SettingsStorage;
 	private globalSettings: Settings;
 	private projectSettings: Settings;
@@ -879,9 +871,8 @@ export class SettingsManager {
 		return override ?? ordinary ?? DEFAULT_COMPACTION_TOKEN_SETTINGS[field];
 	}
 
-	getCompactionReserveTokens(model?: Pick<Model<string>, "provider" | "id"> & { contextWindow?: number }): number {
-		return compactionReserveFor(model?.contextWindow,
-			this.getCompactionTokenSetting("reserveTokens", model), this.hostAutoCompactWindow);
+	getCompactionReserveTokens(model?: Pick<Model<string>, "provider" | "id">): number {
+		return this.getCompactionTokenSetting("reserveTokens", model);
 	}
 
 	getCompactionKeepRecentTokens(model?: Pick<Model<string>, "provider" | "id">): number {
@@ -889,7 +880,7 @@ export class SettingsManager {
 	}
 
 	/** Resolve each token setting through model override, ordinary setting, then built-in default. */
-	getCompactionSettings(model?: Pick<Model<string>, "provider" | "id"> & { contextWindow?: number }): {
+	getCompactionSettings(model?: Pick<Model<string>, "provider" | "id">): {
 		enabled: boolean;
 		reserveTokens: number;
 		keepRecentTokens: number;

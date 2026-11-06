@@ -1,12 +1,62 @@
 import { afterEach, expect, test } from 'bun:test';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const directories: string[] = [];
 afterEach(() => { for (const directory of directories.splice(0)) rmSync(directory, { recursive: true, force: true }); });
 
 for (const path of ['../src/upstream/core/extensions/loader.js', '../src/pi/core/extensions/loader.ts']) {
+  test(`plugin import metadata resolves per file through ${path}`, () => {
+    const directory = mkdtempSync(join(tmpdir(), 'plugin-metadata-'));
+    directories.push(directory);
+    const nested = join(directory, 'nested 中文');
+    mkdirSync(nested);
+    const dependency = join(nested, 'metadata.ts');
+    writeFileSync(dependency, 'export const metadata = [import.meta.dir, import.meta.path, import.meta.file];');
+    const plugin = join(directory, 'extension.ts');
+    writeFileSync(join(directory, 'resource.txt'), 'plugin resource');
+    writeFileSync(plugin, `
+      import { readFileSync } from 'node:fs';
+      import { metadata } from './nested 中文/metadata.ts';
+      export default function(pi) {
+        pi.registerFlag('metadata', { type: 'string', default: JSON.stringify({
+          dir: import.meta.dir, path: import.meta.path, file: import.meta.file,
+          dirname: import.meta.dirname, filename: import.meta.filename, url: import.meta.url,
+          computed: import.meta['dir'], literal: 'import.meta.dir', nested: metadata,
+          optional: import.meta?.path, resource: readFileSync(import.meta.dir + '/resource.txt', 'utf8'),
+        }) });
+      }
+    `);
+    const expected = {
+      dir: directory, path: plugin, file: basename(plugin), dirname: directory, filename: plugin,
+      url: pathToFileURL(plugin).href, computed: directory, literal: 'import.meta.dir',
+      nested: [dirname(dependency), dependency, basename(dependency)],
+      optional: plugin, resource: 'plugin resource',
+    };
+    const seed = Bun.spawnSync([process.execPath, '--eval', `
+      const { createJiti } = await import(${JSON.stringify(import.meta.resolve('jiti/static'))});
+      await createJiti(${JSON.stringify(plugin)}, { tryNative: false, moduleCache: false })
+        .import(${JSON.stringify(plugin)});
+    `], { cwd: directory, env: process.env, stdout: 'pipe', stderr: 'pipe', timeout: 15_000 });
+    expect({ code: seed.exitCode, error: seed.stderr.toString() }).toEqual({ code: 0, error: '' });
+    const child = Bun.spawnSync([process.execPath, '--eval', `
+      try {
+        const assert = await import('node:assert/strict');
+        const { loadExtensions } = await import(${JSON.stringify(new URL(path, import.meta.url).href)});
+        for (let reload = 0; reload < 2; reload++) {
+          const loaded = await loadExtensions([${JSON.stringify(plugin)}], ${JSON.stringify(directory)});
+          assert.deepEqual(loaded.errors, []);
+          assert.deepEqual(JSON.parse(loaded.extensions[0].flags.get('metadata').default), ${JSON.stringify(expected)});
+        }
+        console.log('plugin metadata passed');
+      } catch (error) { console.error(error.message.slice(0, 1200)); process.exitCode = 1; }
+    `], { cwd: directory, env: process.env, stdout: 'pipe', stderr: 'pipe', timeout: 15_000 });
+    expect({ code: child.exitCode, error: child.stderr.toString() }).toEqual({ code: 0, error: '' });
+    expect(child.stdout.toString()).toContain('plugin metadata passed');
+  });
+
   test.each(['native', 'host', 'plugin'])(`extension dependencies preserve %s stack handling through ${path}`, mode => {
     const directory = mkdtempSync(join(tmpdir(), 'plugin-transpiler-'));
     directories.push(directory);

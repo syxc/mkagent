@@ -56,6 +56,28 @@ afterEach(() => {
 });
 
 describe('host native resources', () => {
+  test.each([false, true])('host compaction policy delegates native settings and survives reload with profiles=%s', async profile => {
+    const global = { compaction: { reserveTokens: 31_000, modelOverrides: { 'test/wide': { reserveTokens: 123 } } } };
+    if (!profile) put(join(agentDir, 'settings.json'), JSON.stringify(global));
+    const settings = createHostSettingsManager({
+      cwd, agentDir, ...(profile ? { globalSettings: global } : {}),
+    });
+    const model = { provider: 'test', id: 'wide', contextWindow: 1_000_000 };
+    expect(settings.getCompactionReserveTokens(model)).toBe(123);
+    settings.setHostAutoCompactWindow(100_000);
+    expect(settings.getCompactionReserveTokens(model)).toBe(900_000);
+    expect(settings.getCompactionSettings(model).reserveTokens).toBe(900_000);
+    settings.setTheme('host-policy');
+    await settings.flush();
+    await settings.reload();
+    expect(settings.getCompactionSettings(model).reserveTokens).toBe(900_000);
+    expect(settings.getGlobalSettings().compaction?.reserveTokens).toBe(31_000);
+    expect(settings.getTheme()).toBe('host-policy');
+    settings.setHostAutoCompactWindow(undefined);
+    expect(settings.getCompactionReserveTokens(model)).toBe(123);
+    expect(settings.getCompactionSettings(model).reserveTokens).toBe(123);
+  });
+
   test('host-only policy isolates native sessions from ambient Pi resources and settings across reloads', async () => {
     for (const directory of [agentDir, join(cwd, '.pi')]) {
       put(join(directory, 'settings.json'), JSON.stringify({ compaction: { enabled: false }, retry: { enabled: false } }));

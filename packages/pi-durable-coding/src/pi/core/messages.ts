@@ -67,7 +67,7 @@ export interface CompactionSummaryMessage {
 }
 
 // Extend CustomAgentMessages via declaration merging
-declare module "../../agent-runtime.ts" {
+declare module "@earendil-works/pi-agent-core" {
 	interface CustomAgentMessages {
 		bashExecution: BashExecutionMessage;
 		custom: CustomMessage;

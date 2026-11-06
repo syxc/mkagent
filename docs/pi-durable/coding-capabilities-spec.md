@@ -87,10 +87,10 @@ needed, but pi-durable remains responsible for execution scheduling, task
 ownership, accepted inputs, recovery and commits. Importing an official package
 must not start a second Agent loop outside that boundary.
 
-The current implementation does not require a `pi-agent-core` dependency.
-Keeping that dependency absent is an implementation choice, not an acceptance
-condition. Reassess source-port adapters when a public core API can replace
-them without changing durable execution.
+The current implementation uses public `pi-agent-core` protocol types and
+`streamProxy`. The local Agent facade and durable tasks own execution.
+Reassess source-port adapters when another public core API can replace them
+without changing durable execution.
 
 Port the complete public coding dependency closure from the pinned TypeScript
 source, including the SDK, resources, extensions, session layer and presentation
