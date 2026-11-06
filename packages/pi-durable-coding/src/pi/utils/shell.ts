@@ -1,30 +1,14 @@
+import { getBashShellConfig, killProcessTree } from "../../compat/shell.ts";
+export { killProcessTree };
 import { accessSync, constants } from "node:fs";
-import { delimiter, join, win32 } from "node:path";
-import { spawn, spawnSync } from "child_process";
+import { delimiter, win32 } from "node:path";
+import { spawnSync } from "child_process";
 import { getBinDir } from "../config.ts";
 
 export interface ShellConfig {
 	shell: string;
 	args: string[];
 	commandTransport?: "argv" | "stdin";
-}
-
-// Keep in sync with packages/durable/src/env/node.ts.
-function isLegacyWslBashPath(path: string): boolean {
-	const normalized = win32.normalize(path).toLowerCase();
-	const systemRoot = process.env.SystemRoot;
-	if (systemRoot) {
-		if (!/^[a-z]:[\\/]/i.test(systemRoot)) return false;
-		return ["System32", "Sysnative"].some(
-			(directory) => normalized === win32.join(systemRoot, directory, "bash.exe").toLowerCase(),
-		);
-	}
-	// Fall back to conventional launcher paths only when the Windows directory is unknown.
-	return /^[a-z]:\\windows\\(?:system32|sysnative)\\bash\.exe$/.test(normalized);
-}
-
-function getBashShellConfig(shell: string): ShellConfig {
-	return isLegacyWslBashPath(shell) ? { shell, args: ["-s"], commandTransport: "stdin" } : { shell, args: ["-c"] };
 }
 
 // Matches harness-v2's pathExists (packages/durable/src/env/node.ts).
@@ -212,53 +196,4 @@ export function killTrackedDetachedChildren(): void {
 		killProcessTree(pid);
 	}
 	trackedDetachedChildPids.clear();
-}
-
-/**
- * Kill a process and all its children (cross-platform)
- */
-export function killProcessTree(pid: number): void {
-	if (process.platform === "win32") {
-		// Use the trusted System32 executable so cleanup does not depend on PATH.
-		try {
-			const child = spawn(
-				join(process.env.SystemRoot || "C:\\Windows", "System32", "taskkill.exe"),
-				["/F", "/T", "/PID", String(pid)],
-				{
-					stdio: "ignore",
-					detached: true,
-					windowsHide: true,
-				},
-			);
-			// A failed spawn emits "error" asynchronously; consume it to avoid crashing Node.
-			child.once("error", () => {});
-		} catch {
-			// Ignore errors if taskkill fails.
-		}
-	} else {
-		if (process.platform === "darwin") {
-			// macOS signals group members individually after releasing the group lock. A killed
-			// child can wake its waiting shell before that shell is signalled, letting `a; b`
-			// start b during cancellation (#11252). Stop the group first to reduce this race;
-			// this is best-effort, not an atomic freeze. SIGKILL also kills stopped processes.
-			// Linux holds tasklist_lock across group signalling; child exit notification needs
-			// its write lock, so the shell is signalled before observing the killed child's exit.
-			try {
-				process.kill(-pid, "SIGSTOP");
-			} catch {
-				// A failed stop must not prevent the kill attempt or its single-process fallback.
-			}
-		}
-		// Use SIGKILL on Unix/Linux/Mac
-		try {
-			process.kill(-pid, "SIGKILL");
-		} catch {
-			// Fallback to killing just the child if process group kill fails
-			try {
-				process.kill(pid, "SIGKILL");
-			} catch {
-				// Process already dead
-			}
-		}
-	}
 }

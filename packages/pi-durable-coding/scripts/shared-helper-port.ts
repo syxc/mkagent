@@ -11,6 +11,7 @@ export function portSharedHelpers(path: string, body: string): string {
   if (path === 'utils/mime.ts') return portImageMime(body);
   if (path === 'utils/ansi.ts') return portAnsi(body);
   if (path === 'utils/child-process.ts') return portChildProcess(body);
+  if (path === 'utils/shell.ts') return portShell(body);
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
@@ -258,6 +259,38 @@ function portChildProcess(body: string): string {
   ];
   for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
   return body;
+}
+
+function portShell(body: string): string {
+  const parsed = ts.createSourceFile('shell.ts', body, ts.ScriptTarget.Latest, true);
+  const expected: Record<string, string> = {
+    isLegacyWslBashPath: 'cddb113d738571244cbeaeffc75859243b4ed759a9f3436ecac69220fc5947ff',
+    getBashShellConfig: 'a4362dcc7b15aa46a643446690e27b186235839f1a3673b72f619f12f1de409b',
+    killProcessTree: 'a3b09ad5cc88631155c1a252988f2cf2588fe5cca1c9512343a1b086a2316668',
+  };
+  const imports: Record<string, string> = {
+    'import { delimiter, join, win32 } from "node:path";': 'import { delimiter, win32 } from "node:path";',
+    'import { spawn, spawnSync } from "child_process";': 'import { spawnSync } from "child_process";',
+  };
+  const remaining = new Set([...Object.keys(expected), ...Object.keys(imports)]);
+  const edits: Array<{ start: number; end: number; text: string }> = [];
+  for (const node of parsed.statements) {
+    if (ts.isFunctionDeclaration(node) && node.name && Object.hasOwn(expected, node.name.text)) {
+      if (!remaining.delete(node.name.text) ||
+          createHash('sha256').update(node.getText(parsed)).digest('hex') !== expected[node.name.text]) {
+        throw new Error('Native shell algorithm boundary changed');
+      }
+      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
+    } else if (ts.isImportDeclaration(node) && Object.hasOwn(imports, node.getText(parsed))) {
+      const text = node.getText(parsed);
+      remaining.delete(text);
+      edits.push({ start: node.getStart(parsed), end: node.end, text: imports[text] });
+    }
+  }
+  if (remaining.size) throw new Error('Native shell declarations changed');
+  for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
+  return 'import { getBashShellConfig, killProcessTree } from "../../compat/shell.ts";\n'
+    + 'export { killProcessTree };\n' + body;
 }
 
 function portZipRuntime(body: string): string {

@@ -20,6 +20,43 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Shared Native shell algorithms
+
+Native synchronous shell discovery still owns path searches and errors.
+Its Bash argv selection and process tree cleanup now call existing durable
+helpers through `compat/shell.ts`. The adapter retains the Native macOS
+best-effort group `SIGSTOP` before the shared cleanup. Detached child tracking,
+PowerShell and environment handling remain Native policy.
+
+The two Bash function bodies match after TypeScript erasure. Before and after
+replacement, the actual Native entry passes 18 tests and 34 assertions.
+Cases cover eight WSL paths and SystemRoot variants, synchronous missing-path
+errors, macOS signal order and stop failure, Unix group and child fallback,
+detached tracking, and trusted Windows taskkill arguments and errors.
+Signals and taskkill are intercepted by verified substitutes. These checks
+do not run real Windows processes or send real kill signals.
+
+Nine other Native functions retain their exact text. The generator rejects
+seven changed declaration boundaries. The single-file check reports
+`sourceFiles: 1` and `complete: false`. Ten explicit strict type roots resolve
+262 source files with no diagnostics. The eight-file shell, process, ANSI and
+image suite passes 146 tests and 932 assertions.
+
+The durable JavaScript differs from the original package only by exporting
+`getBashShellConfig`, `killProcessTree` and the earlier `waitForChildProcess`.
+No algorithm body changes. All 24 patch files apply cleanly and match the
+working tree; the previous 22-file prefix remains unchanged. The patch SHA-256 is
+`45344f7300c49b46da08e092637ec61fad8bc8f40c7c3529ca63afddfbde34f0`.
+
+A fresh cache links 99 original local packages, excluding the old patched
+cache. The independent offline frozen install disables lifecycle scripts and
+matches all 24 patch files and nine Native source, test and metadata files.
+Bun and Node each pass the same 18 test bodies and 34 assertions. The Node
+adapter uses strict assertions and synchronizes builtin spawn bindings.
+Both locks remain unchanged. Registry tarball integrity, real Windows,
+complete SDK and product integration, root installation and releases remain
+unverified. Review stayed in the main thread within the permitted files.
+
 ## Shared child process wait
 
 Native now forwards its child wait to the existing durable implementation
@@ -50,7 +87,7 @@ unchanged. A fresh independent cache uses 99 existing package directories for
 100 lock records. A frozen install with scripts disabled matches all 24 patched
 files and all four copied Native files. Bun and Node each pass the same 21 test
 bodies and 155 assertions; Node uses a small assert adapter. The consumer lock
-and root lock remain unchanged. The current patch SHA-256 is
+and root lock remain unchanged. At that stage, the patch SHA-256 was
 `74af1a588a0af12e3de498083c773daeced397d27f8d399cd1c42258ec2df071`.
 
 The first consumer install could not resolve missing registry metadata in its

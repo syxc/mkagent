@@ -1859,8 +1859,10 @@
       "source": "packages/coding-agent/src/utils/shell.ts",
       "target": "src/pi/utils/shell.ts",
       "sha256": "bacb0f871b92e38ac17221e0c1b00ac5211e0f5c0063675afd980513c7c79fb4",
-      "portSha256": "bacb0f871b92e38ac17221e0c1b00ac5211e0f5c0063675afd980513c7c79fb4",
-      "changes": []
+      "portSha256": "af78a612cd50d7b9643bceaa52a6c92e7e1ec779e264be39fec68ece0d913a65",
+      "changes": [
+        "shared-durable-shell-algorithms"
+      ]
     },
     {
       "source": "packages/coding-agent/src/utils/sleep.ts",
