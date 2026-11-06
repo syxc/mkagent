@@ -625,3 +625,103 @@ diff --git a/dist/harness/generation.d.ts b/dist/harness/generation.d.ts
 +/** Append in order, resolving every local reference before passing it to durable. */
 +export declare function appendCodingEntries(tx: Tx, conversation: ConversationId, entries: readonly CodingEntryDraft[]): Promise<EntryId[]>;
 +export {};
+diff --git a/dist/search.js b/dist/search.js
+--- a/dist/search.js
++++ b/dist/search.js
+@@ -16,6 +16,12 @@
+  * Only `text` is length-normalized, so a long name or long namespace instructions do not lower a tool's score.
+  */
+ export function rankDocuments(query, documents, limit) {
++    return rankToolSearchDocuments(query, documents, limit).map((match) => match.name);
++}
++/** Compatibility seam for SDK consumers that also need scores and configurable BM25 parameters. */
++export function rankToolSearchDocuments(query, documents, limit, options = {}) {
++    const k1 = options.k1 ?? K1;
++    const b = options.b ?? B;
+     const queryTerms = new Set(tokenize(query));
+     if (queryTerms.size === 0 || documents.length === 0 || limit <= 0)
+         return [];
+@@ -29,14 +35,14 @@
+     const exactQuery = normalizeName(query);
+     const matches = [];
+     for (const document of indexed) {
+-        const norm = K1 * (1 - B + (B * document.textLength) / averageLength);
++        const norm = k1 * (1 - b + (b * document.textLength) / averageLength);
+         let score = 0;
+         let covered = 0;
+         for (const term of queryTerms) {
+             const count = document.textCounts.get(term) ?? 0;
+             const weight = (document.nameTerms.has(term) ? NAME_WEIGHT : 0) +
+                 (document.namespaceTerms.has(term) ? NAMESPACE_WEIGHT : 0) +
+-                (count * (K1 + 1)) / (count + norm);
++                (count * (k1 + 1)) / (count + norm);
+             if (weight > 0)
+                 covered++;
+             score += idf.get(term) * weight;
+@@ -51,7 +57,7 @@
+     return matches
+         .sort((left, right) => Number(right.exact) - Number(left.exact) || right.covered - left.covered || right.score - left.score)
+         .slice(0, limit)
+-        .map((match) => match.name);
++        .map(({ name, score }) => ({ name, score }));
+ }
+ const K1 = 1.2;
+ const B = 0.75;
+diff --git a/dist/search.d.ts b/dist/search.d.ts
+--- a/dist/search.d.ts
++++ b/dist/search.d.ts
+@@ -24,6 +24,11 @@
+  * Only `text` is length-normalized, so a long name or long namespace instructions do not lower a tool's score.
+  */
+ export declare function rankDocuments(query: string, documents: readonly SearchDocument[], limit: number): string[];
++/** Compatibility seam for SDK consumers that also need scores and configurable BM25 parameters. */
++export declare function rankToolSearchDocuments(query: string, documents: readonly SearchDocument[], limit: number, options?: {
++    k1?: number;
++    b?: number;
++}): { name: string; score: number }[];
+ /** Unicode word segmentation with identifier boundaries and English stop words/singular forms. */
+ export declare function tokenize(text: string): string[];
+ //# sourceMappingURL=search.d.ts.map
+\ No newline at end of file
+diff --git a/dist/tool-search/index.js b/dist/tool-search/index.js
+--- a/dist/tool-search/index.js
++++ b/dist/tool-search/index.js
+@@ -1,2 +1,4 @@
+ export { createToolSearchExtension, createToolSearchTool, DEFAULT_TOOL_SEARCH_LIMIT, TOOL_SEARCH_TOOL_NAME, } from "./tool-search.js";
++export { rankToolSearchDocuments, tokenize as tokenizeToolSearch } from "../search.js";
++export { searchText as createToolSearchText } from "./tool-search.js";
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/dist/tool-search/index.d.ts b/dist/tool-search/index.d.ts
+--- a/dist/tool-search/index.d.ts
++++ b/dist/tool-search/index.d.ts
+@@ -1,2 +1,4 @@
+ export { createToolSearchExtension, createToolSearchTool, DEFAULT_TOOL_SEARCH_LIMIT, TOOL_SEARCH_TOOL_NAME, type ToolSearchToolDetails, } from "./tool-search.ts";
++export { rankToolSearchDocuments, tokenize as tokenizeToolSearch } from "../search.js";
++export { searchText as createToolSearchText } from "./tool-search.ts";
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/tool-search/tool-search.js b/dist/tool-search/tool-search.js
+--- a/dist/tool-search/tool-search.js
++++ b/dist/tool-search/tool-search.js
+@@ -38,7 +38,7 @@
+     }
+ }
+ /** Search text of a tool: its description and its parameters' names and descriptions; the ranker reads the name. */
+-function searchText(tool) {
++export function searchText(tool) {
+     const parts = [tool.description];
+     schemaText(tool.parameters, parts);
+     return parts.filter((part) => part.trim() !== "").join(" ");
+diff --git a/dist/tool-search/tool-search.d.ts b/dist/tool-search/tool-search.d.ts
+--- a/dist/tool-search/tool-search.d.ts
++++ b/dist/tool-search/tool-search.d.ts
+@@ -5,6 +5,8 @@
+ export type ToolSearchToolDetails = {
+     loaded: string[];
+ };
++/** Search text of a tool's description and parameter metadata. */
++export declare function searchText(tool: { description: string; parameters: unknown }): string;
+ export declare function createToolSearchTool(): ToolRegistration<import("@earendil-works/pi-schema").Schema<{
+     query: string;
+     limit?: number | undefined;

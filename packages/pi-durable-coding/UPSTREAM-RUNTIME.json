@@ -7,6 +7,7 @@
     "@earendil-works/pi-agent-core": "1.5.0",
     "@earendil-works/pi-ai": "1.5.0",
     "@earendil-works/pi-codemode": "1.5.0",
+    "@earendil-works/pi-durable": "1.5.0",
     "@earendil-works/pi-mcp": "1.5.0",
     "@earendil-works/pi-tui": "1.5.0",
     "@silvia-odwyer/photon-node": "0.3.4",
@@ -1108,8 +1109,10 @@
       "source": "packages/coding-agent/src/extensions/tool-search/tool.ts",
       "target": "src/pi/extensions/tool-search/tool.ts",
       "sha256": "27f675348b17878ae91a50947198ea9fedffb16d12cbd963cec9dcf8aae5bbc2",
-      "portSha256": "27f675348b17878ae91a50947198ea9fedffb16d12cbd963cec9dcf8aae5bbc2",
-      "changes": []
+      "portSha256": "8939db89dd288ab11ea28af3f1434ca652f310edec59ceb7793a1f23d71c9816",
+      "changes": [
+        "shared-durable-tool-search-ranking"
+      ]
     },
     {
       "source": "packages/coding-agent/src/index.ts",
@@ -1848,8 +1851,10 @@
       "source": "packages/coding-agent/src/utils/sleep.ts",
       "target": "src/pi/utils/sleep.ts",
       "sha256": "41bb3a7cccc0420483993d6fbc4e85d7cc1ab5a4ec46ce440deaae224f1005fc",
-      "portSha256": "41bb3a7cccc0420483993d6fbc4e85d7cc1ab5a4ec46ce440deaae224f1005fc",
-      "changes": []
+      "portSha256": "cc3c01511d5ae856a78deda64a32de1d6e7b7a08f370e460ccaa302e7e8817e3",
+      "changes": [
+        "public-pi-ai-sleep-helper"
+      ]
     },
     {
       "source": "packages/coding-agent/src/utils/syntax-highlight.ts",

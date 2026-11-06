@@ -2328,6 +2328,18 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/test/shared-sleep.test.ts": {
+      "sha256": "5e1dee9a6b2fc7ff6e389c5b07fbf4aceb563a10aa99faf4cd5c40a61126f537",
+      "reason": "Check shared timer reuse, listener cleanup, optional signals and native cancellation and timer errors."
+    },
+    "packages/pi-durable-coding/test/shared-tool-search.test.ts": {
+      "sha256": "6b849f2bba5f073040e5e2252b293a3337390cf3f2ffc21990ffff5e17cbd8da",
+      "reason": "Check shared search scores, tokenizer identity, schema metadata, namespace ranking and native activation callbacks."
+    },
+    "packages/pi-durable-coding/test/codemode-durable-boundary.test.ts": {
+      "sha256": "399d53f6bafe49fc95a2b2be0fc3348184e84d3fa72408bd18a82227b3397512",
+      "reason": "Record codemode compatibility gaps through real durable tasks and sandbox comparisons before replacing native execution."
+    },
     "packages/pi-durable-coding/src/legacy/api-types.ts": {
       "sha256": "a0524a6fec510bb5c5a0673b349bf53394b1a01933d459edeb9ce53ff559751f",
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
@@ -2337,8 +2349,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "e734a4bef7b66357141349a8403357f111f4cce63c3e1e6a31bf8d8639edc4c8",
-      "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
+      "sha256": "3abfab304fbe7029f99760061c8d14e848d1a1d9b1e1124dcde5467e76a25aa0",
+      "reason": "Reproduce shared resource and durable search helpers while preserving native namespace and tool activation contracts."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3797,8 +3809,8 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "38b57721fc6d38ca192022cccae8b2b80693e08fc742e12524f30881eff42d5e",
-      "reason": "Apply the typed generation-task patch through frozen Bun installs with one scheduler."
+      "sha256": "20261ea330316ffdfc14cf2a7e50d355761a239d25fc4a6c162537cb8cd40d39",
+      "reason": "Retain legacy generation-task compatibility and expose shared durable search helpers through narrow compatibility exports."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
       "sha256": "53af9ef53c9ada189e0122a646c18ccf20bc16c2720fa56c25a3a2de22690352",
@@ -3849,7 +3861,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "f24d39ea3c946e6bd1966899ff2b6704412f9d307221d913678caaf14ef937b0",
+      "sha256": "3db95e8594d42e0cc9fa16d8d8f7447ef9552cb8560f15cd0ef8d08729881e1d",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3869,8 +3881,8 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "85db5108b1fe9e0d243ca0ea736615af30073ece9bcc1a091f3830f6fe9ef815",
-      "reason": "Reproduce permitted coding runtime transformations, public package reuse and scoped checks without expanding restricted source."
+      "sha256": "dbe7b054ae0b231e69d85edeb1ad12d0a381e78009aa2f2e1a83fa0e849645be",
+      "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4537,8 +4549,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/tool-search/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/tool-search/tool.ts": {
-      "sha256": "27f675348b17878ae91a50947198ea9fedffb16d12cbd963cec9dcf8aae5bbc2",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/tool-search/tool.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "8939db89dd288ab11ea28af3f1434ca652f310edec59ceb7793a1f23d71c9816",
+      "reason": "Delegate tokenization, scored BM25 and schema metadata to durable compatibility exports; retain native namespace and session activation."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
@@ -4953,8 +4965,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/shell.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/sleep.ts": {
-      "sha256": "41bb3a7cccc0420483993d6fbc4e85d7cc1ab5a4ec46ce440deaae224f1005fc",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/sleep.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "cc3c01511d5ae856a78deda64a32de1d6e7b7a08f370e460ccaa302e7e8817e3",
+      "reason": "Use public pi-ai sleep while preserving the optional signal, native cancellation error and ordinary timer error identity."
     },
     "packages/pi-durable-coding/src/pi/utils/syntax-highlight.ts": {
       "sha256": "d54b89e54097abd85119385c0ae21320dc587b7494c03833f9ce48328d2e8f41",

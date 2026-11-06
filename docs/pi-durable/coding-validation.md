@@ -20,6 +20,48 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Search core and sleep follow-up after 5702c34
+
+The stopping condition is the lowest maintenance cost that preserves the
+existing product and plugin contracts. A completed batch, passing tests or a
+local commit does not close the remaining source audit and codemode work.
+
+The SDK now shares durable's tokenizer, BM25 calculation and schema metadata
+traversal. The existing local durable patch adds three compatibility exports:
+`rankToolSearchDocuments`, `tokenizeToolSearch` and `createToolSearchText`.
+The scored ranker accepts the SDK's configurable `k1/b`. Durable's own
+`rankDocuments` delegates to it with the original defaults and returns names.
+The SDK retains namespace text, its TypeBox registration and native active-tool
+callbacks. These callbacks keep tool changes with the native session owner;
+the new unit test reaches the callback, without testing full branch recovery.
+The local exports require patch replay and compatibility checks on upgrades.
+
+The sleep helper now delegates to public `pi-ai/utils/sleep`. The wrapper keeps
+the optional signal, the coding cancellation error and ordinary timer errors.
+The public implementation owns timer cancellation and listener cleanup.
+
+| Check | Result and scope |
+| --- | --- |
+| Isolated regression | 23 explicit files, 196 passes, 1106 assertions and no failures. This extends the 21-file suite below with the sleep and search tests. Pre-cancelled and active waits preserve the coding error even when the reason is `NaN`. |
+| Original search cases | The pinned original tokenizer and ranker sections pass all 27 cases, including multilingual queries, schema properties, namespace matches and exact names. Only the test framework and target import changed. |
+| Differential search | 3256 assertions compare the new implementation with the unchanged coding and durable implementations, including configurable scores, empty corpora, unusual limits and Unicode. The temporary reference was captured before replacement. |
+| Consumer types | A strict, single-root public search and optional-sleep consumer passes. Its reader rejects restricted names and any other local coding source before reading. |
+| Scoped reproduction | Search, sleep and cancellation reproduce together with three source files and `complete: false`. The complete runtime closure was not traversed. |
+| Durable patch | The complete patch applies to the cached unmodified 1.5.0 package. All ten patched files reproduce the installed files exactly. This is separate from a frozen dependency install. |
+
+Codemode replacement remains in progress. Six real Harness and sandbox
+comparisons passed with 38 assertions. They confirm differences in call IDs,
+namespace aliases, discovery-global registration, output budgets, image
+storage without an environment and branch store lifetime. For a
+`max_output_tokens` value of 400000, a 1.1-million-character result stays
+complete in the native implementation and is cut by the built-in formatter,
+even with a larger outer output limit. These checks establish compatibility
+gaps; they do not establish a completed adapter, native hook coverage or
+recovery behavior.
+
+The full SDK/source necessity audit, complete SDK and product checks, and full
+source reproduction retain the restrictions listed below. They remain open.
+
 ## Durable built-ins follow-up after 13abdc2
 
 The production host already installs durable's `codemode`, `tool-search`,

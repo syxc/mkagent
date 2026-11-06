@@ -39,6 +39,7 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
   throw new Error('Expected clean pinned Pi v1.5.0 sources');
 }
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
+const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
 const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'utils/highlight-js.d.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
@@ -195,6 +196,28 @@ export function raceWithAbortSignal<T>(operation: Promise<T>, signal: AbortSigna
 `;
     changes.add('public-pi-ai-abort-helper');
   }
+  if (path === 'utils/sleep.ts') {
+    const exports = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node)
+      || (ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)));
+    const sleep = exports[0];
+    if (exports.length !== 1 || !sleep || !ts.isFunctionDeclaration(sleep) || sleep.name?.text !== 'sleep'
+      || sleep.parameters.length !== 2 || sleep.type?.getText(parsed) !== 'Promise<void>'
+      || sleep.parameters[0].type?.kind !== ts.SyntaxKind.NumberKeyword
+      || sleep.parameters[1].type?.getText(parsed) !== 'AbortSignal' || !sleep.parameters[1].questionToken) {
+      throw new Error('Public sleep API changed; review the optional-signal and cancellation-error wrapper');
+    }
+    body = `import { sleep as sharedSleep } from "@earendil-works/pi-ai/utils/sleep";
+
+/** Keep the coding API's optional signal and cancellation error over the shared timer. */
+export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+\treturn sharedSleep(ms, signal ?? new AbortController().signal).catch((error: unknown) => {
+\t\tif (signal?.aborted && Object.is(error, signal.reason)) throw new Error("Aborted");
+\t\tthrow error;
+\t});
+}
+`;
+    changes.add('public-pi-ai-sleep-helper');
+  }
   if (path === 'core/extensions/types.ts' || path === 'core/tools/tool-definition-wrapper.ts') {
     body = portToolDefinition(path, body);
     changes.add('explicit-durable-tool-replay-policy');
@@ -232,9 +255,10 @@ export function raceWithAbortSignal<T>(operation: Promise<T>, signal: AbortSigna
     body = portBundledAssets(body);
     changes.add('installed-native-bundle-assets');
   }
-  if (path === 'core/footer-data-provider.ts' || path === 'core/resource-loader.ts') {
+  if (path === 'core/footer-data-provider.ts' || path === 'core/resource-loader.ts' || path === 'extensions/tool-search/tool.ts') {
     body = portSharedHelpers(path, body);
-    changes.add('shared-lightweight-resource-algorithms');
+    changes.add(path === 'extensions/tool-search/tool.ts' ? 'shared-durable-tool-search-ranking' : 'shared-lightweight-resource-algorithms');
+    if (path === 'extensions/tool-search/tool.ts') dependencies.add('@earendil-works/pi-durable');
   }
   if (path === 'core/extensions/runner.ts' || path === 'core/session-manager.ts') {
     body = portCompatRuntime(path, body);
@@ -342,7 +366,7 @@ records.push({
   sha256: hash(rpcSource), portSha256: hash(uiBody), changes: ['standalone-extension-ui-wire-contracts'],
 });
 const externalDependencies = Object.fromEntries([...dependencies].sort().map(name => {
-  const version = packageInfo.dependencies[name];
+  const version = packageInfo.dependencies[name] ?? localDependencies[name];
   return [name, version ?? '<builtin or development type>'];
 }));
 records.sort((a, b) => a.target.localeCompare(b.target));

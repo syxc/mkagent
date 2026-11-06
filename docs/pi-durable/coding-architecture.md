@@ -32,7 +32,7 @@ flowchart TD
 |---|---|
 | `@earendil-works/pi-durable` | Harness、任务、事务、存储和恢复，以及生产宿主已安装的 `/codemode`、`/tool-search`、`/tools`、`/images` 内置模块 |
 | `@earendil-works/pi-agent-core` | 公开协议类型、消息声明合并和 `streamProxy`；Agent 与循环入口仍由本地 durable 实现提供 |
-| `@earendil-works/pi-ai` | 模型目录、provider、消息、流式请求、用量及公开取消信号 helper；旧接口只保留可选 signal 适配 |
+| `@earendil-works/pi-ai` | 模型目录、provider、消息、流式请求、用量及公开取消和等待 helper；旧接口只保留可选 signal 与取消错误适配 |
 | `@earendil-works/pi-mcp` | MCP 客户端与协议支持 |
 | `@earendil-works/pi-codemode` | QuickJS 沙箱，作为 durable codemode 的执行后端 |
 | `@earendil-works/pi-tui` | Pi 交互组件、主题和终端接口 |
@@ -47,9 +47,11 @@ flowchart TD
 
 真实沙箱回归发现 Worker 回调丢失异步上下文，导致桥接提交报错。`currentCodingToolInvocation()` 现在捕获当前上下文，使后续提交回到原来的工具和 journal 作用域；codemode 的执行、日志和子任务仍使用 durable 内置实现。三项集成检查覆盖子工具审批与归属、model-only 限制及 tool-search 启用回调。完整 AgentSession 的声明更新、分支和恢复不在这三项检查范围内。
 
-SDK 中的原生 codemode、tool-search 扩展仍保留独立工厂、渲染、会话条目及工具启用契约。将这些契约接到 durable 内置模块的替代方案尚未闭合，不能仅因接口形状不同就判定必须保留，也不能由宿主已复用推断 SDK 的重复实现已经消除。
+SDK 的 tool-search 已共用 durable 的分词、BM25 和 schema 元数据遍历。仓内补丁为现有核心增加兼容导出，提供 SDK 所需的分数、可配置 `k1/b` 和元数据文本；内置工具仍调用同一排序核心，默认行为保持原样。SDK 保留 namespace 独立字段、注册和会话启用接口，不另行维护排序算法。兼容导出属于本地补丁，升级须重放补丁并运行原版排序对照。
 
-`pi-durable` 还通过根包的 `patchedDependencies` 应用[仓内补丁](../../patches/@earendil-works%252Fpi-durable@1.5.0.patch)，扩展 `GenerationTask` 的旧 coding 阶段、回调及类型声明。当前生产 `CodingHost` 通过本地任务执行；根 SDK 仍公开旧 `NativeCodingRuntime`，历史 checkpoint 也保留读取及拒绝不确定回放的迁移语义，因此本轮保留补丁。删除它须先完成兼容桥接及存量恢复验证。
+原生 codemode 的执行替代仍在继续。真实沙箱对照已确认实时 calls、namespace alias、输出预算、无 env 图片及分支 store 的差异；这些契约须由最小接点和外部适配保留，不能直接更换整个工厂。SDK 替代与完整闭包核实尚未闭合。
+
+`pi-durable` 通过根包的 `patchedDependencies` 应用[仓内补丁](../../patches/@earendil-works%252Fpi-durable@1.5.0.patch)，包含旧 `GenerationTask` coding 阶段、回调、类型声明及上述搜索兼容导出。当前生产 `CodingHost` 通过本地任务执行；根 SDK 仍公开旧 `NativeCodingRuntime`，历史 checkpoint 也保留读取及拒绝不确定回放的迁移语义。删除旧阶段部分须先完成兼容桥接及存量恢复验证；搜索接点单独保留升级核对。
 
 ## 哪些复制或移植了上游源码
 
