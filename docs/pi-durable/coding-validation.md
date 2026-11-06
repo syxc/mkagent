@@ -25,26 +25,34 @@ The baseline product test then passed with 1 test and 43 assertions.
 Native EXIF orientation now forwards to `compat/image-orientation.ts`. A small
 durable patch exports its existing EXIF reader and pixel transposition helper
 through `images`. The adapter retains Photon Node 0.3.4 objects, in-place flips,
-new objects for transposition and caller-owned cleanup. Native's WebP chunk
-bound is optional in the shared reader and enabled by the adapter. The durable
+new objects for transposition and caller-owned cleanup. The shared reader's
+optional Native mode preserves WebP chunk bounds, short-chunk prefix checks,
+signed chunk traversal and signed little-endian TIFF offsets. The durable
 default remains unchanged. Encoding, quality selection, resize limits, worker
 loading and packaged WASM fallback remain pending reuse analysis.
 
 Before replacement, nine checks and 240 assertions pass against Native's
-original implementation. After replacement, eleven checks and 244 assertions
-pass, including two new shared-export and patch-integrity checks. Fixed pixel
+original implementation. The initial replacement passes eleven checks and
+244 assertions but misses malformed metadata differences. Three added tests
+fail on that implementation, then pass after the Native mode correction.
+The current fourteen checks and 330 assertions pass. Fixed pixel
 layouts cover all eight orientations, JPEG and three WebP layouts, both TIFF
 byte orders, dimensions, input ownership, missing metadata and truncation.
-They use the actual Photon Node WASM. These checks do not establish the full
-image pipeline, worker fallback or packaged application behavior.
+They use the actual Photon Node WASM. A separate probe compares the actual old
+and new entry points on 131 samples, including signed metadata and truncation
+at each byte of a JPEG and a prefixed WebP. No differences remain in that set.
+This does not prove equivalence for all malformed inputs. Legacy signed chunk
+traversal can fail to terminate on cyclic offsets; that behavior is retained.
+These checks do not establish the full image pipeline, worker fallback or
+packaged application behavior.
 
 Five explicit roots, including one durable declaration, pass strict checks
 with 226 source files and zero diagnostics. One allowed Native source and its
 record reproduce with `sourceFiles: 1` and `complete: false`. The complete
 22-file patch applies cleanly and matches the installed files byte for byte.
 The standalone consumer installs 93 packages from 94 existing lock records
-with a frozen lock, no network and no lifecycle scripts. All 40 checks and
-394 assertions pass. This uses existing cache files and does not check registry
+with a frozen lock, no network and no lifecycle scripts. All 43 checks and
+480 assertions pass. This uses existing cache files and does not check registry
 tarball integrity again or establish a complete root installation.
 
 The first lock refresh attempts fail because offline registry metadata is
@@ -59,7 +67,7 @@ the complete following body with LF line endings. Updating the patch also
 requires updating this digest. The regression check fails without that header
 and passes with it. The prefaced patch installs correctly with the old cache
 present, preserves the frozen lock and matches all 22 files. Its SHA-256 is
-`fb00459d27fd402281f08d11151ad822713b4e8bb8f6bd7d0c01e05001599d33`.
+`6734cb5015b55157a24e7cd48e9857b5fcfa602fb7ad88a5e41f7e5c13b75775`.
 This is an artifact workaround, not a verified fix to Bun itself.
 
 ## Public ZIP helpers

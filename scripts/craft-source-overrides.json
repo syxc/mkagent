@@ -2333,8 +2333,8 @@
       "reason": "Reuse durable EXIF metadata and pixel transposition while retaining Native Photon ownership and WebP chunk bounds."
     },
     "packages/pi-durable-coding/test/native-image-orientation.test.ts": {
-      "sha256": "980c625aac01704d634b979ab6f679129d0fb887fce7aadab00b4dc16afb868a",
-      "reason": "Verify fixed EXIF pixel layouts with real Native Photon and pin the full-content digest that refreshes patched Bun installs."
+      "sha256": "f52180e51cc83769b3c7d344655ff1b9f81fa0a31a613ad0a414619eff144885",
+      "reason": "Verify Native EXIF layouts and signed metadata boundaries, and pin the full patch digest that refreshes cached Bun installs."
     },
     "packages/pi-durable-coding/src/compat/archive.ts": {
       "sha256": "3aeba2fe800dc37eafa07ff87e97eb84b8667c15dcb2143ae51e632cf77aa417",
@@ -3885,7 +3885,7 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "fb00459d27fd402281f08d11151ad822713b4e8bb8f6bd7d0c01e05001599d33",
+      "sha256": "6734cb5015b55157a24e7cd48e9857b5fcfa602fb7ad88a5e41f7e5c13b75775",
       "reason": "Keep a canonical complete Git patch for frozen Bun installs, shared algorithms and host policies; stamp the full body so old Bun cache artifacts are not reused."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {

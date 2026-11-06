@@ -95,6 +95,53 @@ test('Shared EXIF keeps the durable default and applies Native chunk bounds only
   expect(exifOrientation(bytes, true)).toBe(1);
 });
 
+test('Native EXIF checks signed chunk size before consuming a WebP Exif prefix', () => {
+  for (const little of [false, true]) {
+    for (const size of [0, 1, 5, 6, 32, 0x7fffffff, 0x80000000, 0xffffffff]) {
+      const bytes = metadata(6, little, 'webp-prefixed');
+      bytes.writeUInt32LE(size, 16);
+      const orientation = size === 6 || size === 32 ? 6 : 1;
+      expect(exifOrientation(bytes)).toBe(6);
+      expect(exifOrientation(bytes, false)).toBe(6);
+      expect(exifOrientation(bytes, true)).toBe(orientation);
+      const image = new photon.PhotonImage(pixels(layouts[0]), 3, 2);
+      let output: photon.PhotonImage | undefined;
+      try {
+        output = applyExifOrientation(photon, image, bytes);
+        expect(output.get_raw_pixels()).toEqual(pixels(layouts[orientation - 1]));
+        expect(output === image).toBe(orientation === 1);
+      } finally {
+        if (output && output !== image) output.free();
+        image.free();
+      }
+    }
+  }
+});
+
+test('Native EXIF retains signed little-endian TIFF offsets', () => {
+  for (const format of ['jpeg', 'webp']) {
+    const bytes = metadata(6, true, format);
+    const tiff = format === 'jpeg' ? 12 : 20;
+    bytes.writeUInt32LE(0xfffffff4, tiff + 4);
+    bytes.writeUInt16LE(0x112, tiff + 2);
+    bytes.writeUInt16LE(6, tiff + 10);
+    expect(exifOrientation(bytes)).toBe(1);
+    expect(exifOrientation(bytes, true)).toBe(6);
+  }
+});
+
+test('Native EXIF retains signed non-EXIF WebP chunk traversal', () => {
+  const bytes = Buffer.alloc(62);
+  bytes.write('RIFF\0\0\0\0WEBPJUNK');
+  bytes.writeUInt32LE(0xfffffffe, 16);
+  bytes.writeUInt32LE(2, 22);
+  bytes.write('EXIF', 28);
+  bytes.writeUInt32LE(26, 32);
+  metadata(6, true, 'webp').copy(bytes, 36, 20);
+  expect(exifOrientation(bytes)).toBe(1);
+  expect(exifOrientation(bytes, true)).toBe(6);
+});
+
 test('Canonical durable patch stamps its complete content before cached installs', async () => {
   const path = await realpath(new URL('../../../patches/@earendil-works%252Fpi-durable@1.5.0.patch', import.meta.url));
   if (path.toLowerCase().includes('runtime-credentials')) throw new Error('Unexpected patch alias');
