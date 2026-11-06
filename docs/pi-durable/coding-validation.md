@@ -19,7 +19,68 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
-The current package-assembly changes use public core protocol types and
+## Architecture follow-up after e3762bc
+
+The document correction and independent gap review were committed as
+`e3762bc` before this implementation. The current change restores public core
+type imports in 28 files, shares 14 helper implementations, and keeps legacy
+documentation URLs in a 30-line external prompt adapter. The helper inventory
+now has 13 source ports, six unchanged fixtures and 21 shared entries. Eighteen
+entries are plain forwards; skills, prompt templates and system prompt retain
+host policy. Skills and prompt templates each need an optional project directory
+parameter in the shared implementation. Legacy wrappers pass `.pi`; native
+calls retain the installation default.
+The runtime inventory remains 248 TypeScript files and nine assets.
+
+| Check | Current result and scope |
+| --- | --- |
+| Affected regression suite | 10 files, 117 tests, 661 assertions, zero failures; one combined command exited 0 after the final code change. Covers resources, unchanged official plugins, models, durable Agent, recovery, host approval, nested tools, cancellation and storage. |
+| Public type imports | All 28 files produce identical Bun JavaScript before and after the change. Permitted source and output hashes match; no complete runtime reproduction is claimed. |
+| Helper reproduction | The permitted generator check exits 0: 19 source products, including six fixtures, and 21 shared entries. The two directory transforms and the provider type transform also reproduce permitted pinned source exactly. |
+| Declarations | Thirteen permitted helper declaration roots, the external policy and the actual native-models.ts consumer pass a targeted build. The consumer also passes a strict type check. This is not a full SDK or repository type check. |
+| Product and platform scope | No worker, UI, permission, task, storage or packaging implementation changed. Earlier product and platform results retain their original scope; no new product or cross-platform run is claimed. |
+| Full checks | Full runtime generation, full Craft audit, full SDK/repository type checks, complete coding/product suites and worker/server builds can reach restricted source. They were not run in this session. Unchanged lint targets retain the documented `f4f9f26` evidence; root lint was not rerun. |
+| Independent review | The initial 49-file diff and the added scope up to 57 files were reviewed. Directory and provider type regressions were reproduced and corrected. A final review of the three type-correction implementation files confirmed the fix with no new actionable issue. Final registry and document updates were checked by the main thread. |
+
+The regression command uses these files under
+`packages/pi-durable-coding/`: `src/resources.test.ts` and
+`test/{extensions,durable-agent,native-models,durable-runtime,durable-boundaries,durable-coding-tool-task,durable-session-store,session-view,host-tools}.test.ts`.
+It runs through the task's isolated HOME/config and environment allowlist, with
+`bun test` and `--timeout 20000`. The declaration build uses 13 permitted
+helper roots, the external policy and the actual host consumer, with strict
+checking, `allowJs`, `checkJs: false`, `noUncheckedIndexedAccess: false`,
+`skipLibCheck`, and declaration output in a task-owned directory.
+
+The new process test first failed because both legacy resource entries scanned
+`.tau` instead of `.pi` when `PI_PACKAGE_DIR` selected a different installation.
+It passes after the explicit directory parameter was added. It also checks that
+native calls still scan `.tau` and explicit legacy paths keep project scope.
+An added identity assertion initially used `source` instead of `scope`; the old
+source confirmed that `source` is `local`, so the final assertion checks `scope`.
+The first declaration command named three paths in the wrong directories and
+failed; the command with the actual helper paths passed.
+
+The last five shared helpers were checked before replacement. Extension runtime
+helpers, the pi-ai extension view, provider composition and configuration value
+resolution produced identical JavaScript. All six selected shell declarations
+matched. The shell forward retains only its previous public API.
+
+The shared provider signature initially required the complete `ModelConfig`
+class. A strict check of the real `native-models.ts` consumer reproduced two
+TS2345 errors at its existing structural calls. The function reads only
+`getProvider`; a type-only correction to `Pick<ModelConfig, "getProvider">`
+retains that contract. The consumer type check and declaration build then
+passed. Bun produces identical JavaScript before and after the correction.
+
+The source registry matches all 53 changed coding files. Thirty-one permitted
+runtime source and output records match their pinned manifest hashes.
+These are scoped checks; the full audit remains blocked.
+Remaining source reasons and upgrade checks are recorded in the
+[architecture](coding-architecture.md). F5 remains blocked; the complete task
+has not passed final acceptance.
+
+## Earlier f4f9f26 baseline
+The f4f9f26 package-assembly changes use public core protocol types and
 `streamProxy`, move host compaction policy outside native settings, and replace
 seven duplicate helper implementations with forwards. The runtime inventory is
 now 248 source files and 9 assets. The earlier helper inventory contains 27
@@ -249,7 +310,10 @@ deferred assistant messages.
 
 ## Reproduction and upgrade
 
-Use an isolated environment and a pinned Craft mirror:
+Historical repository acceptance entry points are listed below. They do not
+constitute current permission to run checks that reach restricted source.
+The full coding suite, reference parity, validate:ci and worker/server builds
+are blocked in this session; use the scoped checks recorded above.
 
 ```sh
 bun test ./packages/pi-durable-coding ./packages/pi-agent-server

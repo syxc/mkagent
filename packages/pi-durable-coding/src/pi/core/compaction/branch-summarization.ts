@@ -5,7 +5,7 @@
  * a summary of the branch being left so context isn't lost.
  */
 
-import type { AgentMessage, StreamFn, ThinkingLevel } from "../../../agent-runtime.ts";
+import type { AgentMessage, StreamFn, ThinkingLevel } from "@earendil-works/pi-agent-core";
 import type { RetryCallbacks, RetryPolicy } from "@earendil-works/pi-ai";
 import { contentText, normalizeContext } from "@earendil-works/pi-ai";
 import type { Model, SimpleStreamOptions, Usage } from "@earendil-works/pi-ai/compat";

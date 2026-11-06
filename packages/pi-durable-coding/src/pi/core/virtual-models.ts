@@ -9,7 +9,7 @@
  * separately and adds them to the provider's catalog with `withVirtualModels()`, so any provider,
  * including one with physical models, can list several virtual models.
  */
-import type { AgentMessage } from "../../agent-runtime.ts";
+import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import {
 	type AnyModel,
 	type Api,

@@ -1,4 +1,4 @@
-import type { ThinkingLevel } from "../../agent-runtime.ts";
+import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 
 export const DEFAULT_THINKING_LEVEL: ThinkingLevel = "medium";
 export const THINKING_LEVEL_OPTIONS: readonly ThinkingLevel[] = [

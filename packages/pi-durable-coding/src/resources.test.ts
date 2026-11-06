@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { discoverCodingSkills, formatSkillsForPrompt, loadCodingResources, loadProjectContextFiles } from './resources.ts';
 import { expandCodingSkill, expandCodingTemplate, parseCommandArgs, substituteArgs } from './input.ts';
+import { buildSystemPrompt, buildSystemPromptSections, buildSystemPromptState } from './upstream/core/system-prompt.ts';
 
 let root: string;
 let cwd: string;
@@ -29,6 +30,75 @@ beforeEach(() => {
 afterEach(() => rmSync(root, { recursive: true, force: true }));
 
 describe('ported native resource behavior', () => {
+  test('keeps legacy .pi discovery when the native installation uses another project directory', () => {
+    const installation = join(root, 'alternate-pi');
+    put(join(installation, 'package.json'), JSON.stringify({ name: 'fixture', piConfig: { configDir: '.tau' } }));
+    skill(join(cwd, '.pi', 'skills', 'pi', 'SKILL.md'), 'pi');
+    skill(join(cwd, '.tau', 'skills', 'tau', 'SKILL.md'), 'tau');
+    put(join(cwd, '.pi', 'prompts', 'pi.md'), 'Pi prompt');
+    put(join(cwd, '.tau', 'prompts', 'tau.md'), 'Tau prompt');
+    const code = `
+      import { discoverCodingSkills } from ${JSON.stringify(join(import.meta.dir, 'resources.ts'))};
+      import { loadPromptTemplates } from ${JSON.stringify(join(import.meta.dir, 'upstream/core/prompt-templates.ts'))};
+      import { loadSkills as nativeSkills } from ${JSON.stringify(join(import.meta.dir, 'pi/core/skills.ts'))};
+      import { loadPromptTemplates as nativePrompts } from ${JSON.stringify(join(import.meta.dir, 'pi/core/prompt-templates.ts'))};
+      import { CONFIG_DIR_NAME } from ${JSON.stringify(join(import.meta.dir, 'pi/config.ts'))};
+      const options = ${JSON.stringify({ cwd, agentDir, includeDefaults: true, skillPaths: [], promptPaths: [] })};
+      const explicit = {
+        ...options, includeDefaults: false,
+        skillPaths: ['.pi/skills/pi/SKILL.md'], promptPaths: ['.pi/prompts/pi.md'],
+      };
+      console.log(JSON.stringify({
+        configDir: CONFIG_DIR_NAME,
+        legacySkills: discoverCodingSkills(options).skills.map(item => item.name),
+        legacyPrompts: loadPromptTemplates(options).templates.map(item => item.name),
+        nativeSkills: nativeSkills(options).skills.map(item => item.name),
+        nativePrompts: nativePrompts(options).templates.map(item => item.name),
+        skillScopes: discoverCodingSkills(explicit).skills.map(item => item.sourceInfo.scope),
+        promptScopes: loadPromptTemplates(explicit).templates.map(item => item.sourceInfo.scope),
+      }));
+    `;
+    const child = Bun.spawnSync([process.execPath, '-e', code], {
+      env: { ...process.env, PI_PACKAGE_DIR: installation }, stdout: 'pipe', stderr: 'pipe',
+    });
+    expect({ code: child.exitCode, error: child.stderr.toString() }).toEqual({ code: 0, error: '' });
+    expect(JSON.parse(child.stdout.toString())).toEqual({
+      configDir: '.tau', legacySkills: ['pi'], legacyPrompts: ['pi'], nativeSkills: ['tau'], nativePrompts: ['tau'],
+      skillScopes: ['project'], promptScopes: ['project'],
+    });
+  });
+
+  test('keeps legacy documentation URLs in structured and rendered prompts', () => {
+    const source = 'https://github.com/earendil-works/pi/tree/v1.5.0/packages/coding-agent';
+    const sections = buildSystemPromptSections({ cwd });
+    expect(sections.docs).toContain(`Main documentation: ${source}/README.md`);
+    expect(sections.docs).toContain(`Additional docs: ${source}/docs`);
+    expect(buildSystemPrompt({ cwd })).toContain(`Examples: ${source}/examples`);
+  });
+
+  test('keeps custom documentation sections and host prompt behavior', () => {
+    expect(buildSystemPromptSections({ cwd, customPrompt: 'Host prompt' }).docs).toBeUndefined();
+    const sections = buildSystemPromptSections({ cwd, sections: { docs: 'Custom documentation' } });
+    expect(sections.docs).toBe('<docs>\nCustom documentation\n</docs>');
+    expect(buildSystemPromptSections({ cwd, sections: { docs: '' } }).docs)
+      .toContain('https://github.com/earendil-works/pi/tree/v1.5.0/packages/coding-agent/docs');
+  });
+
+  test('keeps forced prompts opaque without generated sections', () => {
+    const options = { cwd, forceSystemPrompt: '<docs>Exact replacement</docs>' };
+    expect(buildSystemPromptState(options)).toEqual({ content: options.forceSystemPrompt });
+    expect(buildSystemPrompt(options)).toBe(options.forceSystemPrompt);
+  });
+
+  test('requires the host agent directory before discovering skills', () => {
+    skill(join(agentDir, 'skills', 'global', 'SKILL.md'), 'global');
+    skill(join(cwd, '.pi', 'skills', 'project', 'SKILL.md'), 'project');
+    expect(() => Reflect.apply(discoverCodingSkills, undefined, [{ cwd }]))
+      .toThrow('The durable coding host must provide agentDir explicitly.');
+    expect(discoverCodingSkills({ cwd, agentDir }).skills.map(value => value.name).sort())
+      .toEqual(['global', 'project']);
+  });
+
   test('inherits ignore rules and nested negation while following skill symlinks', () => {
     const skillsDir = join(agentDir, 'skills');
     put(join(skillsDir, '.gitignore'), '**/skip*\n');

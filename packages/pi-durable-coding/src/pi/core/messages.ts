@@ -5,7 +5,7 @@
  * and provides a transformer to convert them to LLM-compatible messages.
  */
 
-import type { AgentMessage } from "../../agent-runtime.ts";
+import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { ImageContent, Message, TextContent } from "@earendil-works/pi-ai";
 
 export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:

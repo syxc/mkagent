@@ -1,4 +1,4 @@
-import type { AgentTool, AgentToolResult, AgentToolUpdateCallback } from "../../../agent-runtime.ts";
+import type { AgentTool, AgentToolResult, AgentToolUpdateCallback } from "@earendil-works/pi-agent-core";
 import type { Static, TSchema } from "typebox";
 import type { ExtensionToolContext, ToolDefinition } from "../extensions/types.ts";
 

@@ -1,4 +1,4 @@
-import type { AgentMessage } from "../../agent-runtime.ts";
+import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import {
 	type AssistantMessage,
 	getCurrentSystemMessage,

@@ -2,7 +2,7 @@
  * Extension runner - executes extensions and manages their lifecycle.
  */
 
-import type { AgentMessage, AgentTool } from "../../../agent-runtime.ts";
+import type { AgentMessage, AgentTool } from "@earendil-works/pi-agent-core";
 import {
 	getCurrentSystemMessage,
 	type ImageContent,

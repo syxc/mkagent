@@ -3,7 +3,7 @@
  * execute.lazy.ts so the sandbox runtime only loads when a script runs.
  */
 
-import type { AgentTool, AgentToolCallOutcome, AgentToolResult } from "../../../agent-runtime.ts";
+import type { AgentTool, AgentToolCallOutcome, AgentToolResult } from "@earendil-works/pi-agent-core";
 import type {
 	AnyModel,
 	ClassifierContext,

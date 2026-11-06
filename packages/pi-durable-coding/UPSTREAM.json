@@ -6,27 +6,6 @@
   "typescript": "5.9.3",
   "files": [
     {
-      "source": "packages/coding-agent/src/core/skills.ts",
-      "target": "src/upstream/core/skills.ts",
-      "sha256": "79e7d971a26730e3a692c434c32dc63bd8ce36aa4bedaaaf96e405f4a39bc411",
-      "portSha256": "99166471919da374ed31ac93a390b11c1cec42d5304f4d921c27e4a8a1841808"
-    },
-    {
-      "source": "packages/coding-agent/src/core/prompt-templates.ts",
-      "target": "src/upstream/core/prompt-templates.ts",
-      "sha256": "1bdaa7b3825f92bf33203fd7587014b878c55b3d812900cca5cad08fefd92171",
-      "portSha256": "0ba657f6e9a0731b609d8fe93c87602e101667539f4cd44722da2457c63e1692",
-      "changes": [
-        "checked-index-access"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/child-process.ts",
-      "target": "src/upstream/utils/child-process.ts",
-      "sha256": "cd324f5b9a1abadd85ab5a331750d475c8bd51ec65cae091ad9b416245ec85d4",
-      "portSha256": "e093a913e5027dd86597dc8442b9a5908fbe8f840af19812e917fd1ee400fdab"
-    },
-    {
       "source": "packages/coding-agent/src/core/package-manager.ts",
       "target": "src/upstream/core/package-manager.ts",
       "sha256": "117f6a99c323c4284a905d1731756f745f435e11f82912b44363301f7b698fa0",
@@ -34,42 +13,6 @@
       "changes": [
         "checked-index-access"
       ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/git.ts",
-      "target": "src/upstream/utils/git.ts",
-      "sha256": "c8972c0cf248173f7bc3a42a5e9796db290ea3f978c792a0b371814dda7f2638",
-      "portSha256": "bf651cb76e7f971b827c691d3ad4c0846acf5e3fd37be25f7be74fc42924d9c2"
-    },
-    {
-      "source": "packages/coding-agent/src/core/output-guard.ts",
-      "target": "src/upstream/core/output-guard.ts",
-      "sha256": "68c0e9a7533f0cf7270bb50a7558185a9f9a0f71304c85bb438dd620161a4f04",
-      "portSha256": "4a798f6ae126db2a50a8f5de9f44f6df86c5aec73eb609a26fe4b5743b9eaa78"
-    },
-    {
-      "source": "packages/coding-agent/src/core/system-prompt.ts",
-      "target": "src/upstream/core/system-prompt.ts",
-      "sha256": "eef891d637974d09a6611d33e52d66d5f2a93d6e9512259ba45f593c42143617",
-      "portSha256": "4b3e7a7bf48172e653df69602633717501628d756b1eb14c7ba19798990da7f3"
-    },
-    {
-      "source": "packages/coding-agent/src/core/exec.ts",
-      "target": "src/upstream/core/exec.ts",
-      "sha256": "b94829cba4cf98c5cd8476be143697bd2a52414179b0c4e10e9e0665a167f833",
-      "portSha256": "9375716bbd1c2da87c33408fc9e51440e908be32f34bc331950d02d0b23b05ba"
-    },
-    {
-      "source": "packages/coding-agent/src/core/timings.ts",
-      "target": "src/upstream/core/timings.ts",
-      "sha256": "55e4d7f31bdf3727baa4e89f361a6abee9ae4a76f64a30369ea157cb37bbc2b2",
-      "portSha256": "ddaf0420b14a6f2b8893a8e133a16256619b72bf0e7052273d46867e4d9bb8d0"
-    },
-    {
-      "source": "packages/coding-agent/src/core/mcp-servers.ts",
-      "target": "src/upstream/core/mcp-servers.ts",
-      "sha256": "148855a4417dd0133b9499407fb2d1621d72702a263fa00fbfcd2b83769bf05f",
-      "portSha256": "bd173c50711160111ccb3c5b6a65ce3cf0f803fe74eaea2cd57d9f26d034a7a6"
     },
     {
       "source": "packages/coding-agent/src/core/extensions/runner.ts",
@@ -91,21 +34,6 @@
         "extension-module-resolution",
         "preserve-host-stack-formatting-after-babel-bootstrap"
       ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/extensions/types.ts",
-      "target": "src/upstream/core/extensions/types.js",
-      "sha256": "78cfd4937aa72c02be444354ef5cb94310b9b40e20e477969630eb81c6a7391b",
-      "portSha256": "c50b6cd4904c8010ce6695a46832080e993003b50e4aae98d53950829d627ce6",
-      "changes": [
-        "erase-types"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts",
-      "target": "src/upstream/core/extensions/pi-ai-extension-view.ts",
-      "sha256": "119d56316bd9b344fea619f5441367c2a916de58d0ffc8aa665b5c9d44244455",
-      "portSha256": "ce4ff8375111f2638ebae11cc38d8baa41a92b9a2534e35e4060afe113116485"
     },
     {
       "source": "packages/coding-agent/src/core/messages.ts",
@@ -153,35 +81,6 @@
       ],
       "changes": [
         "erase-types"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/provider-composer.ts",
-      "target": "src/upstream/core/provider-composer.js",
-      "sha256": "bddf6d242288123d00e6ae75c4c5f2ce19706152ae87ee33e326e55623f91501",
-      "portSha256": "e988338e0cc0db8f1aefe5acb1bcd9fb8e03bd266f863dd29e4721247435d687",
-      "changes": [
-        "erase-types"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/resolve-config-value.ts",
-      "target": "src/upstream/core/resolve-config-value.ts",
-      "sha256": "0f53dad47fe5d5d8837c022b7951ccd3bd5a9b577bd662f0986272110e83bcc7",
-      "portSha256": "31730d1678bee6adf3166f9d933d586521d612c61ed60d6e329c2261b02ebaa2"
-    },
-    {
-      "source": "packages/coding-agent/src/utils/shell.ts",
-      "target": "src/upstream/utils/shell.ts",
-      "sha256": "bacb0f871b92e38ac17221e0c1b00ac5211e0f5c0063675afd980513c7c79fb4",
-      "portSha256": "2171607335ccc09b39ea778fb60802a5daa133ed861efb2e5a1d8e90bb4c8c93",
-      "selection": [
-        "ShellConfig",
-        "isLegacyWslBashPath",
-        "getBashShellConfig",
-        "shellPathExists",
-        "findExecutableOnPath",
-        "getShellConfig"
       ]
     },
     {
@@ -333,6 +232,75 @@
     {
       "target": "src/upstream/utils/paths.ts",
       "implementation": "src/pi/utils/paths.ts"
+    },
+    {
+      "target": "src/upstream/utils/child-process.ts",
+      "implementation": "src/pi/utils/child-process.ts"
+    },
+    {
+      "target": "src/upstream/utils/git.ts",
+      "implementation": "src/pi/utils/git.ts"
+    },
+    {
+      "target": "src/upstream/core/output-guard.ts",
+      "implementation": "src/pi/core/output-guard.ts"
+    },
+    {
+      "target": "src/upstream/core/exec.ts",
+      "implementation": "src/pi/core/exec.ts"
+    },
+    {
+      "target": "src/upstream/core/timings.ts",
+      "implementation": "src/pi/core/timings.ts"
+    },
+    {
+      "target": "src/upstream/core/mcp-servers.ts",
+      "implementation": "src/pi/core/mcp-servers.ts"
+    },
+    {
+      "target": "src/upstream/core/skills.ts",
+      "implementation": "src/pi/core/skills.ts",
+      "changes": [
+        "explicit-host-agent-directory",
+        "explicit-host-project-resource-directory"
+      ]
+    },
+    {
+      "target": "src/upstream/core/prompt-templates.ts",
+      "implementation": "src/pi/core/prompt-templates.ts",
+      "changes": [
+        "explicit-host-project-resource-directory"
+      ]
+    },
+    {
+      "target": "src/upstream/core/system-prompt.ts",
+      "implementation": "src/pi/core/system-prompt.ts",
+      "changes": [
+        "host-documentation-paths"
+      ]
+    },
+    {
+      "target": "src/upstream/core/extensions/types.js",
+      "implementation": "src/pi/core/extensions/types.ts"
+    },
+    {
+      "target": "src/upstream/core/extensions/pi-ai-extension-view.ts",
+      "implementation": "src/pi/core/extensions/pi-ai-extension-view.ts"
+    },
+    {
+      "target": "src/upstream/core/provider-composer.js",
+      "implementation": "src/pi/core/provider-composer.ts"
+    },
+    {
+      "target": "src/upstream/core/resolve-config-value.ts",
+      "implementation": "src/pi/core/resolve-config-value.ts"
+    },
+    {
+      "target": "src/upstream/utils/shell.ts",
+      "implementation": "src/pi/utils/shell.ts",
+      "changes": [
+        "selected-public-shell-api"
+      ]
     }
   ]
 }

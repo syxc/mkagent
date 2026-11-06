@@ -14,7 +14,7 @@ import type {
 	AgentToolCallOutcome,
 	AgentToolResult,
 	AgentToolUpdateCallback,
-} from "../../agent-runtime.ts";
+} from "@earendil-works/pi-agent-core";
 import type { JsonObject, NestedToolCallRecord, NestedToolCalls, TextContent, Usage } from "@earendil-works/pi-ai";
 import { combineUsage } from "./usage-totals.ts";
 

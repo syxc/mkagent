@@ -411,7 +411,7 @@ export interface LoadSkillsOptions {
  * Load skills from all configured locations.
  * Returns skills and any validation diagnostics.
  */
-export function loadSkills(options: LoadSkillsOptions): LoadSkillsResult {
+export function loadSkills(options: LoadSkillsOptions, projectConfigDir = CONFIG_DIR_NAME): LoadSkillsResult {
 	const { agentDir, skillPaths, includeDefaults } = options;
 
 	// Resolve agentDir - if not provided, use default from config
@@ -456,11 +456,11 @@ export function loadSkills(options: LoadSkillsOptions): LoadSkillsResult {
 
 	if (includeDefaults) {
 		addSkills(loadSkillsFromDirInternal(join(resolvedAgentDir, "skills"), "user", true));
-		addSkills(loadSkillsFromDirInternal(resolve(resolvedCwd, CONFIG_DIR_NAME, "skills"), "project", true));
+		addSkills(loadSkillsFromDirInternal(resolve(resolvedCwd, projectConfigDir, "skills"), "project", true));
 	}
 
 	const userSkillsDir = join(resolvedAgentDir, "skills");
-	const projectSkillsDir = resolve(resolvedCwd, CONFIG_DIR_NAME, "skills");
+	const projectSkillsDir = resolve(resolvedCwd, projectConfigDir, "skills");
 
 	const getSource = (resolvedPath: string): "user" | "project" | "path" => {
 		if (!includeDefaults) {

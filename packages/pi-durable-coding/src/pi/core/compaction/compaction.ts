@@ -5,7 +5,7 @@
  * and after compaction the session is reloaded.
  */
 
-import type { AgentMessage, StreamFn, ThinkingLevel } from "../../../agent-runtime.ts";
+import type { AgentMessage, StreamFn, ThinkingLevel } from "@earendil-works/pi-agent-core";
 import {
 	contentText,
 	getCurrentSystemMessage,

@@ -16,7 +16,7 @@ import type {
 	AgentToolUpdateCallback,
 	ThinkingLevel,
 	ToolExecutionMode,
-} from "../../../agent-runtime.ts";
+} from "@earendil-works/pi-agent-core";
 import type {
 	AnyModel,
 	Api,

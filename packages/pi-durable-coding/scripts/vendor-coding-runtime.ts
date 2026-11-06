@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { isBuiltin } from 'node:module';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
-import { portModelRuntime } from './model-runtime-port.ts';
+import { portModelRuntime, portProviderComposer } from './model-runtime-port.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
@@ -55,6 +55,11 @@ while (queue.length) {
   const inspect = (literal: ts.StringLiteralLike) => {
     const specifier = literal.text;
     if (specifier === '@earendil-works/pi-agent-core') {
+      // Public protocol types do not cross the execution boundary.
+      if (ts.isImportDeclaration(literal.parent) && literal.parent.importClause?.isTypeOnly) {
+        dependencies.add(specifier);
+        return;
+      }
       let target = slash(relative(dirname(join(destination, 'src/pi', path)), join(destination, 'src/agent-runtime.ts')));
       if (!target.startsWith('.')) target = './' + target;
       replacements.push({ start: literal.getStart(parsed), end: literal.end, body: JSON.stringify(target) });
@@ -104,9 +109,17 @@ while (queue.length) {
     body = portResourceLoader(path, body);
     changes.add('host-resource-trust-and-installed-package-policy');
   }
+  if (path === 'core/skills.ts' || path === 'core/prompt-templates.ts') {
+    body = portResourceLoader(path, body);
+    changes.add('explicit-host-project-resource-directory');
+  }
   if (path === 'core/model-runtime.ts') {
     body = portModelRuntime(body);
     changes.add('host-owned-models-and-credentials');
+  }
+  if (path === 'core/provider-composer.ts') {
+    body = portProviderComposer(body);
+    changes.add('structural-provider-config-interface');
   }
   if (path === 'core/agent-session.ts') {
     body = portAgentSession(body);

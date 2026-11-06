@@ -224,7 +224,7 @@ export interface LoadPromptTemplatesResult {
  * 2. Project: cwd/{CONFIG_DIR_NAME}/prompts/
  * 3. Explicit prompt paths
  */
-export function loadPromptTemplates(options: LoadPromptTemplatesOptions): LoadPromptTemplatesResult {
+export function loadPromptTemplates(options: LoadPromptTemplatesOptions, projectConfigDir = CONFIG_DIR_NAME): LoadPromptTemplatesResult {
 	const resolvedCwd = resolvePath(options.cwd);
 	const resolvedAgentDir = resolvePath(options.agentDir);
 	const promptPaths = options.promptPaths;
@@ -238,7 +238,7 @@ export function loadPromptTemplates(options: LoadPromptTemplatesOptions): LoadPr
 	};
 
 	const globalPromptsDir = join(resolvedAgentDir, "prompts");
-	const projectPromptsDir = resolve(resolvedCwd, CONFIG_DIR_NAME, "prompts");
+	const projectPromptsDir = resolve(resolvedCwd, projectConfigDir, "prompts");
 
 	const isUnderPath = (target: string, root: string): boolean => {
 		const normalizedRoot = resolve(root);

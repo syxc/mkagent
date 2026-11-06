@@ -57,10 +57,10 @@ flowchart TD
 | `src/durable-agent.ts`、`src/stream-fn.ts` | 来自 `packages/agent/src/` 的 Agent 外观和 stream 支持。改写本地导入，并把 Agent 循环接到 durable 后端。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 已改为公开包适配，不再生成上游副本。 |
 | `src/native-operations.ts` | 从上游 `agent-loop.ts` 选取 10 个请求、工具参数准备及结果处理函数。调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
-| `src/upstream/**` | 另一套选择移植，共 27 项辅助与兼容源码，包括资源、扩展、会话视图及 durable context 函数；另有 7 个转发入口复用 `src/pi/**` 的同源实现。部分抽取指定声明、移除类型或调整导入。 |
+| `src/upstream/**` | 另一套选择移植，共 13 项辅助与兼容源码，包括资源、扩展、会话视图及 durable context 函数；另有 21 个共享入口复用 `src/pi/**` 的同源实现。部分抽取指定声明、移除类型或调整导入。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
 
-前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 248 份源码和 9 项资源，由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)生成。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 33 项来源产物及 7 个转发入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
+前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 248 份源码和 9 项资源，由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)生成。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 19 项来源产物及 21 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
 这里的“移植”包含原样复制和可复现转换。清单记录原文件哈希、产物哈希及变更；转换覆盖 Agent 执行边界、宿主模型与凭据接口、项目信任、资源策略、工具回放、OAuth、插件解析及打包资源路径。转换规则保存在生成脚本及同目录的 `*-port.ts` 中。
 
@@ -77,6 +77,28 @@ flowchart TD
 插件保留 Pi 包名导入，由[原生虚拟模块表](../../packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts)映射到本地移植 API 和独立官方包，也提供旧 `@mariozechner/*` 名称映射。这不要求安装完整 coding-agent 包。MkAgent 通过 RPC 承接扩展 UI；保留 Pi TUI 源码和依赖，不代表 MkAgent CLI 已采用原生 Pi TUI。插件兼容范围以需求对照中的实际验收为准。
 
 Pi v1.5.0 尚未将 `AgentSession`、工具工厂、扩展与资源加载等 coding 层独立发布，完整包的 `createAgentSession` 固定创建上游 Agent，也没有公开的工厂执行器注入及版本化 snapshot/restore 接口。这些限制解释相关边界的移植需求，不能证明当前整个公开源码闭包都必须保留；F1 至 F3 逐类核对可替代实现和必要例外。durable 副作用和回调边界不能直接换成上游完整工具循环。公开包引用、策略外移和实现复用已减少部分差异，尚未达到仅更新版本号即可升级；生成与哈希追溯不能代替减少适配代码。
+
+## 保留源码的依据与升级核对
+
+本轮逐类核对后的边界如下。公开导入闭包是当前 SDK 导出面的依赖集合，不作为“所有文件都绝对必要”的证明；受限源码的具体内容仍未核验。
+
+| 范围 | 决定与依据 | 升级时核对 |
+|---|---|---|
+| 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份文件恢复原版类型导入，Bun 产物逐份相同；只有 SDK、AgentSession 和虚拟模块表三处运行时导入改接 durable。 | 公开类型、消息声明合并、这三处执行入口 |
+| Agent 外观及请求操作 | 上游 Agent 自己调用原版循环，没有公开的调度器注入点；10 个选取操作均为模块私有函数。公开 `runToolCall` 将准备、执行和 afterToolCall 合在一次调用中，缺少当前任务所需的分阶段 checkpoint 接口。保留外观移植与操作抽取，任务由 durable 调度。 | facade 状态、操作语义和任务恢复版本 |
+| Coding 会话、扩展及展示 | 独立公开包未提供 AgentSession、coding loader 和 InteractiveMode；完整 coding 包只有根入口及 rpc-entry。当前 `./native` 保留完整 SDK 导出面，不能直接删掉其传递依赖而维持该入口。 | SDK 导出、插件事件、终端宿主及资源闭包；不把静态存在当行为验收 |
+| 共享 helper 与宿主策略 | 21 个旧入口复用同一实现，18 个直接转发，3 个带外部策略。skills 和 prompt templates 固定旧入口的 `.pi` 目录，skills 还要求显式 agentDir；system prompt 用 30 行外部策略保留旧文档 URL、custom 和 forced prompt。shell 只转发旧公开名称。 | helper 导出、目录保护、来源归属、默认及自定义提示词 |
+| 旧扩展入口 | 旧 loader 禁止上游 Agent 执行，runner 绑定 headless theme；原生入口提供 durable Agent 和 TUI。行为契约不同，不能直接互换整个 loader/runner；Bun 转译策略继续共用外部适配。 | 两种加载入口、失败回滚、元数据、类型边界 |
+| 旧 package manager | 原生副本新增 resolutionPolicy、skip 结果和关闭等待语义，旧入口仍使用独立的 offline 资源包装。直接转发不是等价替换，本轮保留这一兼容副本，不将它标为已证明不可再收敛。 | 两种 resolve/update 返回及错误语义，先统一契约再去重 |
+| 旧模型、设置、会话及上下文辅助 | 公开 pi-ai 模型集合已复用，provider 组合和配置值解析共用原生实现；旧 registry API、同步会话投影、设置合并和 boundary draft 等仍需不同的 facade 或私有方法抽取。durable context 选取支持同步预览，不能直接替换为异步提交后的 context 读取。 | `UPSTREAM.json` 的 13 项来源、选取声明、宿主端口及 journal 语义 |
+| MCP OAuth、模型与打包适配 | MCP 协议和授权流程已用公开 pi-mcp；宿主持久化、跨进程刷新锁、取消、凭据接口及打包路径不由该公开协议包提供。受限凭据源码未读取，不对其内部必要性作完成声明。 | 主机生命周期、锁、取消、安装资源；受限项仍待核实 |
+| durable 补丁 | 根 SDK 的 NativeCodingRuntime 和历史 checkpoint 仍依赖旧阶段，不能仅因新 CodingHost 已换用本地任务而删除。 | 旧 SDK 兼容和存量 checkpoint 迁移 |
+
+原生 skills 和 prompt templates 原来只使用安装配置的项目目录常量，公开参数无法保留旧入口固定 `.pi` 的契约。共享函数各增加一个可选的项目目录参数，默认仍为原生目录；两个外部包装传入旧目录。两份源码共五处行替换，生成规则检查函数签名及三处目录表达式。独立复核发现的 `.tau` 回归已在新进程复现并修复，用例同时检查两套目录和显式资源的项目归属。
+
+Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只提供 `getProvider`。该函数只读取这一个方法，完整类的私有状态无法由结构包装直接满足。保留一处类型参数接点，将约束收窄为 `Pick<ModelConfig, 'getProvider'>`，JavaScript 与原版相同。实际 `native-models.ts` 调用方先复现两处类型错误，修正后类型检查及声明构建通过；升级时核对该方法的输入输出和新增读取。
+
+本轮 14 份重复 helper 归一后，旧入口净减少 3059 行；外部文档策略新增 30 行，合计净减少 3029 行实现。辅助移植由 27 项降为 13 项，共享入口由 7 个增至 21 个。类型导入内部改写的文件由 31 个降为 3 个，另保留上述两处目录参数和一处 provider 类型接点。248 份运行时源码的计数未变，不把这些收益写成移除了整个 coding 闭包。
 
 ## 复现与升级
 

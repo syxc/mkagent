@@ -74,10 +74,8 @@
       "source": "packages/coding-agent/src/cli/args.ts",
       "target": "src/pi/cli/args.ts",
       "sha256": "05471cfd210c08ffad9ea58c334849c94de260137efa6b1b0eecfcd355d630e7",
-      "portSha256": "2bd10a6f3c7ed331d7aaad53b4520c0fe91a0c1dc55b6dc6caa7aa3771e2beef",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "05471cfd210c08ffad9ea58c334849c94de260137efa6b1b0eecfcd355d630e7",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/cli/auth-check.ts",
@@ -171,9 +169,8 @@
       "source": "packages/coding-agent/src/core/agent-session-services.ts",
       "target": "src/pi/core/agent-session-services.ts",
       "sha256": "c69826f519aa21b2dc04768eb63b0d10e88be071195beaf43bb1292dec187d01",
-      "portSha256": "00b586e1dca795e15e9c561a3375e828209bf7855a7fe41adce052d83391e8c6",
+      "portSha256": "f29c09dc8227bd5f9720880638d4e1a66f34d75057814889721abde64a3bed53",
       "changes": [
-        "durable-agent-boundary",
         "shared-extension-model-initialization"
       ]
     },
@@ -220,10 +217,8 @@
       "source": "packages/coding-agent/src/core/bug-report.ts",
       "target": "src/pi/core/bug-report.ts",
       "sha256": "fe83a233e4f38e6d234b54cdf8e8177c6caf0bfb08846830fc7c6d319adc6b9a",
-      "portSha256": "f225042e507b1b7990fe0af6341a049eb0a854823eee00537f67929c5a1f6d6a",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "fe83a233e4f38e6d234b54cdf8e8177c6caf0bfb08846830fc7c6d319adc6b9a",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/cache-stats.ts",
@@ -252,19 +247,15 @@
       "source": "packages/coding-agent/src/core/compaction/branch-summarization.ts",
       "target": "src/pi/core/compaction/branch-summarization.ts",
       "sha256": "274e63efb0722fed8ccf8656f6ee7ed7e75c9e9aa3ebd5c673e7d57b12bd72de",
-      "portSha256": "2e7ffee366cf8ec6bf61219dc51240546e99c6403867db0e36bd4a3361e321c3",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "274e63efb0722fed8ccf8656f6ee7ed7e75c9e9aa3ebd5c673e7d57b12bd72de",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/compaction/compaction.ts",
       "target": "src/pi/core/compaction/compaction.ts",
       "sha256": "32714966eb644da31cd84e8eb172965256160626b3d26ae9752c3894300f2b0b",
-      "portSha256": "18f984a00135f18468558993ba750ba2baf83487095897bba5228999c990dd5a",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "32714966eb644da31cd84e8eb172965256160626b3d26ae9752c3894300f2b0b",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/compaction/index.ts",
@@ -277,10 +268,8 @@
       "source": "packages/coding-agent/src/core/compaction/utils.ts",
       "target": "src/pi/core/compaction/utils.ts",
       "sha256": "37eab7698cdbff8b5987d4529005ea16d7e1ae4a5344d7d0443c3466444aa90e",
-      "portSha256": "904688554d55f25208481af98db7a51b90727b27851ccd1cb990ef087c789b0c",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "37eab7698cdbff8b5987d4529005ea16d7e1ae4a5344d7d0443c3466444aa90e",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/crash-log.ts",
@@ -293,10 +282,8 @@
       "source": "packages/coding-agent/src/core/defaults.ts",
       "target": "src/pi/core/defaults.ts",
       "sha256": "e05e32e5613066667b52fa1d8864fec27b3564636f93af7983f53984bce02955",
-      "portSha256": "5bf544f0b96a4f1d9f6c253d4f40d9a943c53be97091903f5c013968ef3b60aa",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "e05e32e5613066667b52fa1d8864fec27b3564636f93af7983f53984bce02955",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/diagnostics.ts",
@@ -337,10 +324,8 @@
       "source": "packages/coding-agent/src/core/export-html/index.ts",
       "target": "src/pi/core/export-html/index.ts",
       "sha256": "6741a3b59795d3b25fea9f7385f84b7213fa869060152416cde7aa6802c44f9d",
-      "portSha256": "d289d402ff12fc1b92a1ac35798a1fac7afefed5932fa683cedd93a4e466d974",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "6741a3b59795d3b25fea9f7385f84b7213fa869060152416cde7aa6802c44f9d",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/export-html/template.css",
@@ -433,18 +418,15 @@
       "source": "packages/coding-agent/src/core/extensions/runner.ts",
       "target": "src/pi/core/extensions/runner.ts",
       "sha256": "3cd6d1ad18e8e4c7adf722aed9291bc64f06e3a7d461755c21e3cba4819f4e5e",
-      "portSha256": "f4c940030e45b0588afdcedb27e313804e3af0b74c62967572ffaecd74a31294",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "3cd6d1ad18e8e4c7adf722aed9291bc64f06e3a7d461755c21e3cba4819f4e5e",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/extensions/types.ts",
       "target": "src/pi/core/extensions/types.ts",
       "sha256": "78cfd4937aa72c02be444354ef5cb94310b9b40e20e477969630eb81c6a7391b",
-      "portSha256": "c77e6baabea893d791a22d219b960c9d297753c723526d24cc34e948803367f0",
+      "portSha256": "ac81ad3fce99a4e573e895c17c3383650a6da4c2ddc7b2fb0699dc4593e1cadb",
       "changes": [
-        "durable-agent-boundary",
         "explicit-durable-tool-replay-policy"
       ]
     },
@@ -461,10 +443,8 @@
       "source": "packages/coding-agent/src/core/extensions/wrapper.ts",
       "target": "src/pi/core/extensions/wrapper.ts",
       "sha256": "7783d9e41dcb99fd10ebdd4e3d7aa4cef84fcf387f42be95265a5b7f6dcee14b",
-      "portSha256": "2528681cdc77545a889b47705c6bfaae7f5f642f9daf445a0705238e9d39a556",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "7783d9e41dcb99fd10ebdd4e3d7aa4cef84fcf387f42be95265a5b7f6dcee14b",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/footer-data-provider.ts",
@@ -505,9 +485,8 @@
       "source": "packages/coding-agent/src/core/messages.ts",
       "target": "src/pi/core/messages.ts",
       "sha256": "5397e3c96c9504266e4ee8b6e88d5098b3280ee7dbb0c687b74708c62a06c8d4",
-      "portSha256": "e4e3869fb9038cabb0565a1140dd0aa98b512468bbc726230b11564c536ccb7e",
+      "portSha256": "d755158524aca4ddf06d69044c24d8f0977e1213f00814a8541470309d421ca2",
       "changes": [
-        "durable-agent-boundary",
         "exclude-host-correlation-from-model-context"
       ]
     },
@@ -529,10 +508,8 @@
       "source": "packages/coding-agent/src/core/model-resolver.ts",
       "target": "src/pi/core/model-resolver.ts",
       "sha256": "aa4ac64cae58ba346f53a44f131ee26f35385eb36c43456bb51e92b471ce609f",
-      "portSha256": "4a1bad8a4d2088681698df09a6b6260e4f7963550b72fec7e5d564cee7404372",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "aa4ac64cae58ba346f53a44f131ee26f35385eb36c43456bb51e92b471ce609f",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/model-runtime.ts",
@@ -554,10 +531,8 @@
       "source": "packages/coding-agent/src/core/nested-tool-calls.ts",
       "target": "src/pi/core/nested-tool-calls.ts",
       "sha256": "15b0d9d5b24df2add64e7347b4f904c1948f97a0dd6512eb4f7de7884a9286b7",
-      "portSha256": "4d899f84a11c9514b0f9cdb40100ae92ee33096783328aa029aee0d55d768625",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "15b0d9d5b24df2add64e7347b4f904c1948f97a0dd6512eb4f7de7884a9286b7",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/output-guard.ts",
@@ -600,15 +575,19 @@
       "source": "packages/coding-agent/src/core/prompt-templates.ts",
       "target": "src/pi/core/prompt-templates.ts",
       "sha256": "1bdaa7b3825f92bf33203fd7587014b878c55b3d812900cca5cad08fefd92171",
-      "portSha256": "1bdaa7b3825f92bf33203fd7587014b878c55b3d812900cca5cad08fefd92171",
-      "changes": []
+      "portSha256": "6e0df3750ac27653c11c9a33508d07ba48ace83af43fc8c50016a80fa3a51f61",
+      "changes": [
+        "explicit-host-project-resource-directory"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/provider-composer.ts",
       "target": "src/pi/core/provider-composer.ts",
       "sha256": "bddf6d242288123d00e6ae75c4c5f2ce19706152ae87ee33e326e55623f91501",
-      "portSha256": "bddf6d242288123d00e6ae75c4c5f2ce19706152ae87ee33e326e55623f91501",
-      "changes": []
+      "portSha256": "b99da0687b1b993483253a96b47e991e0a723ac4322a66011f7e8479884474ab",
+      "changes": [
+        "structural-provider-config-interface"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/radius.ts",
@@ -675,10 +654,8 @@
       "source": "packages/coding-agent/src/core/session-manager.ts",
       "target": "src/pi/core/session-manager.ts",
       "sha256": "444650a737052f0d710c19f9e50e115c24b49107130059d5bef458eacf3927c7",
-      "portSha256": "f4f0a023fd909f4aebad256b5b8cafb88132c6fe109898d93c07f6b960ee4148",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "444650a737052f0d710c19f9e50e115c24b49107130059d5bef458eacf3927c7",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/settings-defaults.ts",
@@ -698,10 +675,8 @@
       "source": "packages/coding-agent/src/core/settings-manager.ts",
       "target": "src/pi/core/settings-manager.ts",
       "sha256": "7b21f0900b96b8b11751c046cc009bdbd62b2a6f579a96e9727c737d0dd5e62d",
-      "portSha256": "81d95105d236ff8c42b072e377b9ec094fd9914ef2d51fc41af9be099c903e25",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "7b21f0900b96b8b11751c046cc009bdbd62b2a6f579a96e9727c737d0dd5e62d",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/settings-schema.ts",
@@ -714,8 +689,10 @@
       "source": "packages/coding-agent/src/core/skills.ts",
       "target": "src/pi/core/skills.ts",
       "sha256": "79e7d971a26730e3a692c434c32dc63bd8ce36aa4bedaaaf96e405f4a39bc411",
-      "portSha256": "79e7d971a26730e3a692c434c32dc63bd8ce36aa4bedaaaf96e405f4a39bc411",
-      "changes": []
+      "portSha256": "ae60c4b07234869367c41eb98b6169431790ecf0028cabc3e89b522e3280c869",
+      "changes": [
+        "explicit-host-project-resource-directory"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/slash-commands.ts",
@@ -800,10 +777,8 @@
       "source": "packages/coding-agent/src/core/tools/index.ts",
       "target": "src/pi/core/tools/index.ts",
       "sha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
-      "portSha256": "c8fe3c607d0c445146df183459f46de19f7b4feebe8e93e77962cf55cf36e629",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/tools/ls.ts",
@@ -907,9 +882,8 @@
       "source": "packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
       "target": "src/pi/core/tools/tool-definition-wrapper.ts",
       "sha256": "dcc1e90f646f4feff9dea53b5b22fe05f898a379b5b494b23a338a74c5247519",
-      "portSha256": "60d47613de4c8644ba89456b83b47c108869f9a91baf6e62d9fab61ea3e8d2df",
+      "portSha256": "579f5bc1c95d1eedc1ef32da6b991ff609f88217abbec65dcb950bddcc545e41",
       "changes": [
-        "durable-agent-boundary",
         "explicit-durable-tool-replay-policy"
       ]
     },
@@ -945,10 +919,8 @@
       "source": "packages/coding-agent/src/core/virtual-models.ts",
       "target": "src/pi/core/virtual-models.ts",
       "sha256": "dd836e0623b57bba55fa99b73738427e089a80599a45acc86d7b28219fa26519",
-      "portSha256": "f24a0411428bfffa43e64e0787d60724e9fc354ea31273ddcbc78c7785c37c11",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "dd836e0623b57bba55fa99b73738427e089a80599a45acc86d7b28219fa26519",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/extensions/codemode/execute.lazy.ts",
@@ -961,10 +933,8 @@
       "source": "packages/coding-agent/src/extensions/codemode/execute.ts",
       "target": "src/pi/extensions/codemode/execute.ts",
       "sha256": "2f7cdf2ec0497b5bbcd05e8db6476c792ae6a8c05e019a5dad94e3417449a556",
-      "portSha256": "68f4c424c2f4f90204f76fd82137c789d0a9c59cb5647e23ee4fc625f4b1cd7b",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "2f7cdf2ec0497b5bbcd05e8db6476c792ae6a8c05e019a5dad94e3417449a556",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/extensions/codemode/index.ts",
@@ -984,10 +954,8 @@
       "source": "packages/coding-agent/src/extensions/codemode/tool.ts",
       "target": "src/pi/extensions/codemode/tool.ts",
       "sha256": "feef5e43431c493d9c5a0eb5b18f226f64d878bfd4f80293ed8bd12331d86ee5",
-      "portSha256": "eaabc63ccf5b2ca6013b954bfaabfb1f1c79c974a1d90d490e3a3ad246ee5911",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "feef5e43431c493d9c5a0eb5b18f226f64d878bfd4f80293ed8bd12331d86ee5",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/extensions/codemode/worker.ts",
@@ -1107,10 +1075,8 @@
       "source": "packages/coding-agent/src/extensions/mcp/tools.ts",
       "target": "src/pi/extensions/mcp/tools.ts",
       "sha256": "cd3245946deb3cb3df2e7b521a07837525f886d281c5e4600527eb2aed95e2ac",
-      "portSha256": "951d5b9f9ad3492184dfb04b88159b8ae8b09aab358b7bda29628107360d190c",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "cd3245946deb3cb3df2e7b521a07837525f886d281c5e4600527eb2aed95e2ac",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/extensions/mcp/ui.ts",
@@ -1424,10 +1390,8 @@
       "source": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts",
       "target": "src/pi/modes/interactive/components/settings-selector.ts",
       "sha256": "e8f96c52aeb23f7b7770a0bb5887b474ae0f0ada5bcb66bf607257d5d3bd4f51",
-      "portSha256": "e827c2eb7bff19ce306b39a043d791f2a16c5c93532072b0efd9272c132f0a53",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "e8f96c52aeb23f7b7770a0bb5887b474ae0f0ada5bcb66bf607257d5d3bd4f51",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/settings-submenu.ts",
@@ -1475,10 +1439,8 @@
       "source": "packages/coding-agent/src/modes/interactive/components/thinking-selector.ts",
       "target": "src/pi/modes/interactive/components/thinking-selector.ts",
       "sha256": "a8e562022d04ef4266191ba35a0417fced547666be6e6e97329aa3918b512e18",
-      "portSha256": "be69bcb46490b93e0f4a8635c57a0c01082ec561a1982a6b34732c8bf297f0df",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "a8e562022d04ef4266191ba35a0417fced547666be6e6e97329aa3918b512e18",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/tool-execution.ts",
@@ -1533,9 +1495,8 @@
       "source": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
       "target": "src/pi/modes/interactive/interactive-mode.ts",
       "sha256": "ee4ba8aeee85b772aee57b342356da3030eed3b2c32656fa9c0927e6a81fbab0",
-      "portSha256": "73b6249ccde26e23fa6a48521283c7853e028a70f955ecf3e6627fc2e4eaf3d4",
+      "portSha256": "afc5c5c5781f592c4427c2a17798759cb702e4aa41721043a952d5f1c64934c1",
       "changes": [
-        "durable-agent-boundary",
         "node-and-bun-process-listener-types"
       ]
     },
@@ -1613,10 +1574,8 @@
       "source": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
       "target": "src/pi/modes/interactive/theme/theme.ts",
       "sha256": "d1da018dbaba222b5f477b77cb9c1c79886dbcc92856b80e1c0c7685256382cf",
-      "portSha256": "4a8a7147f4d510d6d25352a5ecd9f6f1bd6956fe4e9e0258d562b96d022e5a94",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "d1da018dbaba222b5f477b77cb9c1c79886dbcc92856b80e1c0c7685256382cf",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/tui-renderer.ts",
@@ -1652,10 +1611,8 @@
       "source": "packages/coding-agent/src/modes/rpc/rpc-client.ts",
       "target": "src/pi/modes/rpc/rpc-client.ts",
       "sha256": "a34c9eb4937bf3b526128c9a2032cc3295504996a14bf204e4a17e5bb55dcf7f",
-      "portSha256": "fe07874603650c27e23152aeab4ba6b2fd7c2b584c61c4e9b24680baf2b51b14",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "a34c9eb4937bf3b526128c9a2032cc3295504996a14bf204e4a17e5bb55dcf7f",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/modes/rpc/rpc-mode.ts",
@@ -1670,10 +1627,8 @@
       "source": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
       "target": "src/pi/modes/rpc/rpc-types.ts",
       "sha256": "be06a1d53916e03e9274cce9e4833692b235494e4047f1f7139d7f0147daae1a",
-      "portSha256": "9ba54fceee984d62231976892c44a97bbcfc3a491a91566d104732b9bde2a97d",
-      "changes": [
-        "durable-agent-boundary"
-      ]
+      "portSha256": "be06a1d53916e03e9274cce9e4833692b235494e4047f1f7139d7f0147daae1a",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/package-manager-cli.ts",

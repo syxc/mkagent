@@ -1,4 +1,10 @@
 /** Keep host model ownership changes reproducible from the pinned native source. */
+export function portProviderComposer(source: string): string {
+  const parameter = '\tmodelConfig: ModelConfig,';
+  if (source.split(parameter).length !== 2) throw new Error('Pinned provider config parameter changed');
+  return source.replace(parameter, '\tmodelConfig: Pick<ModelConfig, "getProvider">,');
+}
+
 export function portModelRuntime(source: string): string {
   let body = source;
   const replace = (before: string, after: string) => {

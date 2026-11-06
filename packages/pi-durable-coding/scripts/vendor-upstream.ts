@@ -1,7 +1,7 @@
 /** Reproduce the pinned Pi source port without importing the upstream package. */
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
@@ -119,7 +119,6 @@ function port(source: string, target = source, selection?: string[], imports = '
       ['sources[0].source', 'sources[0]!.source'],
       ['await tasks[index]();', 'await tasks[index]!();'],
     ],
-    'core/prompt-templates.ts': [['const char = argsString[i];', 'const char = argsString[i]!;']],
     'utils/paths.ts': [['match[1].toUpperCase()', 'match[1]!.toUpperCase()']],
   };
   if (checkedIndexes[source]) {
@@ -146,39 +145,55 @@ function port(source: string, target = source, selection?: string[], imports = '
 const forwarded = [
   'core/source-info.ts', 'core/diagnostics.ts', 'core/event-bus.ts', 'core/pi-manifest.ts',
   'utils/frontmatter.ts', 'utils/text.ts', 'utils/paths.ts',
+  'utils/child-process.ts', 'utils/git.ts', 'core/output-guard.ts',
+  'core/exec.ts', 'core/timings.ts', 'core/mcp-servers.ts',
+  'core/skills.ts', 'core/prompt-templates.ts', 'core/system-prompt.ts',
+  'core/extensions/types.js', 'core/extensions/pi-ai-extension-view.ts',
+  'core/provider-composer.js', 'core/resolve-config-value.ts', 'utils/shell.ts',
 ].map(file => ({
   target: 'src/upstream/' + file,
-  implementation: 'src/pi/' + file,
+  implementation: 'src/pi/' + file.replace(/\.js$/, '.ts'),
+  ...(file === 'core/skills.ts' ? { changes: ['explicit-host-agent-directory', 'explicit-host-project-resource-directory'] }
+    : file === 'core/prompt-templates.ts' ? { changes: ['explicit-host-project-resource-directory'] }
+    : file === 'core/system-prompt.ts' ? { changes: ['host-documentation-paths'] }
+    : file === 'utils/shell.ts' ? { changes: ['selected-public-shell-api'] } : {}),
 }));
 for (const item of forwarded) {
   const path = item.implementation.slice('src/pi/'.length);
-  save(item.target, '// Shared native implementation; keep legacy imports without another source copy.\n'
-    + `export * from "../../pi/${path}";\n`);
+  const specifier = JSON.stringify(relative(dirname(item.target), item.implementation).split(sep).join('/'));
+  let content = '// Shared native implementation; keep legacy imports without another source copy.\n'
+    + (path === 'utils/shell.ts' ? `export { getShellConfig, type ShellConfig } from ${specifier};\n`
+      : `export * from ${specifier};\n`);
+  if (path === 'core/skills.ts') {
+    content += 'import { loadSkills as loadNativeSkills, type LoadSkillsOptions } from "../../pi/core/skills.ts";\n'
+      + 'import { CONFIG_DIR_NAME, getAgentDir } from "../config.ts";\n\n'
+      + 'export function loadSkills(options: LoadSkillsOptions) {\n'
+      + '  return loadNativeSkills({ ...options, agentDir: options.agentDir ?? getAgentDir() }, CONFIG_DIR_NAME);\n'
+      + '}\n';
+  }
+  if (path === 'core/prompt-templates.ts') {
+    content += 'import { loadPromptTemplates as loadNativePromptTemplates, type LoadPromptTemplatesOptions } from "../../pi/core/prompt-templates.ts";\n'
+      + 'import { CONFIG_DIR_NAME } from "../config.ts";\n\n'
+      + 'export function loadPromptTemplates(options: LoadPromptTemplatesOptions) {\n'
+      + '  return loadNativePromptTemplates(options, CONFIG_DIR_NAME);\n'
+      + '}\n';
+  }
+  if (path === 'core/system-prompt.ts') {
+    content += 'export { buildSystemPrompt, buildSystemPromptSections, buildSystemPromptState } from "../../host-system-prompt.ts";\n';
+  }
+  save(item.target, content);
 }
 
-for (const file of [
-  'core/skills.ts', 'core/prompt-templates.ts', 'utils/child-process.ts',
-  'core/package-manager.ts', 'utils/git.ts', 'core/output-guard.ts',
-  'core/system-prompt.ts', 'core/exec.ts', 'core/timings.ts', 'core/mcp-servers.ts',
-]) port(file);
+port('core/package-manager.ts');
 
 port('core/extensions/runner.ts', 'core/extensions/runner.js', undefined, '', ['erase-types', 'headless-theme-binding']);
 port('core/extensions/loader.ts', 'core/extensions/loader.js', undefined, '', ['erase-types', 'extension-module-resolution']);
-port('core/extensions/types.ts', 'core/extensions/types.js', undefined, '', ['erase-types']);
-port('core/extensions/pi-ai-extension-view.ts');
 port('core/messages.ts', 'core/messages.js', undefined, '', ['erase-types']);
 port('core/session-manager.ts', 'core/session-manager.js', undefined, '', ['erase-types', 'session-message-binding', 'durable-model-projection']);
 port('core/model-registry.ts', 'core/model-registry.js', ['ModelRegistry'], '', ['erase-types']);
 port('core/settings-manager.ts', 'core/settings-merge.js',
   ['isMergeableObject', 'deepMergeObjects', 'isToolModifier', 'mergeDefaultTools', 'deepMergeSettings'],
   'export { deepMergeSettings as mergeCodingSettings };\n', ['erase-types']);
-port('core/provider-composer.ts', 'core/provider-composer.js', undefined, '', ['erase-types']);
-port('core/resolve-config-value.ts', 'core/resolve-config-value.ts');
-port('utils/shell.ts', 'utils/shell.ts', [
-  'ShellConfig', 'isLegacyWslBashPath', 'getBashShellConfig', 'shellPathExists',
-  'findExecutableOnPath', 'getShellConfig',
-], 'import { accessSync, constants } from "node:fs";\n'
-  + 'import { win32 } from "node:path";\nimport { spawnSync } from "node:child_process";\n\n');
 
 port('core/footer-data-provider.ts', 'core/git-paths.ts', ['GitPaths', 'findGitPaths'],
   'import { existsSync, readFileSync, statSync } from "node:fs";\n'

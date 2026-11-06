@@ -11,7 +11,7 @@
  */
 
 import { createHash } from "node:crypto";
-import type { AgentToolResult } from "../../../agent-runtime.ts";
+import type { AgentToolResult } from "@earendil-works/pi-agent-core";
 import type { ImageContent, JsonValue, TextContent } from "@earendil-works/pi-ai";
 import {
 	type CallToolResult,

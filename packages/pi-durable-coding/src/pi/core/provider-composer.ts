@@ -547,7 +547,7 @@ export function validateExtensionProvider(
 export function composeModelProvider(
 	providerId: string,
 	base: Provider | undefined,
-	modelConfig: ModelConfig,
+	modelConfig: Pick<ModelConfig, "getProvider">,
 	extension: ProviderConfigInput | undefined,
 ): Provider {
 	const config = modelConfig.getProvider(providerId);

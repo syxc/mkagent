@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { ThinkingLevel } from "../../../../agent-runtime.ts";
+import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 import {
 	backgroundAnsi,
 	type Color,
