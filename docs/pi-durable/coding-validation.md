@@ -20,6 +20,46 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Codemode host policies after 05710bf
+
+The local dependency patch adds four host integration points to durable's
+codemode: a branch store adapter, an asynchronous sandbox lease, output policy
+and named discovery overrides. These are local compatibility APIs. The native
+SDK executor has not yet switched to them.
+
+The store adapter reads inside the first `run.start` transaction and writes
+the raw set/delete operations with `run.result`. Completed calls reuse their
+result. Failed scripts do not write the store. An adapter disables the default
+conversation store. The native journal fixture confirms that its entry and the
+durable result appear in the same publication.
+
+The sandbox provider receives the saved absolute deadline and task context.
+Cancellation and deadline checks run again after admission. The lease is
+released before formatting, including on script failure, and on startup or
+cancellation failure. A completed result does not acquire another lease.
+Output options keep the script token budget while allowing a host writer,
+image labels, elapsed-time callback and no extra byte or line ceiling.
+Custom discovery globals use the existing durable global journal.
+
+| Check | Result and scope |
+| --- | --- |
+| Focused regression | Eight explicit files pass 95 tests and 676 assertions. They include the journal, host bridge, tool task, native store fixture, public policies and formatter cases. |
+| Native journal fixture | Six tests pass 36 assertions using real model calls, Harness, MemoryStorage, QuickJS and the native journal. They cover branch selection, unchanged set values, missing-key deletion, no append support, result reuse, script failure and refused writeback. |
+| Public policies | Nine tests pass 41 assertions through the public factory and real ToolTask. The Harness clock checks admission against the saved deadline. Real task cancellation checks a late lease without starting a VM. Output cases check 1,100,000 characters and images without an environment. |
+| Public types | The policy test is a strict single-root public consumer. Its compiler host rejects coding runtime source and the restricted filename before reading. |
+| Patch replay and install | The complete standard Git diff applies to the clean 1.5.0 cache. A fresh independent consumer installs offline with lifecycle scripts disabled; a second fresh consumer uses its frozen lockfile. All 16 target files match the tested package. The installed package also passes the nine public policy tests and 41 assertions. This is not a workspace frozen install. |
+| Static review | An independent reviewer read the integration diff and all three relevant test files. It found no high-confidence defect and did not run tests. The main thread later corrected one test's invalid store method and reran it through the frozen-install consumer. |
+
+The initial store refusal test called `store.save`, which the real VM rejected
+before writeback. The documented `store(key, value)` and `load(key)` calls now
+reach the adapter, check its raw writes and confirm the intended rejection.
+
+Native entry-point wiring, live string call IDs, plugin hooks, model
+concurrency and usage, queue policy and full restart recovery remain open.
+These checks do not prove exactly-once execution of arbitrary external
+callbacks on transaction retries. Full SDK and product checks remain
+restricted.
+
 ## Journal transactions after 266bdb7
 
 The native journal can prepare more than once in one durable transaction.

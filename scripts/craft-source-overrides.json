@@ -2341,8 +2341,8 @@
       "reason": "Check shared search scores, tokenizer identity, schema metadata, namespace ranking and native activation callbacks."
     },
     "packages/pi-durable-coding/test/codemode-durable-boundary.test.ts": {
-      "sha256": "399d53f6bafe49fc95a2b2be0fc3348184e84d3fa72408bd18a82227b3397512",
-      "reason": "Record codemode compatibility gaps through real durable tasks and sandbox comparisons before replacing native execution."
+      "sha256": "e831956503327f7aaeb589f0fc578b720e6e3e536a1bb26c0d18993edf15a6b3",
+      "reason": "Record native execution differences through real durable tasks and verify the discovery override compatibility port."
     },
     "packages/pi-durable-coding/src/legacy/api-types.ts": {
       "sha256": "a0524a6fec510bb5c5a0673b349bf53394b1a01933d459edeb9ce53ff559751f",
@@ -3813,8 +3813,8 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "232f53799d476fc63500d32573c97cd3c634db67737a295cb8f59c0be3b870c8",
-      "reason": "Use a canonical complete Git patch for frozen Bun installs, legacy generation compatibility and shared durable search and codemode output seams."
+      "sha256": "8fc7240d1085bc0f1af0cd43fe882cd716e5e8fddd000d60a602b1818ea092fb",
+      "reason": "Keep a canonical complete Git patch for frozen Bun installs, legacy generation, shared search and codemode formatting, branch store transactions and host execution policies."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
       "sha256": "53af9ef53c9ada189e0122a646c18ccf20bc16c2720fa56c25a3a2de22690352",
@@ -5175,6 +5175,14 @@
     "packages/pi-durable-coding/test/host-builtins.test.ts": {
       "sha256": "1c57ae6955d9312b7e4ceb5814f374cebf4a75daa970988341cec1fffd3691fe",
       "reason": "Exercise the real durable codemode sandbox through the coding Agent, production approval, official child ownership, caller restrictions and tool-search activation receipts."
+    },
+    "packages/pi-durable-coding/test/codemode-native-store.test.ts": {
+      "sha256": "b439325b4facc7515f5cdbf93b7621046e51d27384f94c064dddfa70a01aa11e",
+      "reason": "Verify branch-local raw store writes, result transactions, completed invocation reuse and rejected writeback using real native journal and durable model calls."
+    },
+    "packages/pi-durable-coding/test/durable-codemode-options.test.ts": {
+      "sha256": "388e6f561a6b84671e007ade4bb60ee311dde821044fe733b4c577ae089a3f7a",
+      "reason": "Verify sandbox leases, deadline and cancellation cleanup, host output policies and discovery overrides through public durable ToolTasks."
     }
   },
   "deleted": {

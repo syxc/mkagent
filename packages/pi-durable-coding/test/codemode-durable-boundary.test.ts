@@ -153,12 +153,11 @@ describe('public durable codemode adoption boundaries', () => {
     expect(JSON.parse(itemText(durable.output!, 1))).toEqual([namespace, null]);
   }, 10_000);
 
-  test('same-named public globals cannot override native discovery', async () => {
+  test('the discovery override port accepts a same-named public global', async () => {
     const run = await builtin({
       globals: [{ name: 'describeNamespace', spread: true, execute: async () => 'override' }],
     });
-    await expect(run('return await describeNamespace("docs");'))
-      .rejects.toThrow('Global "describeNamespace" is already registered');
+    expect(itemText((await run('return await describeNamespace("docs");')).output!, 1)).toBe('override');
   }, 10_000);
 
   test('raising host output limits does not raise the built-in formatter ceiling', async () => {

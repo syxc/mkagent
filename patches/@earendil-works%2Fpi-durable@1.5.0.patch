@@ -1,3 +1,404 @@
+diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
+index 429bfd1..f99d006 100644
+--- a/dist/codemode/codemode.d.ts
++++ b/dist/codemode/codemode.d.ts
+@@ -38,8 +38,9 @@ import { type Context, type JsonValue } from "@earendil-works/chord";
+ import type { CodemodeSandboxBase } from "@earendil-works/pi-codemode/portable";
+ import { type Static } from "@earendil-works/pi-schema";
+ import type { Extension, ToolExecutionApi, ToolRegistration } from "../harness/types.ts";
+-import type { JsonObject } from "../types.ts";
++import type { JsonObject, Tx } from "../types.ts";
+ import { type CodemodeNamespace } from "./describe.ts";
++import type { CodemodeFormatOptions } from "./output.js";
+ /**
+  * Version of everything in this module that turns stored results into what a script sees: result mapping, globals,
+  * start data. Bump it when that changes, so a call started before an upgrade is not replayed by different code.
+@@ -151,9 +152,24 @@ declare const codemodeSchema: import("@earendil-works/pi-schema").Schema<{
+     code: string;
+ }>;
+ export type CodemodeToolInput = Static<typeof codemodeSchema>;
++/** A host-owned store, prepared in the same transaction as the start or result. */
++export interface CodemodeStoreAdapter {
++    read(tx: Tx, api: ToolExecutionApi, context: Context): Record<string, JsonValue> | Promise<Record<string, JsonValue>>;
++    /** Receives the script's original writes, including same-value sets and missing-key deletes. */
++    write(tx: Tx, writes: { set: Record<string, JsonValue>; delete: string[] }, api: ToolExecutionApi, context: Context): void | Promise<void>;
++}
++/** A sandbox reserved for one attempt; released on success, failure or cancellation. */
++export interface CodemodeSandboxLease {
++    readonly sandbox: CodemodeSandboxBase;
++    release(): void | Promise<void>;
++}
+ export type CodemodeToolOptions = {
+     /** Runs the scripts: `CodemodeSandbox` on Node, `RemoteCodemodeSandbox` on Cloudflare. */
+-    readonly sandbox: CodemodeSandboxBase;
++    readonly sandbox: CodemodeSandboxBase | ((api: ToolExecutionApi, context: Context, deadline?: number) => Promise<CodemodeSandboxLease>);
++    /** Replaces the conversation store; completed invocations do not read or write again. */
++    readonly store?: CodemodeStoreAdapter;
++    /** Overrides formatting policy while retaining the script's token budget. */
++    readonly output?: Partial<Pick<CodemodeFormatOptions, "limits" | "write" | "imageSize" | "wallMs">>;
+     /** Groups of tools by name prefix, such as MCP servers, for the `codemode` section and tool search. */
+     readonly namespaces?: readonly CodemodeNamespace[];
+     /** Estimated tokens the tool declarations in the `codemode` section may use. Default 3000. */
+diff --git a/dist/codemode/codemode.js b/dist/codemode/codemode.js
+index 9ef1da0..b711a22 100644
+--- a/dist/codemode/codemode.js
++++ b/dist/codemode/codemode.js
+@@ -100,7 +100,9 @@ export function createCodemodeTool(options) {
+         name: CODEMODE_TOOL_NAME,
+         description: codemodeDescription(options.models !== false),
+         parameters: codemodeSchema,
+-        outputLimits: OUTPUT_LIMITS,
++        outputLimits: options.output?.limits === false
++            ? { maxBytes: Number.MAX_SAFE_INTEGER, maxLines: Number.MAX_SAFE_INTEGER }
++            : options.output?.limits ?? OUTPUT_LIMITS,
+         // Capable models write the script as raw text instead of a JSON-escaped string; pi-ai applies it only for them.
+         constrainedSampling: { type: "grammar", variants: { openai_lark: CODEMODE_SOURCE_GRAMMAR } },
+         callers: ["model"],
+@@ -230,7 +232,8 @@ class CodemodeCall {
+         const callable = agent.callable.filter((tool) => !tool.name.startsWith(CODEMODE_INTERNAL_PREFIX));
+         const models = this.options.models === false ? [] : [...CATALOG_GLOBALS, ...Object.keys(MODEL_CALLS)];
+         const globals = [
+-            ...DISCOVERY_GLOBALS.map((name) => ({ name, spread: true })),
++            ...DISCOVERY_GLOBALS.filter((name) => !this.options.globals?.some((global) => global.name === name))
++                .map((name) => ({ name, spread: true })),
+             ...models.map((name) => ({ name, spread: true })),
+             ...(this.options.globals ?? []).map((global) => ({ name: global.name, spread: global.spread === true })),
+         ];
+@@ -259,7 +262,9 @@ class CodemodeCall {
+                 return { done: copyJson(run.result) };
+             const rerun = run.start !== undefined;
+             if (run.start === undefined) {
+-                const store = await tx.doc(CodemodeStoreDoc, api.conversationId);
++                const values = this.options.store === undefined
++                    ? (await tx.doc(CodemodeStoreDoc, api.conversationId)).values
++                    : await this.options.store.read(tx, api, context);
+                 const timeout = sourceOptions.timeoutMs;
+                 run.start = {
+                     version: CODEMODE_MODULE_VERSION,
+@@ -270,7 +275,7 @@ class CodemodeCall {
+                     namespaces,
+                     globals,
+                     maxOutputTokens: sourceOptions.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
+-                    store: copyJson(store.values),
++                    store: copyJson(values),
+                 };
+             }
+             const journal = await tx.doc(CodemodeJournalDoc, api.taskId);
+@@ -303,20 +308,34 @@ class CodemodeCall {
+         context.abortSignal?.addEventListener("abort", onAbort, { once: true });
+         if (context.abortSignal?.aborted)
+             onAbort();
++        let lease;
+         try {
+-            this.run = this.options.sandbox.start(code, {
++            const sandbox = typeof this.options.sandbox === "function"
++                ? (lease = await this.options.sandbox(api, context, this.start.deadline)).sandbox
++                : this.options.sandbox;
++            context.abortSignal?.throwIfAborted();
++            const remainingAtStart = this.start.deadline === undefined ? undefined : this.start.deadline - api.now();
++            if (remainingAtStart !== undefined && remainingAtStart <= 0) {
++                return await this.decide(errorResult(`Script timed out: its deadline passed while waiting for a sandbox.`));
++            }
++            this.run = sandbox.start(code, {
+                 startedAt: this.start.startedAt,
+                 seed: this.start.seed,
+                 tools: this.start.tools.filter((tool) => tool.hidden !== true),
+                 globals: this.start.globals,
+                 store: this.start.store,
+                 signal: this.controller.signal,
+-                ...(remaining === undefined ? {} : { timeoutMs: remaining }),
++                ...(remainingAtStart === undefined ? {} : { timeoutMs: remainingAtStart }),
+                 onStarted: (fingerprint) => void this.checkFingerprint(fingerprint),
+                 onCall: (call) => this.onCall(call),
+                 onIdle: (seq, issued) => this.onIdle(seq, issued),
+             });
+             const result = await this.run.result;
++            if (lease !== undefined) {
++                const acquired = lease;
++                lease = undefined;
++                await acquired.release();
++            }
+             if (this.failure !== undefined)
+                 throw this.failure;
+             if (this.ended !== undefined)
+@@ -346,13 +365,14 @@ class CodemodeCall {
+                     : this.replayed[during.seq - 1]?.issuedAfter !== undefined) ||
+                     this.replayed.slice(during.seq).some((entry) => entry.id > during.issued);
+                 if (continued) {
+-                    return this.decide(errorResult(`The script took a different path when resumed after a restart: it ended after result ${during.seq}, where it went on before.`));
++                    return await this.decide(errorResult(`The script took a different path when resumed after a restart: it ended after result ${during.seq}, where it went on before.`));
+                 }
+             }
+-            return this.complete(result);
++            return await this.complete(result);
+         }
+         finally {
+             context.abortSignal?.removeEventListener("abort", onAbort);
++            await lease?.release();
+         }
+     }
+     /** Store an outcome the call decided, and end the VM if it runs; returns the outcome. */
+@@ -386,12 +406,13 @@ class CodemodeCall {
+     async complete(result) {
+         const details = this.details();
+         const formatted = await formatResult(result, {
++            ...this.options.output,
+             generatedImages: this.generatedImages,
+-            wallMs: this.api.now() - this.start.startedAt,
++            wallMs: this.options.output?.wallMs ?? this.api.now() - this.start.startedAt,
+             maxOutputTokens: this.start.maxOutputTokens,
+             calls: details.calls,
+-            limits: OUTPUT_LIMITS,
+-            write: this.outputFiles(),
++            limits: this.options.output?.limits ?? OUTPUT_LIMITS,
++            write: this.options.output?.write ?? this.outputFiles(),
+         });
+         const tool = {
+             output: formatted.content,
+@@ -408,11 +429,16 @@ class CodemodeCall {
+                 return run.result;
+             run.result = copyJson(tool, { omitUndefinedProperties: true });
+             if (writes !== undefined && (Object.keys(writes.set).length > 0 || writes.delete.length > 0)) {
+-                const store = await tx.doc(CodemodeStoreDoc, this.api.conversationId);
+-                for (const key of writes.delete)
+-                    delete store.values[key];
+-                for (const [key, value] of Object.entries(writes.set))
+-                    store.values[key] = value;
++                if (this.options.store !== undefined) {
++                    await this.options.store.write(tx, writes, this.api, this.context);
++                }
++                else {
++                    const store = await tx.doc(CodemodeStoreDoc, this.api.conversationId);
++                    for (const key of writes.delete)
++                        delete store.values[key];
++                    for (const [key, value] of Object.entries(writes.set))
++                        store.values[key] = value;
++                }
+             }
+             return tool;
+         }, this.context);
+@@ -727,18 +753,18 @@ class CodemodeCall {
+         return { calls };
+     }
+     async callGlobal(call) {
+-        const discovery = DISCOVERY_GLOBALS.includes(call.name);
++        const global = this.options.globals?.find((candidate) => candidate.name === call.name);
++        const discovery = global === undefined && DISCOVERY_GLOBALS.includes(call.name);
+         const catalog = CATALOG_GLOBALS.includes(call.name);
+-        const global = discovery || catalog ? undefined : this.options.globals?.find((candidate) => candidate.name === call.name);
+         if (!discovery && !catalog && global === undefined)
+             return { ok: false, message: `Unknown global ${call.name}` };
+         try {
+             // `undefined` stays undefined: the journal omits the value, and a replay resolves with undefined again.
+-            const value = discovery
+-                ? this.discover(call)
+-                : catalog
+-                    ? await catalogCall(call.name, call.args, this.api.models, this.context)
+-                    : await global.execute(call.args, this.api, this.context);
++            const value = global !== undefined
++                ? await global.execute(call.args, this.api, this.context)
++                : discovery
++                    ? this.discover(call)
++                    : await catalogCall(call.name, call.args, this.api.models, this.context);
+             return { ok: true, value };
+         }
+         catch (error) {
+diff --git a/dist/codemode/index.d.ts b/dist/codemode/index.d.ts
+index 3e1c49c..e745aa5 100644
+--- a/dist/codemode/index.d.ts
++++ b/dist/codemode/index.d.ts
+@@ -1,3 +1,4 @@
+-export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
++export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, type CodemodeSandboxLease, type CodemodeStoreAdapter, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
+ export { type CodemodeNamespace, DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.ts";
++export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult, type CodemodeFormatOptions, type OutputFile } from "./output.js";
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/codemode/index.js b/dist/codemode/index.js
+index 0556d0b..d33ae00 100644
+--- a/dist/codemode/index.js
++++ b/dist/codemode/index.js
+@@ -1,3 +1,4 @@
+ export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, CodemodeStoreDoc, createCodemodeExtension, createCodemodeTool, } from "./codemode.js";
+ export { DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.js";
++export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult } from "./output.js";
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/dist/codemode/output.d.ts b/dist/codemode/output.d.ts
+index b9163a1..253dd95 100644
+--- a/dist/codemode/output.d.ts
++++ b/dist/codemode/output.d.ts
+@@ -21,19 +21,23 @@ type Limits = {
+ };
+ /** Default token budget for script output. */
+ export declare const DEFAULT_MAX_OUTPUT_TOKENS = 10000;
+-/** The tool result's content for a script's result, and the path of the complete text when it was cut. */
+-export declare function formatResult(result: CodemodeResult, options: {
++/** Formatting and file policy shared by the built-in and coding tool adapters. */
++export interface CodemodeFormatOptions {
+     /** Images `models.generateImages()` returned; when the script showed none, the result says so. */
+     readonly generatedImages: number;
+-    readonly wallMs: number;
++    readonly wallMs: number | (() => number);
+     readonly maxOutputTokens: number;
+     readonly calls: readonly {
+         name: string;
+         status: string;
+     }[];
+-    readonly limits: Limits;
++    /** False retains the script's token budget without extra byte or line limits. */
++    readonly limits: Limits | false;
+     readonly write: OutputFile;
+-}): Promise<{
++    readonly imageSize?: (bytes: number) => string;
++}
++/** The tool result's content for a script's result, and the path of the complete text when it was cut. */
++export declare function formatResult(result: CodemodeResult, options: CodemodeFormatOptions): Promise<{
+     content: Item[];
+     fullOutputPath?: string;
+ }>;
+diff --git a/dist/codemode/output.js b/dist/codemode/output.js
+index d28306e..d8590da 100644
+--- a/dist/codemode/output.js
++++ b/dist/codemode/output.js
+@@ -81,8 +81,8 @@ async function truncate(items, maxTokens, limits, write) {
+     const texts = items.filter((item) => item.type === "text").map((item) => item.text);
+     const combined = texts.join("\n");
+     // Within the limits too: a UTF-16 unit is at most 3 UTF-8 bytes, and the rest of the result is a few short lines.
+-    const budget = Math.min(maxTokens * CHARS_PER_TOKEN, Math.floor(limits.maxBytes / 4));
+-    const lineBudget = Math.floor((limits.maxLines - LINE_MARGIN) / 2);
++    const budget = limits === false ? maxTokens * CHARS_PER_TOKEN : Math.min(maxTokens * CHARS_PER_TOKEN, Math.floor(limits.maxBytes / 4));
++    const lineBudget = limits === false ? Number.POSITIVE_INFINITY : Math.floor((limits.maxLines - LINE_MARGIN) / 2);
+     const lines = combined.split("\n").length;
+     if (texts.length === 0 || (combined.length <= budget && lines <= 2 * lineBudget))
+         return { items: [...items] };
+@@ -103,11 +103,11 @@ async function truncate(items, maxTokens, limits, write) {
+     };
+ }
+ /** Save each image to a file and put a text item with its path before it; an image shown twice is saved once. */
+-async function saveImages(items, write) {
++async function saveImages(items, write, imageSize = (bytes) => `${bytes} bytes`) {
+     const labels = new Map();
+     const label = async ({ data, mimeType }, index) => {
+         const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
+-        const kind = `${mimeType}, ${bytes.length} bytes`;
++        const kind = `${mimeType}, ${imageSize(bytes.length)}`;
+         // A failed write must not discard the result of a script whose calls already ran: it becomes part of the label.
+         const saved = await write(`image-${index}${IMAGE_EXTENSIONS[mimeType] ?? ".bin"}`, bytes);
+         return "path" in saved
+@@ -157,8 +157,9 @@ export async function formatResult(result, options) {
+     }
+     const truncated = await truncate(joinAdjacentText(items), options.maxOutputTokens, options.limits, options.write);
+     // After truncation, which joins the text items and moves images after them, so each path stays next to its image.
+-    const content = joinAdjacentText(await saveImages(truncated.items, options.write));
+-    const header = `${result.ok ? "Script completed" : "Script failed"}\nWall time ${(options.wallMs / 1000).toFixed(1)} seconds\nOutput:\n`;
++    const content = joinAdjacentText(await saveImages(truncated.items, options.write, options.imageSize));
++    const wallMs = typeof options.wallMs === "function" ? options.wallMs() : options.wallMs;
++    const header = `${result.ok ? "Script completed" : "Script failed"}\nWall time ${(wallMs / 1000).toFixed(1)} seconds\nOutput:\n`;
+     return {
+         content: [{ type: "text", text: header }, ...content],
+         ...(truncated.fullOutputPath === undefined ? {} : { fullOutputPath: truncated.fullOutputPath }),
+diff --git a/dist/harness/generation.d.ts b/dist/harness/generation.d.ts
+index 6b3121b..ebdd963 100644
+--- a/dist/harness/generation.d.ts
++++ b/dist/harness/generation.d.ts
+@@ -1,12 +1,15 @@
+ import { type Draft } from "@earendil-works/chord";
+-import type { DeferredHandle, ModelThinkingLevel } from "@earendil-works/pi-ai";
+-import type { ConversationId, EntryId, SubmissionId, Task, TaskId, Tx } from "../types.ts";
++import type { DeferredHandle, Message, ModelThinkingLevel } from "@earendil-works/pi-ai";
++import type { ConversationId, EntryId, EntryDraft, SubmissionId, Task, TaskId, Tx } from "../types.ts";
+ import { type LiveState } from "./live.ts";
+ import { type ToolTaskResult } from "./tool.ts";
+-import type { CompactionResult, ConversationStreamOptions, GenerationHooks, ModelRef, RunSummary } from "./types.ts";
+-export type GenerationInput = Record<string, never>;
++import type { CompactionResult, ConversationStreamOptions, GenerationHooks, ModelRef, RunSummary, UserInput } from "./types.ts";
++export type GenerationInput = {
++    codingRequest?: true;
++};
+ export type GenerationCheckpoint = {
+     phase: "prepare";
++    codingPrepared?: true;
+     attempt: number;
+     /** The blocking compaction this generation waited for; it starts no other compaction (spec §8.3). */
+     compacted?: TaskId<CompactionResult>;
+@@ -70,10 +73,61 @@ export type GenerationCheckpoint = {
+     phase: "drain";
+     answer: EntryId;
+     tasks: TaskId[];
++} | CodingCheckpoint | CodingPrepareCheckpoint;
++type CodingPlan = {
++    kind: "answer";
++    continuation?: UserInput;
++} | {
++    kind: "tools";
++    tools: TaskId<ToolTaskResult>[];
++} | {
++    kind: "terminate";
++    last: EntryId;
++} | {
++    kind: "failure";
++    request: Request;
++};
++type CodingState = {
++    assistant: EntryId;
++    results: EntryId[];
++    turnIndex: number;
++    outcome: "completed" | "error" | "aborted";
++    plan: CodingPlan;
++    continued?: boolean;
++    appliedWrite?: SubmissionId;
++};
++type CodingCheckpoint = CodingState & ({
++    phase: "codingBoundary";
++} | {
++    phase: "codingSettle";
++    step: "route" | "before" | "finalize";
++});
++type CodingPrepareCheckpoint = {
++    phase: "codingPrepare";
++    prepare: {
++        phase: "prepare";
++        attempt: number;
++        codingPrepared?: true;
++        compacted?: TaskId<CompactionResult>;
++        overflow?: string;
++        threshold?: true;
++    };
+ };
+ export type GenerationResult = {
+     entryId: EntryId;
+ };
++/** What classification needs from the request that produced a message. */
++type Request = {
++    readonly attempt: number;
++    readonly compacted: TaskId<CompactionResult> | undefined;
++    readonly model: ModelRef;
++    readonly thinkingLevel: ModelThinkingLevel | undefined;
++    readonly cutoff: EntryId;
++    /** Committed model context through `cutoff`, when the phase already derived it. */
++    readonly messages?: readonly Message[];
++    /** Set when the message came from polling, so a still deferred result polls strictly later. */
++    readonly pollAt?: number;
++};
+ /**
+  * Built-in generation task: prepares the positional system prompt and tool loadout, requests or polls the model,
+  * retries, and classifies the response. The run's inputs live in `pi.live.run`.
+@@ -97,4 +151,12 @@ export declare function startRun(tx: Tx, conversationId: ConversationId, live: D
+ }): Promise<void>;
+ /** Hand run control from `from` to `to`; the run's inputs move with it. */
+ export declare function handOver(live: Draft<LiveState>, from: TaskId, to: TaskId): void;
+-//# sourceMappingURL=generation.d.ts.map
+\ No newline at end of file
++export interface CodingEntryDraft extends EntryDraft {
++    references?: {
++        head?: number;
++        edits?: Record<number, number>;
++    };
++}
++/** Append in order, resolving every local reference before passing it to durable. */
++export declare function appendCodingEntries(tx: Tx, conversation: ConversationId, entries: readonly CodingEntryDraft[]): Promise<EntryId[]>;
++export {};
 diff --git a/dist/harness/generation.js b/dist/harness/generation.js
 index ac42dfe..ea8ed27 100644
 --- a/dist/harness/generation.js
@@ -447,6 +848,31 @@ index ac42dfe..ea8ed27 100644
 +    }
 +    return ids;
 +}
+diff --git a/dist/harness/live.d.ts b/dist/harness/live.d.ts
+index a70aedb..7437b5d 100644
+--- a/dist/harness/live.d.ts
++++ b/dist/harness/live.d.ts
+@@ -109,6 +109,11 @@ export type RunFailure = {
+ };
+ /** Run control (spec §8.2). */
+ export type LiveRun = {
++    /** Native coding turn index, independent of the durable tool-round limit. */
++    codingTurn?: number;
++    codingStarted?: boolean;
++    codingLastMessage?: EntryId;
++    codingPreparation?: { taskId: TaskId; attempt: number };
+     /** The task that settles the run's inputs: its generation, handed from one to the next. */
+     taskId: TaskId;
+     /** The run's placed inputs, settled when it ends; `[]` once it answered and runs only its `afterRun` tasks. */
+@@ -258,5 +263,4 @@ export declare function clearProgress(slot: Draft<SlotProgress>): void;
+  * uncertain storage failure poisons the Session instead and writes no outcome.
+  */
+ export declare function settleSchedulerOutcome(tx: Transaction, record: TaskRecord<JsonValue, JsonValue, JsonValue>, outcome: SchedulerOutcome): Promise<void>;
+-export {};
+-//# sourceMappingURL=live.d.ts.map
+\ No newline at end of file
++export {};
+\ No newline at end of file
 diff --git a/dist/harness/types.d.ts b/dist/harness/types.d.ts
 index eb64e47..caffdbe 100644
 --- a/dist/harness/types.d.ts
@@ -503,132 +929,23 @@ index eb64e47..caffdbe 100644
 \ No newline at end of file
 +export {};
 \ No newline at end of file
-diff --git a/dist/harness/live.d.ts b/dist/harness/live.d.ts
-index a70aedb..7437b5d 100644
---- a/dist/harness/live.d.ts
-+++ b/dist/harness/live.d.ts
-@@ -109,6 +109,11 @@ export type RunFailure = {
- };
- /** Run control (spec §8.2). */
- export type LiveRun = {
-+    /** Native coding turn index, independent of the durable tool-round limit. */
-+    codingTurn?: number;
-+    codingStarted?: boolean;
-+    codingLastMessage?: EntryId;
-+    codingPreparation?: { taskId: TaskId; attempt: number };
-     /** The task that settles the run's inputs: its generation, handed from one to the next. */
-     taskId: TaskId;
-     /** The run's placed inputs, settled when it ends; `[]` once it answered and runs only its `afterRun` tasks. */
-@@ -258,5 +263,4 @@ export declare function clearProgress(slot: Draft<SlotProgress>): void;
-  * uncertain storage failure poisons the Session instead and writes no outcome.
+diff --git a/dist/search.d.ts b/dist/search.d.ts
+index 0cedcf1..f130980 100644
+--- a/dist/search.d.ts
++++ b/dist/search.d.ts
+@@ -24,6 +24,11 @@ export type SearchDocument = {
+  * Only `text` is length-normalized, so a long name or long namespace instructions do not lower a tool's score.
   */
- export declare function settleSchedulerOutcome(tx: Transaction, record: TaskRecord<JsonValue, JsonValue, JsonValue>, outcome: SchedulerOutcome): Promise<void>;
--export {};
--//# sourceMappingURL=live.d.ts.map
+ export declare function rankDocuments(query: string, documents: readonly SearchDocument[], limit: number): string[];
++/** Compatibility seam for SDK consumers that also need scores and configurable BM25 parameters. */
++export declare function rankToolSearchDocuments(query: string, documents: readonly SearchDocument[], limit: number, options?: {
++    k1?: number;
++    b?: number;
++}): { name: string; score: number }[];
+ /** Unicode word segmentation with identifier boundaries and English stop words/singular forms. */
+ export declare function tokenize(text: string): string[];
+ //# sourceMappingURL=search.d.ts.map
 \ No newline at end of file
-+export {};
-\ No newline at end of file
-diff --git a/dist/harness/generation.d.ts b/dist/harness/generation.d.ts
-index 6b3121b..ebdd963 100644
---- a/dist/harness/generation.d.ts
-+++ b/dist/harness/generation.d.ts
-@@ -1,12 +1,15 @@
- import { type Draft } from "@earendil-works/chord";
--import type { DeferredHandle, ModelThinkingLevel } from "@earendil-works/pi-ai";
--import type { ConversationId, EntryId, SubmissionId, Task, TaskId, Tx } from "../types.ts";
-+import type { DeferredHandle, Message, ModelThinkingLevel } from "@earendil-works/pi-ai";
-+import type { ConversationId, EntryId, EntryDraft, SubmissionId, Task, TaskId, Tx } from "../types.ts";
- import { type LiveState } from "./live.ts";
- import { type ToolTaskResult } from "./tool.ts";
--import type { CompactionResult, ConversationStreamOptions, GenerationHooks, ModelRef, RunSummary } from "./types.ts";
--export type GenerationInput = Record<string, never>;
-+import type { CompactionResult, ConversationStreamOptions, GenerationHooks, ModelRef, RunSummary, UserInput } from "./types.ts";
-+export type GenerationInput = {
-+    codingRequest?: true;
-+};
- export type GenerationCheckpoint = {
-     phase: "prepare";
-+    codingPrepared?: true;
-     attempt: number;
-     /** The blocking compaction this generation waited for; it starts no other compaction (spec §8.3). */
-     compacted?: TaskId<CompactionResult>;
-@@ -70,10 +73,61 @@ export type GenerationCheckpoint = {
-     phase: "drain";
-     answer: EntryId;
-     tasks: TaskId[];
-+} | CodingCheckpoint | CodingPrepareCheckpoint;
-+type CodingPlan = {
-+    kind: "answer";
-+    continuation?: UserInput;
-+} | {
-+    kind: "tools";
-+    tools: TaskId<ToolTaskResult>[];
-+} | {
-+    kind: "terminate";
-+    last: EntryId;
-+} | {
-+    kind: "failure";
-+    request: Request;
-+};
-+type CodingState = {
-+    assistant: EntryId;
-+    results: EntryId[];
-+    turnIndex: number;
-+    outcome: "completed" | "error" | "aborted";
-+    plan: CodingPlan;
-+    continued?: boolean;
-+    appliedWrite?: SubmissionId;
-+};
-+type CodingCheckpoint = CodingState & ({
-+    phase: "codingBoundary";
-+} | {
-+    phase: "codingSettle";
-+    step: "route" | "before" | "finalize";
-+});
-+type CodingPrepareCheckpoint = {
-+    phase: "codingPrepare";
-+    prepare: {
-+        phase: "prepare";
-+        attempt: number;
-+        codingPrepared?: true;
-+        compacted?: TaskId<CompactionResult>;
-+        overflow?: string;
-+        threshold?: true;
-+    };
- };
- export type GenerationResult = {
-     entryId: EntryId;
- };
-+/** What classification needs from the request that produced a message. */
-+type Request = {
-+    readonly attempt: number;
-+    readonly compacted: TaskId<CompactionResult> | undefined;
-+    readonly model: ModelRef;
-+    readonly thinkingLevel: ModelThinkingLevel | undefined;
-+    readonly cutoff: EntryId;
-+    /** Committed model context through `cutoff`, when the phase already derived it. */
-+    readonly messages?: readonly Message[];
-+    /** Set when the message came from polling, so a still deferred result polls strictly later. */
-+    readonly pollAt?: number;
-+};
- /**
-  * Built-in generation task: prepares the positional system prompt and tool loadout, requests or polls the model,
-  * retries, and classifies the response. The run's inputs live in `pi.live.run`.
-@@ -97,4 +151,12 @@ export declare function startRun(tx: Tx, conversationId: ConversationId, live: D
- }): Promise<void>;
- /** Hand run control from `from` to `to`; the run's inputs move with it. */
- export declare function handOver(live: Draft<LiveState>, from: TaskId, to: TaskId): void;
--//# sourceMappingURL=generation.d.ts.map
-\ No newline at end of file
-+export interface CodingEntryDraft extends EntryDraft {
-+    references?: {
-+        head?: number;
-+        edits?: Record<number, number>;
-+    };
-+}
-+/** Append in order, resolving every local reference before passing it to durable. */
-+export declare function appendCodingEntries(tx: Tx, conversation: ConversationId, entries: readonly CodingEntryDraft[]): Promise<EntryId[]>;
-+export {};
 diff --git a/dist/search.js b/dist/search.js
 index 7b05ef0..e8ccd6b 100644
 --- a/dist/search.js
@@ -672,22 +989,15 @@ index 7b05ef0..e8ccd6b 100644
  }
  const K1 = 1.2;
  const B = 0.75;
-diff --git a/dist/search.d.ts b/dist/search.d.ts
-index 0cedcf1..f130980 100644
---- a/dist/search.d.ts
-+++ b/dist/search.d.ts
-@@ -24,6 +24,11 @@ export type SearchDocument = {
-  * Only `text` is length-normalized, so a long name or long namespace instructions do not lower a tool's score.
-  */
- export declare function rankDocuments(query: string, documents: readonly SearchDocument[], limit: number): string[];
-+/** Compatibility seam for SDK consumers that also need scores and configurable BM25 parameters. */
-+export declare function rankToolSearchDocuments(query: string, documents: readonly SearchDocument[], limit: number, options?: {
-+    k1?: number;
-+    b?: number;
-+}): { name: string; score: number }[];
- /** Unicode word segmentation with identifier boundaries and English stop words/singular forms. */
- export declare function tokenize(text: string): string[];
- //# sourceMappingURL=search.d.ts.map
+diff --git a/dist/tool-search/index.d.ts b/dist/tool-search/index.d.ts
+index ad6acf3..5fa16eb 100644
+--- a/dist/tool-search/index.d.ts
++++ b/dist/tool-search/index.d.ts
+@@ -1,2 +1,4 @@
+ export { createToolSearchExtension, createToolSearchTool, DEFAULT_TOOL_SEARCH_LIMIT, TOOL_SEARCH_TOOL_NAME, type ToolSearchToolDetails, } from "./tool-search.ts";
++export { rankToolSearchDocuments, tokenize as tokenizeToolSearch } from "../search.js";
++export { searchText as createToolSearchText } from "./tool-search.ts";
+ //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
 diff --git a/dist/tool-search/index.js b/dist/tool-search/index.js
 index 8030781..6081dd4 100644
@@ -699,29 +1009,6 @@ index 8030781..6081dd4 100644
 +export { searchText as createToolSearchText } from "./tool-search.js";
  //# sourceMappingURL=index.js.map
 \ No newline at end of file
-diff --git a/dist/tool-search/index.d.ts b/dist/tool-search/index.d.ts
-index ad6acf3..5fa16eb 100644
---- a/dist/tool-search/index.d.ts
-+++ b/dist/tool-search/index.d.ts
-@@ -1,2 +1,4 @@
- export { createToolSearchExtension, createToolSearchTool, DEFAULT_TOOL_SEARCH_LIMIT, TOOL_SEARCH_TOOL_NAME, type ToolSearchToolDetails, } from "./tool-search.ts";
-+export { rankToolSearchDocuments, tokenize as tokenizeToolSearch } from "../search.js";
-+export { searchText as createToolSearchText } from "./tool-search.ts";
- //# sourceMappingURL=index.d.ts.map
-\ No newline at end of file
-diff --git a/dist/tool-search/tool-search.js b/dist/tool-search/tool-search.js
-index 1c5c127..802d238 100644
---- a/dist/tool-search/tool-search.js
-+++ b/dist/tool-search/tool-search.js
-@@ -38,7 +38,7 @@ function schemaText(schema, parts) {
-     }
- }
- /** Search text of a tool: its description and its parameters' names and descriptions; the ranker reads the name. */
--function searchText(tool) {
-+export function searchText(tool) {
-     const parts = [tool.description];
-     schemaText(tool.parameters, parts);
-     return parts.filter((part) => part.trim() !== "").join(" ");
 diff --git a/dist/tool-search/tool-search.d.ts b/dist/tool-search/tool-search.d.ts
 index fde23df..262643a 100644
 --- a/dist/tool-search/tool-search.d.ts
@@ -735,97 +1022,16 @@ index fde23df..262643a 100644
  export declare function createToolSearchTool(): ToolRegistration<import("@earendil-works/pi-schema").Schema<{
      query: string;
      limit?: number | undefined;
-diff --git a/dist/codemode/output.js b/dist/codemode/output.js
-index d28306e..d8590da 100644
---- a/dist/codemode/output.js
-+++ b/dist/codemode/output.js
-@@ -81,8 +81,8 @@ async function truncate(items, maxTokens, limits, write) {
-     const texts = items.filter((item) => item.type === "text").map((item) => item.text);
-     const combined = texts.join("\n");
-     // Within the limits too: a UTF-16 unit is at most 3 UTF-8 bytes, and the rest of the result is a few short lines.
--    const budget = Math.min(maxTokens * CHARS_PER_TOKEN, Math.floor(limits.maxBytes / 4));
--    const lineBudget = Math.floor((limits.maxLines - LINE_MARGIN) / 2);
-+    const budget = limits === false ? maxTokens * CHARS_PER_TOKEN : Math.min(maxTokens * CHARS_PER_TOKEN, Math.floor(limits.maxBytes / 4));
-+    const lineBudget = limits === false ? Number.POSITIVE_INFINITY : Math.floor((limits.maxLines - LINE_MARGIN) / 2);
-     const lines = combined.split("\n").length;
-     if (texts.length === 0 || (combined.length <= budget && lines <= 2 * lineBudget))
-         return { items: [...items] };
-@@ -103,11 +103,11 @@ async function truncate(items, maxTokens, limits, write) {
-     };
- }
- /** Save each image to a file and put a text item with its path before it; an image shown twice is saved once. */
--async function saveImages(items, write) {
-+async function saveImages(items, write, imageSize = (bytes) => `${bytes} bytes`) {
-     const labels = new Map();
-     const label = async ({ data, mimeType }, index) => {
-         const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
--        const kind = `${mimeType}, ${bytes.length} bytes`;
-+        const kind = `${mimeType}, ${imageSize(bytes.length)}`;
-         // A failed write must not discard the result of a script whose calls already ran: it becomes part of the label.
-         const saved = await write(`image-${index}${IMAGE_EXTENSIONS[mimeType] ?? ".bin"}`, bytes);
-         return "path" in saved
-@@ -157,8 +157,9 @@ export async function formatResult(result, options) {
+diff --git a/dist/tool-search/tool-search.js b/dist/tool-search/tool-search.js
+index 1c5c127..802d238 100644
+--- a/dist/tool-search/tool-search.js
++++ b/dist/tool-search/tool-search.js
+@@ -38,7 +38,7 @@ function schemaText(schema, parts) {
      }
-     const truncated = await truncate(joinAdjacentText(items), options.maxOutputTokens, options.limits, options.write);
-     // After truncation, which joins the text items and moves images after them, so each path stays next to its image.
--    const content = joinAdjacentText(await saveImages(truncated.items, options.write));
--    const header = `${result.ok ? "Script completed" : "Script failed"}\nWall time ${(options.wallMs / 1000).toFixed(1)} seconds\nOutput:\n`;
-+    const content = joinAdjacentText(await saveImages(truncated.items, options.write, options.imageSize));
-+    const wallMs = typeof options.wallMs === "function" ? options.wallMs() : options.wallMs;
-+    const header = `${result.ok ? "Script completed" : "Script failed"}\nWall time ${(wallMs / 1000).toFixed(1)} seconds\nOutput:\n`;
-     return {
-         content: [{ type: "text", text: header }, ...content],
-         ...(truncated.fullOutputPath === undefined ? {} : { fullOutputPath: truncated.fullOutputPath }),
-diff --git a/dist/codemode/output.d.ts b/dist/codemode/output.d.ts
-index b9163a1..253dd95 100644
---- a/dist/codemode/output.d.ts
-+++ b/dist/codemode/output.d.ts
-@@ -21,19 +21,23 @@ type Limits = {
- };
- /** Default token budget for script output. */
- export declare const DEFAULT_MAX_OUTPUT_TOKENS = 10000;
--/** The tool result's content for a script's result, and the path of the complete text when it was cut. */
--export declare function formatResult(result: CodemodeResult, options: {
-+/** Formatting and file policy shared by the built-in and coding tool adapters. */
-+export interface CodemodeFormatOptions {
-     /** Images `models.generateImages()` returned; when the script showed none, the result says so. */
-     readonly generatedImages: number;
--    readonly wallMs: number;
-+    readonly wallMs: number | (() => number);
-     readonly maxOutputTokens: number;
-     readonly calls: readonly {
-         name: string;
-         status: string;
-     }[];
--    readonly limits: Limits;
-+    /** False retains the script's token budget without extra byte or line limits. */
-+    readonly limits: Limits | false;
-     readonly write: OutputFile;
--}): Promise<{
-+    readonly imageSize?: (bytes: number) => string;
-+}
-+/** The tool result's content for a script's result, and the path of the complete text when it was cut. */
-+export declare function formatResult(result: CodemodeResult, options: CodemodeFormatOptions): Promise<{
-     content: Item[];
-     fullOutputPath?: string;
- }>;
-diff --git a/dist/codemode/index.js b/dist/codemode/index.js
-index 0556d0b..d33ae00 100644
---- a/dist/codemode/index.js
-+++ b/dist/codemode/index.js
-@@ -1,3 +1,4 @@
- export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, CodemodeStoreDoc, createCodemodeExtension, createCodemodeTool, } from "./codemode.js";
- export { DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.js";
-+export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult } from "./output.js";
- //# sourceMappingURL=index.js.map
-\ No newline at end of file
-diff --git a/dist/codemode/index.d.ts b/dist/codemode/index.d.ts
-index 3e1c49c..5373079 100644
---- a/dist/codemode/index.d.ts
-+++ b/dist/codemode/index.d.ts
-@@ -1,3 +1,4 @@
- export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
- export { type CodemodeNamespace, DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.ts";
-+export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult, type CodemodeFormatOptions, type OutputFile } from "./output.js";
- //# sourceMappingURL=index.d.ts.map
-\ No newline at end of file
+ }
+ /** Search text of a tool: its description and its parameters' names and descriptions; the ranker reads the name. */
+-function searchText(tool) {
++export function searchText(tool) {
+     const parts = [tool.description];
+     schemaText(tool.parameters, parts);
+     return parts.filter((part) => part.trim() !== "").join(" ");

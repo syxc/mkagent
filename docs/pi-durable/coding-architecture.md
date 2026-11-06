@@ -51,9 +51,11 @@ SDK 的 tool-search 已共用 durable 的分词、BM25 和 schema 元数据遍�
 
 原生 codemode 已共用 durable 的输出格式化器，删除独立的布局、截断和图片保存实现。补丁公开 formatter，并允许仅按 token 预算截断、注入图片大小显示及在文件写入后计时；SDK 保留文件写入策略，继续支持无 env 的图片保存和高输出预算。96 个原版差异场景通过。实时 calls、namespace alias 和分支 store 的完整执行适配仍在继续，SDK 替代与完整闭包核实尚未闭合。
 
+补丁继续提供 store、沙箱租约、输出策略和 discovery 覆盖接点。store 首次读取和最终写回分别进入 `run.start` 与 `run.result` 的事务；配置适配器后不写内置会话 store。租约在申请后检查取消和已保存的绝对 deadline，VM 结束后先释放再格式化。输出策略保留脚本 token 预算，同名 discovery globals 可通过原有全局调用日志执行。真实分支 journal 和模型调用 fixture 已验证这些接点，Native SDK 入口尚未切换，实时展示、插件和完整恢复仍待接线验证。
+
 `pi-durable` 通过根包的 `patchedDependencies` 应用[仓内补丁](../../patches/@earendil-works%252Fpi-durable@1.5.0.patch)，包含旧 `GenerationTask` coding 阶段、回调、类型声明及上述搜索和输出兼容接点。当前生产 `CodingHost` 通过本地任务执行；根 SDK 仍公开旧 `NativeCodingRuntime`，历史 checkpoint 也保留读取及拒绝不确定回放的迁移语义。删除旧阶段部分须先完成兼容桥接及存量恢复验证；搜索和输出接点单独保留升级核对。
 
-补丁统一由干净依赖生成标准 Git diff。离线冻结安装曾遗漏手工追加的搜索和输出段，标准化后 14 个文件与测试包完全一致；升级须同时核对补丁重放和新安装结果。
+补丁统一由干净依赖生成标准 Git diff。离线冻结安装曾遗漏手工追加的搜索和输出段，标准化后已解决。加入 codemode 接点后，16 个文件通过干净缓存重放和独立消费者的离线 frozen install 字节核对，该消费者的 9 项真实调用测试通过；升级须同时核对补丁重放和新安装结果。
 
 ## 哪些复制或移植了上游源码
 
