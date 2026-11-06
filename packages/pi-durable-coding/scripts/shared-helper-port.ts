@@ -3,6 +3,8 @@ import ts from 'typescript';
 
 export function portSharedHelpers(path: string, body: string): string {
   if (path === 'extensions/codemode/execute.ts') return portCodemodeRuntime(body);
+  if (path === 'utils/zip.ts') return portZipRuntime(body);
+  if (path === 'utils/tools-manager.ts') return portToolArchives(body);
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
@@ -95,4 +97,60 @@ function portCodemodeRuntime(body: string): string {
   }
   return '/** Native policy over the public durable codemode executor. */\n'
     + 'export { executeNativeCodemode as executeCodemode, readCodemodeStore } from "../../../compat/codemode-native.ts";\n';
+}
+
+function portZipRuntime(body: string): string {
+  const parsed = ts.createSourceFile('zip.ts', body, ts.ScriptTarget.Latest, true);
+  const exports = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node) ||
+    ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword));
+  const entry = parsed.statements.find(node => ts.isInterfaceDeclaration(node) && node.name.text === 'ZipEntry');
+  const write = exports[0];
+  if (exports.length !== 1 || !write || !ts.isFunctionDeclaration(write) || write.name?.text !== 'writeZipArchive' ||
+      write.modifiers?.some(modifier => modifier.kind !== ts.SyntaxKind.ExportKeyword) ||
+      write.parameters.some(parameter => parameter.questionToken || parameter.initializer || parameter.dotDotDotToken) ||
+      write.parameters.map(parameter => parameter.name.getText(parsed)).join(',') !== 'filePath,entries' ||
+      write.parameters.map(parameter => parameter.type?.getText(parsed)).join(',') !== 'string,readonly ZipEntry[]' ||
+      write.type?.getText(parsed) !== 'Promise<void>' || !entry || !ts.isInterfaceDeclaration(entry) ||
+      entry.members.map(member => member.getText(parsed)).join('') !== 'name: string;data: string | Uint8Array;') {
+    throw new Error('Native ZIP writer boundary changed');
+  }
+  return '/** Native archive policy over the public ZIP implementation. */\n'
+    + 'export { writeZipArchive } from "../../compat/archive.ts";\n';
+}
+
+function portToolArchives(body: string): string {
+  const parsed = ts.createSourceFile('tools-manager.ts', body, ts.ScriptTarget.Latest, true);
+  const names = new Set(['extractZipArchive', 'getWindowsTarCommand']);
+  const edits: Array<{ start: number; end: number; text: string }> = [];
+  let calls = 0;
+  const visit = (node: ts.Node): void => {
+    if (ts.isIdentifier(node) && (node.text === 'getWindowsTarCommand' ||
+        (node.text === 'extractZipArchive' && (!ts.isCallExpression(node.parent) || node.parent.expression !== node)))) {
+      throw new Error('Native ZIP extraction reference changed');
+    }
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'extractZipArchive') {
+      if (!ts.isExpressionStatement(node.parent) ||
+          node.arguments.map(argument => argument.getText(parsed)).join(',') !== 'archivePath,extractDir,assetName') {
+        throw new Error('Native ZIP extraction call changed');
+      }
+      edits.push({ start: node.getStart(parsed), end: node.getStart(parsed), text: 'await ' });
+      calls++;
+    }
+    ts.forEachChild(node, visit);
+  };
+  for (const node of parsed.statements) {
+    if (ts.isFunctionDeclaration(node) && node.name && names.delete(node.name.text)) {
+      const parameters = node.name.text === 'extractZipArchive' ? 'archivePath,extractDir,assetName' : '';
+      const result = node.name.text === 'extractZipArchive' ? 'void' : 'string';
+      if (node.parameters.map(parameter => parameter.name.getText(parsed)).join(',') !== parameters ||
+          node.parameters.some(parameter => parameter.type?.kind !== ts.SyntaxKind.StringKeyword) ||
+          node.type?.getText(parsed) !== result || node.modifiers?.length) {
+        throw new Error('Native ZIP extraction boundary changed');
+      }
+      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
+    } else visit(node);
+  }
+  if (names.size || calls !== 1) throw new Error('Native ZIP extraction declarations changed');
+  for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
+  return 'import { extractZipArchive } from "../../compat/archive.ts";\n' + body;
 }

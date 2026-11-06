@@ -20,6 +20,60 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Public ZIP helpers
+
+The Native ZIP writer forwards to `compat/archive.ts`. `fflate@0.8.2` owns ZIP
+records and the directory. Node zlib retains raw DEFLATE and CRC. The public
+`ZipInputFile` interface preserves ordered duplicate entries without keeping
+one deflate window per entry. The installer awaits `JSZip@3.10.1` for ZIP
+reading and CRC validation. Its adapter requires an empty directory and
+checks the paths and file types of retained entries before writing files.
+
+Focused checks pass 18 tests and 63 assertions. Python's standard ZIP reader
+checks content, CRC, Unicode, binary views, duplicate names, empty entries
+and all 65535 classic entries. Overflow, callback errors and write errors
+are covered. No multi-gigabyte payload was allocated.
+
+The installer checks execute the original single source file after
+transpilation, with explicit platform, command, config and HTTP hosts.
+They run real extraction, binary discovery, rename and cleanup for fd and
+ripgrep. Independent DEFLATE fixtures check duplicate names, normalized paths,
+explicit directories and Unicode. Installer checks retain versioned-directory,
+root and recursive binary precedence. CRC refusal also leaves no installed
+binary or temporary files.
+These checks simulate Windows. They do not load the complete SDK, fetch
+real release archives or establish actual Windows behavior.
+
+Strict checks pass for five explicit source roots and existing library
+declarations, with zero diagnostics. Two allowed generated files reproduce
+with `sourceFiles: 2` and `complete: false`. The minimal consumer installs
+14 packages from 15 existing lock records with network and lifecycle scripts
+disabled. Its 13 archive checks pass with 32 assertions. Node v24.22.1 also
+runs the actual writer and extractor successfully.
+
+JSZip normalizes entry names and retains the last entry for each normalized
+name. The adapter checks retained entries; this does not prove rejection of
+every original path or file type that a later entry replaced. CRC validation
+still processes all entries. Reading the complete archive and validating CRC
+also uses memory beyond the compressed input. Windows filename rules,
+permissions and concurrent changes to the extraction directory are not covered.
+
+The cache was seeded from individually checked installed package files.
+Registry tarball integrity was not checked again. The root lock-only
+refresh and frozen check failed because registry metadata was unavailable
+offline. The two workspace declarations use existing locked versions.
+The minimal consumer does not establish a complete root installation.
+
+A prior delegated repository TypeScript search omitted the denied-file
+exclusion. It returned no restricted snippet, but a filesystem read cannot
+be ruled out. This phase has no complete claim of compliance with the
+no-read rule. Later direct inspection uses explicit paths checked with
+realpath. The first installer fixture also triggered system tool version
+probes because Bun built-in mocks did not replace static exports.
+The final fixture starts with an isolated PATH and uses explicit hosts.
+Final checks deny network access and reads of restricted source names
+and known aliases at the operating system boundary.
+
 ## Native codemode executor through durable
 
 The Native SDK entry now forwards to `compat/codemode-native.ts`; its separate

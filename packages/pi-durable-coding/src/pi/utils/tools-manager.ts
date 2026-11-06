@@ -1,3 +1,4 @@
+import { extractZipArchive } from "../../compat/archive.ts";
 import { type SpawnSyncReturns, spawnSync } from "child_process";
 import { chmodSync, createWriteStream, existsSync, mkdirSync, readdirSync, renameSync, rmSync } from "fs";
 import { arch, platform } from "os";
@@ -194,55 +195,6 @@ function extractTarGzArchive(archivePath: string, extractDir: string, assetName:
 	}
 }
 
-function getWindowsTarCommand(): string {
-	const systemRoot = process.env.SystemRoot;
-	if (systemRoot) {
-		const systemTar = join(systemRoot, "System32", "tar.exe");
-		if (existsSync(systemTar)) {
-			return systemTar;
-		}
-	}
-	return "tar.exe";
-}
-
-function extractZipArchive(archivePath: string, extractDir: string, assetName: string): void {
-	const failures: string[] = [];
-
-	if (platform() === "win32") {
-		// Windows ships bsdtar as tar.exe, which supports zip files. Prefer the
-		// System32 binary over Git Bash's GNU tar, which does not handle zip archives.
-		const tarFailure = runExtractionCommand(getWindowsTarCommand(), ["xf", archivePath, "-C", extractDir]);
-		if (!tarFailure) return;
-		failures.push(tarFailure);
-
-		const script =
-			"& { param($archive, $destination) $ErrorActionPreference = 'Stop'; Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force }";
-		const powershellFailure = runExtractionCommand("powershell.exe", [
-			"-NoLogo",
-			"-NoProfile",
-			"-NonInteractive",
-			"-ExecutionPolicy",
-			"Bypass",
-			"-Command",
-			script,
-			archivePath,
-			extractDir,
-		]);
-		if (!powershellFailure) return;
-		failures.push(powershellFailure);
-	} else {
-		const unzipFailure = runExtractionCommand("unzip", ["-q", archivePath, "-d", extractDir]);
-		if (!unzipFailure) return;
-		failures.push(unzipFailure);
-
-		const tarFailure = runExtractionCommand("tar", ["xf", archivePath, "-C", extractDir]);
-		if (!tarFailure) return;
-		failures.push(tarFailure);
-	}
-
-	throw new Error(`Failed to extract ${assetName}: ${failures.join("; ")}`);
-}
-
 // Download and install a tool
 async function downloadTool(tool: "fd" | "rg"): Promise<string> {
 	const config = TOOLS[tool];
@@ -283,7 +235,7 @@ async function downloadTool(tool: "fd" | "rg"): Promise<string> {
 		if (assetName.endsWith(".tar.gz")) {
 			extractTarGzArchive(archivePath, extractDir, assetName);
 		} else if (assetName.endsWith(".zip")) {
-			extractZipArchive(archivePath, extractDir, assetName);
+			await extractZipArchive(archivePath, extractDir, assetName);
 		} else {
 			throw new Error(`Unsupported archive format: ${assetName}`);
 		}

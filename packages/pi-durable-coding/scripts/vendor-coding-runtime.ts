@@ -256,11 +256,16 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     changes.add('installed-native-bundle-assets');
   }
   if (path === 'core/footer-data-provider.ts' || path === 'core/resource-loader.ts' ||
-      path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts') {
+      path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts' ||
+      path === 'utils/zip.ts' || path === 'utils/tools-manager.ts') {
     body = portSharedHelpers(path, body);
     changes.add(path === 'extensions/tool-search/tool.ts' ? 'shared-durable-tool-search-ranking'
-      : path === 'extensions/codemode/execute.ts' ? 'shared-durable-codemode-executor' : 'shared-lightweight-resource-algorithms');
+      : path === 'extensions/codemode/execute.ts' ? 'shared-durable-codemode-executor'
+      : path === 'utils/zip.ts' ? 'public-fflate-zip-writer'
+      : path === 'utils/tools-manager.ts' ? 'public-jszip-tool-archives' : 'shared-lightweight-resource-algorithms');
     if (path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts') dependencies.add('@earendil-works/pi-durable');
+    if (path === 'utils/zip.ts') dependencies.add('fflate');
+    if (path === 'utils/tools-manager.ts') dependencies.add('jszip');
   }
   if (path === 'core/extensions/runner.ts' || path === 'core/session-manager.ts') {
     body = portCompatRuntime(path, body);

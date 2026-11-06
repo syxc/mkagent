@@ -30,6 +30,8 @@ pi-durable 已公开 codemode、tool-search、tools 和 images 等模块，不�
 
 宿主已安装上述四类内置模块，并通过工具桥接向 coding profile 提供工具。SDK 搜索、codemode 输出及 Native codemode 执行现已共用 durable；原 Native 执行循环已删除。外层保留发现元数据、字符串调用 ID、分支 store、沙箱名额和 Native 工具管道。取消和等待 helper 引用公开包。完整 SDK 源码闭包的必要性仍未核实，不能据此宣称整个 SDK 已去重。最新证据见[验证记录](coding-validation.md)。
 
+ZIP 文件记录和目录已交给独立 `fflate` 包，压缩与 CRC 继续用 Node 标准库。工具 ZIP 解包已交给 `JSZip`，外层只保留目录、普通文件和错误适配。写入端的重复条目及最大经典条目数通过标准读取器核对；解包端按 JSZip 的规范化规则保留最后同名条目，只检查保留条目的路径及类型。Native 安装源码在显式宿主中验证 DEFLATE、查找优先级、安装和失败清理。定向生成及最小依赖安装已通过，真实 Windows 发布包及全仓安装未通过完整验证。访问边界偏差见[跟进清单](coding-follow-up.md)，F1/F3 和完整验收继续开放。
+
 store 适配的 journal 前置已完成：重复 flush 按事务草稿中的 nonce 跳过同阶段已准备的前缀，保留回滚重试和真正并发 replace 的拒绝语义。Native codemode 现已接入该事务边界，真实 journal 验证 store 条目与 `run.result` 同批提交，存储拒绝时均不发布。普通 callback 的外部副作用仍不属于 durable 事务。
 
 当前依赖补丁具备 store、沙箱租约、输出策略、发现覆盖、异步准备、调用观察和结果投影接点。Native 与官方两种父 owner 的用量检查、真实 Native 工具任务的参数修改、拒绝及结果 hooks 已通过。同一 owner 的中断重跑覆盖完成回执、旧拒绝及工具别名变化，不等于进程崩溃恢复验收。最新独立离线 frozen install 核对 18 个补丁文件，安装后的 29 项测试、150 个断言通过；完整产品及插件加载检查仍受限。

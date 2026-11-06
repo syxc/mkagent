@@ -971,8 +971,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "1498c278f498410f839a419b48def37233c64504a0e874620dc9fd0e7a7fbf53",
-      "reason": "Lock independent Pi packages, including the public core protocol and proxy, while pi-durable owns execution."
+      "sha256": "423bf0a96042361442436e0909d4d6e79d10f0b836bc753114e2d84124d64ad7",
+      "reason": "Lock independent Pi packages, including the public core protocol and proxy, while pi-durable owns execution. Declare existing locked archive packages."
     },
     "package.json": {
       "sha256": "b79a730bd5592712e5daf22a2abc12b42f4132323679217785b9d2e18c44c0d0",
@@ -2328,6 +2328,18 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/src/compat/archive.ts": {
+      "sha256": "3aeba2fe800dc37eafa07ff87e97eb84b8667c15dcb2143ae51e632cf77aa417",
+      "reason": "Adapt public ZIP records and decoding to Native ordering, binary data, CRC and fresh-directory installer policy."
+    },
+    "packages/pi-durable-coding/test/native-archive.test.ts": {
+      "sha256": "414f64d3e5487dcab828db81bf47fc5b89c98ec5577200be3804d838028691b4",
+      "reason": "Verify ZIP contracts with Python's standard reader, binary fixtures and original Native installer source under explicit hosts."
+    },
+    "packages/pi-durable-coding/test/native-tool-archive.fixture.ts": {
+      "sha256": "8ba15122afa41892804085f4678d47f83aa1304e1f0e4fa027528077dedab16e",
+      "reason": "Execute only allowed Native installer source with explicit platform, command and HTTP hosts and an isolated initial PATH."
+    },
     "packages/pi-durable-coding/src/compat/codemode-calls.ts": {
       "sha256": "9b48f314e5850bff3639bcd638b19ba850a576cbb1ffa920b1bb241971258701",
       "reason": "Project Native live rows and display usage from real durable child receipts without duplicating execution."
@@ -2405,8 +2417,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "71c512bb64df41eb186a25e023b3be528e1e37ed3740729ca1111fc240843e49",
-      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations."
+      "sha256": "11d9dde99c45f8a7b5e5d5535a5fa33146a55fe8191e0e4fbec54571afa88ec5",
+      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP boundaries."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3605,8 +3617,8 @@
       "reason": "Record selected source ports, unchanged fixtures and shared native helper adapters. Record six selected helper sources, six unchanged fixtures and 28 shared entries."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "a2ad77ab8c6295cafea26026b28d3fcc67586bbfd29c4c98c0d2de5e9fdaf041",
-      "reason": "Declare independent coding capabilities using official Pi libraries and loader dependencies."
+      "sha256": "7180767c48c15f9ab9d4782a5e67073f1b4cd9af091483669c03c44a2a9da71a",
+      "reason": "Declare independent coding capabilities using official Pi libraries and loader dependencies. Pin public ZIP dependencies already present in the lock."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "786c0a826065a0bf665fad733d1f90681ef52babb81dc011e09349aacf111fa3",
@@ -3917,7 +3929,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "0f279db68e6b4fabcda4514439e034d6a342916149357295a695f669eddebd7a",
+      "sha256": "d5c010c0fe8f05c134d8ae9e141fb2c801c3a62fdc8a3f61f447cf8b489fe939",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3937,7 +3949,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "7e60a3b9d92da862a5fb7deae327c5d0e58b635ab8177983349a5fb6f12ea3f6",
+      "sha256": "149b19187b45230fd6104a01cb60ffc8301926d242b0bb056b567ca96a159be5",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -5037,7 +5049,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/tool-result-images.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/tools-manager.ts": {
-      "sha256": "d9f37a23a5af7ccfc2bb2ea172677e0c5fc8bbe5f265305eae75a5e775f3fa50",
+      "sha256": "2df25e7614895d6273df1a4b023f8dccd7f6ff6d0ffaa3ffb326b42938ead153",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/tools-manager.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/version-check.ts": {
@@ -5053,7 +5065,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/wsl.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/zip.ts": {
-      "sha256": "9e523bcac3e9fcc3996b483ca8b4ab2934b551b03e8764ba8a6e92932ee8a548",
+      "sha256": "86a4d80390793d5f3982421f6e0d98130924e1a829d7ea1c3fbd9f586d669e81",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/zip.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/stream-fn.ts": {
