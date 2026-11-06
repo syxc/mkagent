@@ -1,3 +1,5 @@
+import { nativeAnsiRegex as ansiRegex } from "../../compat/ansi.ts";
+
 /*
  * Portions of this file are derived from:
  * - ansi-regex (https://github.com/chalk/ansi-regex)
@@ -26,9 +28,6 @@
  * SOFTWARE.
  */
 
-// Valid string terminator sequences are BEL, ESC\, and 0x9c
-const ST = "(?:\\u0007|\\u001B\\u005C|\\u009C)";
-
 // OSC sequences: ESC ] ... ST
 const OSC_START = "\\u001B\\]";
 
@@ -37,10 +36,6 @@ const OSC_START = "\\u001B\\]";
 // ESC[<35;59;1M (SGR mouse report) is stripped whole. After a bare ESC these bytes stay final bytes:
 // ESC = and ESC > (keypad modes) must not swallow the digits of the text that follows.
 const CSI_START = "(?:(?:\\u001B\\[|\\u009B)[<=>]|[\\u001B\\u009B][[\\]()#;?]*)(?:\\d{1,4}(?:[;:]\\d{0,4})*)?";
-const CSI_FINAL = "[\\dA-PR-TZcf-nq-uy=><~]";
-
-// Complete sequences. OSC is non-greedy until the first ST.
-const ansiRegex = new RegExp(`(?:${OSC_START}[\\s\\S]*?${ST})|${CSI_START}${CSI_FINAL}`, "g");
 
 // Unfinished sequence at the end of the text: OSC without its ST (a trailing ESC may start ESC\),
 // or CSI without its final byte.

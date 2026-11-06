@@ -20,6 +20,48 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Public ANSI matching
+
+Native complete matching now uses `ansi-regex@6.2.2`, already present in the
+root lock. A five-line adapter adds private CSI prefixes to the public pattern.
+One replacement pass preserves adjacent escape bytes. The Native entry retains
+both function bodies, its type errors and its pending window of 256 UTF-16 code units.
+The new direct dependency has no transitive dependencies.
+
+Twenty-six targeted inputs, 145 stream cuts and 3860 composed inputs match the
+pinned original under Bun 1.3.14 and Node 24.22.1. Direct standard-library
+replacement differs on five targeted inputs under Bun and three under Node.
+The installed strip-ansi 6.0.1 differs on eight; 7.1.2 differs on three.
+The TUI probe differs on twelve and evaluates only its three pure function
+bodies. The public pattern plus the private CSI branch has no differences in
+these cases. This sample does not prove equivalence for all possible strings.
+
+The actual Native entry passes 30 tests and 183 assertions before and after
+replacement. Its 3860 original outputs have SHA-256
+`84bd631fc44a33b5273723e2889719a099ac5183361fc85d77fa31be63e6bc20`.
+The five-file ANSI and image suite passes 107 tests and 743 assertions.
+Four explicit roots pass strict checks with 222 source files and no diagnostics.
+The ANSI and MIME source records reproduce with `sourceFiles: 2` and
+`complete: false`. The generator rejects seven matcher changes. A multiline template
+probe first exposes whitespace loss in generation; AST deletion then preserves
+both function bodies and the template text.
+
+An independent consumer installs offline with a frozen lock and scripts disabled.
+Its four lock records come from the root lock; Bun reports six installed packages.
+Twelve installed package files and three Native files match byte for byte.
+The frozen lock is unchanged. Native resolves regex 6.2.2, while strip-ansi 6.0.1
+resolves regex 5.0.1. Bun passes 30 tests and 183 assertions. Node executes the
+same contract bodies with a small assert adapter and passes 30 checks with
+183 assertions. The root lock adds one workspace dependency and one scoped
+resolution; other entries remain equal.
+
+Initial fixture checks corrected an unterminated-OSC expectation, a root-output
+boundary and a hoisted-dependency assumption. The final checks resolve actual
+caller paths. The cache uses twelve explicit local package files; registry
+tarball integrity is not checked again. Full root installation, the complete SDK
+and terminal integration remain outside these checks. The durable patch is
+unchanged from the MIME stage.
+
 ## Shared image MIME detection
 
 The existing durable header detector is now exported through `images`.

@@ -8,6 +8,7 @@ export function portSharedHelpers(path: string, body: string): string {
   if (path === 'utils/exif-orientation.ts') return portImageOrientation(body);
   if (path === 'utils/image-resize-core.ts') return portImageResize(body);
   if (path === 'utils/mime.ts') return portImageMime(body);
+  if (path === 'utils/ansi.ts') return portAnsi(body);
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
@@ -187,6 +188,43 @@ function portImageMime(body: string): string {
   }
   return '/** Native null and file-prefix policy over durable image sniffing. */\n'
     + 'export { detectSupportedImageMimeType, detectSupportedImageMimeTypeFromFile } from "../../compat/image-mime.ts";\n';
+}
+
+function portAnsi(body: string): string {
+  const parsed = ts.createSourceFile('ansi.ts', body, ts.ScriptTarget.Latest, true);
+  const variables = new Map(parsed.statements.filter(ts.isVariableStatement)
+    .flatMap(statement => [...statement.declarationList.declarations].map(node => [node.name.getText(parsed), { node, statement }] as const)));
+  const expected: Record<string, string> = {
+    ST: String.raw`(?:\u0007|\u001B\u005C|\u009C)`,
+    OSC_START: String.raw`\u001B\]`,
+    CSI_START: String.raw`(?:(?:\u001B\[|\u009B)[<=>]|[\u001B\u009B][[\]()#;?]*)(?:\d{1,4}(?:[;:]\d{0,4})*)?`,
+    CSI_FINAL: String.raw`[\dA-PR-TZcf-nq-uy=><~]`,
+  };
+  const regex = variables.get('ansiRegex')?.node.initializer;
+  const pattern = regex && ts.isNewExpression(regex) ? regex.arguments?.[0] : undefined;
+  const flags = regex && ts.isNewExpression(regex) ? regex.arguments?.[1] : undefined;
+  if (Object.entries(expected).some(([name, text]) => {
+    const value = variables.get(name)?.node.initializer;
+    return !value || !ts.isStringLiteral(value) || value.text !== text;
+  }) || !regex || !ts.isNewExpression(regex) || regex.expression.getText(parsed) !== 'RegExp' ||
+      regex.arguments?.length !== 2 || !flags || !ts.isStringLiteral(flags) || flags.text !== 'g' ||
+      !pattern || !ts.isTemplateExpression(pattern) || pattern.head.text !== '(?:' ||
+      JSON.stringify(pattern.templateSpans.map(span => [span.expression.getText(parsed), span.literal.text])) !==
+        JSON.stringify([['OSC_START', String.raw`[\s\S]*?`], ['ST', ')|'], ['CSI_START', ''], ['CSI_FINAL', '']])) {
+    throw new Error('Native ANSI matcher boundary changed');
+  }
+  const edits: Array<{ start: number; end: number }> = [];
+  for (const name of ['ST', 'CSI_FINAL', 'ansiRegex']) {
+    const item = variables.get(name);
+    if (!item || item.statement.declarationList.declarations.length !== 1) throw new Error('Native ANSI declarations changed');
+    let start = item.statement.getFullStart();
+    for (const comment of ts.getLeadingCommentRanges(body, item.statement.getFullStart()) ?? []) {
+      if (comment.kind === ts.SyntaxKind.MultiLineCommentTrivia) start = comment.end;
+    }
+    edits.push({ start, end: item.statement.end });
+  }
+  for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + body.slice(edit.end);
+  return 'import { nativeAnsiRegex as ansiRegex } from "../../compat/ansi.ts";\n\n' + body;
 }
 
 function portZipRuntime(body: string): string {
