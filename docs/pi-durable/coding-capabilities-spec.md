@@ -27,6 +27,14 @@ Production must not depend directly on the complete `pi-coding-agent` package.
 This clarification replaces the earlier dependency restriction in this document
 and in the historical first-switch specifications.
 
+On 2026-11-06, the user considers most required functionality implemented and asks for that
+assessment to be checked against code and behavior evidence. Existing code and
+historical checks establish the kernel integration. The current priority is
+architecture: prefer public package imports, use thin external adapters where
+needed, and minimize source ports and internal changes that increase upgrade
+work. Verify those facts against code and tests before changing an implementation.
+Existing functionality and plugin contracts remain the regression baseline.
+
 This inventory is the acceptance target. Its baseline column describes MkAgent
 before this migration. See [validation and limits](coding-validation.md) for
 the implemented behavior and current evidence. Follow the ordered corrections
@@ -34,6 +42,11 @@ and product acceptance gates in the
 [implementation plan](durable-coding-agent-plan.md).
 
 ## Architecture
+
+The target assembly is MkAgent product features above durable coding agent,
+whose Coding layer uses the existing pi-durable kernel. Requiring every normal
+session to use AgentSession or a native projection is an implementation choice,
+not a separate acceptance condition.
 
 `@mkagent/pi-durable-coding` contains the ported resource, prompt, extension,
 session projection and presentation code. It depends on independent official
@@ -92,17 +105,20 @@ The current implementation uses public `pi-agent-core` protocol types and
 Reassess source-port adapters when another public core API can replace them
 without changing durable execution.
 
-Port the complete public coding dependency closure from the pinned TypeScript
-source, including the SDK, resources, extensions, session layer and presentation
-code. Preserve registration, event chaining, rollback and stale-context behavior.
-Controlled port scripts bind execution, model credentials, resource trust and
-effective settings to the host.
+The current implementation ports the public coding dependency closure from
+the pinned TypeScript source. This is an implementation record, not a
+requirement to copy that entire closure. For each retained area, identify the
+required contract, the public interface gap and why an external adapter is
+insufficient. Preserve registration, event chaining, rollback and stale-context
+behavior when replacing or reducing a port.
 
 `UPSTREAM-RUNTIME.json` records each source and output hash, asset and
 transformation in the full runtime port. `UPSTREAM.json` records the earlier
-compatibility helpers. The generation scripts reproduce both from the pinned
-checkout. The runtime keeps TypeScript declarations and rewrites old Agent
-imports to the durable facade. Host consumers use `./native`, `./agent` and
+compatibility helpers. Full runtime reproduction currently requires access to
+restricted credential source and must not run within this session. The permitted
+helper generator can reproduce its explicit source list. The runtime keeps
+TypeScript declarations and binds Agent execution imports to the durable facade.
+Host consumers use `./native`, `./agent` and
 `./durable` exports.
 
 Plugin SDK import identifiers resolve to the local port or independent official
@@ -161,8 +177,10 @@ Plugin compatibility is assessed per API group. A retained source file or a
 successful registration does not establish all host, platform and interactive
 workflows. See the validation report for tested behavior and host limits.
 
-Missing host operations and missing validation remain open acceptance items.
-They cannot become accepted exclusions merely by being listed in the report.
+Confirmed missing required host operations remain acceptance defects. Missing
+validation is an evidence gap, not proof of a missing implementation. Record
+both separately and retain unverified scope without extending this architecture
+work to every possible plugin or platform combination.
 MkAgent regression coverage must also include model and credential updates,
 permissions, proxy and session tools, MCP, browser tools, background work,
 branching, persistence and transport behavior.
@@ -189,9 +207,12 @@ Shutdown and reload release old handlers and connections.
 
 ## Implementation sequence
 
-The first implementation followed this sequence. It established the source port
-and main durable integration, but did not finish product acceptance. The
-implementation plan now defines the remaining work in order.
+The first implementation followed the historical sequence below. It established
+the source port and main durable integration. The current work follows the
+[architecture follow-up](coding-follow-up.md): first correct and check the
+documents, then verify the implementation and package alternatives, implement
+the confirmed reductions, and validate their effects. Check each result against
+the user's requirements and correct unsupported assumptions as they appear.
 
 1. Commit this versioned design and inventory.
 2. Port the native resource and extension dependency closure with provenance.
@@ -233,5 +254,6 @@ The isolated pinned Craft mirror is the source-audit reference.
 
 The final validation report must separate unit/contract coverage, real Harness
 behavior, packaged subprocess behavior and platform checks. It must list every
-inventory row that remains incomplete. Historical green runs are not evidence
-for this branch.
+inventory row that remains incomplete. Historical green runs do not establish
+that current changes pass. Evidence for unchanged areas may be reused when the
+report states its commit, coverage and reason it still applies.

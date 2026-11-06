@@ -1,11 +1,23 @@
 # Pi-durable coding agent validation and remaining work
 
-This report records the implementation and checks at `4776fe1`. The target is
+This report keeps the implementation and checks at `4776fe1` and records later
+work separately. The target is
 `pi-durable coding agent`: pi-durable execution, Pi coding capabilities and
 plugin compatibility, with all existing MkAgent features preserved. The
 [implementation plan](durable-coding-agent-plan.md) defines the remaining
 corrections and acceptance gates after the user's clarification on 2026-11-04.
-An unimplemented operation or an unverified product path remains open work.
+Confirmed missing required operations and missing validation are recorded
+separately. Unverified combinations alone do not establish a functional defect
+or expand the scope of this architecture work.
+
+The review on 2026-11-06 uses code baseline `f4f9f26`. The pi-durable kernel is
+already integrated. Most Coding functionality has implementation and historical
+evidence; its completeness still requires verification. The current
+priority is package reuse and thin external adapters that reduce upgrade work.
+The [follow-up list](coding-follow-up.md) records the revised work and the
+blocked source checks. Normal-profile AgentSession and projection requirements
+were unsupported assumptions; the candidate runtime changes were withdrawn.
+The baseline product test then passed with 1 test and 43 assertions.
 
 The current package-assembly changes use public core protocol types and
 `streamProxy`, move host compaction policy outside native settings, and replace
@@ -165,10 +177,20 @@ Production crash checks first reproduced an old answer settling a new input,
 and an interrupted finalizer leaving an input permanently placed. Each has a
 test in the repository that passed after its correction.
 
-## Capability status and open acceptance items
+## Historical capability record before visual acceptance
+
+This section combines the original `4776fe1` record with later corrections.
+It is not a snapshot of that commit. PowerShell wiring was added in `57bbaf5`,
+successful-read prerequisites in `61fac5d`, and search, long-output and mixed
+instruction checks in `a41e6b5`. Statements about missing real PowerShell,
+browser, Desktop and terminal checks describe that earlier validation period.
+Later selected checks have passed; use the
+[acceptance crosswalk](coding-acceptance.md) and the implementation plan's macOS,
+WebUI trust and Desktop package records for current evidence. Their coverage
+limits still apply.
 
 Retaining native source does not establish all host and platform combinations.
-The table records current evidence and gaps. It does not waive the target.
+The table records historical evidence and gaps. It does not waive the target.
 The [acceptance crosswalk](coding-acceptance.md) tracks every specification row
 and MkAgent retention area during D6. It separates pending behavior checks from
 environment blocks.
@@ -178,12 +200,12 @@ environment blocks.
 | read/write/edit/bash | Production tools keep host approval. Native implementations and public SDK exports are retained. Filesystem, approval and timeout regressions use local fixtures. |
 | grep/find/ls | Host tools keep their cancellation adaptations. Actual macOS rg/fd/ls checks cover Unicode, hidden files, ignore rules, limits and failures. Other platforms remain open. |
 | Images and long output | Relocated native PNG processing and durable BMP reads use their respective packaged WASM files. A real coding host checks a complete UTF-8 spill, tail window and reads after durable reopen. |
-| PowerShell | Coding sessions expose a deferred named tool for explicit activation. Host Ask mode requires each approval; Explore blocks it. A real worker uses a local process fixture to check wiring and arguments. This host has no `pwsh`; real PowerShell and Windows execution remain open. |
+| PowerShell | `57bbaf5` exposes a deferred named tool for explicit activation. Host Ask mode requires each approval; Explore blocks it. A real worker uses a local process fixture to check wiring and arguments. Real PowerShell was not prepared for that check; later macOS results are recorded separately, and Windows remains unverified. |
 | Permissions and metadata | Allow, deny, modified arguments, nested calls, visibility and durable ownership have coverage. Trusted Node plugins are not sandboxed. |
 | Project instructions | Native parsing and source identity are retained. Project execution requires host trust. Mixed host path discovery and native global/ancestor/cwd content reach model requests after reload and context hooks without duplicate content injection. Separate files retain their source paths even when their text is equal. |
 | SYSTEM/APPEND files | Native precedence and composition have coverage. The host base prompt remains present. |
 | Native skills | Native parsing, explicit invocation, collisions and installed resources have coverage. |
-| Skill activation | Native expansion and shared mention discovery are retained. Read/Bash prerequisites clear only after approved foreground completion. Real default and coding workers cover failed, denied, masked-failure and successful reads, including stdin versus fd 3 redirection. Bounded skill fallback remains; strict browser prerequisites do not fall back. |
+| Skill activation | Native expansion and shared mention discovery are retained. `61fac5d` clears Read/Bash prerequisites only after approved foreground completion. Real default and coding workers cover failed, denied, masked-failure and successful reads, including stdin versus fd 3 redirection. Bounded skill fallback remains; strict browser prerequisites do not fall back. |
 | Prompt templates | Native parsing, quoting, defaults, slices, collisions and input transforms have coverage. |
 | Extensions: tools | Unmodified plugins, structured results, nested calls, progress, cancellation and deferred discovery have coverage. |
 | Extensions: commands/input | Native command and input processing are used. Production reload and handled-input cases have coverage. |
@@ -233,15 +255,17 @@ Use an isolated environment and a pinned Craft mirror:
 bun test ./packages/pi-durable-coding ./packages/pi-agent-server
 bun packages/pi-durable-coding/test/reference/parity.ts \
   <isolated-upstream-node-modules> <pinned-Pi-checkout>
-bun packages/pi-durable-coding/scripts/vendor-coding-runtime.ts \
-  <pinned-Pi-checkout> --check
 bun run validate:ci
 bun run lint
-bun run audit:craft-reuse
 bun run --cwd packages/pi-agent-server build
 bun install --frozen-lockfile --ignore-scripts
 bun run server:build --output <task-owned-output-directory> --compress
 ```
+
+The complete runtime generator check and full Craft audit are currently
+blocked because they read restricted credential source. Do not run or retry
+them, or read local or upstream `runtime-credentials.ts` through another tool.
+Partial hash checks do not establish full reproduction.
 
 Set `CRAFT_AGENT_SOURCE` to the isolated pinned Craft checkout. The earlier
 helper port uses `scripts/vendor-upstream.ts` in the coding package. Durable

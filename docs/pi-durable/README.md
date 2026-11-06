@@ -1,11 +1,13 @@
 # Pi-durable coding agent 内核文档
 
-当前目标是 `pi-durable coding agent`：用 pi-durable 调度执行，补齐 Pi coding agent 的 coding 能力并兼容其插件生态，同时保留 MkAgent 现有全部功能。`pi-agent-core` 可以按需引用，禁止直接依赖完整的 `pi-coding-agent` 包。
+pi-durable 内核已接入，`pi-durable coding agent` 的 Coding 能力和插件契约已有实现及历史证据，完整程度须先核实。当前重点是架构优化：优先引用独立公开包，公开接口不足时采用薄外部适配，仅保留必要源码移植，减少上游 SDK 升级时的适配工作。MkAgent 现有功能保持完整，`pi-agent-core` 可以按需引用，禁止生产直接依赖完整 `pi-coding-agent` 包。
 
-本轮以实施计划和能力规格为准，验收记录区分已实现、待修正和待验证。历史规格保留第一次内核切换时的约束及证据，不再把当时禁止 `pi-agent-core` 的要求作为当前限制。
+先按用户要求严格修正文档并查漏补缺，再按[架构优化跟进](coding-follow-up.md)落实。实施计划和能力规格保留目标与契约，验收记录区分已实现、待修正和待验证；发现偏离时及时纠正任务、文档及实现。历史规格保留第一次内核切换时的约束及证据，不再把当时禁止 `pi-agent-core` 的要求作为当前限制。
 
 | 文档 | 内容 |
 |---|---|
+| [架构优化跟进](coding-follow-up.md) | 按用户最新澄清核实包复用、薄适配、必要例外及改动影响 |
+| [需求与验收对照](coding-acceptance.md) | 已有功能和插件证据、适用版本及未验证范围 |
 | [Coding agent 精简架构](coding-architecture.md) | 执行链路、上游包依赖、源码移植清单及 MkAgent 自有适配边界 |
 | [Durable coding agent 实施计划](durable-coding-agent-plan.md) | 用户澄清后的目标、职责边界、产品保留清单、逐项修正顺序及验收条件 |
 | [Coding 能力与插件兼容规格](coding-capabilities-spec.md) | 固定上游基线、依赖规则、能力清单和宿主契约 |

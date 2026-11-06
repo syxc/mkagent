@@ -1,6 +1,6 @@
 # Pi-durable coding agent 精简架构
 
-MkAgent 在独立 worker 中运行以 pi-durable 替换执行内核的 Pi coding agent。装配沿用 Pi 的独立包边界，会话、工具和插件语义来自公开包及必要的固定上游源码移植；pi-durable 负责执行调度与恢复，MkAgent 负责产品会话、权限和界面。本文说明当前实现；逐项验收及剩余工作见[需求对照](coding-acceptance.md)。
+MkAgent 已接入 pi-durable 内核，当前 coding profile 在已有 Harness 上运行 Pi coding 上层，普通 profile 保留 GenerationTask 路径。Coding 功能及插件契约已有实现和历史证据，完整程度仍须逐项核实。本次重点是核对独立包复用、薄外部适配及剩余源码移植的必要性，减少后续升级工作。pi-durable 负责执行调度与恢复，MkAgent 负责产品会话、权限和界面。工作顺序见[跟进清单](coding-follow-up.md)，功能证据见[需求对照](coding-acceptance.md)。
 
 ## 执行链路
 
@@ -76,15 +76,16 @@ flowchart TD
 
 插件保留 Pi 包名导入，由[原生虚拟模块表](../../packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts)映射到本地移植 API 和独立官方包，也提供旧 `@mariozechner/*` 名称映射。这不要求安装完整 coding-agent 包。MkAgent 通过 RPC 承接扩展 UI；保留 Pi TUI 源码和依赖，不代表 MkAgent CLI 已采用原生 Pi TUI。插件兼容范围以需求对照中的实际验收为准。
 
-Pi v1.5.0 尚未将 `AgentSession`、工具工厂、扩展与资源加载等 coding 层独立发布，完整包的 `createAgentSession` 固定创建上游 Agent，也没有公开执行器注入及版本化 snapshot/restore 接口。因此这部分仍需源码移植；durable 副作用和回调边界也不能直接换成上游完整工具循环。公开包引用、策略外移和实现复用减少了本地差异，但尚未达到仅更新版本号即可升级。生成与哈希追溯用于核对来源，不能代替减少适配代码。
+Pi v1.5.0 尚未将 `AgentSession`、工具工厂、扩展与资源加载等 coding 层独立发布，完整包的 `createAgentSession` 固定创建上游 Agent，也没有公开的工厂执行器注入及版本化 snapshot/restore 接口。这些限制解释相关边界的移植需求，不能证明当前整个公开源码闭包都必须保留；F1 至 F3 逐类核对可替代实现和必要例外。durable 副作用和回调边界不能直接换成上游完整工具循环。公开包引用、策略外移和实现复用已减少部分差异，尚未达到仅更新版本号即可升级；生成与哈希追溯不能代替减少适配代码。
 
 ## 复现与升级
 
-在仓库根执行以下检查，`/absolute/pi-checkout` 须为上述 revision 的干净上游 checkout：
+辅助层检查使用上述 revision 的干净上游 checkout：
 
 ```sh
 bun packages/pi-durable-coding/scripts/vendor-upstream.ts /absolute/pi-checkout --check
-bun packages/pi-durable-coding/scripts/vendor-coding-runtime.ts /absolute/pi-checkout --check
 ```
 
-去掉 `--check` 可重新生成。修改移植逻辑应先改生成脚本或 `*-port.ts`，再生成产物。升级时一起核对独立包版本、两份来源清单、MIT 许可和 durable 补丁；行为验证还需覆盖固定原版 Pi 对照、真实 worker、恢复及产品流程，生成检查本身不能证明插件兼容。
+完整运行时的 `vendor-coding-runtime.ts --check` 和全量 Craft 审计会读取受限凭据源码，当前不得执行或重试，也不得通过其他脚本间接读取本地或上游的 `runtime-credentials.ts`。F5 保留阻塞，局部核对不等于完整复现。
+
+修改获准范围的移植逻辑时，同步生成规则及来源记录，不绕过访问边界。升级时核对独立包版本、必要移植清单、MIT 许可和 durable 补丁，并按影响验证固定原版 Pi 对照、实际 worker、恢复及产品流程。
