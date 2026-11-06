@@ -1,19 +1,24 @@
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
-index 429bfd1..f99d006 100644
+index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..11f8ccc84e8bb58af646d6cc8daa7a1bdd665f18 100644
 --- a/dist/codemode/codemode.d.ts
 +++ b/dist/codemode/codemode.d.ts
-@@ -38,8 +38,9 @@ import { type Context, type JsonValue } from "@earendil-works/chord";
- import type { CodemodeSandboxBase } from "@earendil-works/pi-codemode/portable";
+@@ -35,11 +35,12 @@
+  * call with an error result.
+  */
+ import { type Context, type JsonValue } from "@earendil-works/chord";
+-import type { CodemodeSandboxBase } from "@earendil-works/pi-codemode/portable";
++import type { CodemodeResult, CodemodeSandboxBase } from "@earendil-works/pi-codemode/portable";
  import { type Static } from "@earendil-works/pi-schema";
- import type { Extension, ToolExecutionApi, ToolRegistration } from "../harness/types.ts";
+-import type { Extension, ToolExecutionApi, ToolRegistration } from "../harness/types.ts";
 -import type { JsonObject } from "../types.ts";
++import type { Extension, ToolExecutionApi, ToolExecutionResult, ToolRegistration } from "../harness/types.ts";
 +import type { JsonObject, Tx } from "../types.ts";
  import { type CodemodeNamespace } from "./describe.ts";
 +import type { CodemodeFormatOptions } from "./output.js";
  /**
   * Version of everything in this module that turns stored results into what a script sees: result mapping, globals,
   * start data. Bump it when that changes, so a call started before an upgrade is not replayed by different code.
-@@ -151,9 +152,24 @@ declare const codemodeSchema: import("@earendil-works/pi-schema").Schema<{
+@@ -151,9 +152,37 @@ declare const codemodeSchema: import("@earendil-works/pi-schema").Schema<{
      code: string;
  }>;
  export type CodemodeToolInput = Static<typeof codemodeSchema>;
@@ -28,6 +33,13 @@ index 429bfd1..f99d006 100644
 +    readonly sandbox: CodemodeSandboxBase;
 +    release(): void | Promise<void>;
 +}
++/** Result metadata for host projection; queued calls are included. */
++export interface CodemodeResultInfo {
++    readonly calls: readonly CodemodeNestedCall[];
++    readonly generatedImages: number;
++    readonly maxOutputTokens: number;
++    readonly wallMs: number;
++}
  export type CodemodeToolOptions = {
      /** Runs the scripts: `CodemodeSandbox` on Node, `RemoteCodemodeSandbox` on Cloudflare. */
 -    readonly sandbox: CodemodeSandboxBase;
@@ -36,11 +48,17 @@ index 429bfd1..f99d006 100644
 +    readonly store?: CodemodeStoreAdapter;
 +    /** Overrides formatting policy while retaining the script's token budget. */
 +    readonly output?: Partial<Pick<CodemodeFormatOptions, "limits" | "write" | "imageSize" | "wallMs">>;
++    /** Observe issued calls by registered name before admission or model-slot waiting; also called during replay. */
++    readonly onCallStart?: (call: { readonly id: number; readonly name: string; readonly args: unknown }) => void;
++    /** Replace the complete tool result before its atomic publication; completed results reuse that projection. */
++    readonly formatResult?: (result: CodemodeResult, info: CodemodeResultInfo) => ToolExecutionResult | Promise<ToolExecutionResult>;
++    /** On caller cancellation after VM start, return partial output without storing an outcome or writes. Default throw. */
++    readonly cancellation?: "throw" | "result";
      /** Groups of tools by name prefix, such as MCP servers, for the `codemode` section and tool search. */
      readonly namespaces?: readonly CodemodeNamespace[];
      /** Estimated tokens the tool declarations in the `codemode` section may use. Default 3000. */
 diff --git a/dist/codemode/codemode.js b/dist/codemode/codemode.js
-index 9ef1da0..b711a22 100644
+index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be77346639294b74822d 100644
 --- a/dist/codemode/codemode.js
 +++ b/dist/codemode/codemode.js
 @@ -100,7 +100,9 @@ export function createCodemodeTool(options) {
@@ -84,7 +102,7 @@ index 9ef1da0..b711a22 100644
                  };
              }
              const journal = await tx.doc(CodemodeJournalDoc, api.taskId);
-@@ -303,20 +308,34 @@ class CodemodeCall {
+@@ -303,24 +308,48 @@ class CodemodeCall {
          context.abortSignal?.addEventListener("abort", onAbort, { once: true });
          if (context.abortSignal?.aborted)
              onAbort();
@@ -119,9 +137,24 @@ index 9ef1da0..b711a22 100644
 +                await acquired.release();
 +            }
              if (this.failure !== undefined)
-                 throw this.failure;
+-                throw this.failure;
++                throw this.failure.error;
              if (this.ended !== undefined)
-@@ -346,13 +365,14 @@ class CodemodeCall {
+                 return this.ended;
++            if (context.abortSignal?.aborted && this.options.cancellation === "result") {
++                const cancelled = result.ok ? {
++                    ok: false,
++                    error: { kind: "aborted", message: errorMessage(context.abortSignal.reason) },
++                    output: result.output,
++                    calls: result.calls,
++                    ...(result.during === undefined ? {} : { during: result.during }),
++                } : result;
++                return await this.format(cancelled);
++            }
+             context.abortSignal?.throwIfAborted();
+             // Aborted, but not by this call: the host closed the sandbox, for example while shutting down before closing the
+             // Harness. That decides nothing about the script: store nothing and end with this invocation, so a later attempt
+@@ -346,13 +375,14 @@ class CodemodeCall {
                      : this.replayed[during.seq - 1]?.issuedAfter !== undefined) ||
                      this.replayed.slice(during.seq).some((entry) => entry.id > during.issued);
                  if (continued) {
@@ -138,9 +171,32 @@ index 9ef1da0..b711a22 100644
          }
      }
      /** Store an outcome the call decided, and end the VM if it runs; returns the outcome. */
-@@ -386,12 +406,13 @@ class CodemodeCall {
-     async complete(result) {
+@@ -377,23 +407,35 @@ class CodemodeCall {
+         return this.ended !== undefined || this.failure !== undefined || this.run?.finished === true;
+     }
+     fail(error) {
++        if (this.options.cancellation === "result" && this.context.abortSignal?.aborted &&
++            Object.is(error, this.context.abortSignal.reason))
++            return;
+         if (this.failure !== undefined)
+             return;
+-        this.failure = error;
++        this.failure = { error };
+         this.controller.abort(error);
+     }
+-    /** The script's own outcome, stored with its store writes in one transaction. */
+-    async complete(result) {
++    /** Host projection runs after the sandbox lease has been released. */
++    async format(result) {
          const details = this.details();
++        if (this.options.formatResult !== undefined) {
++            return this.options.formatResult(result, {
++                calls: details.calls,
++                generatedImages: this.generatedImages,
++                maxOutputTokens: this.start.maxOutputTokens,
++                wallMs: this.api.now() - this.start.startedAt,
++            });
++        }
          const formatted = await formatResult(result, {
 +            ...this.options.output,
              generatedImages: this.generatedImages,
@@ -153,9 +209,26 @@ index 9ef1da0..b711a22 100644
 +            limits: this.options.output?.limits ?? OUTPUT_LIMITS,
 +            write: this.options.output?.write ?? this.outputFiles(),
          });
-         const tool = {
+-        const tool = {
++        return {
              output: formatted.content,
-@@ -408,11 +429,16 @@ class CodemodeCall {
+             isError: !result.ok,
+             details: {
+@@ -401,6 +443,13 @@ class CodemodeCall {
+                 ...(formatted.fullOutputPath === undefined ? {} : { fullOutputPath: formatted.fullOutputPath }),
+             },
+         };
++    }
++    /** The script's own outcome, stored with its store writes in one transaction. */
++    async complete(result) {
++        const tool = await this.format(result);
++        if (this.context.abortSignal?.aborted && this.options.cancellation === "result")
++            return { ...tool, isError: true };
++        this.context.abortSignal?.throwIfAborted();
+         const writes = result.ok ? result.storeWrites : undefined;
+         return this.api.commit(async (tx) => {
+             const run = await tx.doc(CodemodeRunDoc, this.api.taskId);
+@@ -408,11 +457,16 @@ class CodemodeCall {
                  return run.result;
              run.result = copyJson(tool, { omitUndefinedProperties: true });
              if (writes !== undefined && (Object.keys(writes.set).length > 0 || writes.delete.length > 0)) {
@@ -177,7 +250,33 @@ index 9ef1da0..b711a22 100644
              }
              return tool;
          }, this.context);
-@@ -727,18 +753,18 @@ class CodemodeCall {
+@@ -484,8 +538,15 @@ class CodemodeCall {
+         if (this.stopped)
+             return;
+         const call = asToolCall(made);
+-        if (call.target === "tool")
+-            this.started(call);
++        if (call.target === "tool") {
++            try {
++                this.started(call);
++            }
++            catch (error) {
++                this.fail(error);
++                return;
++            }
++        }
+         this.issued = Math.max(this.issued, call.id);
+         const index = this.replaying ? (this.replayIndex.get(call.id) ?? -1) : -1;
+         if (index === -1) {
+@@ -704,6 +765,7 @@ class CodemodeCall {
+             ? call.name.slice(CODEMODE_INTERNAL_PREFIX.length)
+             : call.name;
+         this.rows.set(call.id, { id: call.id, name, args: cut(args, ARGS_PREVIEW_CHARS), status: "running" });
++        this.options.onCallStart?.({ id: call.id, name: call.name, args: call.args });
+     }
+     /** A tool call ended: its row gets its status, duration, and error. */
+     /** The call ended: an error result is an error row, also when the script got its value (bash's nonzero exit). */
+@@ -727,18 +789,18 @@ class CodemodeCall {
          return { calls };
      }
      async callGlobal(call) {
@@ -204,28 +303,157 @@ index 9ef1da0..b711a22 100644
          }
          catch (error) {
 diff --git a/dist/codemode/index.d.ts b/dist/codemode/index.d.ts
-index 3e1c49c..e745aa5 100644
+index 3e1c49c52cfcb495f0e6fd74250bf07008107766..08abe1a2ca9ede37ffce130b88bae3cf95125e09 100644
 --- a/dist/codemode/index.d.ts
 +++ b/dist/codemode/index.d.ts
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
 -export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
-+export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, type CodemodeSandboxLease, type CodemodeStoreAdapter, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
++export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, type CodemodeResultInfo, type CodemodeSandboxLease, type CodemodeStoreAdapter, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
  export { type CodemodeNamespace, DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.ts";
 +export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult, type CodemodeFormatOptions, type OutputFile } from "./output.js";
++export { type CodemodeModelSource, type CodemodePreparedModelCall, createModelTools, prepareCodemodeModelCall } from "./models.js";
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
 diff --git a/dist/codemode/index.js b/dist/codemode/index.js
-index 0556d0b..d33ae00 100644
+index 0556d0b84a189bac4f496369a5cd0384181cdf87..ea28e52c55cacca6405007fc1c7d2a3191bec23c 100644
 --- a/dist/codemode/index.js
 +++ b/dist/codemode/index.js
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
  export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, CodemodeStoreDoc, createCodemodeExtension, createCodemodeTool, } from "./codemode.js";
  export { DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.js";
 +export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult } from "./output.js";
++export { createModelTools, prepareCodemodeModelCall } from "./models.js";
  //# sourceMappingURL=index.js.map
 \ No newline at end of file
+diff --git a/dist/codemode/models.d.ts b/dist/codemode/models.d.ts
+index fa6aed962716c514ae9de778ca33960fc707087a..6d11686fb4db10c945f228fe9b262f49924d165a 100644
+--- a/dist/codemode/models.d.ts
++++ b/dist/codemode/models.d.ts
+@@ -8,8 +8,8 @@
+  * code mode tool turns a script's call of the global into a call of that tool.
+  */
+ import type { Context, JsonValue } from "@earendil-works/chord";
+-import type { Models } from "@earendil-works/pi-ai";
+-import type { ToolRegistration } from "../harness/types.ts";
++import type { AnyModel, AssistantImages, ClassifierResult, Models } from "@earendil-works/pi-ai";
++import type { ToolExecutionResult, ToolRegistration } from "../harness/types.ts";
+ /** Reserved names of code mode's internal tools; they are never listed to scripts or the model. */
+ export declare const CODEMODE_INTERNAL_PREFIX = "pi.codemode.";
+ export declare const CLASSIFY_TOOL = "pi.codemode.models.classify";
+@@ -23,6 +23,19 @@ export declare const MAX_CONCURRENT_MODEL_CALLS = 4;
+ export declare const MODELS_DESCRIPTION: string;
+ /** The catalog functions: what a script's call of `name` with `args` (the argument list) resolves to. */
+ export declare function catalogCall(name: string, args: unknown, models: Models, context: Context): Promise<JsonValue | undefined>;
++/** The model methods needed to validate and execute a code mode helper. */
++export type CodemodeModelSource = Pick<Models, "getModelOfType" | "classify" | "generateImages">;
++export interface CodemodePreparedModelCall {
++    readonly model: AnyModel;
++    execute(context: Context): Promise<ToolExecutionResult & { readonly structuredOutput: JsonValue & (ClassifierResult | AssistantImages) }>;
++}
++/** Validate before admission; script-supplied endpoints and headers are never used. */
++export declare function prepareCodemodeModelCall(
++    name: "models.classify" | "models.generateImages",
++    args: { readonly model: unknown; readonly context: unknown },
++    models: CodemodeModelSource,
++    options?: { readonly docsPath?: string },
++): CodemodePreparedModelCall;
+ /** The internal tools behind `models.classify()` and `models.generateImages()`. */
+ export declare function createModelTools(): ToolRegistration[];
+ //# sourceMappingURL=models.d.ts.map
+\ No newline at end of file
+diff --git a/dist/codemode/models.js b/dist/codemode/models.js
+index 65fca86484dda7e40d9992a9f8c2ec0b72c8489b..edcd9f07d894f1e4193b027f2f872f550384b600 100644
+--- a/dist/codemode/models.js
++++ b/dist/codemode/models.js
+@@ -84,8 +84,8 @@ export async function catalogCall(name, args, models, context) {
+ }
+ const CLASSIFIER_CONTEXT_SHAPE = '{ state: { ... }, images?: [{ type: "image", data: <base64>, mimeType }], questions: { <id>: { type: "choice", instructions, criteria: { <label>: <meaning> } } | { type: "score", instructions, criteria: [<lowest level>, ..., <highest level>] } | { type: "bool", instructions, criteria: { true: <meaning>, false: <meaning> } } } }';
+ /** Check a script's classifier context, so mistakes fail with the expected shape instead of a provider error. */
+-function checkClassifierContext(context) {
+-    const fail = (problem) => new Error(`models.classify() ${problem}. Expected context: ${CLASSIFIER_CONTEXT_SHAPE}.`);
++function checkClassifierContext(context, docsPath) {
++    const fail = (problem) => new Error(`models.classify() ${problem}. Expected context: ${CLASSIFIER_CONTEXT_SHAPE}.${docsPath === undefined ? "" : ` See "Classify" in ${docsPath}.`}`);
+     if (!isRecord(context))
+         throw fail(`expects a context object as its second argument, got ${describeValue(context)}`);
+     if (!isRecord(context.state))
+@@ -137,8 +137,8 @@ function checkClassifierContext(context) {
+     return context;
+ }
+ /** Check a script's image context, so mistakes such as `{ prompt }` fail with the expected shape. */
+-function checkImagesContext(context) {
+-    const fail = (problem) => new Error(`models.generateImages() ${problem}. Expected context: { input: [{ type: "text", text: <prompt> }, ...optional { type: "image", data: <base64>, mimeType } references] }.`);
++function checkImagesContext(context, docsPath) {
++    const fail = (problem) => new Error(`models.generateImages() ${problem}. Expected context: { input: [{ type: "text", text: <prompt> }, ...optional { type: "image", data: <base64>, mimeType } references] }.${docsPath === undefined ? "" : ` See "Generate images" in ${docsPath}.`}`);
+     if (!isRecord(context))
+         throw fail(`expects a context object as its second argument, got ${describeValue(context)}`);
+     const { input } = context;
+@@ -194,6 +194,30 @@ function modelResult(label, result, value) {
+         ...(result.usage === undefined ? {} : { usage: result.usage }),
+     };
+ }
++/** Validate once before admission, resolving only the host's configured model. */
++export function prepareCodemodeModelCall(name, args, models, options = {}) {
++    if (name !== "models.classify" && name !== "models.generateImages")
++        throw new Error(`Unknown code mode model call ${name}`);
++    const classifier = name === "models.classify";
++    const type = classifier ? "classifier" : "image";
++    const model = resolveModel(name, type, args.model, models);
++    const checked = classifier
++        ? checkClassifierContext(args.context, options.docsPath)
++        : checkImagesContext(args.context, options.docsPath);
++    return {
++        model,
++        async execute(context) {
++            const request = {
++                telemetry: context.telemetry,
++                ...(context.abortSignal === undefined ? {} : { signal: context.abortSignal }),
++            };
++            const result = classifier
++                ? await models.classify(model, checked, request)
++                : await models.generateImages(model, checked, request);
++            return modelResult(`${classifier ? "classify" : "generateImages"} ${model.provider}/${model.id}`, result, result);
++        },
++    };
++}
+ /** The internal tools behind `models.classify()` and `models.generateImages()`. */
+ export function createModelTools() {
+     const classify = defineTool({
+@@ -202,15 +226,7 @@ export function createModelTools() {
+         parameters: ModelCallParameters,
+         structuredOutputSchema: unknown(),
+         callers: ["tools"],
+-        execute: async (args, api, context) => {
+-            const model = resolveModel("models.classify", "classifier", args.model, api.models);
+-            const checked = checkClassifierContext(args.context);
+-            const result = await api.models.classify(model, checked, {
+-                telemetry: context.telemetry,
+-                ...(context.abortSignal === undefined ? {} : { signal: context.abortSignal }),
+-            });
+-            return modelResult(`classify ${model.provider}/${model.id}`, result, result);
+-        },
++        execute: async (args, api, context) => prepareCodemodeModelCall("models.classify", args, api.models).execute(context),
+     });
+     const generateImages = defineTool({
+         name: GENERATE_IMAGES_TOOL,
+@@ -218,15 +234,7 @@ export function createModelTools() {
+         parameters: ModelCallParameters,
+         structuredOutputSchema: unknown(),
+         callers: ["tools"],
+-        execute: async (args, api, context) => {
+-            const model = resolveModel("models.generateImages", "image", args.model, api.models);
+-            const checked = checkImagesContext(args.context);
+-            const result = await api.models.generateImages(model, checked, {
+-                telemetry: context.telemetry,
+-                ...(context.abortSignal === undefined ? {} : { signal: context.abortSignal }),
+-            });
+-            return modelResult(`generateImages ${model.provider}/${model.id}`, result, result);
+-        },
++        execute: async (args, api, context) => prepareCodemodeModelCall("models.generateImages", args, api.models).execute(context),
+     });
+     return [classify, generateImages];
+ }
 diff --git a/dist/codemode/output.d.ts b/dist/codemode/output.d.ts
-index b9163a1..253dd95 100644
+index b9163a19d958e428ef19d0b28afa37548027e590..253dd95a7e1258b0abfe6b8653d155fddc4b9b51 100644
 --- a/dist/codemode/output.d.ts
 +++ b/dist/codemode/output.d.ts
 @@ -21,19 +21,23 @@ type Limits = {
@@ -258,7 +486,7 @@ index b9163a1..253dd95 100644
      fullOutputPath?: string;
  }>;
 diff --git a/dist/codemode/output.js b/dist/codemode/output.js
-index d28306e..d8590da 100644
+index d28306e526198175420d555b8058eb2f1976793a..d8590da0832c2863a28a21e1ea3090c45c844a17 100644
 --- a/dist/codemode/output.js
 +++ b/dist/codemode/output.js
 @@ -81,8 +81,8 @@ async function truncate(items, maxTokens, limits, write) {
@@ -299,7 +527,7 @@ index d28306e..d8590da 100644
          content: [{ type: "text", text: header }, ...content],
          ...(truncated.fullOutputPath === undefined ? {} : { fullOutputPath: truncated.fullOutputPath }),
 diff --git a/dist/harness/generation.d.ts b/dist/harness/generation.d.ts
-index 6b3121b..ebdd963 100644
+index 6b3121b5ace947b905cbe6e8cfa8d5e19c26ed62..ebdd9639525e14fb40c7a874ce92fde3a6b41d9f 100644
 --- a/dist/harness/generation.d.ts
 +++ b/dist/harness/generation.d.ts
 @@ -1,12 +1,15 @@
@@ -400,7 +628,7 @@ index 6b3121b..ebdd963 100644
 +export declare function appendCodingEntries(tx: Tx, conversation: ConversationId, entries: readonly CodingEntryDraft[]): Promise<EntryId[]>;
 +export {};
 diff --git a/dist/harness/generation.js b/dist/harness/generation.js
-index ac42dfe..ea8ed27 100644
+index ac42dfe741b20726ab8eb3d8139b1296d664210d..ea8ed27981e3688b414f613317cd23dd7e6b790b 100644
 --- a/dist/harness/generation.js
 +++ b/dist/harness/generation.js
 @@ -22,7 +22,7 @@ const DEFAULT_POLL_AFTER_MS = 5000;
@@ -849,7 +1077,7 @@ index ac42dfe..ea8ed27 100644
 +    return ids;
 +}
 diff --git a/dist/harness/live.d.ts b/dist/harness/live.d.ts
-index a70aedb..7437b5d 100644
+index a70aedb657b3f7b6e108828e77e8699b14817d44..7437b5d55497ba3ff5ae14aadc10770188a74807 100644
 --- a/dist/harness/live.d.ts
 +++ b/dist/harness/live.d.ts
 @@ -109,6 +109,11 @@ export type RunFailure = {
@@ -874,7 +1102,7 @@ index a70aedb..7437b5d 100644
 +export {};
 \ No newline at end of file
 diff --git a/dist/harness/types.d.ts b/dist/harness/types.d.ts
-index eb64e47..caffdbe 100644
+index eb64e474162b158a43563e6c68d8ffea8c18b74a..caffdbee4d785abc036f1b2a377e9903bf83c979 100644
 --- a/dist/harness/types.d.ts
 +++ b/dist/harness/types.d.ts
 @@ -1,5 +1,5 @@
@@ -930,7 +1158,7 @@ index eb64e47..caffdbe 100644
 +export {};
 \ No newline at end of file
 diff --git a/dist/search.d.ts b/dist/search.d.ts
-index 0cedcf1..f130980 100644
+index 0cedcf1631d9b2c31824dd2bed86cc685604cecf..f13098012c7d9761613570910ead1df644accff2 100644
 --- a/dist/search.d.ts
 +++ b/dist/search.d.ts
 @@ -24,6 +24,11 @@ export type SearchDocument = {
@@ -947,7 +1175,7 @@ index 0cedcf1..f130980 100644
  //# sourceMappingURL=search.d.ts.map
 \ No newline at end of file
 diff --git a/dist/search.js b/dist/search.js
-index 7b05ef0..e8ccd6b 100644
+index 7b05ef0be2e825d0428d6a3867afb098a46c8317..e8ccd6b4885bccb31fb392ea9bc25240fb8e6ea1 100644
 --- a/dist/search.js
 +++ b/dist/search.js
 @@ -16,6 +16,12 @@
@@ -990,7 +1218,7 @@ index 7b05ef0..e8ccd6b 100644
  const K1 = 1.2;
  const B = 0.75;
 diff --git a/dist/tool-search/index.d.ts b/dist/tool-search/index.d.ts
-index ad6acf3..5fa16eb 100644
+index ad6acf3e2c679863be80bd4059eaf6597c03fa06..5fa16eb8c6b324c40382fee4ffe2ffc415f4961c 100644
 --- a/dist/tool-search/index.d.ts
 +++ b/dist/tool-search/index.d.ts
 @@ -1,2 +1,4 @@
@@ -1000,7 +1228,7 @@ index ad6acf3..5fa16eb 100644
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
 diff --git a/dist/tool-search/index.js b/dist/tool-search/index.js
-index 8030781..6081dd4 100644
+index 80307813567e13fa181161101ef693d1c2657c01..6081dd45aaf06aaf1006b9079937eba35c95b1f9 100644
 --- a/dist/tool-search/index.js
 +++ b/dist/tool-search/index.js
 @@ -1,2 +1,4 @@
@@ -1010,7 +1238,7 @@ index 8030781..6081dd4 100644
  //# sourceMappingURL=index.js.map
 \ No newline at end of file
 diff --git a/dist/tool-search/tool-search.d.ts b/dist/tool-search/tool-search.d.ts
-index fde23df..262643a 100644
+index fde23df685ba39f1da3baf55d8dc86eba8255553..262643aa1757045822e07e201c207e18db73fa4d 100644
 --- a/dist/tool-search/tool-search.d.ts
 +++ b/dist/tool-search/tool-search.d.ts
 @@ -5,6 +5,8 @@ export declare const DEFAULT_TOOL_SEARCH_LIMIT = 8;
@@ -1023,7 +1251,7 @@ index fde23df..262643a 100644
      query: string;
      limit?: number | undefined;
 diff --git a/dist/tool-search/tool-search.js b/dist/tool-search/tool-search.js
-index 1c5c127..802d238 100644
+index 1c5c127ea6b007eb4033486fcbde0d5e6b20cc16..802d2381bcde340b7da8f9b6a54ebe3239296ecd 100644
 --- a/dist/tool-search/tool-search.js
 +++ b/dist/tool-search/tool-search.js
 @@ -38,7 +38,7 @@ function schemaText(schema, parts) {

@@ -1,12 +1,13 @@
 import { extname } from "node:path";
-import { DEFAULT_MAX_OUTPUT_TOKENS, formatCodemodeResult } from "@earendil-works/pi-durable/codemode";
+import { BACKGROUND_CONTEXT, withAbortSignal } from "@earendil-works/chord/context";
+import { DEFAULT_MAX_OUTPUT_TOKENS, formatCodemodeResult, prepareCodemodeModelCall } from "@earendil-works/pi-durable/codemode";
 /**
  * Runs one codemode script in the sandbox. Split from tool.ts and loaded through
  * execute.lazy.ts so the sandbox runtime only loads when a script runs.
  */
 
 import type { AgentTool, AgentToolCallOutcome, AgentToolResult } from "@earendil-works/pi-agent-core";
-import type { AnyModel, ClassifierContext, ImagesContext, ModelType, ModelTypeMap, TextContent, Usage } from "@earendil-works/pi-ai";
+import type { AnyModel, ModelType, TextContent, Usage } from "@earendil-works/pi-ai";
 import { type CodemodeResult, CodemodeSandbox, type CodemodeTool, loadQuickJSWasm, parseCodemodeSource, renderToolSample, toCodemodeIdentifier } from "@earendil-works/pi-codemode";
 import { getCodemodeWorkerSpecifier, getQuickJSWasmPath } from "../../config.ts";
 import type { ExtensionToolContext, ToolNamespace } from "../../core/extensions/types.ts";
@@ -133,14 +134,6 @@ function toModelInfo(model: AnyModel): Record<string, unknown> {
 	return info;
 }
 
-/** `an image`, `a classifier`. */
-function withArticle(word: string): string {
-	return `${/^[aeiou]/.test(word) ? "an" : "a"} ${word}`;
-}
-
-/** A JSON value from a script, read field by field: values that are not objects have no fields. */
-type ScriptValue = { readonly [key: string]: unknown } | null | undefined;
-
 /** A script value in an error message: `undefined`, `a string`, `an array`, or its keys (`{ prompt }`). */
 function describeValue(value: unknown): string {
 	if (value === undefined || value === null) return String(value);
@@ -151,99 +144,6 @@ function describeValue(value: unknown): string {
 		return `{ ${keys.slice(0, 6).join(", ")}${keys.length > 6 ? ", ..." : ""} }`;
 	}
 	return typeof value === "string" ? "a string" : `a ${typeof value}`;
-}
-
-const CLASSIFIER_CONTEXT_SHAPE =
-	'{ state: { ... }, images?: [{ type: "image", data: <base64>, mimeType }], questions: { <id>: { type: "choice", instructions, criteria: { <label>: <meaning> } } | { type: "score", instructions, criteria: [<lowest level>, ..., <highest level>] } | { type: "bool", instructions, criteria: { true: <meaning>, false: <meaning> } } } }';
-
-/** Check a script's classifier context, so mistakes fail with the expected shape instead of a provider error. */
-function checkClassifierContext(context: unknown): ClassifierContext {
-	const fail = (problem: string) =>
-		new Error(
-			`models.classify() ${problem}. Expected context: ${CLASSIFIER_CONTEXT_SHAPE}. See "Classify" in ${CODEMODE_DOCS_PATH}.`,
-		);
-	if (typeof context !== "object" || context === null || Array.isArray(context)) {
-		throw fail(`expects a context object as its second argument, got ${describeValue(context)}`);
-	}
-	const { state, images, questions } = context as Record<string, unknown>;
-	if (typeof state !== "object" || state === null || Array.isArray(state)) {
-		throw fail(`context.state must be an object, got ${describeValue(state)}`);
-	}
-	if (images !== undefined) {
-		if (!Array.isArray(images)) throw fail(`context.images must be an array, got ${describeValue(images)}`);
-		images.forEach((image: ScriptValue, index) => {
-			if (image?.type !== "image" || typeof image.data !== "string" || typeof image.mimeType !== "string") {
-				throw fail(`context.images[${index}] must be an image block, got ${describeValue(image)}`);
-			}
-		});
-	}
-	if (
-		typeof questions !== "object" ||
-		questions === null ||
-		Array.isArray(questions) ||
-		Object.keys(questions).length === 0
-	) {
-		throw fail(`context.questions must map question IDs to questions, got ${describeValue(questions)}`);
-	}
-	const isStrings = (values: unknown[]) => values.length > 0 && values.every((value) => typeof value === "string");
-	for (const [id, question] of Object.entries(questions)) {
-		const at = `context.questions.${id}`;
-		if (typeof question !== "object" || question === null || Array.isArray(question)) {
-			throw fail(`${at} must be a question object, got ${describeValue(question)}`);
-		}
-		const { type, instructions, criteria } = question as Record<string, unknown>;
-		if (typeof instructions !== "string") throw fail(`${at}.instructions must be a string`);
-		if (type === "choice") {
-			if (
-				typeof criteria !== "object" ||
-				criteria === null ||
-				Array.isArray(criteria) ||
-				!isStrings(Object.values(criteria))
-			) {
-				throw fail(`${at} is a "choice" question, so criteria must map each label to its meaning`);
-			}
-		} else if (type === "score") {
-			if (!Array.isArray(criteria) || !isStrings(criteria)) {
-				throw fail(`${at} is a "score" question, so criteria must list the levels as strings, lowest first`);
-			}
-		} else if (type === "bool") {
-			const labels = criteria as ScriptValue;
-			if (typeof labels?.true !== "string" || typeof labels.false !== "string") {
-				throw fail(`${at} is a "bool" question, so criteria must be { true: string, false: string }`);
-			}
-		} else {
-			throw fail(`${at}.type must be "choice", "score", or "bool", got ${JSON.stringify(type)}`);
-		}
-	}
-	return context as unknown as ClassifierContext;
-}
-
-/** Check a script's image context, so mistakes such as `{ prompt }` fail with the expected shape. */
-function checkImagesContext(context: unknown): ImagesContext {
-	const fail = (problem: string) =>
-		new Error(
-			`models.generateImages() ${problem}. Expected context: { input: [{ type: "text", text: <prompt> }, ...optional { type: "image", data: <base64>, mimeType } references] }. See "Generate images" in ${CODEMODE_DOCS_PATH}.`,
-		);
-	if (typeof context !== "object" || context === null || Array.isArray(context)) {
-		throw fail(`expects a context object as its second argument, got ${describeValue(context)}`);
-	}
-	const { input } = context as Record<string, unknown>;
-	if (!Array.isArray(input) || input.length === 0) {
-		throw fail(`context.input must be a non-empty array of blocks, got ${describeValue(input)}`);
-	}
-	input.forEach((block: ScriptValue, index) => {
-		if (block?.type === "text" && typeof block.text === "string") return;
-		if (block?.type === "image" && typeof block.data === "string" && typeof block.mimeType === "string") return;
-		throw fail(`context.input[${index}] must be a text or image block, got ${describeValue(block)}`);
-	});
-	return context as unknown as ImagesContext;
-}
-
-/** The fields of `ClassifierResult` and `AssistantImages` that a nested call row reports. */
-interface ModelCallResult {
-	stopReason: "stop" | "error" | "aborted";
-	errorMessage?: string;
-	usage?: Usage;
 }
 
 /** Runs at most `limit` calls at once, in call order. */
@@ -559,55 +459,34 @@ function createModelGlobals(
 	const limit = createLimiter(MAX_CONCURRENT_MODEL_CALLS);
 	let callCount = 0;
 
-	/**
-	 * Resolve the script's model by provider and id only, check the context, then run the call as a
-	 * nested call row. A script-supplied baseUrl or headers must never receive the credentials.
-	 */
-	const runModelCall = async <TType extends "classifier" | "image", TContext, TResult extends ModelCallResult>(
-		name: string,
-		type: TType,
+	const source = {
+		getModelOfType: models.getModelOfType.bind(models),
+		classify: (...[model, context, options]: Parameters<CodemodeModelRuntime["classify"]>) =>
+			models.classify(model, context, { signal: options?.signal }),
+		generateImages: (...[model, context, options]: Parameters<CodemodeModelRuntime["generateImages"]>) =>
+			models.generateImages(model, context, { signal: options?.signal }),
+	};
+	const runModelCall = async (
+		name: "models.classify" | "models.generateImages",
 		[model, context]: unknown[],
-		checkContext: (context: unknown) => TContext,
-		run: (resolved: ModelTypeMap[TType], context: TContext) => Promise<TResult>,
-	): Promise<TResult> => {
-		const listHint = `List the ${type} models you can use with models.getAvailableOfType("${type}").`;
-		const given = model as ScriptValue;
-		if (typeof given?.provider !== "string" || typeof given.id !== "string") {
-			// undefined arrives as null: spread arguments cross the sandbox as a JSON array.
-			const undefinedHint =
-				model === undefined || model === null
-					? " models.getModelOfType() returns undefined for an unknown provider or id."
-					: "";
-			throw new Error(
-				`${name}() expects ${withArticle(type)} model as its first argument, got ${describeValue(model)}.${undefinedHint} ${listHint}`,
-			);
-		}
-		const provider = given.provider;
-		const id = given.id;
-		const ref = `${provider}/${id}`;
-		const resolved = models.getModelOfType(type, provider, id);
-		if (!resolved) {
-			const actualType = [...MODEL_TYPES].find(
-				(other) => other !== type && models.getModelOfType(other as ModelType, provider, id) !== undefined,
-			);
-			throw new Error(
-				actualType
-					? `"${ref}" is ${withArticle(actualType)} model, not ${withArticle(type)} model. ${listHint}`
-					: `Unknown ${type} model "${ref}". ${listHint}`,
-			);
-		}
-		const checked = checkContext(context);
-
+		signal: AbortSignal,
+	): Promise<unknown> => {
+		const prepared = prepareCodemodeModelCall(name, { model, context }, source, { docsPath: CODEMODE_DOCS_PATH });
 		const record: CodemodeNestedCall = {
 			id: `${toolCallId}/${name}/${++callCount}`,
 			name,
-			args: `${resolved.provider}/${resolved.id}`,
+			args: `${prepared.model.provider}/${prepared.model.id}`,
 			status: "running",
 		};
 		calls.push(record);
 		publish();
 		const startedAt = performance.now();
-		const result = await limit(() => run(resolved, checked));
+		const execution = await limit(() => prepared.execute(withAbortSignal(signal, BACKGROUND_CONTEXT)));
+		const result = execution.structuredOutput;
+		if (name === "models.generateImages" && "output" in result && Array.isArray(result.output)) {
+			addGeneratedImages(result.output.filter((block) =>
+				typeof block === "object" && block !== null && "type" in block && block.type === "image").length);
+		}
 		record.durationMs = performance.now() - startedAt;
 		record.status = result.stopReason === "stop" ? "ok" : result.stopReason === "aborted" ? "cancelled" : "error";
 		if (result.errorMessage) record.error = truncateText(result.errorMessage, ERROR_PREVIEW_CHARS);
@@ -638,22 +517,8 @@ function createModelGlobals(
 			const model = models.getModelOfType(toModelType(type), provider, id);
 			return model === undefined ? undefined : toModelInfo(model);
 		},
-		"models.classify": (args, { signal }) =>
-			runModelCall("models.classify", "classifier", args as unknown[], checkClassifierContext, (resolved, context) =>
-				models.classify(resolved, context, { signal }),
-			),
-		"models.generateImages": (args, { signal }) =>
-			runModelCall(
-				"models.generateImages",
-				"image",
-				args as unknown[],
-				checkImagesContext,
-				async (resolved, context) => {
-					const result = await models.generateImages(resolved, context, { signal });
-					addGeneratedImages(result.output.filter((block) => block.type === "image").length);
-					return result;
-				},
-			),
+		"models.classify": (args, { signal }) => runModelCall("models.classify", args as unknown[], signal),
+		"models.generateImages": (args, { signal }) => runModelCall("models.generateImages", args as unknown[], signal),
 	};
 	return Object.entries(implementations).map(([name, execute]) => ({ name, spread: true, execute }));
 }

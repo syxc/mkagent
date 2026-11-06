@@ -4,14 +4,14 @@ import type { Context } from '@earendil-works/chord';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { createModels, type AssistantMessage } from '@earendil-works/pi-ai';
 import {
-  createRegistry, defineDoc, Harness, MemoryStorage,
-  type CommitResult, type Seq, type Storage, type StorageWrite,
+  createRegistry, defineDoc, Harness, MemoryStorage, ToolTask,
+  type CommitResult, type Seq, type Storage, type StorageWrite, type Tx,
 } from '@earendil-works/pi-durable';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import type { AgentTool, StreamFn } from '../src/agent-runtime.ts';
-import { currentCodingToolInvocation, DurableLoopBinding } from '../src/durable-coding/engine.ts';
+import { currentCodingHostToolApi, currentCodingToolInvocation, DurableLoopBinding } from '../src/durable-coding/engine.ts';
 import { NativeSessionJournal } from '../src/durable-coding/session-journal.ts';
-import { hostToolToAgent } from '../src/host-tools.ts';
+import { agentToolToHost, hostToolToAgent } from '../src/host-tools.ts';
 import { getDefaultStreamFn, setDefaultStreamFn } from '../src/stream-fn.ts';
 
 const context = BACKGROUND_CONTEXT;
@@ -76,7 +76,7 @@ async function toolFixture() {
   const execute = (tool: AgentTool) => binding.runTool({
     type: 'toolCall', name: tool.name, id: 'transaction-call', arguments: {},
   }, { tools: [tool], assistantMessage: assistant, context: { messages: [], tools: [tool] } });
-  return { ...opened, execute };
+  return { ...opened, execute, binding };
 }
 
 describe('native journal preparation within one transaction', () => {
@@ -303,6 +303,70 @@ describe('native journal preparation within one transaction', () => {
 });
 
 describe('native journal scope in a real host tool invocation', () => {
+  test('the same-owner path binds a wrapper API while retaining its CodingToolTask', async () => {
+    const { execute, binding } = await toolFixture();
+    let observed = false;
+    const tool = hostToolToAgent({
+      name: 'wrapped-scope', description: 'Bind the real wrapped API', parameters: { type: 'object' },
+      execute: async (_args, api, ctx) => {
+        const task = currentCodingToolInvocation().runtime.taskId;
+        const wrapped = { ...api, now: () => 12345 };
+        await binding.withHostToolScope(wrapped, ctx, async () => {
+          expect(currentCodingHostToolApi()?.api).toBe(wrapped);
+          expect(currentCodingHostToolApi()?.api.now()).toBe(12345);
+          expect(currentCodingToolInvocation().runtime.taskId).toBe(task);
+          observed = true;
+        });
+        expect(currentCodingHostToolApi()?.api).toBe(api);
+        return { output: [] };
+      },
+    });
+    expect((await execute(tool)).isError).toBe(false);
+    expect(observed).toBe(true);
+  });
+
+  test.each(['models', 'append'])('an official ToolTask retains native %s behavior', async behavior => {
+    const { execute, binding, registry, journal, manager } = await toolFixture();
+    const first = createModels();
+    const second = createModels();
+    let models = first;
+    let entry = '';
+    let observed = false;
+    const native: AgentTool = {
+      name: 'native-wrapper', label: 'Native wrapper', description: 'Real official scope fixture',
+      parameters: { type: 'object' },
+      execute: async () => {
+        if (behavior === 'models') {
+          expect(currentCodingHostToolApi()?.api.models).toBe(first);
+          models = second;
+          expect(currentCodingHostToolApi()?.api.models).toBe(second);
+        } else {
+          entry = manager.appendCustomEntry('unflushed official append');
+        }
+        observed = true;
+        return { content: [{ type: 'text', text: 'native behavior retained' }], details: {} };
+      },
+    };
+    registry.install({
+      name: 'test-native-wrapper',
+      tools: [agentToolToHost(native, (api, ctx, work) =>
+        binding.withHostToolScope({ ...api, get models() { return models; } }, ctx, work))],
+    });
+    const parent = hostToolToAgent({
+      name: 'native-wrapper-parent', description: 'Own the official task', parameters: { type: 'object' },
+      execute: async (_args, api, ctx) => {
+        const result = await api.executeTool(native.name, {}, ctx);
+        return { output: [], isError: result.isError };
+      },
+    });
+    expect((await execute(parent)).isError).toBe(false);
+    expect(observed).toBe(true);
+    if (behavior === 'append') {
+      expect(journal.durableId(entry)).toBeDefined();
+      expect(journal.committedSnapshot().entries).toMatchObject([{ id: entry }]);
+    }
+  });
+
   test('a detached commit prepares callback appends with the host document in one receipt', async () => {
     const detached = new AsyncResource('test.native-journal-detached');
     const { execute, journal, manager, harness, conversation } = await toolFixture();
@@ -316,9 +380,11 @@ describe('native journal scope in a real host tool invocation', () => {
       name: 'transaction', description: 'Local transaction fixture', parameters: { type: 'object' },
       execute: async (_args, api, ctx) => {
         const scope = currentCodingToolInvocation();
+        expect(currentCodingHostToolApi()?.api).toBe(api);
         before = manager.appendCustomEntry('before callback');
         const result = await detached.runInAsyncScope(() => api.commit(async tx => {
           expect(currentCodingToolInvocation().runtime.taskId).toBe(scope.runtime.taskId);
+          expect(currentCodingHostToolApi()?.api).toBe(api);
           after = manager.appendCustomEntry('inside callback');
           (await tx.doc(HostState, conversation.id)).id = after;
           expect(journal.durableId(before)).toBeUndefined();
@@ -335,6 +401,79 @@ describe('native journal scope in a real host tool invocation', () => {
     try {
       const result = await execute(tool);
       expect(result.result.content).toEqual([{ type: 'text', text: 'committed' }]);
+      expect(result.isError).toBe(false);
+      expect(journal.committedSnapshot().entries.map(entry => entry.id)).toEqual([before, after]);
+      expect((await harness.snapshot(HostState, conversation.id, context))?.id).toBe(after);
+    } finally {
+      detached.emitDestroy();
+    }
+  });
+
+  test.each([false, true])('an official ToolTask commits detached native appends (retry: %s)', async retry => {
+    const detached = new AsyncResource('test.native-official-api');
+    const opened = await toolFixture();
+    const { execute, binding, registry, journal, manager, conversation, harness } = opened;
+    const HostState = defineDoc({
+      kind: 'test.native-official-host-state', version: 1, scope: 'conversation',
+      initial: () => ({ id: '' }), checkpointWhen: () => false,
+    });
+    let before = '';
+    let after = '';
+    let enteredCommit = false;
+    const native: AgentTool = {
+      name: 'native-scope', label: 'Native scope', description: 'Local official scope fixture',
+      parameters: { type: 'object' },
+      execute: async callId => {
+        expect(() => currentCodingToolInvocation()).toThrow('requires a durable coding tool invocation');
+        const scope = currentCodingHostToolApi();
+        if (!scope) throw new Error('Official ToolTask has no host API');
+        expect(scope.api.callId).toBe(callId);
+        expect((await scope.api.getTask(scope.api.taskId, scope.context))?.kind).toBe(ToolTask.definition.name);
+        before = manager.appendCustomEntry('before official callback');
+        const change = async (tx: Tx) => {
+          enteredCommit = true;
+          if (currentCodingHostToolApi()?.api.taskId !== scope.api.taskId) {
+            throw new Error('Official commit lost the native API scope');
+          }
+          after = manager.appendCustomEntry('inside official callback');
+          (await tx.doc(HostState, conversation.id)).id = after;
+          expect(journal.durableId(after)).toBeUndefined();
+        };
+        if (retry) {
+          const refused = new Error('Refuse official transaction');
+          await expect(detached.runInAsyncScope(() => scope.api.commit(async tx => {
+            await change(tx);
+            throw refused;
+          }, scope.context))).rejects.toBe(refused);
+          expect(journal.durableId(before)).toBeUndefined();
+          expect(journal.durableId(after)).toBeUndefined();
+          expect(await harness.snapshot(HostState, conversation.id, context)).toBeUndefined();
+          await detached.runInAsyncScope(() => scope.api.commit(async tx => {
+            (await tx.doc(HostState, conversation.id)).id = after;
+          }, scope.context));
+        } else {
+          await detached.runInAsyncScope(() => scope.api.commit(change, scope.context));
+        }
+        expect(journal.durableId(before)).toBeDefined();
+        expect(journal.durableId(after)).toBeDefined();
+        return { content: [{ type: 'text', text: 'official committed' }], details: {} };
+      },
+    };
+    registry.install({
+      name: 'test-native-official-scope',
+      tools: [agentToolToHost(native, (api, ctx, work) => binding.withHostToolScope(api, ctx, work))],
+    });
+    const parent = hostToolToAgent({
+      name: 'official-parent', description: 'Local official parent', parameters: { type: 'object' },
+      execute: async (_args, api, ctx) => {
+        const result = await api.executeTool(native.name, {}, ctx, { key: 'official-scope' });
+        expect(currentCodingHostToolApi()?.api).toBe(api);
+        return { output: [{ type: 'text', text: String(result.isError) }], isError: result.isError };
+      },
+    });
+    try {
+      const result = await execute(parent);
+      expect(enteredCommit).toBe(true);
       expect(result.isError).toBe(false);
       expect(journal.committedSnapshot().entries.map(entry => entry.id)).toEqual([before, after]);
       expect((await harness.snapshot(HostState, conversation.id, context))?.id).toBe(after);

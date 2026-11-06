@@ -3,14 +3,16 @@ import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { createModels, fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall } from '@earendil-works/pi-ai';
 import { CodemodeSandbox } from '@earendil-works/pi-codemode';
 import {
-  createRegistry, Harness, MemoryStorage, type TaskId, type ToolExecutionResult,
+  createRegistry, defineTool, Harness, MemoryStorage, type CommitPublication, type TaskId, type ToolExecutionResult,
+  type ToolRegistration,
 } from '@earendil-works/pi-durable';
+import { obj } from '@earendil-works/pi-schema';
 import {
   createCodemodeExtension, type CodemodeSandboxLease, type CodemodeStoreAdapter, type CodemodeToolOptions,
 } from '@earendil-works/pi-durable/codemode';
 
 const context = BACKGROUND_CONTEXT;
-const cleanups: Array<() => Promise<unknown>> = [];
+const cleanups: Array<() => Promise<unknown> | void> = [];
 afterEach(async () => {
   for (const close of cleanups.splice(0).reverse()) await close();
 });
@@ -24,16 +26,16 @@ function sandbox() {
   return { value, starts: () => starts };
 }
 
-async function fixture(options: Partial<CodemodeToolOptions> = {}, repeat = false) {
+async function fixture(options: Partial<CodemodeToolOptions> = {}, repeat = false, extraTools: ToolRegistration[] = []) {
   const registry = createRegistry();
   const extension = createCodemodeExtension({
     sandbox: options.sandbox ?? sandbox().value, models: false, ...options,
   });
   let result: ToolExecutionResult | undefined;
-  let failure: unknown;
+  const failures: unknown[] = [];
   registry.install({
     ...extension,
-    tools: extension.tools?.map(tool => tool.name !== 'codemode' ? tool : {
+    tools: [...(extension.tools?.map((tool): ToolRegistration => tool.name !== 'codemode' ? tool : {
       ...tool,
       execute: async (args, api, ctx) => {
         try {
@@ -41,11 +43,11 @@ async function fixture(options: Partial<CodemodeToolOptions> = {}, repeat = fals
           if (repeat) expect(await tool.execute(args, api, ctx)).toEqual(result);
           return result;
         } catch (error) {
-          failure = error;
+          failures.push(error);
           throw error;
         }
       },
-    }),
+    }) ?? []), ...extraTools],
   });
   const faux = fauxProvider();
   const models = createModels();
@@ -56,20 +58,23 @@ async function fixture(options: Partial<CodemodeToolOptions> = {}, repeat = fals
     settings: { retry: { enabled: false }, compaction: { enabled: false } },
   }, context);
   cleanups.push(() => harness.close(context));
+  const receipts: CommitPublication[] = [];
+  const observation = harness.observeCommits({ advance: receipt => { receipts.push(receipt); }, end: () => {} });
+  cleanups.push(() => observation.detach());
   const conversation = await harness.root(context, { agent: { model: { provider: 'faux', modelId: 'faux-1' } } });
   const run = async (code: string): Promise<ToolExecutionResult> => {
     result = undefined;
-    failure = undefined;
+    failures.length = 0;
     faux.setResponses([
       fauxAssistantMessage([fauxToolCall('codemode', { code }, { id: 'policy-script' })], { stopReason: 'toolUse' }),
       fauxAssistantMessage([fauxText('done')]),
     ]);
     await (await conversation.submit({ type: 'input', content: 'Run local code' }, context)).wait(context);
-    if (failure !== undefined) throw failure;
+    if (failures.length) throw failures[0];
     if (result === undefined) throw new Error('The model did not execute codemode');
     return result;
   };
-  return { run, harness, advance: (ms: number) => { now += ms; } };
+  return { run, harness, receipts, advance: (ms: number) => { now += ms; } };
 }
 
 function text(result: ToolExecutionResult) {
@@ -77,6 +82,216 @@ function text(result: ToolExecutionResult) {
 }
 
 describe('public durable codemode host policies', () => {
+  test('the host projects the entire result once, after release and before durable result reuse', async () => {
+    const vm = sandbox();
+    let releases = 0;
+    let projections = 0;
+    const usage = {
+      input: 2, output: 3, cacheRead: 0, cacheWrite: 0, totalTokens: 5,
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+    };
+    const opened = await fixture({
+      sandbox: async () => ({ sandbox: vm.value, release: () => { releases++; } }),
+      formatResult: (result, info) => {
+        projections++;
+        expect(releases).toBe(1);
+        expect(result.ok).toBe(true);
+        expect(info.calls).toEqual([]);
+        expect(info.maxOutputTokens).toBe(12345);
+        return { output: [{ type: 'text', text: 'host projection' }], details: { calls: ['native-id'] }, usage };
+      },
+    }, true);
+    const result = await opened.run('// @options: {"max_output_tokens":12345}\nreturn "script value";');
+    expect(text(result)).toBe('host projection');
+    expect(result.details).toEqual({ calls: ['native-id'] });
+    expect(result.usage).toEqual(usage);
+    expect(projections).toBe(1);
+    expect(vm.starts()).toBe(1);
+  }, 10_000);
+
+  test('each issued call is observed before its actual official ToolTask executes', async () => {
+    const started = new Set<number>();
+    const names: string[] = [];
+    let effects = 0;
+    const effect = defineTool({
+      name: 'observed', description: 'Observe admission', parameters: obj({}), callers: ['tools'],
+      execute: async () => {
+        effects++;
+        expect(started.size).toBeGreaterThan(0);
+        return { output: [{ type: 'text', text: 'observed effect' }] };
+      },
+    });
+    const opened = await fixture({
+      onCallStart: call => {
+        started.add(call.id);
+        names.push(call.name);
+        expect(call.args).toEqual({});
+      },
+    }, true, [effect]);
+    const result = await opened.run('return await tools.observed({});');
+    expect(text(result)).toContain('observed effect');
+    expect(names).toEqual(['observed']);
+    expect(started).toEqual(new Set([1]));
+    expect(effects).toBe(1);
+  }, 10_000);
+
+  test('a synchronous observer failure stops the VM and propagates after release', async () => {
+    const vm = sandbox();
+    const refused = new Error('host observer refused');
+    let releases = 0;
+    let effects = 0;
+    const opened = await fixture({
+      sandbox: async () => ({ sandbox: vm.value, release: () => { releases++; } }),
+      onCallStart: () => { throw refused; },
+    }, false, [defineTool({
+      name: 'observed', description: 'Refuse admission', parameters: obj({}), callers: ['tools'],
+      execute: async () => { effects++; return { output: [] }; },
+    })]);
+    await expect(opened.run('await tools.observed({});')).rejects.toBe(refused);
+    expect(releases).toBe(1);
+    expect(effects).toBe(0);
+  }, 10_000);
+
+  test('model observers retain registered names for all issued calls, including queued helpers', async () => {
+    const names: string[] = [];
+    const opened = await fixture({ models: true, onCallStart: call => { names.push(call.name); } });
+    const result = await opened.run(
+      'return await Promise.allSettled(Array.from({length:6},()=>models.classify({provider:"faux",id:"faux-1"},{})));');
+    expect(result.isError).toBe(false);
+    expect(names).toEqual(Array(6).fill('pi.codemode.models.classify'));
+  }, 10_000);
+
+  test.each([undefined, null, 0])('an observer throwing %s still fails instead of publishing a cancellation result', async error => {
+    const opened = await fixture({
+      onCallStart: () => { throw error; },
+    }, false, [defineTool({
+      name: 'observed', description: 'Observe a thrown value', parameters: obj({}), callers: ['tools'],
+      execute: async () => ({ output: [] }),
+    })]);
+    const outcome = await opened.run('await tools.observed({});').then(
+      value => ({ value }), error => ({ error }));
+    expect(outcome).toEqual({ error });
+  }, 10_000);
+
+  for (const releaseFails of [false, true]) {
+    test(`caller cancellation ${releaseFails ? 'preserves a release failure' : 'returns partial output without a result or store publication'}`, async () => {
+      const vm = sandbox();
+      const cleanup = new Error('cleanup failed during cancellation');
+      let task!: TaskId;
+      let entered!: () => void;
+      const ready = new Promise<void>(done => { entered = done; });
+      let releases = 0;
+      let writes = 0;
+      let projected = 0;
+      const opened = await fixture({
+        sandbox: async api => {
+          task = api.taskId;
+          return {
+            sandbox: vm.value,
+            release: async () => {
+              releases++;
+              await vm.value.close();
+              if (releaseFails) throw cleanup;
+            },
+          };
+        },
+        cancellation: 'result',
+        store: { read: () => ({}), write: () => { writes++; } },
+        formatResult: (result, info) => {
+          projected++;
+          expect(releases).toBe(1);
+          expect(result.ok).toBe(false);
+          expect(info.calls).toMatchObject([{ name: 'wait', status: 'cancelled' }]);
+          return { output: result.output, isError: !result.ok, details: { cancelled: true } };
+        },
+      }, false, [defineTool({
+        name: 'wait', description: 'Wait for cancellation', parameters: obj({}), callers: ['tools'],
+        execute: async (_args, _api, ctx) => {
+          entered();
+          await new Promise<void>(done => {
+            if (ctx.abortSignal?.aborted) done();
+            else ctx.abortSignal?.addEventListener('abort', () => done(), { once: true });
+          });
+          return { output: [] };
+        },
+      })]);
+      const running = opened.run('store("uncommitted", 1); text("partial before cancel"); await tools.wait({});');
+      const settled = running.then(value => ({ value }), error => ({ error }));
+      await ready;
+      await opened.harness.abortTask(task, context);
+      const outcome = await settled;
+      if (releaseFails) {
+        expect(outcome).toEqual({ error: cleanup });
+        expect(projected).toBe(0);
+      } else {
+        expect('value' in outcome).toBe(true);
+        if (!('value' in outcome)) throw outcome.error;
+        expect(text(outcome.value)).toContain('partial before cancel');
+        expect(outcome.value.isError).toBe(true);
+        expect(projected).toBe(1);
+      }
+      expect(releases).toBe(1);
+      expect(writes).toBe(0);
+      expect(opened.receipts.some(receipt => receipt.changes.some(change =>
+        change.type === 'document' && change.kind === 'change' && change.record.kind === 'pi.codemode.run'
+          && change.value.result !== undefined))).toBe(false);
+    }, 10_000);
+  }
+
+  for (const [cancellation, projectionFails] of [['result', false], ['result', true], ['throw', false]] as const) {
+    test(`cancellation during projection (${cancellation}, failure: ${projectionFails}) retains output or the original error`, async () => {
+      const vm = sandbox();
+      const projectionError = new Error('projection failed during cancellation');
+      let task!: TaskId;
+      let entered!: () => void;
+      const ready = new Promise<void>(done => { entered = done; });
+      let cancelled!: Promise<void>;
+      let reason: unknown;
+      let releases = 0;
+      let writes = 0;
+      let projections = 0;
+      const opened = await fixture({
+        sandbox: async (api, ctx) => {
+          task = api.taskId;
+          cancelled = new Promise<void>(done => {
+            ctx.abortSignal?.addEventListener('abort', () => { reason = ctx.abortSignal?.reason; done(); }, { once: true });
+          });
+          return { sandbox: vm.value, release: () => { releases++; } };
+        },
+        cancellation,
+        store: { read: () => ({}), write: () => { writes++; } },
+        formatResult: async result => {
+          projections++;
+          expect(result.ok).toBe(true);
+          expect(releases).toBe(1);
+          entered();
+          await cancelled;
+          if (projectionFails) throw projectionError;
+          return { output: result.output, details: { projected: true } };
+        },
+      });
+      const running = opened.run('store("uncommitted", 1); text("partial during projection");');
+      const settled = running.then(value => ({ value }), error => ({ error }));
+      await ready;
+      await opened.harness.abortTask(task, context);
+      const outcome = await settled;
+      if (projectionFails) expect(outcome).toEqual({ error: projectionError });
+      else if (cancellation === 'throw') expect(outcome).toEqual({ error: reason });
+      else {
+        expect('value' in outcome).toBe(true);
+        if (!('value' in outcome)) throw outcome.error;
+        expect(text(outcome.value)).toContain('partial during projection');
+        expect(outcome.value.details).toEqual({ projected: true });
+        expect(outcome.value.isError).toBe(true);
+      }
+      expect(projections).toBe(1);
+      expect(writes).toBe(0);
+      expect(opened.receipts.some(receipt => receipt.changes.some(change =>
+        change.type === 'document' && change.kind === 'change' && change.record.kind === 'pi.codemode.run'
+          && change.value.result !== undefined))).toBe(false);
+    }, 10_000);
+  }
+
   test('a lease starts only once and is released before output formatting and result replay', async () => {
     const vm = sandbox();
     let acquisitions = 0;

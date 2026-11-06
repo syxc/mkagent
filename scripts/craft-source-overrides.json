@@ -2328,6 +2328,14 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/test/durable-codemode-models.test.ts": {
+      "sha256": "c78f1c9497ab744fedf6e7d684cd6e9dd59a0c2097699fc0be65b671786c43c7",
+      "reason": "Verify shared model resolution, validation before effects, structured image errors and usage through the public durable helper."
+    },
+    "packages/pi-durable-coding/test/native-codemode-models.test.ts": {
+      "sha256": "ac455b7cd4bc67792ad6c409e90809252c0829ae83fb14c4c91cfda1f48733e2",
+      "reason": "Verify the native tool definition preserves model concurrency, early rows, isolated registries, validation hints, images and usage."
+    },
     "packages/pi-durable-coding/test/shared-codemode-output.test.ts": {
       "sha256": "29dbbe48f9d52cf1c618309eabd2f57714c55eba0d82183b0ae782c7fbd6adaf",
       "reason": "Check shared codemode formatting, native token budgets, image deduplication, write failures and partial cancellation output."
@@ -2353,8 +2361,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "662b1ac85ceba65639b99daed59e7a08277c7cbe75dfc54c24cc69d0fde3ee4d",
-      "reason": "Reproduce shared resource, search and codemode output adapters while retaining native activation, store and file policies."
+      "sha256": "31f37532c246d3f6e50ee04935744d807d23772a282d545f653468551bda6299",
+      "reason": "Reproduce shared resource, search, codemode output and model adapters with guarded native contract boundaries."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3813,7 +3821,7 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "8fc7240d1085bc0f1af0cd43fe882cd716e5e8fddd000d60a602b1818ea092fb",
+      "sha256": "a5cdc6673074941da76f8c529a3bebc190bc50c18f66e9f07e71fd8765a2a7a5",
       "reason": "Keep a canonical complete Git patch for frozen Bun installs, legacy generation, shared search and codemode formatting, branch store transactions and host execution policies."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
@@ -3865,7 +3873,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "1d4b9b18aa7cd1e8a88b76bb26fa9a371ba20ea76e8fdadf7d70284e34f3d325",
+      "sha256": "0b0a8cf0a993d4ca08744dea44d28d9b6d129ea5af24364324556d283d448097",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3885,7 +3893,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "f2de325e9d2cbb7a6a362581883a9ec1c168244c72c97a9654aa15a2c0d44ce1",
+      "sha256": "cb17760761dd9301f1e489dc7b69809a0fa9b9da222a6a8ff70a5dff4f2d19f8",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -3901,8 +3909,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
-      "sha256": "8980d014ec271265faf00dcf552e68d056fc17533c3418fd115a7716c97c7368",
-      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler; restore the originating async context for builtin callbacks and synchronous or asynchronous native appends."
+      "sha256": "1a72dfe21144ea6145fd6e751db50cd5332d8466df46cf597a6af9857d3a7a06",
+      "reason": "Bind real CodingToolTask and official ToolTask APIs to native invocation scopes, preserving task ownership and transactional journal preparation across detached callbacks."
     },
     "packages/pi-durable-coding/src/durable-coding/index.ts": {
       "sha256": "32898b73b64f687a315137b0f0c33c25961be8b5c825f13437f08a48b7038f71",
@@ -3977,8 +3985,8 @@
       "reason": "Provide the independent native coding host adapter and public contracts in host-tool-nested.ts."
     },
     "packages/pi-durable-coding/src/host-tools.ts": {
-      "sha256": "2284edd56bb3fa11ecec5e61f876d47aefbf2d81c060c2eaa45d8ac5ca3421fc",
-      "reason": "Bridge native and official host tools; restore commit callbacks to their invocation and prepare native appends before and after the callback in the same transaction."
+      "sha256": "09bea98e7c3a452c26f1200caf5b4c564d3d2898427e42619149ef70f4ca3edb",
+      "reason": "Bridge real host APIs and native results without losing wrapper contracts, owned children, callback scope or transaction boundaries."
     },
     "packages/pi-durable-coding/src/native-operations.ts": {
       "sha256": "8221637426549d2ed380b6ff0011ec58687482c88b4540cc41dbe5fcbc49b52f",
@@ -4461,8 +4469,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/execute.lazy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/execute.ts": {
-      "sha256": "9ecce881420faf06e06b432ee0328b5ddb7b1c153fce26c7be9184907d774b4a",
-      "reason": "Share durable codemode output formatting while preserving native token budgets, image labels, output files and branch store writes."
+      "sha256": "d6e0f472f5030255716f69f6cf33677ccd281bb9a36417a1559cd2427dfcc871",
+      "reason": "Share durable model preparation and output formatting while preserving native rows, concurrency, usage, validation hints and branch policies."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/index.ts": {
       "sha256": "7684b16067a29ea1c83170afdce35437c54afdd679b250c7465a668624aff70f",
@@ -5037,8 +5045,8 @@
       "reason": "Exercise durable native coding behavior and isolated recovery through the host-tools.test.ts fixture."
     },
     "packages/pi-durable-coding/test/native-journal-transactions.test.ts": {
-      "sha256": "03c3c2a10501e07b7303d2d20dc77afb6aea3a17163c3f1091668600c4e3921c",
-      "reason": "Verify real native journal preparations, rollback retries, receipt visibility, replacement conflicts and detached host callback appends."
+      "sha256": "f2a1a0f7d9c6779e9afa3b273bc90fd25ca53366549aab743a53b668d675b95f",
+      "reason": "Verify repeated journal preparation, detached commits, wrapper API identity, dynamic models and final native flush in real official ToolTasks."
     },
     "packages/pi-durable-coding/test/native-session-journal.test.ts": {
       "sha256": "ddd81eebca131bfbeed3134c4f17dbcde0cf02440a6c911ab234863d2788711b",
@@ -5181,8 +5189,8 @@
       "reason": "Verify branch-local raw store writes, result transactions, completed invocation reuse and rejected writeback using real native journal and durable model calls."
     },
     "packages/pi-durable-coding/test/durable-codemode-options.test.ts": {
-      "sha256": "388e6f561a6b84671e007ade4bb60ee311dde821044fe733b4c577ae089a3f7a",
-      "reason": "Verify sandbox leases, deadline and cancellation cleanup, host output policies and discovery overrides through public durable ToolTasks."
+      "sha256": "bb01a87c1a1884ffad04ced8ec967b2049bc650282481709106a68b3f8fec969",
+      "reason": "Verify public host policies, issued-call observation, result projection and cancellation during VM work and asynchronous formatting through real durable tasks."
     }
   },
   "deleted": {

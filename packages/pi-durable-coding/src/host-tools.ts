@@ -10,7 +10,7 @@ import {
 } from '@earendil-works/pi-durable';
 import type { AgentTool, AgentToolUpdateCallback } from './agent-runtime.ts';
 import type { ToolDefinition } from './pi/core/extensions/types.ts';
-import { currentCodingToolInvocation } from './durable-coding/engine.ts';
+import { currentCodingToolInvocation, withCodingHostToolApi } from './durable-coding/engine.ts';
 import { nestedHostTools } from './host-tool-nested.ts';
 import type { HostControlledToolResult } from './host-tool-controls.ts';
 
@@ -62,7 +62,8 @@ export function hostToolToAgent(registration: HostTool): NativeTool {
       let executionError: { error: unknown } | undefined;
       try {
         context.abortSignal?.throwIfAborted();
-        result = await registration.execute(args, invocation.api, context);
+        result = await withCodingHostToolApi(invocation.api, context,
+          () => registration.execute(args, invocation.api, context));
       } catch (error) {
         executionError = { error };
       } finally {
@@ -193,7 +194,7 @@ async function hostInvocation(
     let value!: T;
     await runtime.commit(async tx => {
       await flush(tx);
-      value = await scope.runInScope(() => change(tx));
+      value = await scope.runInScope(() => withCodingHostToolApi(api, context, () => change(tx)));
       await flush(tx);
       return undefined;
     }, commitContext, options);

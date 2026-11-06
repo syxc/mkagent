@@ -56,6 +56,7 @@ interface Invocation {
   drafts: EntryDraft[];
   runTool(call: AgentToolCall, options: RunToolCallOptions): Promise<AgentToolCallOutcome>;
   tool?: CodingToolInvocation;
+  hostTool?: { api: ToolExecutionApi; context: Context };
 }
 
 interface ToolOwner {
@@ -65,6 +66,21 @@ interface ToolOwner {
 }
 
 const invocation = new AsyncLocalStorage<Invocation>();
+
+/** Bind an existing tool API without changing its task owner. */
+export function withCodingHostToolApi<T>(api: ToolExecutionApi, context: Context, work: () => T): T {
+  const scope = invocation.getStore();
+  if (!scope) throw new Error('Host tool API requires a durable coding invocation');
+  return invocation.run({ ...scope, hostTool: { api, context } }, work);
+}
+
+/** Capture either an official ToolTask API or the API backed by a CodingToolTask. */
+export function currentCodingHostToolApi() {
+  const scope = invocation.getStore();
+  if (!scope?.hostTool) return undefined;
+  const resume = AsyncLocalStorage.snapshot();
+  return { ...scope.hostTool, runInScope: <T>(work: () => T): T => resume(work) };
+}
 
 /** The real durable tool phase used by the host approval and execution adapters. */
 export function currentCodingToolInvocation(): CodingToolInvocation & {
@@ -404,7 +420,9 @@ export class DurableLoopBinding {
   /** Official ToolTasks enter through their own API, never an inherited, ended task invocation. */
   async withHostToolScope<T>(api: ToolExecutionApi, context: Context, work: () => Promise<T>): Promise<T> {
     const existing = invocation.getStore();
-    if (existing?.tool?.runtime.taskId === api.taskId && existing.host === this.execution) return work();
+    if (existing?.tool?.runtime.taskId === api.taskId && existing.host === this.execution) {
+      return withCodingHostToolApi(api, context, work);
+    }
     const backend = await this.backend();
     if (api.conversationId !== backend.conversation.id || !this.execution) {
       throw new Error('Host tool does not belong to the active durable coding session');
@@ -417,7 +435,24 @@ export class DurableLoopBinding {
     };
     const phase = () => invocation.run({
       host, drafts: [], runTool: (call, options) => this.startTool(call, options, owner),
-    }, work);
+    }, async () => {
+      const resume = AsyncLocalStorage.snapshot();
+      const scopedApi: ToolExecutionApi = {
+        ...api,
+        get models() { return api.models; },
+        commit: (change, commitContext, options) => api.commit(async tx => {
+          await resume(() => host.commit(tx));
+          const result = await resume(() => withCodingHostToolApi(scopedApi, context, () => change(tx)));
+          await resume(() => host.commit(tx));
+          return result;
+        }, commitContext, options),
+      };
+      return withCodingHostToolApi(scopedApi, context, async () => {
+        const result = await work();
+        await scopedApi.commit(() => undefined, context);
+        return result;
+      });
+    });
     // Context cancellation remains owned by the official ToolTask.
     context.abortSignal?.throwIfAborted();
     return this.options.journal ? this.options.journal.phase(phase) : phase();

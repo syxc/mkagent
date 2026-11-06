@@ -20,6 +20,72 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Native tool API scopes after 5fee19e
+
+Native execution can capture the actual host API from either a CodingToolTask
+or an official ToolTask. The official path retains its own task identity and
+does not invent a CodingToolTask invocation. Its commit view restores the
+native phase and prepares the journal before and after the callback.
+
+The first detached official commit reached its callback but lost the native
+API scope; the new case failed before the commit view was added. Normal
+submission and rollback followed by a fresh commit now pass. The tests check
+that neither native entry nor host document is published on rejection,
+pending native operations commit once on retry, and the parent API is restored
+after its official child returns. These are explicit retries in one phase,
+not a guarantee of arbitrary callback replay.
+
+Independent review found three additional gaps: a same-owner wrapper API was
+not bound, the model getter was captured too early, and official tools did not
+flush native appends made without an explicit commit. Each regression failed
+before its correction. The wrapper identity, changing model view and final
+native flush now pass through real official ToolTasks.
+
+The journal transaction file passes 14 tests and 108 assertions. Four related
+host built-in, bridge, tool task and store files separately pass 45 tests and
+379 assertions. A strict public consumer checks the two scope helpers and the
+API-view expression, with source equality checked separately. This is not a
+full engine or SDK type check. Native codemode entry-point migration remains
+in progress.
+
+## Shared model preparation and codemode policies after 5fee19e
+
+The SDK now calls `prepareCodemodeModelCall` for classifier and image helpers.
+The shared code resolves provider/id through the host registry, validates the
+context before an effect, and retains structured values and usage. The SDK
+keeps its documentation hints, receiver binding, live rows and four-call
+limit. Its existing sandbox execution loop still runs.
+
+The dependency patch also adds issued-call observation, complete result
+projection and an explicit cancellation-result policy. Observation runs
+before admission and model-slot waiting. Projection runs after lease release.
+Completed calls reuse the stored projection. Caller cancellation after VM
+start returns partial output without publishing a result or store writes.
+Ordinary observer, projection, release and store errors still propagate.
+
+Independent review found that cancellation during asynchronous projection
+reached the final commit and threw. The new case failed before the fix.
+Completion now checks cancellation after projection, returns the existing
+projection as an error and skips publication. Projection runs once. Two
+companion cases retain the original projection error and default throw policy.
+
+| Check | Result and scope |
+| --- | --- |
+| Combined regression | Ten explicit files pass 116 tests and 833 assertions across native journal transactions, tool ownership, bridges, store policies, output and shared models. |
+| Public policies | 21 tests and 102 assertions through Harness, QuickJS and official ToolTasks. Cases include queued model rows, observer throws of `undefined`, `null` and `0`, partial cancellation output and refusal of store writeback. |
+| Shared model preparation | Three tests and 21 assertions check host model resolution, deferred effects, structured image errors, usage and validation hints. |
+| Native definition entry | Four tests and 50 assertions use the real tool definition with session and model substitutes. Six rows appear before slot admission, providers run at most four at a time, prompts stay out of previews, and concurrent model registries remain separate. These checks do not use a complete AgentSession. |
+| Public types | Both public test roots pass strict checks. The extracted native model adapter also passes with its selected declarations checked against the source. The compiler rejects coding runtime files. These are not full SDK checks. |
+| Scoped reproduction | The selected codemode execution source and its source record reproduce with `complete: false`. The generator now includes shared model preparation. |
+| Patch and frozen install | The complete patch applies to a clean 1.5.0 cache. A fresh offline install with scripts disabled and a frozen lock keeps the lock unchanged. All 18 target files match. The installed consumer passes 24 tests and 123 assertions. Patch SHA-256: `a5cdc6673074941da76f8c529a3bebc190bc50c18f66e9f07e71fd8765a2a7a5`. |
+| Independent review | Static review confirmed the three scope corrections and found the projection cancellation window. The main thread reproduced and corrected that window; the reviewer did not run tests. |
+
+An earlier frozen consumer preceded restoration of two `async` model execute
+methods and is superseded by the install above. Native core migration, plugin
+hooks, ordinary child-tool usage accounting and restart recovery remain open.
+Repeated host flushes can still call the optional commit-state hook more than
+once. External callback side effects are outside the transaction guarantees.
+
 ## Codemode host policies after 05710bf
 
 The local dependency patch adds four host integration points to durable's

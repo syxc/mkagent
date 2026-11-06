@@ -2,7 +2,7 @@
 import ts from 'typescript';
 
 export function portSharedHelpers(path: string, body: string): string {
-  if (path === 'extensions/codemode/execute.ts') return portCodemodeOutput(body);
+  if (path === 'extensions/codemode/execute.ts') return portCodemodeModels(portCodemodeOutput(body));
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
@@ -156,4 +156,101 @@ function portCodemodeOutput(body: string): string {
   for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
   return 'import { extname } from "node:path";\n'
     + 'import { DEFAULT_MAX_OUTPUT_TOKENS, formatCodemodeResult } from "@earendil-works/pi-durable/codemode";\n' + body;
+}
+
+function portCodemodeModels(body: string): string {
+  const parsed = ts.createSourceFile('execute.ts', body, ts.ScriptTarget.Latest, true);
+  const functions = new Map([['withArticle', 1], ['checkClassifierContext', 1], ['checkImagesContext', 1]]);
+  const declarations = new Set(['ScriptValue', 'CLASSIFIER_CONTEXT_SHAPE', 'ModelCallResult']);
+  const edits: Array<{ start: number; end: number; text: string }> = [];
+  let replaced = false;
+  for (const node of parsed.statements) {
+    if (ts.isFunctionDeclaration(node) && node.name && functions.has(node.name.text)) {
+      if (node.parameters.length !== functions.get(node.name.text)) throw new Error('Codemode model validation signature changed');
+      functions.delete(node.name.text);
+      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
+    }
+    const named = ts.isVariableStatement(node) && node.declarationList.declarations.length === 1
+      ? node.declarationList.declarations[0].name
+      : ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node) ? node.name : undefined;
+    if (named && ts.isIdentifier(named) && declarations.delete(named.text)) {
+      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
+    }
+    if (ts.isImportDeclaration(node) && node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
+      const imports = node.importClause.namedBindings;
+      const kept = imports.elements.filter(item => !['ClassifierContext', 'ImagesContext', 'ModelTypeMap'].includes(item.name.text));
+      if (kept.length !== imports.elements.length) {
+        edits.push({ start: imports.getStart(parsed), end: imports.end, text: '{ ' + kept.map(item => item.getText(parsed)).join(', ') + ' }' });
+      }
+    }
+    if (!ts.isFunctionDeclaration(node) || node.name?.text !== 'createModelGlobals' || !node.body) continue;
+    const variables = node.body.statements.filter(ts.isVariableStatement);
+    const names = variables.map(item => item.declarationList.declarations[0].name.getText(parsed));
+    if (node.parameters.length !== 6 || JSON.stringify(names) !== JSON.stringify(['limit', 'callCount', 'runModelCall', 'implementations'])) {
+      throw new Error('Codemode model globals boundary changed');
+    }
+    const dispatch = variables[2];
+    const arrow = dispatch.declarationList.declarations[0].initializer;
+    if (!arrow || !ts.isArrowFunction(arrow) || arrow.parameters.length !== 5 || arrow.typeParameters?.length !== 3) {
+      throw new Error('Codemode model dispatcher changed');
+    }
+    edits.push({ start: dispatch.getFullStart(), end: dispatch.end, text: `
+
+	const source = {
+		getModelOfType: models.getModelOfType.bind(models),
+		classify: (...[model, context, options]: Parameters<CodemodeModelRuntime["classify"]>) =>
+			models.classify(model, context, { signal: options?.signal }),
+		generateImages: (...[model, context, options]: Parameters<CodemodeModelRuntime["generateImages"]>) =>
+			models.generateImages(model, context, { signal: options?.signal }),
+	};
+	const runModelCall = async (
+		name: "models.classify" | "models.generateImages",
+		[model, context]: unknown[],
+		signal: AbortSignal,
+	): Promise<unknown> => {
+		const prepared = prepareCodemodeModelCall(name, { model, context }, source, { docsPath: CODEMODE_DOCS_PATH });
+		const record: CodemodeNestedCall = {
+			id: \`\${toolCallId}/\${name}/\${++callCount}\`,
+			name,
+			args: \`\${prepared.model.provider}/\${prepared.model.id}\`,
+			status: "running",
+		};
+		calls.push(record);
+		publish();
+		const startedAt = performance.now();
+		const execution = await limit(() => prepared.execute(withAbortSignal(signal, BACKGROUND_CONTEXT)));
+		const result = execution.structuredOutput;
+		if (name === "models.generateImages" && "output" in result && Array.isArray(result.output)) {
+			addGeneratedImages(result.output.filter((block) =>
+				typeof block === "object" && block !== null && "type" in block && block.type === "image").length);
+		}
+		record.durationMs = performance.now() - startedAt;
+		record.status = result.stopReason === "stop" ? "ok" : result.stopReason === "aborted" ? "cancelled" : "error";
+		if (result.errorMessage) record.error = truncateText(result.errorMessage, ERROR_PREVIEW_CHARS);
+		if (result.usage) {
+			record.cost = result.usage.cost.total;
+			addUsage(result.usage);
+		}
+		publish();
+		return result;
+	};` });
+    const object = variables[3].declarationList.declarations[0].initializer;
+    if (!object || !ts.isObjectLiteralExpression(object) || object.properties.length !== 5) throw new Error('Codemode model globals changed');
+    const remaining = new Set(['models.classify', 'models.generateImages']);
+    for (const property of object.properties) {
+      if (!ts.isPropertyAssignment(property) || !ts.isStringLiteral(property.name) || !remaining.delete(property.name.text)) continue;
+      const name = property.name.text;
+      edits.push({ start: property.getStart(parsed), end: property.end,
+        text: JSON.stringify(name) + ': (args, { signal }) => runModelCall(' + JSON.stringify(name) + ', args as unknown[], signal)' });
+    }
+    if (remaining.size) throw new Error('Codemode model helper names changed');
+    replaced = true;
+  }
+  if (functions.size || declarations.size || !replaced) throw new Error('Codemode model declarations changed');
+  for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
+  const imported = 'import { DEFAULT_MAX_OUTPUT_TOKENS, formatCodemodeResult } from "@earendil-works/pi-durable/codemode";';
+  if (!body.includes(imported)) throw new Error('Codemode shared formatter import changed');
+  return body.replace(imported,
+    'import { BACKGROUND_CONTEXT, withAbortSignal } from "@earendil-works/chord/context";\n'
+    + 'import { DEFAULT_MAX_OUTPUT_TOKENS, formatCodemodeResult, prepareCodemodeModelCall } from "@earendil-works/pi-durable/codemode";');
 }
