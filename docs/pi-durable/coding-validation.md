@@ -20,6 +20,50 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Shared read path candidates
+
+Native synchronous and asynchronous read paths now use the durable candidate
+generator exported through `/tools`. It owns the macOS screenshot space, NFD,
+curly quote and combined spellings. The adapter retains Native lazy evaluation,
+skips candidates equal to the original path and retries other duplicates.
+Durable still builds the full candidate set before checking each unique path.
+Native path resolution and the other four function bodies remain unchanged.
+
+The actual Native entry passes the same 20 tests and 74 assertions before
+and after replacement. They check fallback order, early success, repeated
+probes, unchanged candidates and malformed file URLs. The 24 captured original
+durable cases match both results and existence probes. Five isolated real
+file cases match the original Native sync and async entries. These include
+screenshot spaces, curly quotes, Unicode names and a missing file. The local
+macOS filesystem does not establish Windows filename behavior.
+
+Seven explicit strict type roots resolve 439 source files with no diagnostics.
+The generator rejects five changed declaration boundaries. The single-file
+check reports `sourceFiles: 1` and `complete: false`. The nine-file path, shell,
+process, ANSI and image suite passes 166 tests and 1006 assertions.
+
+All 28 patch files apply cleanly and match the installed files. The previous
+24-file patch body remains unchanged. The patch SHA-256 is
+`1f6fa31edaf5ade9e683fbcc12ca771fc53ee2fa8938687b6ca9127820c7b66b`.
+A fresh independent cache links 99 original local packages and excludes the old
+patched cache. The offline frozen install disables lifecycle scripts. All 28
+patched files, 12 Native source, test and metadata files, and 46 runtime source
+files match byte for byte. Bun and Node each pass the same 38 test bodies and
+108 assertions. Node synchronizes builtin fs and spawn bindings. Both locks
+remain unchanged. The first import audit used require conditions and could not
+resolve the import-only pi-schema export. The corrected audit uses import
+conditions and checks 46 runtime files with no nonliteral imports.
+
+The work does not recheck registry tarball integrity, complete SDK or product
+integration, root installation or release builds. Review stayed in the main
+thread within the permitted files.
+
+The first Git metadata commands in this batch did not use the isolated
+environment. Git access to real HOME configuration cannot be ruled out.
+No configuration content was printed. Later Git checks and the commit use
+the isolated environment and system sandbox. Later passing tests do not
+resolve this access gap.
+
 ## Shared Native shell algorithms
 
 Native synchronous shell discovery still owns path searches and errors.

@@ -814,8 +814,10 @@
       "source": "packages/coding-agent/src/core/tools/path-utils.ts",
       "target": "src/pi/core/tools/path-utils.ts",
       "sha256": "ab6f420d2388a41366113c17a25e356867820b87b02a169d044cfcf83e1997d3",
-      "portSha256": "ab6f420d2388a41366113c17a25e356867820b87b02a169d044cfcf83e1997d3",
-      "changes": []
+      "portSha256": "7975826d5034b8f7f93c152ea181fb53145fdc42e8fa0e7209c7fae974c12ce6",
+      "changes": [
+        "shared-durable-read-path-variants"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/powershell.ts",

@@ -1,4 +1,4 @@
-# Content SHA-256: 0fae9c5e104ae01a840e8c02c8b2d25023a1add57b5bd94013e075b4a70089c7
+# Content SHA-256: 4b781082b0ee39f242242aaa532d5edd4f35f5a86e900f886fc8c6e963073f03
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -1723,3 +1723,72 @@ index 120ff2015d81eb795a090eae897910a58768373f..1bc0e58a3fe28b0722f4efd530e2f2c0
      return new Promise((resolvePromise, reject) => {
          let settled = false;
          let exited = false;
+diff --git a/dist/tools/index.d.ts b/dist/tools/index.d.ts
+index dc06b0be86a205a7aba4ab2c06ec4e003d731165..3d3d8e83aa358bc8036007dfc4451d804ded04eb 100644
+--- a/dist/tools/index.d.ts
++++ b/dist/tools/index.d.ts
+@@ -4,6 +4,7 @@ export { createEditTool, type EditToolDetails, type EditToolInput } from "./edit
+ export { DEFAULT_IMAGE_LIMITS, type ImageLimits, type ImageProcessor, type PreparedImage, } from "./image-processor.ts";
+ export { createReadTool, type ReadToolDetails, type ReadToolInput, type ReadToolOptions } from "./read.ts";
+ export { createWriteTool, type WriteToolInput } from "./write.ts";
++export { readPathVariants } from "./path-utils.ts";
+ /**
+  * The `coding-tools` extension: `read`, `write`, `edit`, and `bash`; nothing installs it automatically.
+  * `createPowerShellTool()` adds `powershell`. `images` prepares the images `read` returns (see `ReadToolOptions`).
+diff --git a/dist/tools/index.js b/dist/tools/index.js
+index 77187bb5df6507b0f291ab9c27c932e68b780889..b9955c670b80a28fa155773628562dac9c9db632 100644
+--- a/dist/tools/index.js
++++ b/dist/tools/index.js
+@@ -8,6 +8,7 @@ export { createEditTool } from "./edit.js";
+ export { DEFAULT_IMAGE_LIMITS, } from "./image-processor.js";
+ export { createReadTool } from "./read.js";
+ export { createWriteTool } from "./write.js";
++export { readPathVariants } from "./path-utils.js";
+ /**
+  * The `coding-tools` extension: `read`, `write`, `edit`, and `bash`; nothing installs it automatically.
+  * `createPowerShellTool()` adds `powershell`. `images` prepares the images `read` returns (see `ReadToolOptions`).
+diff --git a/dist/tools/path-utils.d.ts b/dist/tools/path-utils.d.ts
+index f7a7eedccff9b58fafe57ba9b5c9c12738ed0602..bef38d1b1156f99aee5c93a07262f4a1d1704d3d 100644
+--- a/dist/tools/path-utils.d.ts
++++ b/dist/tools/path-utils.d.ts
+@@ -2,4 +2,6 @@ import type { Context } from "@earendil-works/chord";
+ import { type ExecutionEnv } from "../env/index.ts";
+ export declare function resolveToolPath(env: ExecutionEnv, path: string, context: Context): Promise<string>;
+ export declare function resolveReadToolPath(env: ExecutionEnv, path: string, context: Context): Promise<string>;
++/** Yield read-path spellings in fallback order; callers choose duplicate handling. */
++export declare function readPathVariants(resolved: string): IterableIterator<string>;
+ //# sourceMappingURL=path-utils.d.ts.map
+\ No newline at end of file
+diff --git a/dist/tools/path-utils.js b/dist/tools/path-utils.js
+index 547e6a35c473f5c6af5e7455500e51a535edf05b..b2ef5b12acd2eaca4d4fa2f573fbbc4d9300d7fc 100644
+--- a/dist/tools/path-utils.js
++++ b/dist/tools/path-utils.js
+@@ -10,17 +10,19 @@ export async function resolveToolPath(env, path, context) {
+ }
+ export async function resolveReadToolPath(env, path, context) {
+     const resolved = await resolveToolPath(env, path, context);
+-    const variants = [
+-        resolved,
+-        resolved.replace(/ (AM|PM)\./gi, `${NARROW_NO_BREAK_SPACE}$1.`),
+-        resolved.normalize("NFD"),
+-        resolved.replace(/'/g, "\u2019"),
+-        resolved.normalize("NFD").replace(/'/g, "\u2019"),
+-    ];
+-    for (const variant of new Set(variants)) {
++    for (const variant of new Set(readPathVariants(resolved))) {
+         if (getOrThrow(await env.exists(variant, context)))
+             return variant;
+     }
+     return resolved;
+ }
++/** Yield read-path spellings in fallback order; callers choose duplicate handling. */
++export function* readPathVariants(resolved) {
++    yield resolved;
++    yield resolved.replace(/ (AM|PM)\./gi, `${NARROW_NO_BREAK_SPACE}$1.`);
++    const nfd = resolved.normalize("NFD");
++    yield nfd;
++    yield resolved.replace(/'/g, "\u2019");
++    yield nfd.replace(/'/g, "\u2019");
++}
+ //# sourceMappingURL=path-utils.js.map
+\ No newline at end of file

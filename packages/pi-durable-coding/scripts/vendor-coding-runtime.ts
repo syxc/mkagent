@@ -259,7 +259,7 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts' ||
       path === 'utils/zip.ts' || path === 'utils/tools-manager.ts' || path === 'utils/exif-orientation.ts' ||
       path === 'utils/image-resize-core.ts' || path === 'utils/mime.ts' || path === 'utils/ansi.ts' ||
-      path === 'utils/child-process.ts' || path === 'utils/shell.ts') {
+      path === 'utils/child-process.ts' || path === 'utils/shell.ts' || path === 'core/tools/path-utils.ts') {
     body = portSharedHelpers(path, body);
     changes.add(path === 'extensions/tool-search/tool.ts' ? 'shared-durable-tool-search-ranking'
       : path === 'extensions/codemode/execute.ts' ? 'shared-durable-codemode-executor'
@@ -269,12 +269,13 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       : path === 'utils/ansi.ts' ? 'public-ansi-regex-complete-matcher'
       : path === 'utils/child-process.ts' ? 'shared-durable-child-process-wait'
       : path === 'utils/shell.ts' ? 'shared-durable-shell-algorithms'
+      : path === 'core/tools/path-utils.ts' ? 'shared-durable-read-path-variants'
       : path === 'utils/zip.ts' ? 'public-fflate-zip-writer'
       : path === 'utils/tools-manager.ts' ? 'public-jszip-tool-archives' : 'shared-lightweight-resource-algorithms');
     if (path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts' ||
         path === 'utils/exif-orientation.ts' || path === 'utils/image-resize-core.ts' ||
         path === 'utils/mime.ts' || path === 'utils/child-process.ts' ||
-        path === 'utils/shell.ts') dependencies.add('@earendil-works/pi-durable');
+        path === 'utils/shell.ts' || path === 'core/tools/path-utils.ts') dependencies.add('@earendil-works/pi-durable');
     if (path === 'utils/zip.ts') dependencies.add('fflate');
     if (path === 'utils/tools-manager.ts') dependencies.add('jszip');
     if (path === 'utils/ansi.ts') dependencies.add('ansi-regex');

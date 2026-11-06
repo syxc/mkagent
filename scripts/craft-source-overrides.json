@@ -2485,8 +2485,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "74c46fe91ab0a82eedd1ff8326462157e2a9bb5ba5484ee97baad9df34780978",
-      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize, MIME, ANSI, child wait and shell boundaries."
+      "sha256": "6b1c65402b4a7eff29ac199411aed6233aeb2a58688a9b4a75785cc2d252a066",
+      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize, MIME, ANSI, child wait, shell and read path boundaries."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3945,7 +3945,7 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "45344f7300c49b46da08e092637ec61fad8bc8f40c7c3529ca63afddfbde34f0",
+      "sha256": "1f6fa31edaf5ade9e683fbcc12ca771fc53ee2fa8938687b6ca9127820c7b66b",
       "reason": "Keep a canonical complete Git patch for frozen Bun installs, shared algorithms and host policies; stamp the full body so old Bun cache artifacts are not reused."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
@@ -3997,7 +3997,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "9a78947e6f9dd91fce4777e7f6dad2486e173b3b1c71fd8855c1aa90af83ac93",
+      "sha256": "8efc7f734aed3f7b4daf58f6ed132eecba04ef4de005d42ad23b6b86dbe6b1c4",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -4017,7 +4017,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "da546bf835b92afbb21754d8b88e5f981903820046d572c3c34a8f3c1a1e2f3e",
+      "sha256": "416d25cf3f9845800e297e098621d2dd281ec8b6959f2ac546e0f0eb128b8212",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4517,8 +4517,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/output-accumulator.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/tools/path-utils.ts": {
-      "sha256": "ab6f420d2388a41366113c17a25e356867820b87b02a169d044cfcf83e1997d3",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/path-utils.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "7975826d5034b8f7f93c152ea181fb53145fdc42e8fa0e7209c7fae974c12ce6",
+      "reason": "Pinned Pi v1.5.0 read path port; share durable candidates and retain Native resolution, order and repeated probes."
     },
     "packages/pi-durable-coding/src/pi/core/tools/powershell.ts": {
       "sha256": "56645690718f03e6c5a19b574a74e3f28f0d0df7563fb226eeee5c88576aefad",
@@ -5315,6 +5315,14 @@
     "packages/pi-durable-coding/test/durable-codemode-options.test.ts": {
       "sha256": "cd8a059edc8457c0088f85e5532ed9f232cd2a2bccc3f9a0b8bafdae0d5162db",
       "reason": "Verify public host policies, issued-call observation, result projection and cancellation during VM work and asynchronous formatting through real durable tasks."
+    },
+    "packages/pi-durable-coding/src/compat/read-path.ts": {
+      "sha256": "3e06c640e7ef716be078f7edcdff987b4eecdcc5b9820d460daa03900d978d84",
+      "reason": "Share durable read path variants while retaining Native lazy evaluation and duplicate probe policy."
+    },
+    "packages/pi-durable-coding/test/native-read-path.test.ts": {
+      "sha256": "86a89e41317f879ea8b799d2b33c4623313b1f2aef7a28eb7c407ad26acd8b14",
+      "reason": "Pin actual Native sync and async read path order, repeated probes, unchanged candidates and invalid URL errors."
     }
   },
   "deleted": {

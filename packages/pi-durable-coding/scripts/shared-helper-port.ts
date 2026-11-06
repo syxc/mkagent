@@ -12,6 +12,7 @@ export function portSharedHelpers(path: string, body: string): string {
   if (path === 'utils/ansi.ts') return portAnsi(body);
   if (path === 'utils/child-process.ts') return portChildProcess(body);
   if (path === 'utils/shell.ts') return portShell(body);
+  if (path === 'core/tools/path-utils.ts') return portReadPaths(body);
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
@@ -291,6 +292,39 @@ function portShell(body: string): string {
   for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
   return 'import { getBashShellConfig, killProcessTree } from "../../compat/shell.ts";\n'
     + 'export { killProcessTree };\n' + body;
+}
+
+function portReadPaths(body: string): string {
+  const parsed = ts.createSourceFile('path-utils.ts', body, ts.ScriptTarget.Latest, true);
+  const expected: Record<string, string> = {
+    tryMacOSScreenshotPath: '72ed41fe9febd972126c9adc7a9a0c6a19b46f0f0f0554e568db50d570bf1e20',
+    tryNFDVariant: 'ddbdbbfe8cf568dd0f099d07884a835b492393293624c60823b53100d7b31e46',
+    tryCurlyQuoteVariant: 'de9d47659aa9a74abe18f78f2aea7ca8d4f66bbfb4c83723018266e7a38d96d1',
+    resolveReadPath: 'fc6188a5bb489a0260455e4bc5af061fc5c057a8ef4bd6ba7d83c99707d1f378',
+    resolveReadPathAsync: 'bb342a5a1d4d2b300ae2c7261e4cf91580751f34500024349993e1ddda71ae0f',
+  };
+  const remaining = new Set([...Object.keys(expected), 'NARROW_NO_BREAK_SPACE']);
+  const edits: Array<{ start: number; end: number; text: string }> = [];
+  for (const node of parsed.statements) {
+    if (ts.isFunctionDeclaration(node) && node.name && Object.hasOwn(expected, node.name.text)) {
+      const name = node.name.text;
+      if (!remaining.delete(name) || createHash('sha256').update(node.getText(parsed)).digest('hex') !== expected[name]) {
+        throw new Error('Native read path algorithm boundary changed');
+      }
+      const text = name === 'resolveReadPath'
+        ? 'export function resolveReadPath(filePath: string, cwd: string): string {\n\treturn findReadPath(resolveToCwd(filePath, cwd), fileExists);\n}'
+        : name === 'resolveReadPathAsync'
+          ? 'export async function resolveReadPathAsync(filePath: string, cwd: string): Promise<string> {\n\treturn findReadPathAsync(resolveToCwd(filePath, cwd), pathExists);\n}'
+          : '';
+      edits.push({ start: text ? node.getStart(parsed) : node.getFullStart(), end: node.end, text });
+    } else if (ts.isVariableStatement(node) && node.getText(parsed) === 'const NARROW_NO_BREAK_SPACE = "\\u202F";') {
+      if (!remaining.delete('NARROW_NO_BREAK_SPACE')) throw new Error('Duplicate Native read path constant');
+      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
+    }
+  }
+  if (remaining.size) throw new Error('Native read path declarations changed');
+  for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
+  return 'import { findReadPath, findReadPathAsync } from "../../../compat/read-path.ts";\n' + body;
 }
 
 function portZipRuntime(body: string): string {
