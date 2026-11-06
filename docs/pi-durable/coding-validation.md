@@ -20,6 +20,45 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Shared child process wait
+
+Native now forwards its child wait to the existing durable implementation
+through `compat/child-process.ts`. The six-line adapter disables the durable
+spill callback and selects the exit code. Native spawning still uses Node on
+Unix and cross-spawn on Windows. The patch adds a public export and declaration
+under `env/node`; the durable JavaScript changes only by adding `export`.
+Its wait algorithm and four runtime dependencies match the unpatched package.
+
+Before and after replacement, the actual Native entry passes 18 tests and
+142 assertions. Cases cover exit and close codes, signals, both pipes ending,
+quiet inherited pipes, active output on either pipe, original error identity,
+stream destruction, listener cleanup and overlapping waits. Real processes
+cover stdout, stderr, a missing executable, synchronous spawn and a descendant
+that writes four more chunks after its parent exits. Three public durable
+checks retain signal results and spill draining beyond the idle deadline.
+The combined process suite passes 21 tests and 155 assertions.
+
+The seven-file process, ANSI and image suite passes 128 tests and 898 assertions.
+Five explicit roots pass strict checks with 257 source files and no diagnostics.
+The generator rejects seven wait boundary changes, including body changes.
+The single-file source check reports `sourceFiles: 1` and `complete: false`.
+The original Native file SHA-256 is
+`cd324f5b9a1abadd85ab5a331750d475c8bd51ec65cae091ad9b416245ec85d4`.
+
+The patch now covers 24 files and applies cleanly. Its previous 22-file body is
+unchanged. A fresh independent cache uses 99 existing package directories for
+100 lock records. A frozen install with scripts disabled matches all 24 patched
+files and all four copied Native files. Bun and Node each pass the same 21 test
+bodies and 155 assertions; Node uses a small assert adapter. The consumer lock
+and root lock remain unchanged. The current patch SHA-256 is
+`74af1a588a0af12e3de498083c773daeced397d27f8d399cd1c42258ec2df071`.
+
+The first consumer install could not resolve missing registry metadata in its
+default isolated cache. The system sandbox blocked network attempts. The final
+consumer reuses pinned lock records and a separate local cache. Registry tarball
+integrity is not checked again. Windows spawning, complete SDK and product
+integration, root installation and release builds remain unverified.
+
 ## Public ANSI matching
 
 Native complete matching now uses `ansi-regex@6.2.2`, already present in the
@@ -59,8 +98,8 @@ Initial fixture checks corrected an unterminated-OSC expectation, a root-output
 boundary and a hoisted-dependency assumption. The final checks resolve actual
 caller paths. The cache uses twelve explicit local package files; registry
 tarball integrity is not checked again. Full root installation, the complete SDK
-and terminal integration remain outside these checks. The durable patch is
-unchanged from the MIME stage.
+and terminal integration remain outside these checks. The ANSI stage leaves the
+durable patch unchanged from the MIME stage.
 
 ## Shared image MIME detection
 
@@ -85,13 +124,13 @@ Twenty-one explicit roots pass strict checks with 245 source files and zero
 diagnostics. The MIME source and its record reproduce with `sourceFiles: 1`
 and `complete: false`; declaration checks reject signature and prefix changes.
 
-The current 22-file patch applies cleanly. Both the existing cache and an
+The MIME-stage 22-file patch applies cleanly. Both the existing cache and an
 independent cache install 93 packages from 94 lock records offline with a frozen
 lock and no lifecycle scripts. All patched files match the worktree byte for
 byte; the unchanged MIME implementation also matches. Both consumers pass
 84 checks and 648 assertions across five named files, including the actual
 Native MIME file entry. Native resizing and its worker remain worktree checks.
-The current patch SHA-256 is
+The MIME-stage patch SHA-256 is
 `cfc917ca3875152c0f267de6b829d1b5c608f0e6fa8ece9b6db1424df5f6138a`.
 These checks do not establish a complete root install, registry tarball
 integrity, clipboard integration, terminal registration or a release build.

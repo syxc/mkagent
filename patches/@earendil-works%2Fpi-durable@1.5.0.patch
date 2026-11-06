@@ -1,4 +1,4 @@
-# Content SHA-256: ecba5eed8a0c3adeacd2fb7d95c94754178a1a0a48e9e43ea474d8d89144c814
+# Content SHA-256: beea769280d4b7e79fb83afecb2fc1dab1ae2adc96dff83ed699d86fcdd0b860
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -1667,3 +1667,33 @@ index 1c5c127ea6b007eb4033486fcbde0d5e6b20cc16..802d2381bcde340b7da8f9b6a54ebe32
      const parts = [tool.description];
      schemaText(tool.parameters, parts);
      return parts.filter((part) => part.trim() !== "").join(" ");
+diff --git a/dist/env/node.d.ts b/dist/env/node.d.ts
+index 4be2ceeeeb00b6edc5b85caaa7bc8322e8047b8d..b47f9efd2fada2b66f47a76b3b99e6f8dedafe55 100644
+--- a/dist/env/node.d.ts
++++ b/dist/env/node.d.ts
+@@ -1,6 +1,12 @@
+ import type { Context } from "@earendil-works/chord";
++import type { ChildProcess } from "node:child_process";
+ import { type BinaryReader, type DirReader, type ExecutionEnv, ExecutionError, type FileChange, FileError, type FileInfo, type FileWatcher, type Result, type ShellExecOptions, type ShellExecResult, type TextLineReader, type WatchTarget } from "./index.ts";
+ import { type NodeWatchOptions } from "./node-watch.ts";
++/** Wait for child output to finish, allowing a draining output spill to delay the idle deadline. */
++export declare function waitForChildProcess(child: ChildProcess, spillIsDraining: () => boolean): Promise<{
++    code: number | null;
++    signal: NodeJS.Signals | null;
++}>;
+ export declare class NodeExecutionEnv implements ExecutionEnv {
+     /** Every local environment sees the same files. */
+     readonly id: string;
+diff --git a/dist/env/node.js b/dist/env/node.js
+index 120ff2015d81eb795a090eae897910a58768373f..b9dc04ebaa634f38b90fa7b05bd2361565ff2263 100644
+--- a/dist/env/node.js
++++ b/dist/env/node.js
+@@ -239,7 +239,7 @@ function killProcessTree(pid) {
+         }
+     }
+ }
+-function waitForChildProcess(child, spillIsDraining) {
++export function waitForChildProcess(child, spillIsDraining) {
+     return new Promise((resolvePromise, reject) => {
+         let settled = false;
+         let exited = false;

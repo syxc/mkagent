@@ -1686,8 +1686,10 @@
       "source": "packages/coding-agent/src/utils/child-process.ts",
       "target": "src/pi/utils/child-process.ts",
       "sha256": "cd324f5b9a1abadd85ab5a331750d475c8bd51ec65cae091ad9b416245ec85d4",
-      "portSha256": "cd324f5b9a1abadd85ab5a331750d475c8bd51ec65cae091ad9b416245ec85d4",
-      "changes": []
+      "portSha256": "15118c0272c36832166cd49d4dac73a568f25052bc6a803a6c341ab73b443ed5",
+      "changes": [
+        "shared-durable-child-process-wait"
+      ]
     },
     {
       "source": "packages/coding-agent/src/utils/clipboard-command.ts",

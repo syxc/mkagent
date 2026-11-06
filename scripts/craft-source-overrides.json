@@ -2328,6 +2328,18 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/src/compat/child-process.ts": {
+      "sha256": "19f86ca51d8ac41ad44fd3a674a56373b29590bd46493d7f53472f2591678db9",
+      "reason": "Select Native exit codes over durable's shared child wait without an output spill queue."
+    },
+    "packages/pi-durable-coding/test/native-child-process.test.ts": {
+      "sha256": "18f64fd9f1cfa84a3233029d05d28ac39979d5a17b5616c791b2e40f6c7925cc",
+      "reason": "Pin Native process results, idle pipes, descendant output, errors and listener cleanup."
+    },
+    "packages/pi-durable-coding/test/durable-child-process.test.ts": {
+      "sha256": "aefec44512616c044051844bc9fcb25207e8d74521b358ba18cb748b58876875",
+      "reason": "Verify the public durable child wait retains signals, output spill draining and original errors."
+    },
     "packages/pi-durable-coding/src/compat/ansi.ts": {
       "sha256": "9c923000b4c82315bad4979310e376234082d0045665cfccc0796d4fcd6bfc71",
       "reason": "Compose public ANSI matching with Native private CSI in one pass."
@@ -2465,8 +2477,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "7ff619d6e60a21a123439f813790cc9b1dd65477ea2584d79cdd08a258a1c67a",
-      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize, MIME and ANSI boundaries."
+      "sha256": "9abe461622d77a86aaa6499002d8e83864bd91b64e2bea00c4d6638616d05833",
+      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize, MIME, ANSI and child wait boundaries."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3925,7 +3937,7 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "cfc917ca3875152c0f267de6b829d1b5c608f0e6fa8ece9b6db1424df5f6138a",
+      "sha256": "74af1a588a0af12e3de498083c773daeced397d27f8d399cd1c42258ec2df071",
       "reason": "Keep a canonical complete Git patch for frozen Bun installs, shared algorithms and host policies; stamp the full body so old Bun cache artifacts are not reused."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
@@ -3977,7 +3989,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "a1c0a0328484c5b52d300866fef153b0bc6d4b46bcfd2361f4a413c25350ad20",
+      "sha256": "2da425d0f8850c2d0f87500f7ff48abc1609da745e8b1a1d0503d9ac134ce8c7",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3997,7 +4009,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "c36e5152448c7b15c902fe1d66033c234732c8093d9c054cb422c7200fbc04a1",
+      "sha256": "cd29d0b7e9444f85873d720de9976d61509b270cc63aa69dbdbf9b92291f8775",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4985,7 +4997,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/changelog.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/child-process.ts": {
-      "sha256": "cd324f5b9a1abadd85ab5a331750d475c8bd51ec65cae091ad9b416245ec85d4",
+      "sha256": "15118c0272c36832166cd49d4dac73a568f25052bc6a803a6c341ab73b443ed5",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/child-process.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/clipboard-command.ts": {
