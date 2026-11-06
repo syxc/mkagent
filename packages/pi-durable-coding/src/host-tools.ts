@@ -193,7 +193,8 @@ async function hostInvocation(
     let value!: T;
     await runtime.commit(async tx => {
       await flush(tx);
-      value = await change(tx);
+      value = await scope.runInScope(() => change(tx));
+      await flush(tx);
       return undefined;
     }, commitContext, options);
     return value;

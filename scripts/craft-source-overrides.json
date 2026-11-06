@@ -3901,8 +3901,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
-      "sha256": "4e1d5c6e3adc31ee950c513e7e2a359006f7e92276b061022ab3e01a2c571c60",
-      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler; restore the originating async context for builtin Worker and progress callbacks."
+      "sha256": "8980d014ec271265faf00dcf552e68d056fc17533c3418fd115a7716c97c7368",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler; restore the originating async context for builtin callbacks and synchronous or asynchronous native appends."
     },
     "packages/pi-durable-coding/src/durable-coding/index.ts": {
       "sha256": "32898b73b64f687a315137b0f0c33c25961be8b5c825f13437f08a48b7038f71",
@@ -3933,8 +3933,8 @@
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in session-journal-projection.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/session-journal.ts": {
-      "sha256": "aa68d8e6fb7bfa3c94411f0b816471c74ea4b55187d16f9b95e8e34d9dff7def",
-      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in session-journal.ts."
+      "sha256": "3f4cc26f41097c0ae61804e21bf9ebe2cddbc42746363c309eee42c1519a9d49",
+      "reason": "Bind native session writes to durable receipts; prepare only the new operation suffix within one transaction and retry the complete pending stage after rollback."
     },
     "packages/pi-durable-coding/src/durable-coding/session-task.ts": {
       "sha256": "d0ac1bee698c2abca1aed6e7cd4512b552f91478ac5dc61939e0554f9811358f",
@@ -3977,8 +3977,8 @@
       "reason": "Provide the independent native coding host adapter and public contracts in host-tool-nested.ts."
     },
     "packages/pi-durable-coding/src/host-tools.ts": {
-      "sha256": "aaefc806fe2e6a475f8c85b669e6bf62bb5591bb044d758f1b535aeab6447465",
-      "reason": "Provide the independent native coding host adapter and public contracts in host-tools.ts."
+      "sha256": "2284edd56bb3fa11ecec5e61f876d47aefbf2d81c060c2eaa45d8ac5ca3421fc",
+      "reason": "Bridge native and official host tools; restore commit callbacks to their invocation and prepare native appends before and after the callback in the same transaction."
     },
     "packages/pi-durable-coding/src/native-operations.ts": {
       "sha256": "8221637426549d2ed380b6ff0011ec58687482c88b4540cc41dbe5fcbc49b52f",
@@ -5035,6 +5035,10 @@
     "packages/pi-durable-coding/test/host-tools.test.ts": {
       "sha256": "bdc9a5c6fe69134c47b8a46e434ee030e62738fdcccd7688c4370a03d70f7b40",
       "reason": "Exercise durable native coding behavior and isolated recovery through the host-tools.test.ts fixture."
+    },
+    "packages/pi-durable-coding/test/native-journal-transactions.test.ts": {
+      "sha256": "03c3c2a10501e07b7303d2d20dc77afb6aea3a17163c3f1091668600c4e3921c",
+      "reason": "Verify real native journal preparations, rollback retries, receipt visibility, replacement conflicts and detached host callback appends."
     },
     "packages/pi-durable-coding/test/native-session-journal.test.ts": {
       "sha256": "ddd81eebca131bfbeed3134c4f17dbcde0cf02440a6c911ab234863d2788711b",

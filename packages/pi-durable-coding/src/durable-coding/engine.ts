@@ -67,12 +67,19 @@ interface ToolOwner {
 const invocation = new AsyncLocalStorage<Invocation>();
 
 /** The real durable tool phase used by the host approval and execution adapters. */
-export function currentCodingToolInvocation(): CodingToolInvocation & { flush(tx: Tx): Promise<void> } {
+export function currentCodingToolInvocation(): CodingToolInvocation & {
+  flush(tx: Tx): Promise<void>;
+  runInScope<T>(work: () => T): T;
+} {
   const scope = invocation.getStore();
   if (!scope?.tool) throw new Error('Host tool execution requires a durable coding tool invocation');
   // Worker messages and progress timers can invoke the host API without this async context.
   const resume = AsyncLocalStorage.snapshot();
-  return { ...scope.tool, flush: tx => resume(() => scope.host.commit(tx)) };
+  return {
+    ...scope.tool,
+    flush: tx => resume(() => scope.host.commit(tx)),
+    runInScope: work => resume(work),
+  };
 }
 
 /** A stable execution owner for all prompts, continuations and child calls of one Agent. */

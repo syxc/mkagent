@@ -30,6 +30,8 @@ pi-durable 已公开 codemode、tool-search、tools 和 images 等模块，不�
 
 宿主已安装上述四类内置模块，并通过工具桥接向 coding profile 提供工具。真实 codemode 沙箱验证修复异步回调丢失提交上下文的问题；取消和等待 helper 改为公开包引用。SDK 搜索与 codemode 输出已通过最小兼容接点共用 durable。codemode 的会话、实时展示和 store 事务适配仍在继续，不能把已完成的共享部分视为整个 SDK 已去重。最新证据见[验证记录](coding-validation.md)。
 
+store 适配的 journal 前置已完成：重复 flush 按事务草稿中的 nonce 跳过同阶段已准备的前缀，保留回滚重试和真正并发 replace 的拒绝语义。宿主 commit 恢复回调作用域并在回调后 flush，真实工具调用可把新增原生条目和宿主文档一同提交。9 项新增红绿用例及相关回归共 66 项通过；尚未接入 codemode store，不据此关闭完整执行替换。
+
 当前已引用 core 的公开协议类型和 `streamProxy`，移除对应生成副本；消息声明合并保留在公开 core 模块上。宿主压缩窗口通过公开设置方法的外部包装实现，原生 `SettingsManager` 不再带宿主阈值补丁。包管理、消息、模型、设置、会话、runner、token 及资源算法已共用实现，七份旧接口策略单独维护，生成器只生成转发。可选目录、投影和 runner 依赖参数保留原生默认值；结构类型与旧 JavaScript 宽边界由严格消费者回归覆盖。28 份文件直接使用公开 core 类型，内部执行导入改写由 31 份收敛为 3 份。上游没有独立 coding SDK，也未公开可注入的执行器和版本化恢复接口；这些限制仍不能证明整个 SDK 闭包都必须移植。F1/F3 对完整闭包的核实及 F4/F5 完整检查保持未完成，最新数量、收益和证据见验证记录。
 
 现有包名 `@mkagent/pi-durable-coding`、公开 SDK 兼容名称和持久化任务标识保持稳定。新名称描述运行时，不要求为命名而改写 checkpoint 或插件导入。

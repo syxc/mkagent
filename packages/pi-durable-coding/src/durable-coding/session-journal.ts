@@ -259,9 +259,15 @@ export class NativeSessionJournal {
     if (!stage || !stage.operations.length) return;
     if (stage.ended) throw new Error('Native session phase has ended');
     const count = stage.operations.length;
-    const operations = detached(stage.operations.slice(0, count));
+    const pending = detached(stage.operations.slice(0, count));
     const state = await tx.doc(Journal, this.options.conversation.id);
-    if (operations.some(operation => operation.type === 'replace') && state.revision !== stage.revision) {
+    const candidate = this.candidates.get(state.nonce);
+    // Only this transaction's draft can acknowledge an unreceived prefix. A rolled-back
+    // draft loses its nonce, so a retry prepares the complete pending stage again.
+    const prepared = candidate?.stage === stage ? candidate : undefined;
+    const operations = pending.slice(prepared?.count ?? 0);
+    if (!operations.length) return;
+    if (operations.some(operation => operation.type === 'replace') && state.revision !== stage.revision && !prepared) {
       throw new Error('Concurrent native session replacement requires a fresh phase');
     }
     const before = nativeManager(state, this.options.cwd);

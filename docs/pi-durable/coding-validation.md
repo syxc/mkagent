@@ -20,6 +20,35 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Journal transactions after 266bdb7
+
+The native journal can prepare more than once in one durable transaction.
+It uses the draft nonce to find the prefix already prepared by the same
+stage. A second flush prepares only new operations; an empty suffix does
+not change the revision or navigation identity. A rolled-back draft loses
+its nonce, so a fresh transaction prepares all pending operations again.
+Replacement still rejects a revision from a different committed stage.
+
+Host commits restore the captured invocation around the callback and flush
+again after it returns. Native appends made by a detached callback now enter
+the transaction with the host document. The captured scope also supports
+synchronous and asynchronous appends before an explicit flush.
+
+Nine tests use the real journal, Harness, MemoryStorage and tool binding.
+The first journal run had five failures; both detached invocation cases also
+failed before their fix. All nine now pass. Together with the original
+journal, host bridge and coding tool task tests, four explicit files pass
+66 tests and 542 assertions. They cover navigation revisions, replacement,
+branch parents, edits, compaction references, callback rollback and retry,
+receipt visibility, appends while a receipt is paused, reopen and detached
+appends. Independent static review found no definite defect in the three
+production changes and nine tests. It did not run tests or find a production
+assignment for the optional commit-state hook within the permitted paths.
+The paused-receipt append case was extended in the main thread afterward.
+These checks do not make
+arbitrary callback side effects transactional or complete the codemode
+store adapter. Full SDK and product checks remain restricted.
+
 ## Shared codemode output after 618ceae
 
 The SDK now calls durable's `formatCodemodeResult`. Its executor has 191 fewer
