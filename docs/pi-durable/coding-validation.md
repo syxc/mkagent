@@ -20,6 +20,36 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Shared codemode output after 618ceae
+
+The SDK now calls durable's `formatCodemodeResult`. Its executor has 191 fewer
+lines and retains the native file writer and image-size display policy. The
+local patch exports the existing formatter, its options and default token
+budget. `limits: false` keeps the token budget without the extra byte and line
+ceiling. The optional size callback preserves native image labels. A wall-time
+callback includes file writes in the native elapsed time. Built-in callers
+keep their existing defaults.
+
+| Check | Result and scope |
+| --- | --- |
+| Combined regression | 25 explicit files, 210 passes, 1162 assertions and no failures. This includes the eight output cases and six real sandbox comparisons. |
+| Original formatter | 96 scenarios and 97 assertions pass against 11 unchanged declarations and the original completion selected from `618ceae`. The comparison checks content and complete spill text across four token budgets, images, Unicode, many lines and partial failures. Only generated paths and elapsed time are normalized. |
+| Public types | The output tests pass as a strict single-root consumer of the public types. The compiler rejects every local coding runtime source and restricted filename before reading. |
+| Scoped reproduction | Search, codemode output, sleep and cancellation reproduce together with four source files and `complete: false`. |
+| Patch replay | All 14 files of the complete patch apply to the unmodified cached package and match the isolated installation exactly. |
+| Fresh frozen install | An independent package consumer installs offline with lifecycle scripts disabled. A second fresh install uses its frozen lockfile; all 14 patched files match the tested package. This checks the package patch, not the complete workspace install. |
+| Independent review | Static review covered the wiring, exports, formatter patch and AST port, with no definite defect found. The reviewer could not obtain the historical Git diff; the original comparison ran in the main thread. |
+
+The first install probe retained the old generation patch but omitted the new
+search and output sections. Regenerating the complete patch as a canonical Git
+diff fixed the installed result. Git replay alone had not exposed this gap.
+
+This completes output sharing. The native executor still owns script
+execution, model helpers, discovery and the branch store. The next adapter
+must commit native store entries with the durable result, keep live string
+call IDs and preserve cancellation output. Full execution replacement and the
+restricted checks below remain open.
+
 ## Search core and sleep follow-up after 5702c34
 
 The stopping condition is the lowest maintenance cost that preserves the

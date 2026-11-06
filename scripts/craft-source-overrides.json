@@ -2328,6 +2328,10 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/test/shared-codemode-output.test.ts": {
+      "sha256": "29dbbe48f9d52cf1c618309eabd2f57714c55eba0d82183b0ae782c7fbd6adaf",
+      "reason": "Check shared codemode formatting, native token budgets, image deduplication, write failures and partial cancellation output."
+    },
     "packages/pi-durable-coding/test/shared-sleep.test.ts": {
       "sha256": "5e1dee9a6b2fc7ff6e389c5b07fbf4aceb563a10aa99faf4cd5c40a61126f537",
       "reason": "Check shared timer reuse, listener cleanup, optional signals and native cancellation and timer errors."
@@ -2349,8 +2353,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "3abfab304fbe7029f99760061c8d14e848d1a1d9b1e1124dcde5467e76a25aa0",
-      "reason": "Reproduce shared resource and durable search helpers while preserving native namespace and tool activation contracts."
+      "sha256": "662b1ac85ceba65639b99daed59e7a08277c7cbe75dfc54c24cc69d0fde3ee4d",
+      "reason": "Reproduce shared resource, search and codemode output adapters while retaining native activation, store and file policies."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3809,8 +3813,8 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "20261ea330316ffdfc14cf2a7e50d355761a239d25fc4a6c162537cb8cd40d39",
-      "reason": "Retain legacy generation-task compatibility and expose shared durable search helpers through narrow compatibility exports."
+      "sha256": "232f53799d476fc63500d32573c97cd3c634db67737a295cb8f59c0be3b870c8",
+      "reason": "Use a canonical complete Git patch for frozen Bun installs, legacy generation compatibility and shared durable search and codemode output seams."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
       "sha256": "53af9ef53c9ada189e0122a646c18ccf20bc16c2720fa56c25a3a2de22690352",
@@ -3861,7 +3865,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "3db95e8594d42e0cc9fa16d8d8f7447ef9552cb8560f15cd0ef8d08729881e1d",
+      "sha256": "1d4b9b18aa7cd1e8a88b76bb26fa9a371ba20ea76e8fdadf7d70284e34f3d325",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3881,7 +3885,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "dbe7b054ae0b231e69d85edeb1ad12d0a381e78009aa2f2e1a83fa0e849645be",
+      "sha256": "f2de325e9d2cbb7a6a362581883a9ec1c168244c72c97a9654aa15a2c0d44ce1",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4457,8 +4461,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/execute.lazy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/execute.ts": {
-      "sha256": "2f7cdf2ec0497b5bbcd05e8db6476c792ae6a8c05e019a5dad94e3417449a556",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
+      "sha256": "9ecce881420faf06e06b432ee0328b5ddb7b1c153fce26c7be9184907d774b4a",
+      "reason": "Share durable codemode output formatting while preserving native token budgets, image labels, output files and branch store writes."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/index.ts": {
       "sha256": "7684b16067a29ea1c83170afdce35437c54afdd679b250c7465a668624aff70f",

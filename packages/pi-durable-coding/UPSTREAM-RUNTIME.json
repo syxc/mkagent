@@ -946,8 +946,10 @@
       "source": "packages/coding-agent/src/extensions/codemode/execute.ts",
       "target": "src/pi/extensions/codemode/execute.ts",
       "sha256": "2f7cdf2ec0497b5bbcd05e8db6476c792ae6a8c05e019a5dad94e3417449a556",
-      "portSha256": "2f7cdf2ec0497b5bbcd05e8db6476c792ae6a8c05e019a5dad94e3417449a556",
-      "changes": []
+      "portSha256": "9ecce881420faf06e06b432ee0328b5ddb7b1c153fce26c7be9184907d774b4a",
+      "changes": [
+        "shared-durable-codemode-output"
+      ]
     },
     {
       "source": "packages/coding-agent/src/extensions/codemode/index.ts",

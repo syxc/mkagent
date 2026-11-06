@@ -255,10 +255,12 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     body = portBundledAssets(body);
     changes.add('installed-native-bundle-assets');
   }
-  if (path === 'core/footer-data-provider.ts' || path === 'core/resource-loader.ts' || path === 'extensions/tool-search/tool.ts') {
+  if (path === 'core/footer-data-provider.ts' || path === 'core/resource-loader.ts' ||
+      path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts') {
     body = portSharedHelpers(path, body);
-    changes.add(path === 'extensions/tool-search/tool.ts' ? 'shared-durable-tool-search-ranking' : 'shared-lightweight-resource-algorithms');
-    if (path === 'extensions/tool-search/tool.ts') dependencies.add('@earendil-works/pi-durable');
+    changes.add(path === 'extensions/tool-search/tool.ts' ? 'shared-durable-tool-search-ranking'
+      : path === 'extensions/codemode/execute.ts' ? 'shared-durable-codemode-output' : 'shared-lightweight-resource-algorithms');
+    if (path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts') dependencies.add('@earendil-works/pi-durable');
   }
   if (path === 'core/extensions/runner.ts' || path === 'core/session-manager.ts') {
     body = portCompatRuntime(path, body);

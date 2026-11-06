@@ -49,9 +49,11 @@ flowchart TD
 
 SDK 的 tool-search 已共用 durable 的分词、BM25 和 schema 元数据遍历。仓内补丁为现有核心增加兼容导出，提供 SDK 所需的分数、可配置 `k1/b` 和元数据文本；内置工具仍调用同一排序核心，默认行为保持原样。SDK 保留 namespace 独立字段、注册和会话启用接口，不另行维护排序算法。兼容导出属于本地补丁，升级须重放补丁并运行原版排序对照。
 
-原生 codemode 的执行替代仍在继续。真实沙箱对照已确认实时 calls、namespace alias、输出预算、无 env 图片及分支 store 的差异；这些契约须由最小接点和外部适配保留，不能直接更换整个工厂。SDK 替代与完整闭包核实尚未闭合。
+原生 codemode 已共用 durable 的输出格式化器，删除独立的布局、截断和图片保存实现。补丁公开 formatter，并允许仅按 token 预算截断、注入图片大小显示及在文件写入后计时；SDK 保留文件写入策略，继续支持无 env 的图片保存和高输出预算。96 个原版差异场景通过。实时 calls、namespace alias 和分支 store 的完整执行适配仍在继续，SDK 替代与完整闭包核实尚未闭合。
 
-`pi-durable` 通过根包的 `patchedDependencies` 应用[仓内补丁](../../patches/@earendil-works%252Fpi-durable@1.5.0.patch)，包含旧 `GenerationTask` coding 阶段、回调、类型声明及上述搜索兼容导出。当前生产 `CodingHost` 通过本地任务执行；根 SDK 仍公开旧 `NativeCodingRuntime`，历史 checkpoint 也保留读取及拒绝不确定回放的迁移语义。删除旧阶段部分须先完成兼容桥接及存量恢复验证；搜索接点单独保留升级核对。
+`pi-durable` 通过根包的 `patchedDependencies` 应用[仓内补丁](../../patches/@earendil-works%252Fpi-durable@1.5.0.patch)，包含旧 `GenerationTask` coding 阶段、回调、类型声明及上述搜索和输出兼容接点。当前生产 `CodingHost` 通过本地任务执行；根 SDK 仍公开旧 `NativeCodingRuntime`，历史 checkpoint 也保留读取及拒绝不确定回放的迁移语义。删除旧阶段部分须先完成兼容桥接及存量恢复验证；搜索和输出接点单独保留升级核对。
+
+补丁统一由干净依赖生成标准 Git diff。离线冻结安装曾遗漏手工追加的搜索和输出段，标准化后 14 个文件与测试包完全一致；升级须同时核对补丁重放和新安装结果。
 
 ## 哪些复制或移植了上游源码
 

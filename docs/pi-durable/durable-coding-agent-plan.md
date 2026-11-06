@@ -28,7 +28,7 @@ MkAgent 最初以 Pi coding agent 为底层，第一次切换到纯 pi-durable �
 
 pi-durable 已公开 codemode、tool-search、tools 和 images 等模块，不能只把它视为调度内核。先核实内置能力及少量契约适配能否满足需求，再评估独立官方包。确需移植的 coding 源码固定到 Pi v1.5.0 提交 `f9a26365568127461c47a07a37dcb42c140a3ac5`，保留来源、许可、转换和可复现检查。后续引用 `pi-agent-core` 时，应记录替代哪些适配代码、维护收益和执行边界。
 
-宿主已安装上述四类内置模块，并通过工具桥接向 coding profile 提供工具。真实 codemode 沙箱验证修复异步回调丢失提交上下文的问题；取消和等待 helper 改为公开包引用。SDK 搜索已通过最小兼容导出共用 durable 的分词、排序及 schema 元数据核心。codemode 的会话、渲染、输出和 store 适配仍在继续，不能把已完成的共享部分视为整个 SDK 已去重。最新证据见[验证记录](coding-validation.md)。
+宿主已安装上述四类内置模块，并通过工具桥接向 coding profile 提供工具。真实 codemode 沙箱验证修复异步回调丢失提交上下文的问题；取消和等待 helper 改为公开包引用。SDK 搜索与 codemode 输出已通过最小兼容接点共用 durable。codemode 的会话、实时展示和 store 事务适配仍在继续，不能把已完成的共享部分视为整个 SDK 已去重。最新证据见[验证记录](coding-validation.md)。
 
 当前已引用 core 的公开协议类型和 `streamProxy`，移除对应生成副本；消息声明合并保留在公开 core 模块上。宿主压缩窗口通过公开设置方法的外部包装实现，原生 `SettingsManager` 不再带宿主阈值补丁。包管理、消息、模型、设置、会话、runner、token 及资源算法已共用实现，七份旧接口策略单独维护，生成器只生成转发。可选目录、投影和 runner 依赖参数保留原生默认值；结构类型与旧 JavaScript 宽边界由严格消费者回归覆盖。28 份文件直接使用公开 core 类型，内部执行导入改写由 31 份收敛为 3 份。上游没有独立 coding SDK，也未公开可注入的执行器和版本化恢复接口；这些限制仍不能证明整个 SDK 闭包都必须移植。F1/F3 对完整闭包的核实及 F4/F5 完整检查保持未完成，最新数量、收益和证据见验证记录。
 

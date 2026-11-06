@@ -2,6 +2,7 @@
 import ts from 'typescript';
 
 export function portSharedHelpers(path: string, body: string): string {
+  if (path === 'extensions/codemode/execute.ts') return portCodemodeOutput(body);
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
@@ -78,4 +79,81 @@ export function portSharedHelpers(path: string, body: string): string {
   for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
   if (path === 'core/resource-loader.ts') body = body.replace('import { findGitPaths } from "./footer-data-provider.ts";\n', '');
   return rule.imports + '\n' + body;
+}
+
+function portCodemodeOutput(body: string): string {
+  const parsed = ts.createSourceFile('execute.ts', body, ts.ScriptTarget.Latest, true);
+  const functions = new Map([
+    ['valueText', 1], ['formatOutput', 1], ['joinAdjacentText', 1], ['formatCallSummary', 1],
+    ['formatError', 2], ['spillOutput', 1], ['saveImages', 1], ['truncateOutput', 2],
+  ]);
+  const constants = new Set(['DEFAULT_MAX_OUTPUT_TOKENS', 'CHARS_PER_TOKEN', 'IMAGE_EXTENSIONS']);
+  const edits: Array<{ start: number; end: number; text: string }> = [];
+  let replaced = false;
+  for (const node of parsed.statements) {
+    if (ts.isFunctionDeclaration(node) && node.name && functions.has(node.name.text)) {
+      if (node.parameters.length !== functions.get(node.name.text)) throw new Error('Codemode formatter signature changed');
+      functions.delete(node.name.text);
+      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
+    }
+    if (ts.isVariableStatement(node) && node.declarationList.declarations.length === 1) {
+      const name = node.declarationList.declarations[0].name;
+      if (ts.isIdentifier(name) && constants.delete(name.text)) {
+        edits.push({ start: node.getFullStart(), end: node.end, text: '' });
+      }
+    }
+    if (ts.isImportDeclaration(node) && node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
+      const imports = node.importClause.namedBindings;
+      const kept = imports.elements.filter(item => !['CodemodeOutputItem', 'ImageContent'].includes(item.name.text));
+      if (kept.length !== imports.elements.length) {
+        edits.push({ start: imports.getStart(parsed), end: imports.end, text: '{ ' + kept.map(item => item.getText(parsed)).join(', ') + ' }' });
+      }
+    }
+    if (!ts.isFunctionDeclaration(node) || node.name?.text !== 'executeCodemode' || !node.body) continue;
+    const statements = node.body.statements;
+    const nameOf = (statement: ts.Statement) => ts.isVariableStatement(statement)
+      ? statement.declarationList.declarations[0].name.getText(parsed)
+      : ts.isIfStatement(statement) ? 'if' : ts.isReturnStatement(statement) ? 'return' : '';
+    const start = statements.findIndex(statement => nameOf(statement) === 'scriptOutput');
+    const tail = statements.slice(start);
+    const expected = ['scriptOutput', 'if', 'items', 'if', 'if', 'truncated', 'output', 'wallTime', 'header', 'details', 'if', 'return'];
+    const store = tail[1];
+    if (start < 0 || JSON.stringify(tail.map(nameOf)) !== JSON.stringify(expected) || !ts.isIfStatement(store) ||
+        store.expression.getText(parsed) !== 'result.ok' || !ts.isBlock(store.thenStatement) ||
+        store.thenStatement.statements.length !== 3) throw new Error('Codemode completion boundary changed');
+    const value = store.thenStatement.statements[2];
+    if (!ts.isIfStatement(value) || value.expression.getText(parsed) !== 'result.value !== undefined' ||
+        !value.getText(parsed).includes('scriptOutput.push')) throw new Error('Codemode returned-value boundary changed');
+    const persisted = body.slice(store.getStart(parsed), value.getFullStart()) + body.slice(value.end, store.end);
+    const completion = `
+	const formatted = await formatCodemodeResult(result, {
+		generatedImages,
+		wallMs: () => performance.now() - startedAt,
+		maxOutputTokens: sourceOptions.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
+		calls,
+		limits: false,
+		imageSize: formatSize,
+		write: async (name, data) => {
+			try {
+				return { path: await writeOutputFile("pi-codemode", extname(name), data) };
+			} catch (error) {
+				return { error: error instanceof Error ? error.message : String(error) };
+			}
+		},
+	});
+	const details = snapshot();
+	if (formatted.fullOutputPath) details.fullOutputPath = formatted.fullOutputPath;
+	return {
+		content: formatted.content,
+		details,
+		...(modelUsage ? { usage: modelUsage } : {}),
+		...(result.ok ? {} : { isError: true }),
+	};`;
+    edits.push({ start: tail[0].getFullStart(), end: tail.at(-1)!.end, text: '\n\t' + persisted + '\n' + completion });
+    replaced = true;
+  }
+  if (functions.size || constants.size || !replaced) throw new Error('Codemode output declarations changed');
+  for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
+  return 'import { extname } from "node:path";\n'
+    + 'import { DEFAULT_MAX_OUTPUT_TOKENS, formatCodemodeResult } from "@earendil-works/pi-durable/codemode";\n' + body;
 }

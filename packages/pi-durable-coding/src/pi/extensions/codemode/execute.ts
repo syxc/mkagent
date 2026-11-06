@@ -1,29 +1,13 @@
+import { extname } from "node:path";
+import { DEFAULT_MAX_OUTPUT_TOKENS, formatCodemodeResult } from "@earendil-works/pi-durable/codemode";
 /**
  * Runs one codemode script in the sandbox. Split from tool.ts and loaded through
  * execute.lazy.ts so the sandbox runtime only loads when a script runs.
  */
 
 import type { AgentTool, AgentToolCallOutcome, AgentToolResult } from "@earendil-works/pi-agent-core";
-import type {
-	AnyModel,
-	ClassifierContext,
-	ImageContent,
-	ImagesContext,
-	ModelType,
-	ModelTypeMap,
-	TextContent,
-	Usage,
-} from "@earendil-works/pi-ai";
-import {
-	type CodemodeOutputItem,
-	type CodemodeResult,
-	CodemodeSandbox,
-	type CodemodeTool,
-	loadQuickJSWasm,
-	parseCodemodeSource,
-	renderToolSample,
-	toCodemodeIdentifier,
-} from "@earendil-works/pi-codemode";
+import type { AnyModel, ClassifierContext, ImagesContext, ModelType, ModelTypeMap, TextContent, Usage } from "@earendil-works/pi-ai";
+import { type CodemodeResult, CodemodeSandbox, type CodemodeTool, loadQuickJSWasm, parseCodemodeSource, renderToolSample, toCodemodeIdentifier } from "@earendil-works/pi-codemode";
 import { getCodemodeWorkerSpecifier, getQuickJSWasmPath } from "../../config.ts";
 import type { ExtensionToolContext, ToolNamespace } from "../../core/extensions/types.ts";
 import type { SessionEntry } from "../../core/session-manager.ts";
@@ -302,175 +286,6 @@ export function readCodemodeStore(branch: readonly SessionEntry[]): Record<strin
 	return Object.fromEntries(store);
 }
 
-/** Default token budget for script output. */
-const DEFAULT_MAX_OUTPUT_TOKENS = 10_000;
-/** Characters per token when estimating. */
-const CHARS_PER_TOKEN = 4;
-
-/** Like the script's `text()`: strings as is, other values as compact JSON. */
-function valueText(value: unknown): string {
-	if (typeof value === "string") return value;
-	return JSON.stringify(value) ?? String(value);
-}
-
-/**
- * Lay out the script's output so the model can tell items apart: providers join adjacent text
- * blocks with a newline or with nothing. With more than one text item (`text()` or the returned
- * value), each starts with a `==> text N/M <==` line. `console.*` lines follow all other output in
- * one `<console_output>` block.
- */
-function formatOutput(output: readonly CodemodeOutputItem[]): (TextContent | ImageContent)[] {
-	const total = output.filter((item) => item.type === "text" && !item.console).length;
-	const items: (TextContent | ImageContent)[] = [];
-	const consoleLines: string[] = [];
-	let index = 0;
-	for (const item of output) {
-		if (item.type === "image") {
-			items.push(item);
-		} else if (item.console) {
-			consoleLines.push(item.text);
-		} else {
-			index++;
-			items.push({ type: "text", text: total > 1 ? `==> text ${index}/${total} <==\n${item.text}` : item.text });
-		}
-	}
-	if (consoleLines.length > 0) {
-		items.push({ type: "text", text: `<console_output>\n${consoleLines.join("\n")}\n</console_output>` });
-	}
-	return items;
-}
-
-/**
- * Join adjacent text items into one, each part starting on its own line. The separator check looks
- * at the last non-empty part, not the joined text: reading the end of a growing concatenation makes
- * V8 copy it on every item, which is quadratic (#10678).
- */
-function joinAdjacentText(items: (TextContent | ImageContent)[]): (TextContent | ImageContent)[] {
-	const joined: (TextContent | ImageContent)[] = [];
-	let parts: string[] = [];
-	let lastPart = "";
-	const flush = () => {
-		if (parts.length > 0) joined.push({ type: "text", text: parts.join("") });
-		parts = [];
-		lastPart = "";
-	};
-	for (const item of items) {
-		if (item.type !== "text") {
-			flush();
-			joined.push(item);
-			continue;
-		}
-		if (lastPart !== "" && !lastPart.endsWith("\n")) {
-			parts.push("\n");
-			lastPart = "\n";
-		}
-		parts.push(item.text);
-		if (item.text !== "") lastPart = item.text;
-	}
-	flush();
-	return joined;
-}
-
-function formatCallSummary(calls: readonly CodemodeNestedCall[]): string {
-	if (calls.length === 0) return "No tool calls were made.";
-	return `Tool calls made before the failure (they are not undone): ${calls.map((call) => `${call.name} (${call.status})`).join(", ")}`;
-}
-
-function formatError(result: Extract<CodemodeResult, { ok: false }>, calls: readonly CodemodeNestedCall[]): string {
-	const { error } = result;
-	const head =
-		error.kind === "script"
-			? (error.stack ?? `${error.name ?? "Error"}: ${error.message}`)
-			: error.kind === "timeout"
-				? `Script timed out: ${error.message}`
-				: error.kind === "aborted"
-					? `Script aborted: ${error.message}`
-					: `Script sandbox failed: ${error.message}`;
-	return `${head}\n\n${formatCallSummary(calls)}`;
-}
-
-/** Write the full text output to a temp file, like bash does for truncated output. */
-async function spillOutput(text: string): Promise<{ path: string } | { error: string }> {
-	try {
-		return { path: await writeOutputFile("pi-codemode", ".txt", text) };
-	} catch (error) {
-		return { error: error instanceof Error ? error.message : String(error) };
-	}
-}
-
-/** File extensions of the image types `image()` accepts. Must list every type the sandbox's `image()` detects. */
-const IMAGE_EXTENSIONS: Record<string, string> = {
-	"image/png": ".png",
-	"image/jpeg": ".jpg",
-	"image/gif": ".gif",
-	"image/webp": ".webp",
-};
-
-/**
- * Save each image to a temp file and put a text item with its path before it. The model sees the
- * image but has no other way to reach its bytes: scripts cannot write files, and `write` only takes
- * text. Images shown more than once are saved once.
- */
-async function saveImages(items: (TextContent | ImageContent)[]): Promise<(TextContent | ImageContent)[]> {
-	const labels = new Map<string, Promise<string>>();
-	const label = async ({ data, mimeType }: ImageContent): Promise<string> => {
-		const bytes = Buffer.from(data, "base64");
-		const kind = `${mimeType}, ${formatSize(bytes.length)}`;
-		const extension = IMAGE_EXTENSIONS[mimeType];
-		if (!extension) throw new Error(`No file extension for image type ${mimeType}`);
-		// A failed write (disk full, unwritable temp dir) must not discard the result of a script whose
-		// tool calls already ran, so it becomes part of the label.
-		try {
-			const path = await writeOutputFile("pi-codemode", extension, bytes);
-			return `[Image saved to ${path} (${kind})]`;
-		} catch (error) {
-			return `[Image (${kind}) could not be saved: ${error instanceof Error ? error.message : String(error)}]`;
-		}
-	};
-	const result = await Promise.all(
-		items.map(async (item): Promise<(TextContent | ImageContent)[]> => {
-			if (item.type !== "image") return [item];
-			let pending = labels.get(item.data);
-			if (!pending) {
-				pending = label(item);
-				labels.set(item.data, pending);
-			}
-			return [{ type: "text", text: await pending }, item];
-		}),
-	);
-	return result.flat();
-}
-
-/**
- * Apply the token budget: when the combined text exceeds it, the text items become one
- * item that keeps the start and end of the text, and images follow it. The full text is written to
- * a temp file.
- */
-async function truncateOutput(
-	items: (TextContent | ImageContent)[],
-	maxTokens: number,
-): Promise<{ items: (TextContent | ImageContent)[]; fullOutputPath?: string }> {
-	const texts = items.filter((item): item is TextContent => item.type === "text").map((item) => item.text);
-	const combined = texts.join("\n");
-	const budget = maxTokens * CHARS_PER_TOKEN;
-	if (texts.length === 0 || combined.length <= budget) return { items };
-	const headChars = Math.floor(budget / 2);
-	const tailChars = budget - headChars;
-	const removed = combined.length - headChars - tailChars;
-	const head = combined.slice(0, headChars);
-	const tail = tailChars > 0 ? combined.slice(-tailChars) : "";
-	let text = `Warning: truncated output (original token count: ${Math.ceil(combined.length / CHARS_PER_TOKEN)})\nTotal output lines: ${combined.split("\n").length}\n\n${head}…${Math.ceil(removed / CHARS_PER_TOKEN)} tokens truncated…${tail}`;
-	const spilled = await spillOutput(combined);
-	text +=
-		"path" in spilled
-			? `\n\n[Full output: ${spilled.path} (read with offset/limit)]`
-			: `\n\n[Could not save the full output: ${spilled.error}]`;
-	return {
-		items: [{ type: "text", text }, ...items.filter((item) => item.type === "image")],
-		...("path" in spilled ? { fullOutputPath: spilled.path } : {}),
-	};
-}
-
 /**
  * The value a script receives for a nested call: a tool that declares
  * `outputSchema` resolves to its `structuredContent`, also for error results that carry one (such
@@ -613,38 +428,32 @@ export async function executeCodemode(
 	for (const call of calls) {
 		if (call.status === "running") call.status = "cancelled";
 	}
-
-	const scriptOutput = [...result.output];
 	if (result.ok) {
 		const { set, delete: deleted } = result.storeWrites;
 		if (Object.keys(set).length > 0 || deleted.length > 0) {
 			options.appendEntry?.(CODEMODE_STORE_ENTRY_TYPE, { set, delete: deleted });
 		}
-		// pi extension: a returned value is appended like text().
-		if (result.value !== undefined) scriptOutput.push({ type: "text", text: valueText(result.value) });
-	}
-	const items = formatOutput(scriptOutput);
-	if (!result.ok) items.push({ type: "text", text: `Script error:\n${formatError(result, calls)}` });
-	if (generatedImages > 0 && !items.some((item) => item.type === "image")) {
-		items.push({
-			type: "text",
-			text: `Note: models.generateImages() returned ${generatedImages} image${generatedImages === 1 ? "" : "s"} that the script did not show. Show each image block of result.output with image(block).`,
-		});
 	}
 
-	const truncated = await truncateOutput(
-		joinAdjacentText(items),
-		sourceOptions.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
-	);
-	// After truncation, which joins the text items and moves images after them, so each path stays
-	// next to its image and is never cut.
-	const output = joinAdjacentText(await saveImages(truncated.items));
-	const wallTime = ((performance.now() - startedAt) / 1000).toFixed(1);
-	const header = `${result.ok ? "Script completed" : "Script failed"}\nWall time ${wallTime} seconds\nOutput:\n`;
+	const formatted = await formatCodemodeResult(result, {
+		generatedImages,
+		wallMs: () => performance.now() - startedAt,
+		maxOutputTokens: sourceOptions.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
+		calls,
+		limits: false,
+		imageSize: formatSize,
+		write: async (name, data) => {
+			try {
+				return { path: await writeOutputFile("pi-codemode", extname(name), data) };
+			} catch (error) {
+				return { error: error instanceof Error ? error.message : String(error) };
+			}
+		},
+	});
 	const details = snapshot();
-	if (truncated.fullOutputPath) details.fullOutputPath = truncated.fullOutputPath;
+	if (formatted.fullOutputPath) details.fullOutputPath = formatted.fullOutputPath;
 	return {
-		content: [{ type: "text", text: header }, ...output],
+		content: formatted.content,
 		details,
 		...(modelUsage ? { usage: modelUsage } : {}),
 		...(result.ok ? {} : { isError: true }),

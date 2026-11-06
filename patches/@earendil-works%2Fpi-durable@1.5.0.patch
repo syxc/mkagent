@@ -1,4 +1,5 @@
 diff --git a/dist/harness/generation.js b/dist/harness/generation.js
+index ac42dfe..ea8ed27 100644
 --- a/dist/harness/generation.js
 +++ b/dist/harness/generation.js
 @@ -22,7 +22,7 @@ const DEFAULT_POLL_AFTER_MS = 5000;
@@ -447,6 +448,7 @@ diff --git a/dist/harness/generation.js b/dist/harness/generation.js
 +    return ids;
 +}
 diff --git a/dist/harness/types.d.ts b/dist/harness/types.d.ts
+index eb64e47..caffdbe 100644
 --- a/dist/harness/types.d.ts
 +++ b/dist/harness/types.d.ts
 @@ -1,5 +1,5 @@
@@ -502,6 +504,7 @@ diff --git a/dist/harness/types.d.ts b/dist/harness/types.d.ts
 +export {};
 \ No newline at end of file
 diff --git a/dist/harness/live.d.ts b/dist/harness/live.d.ts
+index a70aedb..7437b5d 100644
 --- a/dist/harness/live.d.ts
 +++ b/dist/harness/live.d.ts
 @@ -109,6 +109,11 @@ export type RunFailure = {
@@ -526,6 +529,7 @@ diff --git a/dist/harness/live.d.ts b/dist/harness/live.d.ts
 +export {};
 \ No newline at end of file
 diff --git a/dist/harness/generation.d.ts b/dist/harness/generation.d.ts
+index 6b3121b..ebdd963 100644
 --- a/dist/harness/generation.d.ts
 +++ b/dist/harness/generation.d.ts
 @@ -1,12 +1,15 @@
@@ -626,6 +630,7 @@ diff --git a/dist/harness/generation.d.ts b/dist/harness/generation.d.ts
 +export declare function appendCodingEntries(tx: Tx, conversation: ConversationId, entries: readonly CodingEntryDraft[]): Promise<EntryId[]>;
 +export {};
 diff --git a/dist/search.js b/dist/search.js
+index 7b05ef0..e8ccd6b 100644
 --- a/dist/search.js
 +++ b/dist/search.js
 @@ -16,6 +16,12 @@
@@ -641,7 +646,7 @@ diff --git a/dist/search.js b/dist/search.js
      const queryTerms = new Set(tokenize(query));
      if (queryTerms.size === 0 || documents.length === 0 || limit <= 0)
          return [];
-@@ -29,14 +35,14 @@
+@@ -29,14 +35,14 @@ export function rankDocuments(query, documents, limit) {
      const exactQuery = normalizeName(query);
      const matches = [];
      for (const document of indexed) {
@@ -658,7 +663,7 @@ diff --git a/dist/search.js b/dist/search.js
              if (weight > 0)
                  covered++;
              score += idf.get(term) * weight;
-@@ -51,7 +57,7 @@
+@@ -51,7 +57,7 @@ export function rankDocuments(query, documents, limit) {
      return matches
          .sort((left, right) => Number(right.exact) - Number(left.exact) || right.covered - left.covered || right.score - left.score)
          .slice(0, limit)
@@ -668,9 +673,10 @@ diff --git a/dist/search.js b/dist/search.js
  const K1 = 1.2;
  const B = 0.75;
 diff --git a/dist/search.d.ts b/dist/search.d.ts
+index 0cedcf1..f130980 100644
 --- a/dist/search.d.ts
 +++ b/dist/search.d.ts
-@@ -24,6 +24,11 @@
+@@ -24,6 +24,11 @@ export type SearchDocument = {
   * Only `text` is length-normalized, so a long name or long namespace instructions do not lower a tool's score.
   */
  export declare function rankDocuments(query: string, documents: readonly SearchDocument[], limit: number): string[];
@@ -684,6 +690,7 @@ diff --git a/dist/search.d.ts b/dist/search.d.ts
  //# sourceMappingURL=search.d.ts.map
 \ No newline at end of file
 diff --git a/dist/tool-search/index.js b/dist/tool-search/index.js
+index 8030781..6081dd4 100644
 --- a/dist/tool-search/index.js
 +++ b/dist/tool-search/index.js
 @@ -1,2 +1,4 @@
@@ -693,6 +700,7 @@ diff --git a/dist/tool-search/index.js b/dist/tool-search/index.js
  //# sourceMappingURL=index.js.map
 \ No newline at end of file
 diff --git a/dist/tool-search/index.d.ts b/dist/tool-search/index.d.ts
+index ad6acf3..5fa16eb 100644
 --- a/dist/tool-search/index.d.ts
 +++ b/dist/tool-search/index.d.ts
 @@ -1,2 +1,4 @@
@@ -702,9 +710,10 @@ diff --git a/dist/tool-search/index.d.ts b/dist/tool-search/index.d.ts
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
 diff --git a/dist/tool-search/tool-search.js b/dist/tool-search/tool-search.js
+index 1c5c127..802d238 100644
 --- a/dist/tool-search/tool-search.js
 +++ b/dist/tool-search/tool-search.js
-@@ -38,7 +38,7 @@
+@@ -38,7 +38,7 @@ function schemaText(schema, parts) {
      }
  }
  /** Search text of a tool: its description and its parameters' names and descriptions; the ranker reads the name. */
@@ -714,9 +723,10 @@ diff --git a/dist/tool-search/tool-search.js b/dist/tool-search/tool-search.js
      schemaText(tool.parameters, parts);
      return parts.filter((part) => part.trim() !== "").join(" ");
 diff --git a/dist/tool-search/tool-search.d.ts b/dist/tool-search/tool-search.d.ts
+index fde23df..262643a 100644
 --- a/dist/tool-search/tool-search.d.ts
 +++ b/dist/tool-search/tool-search.d.ts
-@@ -5,6 +5,8 @@
+@@ -5,6 +5,8 @@ export declare const DEFAULT_TOOL_SEARCH_LIMIT = 8;
  export type ToolSearchToolDetails = {
      loaded: string[];
  };
@@ -725,3 +735,97 @@ diff --git a/dist/tool-search/tool-search.d.ts b/dist/tool-search/tool-search.d.
  export declare function createToolSearchTool(): ToolRegistration<import("@earendil-works/pi-schema").Schema<{
      query: string;
      limit?: number | undefined;
+diff --git a/dist/codemode/output.js b/dist/codemode/output.js
+index d28306e..d8590da 100644
+--- a/dist/codemode/output.js
++++ b/dist/codemode/output.js
+@@ -81,8 +81,8 @@ async function truncate(items, maxTokens, limits, write) {
+     const texts = items.filter((item) => item.type === "text").map((item) => item.text);
+     const combined = texts.join("\n");
+     // Within the limits too: a UTF-16 unit is at most 3 UTF-8 bytes, and the rest of the result is a few short lines.
+-    const budget = Math.min(maxTokens * CHARS_PER_TOKEN, Math.floor(limits.maxBytes / 4));
+-    const lineBudget = Math.floor((limits.maxLines - LINE_MARGIN) / 2);
++    const budget = limits === false ? maxTokens * CHARS_PER_TOKEN : Math.min(maxTokens * CHARS_PER_TOKEN, Math.floor(limits.maxBytes / 4));
++    const lineBudget = limits === false ? Number.POSITIVE_INFINITY : Math.floor((limits.maxLines - LINE_MARGIN) / 2);
+     const lines = combined.split("\n").length;
+     if (texts.length === 0 || (combined.length <= budget && lines <= 2 * lineBudget))
+         return { items: [...items] };
+@@ -103,11 +103,11 @@ async function truncate(items, maxTokens, limits, write) {
+     };
+ }
+ /** Save each image to a file and put a text item with its path before it; an image shown twice is saved once. */
+-async function saveImages(items, write) {
++async function saveImages(items, write, imageSize = (bytes) => `${bytes} bytes`) {
+     const labels = new Map();
+     const label = async ({ data, mimeType }, index) => {
+         const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
+-        const kind = `${mimeType}, ${bytes.length} bytes`;
++        const kind = `${mimeType}, ${imageSize(bytes.length)}`;
+         // A failed write must not discard the result of a script whose calls already ran: it becomes part of the label.
+         const saved = await write(`image-${index}${IMAGE_EXTENSIONS[mimeType] ?? ".bin"}`, bytes);
+         return "path" in saved
+@@ -157,8 +157,9 @@ export async function formatResult(result, options) {
+     }
+     const truncated = await truncate(joinAdjacentText(items), options.maxOutputTokens, options.limits, options.write);
+     // After truncation, which joins the text items and moves images after them, so each path stays next to its image.
+-    const content = joinAdjacentText(await saveImages(truncated.items, options.write));
+-    const header = `${result.ok ? "Script completed" : "Script failed"}\nWall time ${(options.wallMs / 1000).toFixed(1)} seconds\nOutput:\n`;
++    const content = joinAdjacentText(await saveImages(truncated.items, options.write, options.imageSize));
++    const wallMs = typeof options.wallMs === "function" ? options.wallMs() : options.wallMs;
++    const header = `${result.ok ? "Script completed" : "Script failed"}\nWall time ${(wallMs / 1000).toFixed(1)} seconds\nOutput:\n`;
+     return {
+         content: [{ type: "text", text: header }, ...content],
+         ...(truncated.fullOutputPath === undefined ? {} : { fullOutputPath: truncated.fullOutputPath }),
+diff --git a/dist/codemode/output.d.ts b/dist/codemode/output.d.ts
+index b9163a1..253dd95 100644
+--- a/dist/codemode/output.d.ts
++++ b/dist/codemode/output.d.ts
+@@ -21,19 +21,23 @@ type Limits = {
+ };
+ /** Default token budget for script output. */
+ export declare const DEFAULT_MAX_OUTPUT_TOKENS = 10000;
+-/** The tool result's content for a script's result, and the path of the complete text when it was cut. */
+-export declare function formatResult(result: CodemodeResult, options: {
++/** Formatting and file policy shared by the built-in and coding tool adapters. */
++export interface CodemodeFormatOptions {
+     /** Images `models.generateImages()` returned; when the script showed none, the result says so. */
+     readonly generatedImages: number;
+-    readonly wallMs: number;
++    readonly wallMs: number | (() => number);
+     readonly maxOutputTokens: number;
+     readonly calls: readonly {
+         name: string;
+         status: string;
+     }[];
+-    readonly limits: Limits;
++    /** False retains the script's token budget without extra byte or line limits. */
++    readonly limits: Limits | false;
+     readonly write: OutputFile;
+-}): Promise<{
++    readonly imageSize?: (bytes: number) => string;
++}
++/** The tool result's content for a script's result, and the path of the complete text when it was cut. */
++export declare function formatResult(result: CodemodeResult, options: CodemodeFormatOptions): Promise<{
+     content: Item[];
+     fullOutputPath?: string;
+ }>;
+diff --git a/dist/codemode/index.js b/dist/codemode/index.js
+index 0556d0b..d33ae00 100644
+--- a/dist/codemode/index.js
++++ b/dist/codemode/index.js
+@@ -1,3 +1,4 @@
+ export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, CodemodeStoreDoc, createCodemodeExtension, createCodemodeTool, } from "./codemode.js";
+ export { DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.js";
++export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult } from "./output.js";
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/dist/codemode/index.d.ts b/dist/codemode/index.d.ts
+index 3e1c49c..5373079 100644
+--- a/dist/codemode/index.d.ts
++++ b/dist/codemode/index.d.ts
+@@ -1,3 +1,4 @@
+ export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
+ export { type CodemodeNamespace, DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.ts";
++export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult, type CodemodeFormatOptions, type OutputFile } from "./output.js";
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
