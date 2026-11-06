@@ -20,6 +20,43 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Shared image encoding
+
+Native resizing now forwards to `compat/image-resize.ts`. The durable patch
+exposes its encoding and shrinking loop with a callback for the caller's
+Photon runtime. Native retains Photon Node 0.3.4, sequential dimension rounding,
+original-byte returns, result dimensions and the worker reply tag. Its policy
+keeps the configured JPEG quality followed by 85, 70, 55 and 40, eager encoding,
+the smaller initial PNG or JPEG, PNG on ties and strict `< maxBytes`. The durable
+factory keeps its original inclusive limit and encoding order.
+
+Before replacement, the Native resize core matches the pinned upstream source
+byte for byte. Seventeen original outcomes are captured with image and base64
+hashes and result metadata. A separate copy of the unpatched durable processor,
+with only its three import paths changed, captures seventeen default outcomes.
+The fixture files record both source hashes. Two checks execute the actual
+Native worker module; the public resize entry also preserves caller bytes.
+The final Native suite passes 21 checks and 55 assertions. The combined image
+suite passes 56 checks and 414 assertions. These include encoding ownership,
+eager failure cleanup, exact limits and the earlier EXIF regressions.
+An added declaration check fails before the generator rejects grouped public
+constants, then passes with that guard; it also checks default exports and
+option changes.
+
+Seventeen explicit roots pass strict checks with 241 source files and zero
+diagnostics. The resize source and its record reproduce with `sourceFiles: 1`
+and `complete: false`. The complete 22-file patch applies cleanly. Independent
+and warm cache installs preserve the frozen lock and match every patched file.
+Both standalone consumers pass 64 checks and 509 assertions across four named
+files. They test public encoding, the default factory, EXIF and codemode;
+the Native loader and worker checks run in the isolated worktree.
+
+The current patch SHA-256 is
+`9ac4e52bff6c2849ecdc969a6321a47c8a31d7d120d8ae67f4cc9af05707febc`.
+No complete root install or release build is established. Registry tarball
+integrity is not checked again. Synchronous terminal conversion, worker
+fallback and packaged WASM layouts remain outside these checks.
+
 ## Shared image orientation
 
 Native EXIF orientation now forwards to `compat/image-orientation.ts`. A small
@@ -28,8 +65,8 @@ through `images`. The adapter retains Photon Node 0.3.4 objects, in-place flips,
 new objects for transposition and caller-owned cleanup. The shared reader's
 optional Native mode preserves WebP chunk bounds, short-chunk prefix checks,
 signed chunk traversal and signed little-endian TIFF offsets. The durable
-default remains unchanged. Encoding, quality selection, resize limits, worker
-loading and packaged WASM fallback remain pending reuse analysis.
+default remains unchanged. The encoding section above records later reuse.
+Worker loading and packaged WASM policy remain in the Native adapter.
 
 Before replacement, nine checks and 240 assertions pass against Native's
 original implementation. The initial replacement passes eleven checks and
@@ -46,11 +83,11 @@ traversal can fail to terminate on cyclic offsets; that behavior is retained.
 These checks do not establish the full image pipeline, worker fallback or
 packaged application behavior.
 
-Five explicit roots, including one durable declaration, pass strict checks
+At the orientation stage, five roots, including one durable declaration, pass strict checks
 with 226 source files and zero diagnostics. One allowed Native source and its
 record reproduce with `sourceFiles: 1` and `complete: false`. The complete
 22-file patch applies cleanly and matches the installed files byte for byte.
-The standalone consumer installs 93 packages from 94 existing lock records
+That standalone consumer installs 93 packages from 94 existing lock records
 with a frozen lock, no network and no lifecycle scripts. All 43 checks and
 480 assertions pass. This uses existing cache files and does not check registry
 tarball integrity again or establish a complete root installation.
@@ -62,11 +99,12 @@ artifact and the new exports are missing. An independent cache applies all
 22 files. Both patch bodies share their first 76271 bytes; Bun 1.3.14 uses the
 same cache tag for them. Its internal hash behavior has not been verified.
 
-The canonical patch now starts with `# Content SHA-256: ...`, calculated from
+The canonical patch starts with `# Content SHA-256: ...`, calculated from
 the complete following body with LF line endings. Updating the patch also
 requires updating this digest. The regression check fails without that header
 and passes with it. The prefaced patch installs correctly with the old cache
-present, preserves the frozen lock and matches all 22 files. Its SHA-256 is
+present, preserves the frozen lock and matches all 22 files. The orientation
+stage patch SHA-256 is
 `6734cb5015b55157a24e7cd48e9857b5fcfa602fb7ad88a5e41f7e5c13b75775`.
 This is an artifact workaround, not a verified fix to Bun itself.
 

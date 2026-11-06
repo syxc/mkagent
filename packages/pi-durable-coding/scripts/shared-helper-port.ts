@@ -6,6 +6,7 @@ export function portSharedHelpers(path: string, body: string): string {
   if (path === 'utils/zip.ts') return portZipRuntime(body);
   if (path === 'utils/tools-manager.ts') return portToolArchives(body);
   if (path === 'utils/exif-orientation.ts') return portImageOrientation(body);
+  if (path === 'utils/image-resize-core.ts') return portImageResize(body);
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
@@ -115,6 +116,50 @@ function portImageOrientation(body: string): string {
   }
   return '/** Native Photon ownership over durable\'s shared EXIF algorithms. */\n'
     + 'export { applyExifOrientation } from "../../compat/image-orientation.ts";\n';
+}
+
+function portImageResize(body: string): string {
+  const parsed = ts.createSourceFile('image-resize-core.ts', body, ts.ScriptTarget.Latest, true);
+  const exported = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node) ||
+    ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword));
+  const names = exported.map(node => ts.isVariableStatement(node)
+    ? node.declarationList.declarations[0].name.getText(parsed)
+    : ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isFunctionDeclaration(node)
+      ? node.name?.text ?? '' : '');
+  const expected = ['ImageResizeOptions', 'ResizedImage', 'IMAGE_RESIZE_WORKER_RESPONSE_TYPE',
+    'ResizeImageWorkerResponse', 'resizeImageInProcess'];
+  const apply = exported.find(node => ts.isFunctionDeclaration(node));
+  const shapes: Record<string, string> = {
+    ImageResizeOptions: 'maxWidth?:number;maxHeight?:number;maxBytes?:number;jpegQuality?:number;',
+    ResizedImage: 'data:string;mimeType:string;originalWidth:number;originalHeight:number;width:number;height:number;wasResized:boolean;',
+  };
+  const compact = (text: string) => text.replace(/\/\/[^\n]*/g, '').replace(/\s/g, '');
+  const response = exported.find(ts.isTypeAliasDeclaration);
+  const tagDeclaration = exported.find(ts.isVariableStatement);
+  const tag = tagDeclaration?.declarationList.declarations[0].initializer;
+  if (names.join(',') !== expected.join(',') ||
+      exported.some(node => ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier =>
+        modifier.kind !== ts.SyntaxKind.ExportKeyword &&
+        !(ts.isFunctionDeclaration(node) && modifier.kind === ts.SyntaxKind.AsyncKeyword))) ||
+      exported.filter(ts.isInterfaceDeclaration).some(node => compact(node.members.map(member => member.getText(parsed)).join('')) !== shapes[node.name.text]) ||
+      !tagDeclaration || tagDeclaration.declarationList.declarations.length !== 1 ||
+      !(tagDeclaration.declarationList.flags & ts.NodeFlags.Const) ||
+      tagDeclaration.declarationList.declarations[0].type !== undefined ||
+      !tag || !ts.isStringLiteral(tag) || tag.text !== 'pi:image-resize-response' ||
+      !response || compact(response.type.getText(parsed)) !==
+        '|{type:typeofIMAGE_RESIZE_WORKER_RESPONSE_TYPE;result:ResizedImage|null}|{type:typeofIMAGE_RESIZE_WORKER_RESPONSE_TYPE;error:string}' ||
+      !apply || !ts.isFunctionDeclaration(apply) ||
+      !apply.body || apply.typeParameters?.length ||
+      !apply.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.AsyncKeyword) ||
+      apply.parameters.map(parameter => parameter.name.getText(parsed)).join(',') !== 'inputBytes,mimeType,options' ||
+      apply.parameters.map(parameter => parameter.type?.getText(parsed)).join(',') !== 'Uint8Array,string,ImageResizeOptions' ||
+      apply.parameters.some((parameter, index) => !!parameter.questionToken !== (index === 2) || parameter.initializer || parameter.dotDotDotToken) ||
+      compact(apply.type?.getText(parsed) ?? '') !== 'Promise<ResizedImage|null>') {
+    throw new Error('Native image resize boundary changed');
+  }
+  return '/** Native image policy over the shared durable encoding loop. */\n'
+    + 'export { IMAGE_RESIZE_WORKER_RESPONSE_TYPE, resizeImageInProcess } from "../../compat/image-resize.ts";\n'
+    + 'export type { ImageResizeOptions, ResizedImage, ResizeImageWorkerResponse } from "../../compat/image-resize.ts";\n';
 }
 
 function portZipRuntime(body: string): string {

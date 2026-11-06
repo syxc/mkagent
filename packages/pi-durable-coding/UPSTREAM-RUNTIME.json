@@ -1769,8 +1769,10 @@
       "source": "packages/coding-agent/src/utils/image-resize-core.ts",
       "target": "src/pi/utils/image-resize-core.ts",
       "sha256": "324a1768fafbe20408e354e570c648eec58ee6e9f0892b53a3853f295e41a3b5",
-      "portSha256": "324a1768fafbe20408e354e570c648eec58ee6e9f0892b53a3853f295e41a3b5",
-      "changes": []
+      "portSha256": "608f23438bbdd9c898f7f32a2b51c14951c83d33c5153923350f7ca232f4d0ea",
+      "changes": [
+        "shared-durable-image-encoding"
+      ]
     },
     {
       "source": "packages/coding-agent/src/utils/image-resize-worker.ts",

@@ -1,4 +1,4 @@
-# Content SHA-256: 2fd11ff5d8a53c56f350b63f39338873d4ac4a7539ebfc13540455622416ec9a
+# Content SHA-256: 1beab8671ca3d15e670258e54d822714851053b83e90c1a8c303c90301c5d1e9
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -1415,10 +1415,10 @@ index 2b8def67ba27970f6a5bf9b0aca9a2e701fe05b9..f9aee0d6d9b48d5d38d5bcc22da11848
              offset += 8 + size + (size % 2);
          }
 diff --git a/dist/images/index.d.ts b/dist/images/index.d.ts
-index 72d700bcf94cc96f21d689ad85f82468cc226caf..156456d73e8d4d6676ed956cd2d1f6163248963c 100644
+index 72d700bcf94cc96f21d689ad85f82468cc226caf..ade002b93a795e954ecab4a015860a85979158bf 100644
 --- a/dist/images/index.d.ts
 +++ b/dist/images/index.d.ts
-@@ -1,5 +1,12 @@
+@@ -1,5 +1,26 @@
 -import { type SyncInitInput } from "@silvia-odwyer/photon/photon_rs.js";
 +import { type PhotonImage, type SyncInitInput } from "@silvia-odwyer/photon/photon_rs.js";
  import type { ImageProcessor } from "../tools/image-processor.ts";
@@ -1429,11 +1429,25 @@ index 72d700bcf94cc96f21d689ad85f82468cc226caf..156456d73e8d4d6676ed956cd2d1f616
 +    width: number;
 +    height: number;
 +};
++type EncodingImage = Pick<PhotonImage, "get_width" | "get_height" | "get_bytes" | "get_bytes_jpeg" | "free">;
++/**
++ * Encode and shrink an already decoded image through the caller's Photon runtime.
++ * The caller owns `image`; temporary images returned by `resizeImage` are freed.
++ * Native policy preserves eager quality selection, strict limits and resizing at the original size.
++ */
++export declare function encodePhotonImageWithin(image: EncodingImage, size: { width: number; height: number }, maxBytes: number,
++    resizeImage: (width: number, height: number) => EncodingImage,
++    options?: { jpegFirst?: boolean; native?: { jpegQuality: number } }): {
++    data: string;
++    mimeType: string;
++    width: number;
++    height: number;
++} | undefined;
  /**
   * An `ImageProcessor` on Photon (Rust compiled to WebAssembly), for `createCodingTools({ images })`. `wasm` is
   * Photon's `photon_rs_bg.wasm` as bytes or as a compiled module: `@earendil-works/pi-durable/images/node` reads it from
 diff --git a/dist/images/index.js b/dist/images/index.js
-index 10964639c9ac7e6c74b4023185a6deb9846a50b4..274ac2f27dbe44beef5924b860320c134b172507 100644
+index 10964639c9ac7e6c74b4023185a6deb9846a50b4..8b67f8e432fbf261b2b521144b2d69b1b4f67ef6 100644
 --- a/dist/images/index.js
 +++ b/dist/images/index.js
 @@ -2,6 +2,7 @@
@@ -1444,6 +1458,107 @@ index 10964639c9ac7e6c74b4023185a6deb9846a50b4..274ac2f27dbe44beef5924b860320c13
  /** JPEG qualities tried in order. */
  const JPEG_QUALITIES = [80, 70, 55, 40];
  /**
+@@ -52,23 +53,17 @@ function prepare(bytes, mimeType, limits) {
+         const width = image.get_width();
+         const height = image.get_height();
+         const scale = Math.min(1, limits.maxWidth / width, limits.maxHeight / height);
+-        let target = { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
+-        for (;;) {
+-            const encoded = encodeWithin(image, target, limits.maxBytes, mimeType === "image/jpeg");
+-            if (encoded !== undefined) {
+-                const resized = target.width === width && target.height === height
+-                    ? {}
+-                    : { resized: { from: { width, height }, to: target } };
+-                const converted = encoded.mimeType === mimeType ? {} : { convertedFrom: mimeType };
+-                return { ...encoded, ...converted, ...resized };
+-            }
+-            if (target.width === 1 && target.height === 1)
+-                return undefined;
+-            target = {
+-                width: Math.max(1, Math.floor(target.width * 0.75)),
+-                height: Math.max(1, Math.floor(target.height * 0.75)),
+-            };
+-        }
++        const target = { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
++        const encoded = encodePhotonImageWithin(image, target, limits.maxBytes,
++            (w, h) => resize(image, w, h, SamplingFilter.Lanczos3), { jpegFirst: mimeType === "image/jpeg" });
++        if (encoded === undefined)
++            return undefined;
++        const to = { width: encoded.width, height: encoded.height };
++        const resized = to.width === width && to.height === height
++            ? {}
++            : { resized: { from: { width, height }, to } };
++        const converted = encoded.mimeType === mimeType ? {} : { convertedFrom: mimeType };
++        return { data: encoded.data, mimeType: encoded.mimeType, ...converted, ...resized };
+     }
+     catch {
+         // Photon throws for bytes it cannot decode.
+@@ -79,27 +74,56 @@ function prepare(bytes, mimeType, limits) {
+     }
+ }
+ /**
+- * `image` at `size` in the first encoding whose base64 fits `maxBytes`: PNG, then JPEG at falling qualities, or the
+- * JPEG qualities first when `jpegFirst`; `undefined` if none fits.
++ * Encode and shrink through the caller's Photon runtime. The caller keeps ownership of `image`.
++ * Native policy preserves eager quality selection, strict limits and resizing at the original size.
+  */
+-function encodeWithin(image, size, maxBytes, jpegFirst) {
+-    const same = size.width === image.get_width() && size.height === image.get_height();
+-    const scaled = same ? image : resize(image, size.width, size.height, SamplingFilter.Lanczos3);
++export function encodePhotonImageWithin(image, size, maxBytes, resizeImage, options = {}) {
++    let target = size;
++    for (;;) {
++        const encoded = encodeWithin(image, target, maxBytes, resizeImage, options);
++        if (encoded !== undefined)
++            return { ...encoded, width: target.width, height: target.height };
++        if (target.width === 1 && target.height === 1)
++            return undefined;
++        const next = {
++            width: Math.max(1, Math.floor(target.width * 0.75)),
++            height: Math.max(1, Math.floor(target.height * 0.75)),
++        };
++        if (next.width === target.width && next.height === target.height)
++            return undefined;
++        target = next;
++    }
++}
++function encodeWithin(image, size, maxBytes, resizeImage, options) {
++    const native = options.native;
++    const same = !native && size.width === image.get_width() && size.height === image.get_height();
++    const scaled = same ? image : resizeImage(size.width, size.height);
+     try {
+         const png = { mimeType: "image/png", encode: () => scaled.get_bytes() };
+-        const jpegs = JPEG_QUALITIES.map((quality) => ({
++        const qualities = native ? [...new Set([native.jpegQuality, 85, 70, 55, 40])] : JPEG_QUALITIES;
++        const jpegs = qualities.map((quality) => ({
+             mimeType: "image/jpeg",
+             encode: () => scaled.get_bytes_jpeg(quality),
+         }));
+-        for (const candidate of jpegFirst ? [...jpegs, png] : [png, ...jpegs]) {
++        let candidates = options.jpegFirst ? [...jpegs, png] : [png, ...jpegs];
++        if (native) {
++            // Native eagerly encodes every quality before comparing its first PNG and JPEG.
++            const encoded = [png, ...jpegs].map(candidate => ({ mimeType: candidate.mimeType, bytes: new Uint8Array(candidate.encode()) }));
++            const [firstPng, firstJpeg, ...rest] = encoded;
++            const preferred = base64Length(firstJpeg.bytes.length) < base64Length(firstPng.bytes.length)
++                ? [firstJpeg, firstPng] : [firstPng, firstJpeg];
++            candidates = [...preferred, ...rest].map(candidate => ({ mimeType: candidate.mimeType, encode: () => candidate.bytes }));
++        }
++        for (const candidate of candidates) {
+             const bytes = candidate.encode();
+-            if (base64Length(bytes.byteLength) <= maxBytes)
++            const length = base64Length(bytes.byteLength);
++            if (native ? length < maxBytes : length <= maxBytes)
+                 return { data: toBase64(bytes), mimeType: candidate.mimeType };
+         }
+         return undefined;
+     }
+     finally {
+-        if (!same)
++        if (scaled !== image)
+             scaled.free();
+     }
+ }
 diff --git a/dist/search.d.ts b/dist/search.d.ts
 index 0cedcf1631d9b2c31824dd2bed86cc685604cecf..f13098012c7d9761613570910ead1df644accff2 100644
 --- a/dist/search.d.ts
