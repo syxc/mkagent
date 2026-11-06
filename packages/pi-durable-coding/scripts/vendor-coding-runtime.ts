@@ -9,6 +9,8 @@ import { portResourceLoader } from './resource-loader-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
 import { portAgentFacade, portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
+import { portSharedHelpers } from './shared-helper-port.ts';
+import { portCompatRuntime } from './compat-runtime-port.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const checkout = process.argv[2];
@@ -18,14 +20,26 @@ const source = join(upstream, 'packages/coding-agent/src');
 const destination = resolve(import.meta.dir, '..');
 const checking = process.argv.includes('--check');
 const inventory = process.argv.includes('--inventory');
+const options = process.argv.slice(3);
+const selected = options.filter(value => value.startsWith('--file=')).map(value => value.slice('--file='.length));
+for (const option of options) {
+  if (option !== '--check' && option !== '--inventory' && !option.startsWith('--file=')) throw new Error(`Unknown option: ${option}`);
+}
+if (selected.length && (!checking || inventory)) throw new Error('--file requires --check and cannot generate a partial inventory');
+for (const file of selected) {
+  if (!/^[\w/-]+(?:\.d)?\.ts$/.test(file) || file.split('/').includes('..') || file.startsWith('/') ||
+      file.split('/').at(-1)?.toLowerCase() === 'runtime-credentials.ts') throw new Error(`Source is not permitted for a scoped check: ${file}`);
+}
+const scoped = selected.length > 0;
 const head = Bun.spawnSync(['git', '-C', upstream, 'rev-parse', 'HEAD']);
 const status = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--',
-  'packages/coding-agent/src', 'packages/coding-agent/package.json', 'packages/agent/src', 'LICENSE']);
+  ...(scoped ? [...selected.map(file => 'packages/coding-agent/src/' + file), 'packages/coding-agent/package.json', 'LICENSE']
+    : ['packages/coding-agent/src', 'packages/coding-agent/package.json', 'packages/agent/src', 'LICENSE'])]);
 if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCode || status.stdout.toString().trim()) {
   throw new Error('Expected clean pinned Pi v1.5.0 sources');
 }
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
-const queue = ['index.ts', 'core/agent-session-services.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'utils/highlight-js.d.ts'];
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'utils/highlight-js.d.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();
@@ -67,6 +81,7 @@ while (queue.length) {
       return;
     }
     if (specifier.startsWith('.')) {
+      if (scoped) return;
       const candidate = resolve(dirname(join(source, path)), specifier);
       if (!candidate.startsWith(source + sep)) throw new Error(`Relative import escapes coding sources: ${path}: ${specifier}`);
       const selected = existsSync(candidate) && extname(candidate) ? candidate
@@ -109,6 +124,10 @@ while (queue.length) {
     body = portResourceLoader(path, body);
     changes.add('host-resource-trust-and-installed-package-policy');
   }
+  if (path === 'core/package-manager.ts') {
+    changes.add('explicit-host-project-resource-directory');
+    changes.add('structural-package-settings-interface');
+  }
   if (path === 'core/skills.ts' || path === 'core/prompt-templates.ts') {
     body = portResourceLoader(path, body);
     changes.add('explicit-host-project-resource-directory');
@@ -121,6 +140,12 @@ while (queue.length) {
     body = portProviderComposer(body);
     changes.add('structural-provider-config-interface');
   }
+  if (path === 'core/settings-manager.ts') {
+    const declaration = 'function deepMergeSettings(';
+    if (!body.includes(declaration)) throw new Error('Shared settings merge changed');
+    body = body.replace(declaration, 'export ' + declaration);
+    changes.add('shared-settings-merge');
+  }
   if (path === 'core/agent-session.ts') {
     body = portAgentSession(body);
     changes.add('durable-recovery-and-host-tool-policy');
@@ -129,6 +154,7 @@ while (queue.length) {
   if (path === 'core/messages.ts') {
     body = portNativeMessages(body);
     changes.add('exclude-host-correlation-from-model-context');
+    changes.add('legacy-projection-message-policy');
   }
   if (path === 'core/sdk.ts') {
     body = portSDK(body);
@@ -187,9 +213,27 @@ while (queue.length) {
     body = portBundledAssets(body);
     changes.add('installed-native-bundle-assets');
   }
+  if (path === 'core/footer-data-provider.ts' || path === 'core/resource-loader.ts') {
+    body = portSharedHelpers(path, body);
+    changes.add('shared-lightweight-resource-algorithms');
+  }
+  if (path === 'core/extensions/runner.ts' || path === 'core/session-manager.ts') {
+    body = portCompatRuntime(path, body);
+    changes.add('shared-legacy-runtime-policy');
+  }
   const target = 'src/pi/' + path;
   save(target, body);
   records.push({ source: 'packages/coding-agent/src/' + path, target, sha256: hash(original), portSha256: hash(body), changes: [...changes] });
+}
+
+if (scoped) {
+  const manifest = JSON.parse(readFileSync(join(destination, 'UPSTREAM-RUNTIME.json'), 'utf8'));
+  for (const record of records) {
+    const expected = manifest.files.find((entry: { target: string }) => entry.target === record.target);
+    if (!expected || JSON.stringify(expected) !== JSON.stringify(record)) throw new Error(`Scoped source record differs: ${record.target}`);
+  }
+  console.log(JSON.stringify({ mode: 'scoped-check', sourceFiles: records.length, complete: false }));
+  process.exit(0);
 }
 
 function assets(directory: string) {

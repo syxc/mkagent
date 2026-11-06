@@ -19,18 +19,76 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
-## Architecture follow-up after e3762bc
+## Current shared implementation follow-up
+
+The changes after `f2b90d5` share package management, message conversion,
+model facades, settings merge, session storage, extension execution, token
+estimates and resource algorithms. Seven authored policies in `src/legacy/`
+retain host behavior. Generated legacy paths forward to those policies;
+the generator does not keep a second copy of their bodies.
+
+The helper inventory has six selected source ports, six unchanged fixtures
+and 28 shared entries. Eighteen entries are direct forwards; ten retain
+external policy. This is reuse of the ported implementation, separate from
+the public package imports recorded below.
+
+Against `f2b90d5`, the 23 affected production source files add 342 lines and
+remove 6379, a net reduction of 6037 lines including the new adapters and shared types.
+Tests and port rules are counted separately. The runtime inventory still has
+248 source files and nine assets; their complete necessity is unverified.
+
+| Check | Result and scope |
+| --- | --- |
+| Isolated regression | 19 explicit test files, 177 passes, 1046 assertions and no failures in one final command after the type corrections. Covers shared policies, official plugins, resources, native models and input, durable execution, boundaries, tool ownership, approval, cancellation, storage and session projection. |
+| Consumer types and declarations | A strict source consumer and declaration emit pass for the actual package and session-view callers, host message metadata, open settings and token inputs. The regression is kept in `test/shared-compat-types.test.ts`. Its file reader rejects restricted source and real-path aliases before reading. This is not a full SDK check. |
+| Helper reproduction | `vendor-upstream.ts --check` passes with 12 source products and 28 shared entries. Six products are unchanged official fixtures. |
+| Scoped runtime reproduction | Seven explicitly permitted source/output records reproduce: package-manager, messages, resource-loader, footer-data-provider, settings-manager, session-manager and extensions/runner. `--check --file=...` does not traverse imports or generate an inventory; its result states `complete: false`. Nine negative cases cover invalid mode, empty or escaping paths and restricted-name case variants. |
+| Source registration | The 37 changed coding source, script, test and manifest files have local registry entries, including 16 new entries. The complete Craft audit was not run. |
+| Independent review | The reviewer completed static coverage of the original 42-file, 113-hunk diff and the final five-file, five-hunk type correction, with no confirmed actionable defect. The reviewer did not execute tests. Final document facts and registry hashes were checked by the main thread. |
+| Blocked checks | Full runtime generation, full Craft audit, full SDK/repository type checks, complete coding/product suites and worker/server builds can read restricted source. They were not run. Full Runner and ModelRuntime type closure is not covered by the scoped consumer. |
+
+The regression uses `bun test --timeout 20000` through the approved isolated
+HOME/config and environment allowlist. It includes the existing
+`packages/pi-durable-coding/src/resources.test.ts` and these files under
+`packages/pi-durable-coding/test/` are
+`{host-resources,host-project-resources,extensions,native-models,native-user-input,durable-agent,durable-runtime,durable-boundaries,durable-coding-tool-task,durable-session-store,host-tools,shared-packages,shared-models-messages,scoped-port-check,shared-sessions-runner,shared-context-tokens,session-view,shared-compat-types}.test.ts`.
+No actual model endpoint, live WebUI, real credentials or full SDK entry point
+was used.
+
+Strict checking first exposed narrower JavaScript types despite passing
+runtime tests: shared factories returned the native class type, and converted
+messages lost their host metadata fields in the inferred return type.
+Explicit legacy boundaries and class factory return annotations restore the
+old contract. The persistent consumer test failed on the metadata case before
+that correction and passed after it.
+
+An all-`any` parent then reproduced TS7006 for ordinary array callbacks.
+A shared type-only constructor mapping and structured projection returns keep
+scalar, array and Promise inference without copying a method declaration list.
+The consumer also checks branch and context callbacks, string replacement
+callbacks and static list callbacks.
+
+The token fixture initially used the wrong context-edit shape and assumed
+that system content replaced earlier text. The corrected fixture follows
+the public message types: `replacement.content`, section replacement and a
+compaction `systemMessage`. No estimator algorithm was changed.
+
+The architecture now records the six selected helper exceptions and the
+remaining full-closure questions. F1/F3 do not claim complete necessity
+verification. F4/F5 full checks and final acceptance remain open.
+
+## Earlier architecture follow-up at f2b90d5
 
 The document correction and independent gap review were committed as
-`e3762bc` before this implementation. The current change restores public core
+`e3762bc` before that implementation. That change restores public core
 type imports in 28 files, shares 14 helper implementations, and keeps legacy
-documentation URLs in a 30-line external prompt adapter. The helper inventory
-now has 13 source ports, six unchanged fixtures and 21 shared entries. Eighteen
+documentation URLs in a 30-line external prompt adapter. At that revision the
+helper inventory had 13 source ports, six unchanged fixtures and 21 shared entries. Eighteen
 entries are plain forwards; skills, prompt templates and system prompt retain
 host policy. Skills and prompt templates each need an optional project directory
 parameter in the shared implementation. Legacy wrappers pass `.pi`; native
 calls retain the installation default.
-The runtime inventory remains 248 TypeScript files and nine assets.
+At that revision the runtime inventory had 248 TypeScript files and nine assets.
 
 | Check | Current result and scope |
 | --- | --- |

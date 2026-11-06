@@ -6,25 +6,6 @@
   "typescript": "5.9.3",
   "files": [
     {
-      "source": "packages/coding-agent/src/core/package-manager.ts",
-      "target": "src/upstream/core/package-manager.ts",
-      "sha256": "117f6a99c323c4284a905d1731756f745f435e11f82912b44363301f7b698fa0",
-      "portSha256": "4a869c22257716c1e9854c64466b082c1b288ede24e68c43cdf4a4d1928772d8",
-      "changes": [
-        "checked-index-access"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/extensions/runner.ts",
-      "target": "src/upstream/core/extensions/runner.js",
-      "sha256": "3cd6d1ad18e8e4c7adf722aed9291bc64f06e3a7d461755c21e3cba4819f4e5e",
-      "portSha256": "a3cd3f4036c1289ef26e1c4a712e85cbcf9c55718eee16ed38312a4e2500bd33",
-      "changes": [
-        "erase-types",
-        "headless-theme-binding"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/extensions/loader.ts",
       "target": "src/upstream/core/extensions/loader.js",
       "sha256": "873cbe2ae4a15e9563c5a563d447b7aa3a05cca45e145d4250d54ad601bdc85f",
@@ -33,54 +14,6 @@
         "erase-types",
         "extension-module-resolution",
         "preserve-host-stack-formatting-after-babel-bootstrap"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/messages.ts",
-      "target": "src/upstream/core/messages.js",
-      "sha256": "5397e3c96c9504266e4ee8b6e88d5098b3280ee7dbb0c687b74708c62a06c8d4",
-      "portSha256": "dad6446f0af94dbddbbf744281e3c1796b655e4ac05440e5ae12208ce5338566",
-      "changes": [
-        "erase-types"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/session-manager.ts",
-      "target": "src/upstream/core/session-manager.js",
-      "sha256": "444650a737052f0d710c19f9e50e115c24b49107130059d5bef458eacf3927c7",
-      "portSha256": "87b3bafd563da4fe2ca299f5612133c7b3cf8e64223e13399ca2f58974578201",
-      "changes": [
-        "erase-types",
-        "session-message-binding",
-        "durable-model-projection"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/model-registry.ts",
-      "target": "src/upstream/core/model-registry.js",
-      "sha256": "f4ced2d92df9097647aba7da3ae0bb273fa8089e966be15dba880db51d5dee0b",
-      "portSha256": "c13a82819f0d687660bffa482341f0a06b7e4e314c322c0d8306b06a960b1ee6",
-      "selection": [
-        "ModelRegistry"
-      ],
-      "changes": [
-        "erase-types"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/settings-manager.ts",
-      "target": "src/upstream/core/settings-merge.js",
-      "sha256": "7b21f0900b96b8b11751c046cc009bdbd62b2a6f579a96e9727c737d0dd5e62d",
-      "portSha256": "40b2aa2d8ce36f837a15c52e679af3c5daeb3b02999176809f099a00a13df23b",
-      "selection": [
-        "isMergeableObject",
-        "deepMergeObjects",
-        "isToolModifier",
-        "mergeDefaultTools",
-        "deepMergeSettings"
-      ],
-      "changes": [
-        "erase-types"
       ]
     },
     {
@@ -97,11 +30,14 @@
       "source": "packages/coding-agent/src/core/resource-loader.ts",
       "target": "src/upstream/core/context-files.ts",
       "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
-      "portSha256": "185ae61521d87a2764c700980135e566c5f2e7ff1423654c047e741f7551e658",
+      "portSha256": "c10627dd252a97a451f13b8cd69bffc6abf1c39eb35101647d9b645950cd8073",
       "selection": [
         "loadContextFileFromDir",
         "findShadowedContextFile",
         "loadProjectContextFiles"
+      ],
+      "changes": [
+        "host-project-context-trust"
       ]
     },
     {
@@ -111,25 +47,6 @@
       "portSha256": "a4a5baee89c3d6009a3defdf75b4a8c4023b7c5a15b556451eee4206afd3883b",
       "selection": [
         "DefaultResourceLoader.dedupePrompts"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/compaction/compaction.ts",
-      "target": "src/upstream/core/context-tokens.js",
-      "sha256": "32714966eb644da31cd84e8eb172965256160626b3d26ae9752c3894300f2b0b",
-      "portSha256": "df01d3203f7adf9196fcd16786743c78a9ddb045ae8c5862436814557f6e278c",
-      "selection": [
-        "calculateContextTokens",
-        "getAssistantUsage",
-        "getLastAssistantUsageInfo",
-        "estimateContextTokens",
-        "estimateProjectedContextTokens",
-        "ESTIMATED_IMAGE_CHARS",
-        "estimateTextAndImageContentChars",
-        "estimateTokens"
-      ],
-      "changes": [
-        "erase-types"
       ]
     },
     {
@@ -300,6 +217,55 @@
       "implementation": "src/pi/utils/shell.ts",
       "changes": [
         "selected-public-shell-api"
+      ]
+    },
+    {
+      "target": "src/upstream/core/package-manager.ts",
+      "implementation": "src/legacy/package-manager.ts",
+      "changes": [
+        "legacy-project-directory-and-offline-policy"
+      ]
+    },
+    {
+      "target": "src/upstream/core/messages.js",
+      "implementation": "src/legacy/messages.js",
+      "changes": [
+        "legacy-message-metadata-and-identity"
+      ]
+    },
+    {
+      "target": "src/upstream/core/model-registry.js",
+      "implementation": "src/legacy/model-registry.js",
+      "changes": [
+        "structural-model-runtime-constructor"
+      ]
+    },
+    {
+      "target": "src/upstream/core/settings-merge.js",
+      "implementation": "src/legacy/settings-merge.js",
+      "changes": [
+        "legacy-open-settings-shape"
+      ]
+    },
+    {
+      "target": "src/upstream/core/context-tokens.js",
+      "implementation": "src/legacy/context-tokens.js",
+      "changes": [
+        "legacy-open-token-inputs"
+      ]
+    },
+    {
+      "target": "src/upstream/core/extensions/runner.js",
+      "implementation": "src/legacy/extension-runner.js",
+      "changes": [
+        "legacy-headless-theme-and-system-prompt"
+      ]
+    },
+    {
+      "target": "src/upstream/core/session-manager.js",
+      "implementation": "src/legacy/session-manager.js",
+      "changes": [
+        "legacy-durable-projection-and-storage-factories"
       ]
     }
   ]

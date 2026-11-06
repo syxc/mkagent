@@ -1,3 +1,6 @@
+import { loadContextFileFromDir, findShadowedContextFile, loadProjectContextFiles } from "../../upstream/core/context-files.ts";
+export { loadProjectContextFiles };
+import { dedupePrompts } from "../../upstream/core/resource-collisions.ts";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { detectCapabilities, getTerminalColorMode, type TerminalColorMode } from "@earendil-works/pi-tui";
@@ -24,7 +27,6 @@ import type {
 	InlineExtension,
 	LoadExtensionsResult,
 } from "./extensions/types.ts";
-import { findGitPaths } from "./footer-data-provider.ts";
 import {
 	DefaultPackageManager,
 	type PackageInstallFailure,
@@ -210,101 +212,6 @@ function resolvePromptInput(input: string | undefined, description: string): str
 	}
 
 	return input;
-}
-
-function loadContextFileFromDir(dir: string): { path: string; content: string } | null {
-	const candidates = ["AGENTS.override.md", "AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"];
-	for (const filename of candidates) {
-		const filePath = join(dir, filename);
-		if (existsSync(filePath)) {
-			try {
-				if (!statSync(filePath).isFile()) {
-					continue;
-				}
-				return {
-					path: filePath,
-					content: stripBom(readFileSync(filePath, "utf-8")),
-				};
-			} catch (error) {
-				console.error(chalk.yellow(`Warning: Could not read ${filePath}: ${error}`));
-			}
-		}
-	}
-	return null;
-}
-
-/**
- * The main repo's context file that a nested linked worktree's own copy shadows: both
- * occupy the same logical repository scope, so loading both applies that context twice. Returns
- * undefined when nothing is shadowed, leaving normal ancestor inheritance alone.
- *
- * Returned canonicalized (realpath), because `git worktree add` writes the `.git`
- * file's `gitdir:` target in realpath form while cwd may still be symlinked
- * (macOS `/tmp` -> `/private/tmp`).
- */
-function findShadowedContextFile(cwd: string): string | undefined {
-	const gitPaths = findGitPaths(cwd);
-	if (!gitPaths) return undefined;
-	const commonGitDir = canonicalizePath(gitPaths.commonGitDir);
-	const worktreeRoot = canonicalizePath(gitPaths.repoDir);
-	const mainRepoRoot = dirname(commonGitDir);
-	// False for an ordinary repo, where the two are the same dir, and for a sibling
-	// worktree (`git worktree add ../feat`), whose main repo is not an ancestor.
-	if (!isPathWithin(mainRepoRoot, worktreeRoot) || pathsEqual(worktreeRoot, mainRepoRoot)) return undefined;
-	// dirname of the common git dir is the main worktree root only when that dir is
-	// itself checked out from the same repo. In a bare layout (`proj/.bare` +
-	// `proj/main`) it is just the directory holding `.bare`, which tracks nothing; a
-	// submodule's gitdir has no `commondir`, so it lands under `.git/modules`.
-	if (!pathsEqual(canonicalizePath(join(mainRepoRoot, ".git")), commonGitDir)) return undefined;
-	const worktreeContextFile = loadContextFileFromDir(worktreeRoot);
-	return worktreeContextFile ? join(mainRepoRoot, basename(worktreeContextFile.path)) : undefined;
-}
-
-export function loadProjectContextFiles(options: {
-	cwd: string;
-	agentDir: string;
-	projectTrusted?: boolean;
-}): Array<{ path: string; content: string }> {
-	const resolvedCwd = resolvePath(options.cwd);
-	const resolvedAgentDir = resolvePath(options.agentDir);
-
-	const contextFiles: Array<{ path: string; content: string }> = [];
-	const seenPaths = new Set<string>();
-
-	const globalContext = loadContextFileFromDir(resolvedAgentDir);
-	if (globalContext) {
-		contextFiles.push(globalContext);
-		seenPaths.add(globalContext.path);
-	}
-
-	if (options.projectTrusted === false) return contextFiles;
-
-	const ancestorContextFiles: Array<{ path: string; content: string }> = [];
-
-	const shadowedContextFile = findShadowedContextFile(resolvedCwd);
-	let currentDir = resolvedCwd;
-
-	while (true) {
-		const contextFile = loadContextFileFromDir(currentDir);
-		// Compare the directory's real path, not the file's: a worktree AGENTS.md that
-		// symlinks to the main repo's file resolves to the shadowed path itself.
-		const isShadowed =
-			shadowedContextFile !== undefined &&
-			contextFile !== null &&
-			pathsEqual(join(canonicalizePath(currentDir), basename(contextFile.path)), shadowedContextFile);
-		if (contextFile && !isShadowed && !seenPaths.has(contextFile.path)) {
-			ancestorContextFiles.unshift(contextFile);
-			seenPaths.add(contextFile.path);
-		}
-
-		const parentDir = dirname(currentDir);
-		if (parentDir === currentDir) break;
-		currentDir = parentDir;
-	}
-
-	contextFiles.push(...ancestorContextFiles);
-
-	return contextFiles;
 }
 
 export interface DefaultResourceLoaderOptions {
@@ -1212,29 +1119,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 	}
 
 	private dedupePrompts(prompts: PromptTemplate[]): { prompts: PromptTemplate[]; diagnostics: ResourceDiagnostic[] } {
-		const seen = new Map<string, PromptTemplate>();
-		const diagnostics: ResourceDiagnostic[] = [];
-
-		for (const prompt of prompts) {
-			const existing = seen.get(prompt.name);
-			if (existing) {
-				diagnostics.push({
-					type: "collision",
-					message: `name "/${prompt.name}" collision`,
-					path: prompt.filePath,
-					collision: {
-						resourceType: "prompt",
-						name: prompt.name,
-						winnerPath: existing.filePath,
-						loserPath: prompt.filePath,
-					},
-				});
-			} else {
-				seen.set(prompt.name, prompt);
-			}
-		}
-
-		return { prompts: Array.from(seen.values()), diagnostics };
+		return dedupePrompts(prompts);
 	}
 
 	private dedupeThemes(themes: Theme[]): { themes: Theme[]; diagnostics: ResourceDiagnostic[] } {

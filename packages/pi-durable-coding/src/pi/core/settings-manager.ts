@@ -140,7 +140,7 @@ function resolveDefaultTools(entries: string[]): string[] {
 }
 
 /** Deep merge settings: project/overrides take precedence, nested objects merge recursively */
-function deepMergeSettings(base: Settings, overrides: Settings): Settings {
+export function deepMergeSettings(base: Settings, overrides: Settings): Settings {
 	const merged = deepMergeObjects(base as Record<string, unknown>, overrides as Record<string, unknown>) as Settings;
 	const defaultTools = mergeDefaultTools(base.defaultTools, overrides.defaultTools);
 	return defaultTools === undefined ? merged : { ...merged, defaultTools };

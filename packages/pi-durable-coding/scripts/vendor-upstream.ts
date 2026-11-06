@@ -12,7 +12,7 @@ const git = Bun.spawnSync(['git', '-C', upstream, 'rev-parse', 'HEAD']);
 if (git.exitCode || git.stdout.toString().trim() !== revision) {
   throw new Error(`Expected Pi v1.5.0 at ${revision}`);
 }
-const dirty = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--', 'packages/coding-agent/src', 'packages/coding-agent/examples', 'packages/coding-agent/test/suite/mcp-oauth-server.ts', 'packages/durable/src/harness/context.ts', 'LICENSE']);
+const dirty = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--', 'packages/coding-agent/src', 'packages/coding-agent/examples', 'packages/coding-agent/test/suite/mcp-oauth-server.ts', 'packages/durable/src/harness/context.ts', 'LICENSE', ':(glob,icase,exclude)packages/coding-agent/src/**/runtime-credentials.ts']);
 if (dirty.exitCode || dirty.stdout.toString().trim()) throw new Error('Upstream sources must be clean');
 const destination = resolve(import.meta.dir, '..');
 const sourceRoot = join(upstream, 'packages/coding-agent/src');
@@ -86,48 +86,13 @@ function port(source: string, target = source, selection?: string[], imports = '
     content = content.replace(importing, '\tpreparePluginTranspiler(jiti);\n' + importing);
     changes.push('preserve-host-stack-formatting-after-babel-bootstrap');
   }
-  if (changes?.includes('headless-theme-binding')) {
-    const originalImport = '"../../modes/interactive/theme/theme.ts"';
-    if (!content.includes(originalImport)) throw new Error('Upstream runner theme import changed');
-    content = content.replace(originalImport, '"../../../headless-ui.ts"');
-  }
-  if (changes?.includes('session-message-binding')) {
-    content = content.replace('"./messages.ts"', '"./messages.js"');
-  }
-  if (changes?.includes('durable-model-projection')) {
-    content = 'import { buildDurableContextEntries, finalizeDurableProjection } from "../../durable-projection.ts";\n' + content;
-    const anchor = 'const messages = sessionEntryToContextMessages(entry);';
-    if (content.split(anchor).length !== 2) throw new Error('Upstream context projection changed');
-    content = content.replace(anchor,
-      'const newerEdit = edit && (!("durableEntryOrder" in edit) || Number(edit.durableEntryOrder) > Number(entry.durableModelOrder));'
-      + '\n\tconst messages = newerEdit && "durableBaseMessages" in entry ? entry.durableBaseMessages as AgentMessage[]'
-      + ' : "durableModelMessages" in entry ? entry.durableModelMessages as AgentMessage[] : sessionEntryToContextMessages(entry);'
-      + '\n\t// Persisted edits are already folded into the durable contribution. Preview edits still use Pi semantics.'
-      + '\n\tif (edit && "durableModelOrder" in entry && "durableEntryOrder" in edit'
-      + ' && Number(edit.durableEntryOrder) <= Number(entry.durableModelOrder)) return messages;');
-    const selection = 'const path = buildSessionPath(entries, leafId, byId);\n\tlet compaction:';
-    if (!content.includes(selection)) throw new Error('Upstream context selection changed');
-    content = content.replace(selection, 'const path = buildSessionPath(entries, leafId, byId);\n'
-      + '\tif (path.some(entry => "durableEntryOrder" in entry)) return buildDurableContextEntries(path);\n\tlet compaction:');
-    const flattened = 'messages: projectedEntries.flatMap((entry) => entry.messages),';
-    if (!content.includes(flattened)) throw new Error('Upstream projection finalization changed');
-    content = content.replace(flattened, 'messages: finalizeDurableProjection(projectedEntries, path),');
-  }
-  const checkedIndexes: Record<string, Array<[string, string]>> = {
-    'core/package-manager.ts': [
-      ['const existing = currentPackages[matchIndex];', 'const existing = currentPackages[matchIndex]!;'],
-      ['sources[0].source', 'sources[0]!.source'],
-      ['await tasks[index]();', 'await tasks[index]!();'],
-    ],
-    'utils/paths.ts': [['match[1].toUpperCase()', 'match[1]!.toUpperCase()']],
-  };
-  if (checkedIndexes[source]) {
-    // The upstream bounds and regular expressions establish these accesses; only TS strictness differs.
-    for (const [before, after] of checkedIndexes[source]) {
-      if (!content.includes(before)) throw new Error(`Checked index changed: ${source}: ${before}`);
-      content = content.replaceAll(before, after);
-    }
-    changes = [...(changes ?? []), 'checked-index-access'];
+  if (changes?.includes('host-project-context-trust')) {
+    const signature = '\tagentDir: string;\n}';
+    if (!content.includes(signature)) throw new Error('Project context signature changed');
+    content = content.replace(signature, '\tagentDir: string;\n\tprojectTrusted?: boolean;\n}');
+    const anchor = '\tconst ancestorContextFiles: Array<{ path: string; content: string }> = [];';
+    if (!content.includes(anchor)) throw new Error('Project context trust boundary changed');
+    content = content.replace(anchor, '\tif (options.projectTrusted === false) return contextFiles;\n\n' + anchor);
   }
   if (target.endsWith('.js')) {
     content = ts.transpileModule(content, { compilerOptions: {
@@ -141,6 +106,17 @@ function port(source: string, target = source, selection?: string[], imports = '
     sha256: sha256(original), portSha256: sha256(content), ...(selection ? { selection } : {}), ...(changes ? { changes } : {}) });
 }
 
+// Host policies are authored once; generated compatibility paths only forward.
+const legacyPolicies: Record<string, string> = {
+  'core/package-manager.ts': 'src/legacy/package-manager.ts',
+  'core/messages.js': 'src/legacy/messages.js',
+  'core/model-registry.js': 'src/legacy/model-registry.js',
+  'core/settings-merge.js': 'src/legacy/settings-merge.js',
+  'core/context-tokens.js': 'src/legacy/context-tokens.js',
+  'core/extensions/runner.js': 'src/legacy/extension-runner.js',
+  'core/session-manager.js': 'src/legacy/session-manager.js',
+};
+
 // These public helpers need one implementation, including when old entry points import them.
 const forwarded = [
   'core/source-info.ts', 'core/diagnostics.ts', 'core/event-bus.ts', 'core/pi-manifest.ts',
@@ -150,18 +126,30 @@ const forwarded = [
   'core/skills.ts', 'core/prompt-templates.ts', 'core/system-prompt.ts',
   'core/extensions/types.js', 'core/extensions/pi-ai-extension-view.ts',
   'core/provider-composer.js', 'core/resolve-config-value.ts', 'utils/shell.ts',
+  'core/package-manager.ts', 'core/messages.js', 'core/model-registry.js', 'core/settings-merge.js',
+  'core/context-tokens.js', 'core/extensions/runner.js', 'core/session-manager.js',
 ].map(file => ({
   target: 'src/upstream/' + file,
-  implementation: 'src/pi/' + file.replace(/\.js$/, '.ts'),
+  implementation: legacyPolicies[file] ?? 'src/pi/' + file.replace(/\.js$/, '.ts'),
   ...(file === 'core/skills.ts' ? { changes: ['explicit-host-agent-directory', 'explicit-host-project-resource-directory'] }
     : file === 'core/prompt-templates.ts' ? { changes: ['explicit-host-project-resource-directory'] }
     : file === 'core/system-prompt.ts' ? { changes: ['host-documentation-paths'] }
-    : file === 'utils/shell.ts' ? { changes: ['selected-public-shell-api'] } : {}),
+    : file === 'utils/shell.ts' ? { changes: ['selected-public-shell-api'] }
+    : file === 'core/package-manager.ts' ? { changes: ['legacy-project-directory-and-offline-policy'] }
+    : file === 'core/messages.js' ? { changes: ['legacy-message-metadata-and-identity'] }
+    : file === 'core/model-registry.js' ? { changes: ['structural-model-runtime-constructor'] }
+    : file === 'core/settings-merge.js' ? { changes: ['legacy-open-settings-shape'] }
+    : file === 'core/context-tokens.js' ? { changes: ['legacy-open-token-inputs'] }
+    : file === 'core/extensions/runner.js' ? { changes: ['legacy-headless-theme-and-system-prompt'] }
+    : file === 'core/session-manager.js' ? { changes: ['legacy-durable-projection-and-storage-factories'] } : {}),
 }));
 for (const item of forwarded) {
-  const path = item.implementation.slice('src/pi/'.length);
+  const file = item.target.slice('src/upstream/'.length);
+  const path = file.replace(/\.js$/, '.ts');
   const specifier = JSON.stringify(relative(dirname(item.target), item.implementation).split(sep).join('/'));
-  let content = '// Shared native implementation; keep legacy imports without another source copy.\n'
+  let content = (legacyPolicies[file]
+    ? '// Shared host compatibility policy; generated by vendor-upstream.ts.\n'
+    : '// Shared native implementation; keep legacy imports without another source copy.\n')
     + (path === 'utils/shell.ts' ? `export { getShellConfig, type ShellConfig } from ${specifier};\n`
       : `export * from ${specifier};\n`);
   if (path === 'core/skills.ts') {
@@ -184,16 +172,7 @@ for (const item of forwarded) {
   save(item.target, content);
 }
 
-port('core/package-manager.ts');
-
-port('core/extensions/runner.ts', 'core/extensions/runner.js', undefined, '', ['erase-types', 'headless-theme-binding']);
 port('core/extensions/loader.ts', 'core/extensions/loader.js', undefined, '', ['erase-types', 'extension-module-resolution']);
-port('core/messages.ts', 'core/messages.js', undefined, '', ['erase-types']);
-port('core/session-manager.ts', 'core/session-manager.js', undefined, '', ['erase-types', 'session-message-binding', 'durable-model-projection']);
-port('core/model-registry.ts', 'core/model-registry.js', ['ModelRegistry'], '', ['erase-types']);
-port('core/settings-manager.ts', 'core/settings-merge.js',
-  ['isMergeableObject', 'deepMergeObjects', 'isToolModifier', 'mergeDefaultTools', 'deepMergeSettings'],
-  'export { deepMergeSettings as mergeCodingSettings };\n', ['erase-types']);
 
 port('core/footer-data-provider.ts', 'core/git-paths.ts', ['GitPaths', 'findGitPaths'],
   'import { existsSync, readFileSync, statSync } from "node:fs";\n'
@@ -205,15 +184,11 @@ port('core/resource-loader.ts', 'core/context-files.ts',
   + 'import chalk from "chalk";\n'
   + 'import { canonicalizePath, isPathWithin, pathsEqual, resolvePath } from "../utils/paths.ts";\n'
   + 'import { stripBom } from "../utils/text.ts";\n'
-  + 'import { findGitPaths } from "./git-paths.ts";\n\n');
+  + 'import { findGitPaths } from "./git-paths.ts";\n\n'
+  + 'export { loadContextFileFromDir, findShadowedContextFile };\n\n', ['host-project-context-trust']);
 port('core/resource-loader.ts', 'core/resource-collisions.ts', ['DefaultResourceLoader.dedupePrompts'],
   'import type { PromptTemplate } from "./prompt-templates.ts";\n'
   + 'import type { ResourceDiagnostic } from "./diagnostics.ts";\n\n');
-port('core/compaction/compaction.ts', 'core/context-tokens.js', [
-  'calculateContextTokens', 'getAssistantUsage', 'getLastAssistantUsageInfo',
-  'estimateContextTokens', 'estimateProjectedContextTokens', 'ESTIMATED_IMAGE_CHARS',
-  'estimateTextAndImageContentChars', 'estimateTokens',
-], 'import { getCurrentSystemMessage } from "@earendil-works/pi-ai/utils/transcript";\n\n', ['erase-types']);
 port('core/agent-session.ts', 'core/boundary-drafts.js', [
   'AgentSession._applyBoundaryDrafts', 'AgentSession._buildBoundaryContext', 'AgentSession._replaceMessageInPlace',
 ], 'import { estimateProjectedContextTokens } from "./context-tokens.js";\n'

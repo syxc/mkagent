@@ -418,8 +418,10 @@
       "source": "packages/coding-agent/src/core/extensions/runner.ts",
       "target": "src/pi/core/extensions/runner.ts",
       "sha256": "3cd6d1ad18e8e4c7adf722aed9291bc64f06e3a7d461755c21e3cba4819f4e5e",
-      "portSha256": "3cd6d1ad18e8e4c7adf722aed9291bc64f06e3a7d461755c21e3cba4819f4e5e",
-      "changes": []
+      "portSha256": "601d3c1e78616a9d898460e3b0c90e93d2f302a55b6211f6a546a6a5025027d2",
+      "changes": [
+        "shared-legacy-runtime-policy"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/extensions/types.ts",
@@ -450,8 +452,10 @@
       "source": "packages/coding-agent/src/core/footer-data-provider.ts",
       "target": "src/pi/core/footer-data-provider.ts",
       "sha256": "024ae5b3f50a15db9c149f644845ffb267df838b3a555a0756db95043e05a0e2",
-      "portSha256": "024ae5b3f50a15db9c149f644845ffb267df838b3a555a0756db95043e05a0e2",
-      "changes": []
+      "portSha256": "2b35c519981eef661177ccf2816693b3019ca3250375579302410214812fac7f",
+      "changes": [
+        "shared-lightweight-resource-algorithms"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/http-dispatcher.ts",
@@ -485,9 +489,10 @@
       "source": "packages/coding-agent/src/core/messages.ts",
       "target": "src/pi/core/messages.ts",
       "sha256": "5397e3c96c9504266e4ee8b6e88d5098b3280ee7dbb0c687b74708c62a06c8d4",
-      "portSha256": "d755158524aca4ddf06d69044c24d8f0977e1213f00814a8541470309d421ca2",
+      "portSha256": "17d6969f59d76174ae084232124d81bb18f38d7a7997f78812c7de757c8568e9",
       "changes": [
-        "exclude-host-correlation-from-model-context"
+        "exclude-host-correlation-from-model-context",
+        "legacy-projection-message-policy"
       ]
     },
     {
@@ -545,9 +550,11 @@
       "source": "packages/coding-agent/src/core/package-manager.ts",
       "target": "src/pi/core/package-manager.ts",
       "sha256": "117f6a99c323c4284a905d1731756f745f435e11f82912b44363301f7b698fa0",
-      "portSha256": "c9bbc38fe83a4d9528eb8e6fd55855e936a2bffe9ef1d59e715728c68e9ff4c2",
+      "portSha256": "a56f4020f8d7091d11bab8b461c649c0e129e332f2ebe9c9dbf6b8ef45e8db02",
       "changes": [
-        "host-resource-trust-and-installed-package-policy"
+        "host-resource-trust-and-installed-package-policy",
+        "explicit-host-project-resource-directory",
+        "structural-package-settings-interface"
       ]
     },
     {
@@ -614,9 +621,10 @@
       "source": "packages/coding-agent/src/core/resource-loader.ts",
       "target": "src/pi/core/resource-loader.ts",
       "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
-      "portSha256": "cec3726c83caadb556dcd0da9e09ebc1e3002cbb27397d1b5a65b258649b1d76",
+      "portSha256": "e6fc839521535cf94af17fd56dab0973fe8ef332a56019c95e2887d7315f8543",
       "changes": [
-        "host-resource-trust-and-installed-package-policy"
+        "host-resource-trust-and-installed-package-policy",
+        "shared-lightweight-resource-algorithms"
       ]
     },
     {
@@ -654,8 +662,10 @@
       "source": "packages/coding-agent/src/core/session-manager.ts",
       "target": "src/pi/core/session-manager.ts",
       "sha256": "444650a737052f0d710c19f9e50e115c24b49107130059d5bef458eacf3927c7",
-      "portSha256": "444650a737052f0d710c19f9e50e115c24b49107130059d5bef458eacf3927c7",
-      "changes": []
+      "portSha256": "29ebcba7f4d8b957d0091e7e1f567850458a2f7fddcb81a25a41d1351f7f782e",
+      "changes": [
+        "shared-legacy-runtime-policy"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/settings-defaults.ts",
@@ -675,8 +685,10 @@
       "source": "packages/coding-agent/src/core/settings-manager.ts",
       "target": "src/pi/core/settings-manager.ts",
       "sha256": "7b21f0900b96b8b11751c046cc009bdbd62b2a6f579a96e9727c737d0dd5e62d",
-      "portSha256": "7b21f0900b96b8b11751c046cc009bdbd62b2a6f579a96e9727c737d0dd5e62d",
-      "changes": []
+      "portSha256": "d163050b3ca85962cd22d6579e191de9c23f501462400e22d20cda9a1a1b74f4",
+      "changes": [
+        "shared-settings-merge"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/settings-schema.ts",

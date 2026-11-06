@@ -6,6 +6,8 @@ import { canonicalizePath, isPathWithin, pathsEqual, resolvePath } from "../util
 import { stripBom } from "../utils/text.ts";
 import { findGitPaths } from "./git-paths.ts";
 
+export { loadContextFileFromDir, findShadowedContextFile };
+
 function loadContextFileFromDir(dir: string): { path: string; content: string } | null {
 	const candidates = ["AGENTS.override.md", "AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"];
 	for (const filename of candidates) {
@@ -57,6 +59,7 @@ function findShadowedContextFile(cwd: string): string | undefined {
 export function loadProjectContextFiles(options: {
 	cwd: string;
 	agentDir: string;
+	projectTrusted?: boolean;
 }): Array<{ path: string; content: string }> {
 	const resolvedCwd = resolvePath(options.cwd);
 	const resolvedAgentDir = resolvePath(options.agentDir);
@@ -69,6 +72,8 @@ export function loadProjectContextFiles(options: {
 		contextFiles.push(globalContext);
 		seenPaths.add(globalContext.path);
 	}
+
+	if (options.projectTrusted === false) return contextFiles;
 
 	const ancestorContextFiles: Array<{ path: string; content: string }> = [];
 

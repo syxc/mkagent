@@ -145,7 +145,10 @@ export function createCustomMessage(
  * - Compaction's generateSummary (for summarization)
  * - Custom extensions and tools
  */
-export function convertToLlm(messages: AgentMessage[]): Message[] {
+export function convertToLlm(
+	messages: AgentMessage[],
+	options: { preserveHostMetadata?: boolean } = {},
+): Message[] {
 	return messages
 		.map((m): Message | undefined => {
 			switch (m.role) {
@@ -185,8 +188,9 @@ export function convertToLlm(messages: AgentMessage[]): Message[] {
 				case "user":
 				case "assistant":
 				case "toolResult":
-					// Host metadata survives native persistence but never enters model context.
-					if ("hostMessageId" in m || "hostUserInput" in m) {
+					// Legacy projections require the original object for identity-based reconciliation.
+					// Native model context excludes host metadata by default.
+					if (!options.preserveHostMetadata && ("hostMessageId" in m || "hostUserInput" in m)) {
 						const message = { ...m };
 						Reflect.deleteProperty(message, "hostMessageId");
 						Reflect.deleteProperty(message, "hostUserInput");

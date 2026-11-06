@@ -365,6 +365,8 @@ export class ExtensionRunner {
 	private extensions: Extension[];
 	private runtime: ExtensionRuntime;
 	private uiContext: ExtensionUIContext;
+	private readonly noOpUIContext: ExtensionUIContext;
+	private readonly renderSystemPrompt: typeof buildSystemPrompt;
 	private mode: ExtensionMode = "print";
 	private cwd: string;
 	private sessionManager: SessionManager;
@@ -405,10 +407,21 @@ export class ExtensionRunner {
 		cwd: string,
 		sessionManager: SessionManager,
 		modelRegistry: ModelRegistry,
+		dependencies: { getTheme?: () => Theme; buildSystemPrompt?: typeof buildSystemPrompt } = {},
 	) {
 		this.extensions = extensions;
 		this.runtime = runtime;
-		this.uiContext = noOpUIContext;
+		const getTheme = dependencies.getTheme;
+		this.noOpUIContext = getTheme
+			? {
+					...noOpUIContext,
+					get theme() {
+						return getTheme();
+					},
+				}
+			: noOpUIContext;
+		this.uiContext = this.noOpUIContext;
+		this.renderSystemPrompt = dependencies.buildSystemPrompt ?? buildSystemPrompt;
 		this.cwd = cwd;
 		this.sessionManager = sessionManager;
 		this.modelRegistry = modelRegistry;
@@ -570,7 +583,7 @@ export class ExtensionRunner {
 	}
 
 	setUIContext(uiContext?: ExtensionUIContext, mode: ExtensionMode = "print"): void {
-		this.uiContext = uiContext ? this.wrapUIPromptContext(uiContext) : noOpUIContext;
+		this.uiContext = uiContext ? this.wrapUIPromptContext(uiContext) : this.noOpUIContext;
 		this.mode = mode;
 	}
 
@@ -626,7 +639,7 @@ export class ExtensionRunner {
 	}
 
 	hasUI(): boolean {
-		return this.uiContext !== noOpUIContext;
+		return this.uiContext !== this.noOpUIContext;
 	}
 
 	getExtensionPaths(): string[] {
@@ -1429,7 +1442,7 @@ export class ExtensionRunner {
 		systemPromptOptions: BuildSystemPromptOptions,
 	): Promise<BeforeAgentStartCombinedResult> {
 		const currentOptions = normalizeBuildSystemPromptOptions(systemPromptOptions);
-		const renderCurrentSystemPrompt = (): string => buildSystemPrompt(currentOptions);
+		const renderCurrentSystemPrompt = (): string => this.renderSystemPrompt(currentOptions);
 		const ctx = Object.defineProperties(
 			{},
 			Object.getOwnPropertyDescriptors(this.createContext()),

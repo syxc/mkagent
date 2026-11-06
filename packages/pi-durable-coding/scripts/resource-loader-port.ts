@@ -49,6 +49,10 @@ export function portResourceLoader(path: string, source: string): string {
     replace('\t\tlet appendSources = this.appendSystemPromptSource;',
       '\t\tlet appendSources = promptSources?.appendSystemPrompt ?? this.appendSystemPromptSource;');
   } else if (path === 'core/package-manager.ts') {
+    replace('settingsManager: SettingsManager;', 'settingsManager: PackageSettings;', 2);
+    replace('constructor(options: PackageManagerOptions) {',
+      'constructor(options: PackageManagerOptions, private projectConfigDir = CONFIG_DIR_NAME) {');
+    replace('this.cwd, CONFIG_DIR_NAME', 'this.cwd, this.projectConfigDir', 5);
     replace('/** Configured packages that were skipped because installing them failed. */',
       '/** Configured packages omitted by host policy or failed installation. */');
     replace('/** A configured package that could not be installed while resolving resources. */',
@@ -71,6 +75,10 @@ export function portResourceLoader(path: string, source: string): string {
 
 interface PackageManagerOptions {
 \tresolutionPolicy?: PackageResolutionPolicy;`);
+    replace('interface PackageManagerOptions {', `type PackageSettings = Pick<SettingsManager,
+\t"getGlobalSettings" | "getProjectSettings" | "setPackages" | "setProjectPackages" | "isProjectTrusted" | "getNpmCommand">;
+
+interface PackageManagerOptions {`);
     replace('\tprivate builtinExtensions: string[];',
       '\tprivate builtinExtensions: string[];\n\tprivate resolutionPolicy: PackageResolutionPolicy;');
     replace('\t\tthis.builtinExtensions = options.builtinExtensions ?? [];',

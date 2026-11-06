@@ -220,6 +220,13 @@ export interface SessionProjection {
 	model: { provider: string; modelId: string } | null;
 }
 
+/** Optional context policy for hosts with a separate durable entry model. */
+export interface SessionProjectionOptions {
+	selectContextEntries?: (path: SessionEntry[]) => SessionEntry[] | undefined;
+	projectContextEntry?: typeof projectContextEntry;
+	finalizeProjection?: (entries: ProjectedSessionEntry[], path: SessionEntry[]) => AgentMessage[];
+}
+
 export interface SessionContext {
 	messages: AgentMessage[];
 	thinkingLevel: string;
@@ -477,8 +484,11 @@ export function buildContextEntries(
 	entries: SessionEntry[],
 	leafId?: string | null,
 	byId?: Map<string, SessionEntry>,
+	selectContextEntries?: SessionProjectionOptions["selectContextEntries"],
 ): SessionEntry[] {
 	const path = buildSessionPath(entries, leafId, byId);
+	const selected = selectContextEntries?.(path);
+	if (selected !== undefined) return selected;
 	let compaction: CompactionEntry | null = null;
 
 	for (const entry of path) {
@@ -517,8 +527,11 @@ export function buildContextEntries(
  * Handles compaction and branch summaries along the path.
  */
 /** Project one entry into model-visible messages, applying its latest context edit if any. */
-export function projectContextEntry(entry: SessionEntry, edit: ContextEditEntry | undefined): AgentMessage[] {
-	const messages = sessionEntryToContextMessages(entry);
+export function projectContextEntry(
+	entry: SessionEntry,
+	edit: ContextEditEntry | undefined,
+	messages: AgentMessage[] = sessionEntryToContextMessages(entry),
+): AgentMessage[] {
 	if (!edit) return messages;
 	const replacement = edit.replacement;
 	if (replacement === null) return [];
@@ -545,10 +558,11 @@ export function buildSessionProjection(
 	entries: SessionEntry[],
 	leafId?: string | null,
 	byId?: Map<string, SessionEntry>,
+	options: SessionProjectionOptions = {},
 ): SessionProjection {
 	const path = buildSessionPath(entries, leafId, byId);
 	const { thinkingLevel, model } = getSessionContextSettings(path);
-	const contextEntries = buildContextEntries(entries, leafId, byId);
+	const contextEntries = buildContextEntries(entries, leafId, byId, options.selectContextEntries);
 	const edits = new Map<string, ContextEditEntry>();
 	for (const entry of contextEntries) {
 		if (entry.type === "context_edit") edits.set(entry.targetId, entry);
@@ -562,12 +576,14 @@ export function buildSessionProjection(
 			messages:
 				sourceEntry.type === "compaction" && index > 0
 					? []
-					: projectContextEntry(sourceEntry, edits.get(sourceEntry.id)),
+					: (options.projectContextEntry ?? projectContextEntry)(sourceEntry, edits.get(sourceEntry.id)),
 		}),
 	);
 	return {
 		entries: projectedEntries,
-		messages: projectedEntries.flatMap((entry) => entry.messages),
+		messages: options.finalizeProjection
+			? options.finalizeProjection(projectedEntries, path)
+			: projectedEntries.flatMap((entry) => entry.messages),
 		thinkingLevel,
 		model,
 	};
@@ -998,7 +1014,7 @@ export class SessionManager {
 	private labelTimestampsById: Map<string, string> = new Map();
 	private leafId: string | null = null;
 
-	private constructor(
+	protected constructor(
 		cwd: string,
 		sessionDir: string,
 		sessionFile: string | undefined,
@@ -1037,7 +1053,7 @@ export class SessionManager {
 			if (entries.length === 0) {
 				const explicitPath = this.sessionFile;
 				if (statSync(explicitPath).size > 0) {
-					throw new Error(`Session file is not a valid ${APP_NAME} session: ${explicitPath}`);
+					throw new Error(`Session file is not a valid ${this.getAppName()} session: ${explicitPath}`);
 				}
 				this.newSession();
 				this.sessionFile = explicitPath;
@@ -1148,6 +1164,18 @@ export class SessionManager {
 
 	usesDefaultSessionDir(): boolean {
 		return pathsEqual(this.sessionDir, getDefaultSessionDirPath(this.cwd));
+	}
+
+	protected getAppName(): string {
+		return APP_NAME;
+	}
+
+	protected static getDefaultAgentDir(): string {
+		return getDefaultAgentDir();
+	}
+
+	protected static getSessionsDir(): string {
+		return getSessionsDir();
 	}
 
 	getSessionId(): string {
@@ -1764,8 +1792,8 @@ export class SessionManager {
 	 * @param sessionDir Optional session directory. If omitted, uses default (~/.pi/agent/sessions/<encoded-cwd>/).
 	 */
 	static create(cwd: string, sessionDir?: string, options?: NewSessionOptions): SessionManager {
-		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(cwd);
-		return new SessionManager(cwd, dir, undefined, true, options);
+		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(cwd, (this ?? SessionManager).getDefaultAgentDir());
+		return new (this ?? SessionManager)(cwd, dir, undefined, true, options);
 	}
 
 	/**
@@ -1793,7 +1821,7 @@ export class SessionManager {
 		const cwd = cwdOverride ?? (header ? getSessionHeaderCwd(header) : undefined) ?? process.cwd();
 		// If no sessionDir provided, derive from file's parent directory
 		const dir = sessionDir ? normalizePath(sessionDir) : resolve(resolvedPath, "..");
-		return new SessionManager(cwd, dir, resolvedPath, true, undefined, preloadedFileEntries);
+		return new (this ?? SessionManager)(cwd, dir, resolvedPath, true, undefined, preloadedFileEntries);
 	}
 
 	/**
@@ -1802,18 +1830,18 @@ export class SessionManager {
 	 * @param sessionDir Optional session directory. If omitted, uses default (~/.pi/agent/sessions/<encoded-cwd>/).
 	 */
 	static continueRecent(cwd: string, sessionDir?: string): SessionManager {
-		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(cwd);
-		const filterCwd = sessionDir !== undefined && !pathsEqual(dir, getDefaultSessionDirPath(cwd));
+		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(cwd, (this ?? SessionManager).getDefaultAgentDir());
+		const filterCwd = sessionDir !== undefined && !pathsEqual(dir, getDefaultSessionDirPath(cwd, (this ?? SessionManager).getDefaultAgentDir()));
 		const mostRecent = findMostRecentSession(dir, filterCwd ? cwd : undefined);
 		if (mostRecent) {
-			return new SessionManager(cwd, dir, mostRecent, true);
+			return new (this ?? SessionManager)(cwd, dir, mostRecent, true);
 		}
-		return new SessionManager(cwd, dir, undefined, true);
+		return new (this ?? SessionManager)(cwd, dir, undefined, true);
 	}
 
 	/** Create an in-memory session (no file persistence), optionally from entries held outside the filesystem. */
 	static inMemory(cwd: string = process.cwd(), options?: NewSessionOptions, entries?: FileEntry[]): SessionManager {
-		return new SessionManager(cwd, "", undefined, false, options, entries);
+		return new (this ?? SessionManager)(cwd, "", undefined, false, options, entries);
 	}
 
 	/**
@@ -1841,7 +1869,7 @@ export class SessionManager {
 			throw new Error(`Cannot fork: source session has no header: ${resolvedSourcePath}`);
 		}
 
-		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(resolvedTargetCwd);
+		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(resolvedTargetCwd, (this ?? SessionManager).getDefaultAgentDir());
 		if (!existsSync(dir)) {
 			mkdirSync(dir, { recursive: true });
 		}
@@ -1878,7 +1906,7 @@ export class SessionManager {
 			closeSync(fd);
 		}
 
-		return new SessionManager(resolvedTargetCwd, dir, newSessionFile, true);
+		return new (this ?? SessionManager)(resolvedTargetCwd, dir, newSessionFile, true);
 	}
 
 	/**
@@ -1888,8 +1916,8 @@ export class SessionManager {
 	 * @param sessionDir Optional session directory. If omitted, uses default (~/.pi/agent/sessions/<encoded-cwd>/).
 	 */
 	static findById(cwd: string, id: string, sessionDir?: string): string | undefined {
-		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(cwd);
-		const filterCwd = sessionDir !== undefined && !pathsEqual(dir, getDefaultSessionDirPath(cwd));
+		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(cwd, (this ?? SessionManager).getDefaultAgentDir());
+		const filterCwd = sessionDir !== undefined && !pathsEqual(dir, getDefaultSessionDirPath(cwd, (this ?? SessionManager).getDefaultAgentDir()));
 		const resolvedCwd = resolvePath(cwd);
 
 		try {
@@ -1919,8 +1947,8 @@ export class SessionManager {
 		onProgress?: SessionListProgress,
 		signal?: AbortSignal,
 	): Promise<SessionInfo[]> {
-		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(cwd);
-		const filterCwd = sessionDir !== undefined && !pathsEqual(dir, getDefaultSessionDirPath(cwd));
+		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(cwd, (this ?? SessionManager).getDefaultAgentDir());
+		const filterCwd = sessionDir !== undefined && !pathsEqual(dir, getDefaultSessionDirPath(cwd, (this ?? SessionManager).getDefaultAgentDir()));
 		const resolvedCwd = resolvePath(cwd);
 		const includeSession = (session: SessionInfo) => !filterCwd || sessionCwdMatches(session.cwd, resolvedCwd);
 		const progress: SessionListProgress | undefined = onProgress
@@ -1962,7 +1990,7 @@ export class SessionManager {
 			return sortSessionInfos(await listSessionsFromDir(customSessionDir, progress, abortSignal));
 		}
 
-		const sessionsDir = getSessionsDir();
+		const sessionsDir = (this ?? SessionManager).getSessionsDir();
 
 		try {
 			if (!existsSync(sessionsDir)) return [];
