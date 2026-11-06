@@ -82,6 +82,64 @@ function text(result: ToolExecutionResult) {
 }
 
 describe('public durable codemode host policies', () => {
+  test('tool aliases retain discovery, namespaces and the real registered admission name', async () => {
+    let effects = 0;
+    const observed: string[] = [];
+    const opened = await fixture({
+      aliases: { private_registered: 'visible.tool' },
+      namespaces: [{ name: 'visible', prefix: 'visible.' }],
+      onCallStart: call => { observed.push(call.name); },
+    }, false, [defineTool({
+      name: 'private_registered', description: 'Unique aliased fixture', parameters: obj({}), callers: ['tools'],
+      execute: async () => { effects++; return { output: [{ type: 'text', text: 'alias-result' }] }; },
+    })]);
+    const result = await opened.run(`
+      const sample=await describeTool("visible.tool");
+      if(typeof sample!=="string") throw new Error("Missing alias sample");
+      const namespace=await describeNamespace("visible");
+      if(namespace?.tools[0]!=="visible_tool") throw new Error("Wrong namespace binding");
+      const found=await searchTools("Unique aliased fixture",{namespace:"visible"});
+      if(found[0]?.name!=="visible_tool") throw new Error("Wrong search binding");
+      return [await tools.visible_tool({}),sample,namespace,found];
+    `);
+    expect(result.isError).toBe(false);
+    expect(text(result)).toContain('alias-result');
+    expect(text(result)).toContain('visible_tool');
+    expect(observed).toEqual(['private_registered']);
+    expect(effects).toBe(1);
+  }, 10_000);
+
+  test.each([false, true])('preparation can reject before rows or admission (async: %s)', async asynchronous => {
+    const observed: number[] = [];
+    let effects = 0;
+    const opened = await fixture({
+      prepareCall: call => {
+        const prepare = () => {
+          if (call.name === 'prepared' && call.id === 1) throw new Error('Invalid helper context');
+        };
+        return asynchronous ? Promise.resolve().then(prepare) : prepare();
+      },
+      onCallStart: call => { observed.push(call.id); },
+    }, false, [defineTool({
+      name: 'prepared', description: 'Prepare before admission', parameters: obj({}), callers: ['tools'],
+      execute: async () => { effects++; return { output: [{ type: 'text', text: 'accepted' }] }; },
+    })]);
+    const result = await opened.run(`
+      try { await tools.prepared({}); } catch (e) { text(e.message); }
+      return await tools.prepared({});
+    `);
+    expect(result.isError).toBe(false);
+    expect(text(result)).toContain('Invalid helper context');
+    expect(text(result)).toContain('accepted');
+    expect(observed).toEqual([2]);
+    expect(effects).toBe(1);
+    expect(result.details).toMatchObject({ calls: [{ id: 2, name: 'prepared', status: 'ok' }] });
+    const admitted = new Set(opened.receipts.flatMap(receipt => receipt.changes.flatMap(change =>
+      change.type === 'task' && JSON.stringify(change.value.input).includes('"name":"prepared"')
+        ? [change.value.id] : [])));
+    expect(admitted.size).toBe(1);
+  }, 10_000);
+
   test('the host projects the entire result once, after release and before durable result reuse', async () => {
     const vm = sandbox();
     let releases = 0;
@@ -135,13 +193,14 @@ describe('public durable codemode host policies', () => {
     expect(effects).toBe(1);
   }, 10_000);
 
-  test('a synchronous observer failure stops the VM and propagates after release', async () => {
+  test.each([false, true])('an observer failure stops the VM after preparation (async: %s)', async asynchronous => {
     const vm = sandbox();
     const refused = new Error('host observer refused');
     let releases = 0;
     let effects = 0;
     const opened = await fixture({
       sandbox: async () => ({ sandbox: vm.value, release: () => { releases++; } }),
+      prepareCall: asynchronous ? async () => {} : undefined,
       onCallStart: () => { throw refused; },
     }, false, [defineTool({
       name: 'observed', description: 'Refuse admission', parameters: obj({}), callers: ['tools'],
@@ -150,6 +209,28 @@ describe('public durable codemode host policies', () => {
     await expect(opened.run('await tools.observed({});')).rejects.toBe(refused);
     expect(releases).toBe(1);
     expect(effects).toBe(0);
+  }, 10_000);
+
+  test('preparation finishing after the VM returns admits no observer or effect', async () => {
+    const vm = sandbox();
+    let release!: () => void;
+    const gate = new Promise<void>(done => { release = done; });
+    let preparations = 0, observed = 0, effects = 0;
+    const opened = await fixture({
+      sandbox: async () => ({ sandbox: vm.value, release }),
+      prepareCall: async () => { preparations++; await gate; },
+      onCallStart: () => { observed++; },
+    }, false, [defineTool({
+      name: 'prepared', description: 'Wait for preparation', parameters: obj({}), callers: ['tools'],
+      execute: async () => { effects++; return { output: [] }; },
+    })]);
+    const result = await opened.run('tools.prepared({}); return "finished";');
+    expect(text(result)).toContain('finished');
+    expect(preparations).toBe(1);
+    expect(observed).toBe(0);
+    expect(effects).toBe(0);
+    expect(opened.receipts.flatMap(receipt => receipt.changes).filter(change =>
+      change.type === 'task' && JSON.stringify(change.value.input).includes('"name":"prepared"'))).toHaveLength(0);
   }, 10_000);
 
   test('model observers retain registered names for all issued calls, including queued helpers', async () => {

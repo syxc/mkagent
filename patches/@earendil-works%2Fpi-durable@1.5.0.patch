@@ -1,8 +1,8 @@
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
-index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..11f8ccc84e8bb58af646d6cc8daa7a1bdd665f18 100644
+index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
 +++ b/dist/codemode/codemode.d.ts
-@@ -35,11 +35,12 @@
+@@ -35,16 +35,17 @@
   * call with an error result.
   */
  import { type Context, type JsonValue } from "@earendil-works/chord";
@@ -18,7 +18,30 @@ index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..11f8ccc84e8bb58af646d6cc8daa7a1b
  /**
   * Version of everything in this module that turns stored results into what a script sees: result mapping, globals,
   * start data. Bump it when that changes, so a call started before an upgrade is not replayed by different code.
-@@ -151,9 +152,37 @@ declare const codemodeSchema: import("@earendil-works/pi-schema").Schema<{
+  */
+-export declare const CODEMODE_MODULE_VERSION = 2;
++export declare const CODEMODE_MODULE_VERSION = 3;
+ export declare const CODEMODE_TOOL_NAME = "codemode";
+ /** One tool as the script sees it: `tools.<jsName>`. */
+ /**
+@@ -54,6 +55,7 @@ export declare const CODEMODE_TOOL_NAME = "codemode";
+  */
+ type DeclaredTool = {
+     name: string;
++    alias?: string;
+     jsName: string;
+     description: string;
+     structured?: true;
+@@ -99,6 +101,8 @@ type JournalEntry = {
+     at: number;
+     /** Calls the VM had issued after processing this result; absent until acknowledged. */
+     issuedAfter?: number;
++    /** A preparation refusal has no nested task; retain its identity and error for replay. */
++    rejected?: { name: string; args?: JsonValue; message: string };
+     /** A global's call and outcome; a tool's result is its nested call's. */
+     global?: {
+         name: string;
+@@ -151,9 +155,41 @@ declare const codemodeSchema: import("@earendil-works/pi-schema").Schema<{
      code: string;
  }>;
  export type CodemodeToolInput = Static<typeof codemodeSchema>;
@@ -48,6 +71,10 @@ index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..11f8ccc84e8bb58af646d6cc8daa7a1b
 +    readonly store?: CodemodeStoreAdapter;
 +    /** Overrides formatting policy while retaining the script's token budget. */
 +    readonly output?: Partial<Pick<CodemodeFormatOptions, "limits" | "write" | "imageSize" | "wallMs">>;
++    /** Prepare before rows or admission. A refusal is journaled; replay of it does not prepare again. */
++    readonly prepareCall?: (call: { readonly id: number; readonly name: string; readonly args: unknown }) => void | Promise<void>;
++    /** Script-facing tool names, keyed by registered name; internal registration names stay private. */
++    readonly aliases?: Readonly<Record<string, string>>;
 +    /** Observe issued calls by registered name before admission or model-slot waiting; also called during replay. */
 +    readonly onCallStart?: (call: { readonly id: number; readonly name: string; readonly args: unknown }) => void;
 +    /** Replace the complete tool result before its atomic publication; completed results reuse that projection. */
@@ -58,10 +85,29 @@ index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..11f8ccc84e8bb58af646d6cc8daa7a1b
      readonly namespaces?: readonly CodemodeNamespace[];
      /** Estimated tokens the tool declarations in the `codemode` section may use. Default 3000. */
 diff --git a/dist/codemode/codemode.js b/dist/codemode/codemode.js
-index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be77346639294b74822d 100644
+index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..72fbdd3cc71b0dcf8e74fc29e5a19c2aa4a00f69 100644
 --- a/dist/codemode/codemode.js
 +++ b/dist/codemode/codemode.js
-@@ -100,7 +100,9 @@ export function createCodemodeTool(options) {
+@@ -51,7 +51,7 @@ import { DEFAULT_MAX_OUTPUT_TOKENS, formatResult } from "./output.js";
+  * Version of everything in this module that turns stored results into what a script sees: result mapping, globals,
+  * start data. Bump it when that changes, so a call started before an upgrade is not replayed by different code.
+  */
+-export const CODEMODE_MODULE_VERSION = 2;
++export const CODEMODE_MODULE_VERSION = 3;
+ export const CODEMODE_TOOL_NAME = "codemode";
+ export const CodemodeRunDoc = defineDoc({
+     kind: "pi.codemode.run",
+@@ -88,6 +88,9 @@ function cut(text, max) {
+     // A copy: the row outlives the arguments or error text it previews.
+     return text.length > max ? `${ownedSlice(text, 0, max - 3)}...` : text;
+ }
++function scriptName(name, aliases) {
++    return aliases && Object.hasOwn(aliases, name) ? aliases[name] : name;
++}
+ const codemodeSchema = obj({ code: str({ description: "Raw JavaScript source." }) }, { open: true });
+ /** Outputs bounded by the script's own token budget; the Harness's limits only stop a runaway. */
+ const OUTPUT_LIMITS = { maxBytes: 4 * 1024 * 1024, maxLines: 100_000 };
+@@ -100,7 +103,9 @@ export function createCodemodeTool(options) {
          name: CODEMODE_TOOL_NAME,
          description: codemodeDescription(options.models !== false),
          parameters: codemodeSchema,
@@ -72,7 +118,49 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
          // Capable models write the script as raw text instead of a JSON-escaped string; pi-ai applies it only for them.
          constrainedSampling: { type: "grammar", variants: { openai_lark: CODEMODE_SOURCE_GRAMMAR } },
          callers: ["model"],
-@@ -230,7 +232,8 @@ class CodemodeCall {
+@@ -118,7 +123,9 @@ export function createCodemodeExtension(options) {
+         sections: [
+             section("codemode", (input) => codemodeSection(
+             // Deferred tools are found with `searchTools()`, as the coding agent leaves them out too.
+-            input.agent.callable.filter((tool) => !tool.name.startsWith(CODEMODE_INTERNAL_PREFIX) && tool.deferred !== true), options.namespaces ?? [], options.inlineBudget ?? DEFAULT_CODEMODE_INLINE_BUDGET)),
++            input.agent.callable.filter((tool) => !tool.name.startsWith(CODEMODE_INTERNAL_PREFIX) && tool.deferred !== true)
++                .map((tool) => ({ ...tool, name: scriptName(tool.name, options.aliases) })),
++            options.namespaces ?? [], options.inlineBudget ?? DEFAULT_CODEMODE_INLINE_BUDGET)),
+         ],
+     });
+ }
+@@ -205,6 +212,9 @@ class CodemodeCall {
+     generatedImages = 0;
+     /** The script's tool calls for `details`, by VM call ID. */
+     rows = new Map();
++    /** Preparation failures reject in the VM before any task or live row is admitted. */
++    preparationErrors = new Map();
++    preparations = new Map();
+     /** Resolves once the VM's fingerprint is checked or recorded; nothing is delivered or admitted before. */
+     gate;
+     openGate;
+@@ -220,23 +230,28 @@ class CodemodeCall {
+         const { code, options: sourceOptions } = parseCodemodeSource(source);
+         const { api, context } = this;
+         const agent = await api.agent(context);
+-        const tools = agent.callable.map((tool) => ({
+-            name: tool.name,
+-            jsName: toCodemodeIdentifier(tool.name),
+-            description: sampleOf(tool),
+-            ...(tool.structuredOutputSchema === undefined ? {} : { structured: true }),
+-            ...(tool.name.startsWith(CODEMODE_INTERNAL_PREFIX) ? { hidden: true } : {}),
+-        }));
++        const tools = agent.callable.map((tool) => {
++            const alias = scriptName(tool.name, this.options.aliases);
++            return {
++                name: tool.name,
++                ...(alias === tool.name ? {} : { alias }),
++                jsName: toCodemodeIdentifier(alias),
++                description: sampleOf({ ...tool, name: alias }),
++                ...(tool.structuredOutputSchema === undefined ? {} : { structured: true }),
++                ...(tool.name.startsWith(CODEMODE_INTERNAL_PREFIX) ? { hidden: true } : {}),
++            };
++        });
          const callable = agent.callable.filter((tool) => !tool.name.startsWith(CODEMODE_INTERNAL_PREFIX));
          const models = this.options.models === false ? [] : [...CATALOG_GLOBALS, ...Object.keys(MODEL_CALLS)];
          const globals = [
@@ -82,7 +170,14 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
              ...models.map((name) => ({ name, spread: true })),
              ...(this.options.globals ?? []).map((global) => ({ name: global.name, spread: global.spread === true })),
          ];
-@@ -259,7 +262,9 @@ class CodemodeCall {
+         const namespaces = [];
+         for (const tool of callable) {
+-            const namespace = namespaceOf(tool.name, this.options.namespaces ?? []);
++            const namespace = namespaceOf(scriptName(tool.name, this.options.aliases), this.options.namespaces ?? []);
+             if (namespace === undefined)
+                 continue;
+             let entry = namespaces.find((candidate) => candidate.name === namespace.name);
+@@ -259,7 +274,9 @@ class CodemodeCall {
                  return { done: copyJson(run.result) };
              const rerun = run.start !== undefined;
              if (run.start === undefined) {
@@ -93,7 +188,7 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
                  const timeout = sourceOptions.timeoutMs;
                  run.start = {
                      version: CODEMODE_MODULE_VERSION,
-@@ -270,7 +275,7 @@ class CodemodeCall {
+@@ -270,7 +287,7 @@ class CodemodeCall {
                      namespaces,
                      globals,
                      maxOutputTokens: sourceOptions.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
@@ -102,11 +197,12 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
                  };
              }
              const journal = await tx.doc(CodemodeJournalDoc, api.taskId);
-@@ -303,24 +308,48 @@ class CodemodeCall {
+@@ -303,24 +320,51 @@ class CodemodeCall {
          context.abortSignal?.addEventListener("abort", onAbort, { once: true });
          if (context.abortSignal?.aborted)
              onAbort();
 +        let lease;
++        let executionFailure;
          try {
 -            this.run = this.options.sandbox.start(code, {
 +            const sandbox = typeof this.options.sandbox === "function"
@@ -131,13 +227,15 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
                  onIdle: (seq, issued) => this.onIdle(seq, issued),
              });
              const result = await this.run.result;
+             if (this.failure !== undefined)
+-                throw this.failure;
++                throw this.failure.error;
 +            if (lease !== undefined) {
 +                const acquired = lease;
 +                lease = undefined;
 +                await acquired.release();
 +            }
-             if (this.failure !== undefined)
--                throw this.failure;
++            if (this.failure !== undefined)
 +                throw this.failure.error;
              if (this.ended !== undefined)
                  return this.ended;
@@ -154,7 +252,7 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
              context.abortSignal?.throwIfAborted();
              // Aborted, but not by this call: the host closed the sandbox, for example while shutting down before closing the
              // Harness. That decides nothing about the script: store nothing and end with this invocation, so a later attempt
-@@ -346,13 +375,14 @@ class CodemodeCall {
+@@ -346,13 +390,25 @@ class CodemodeCall {
                      : this.replayed[during.seq - 1]?.issuedAfter !== undefined) ||
                      this.replayed.slice(during.seq).some((entry) => entry.id > during.issued);
                  if (continued) {
@@ -164,14 +262,25 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
              }
 -            return this.complete(result);
 +            return await this.complete(result);
++        }
++        catch (error) {
++            executionFailure = { error };
++            throw error;
          }
          finally {
              context.abortSignal?.removeEventListener("abort", onAbort);
-+            await lease?.release();
++            try {
++                await lease?.release();
++            }
++            catch (error) {
++                if (executionFailure !== undefined && !Object.is(executionFailure.error, error))
++                    throw new AggregateError([executionFailure.error, error], "Codemode execution and cleanup failed");
++                throw error;
++            }
          }
      }
      /** Store an outcome the call decided, and end the VM if it runs; returns the outcome. */
-@@ -377,23 +407,35 @@ class CodemodeCall {
+@@ -377,23 +433,35 @@ class CodemodeCall {
          return this.ended !== undefined || this.failure !== undefined || this.run?.finished === true;
      }
      fail(error) {
@@ -214,7 +323,7 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
              output: formatted.content,
              isError: !result.ok,
              details: {
-@@ -401,6 +443,13 @@ class CodemodeCall {
+@@ -401,6 +469,13 @@ class CodemodeCall {
                  ...(formatted.fullOutputPath === undefined ? {} : { fullOutputPath: formatted.fullOutputPath }),
              },
          };
@@ -228,7 +337,7 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
          const writes = result.ok ? result.storeWrites : undefined;
          return this.api.commit(async (tx) => {
              const run = await tx.doc(CodemodeRunDoc, this.api.taskId);
-@@ -408,11 +457,16 @@ class CodemodeCall {
+@@ -408,11 +483,16 @@ class CodemodeCall {
                  return run.result;
              run.result = copyJson(tool, { omitUndefinedProperties: true });
              if (writes !== undefined && (Object.keys(writes.set).length > 0 || writes.delete.length > 0)) {
@@ -250,25 +359,75 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
              }
              return tool;
          }, this.context);
-@@ -484,8 +538,15 @@ class CodemodeCall {
+@@ -484,10 +564,37 @@ class CodemodeCall {
          if (this.stopped)
              return;
          const call = asToolCall(made);
 -        if (call.target === "tool")
 -            this.started(call);
+-        this.issued = Math.max(this.issued, call.id);
+         const index = this.replaying ? (this.replayIndex.get(call.id) ?? -1) : -1;
++        const rejected = index === -1 ? undefined : this.replayed[index].rejected;
++        if (rejected !== undefined && (call.target !== "tool" || call.name !== rejected.name ||
++            !sameJson(call.args, rejected.args))) {
++            this.diverge(`call ${call.id} is ${describe(call)}, but was a rejected call to ${rejected.name}`);
++            return;
++        }
 +        if (call.target === "tool") {
-+            try {
-+                this.started(call);
-+            }
-+            catch (error) {
-+                this.fail(error);
-+                return;
++            if (rejected !== undefined)
++                this.preparationErrors.set(call.id, rejected.message);
++            else {
++                const started = () => {
++                    if (this.stopped || this.preparationErrors.has(call.id))
++                        return;
++                    try { this.started(call); }
++                    catch (error) { this.fail(error); }
++                };
++                try {
++                    const prepared = this.options.prepareCall?.({ id: call.id, name: call.name, args: call.args });
++                    if (prepared !== undefined) {
++                        this.preparations.set(call.id, Promise.resolve(prepared).then(started,
++                            error => { this.preparationErrors.set(call.id, errorMessage(error)); }));
++                    }
++                    else started();
++                }
++                catch (error) {
++                    this.preparationErrors.set(call.id, errorMessage(error));
++                }
 +            }
 +        }
-         this.issued = Math.max(this.issued, call.id);
-         const index = this.replaying ? (this.replayIndex.get(call.id) ?? -1) : -1;
++        this.issued = Math.max(this.issued, call.id);
          if (index === -1) {
-@@ -704,6 +765,7 @@ class CodemodeCall {
+             if (this.released) {
+                 this.waiting.push(call);
+@@ -642,7 +749,13 @@ class CodemodeCall {
+         if (this.stopped)
+             return;
+         const running = call.target === "tool"
+-            ? this.callTool(call).then((outcome) => ({ outcome }))
++            ? this.callTool(call).then((outcome) => ({
++                outcome,
++                ...(this.preparationErrors.has(call.id) ? { rejected: {
++                    name: call.name, ...(call.args === undefined ? {} : { args: call.args }),
++                    message: this.preparationErrors.get(call.id),
++                } } : {}),
++            }))
+             : this.callGlobal(call).then((outcome) => ({
+                 outcome,
+                 global: {
+@@ -669,6 +782,11 @@ class CodemodeCall {
+         });
+     }
+     async callTool(call) {
++        await this.preparations.get(call.id);
++        if (this.stopped)
++            throw new Error("The script has ended");
++        if (this.preparationErrors.has(call.id))
++            return { ok: false, message: this.preparationErrors.get(call.id) };
+         // Passed as the script gave them; validation reports arguments that are not an object.
+         const args = (call.args ?? {});
+         const model = call.name.startsWith(CODEMODE_INTERNAL_PREFIX);
+@@ -704,6 +822,7 @@ class CodemodeCall {
              ? call.name.slice(CODEMODE_INTERNAL_PREFIX.length)
              : call.name;
          this.rows.set(call.id, { id: call.id, name, args: cut(args, ARGS_PREVIEW_CHARS), status: "running" });
@@ -276,7 +435,7 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
      }
      /** A tool call ended: its row gets its status, duration, and error. */
      /** The call ended: an error result is an error row, also when the script got its value (bash's nonzero exit). */
-@@ -727,18 +789,18 @@ class CodemodeCall {
+@@ -727,18 +846,18 @@ class CodemodeCall {
          return { calls };
      }
      async callGlobal(call) {
@@ -302,6 +461,32 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..1a57327a5383da9ff5f5be7734663929
              return { ok: true, value };
          }
          catch (error) {
+@@ -768,7 +887,7 @@ class CodemodeCall {
+             const [name] = args;
+             if (typeof name !== "string")
+                 throw new Error("describeTool() expects a tool name");
+-            return tools.find((tool) => tool.name === name || tool.jsName === name)?.description;
++            return tools.find((tool) => tool.name === name || tool.alias === name || tool.jsName === name)?.description;
+         }
+         if (call.name === "describeNamespace") {
+             const [name] = args;
+@@ -781,7 +900,7 @@ class CodemodeCall {
+                 name: namespace.name,
+                 ...(namespace.description === undefined ? {} : { description: namespace.description }),
+                 ...(namespace.instructions === undefined ? {} : { instructions: namespace.instructions }),
+-                tools: namespace.tools.map((tool) => toCodemodeIdentifier(tool)),
++                tools: namespace.tools.map((name) => tools.find((tool) => tool.name === name)?.jsName ?? toCodemodeIdentifier(name)),
+             };
+         }
+         const [query, options] = args;
+@@ -838,6 +957,7 @@ class CodemodeCall {
+                         id: item.id,
+                         at: item.at,
+                         ...(item.global === undefined ? {} : { global: item.global }),
++                        ...(item.rejected === undefined ? {} : { rejected: item.rejected }),
+                     };
+                     journal.entries.push(copyJson(entry, { omitUndefinedProperties: true }));
+                 }
 diff --git a/dist/codemode/index.d.ts b/dist/codemode/index.d.ts
 index 3e1c49c52cfcb495f0e6fd74250bf07008107766..08abe1a2ca9ede37ffce130b88bae3cf95125e09 100644
 --- a/dist/codemode/index.d.ts

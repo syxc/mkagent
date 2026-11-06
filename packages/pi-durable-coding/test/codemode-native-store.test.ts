@@ -12,7 +12,9 @@ import {
 } from '@earendil-works/pi-durable/codemode';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import type { AgentToolResult, StreamFn } from '../src/agent-runtime.ts';
-import { DurableLoopBinding } from '../src/durable-coding/engine.ts';
+import { currentCodingHostToolApi, DurableLoopBinding } from '../src/durable-coding/engine.ts';
+import { executeNativeCodemode } from '../src/compat/codemode-native.ts';
+import type { ExtensionToolContext } from '../src/pi/core/extensions/types.ts';
 import { NativeSessionJournal } from '../src/durable-coding/session-journal.ts';
 import { hostToolToAgent } from '../src/host-tools.ts';
 import { readCodemodeStore } from '../src/pi/extensions/codemode/execute.ts';
@@ -38,12 +40,34 @@ afterEach(async () => {
   if (failures.length) throw new AggregateError(failures, 'Store fixture cleanup failed');
 });
 
-async function fixture(options: { append?: boolean; repeat?: boolean; refuse?: boolean } = {}) {
+class ResultRefusingStorage extends MemoryStorage {
+  armed = false;
+  refusals = 0;
+  private readonly runs = new Set<string>();
+  override commit(...[batches, receive, ctx]: Parameters<MemoryStorage['commit']>) {
+    for (const write of batches.flat()) {
+      if (write.type === 'document.create' && write.record.kind === 'pi.codemode.run') this.runs.add(write.record.id);
+    }
+    if (this.armed && batches.some(batch => batch.some(write =>
+      write.type === 'document.change' && this.runs.has(write.id) &&
+      JSON.stringify(write.content).includes('"result"')))) {
+      this.armed = false;
+      this.refusals++;
+      return Promise.reject(new Error('refuse stored codemode outcome'));
+    }
+    return super.commit(batches, receive, ctx);
+  }
+}
+
+async function fixture(options: {
+  append?: boolean; repeat?: boolean; refuse?: boolean; native?: boolean; failResultCommit?: boolean;
+} = {}) {
   const registry = createRegistry();
   const sandbox = new CodemodeSandbox({ memoryLimitBytes: 256 * 1024 * 1024 });
   cleanups.push(() => sandbox.close());
   const env = new NodeExecutionEnv({ cwd: '/tmp/codemode-native-store', shellEnv: {} });
-  const harness = await Harness.open(new MemoryStorage(), {
+  const storage = new ResultRefusingStorage();
+  const harness = await Harness.open(storage, {
     registry, models: createModels(), env: () => env,
     settings: { retry: { enabled: false }, compaction: { enabled: false } },
   }, context);
@@ -72,10 +96,30 @@ async function fixture(options: { append?: boolean; repeat?: boolean; refuse?: b
       apiIdentities.add(api);
       if (options.refuse) throw new Error('refuse native store transaction');
       if (options.append !== false) journal.manager.appendCustomEntry('codemode-store', data);
+      if (options.failResultCommit) storage.armed = true;
     },
   };
   const registered = createCodemodeTool({ sandbox, models: false, store });
-  const tool = hostToolToAgent({
+  const tool = options.native ? {
+    name: 'codemode', label: 'Code', description: 'Native codemode through the real journal',
+    parameters: registered.parameters,
+    execute: async (id: string, args: { code: string }, signal?: AbortSignal) => {
+      const run = () => executeNativeCodemode(id, args, signal, undefined, {
+        tools: [], sessionManager: { getBranch: () => { reads++; return journal.manager.getBranch(); } },
+      } as unknown as ExtensionToolContext, options.append === false ? {} : {
+        appendEntry: (kind, data) => {
+          writes++;
+          apiIdentities.add(currentCodingHostToolApi()!.api);
+          if (options.refuse) throw new Error('refuse native store transaction');
+          journal.manager.appendCustomEntry(kind, data);
+          if (options.failResultCommit) storage.armed = true;
+        },
+      });
+      const result = await run();
+      if (options.repeat) expect(await run()).toEqual(result);
+      return result;
+    },
+  } : hostToolToAgent({
     ...registered,
     execute: async (args, api, ctx) => {
       const result = await registered.execute(args, api, ctx);
@@ -122,7 +166,7 @@ async function fixture(options: { append?: boolean; repeat?: boolean; refuse?: b
     await conversation.commit(tx => journal.commit(tx), context);
   });
   const counters = () => ({ reads, writes, apis: apiIdentities.size });
-  return { run, journal, conversation, receipts, counters, values, select };
+  return { run, journal, conversation, receipts, counters, values, select, storage };
 }
 
 function text(result: Awaited<ReturnType<Awaited<ReturnType<typeof fixture>>['run']>>) {
@@ -134,9 +178,10 @@ function resultReceipt(receipt: CommitPublication) {
     && change.record.kind === 'pi.codemode.run' && change.value.result !== undefined);
 }
 
-describe('native store adapter on durable codemode', () => {
+describe.each([false, true])('native journal with the Native SDK executor: %s', native => {
+  const open = (options: Parameters<typeof fixture>[0] = {}) => fixture({ ...options, native });
   test('keeps raw no-op writes and commits the native entry with run.result', async () => {
-    const opened = await fixture();
+    const opened = await open();
     opened.journal.manager.appendCustomEntry('codemode-store', { set: { kept: 1 }, delete: [] });
     await opened.journal.flush();
     const outcome = await opened.run('store("kept", 1); store("missing", undefined); return load("kept");');
@@ -157,7 +202,7 @@ describe('native store adapter on durable codemode', () => {
   }, 10_000);
 
   test('reads each invocation from the selected native branch', async () => {
-    const opened = await fixture();
+    const opened = await open();
     const root = opened.journal.manager.appendCustomEntry('codemode-store', { set: { shared: 'root' }, delete: [] });
     await opened.journal.flush();
     expect((await opened.run('store("path", "left");')).isError).toBe(false);
@@ -172,18 +217,18 @@ describe('native store adapter on durable codemode', () => {
   }, 10_000);
 
   test('without append support writes do not survive into the next call', async () => {
-    const opened = await fixture({ append: false });
+    const opened = await open({ append: false });
     expect((await opened.run('store("ephemeral", 7); return load("ephemeral");')).isError).toBe(false);
     const next = await opened.run('return load("ephemeral");');
     expect(next.isError).toBe(false);
     expect(next.result.content).toHaveLength(1);
     expect(opened.values()).toEqual({});
     expect(opened.journal.committedSnapshot().entries).toEqual([]);
-    expect(opened.counters()).toEqual({ reads: 2, writes: 1, apis: 1 });
+    expect(opened.counters()).toEqual({ reads: 2, writes: native ? 0 : 1, apis: native ? 0 : 1 });
   }, 10_000);
 
   test('a repeated completed invocation returns the stored result without another read or write', async () => {
-    const opened = await fixture({ repeat: true });
+    const opened = await open({ repeat: true });
     const outcome = await opened.run('store("once", 1); return "done";');
     expect(outcome.isError).toBe(false);
     expect(text(outcome)).toContain('done');
@@ -193,7 +238,7 @@ describe('native store adapter on durable codemode', () => {
   }, 10_000);
 
   test('a failed script retains partial output and does not write the store', async () => {
-    const opened = await fixture();
+    const opened = await open();
     const outcome = await opened.run('store("discarded", 1); text("partial"); throw new Error("script failed");');
     expect(outcome.isError).toBe(true);
     expect(text(outcome)).toContain('partial');
@@ -204,10 +249,20 @@ describe('native store adapter on durable codemode', () => {
   }, 10_000);
 
   test('a refused store transaction does not publish run.result', async () => {
-    const opened = await fixture({ refuse: true });
+    const opened = await open({ refuse: true });
     const outcome = await opened.run('store("refused", 1); return "must not commit";');
     expect(outcome.isError).toBe(true);
     expect(opened.counters()).toEqual({ reads: 1, writes: 1, apis: 1 });
+    expect(opened.journal.committedSnapshot().entries).toEqual([]);
+    expect(opened.receipts.filter(resultReceipt)).toEqual([]);
+  }, 10_000);
+
+  test('a storage refusal after append publishes neither Native state nor run.result', async () => {
+    const opened = await open({ failResultCommit: true });
+    await expect(opened.run('store("uncommitted",1); return "must not publish";'))
+      .rejects.toThrow('Session failed after a storage error');
+    expect(opened.storage.refusals).toBe(1);
+    expect(opened.values()).toEqual({});
     expect(opened.journal.committedSnapshot().entries).toEqual([]);
     expect(opened.receipts.filter(resultReceipt)).toEqual([]);
   }, 10_000);

@@ -259,8 +259,7 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts') {
     body = portSharedHelpers(path, body);
     changes.add(path === 'extensions/tool-search/tool.ts' ? 'shared-durable-tool-search-ranking'
-      : path === 'extensions/codemode/execute.ts' ? 'shared-durable-codemode-output' : 'shared-lightweight-resource-algorithms');
-    if (path === 'extensions/codemode/execute.ts') changes.add('shared-durable-codemode-model-preparation');
+      : path === 'extensions/codemode/execute.ts' ? 'shared-durable-codemode-executor' : 'shared-lightweight-resource-algorithms');
     if (path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts') dependencies.add('@earendil-works/pi-durable');
   }
   if (path === 'core/extensions/runner.ts' || path === 'core/session-manager.ts') {

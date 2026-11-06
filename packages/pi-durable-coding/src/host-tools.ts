@@ -13,6 +13,8 @@ import type { ToolDefinition } from './pi/core/extensions/types.ts';
 import { currentCodingToolInvocation, withCodingHostToolApi } from './durable-coding/engine.ts';
 import { nestedHostTools } from './host-tool-nested.ts';
 import type { HostControlledToolResult } from './host-tool-controls.ts';
+import { isHostUsageAccounted } from './host-tool-usage.ts';
+export { markHostUsageAccounted } from './host-tool-usage.ts';
 
 type NativeTool = AgentTool<any, unknown> & Pick<ToolDefinition<any>,
   'exposure' | 'namespace' | 'annotations' | 'reachesTools' | 'defaultActive' | 'promptSnippet' | 'promptGuidelines'>;
@@ -130,7 +132,7 @@ export function agentToolToHost(tool: NativeTool, scope?: HostToolScope): HostTo
         ...(tool.outputSchema === undefined || settled.structuredContent === undefined
           ? {} : { structuredOutput: settled.structuredContent }),
         ...(settled.isError === undefined ? {} : { isError: settled.isError }),
-        ...(settled.usage === undefined ? {} : { usage: settled.usage }),
+        ...(settled.usage === undefined || isHostUsageAccounted(settled) ? {} : { usage: settled.usage }),
         ...(settled.terminate === undefined ? {} : { control: { terminate: settled.terminate } }),
         [nativeResult]: settled,
       } as CarriedResult;

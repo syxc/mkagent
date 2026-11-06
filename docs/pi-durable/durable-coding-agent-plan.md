@@ -28,11 +28,11 @@ MkAgent 最初以 Pi coding agent 为底层，第一次切换到纯 pi-durable �
 
 pi-durable 已公开 codemode、tool-search、tools 和 images 等模块，不能只把它视为调度内核。先核实内置能力及少量契约适配能否满足需求，再评估独立官方包。确需移植的 coding 源码固定到 Pi v1.5.0 提交 `f9a26365568127461c47a07a37dcb42c140a3ac5`，保留来源、许可、转换和可复现检查。后续引用 `pi-agent-core` 时，应记录替代哪些适配代码、维护收益和执行边界。
 
-宿主已安装上述四类内置模块，并通过工具桥接向 coding profile 提供工具。真实 codemode 沙箱验证修复异步回调丢失提交上下文的问题；取消和等待 helper 改为公开包引用。SDK 搜索与 codemode 输出已通过最小兼容接点共用 durable。codemode 的会话、实时展示和 store 事务适配仍在继续，不能把已完成的共享部分视为整个 SDK 已去重。最新证据见[验证记录](coding-validation.md)。
+宿主已安装上述四类内置模块，并通过工具桥接向 coding profile 提供工具。SDK 搜索、codemode 输出及 Native codemode 执行现已共用 durable；原 Native 执行循环已删除。外层保留发现元数据、字符串调用 ID、分支 store、沙箱名额和 Native 工具管道。取消和等待 helper 引用公开包。完整 SDK 源码闭包的必要性仍未核实，不能据此宣称整个 SDK 已去重。最新证据见[验证记录](coding-validation.md)。
 
-store 适配的 journal 前置已完成：重复 flush 按事务草稿中的 nonce 跳过同阶段已准备的前缀，保留回滚重试和真正并发 replace 的拒绝语义。宿主 commit 恢复回调作用域并在回调后 flush，真实工具调用可把新增原生条目和宿主文档一同提交。9 项新增红绿用例及相关回归共 66 项通过；尚未接入 codemode store，不据此关闭完整执行替换。
+store 适配的 journal 前置已完成：重复 flush 按事务草稿中的 nonce 跳过同阶段已准备的前缀，保留回滚重试和真正并发 replace 的拒绝语义。Native codemode 现已接入该事务边界，真实 journal 验证 store 条目与 `run.result` 同批提交，存储拒绝时均不发布。普通 callback 的外部副作用仍不属于 durable 事务。
 
-当前依赖补丁已具备 store、沙箱租约、输出策略及 discovery 覆盖接点。真实 journal fixture 验证原始写入与 `run.result` 共享提交，公开入口测试覆盖释放、取消、deadline、图片和高输出预算；相关回归共 95 项、676 个断言通过。16 个补丁文件经独立离线 frozen install 核对，安装后的 9 项实际调用测试通过。Native SDK 执行入口仍待切换，不将接点验证当作完整生产接线、插件兼容或恢复验收。
+当前依赖补丁具备 store、沙箱租约、输出策略、发现覆盖、异步准备、调用观察和结果投影接点。Native 与官方两种父 owner 的用量检查、真实 Native 工具任务的参数修改、拒绝及结果 hooks 已通过。同一 owner 的中断重跑覆盖完成回执、旧拒绝及工具别名变化，不等于进程崩溃恢复验收。最新独立离线 frozen install 核对 18 个补丁文件，安装后的 29 项测试、150 个断言通过；完整产品及插件加载检查仍受限。
 
 当前已引用 core 的公开协议类型和 `streamProxy`，移除对应生成副本；消息声明合并保留在公开 core 模块上。宿主压缩窗口通过公开设置方法的外部包装实现，原生 `SettingsManager` 不再带宿主阈值补丁。包管理、消息、模型、设置、会话、runner、token 及资源算法已共用实现，七份旧接口策略单独维护，生成器只生成转发。可选目录、投影和 runner 依赖参数保留原生默认值；结构类型与旧 JavaScript 宽边界由严格消费者回归覆盖。28 份文件直接使用公开 core 类型，内部执行导入改写由 31 份收敛为 3 份。上游没有独立 coding SDK，也未公开可注入的执行器和版本化恢复接口；这些限制仍不能证明整个 SDK 闭包都必须移植。F1/F3 对完整闭包的核实及 F4/F5 完整检查保持未完成，最新数量、收益和证据见验证记录。
 

@@ -1,6 +1,7 @@
 /** Bind native Agent callbacks to a pi-durable session and task registry. */
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
+import { restoreHostUsageOutcome } from '../host-tool-usage.ts';
 import { copyJson, type Context } from '@earendil-works/chord';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { InMemoryCredentialStore, type Models } from '@earendil-works/pi-ai';
@@ -25,6 +26,7 @@ import type { CodingSessionAction, CodingSessionCompletion, CodingSessionTaskInp
 import { NativeInputQueues, type InputQueueSnapshot, type QueuedInput } from './input-queues.ts';
 import { NativeSummaryBinding } from './summary-binding.ts';
 import type { SummaryProducer } from './summary-task.ts';
+import { NativeCodemodeForwarders, type NativeCodemodeForwardHandler, type NativeCodemodeForwardLease } from './codemode-forward.ts';
 
 export interface DurableLoopOptions {
   /** A supplied kernel remains owned by its mkagent host. */
@@ -57,6 +59,7 @@ interface Invocation {
   runTool(call: AgentToolCall, options: RunToolCallOptions): Promise<AgentToolCallOutcome>;
   tool?: CodingToolInvocation;
   hostTool?: { api: ToolExecutionApi; context: Context };
+  registerCodemodeForward(api: ToolExecutionApi, context: Context, handler: NativeCodemodeForwardHandler): Promise<NativeCodemodeForwardLease>;
 }
 
 interface ToolOwner {
@@ -79,7 +82,11 @@ export function currentCodingHostToolApi() {
   const scope = invocation.getStore();
   if (!scope?.hostTool) return undefined;
   const resume = AsyncLocalStorage.snapshot();
-  return { ...scope.hostTool, runInScope: <T>(work: () => T): T => resume(work) };
+  const { api, context } = scope.hostTool;
+  return {
+    api, context, runInScope: <T>(work: () => T): T => resume(work),
+    registerCodemodeForward: (handler: NativeCodemodeForwardHandler) => scope.registerCodemodeForward(api, context, handler),
+  };
 }
 
 /** The real durable tool phase used by the host approval and execution adapters. */
@@ -117,6 +124,14 @@ export class DurableLoopBinding {
   private readonly sessionBinding: NativeSessionBinding;
   private readonly inputQueues?: NativeInputQueues;
   private readonly summaries: NativeSummaryBinding;
+  private readonly codemodeForwards = new NativeCodemodeForwarders(
+    (api, context, work) => this.withHostToolScope(api, context, work),
+    () => {
+      const api = currentCodingHostToolApi()?.api;
+      if (!api) throw new Error('Native codemode child has no host API');
+      return api;
+    },
+  );
 
   constructor(options: DurableLoopOptions = {}) {
     this.options = options;
@@ -332,7 +347,7 @@ export class DurableLoopBinding {
     } satisfies AgentLoopConfig['model'];
     this.execution = await this.createExecution(options.context, {
       model, convertToLlm: () => [],
-    }, async () => {}, options.signal, getDefaultStreamFn());
+    }, async () => {}, options.signal, (...args) => getDefaultStreamFn()(...args));
     try {
       return await this.startTool(call, options);
     } finally {
@@ -407,6 +422,7 @@ export class DurableLoopBinding {
   ): Promise<T> {
     const phase = () => invocation.run({
       host, drafts: [], runTool: (call, options) => this.startTool(call, options, runtime),
+      registerCodemodeForward: (api, context, handler) => this.codemodeForwards.register(api, context, handler),
     }, async () => {
       try {
         return await work();
@@ -435,6 +451,7 @@ export class DurableLoopBinding {
     };
     const phase = () => invocation.run({
       host, drafts: [], runTool: (call, options) => this.startTool(call, options, owner),
+      registerCodemodeForward: (api, context, handler) => this.codemodeForwards.register(api, context, handler),
     }, async () => {
       const resume = AsyncLocalStorage.snapshot();
       const scopedApi: ToolExecutionApi = {
@@ -483,7 +500,7 @@ export class DurableLoopBinding {
       if ((outcome.status !== 'completed' && outcome.status !== 'aborted') || !outcome.result) {
         throw new Error('error' in outcome && outcome.error ? outcome.error.message : `Tool call ${outcome.status}`);
       }
-      return outcome.result;
+      return restoreHostUsageOutcome(outcome.result);
     } finally {
       this.callBindings.delete(bindingKey);
       if (taskId) this.callOwners.delete(taskId);
@@ -526,6 +543,7 @@ export class DurableLoopBinding {
       execution,
       session: () => this.sessionBinding.bindings(),
       summary: () => this.summaries.bindings(),
+      forward: (input, api, context) => this.codemodeForwards.forward(input, api, context),
       tool: input => this.toolBindings(input),
       call: (input, owner) => {
         const host = execution();

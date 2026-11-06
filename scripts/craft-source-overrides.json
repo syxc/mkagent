@@ -2328,12 +2328,56 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/src/compat/codemode-calls.ts": {
+      "sha256": "9b48f314e5850bff3639bcd638b19ba850a576cbb1ffa920b1bb241971258701",
+      "reason": "Project Native live rows and display usage from real durable child receipts without duplicating execution."
+    },
+    "packages/pi-durable-coding/src/compat/codemode-discovery.ts": {
+      "sha256": "9b7ac3d6badd7960117eca4b5ef9951908e09fb026e65096c32350001abe38dc",
+      "reason": "Preserve Native declarations, samples, namespace aliases and discovery globals over the durable executor."
+    },
+    "packages/pi-durable-coding/src/compat/codemode-native.ts": {
+      "sha256": "a4022c62bc612025aef2bcbf83d0f5a3f2b39216935367ba73e137e8243966e1",
+      "reason": "Adapt Native codemode to durable while preserving branch writes, hooks, cancellation and result projection."
+    },
+    "packages/pi-durable-coding/src/compat/codemode-sandbox.ts": {
+      "sha256": "ce819e20f87bf96f7ad396c66c59000314cc212e04113761160e038300bd4c45",
+      "reason": "Retain Native worker admission, paths, memory, FIFO, deadlines and joined cleanup as a durable sandbox lease."
+    },
+    "packages/pi-durable-coding/src/durable-coding/codemode-forward.ts": {
+      "sha256": "3e2bb4bad824c2361c25f6171e67b6fc8c82f6525e29e3e5b94d65d6794d8e59",
+      "reason": "Forward dynamic Native tools through validated official child tasks with a durable token winner and joined receipts."
+    },
+    "packages/pi-durable-coding/src/host-tool-usage.ts": {
+      "sha256": "eefced2d3e4d40b09f80c209d512be4bca1d0e7d64f15b94257c9b52419ef9e6",
+      "reason": "Preserve usage overrides and persist accounting metadata across wrappers and strict JSON receipts."
+    },
+    "packages/pi-durable-coding/test/native-codemode-durable.test.ts": {
+      "sha256": "e0f80b3975efb9b0c96d52f11096ab8b9d90e750f9a73529cff99674b4a5d911",
+      "reason": "Verify Native codemode contracts through actual durable tasks in native-codemode-durable.test.ts."
+    },
+    "packages/pi-durable-coding/test/native-codemode-forward.test.ts": {
+      "sha256": "f4b36a549fc7615f4d3cd0b7150ad75c5a022884f1d4d0d3dd78183d4b51ee20",
+      "reason": "Verify Native codemode contracts through actual durable tasks in native-codemode-forward.test.ts."
+    },
+    "packages/pi-durable-coding/test/native-codemode-pipeline.test.ts": {
+      "sha256": "322168c3e5af0a3943359d744883c4b368dcc7dddc3c0080957d70841ee9b2b8",
+      "reason": "Verify Native codemode contracts through actual durable tasks in native-codemode-pipeline.test.ts."
+    },
+    "packages/pi-durable-coding/test/native-codemode-sandbox.test.ts": {
+      "sha256": "a8b9f5532654add58fdeeaf81c6aaf862b2ac4e49464e3ade683027d64fe2fb7",
+      "reason": "Verify Native codemode contracts through actual durable tasks in native-codemode-sandbox.test.ts."
+    },
+    "packages/pi-durable-coding/test/native-codemode-usage.test.ts": {
+      "sha256": "b1aab62ca66d3aef70ab9e0974ed1931630f8f93b90274cb2dc6a8970487a5fd",
+      "reason": "Verify Native codemode contracts through actual durable tasks in native-codemode-usage.test.ts."
+    },
     "packages/pi-durable-coding/test/durable-codemode-models.test.ts": {
       "sha256": "c78f1c9497ab744fedf6e7d684cd6e9dd59a0c2097699fc0be65b671786c43c7",
       "reason": "Verify shared model resolution, validation before effects, structured image errors and usage through the public durable helper."
     },
     "packages/pi-durable-coding/test/native-codemode-models.test.ts": {
-      "sha256": "ac455b7cd4bc67792ad6c409e90809252c0829ae83fb14c4c91cfda1f48733e2",
+      "sha256": "e8c518ab4ef21ad8dbbc1c620c30da911ee3f927a9c8b555212438f295b7cdea",
       "reason": "Verify the native tool definition preserves model concurrency, early rows, isolated registries, validation hints, images and usage."
     },
     "packages/pi-durable-coding/test/shared-codemode-output.test.ts": {
@@ -2349,7 +2393,7 @@
       "reason": "Check shared search scores, tokenizer identity, schema metadata, namespace ranking and native activation callbacks."
     },
     "packages/pi-durable-coding/test/codemode-durable-boundary.test.ts": {
-      "sha256": "e831956503327f7aaeb589f0fc578b720e6e3e536a1bb26c0d18993edf15a6b3",
+      "sha256": "a0633f86e08d2d79edeb7b2f5d09f5c12b43ad56a717a8127dca7a2bdf3f29ce",
       "reason": "Record native execution differences through real durable tasks and verify the discovery override compatibility port."
     },
     "packages/pi-durable-coding/src/legacy/api-types.ts": {
@@ -2361,8 +2405,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "31f37532c246d3f6e50ee04935744d807d23772a282d545f653468551bda6299",
-      "reason": "Reproduce shared resource, search, codemode output and model adapters with guarded native contract boundaries."
+      "sha256": "71c512bb64df41eb186a25e023b3be528e1e37ed3740729ca1111fc240843e49",
+      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3821,7 +3865,7 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "a5cdc6673074941da76f8c529a3bebc190bc50c18f66e9f07e71fd8765a2a7a5",
+      "sha256": "2f95b3d45069ca1cdc5faa5ce204b3ac12a60d5b6647715860c4e579579a1d46",
       "reason": "Keep a canonical complete Git patch for frozen Bun installs, legacy generation, shared search and codemode formatting, branch store transactions and host execution policies."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
@@ -3873,7 +3917,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "0b0a8cf0a993d4ca08744dea44d28d9b6d129ea5af24364324556d283d448097",
+      "sha256": "0f279db68e6b4fabcda4514439e034d6a342916149357295a695f669eddebd7a",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3893,7 +3937,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "cb17760761dd9301f1e489dc7b69809a0fa9b9da222a6a8ff70a5dff4f2d19f8",
+      "sha256": "7e60a3b9d92da862a5fb7deae327c5d0e58b635ab8177983349a5fb6f12ea3f6",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -3909,7 +3953,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
-      "sha256": "1a72dfe21144ea6145fd6e751db50cd5332d8466df46cf597a6af9857d3a7a06",
+      "sha256": "6aa9348c9bdf2a295f27e436ef2127cc4508443df4cbfeadf3cb7e5381c901b0",
       "reason": "Bind real CodingToolTask and official ToolTask APIs to native invocation scopes, preserving task ownership and transactional journal preparation across detached callbacks."
     },
     "packages/pi-durable-coding/src/durable-coding/index.ts": {
@@ -3953,7 +3997,7 @@
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in single-tool-task.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/task-registry.ts": {
-      "sha256": "4186a7d436a9528722213bd27ddee8698d1ca8db6d921d6222bb28eb2d7d3385",
+      "sha256": "58450bf63ea948c8bc6cd69e3860e299e82f45264905d4c2188d3a825ee15a68",
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in task-registry.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/tool-batch.ts": {
@@ -3961,7 +4005,7 @@
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in tool-batch.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/tool-task.ts": {
-      "sha256": "e85b0ca594797443914d4a716f66e15f417b0fd6c6c628a1de553ae7a30aeb9c",
+      "sha256": "c9b5c643f4df01a5c6514523430ad008bfe4143d69f7d5c214d1a1fbe651153d",
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in tool-task.ts."
     },
     "packages/pi-durable-coding/src/durable-loop.ts": {
@@ -3985,7 +4029,7 @@
       "reason": "Provide the independent native coding host adapter and public contracts in host-tool-nested.ts."
     },
     "packages/pi-durable-coding/src/host-tools.ts": {
-      "sha256": "09bea98e7c3a452c26f1200caf5b4c564d3d2898427e42619149ef70f4ca3edb",
+      "sha256": "7872b6f775c5d0f0fd796677b20e23a0a1eaefeb5a79b79966685aa3ef762920",
       "reason": "Bridge real host APIs and native results without losing wrapper contracts, owned children, callback scope or transaction boundaries."
     },
     "packages/pi-durable-coding/src/native-operations.ts": {
@@ -4469,8 +4513,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/execute.lazy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/execute.ts": {
-      "sha256": "d6e0f472f5030255716f69f6cf33677ccd281bb9a36417a1559cd2427dfcc871",
-      "reason": "Share durable model preparation and output formatting while preserving native rows, concurrency, usage, validation hints and branch policies."
+      "sha256": "6403cb6ef6b21a1195c9d6851ca444d7cd3bcbd27d8a3141749759b55ea1229c",
+      "reason": "Forward Native codemode to the durable adapter instead of maintaining a separate execution loop."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/index.ts": {
       "sha256": "7684b16067a29ea1c83170afdce35437c54afdd679b250c7465a668624aff70f",
@@ -5185,11 +5229,11 @@
       "reason": "Exercise the real durable codemode sandbox through the coding Agent, production approval, official child ownership, caller restrictions and tool-search activation receipts."
     },
     "packages/pi-durable-coding/test/codemode-native-store.test.ts": {
-      "sha256": "b439325b4facc7515f5cdbf93b7621046e51d27384f94c064dddfa70a01aa11e",
+      "sha256": "3650495ba5d183d7d39877d930727fddb7f95f15c28bcdcaef14d82d9abbd656",
       "reason": "Verify branch-local raw store writes, result transactions, completed invocation reuse and rejected writeback using real native journal and durable model calls."
     },
     "packages/pi-durable-coding/test/durable-codemode-options.test.ts": {
-      "sha256": "bb01a87c1a1884ffad04ced8ec967b2049bc650282481709106a68b3f8fec969",
+      "sha256": "cd8a059edc8457c0088f85e5532ed9f232cd2a2bccc3f9a0b8bafdae0d5162db",
       "reason": "Verify public host policies, issued-call observation, result projection and cancellation during VM work and asynchronous formatting through real durable tasks."
     }
   },

@@ -1,6 +1,8 @@
 /** One set of task definitions routes callbacks to their conversation's live binding. */
 import { copyJson } from '@earendil-works/chord';
-import type { ConversationId, Registry, TaskId } from '@earendil-works/pi-durable';
+import type { Context } from '@earendil-works/chord';
+import type { ConversationId, Registry, TaskId, ToolExecutionApi, ToolExecutionResult } from '@earendil-works/pi-durable';
+import { nativeCodemodeForwardTool, type NativeCodemodeForwardInput } from './codemode-forward.ts';
 import { createCodingRunTask, type LoopExecution } from './run-task.ts';
 import { createCodingToolTask, type CodingToolTaskBindings, type CodingToolTaskInput } from './tool-task.ts';
 import { createSingleToolTask, type SingleToolExecution, type SingleToolInput } from './single-tool-task.ts';
@@ -13,6 +15,7 @@ export interface CodingTaskBinding {
   call(input: SingleToolInput, owner: TaskId): SingleToolExecution;
   session(): CodingSessionTaskBindings;
   summary(): CodingSummaryBindings;
+  forward(input: NativeCodemodeForwardInput, api: ToolExecutionApi, context: Context): Promise<ToolExecutionResult>;
 }
 
 export interface CodingTasks {
@@ -45,7 +48,10 @@ export function codingTasks(registry: Registry): CodingTasks {
   const call = createSingleToolTask((input, owner, conversation) => resolve(conversation).call(input, owner), scheduler);
   const session = createCodingSessionTask(id => resolve(id).session());
   const summary = createCodingSummaryTask(id => resolve(id).summary());
-  registry.install({ name: 'pi.coding', tasks: [session, run, call, tool, summary] });
+  registry.install({
+    name: 'pi.coding', tasks: [session, run, call, tool, summary],
+    tools: [nativeCodemodeForwardTool(resolve)],
+  });
   const tasks: CodingTasks = {
     run, call, session, summary,
     bind: (conversation, binding) => {

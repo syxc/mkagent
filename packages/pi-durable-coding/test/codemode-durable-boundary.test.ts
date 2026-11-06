@@ -18,6 +18,7 @@ import type { AgentTool } from '../src/agent-runtime.ts';
 import type { ExtensionToolContext } from '../src/pi/core/extensions/types.ts';
 import { executeCodemode } from '../src/pi/extensions/codemode/execute.ts';
 import type { CodemodeStoreEntryData } from '../src/pi/extensions/codemode/tool.ts';
+import { createNativeCodemodeDiscovery } from '../src/compat/codemode-discovery.ts';
 
 const context = BACKGROUND_CONTEXT;
 const cleanups: (() => Promise<unknown>)[] = [];
@@ -158,6 +159,31 @@ describe('public durable codemode adoption boundaries', () => {
       globals: [{ name: 'describeNamespace', spread: true, execute: async () => 'override' }],
     });
     expect(itemText((await run('return await describeNamespace("docs");')).output!, 1)).toBe('override');
+  }, 10_000);
+
+  test('native discovery policies retain aliases, samples, guidelines and validation through durable', async () => {
+    const options = {
+      getToolNamespace: () => ({
+        name: 'docs-guides', aliases: ['manual'], description: 'Documentation', instructions: 'Read the manual',
+      }),
+      getToolGuidelines: () => new Map([['echo', ['Preserve the original fields.']]]),
+    };
+    const policy = createNativeCodemodeDiscovery([nativeEcho], options);
+    const run = await builtin({ globals: policy.globals });
+    const code = `return [
+      await describeNamespace("manual"),
+      await describeNamespace("docs_guides"),
+      await describeTool("echo"),
+      await searchTools("Echo", {namespace:"manual",limit:1}),
+      await describeTool("missing")
+    ];`;
+    const original = await executeCodemode('script', { code }, undefined, undefined, nativeContext(), options);
+    const shared = await run(code);
+    expect(itemText(shared.output!, 1)).toBe(itemText(original.content, 1));
+    expect(itemText(shared.output!, 1)).toContain('Preserve the original fields.');
+    const invalid = 'try { await searchTools("Echo", {limit:0}); } catch (e) { return e.message; }';
+    const originalError = await executeCodemode('script', { code: invalid }, undefined, undefined, nativeContext(), options);
+    expect(itemText((await run(invalid)).output!, 1)).toBe(itemText(originalError.content, 1));
   }, 10_000);
 
   test('raising host output limits does not raise the built-in formatter ceiling', async () => {

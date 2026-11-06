@@ -67,6 +67,8 @@ describe('native codemode definition with shared model preparation', () => {
     const gate = new Promise<void>(done => { release = done; });
     let ready!: () => void;
     const allRows = new Promise<void>(done => { ready = done; });
+    let providersReady!: () => void;
+    const fourProviders = new Promise<void>(done => { providersReady = done; });
     let active = 0;
     let maximum = 0;
     let calls = 0;
@@ -77,6 +79,7 @@ describe('native codemode definition with shared model preparation', () => {
       expect(Object.keys(options ?? {})).toEqual(['signal']);
       calls++;
       maximum = Math.max(maximum, ++active);
+      if (active === 4) providersReady();
       await gate;
       active--;
       return value(1);
@@ -92,6 +95,8 @@ describe('native codemode definition with shared model preparation', () => {
     }, opened.ctx);
     try {
       await allRows;
+      // Durable records the issued-call count before admitting any provider effects.
+      await fourProviders;
       expect(active).toBe(4);
       expect(queued?.calls.map(call => call.args)).toEqual(Array(6).fill('local/judge'));
       expect(JSON.stringify(queued)).not.toContain('private fixture question');

@@ -1,4 +1,5 @@
 // Executes one preflighted native tool without changing the model transcript.
+import { isDeepStrictEqual } from 'node:util';
 import { copyJson, type Context } from '@earendil-works/chord';
 import type { AssistantMessage, JsonValue } from '@earendil-works/pi-ai';
 import {
@@ -10,6 +11,7 @@ import type {
   AgentToolCall, AgentToolResult,
 } from '../agent-runtime.ts';
 import type { HostControlledToolResult } from '../host-tool-controls.ts';
+import { isHostUsageAccounted, withoutHostUsageMarker } from '../host-tool-usage.ts';
 
 /** Arguments have already passed preparation, schema validation, and permission hooks. */
 export interface CodingToolTaskInput {
@@ -27,6 +29,8 @@ export interface CodingToolTaskResult {
   durationMs?: number;
   executionArguments?: JsonValue;
   control?: ToolControl;
+  /** Receipt metadata; rehydrated before the Native caller receives its result. */
+  hostUsageAccounted?: true;
 }
 
 /** Durable boundaries distinguish unknown effects and unknown hook/event delivery. */
@@ -300,7 +304,10 @@ async function finalize(
 
 function durableOutcome(outcome: CodingToolTaskResult): CodingToolTaskResult {
   // Native details are unknown; the persistence boundary accepts finite JSON only.
-  return copyJson(outcome, { omitUndefinedProperties: true }) as unknown as CodingToolTaskResult;
+  return copyJson({
+    ...outcome, result: withoutHostUsageMarker(outcome.result),
+    ...(isHostUsageAccounted(outcome.result) ? { hostUsageAccounted: true } : {}),
+  }, { omitUndefinedProperties: true }) as unknown as CodingToolTaskResult;
 }
 
 function failure(input: CodingToolTaskInput, message: string, durationMs?: number): CodingToolTaskResult {
@@ -330,7 +337,9 @@ function mergeAfter(
   };
   if (structuredContent === undefined) delete result.structuredContent;
   else result.structuredContent = structuredContent;
-  return { ...executed, result, isError: override.isError ?? executed.isError };
+  const outcome = { ...executed, result, isError: override.isError ?? executed.isError };
+  if (!isDeepStrictEqual(result.usage, executed.result.usage)) delete outcome.hostUsageAccounted;
+  return outcome;
 }
 
 async function emitEnd(bindings: CodingToolTaskBindings, outcome: CodingToolTaskResult): Promise<void> {

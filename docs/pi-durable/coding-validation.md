@@ -20,6 +20,61 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Native codemode executor through durable
+
+The Native SDK entry now forwards to `compat/codemode-native.ts`; its separate
+execution loop is removed. Durable owns VM execution, replay, model slots and
+result publication. Host adapters keep Native IDs, live rows, discovery, the
+branch store, worker admission and output policy. One hidden forwarding tool
+uses actual official child tasks and the Native `ctx.executeTool` pipeline.
+
+Focused regression passes 172 tests and 1160 assertions across 15 explicit
+files with network access denied. The actual Native task entry checks
+argument modification, permission denial, result hooks and the child owner
+chain. Nine usage tests cover Native and official parents, frozen wrapper
+spreads, persisted receipt metadata, explicit usage overrides and one ledger
+charge for unchanged usage. Three override cases failed before correction.
+
+Interrupted attempts rerun under the same live owner. Completed receipts
+restore Native IDs, status and display usage after a model is removed.
+Recorded preparation refusals remain refusals after a model is added.
+Private registered names derive only from the public tool name. No separate
+alias memo is needed, and catalog changes cannot change an old target. These checks do not
+establish process crash recovery or exactly-once external effects.
+
+The real branch journal runs seven cases with each executor, including the
+new Native SDK entry. They cover raw writes, branch selection, absent append
+support, result reuse, script failure, callback refusal and a storage failure
+after append. A storage failure closes the Harness; neither the Native entry
+nor `run.result` is published.
+
+The complete patch applies cleanly to all 18 target files. A new standalone
+consumer installs with lifecycle scripts disabled, network access denied and
+an unchanged frozen lock. Its 29 tests and 150 assertions pass. Patch SHA-256:
+`2f95b3d45069ca1cdc5faa5ce204b3ac12a60d5b6647715860c4e579579a1d46`.
+Scoped strict checks cover the actual adapters, forwarding module, Native
+receipt codec and public consumer. The selected execution source reproduces
+with one file and `complete: false`.
+
+Independent static review found receipt restoration, registry validation
+during replay, alias drift and default alias discovery defects. The main
+thread reproduced and corrected them. The actual Native entry also exposed
+the non-JSON usage marker; it is now receipt metadata, restored at the SDK
+result boundary. Full AgentSession, unmodified plugin loading, worker builds,
+product checks and full source reproduction remain restricted. Native parent
+tools keep their existing unsafe replay policy.
+
+Final independent review found three more defects. All three failed in
+real-task regression before correction: observer errors lost during lease
+cleanup, concurrent forwarding registrations ignoring the durable memo winner,
+and empty errors exposing private tool names. Error conversion now also
+preserves text for schema errors without a structured value. Five projection
+cases use expectations from upstream `toScriptValue`, independently of the
+new adapter. Native and public checks pass after correction.
+
+The sections below retain checks at their stated historical baselines.
+Statements about an unwired Native executor describe those earlier stages.
+
 ## Native tool API scopes after 5fee19e
 
 Native execution can capture the actual host API from either a CodingToolTask
