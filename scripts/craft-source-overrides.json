@@ -2328,6 +2328,14 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/src/compat/image-orientation.ts": {
+      "sha256": "cdceab458b7c2ab71db26699a487e621403836fe8812e6115031164f8b5ed2d5",
+      "reason": "Reuse durable EXIF metadata and pixel transposition while retaining Native Photon ownership and WebP chunk bounds."
+    },
+    "packages/pi-durable-coding/test/native-image-orientation.test.ts": {
+      "sha256": "980c625aac01704d634b979ab6f679129d0fb887fce7aadab00b4dc16afb868a",
+      "reason": "Verify fixed EXIF pixel layouts with real Native Photon and pin the full-content digest that refreshes patched Bun installs."
+    },
     "packages/pi-durable-coding/src/compat/archive.ts": {
       "sha256": "3aeba2fe800dc37eafa07ff87e97eb84b8667c15dcb2143ae51e632cf77aa417",
       "reason": "Adapt public ZIP records and decoding to Native ordering, binary data, CRC and fresh-directory installer policy."
@@ -2417,8 +2425,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "11d9dde99c45f8a7b5e5d5535a5fa33146a55fe8191e0e4fbec54571afa88ec5",
-      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP boundaries."
+      "sha256": "608300e3e73c024fdee43223896fc60eb23eb6974a11c688004bfaa6ecf06d3d",
+      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP and EXIF boundaries."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3877,8 +3885,8 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "2f95b3d45069ca1cdc5faa5ce204b3ac12a60d5b6647715860c4e579579a1d46",
-      "reason": "Keep a canonical complete Git patch for frozen Bun installs, legacy generation, shared search and codemode formatting, branch store transactions and host execution policies."
+      "sha256": "fb00459d27fd402281f08d11151ad822713b4e8bb8f6bd7d0c01e05001599d33",
+      "reason": "Keep a canonical complete Git patch for frozen Bun installs, shared algorithms and host policies; stamp the full body so old Bun cache artifacts are not reused."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
       "sha256": "53af9ef53c9ada189e0122a646c18ccf20bc16c2720fa56c25a3a2de22690352",
@@ -3929,7 +3937,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "d5c010c0fe8f05c134d8ae9e141fb2c801c3a62fdc8a3f61f447cf8b489fe939",
+      "sha256": "17921e83bf540da171900d4eda1cc6b6b01541c54650976981d8adcba82e7893",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3949,7 +3957,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "149b19187b45230fd6104a01cb60ffc8301926d242b0bb056b567ca96a159be5",
+      "sha256": "aff2bb68d7fcc5669a0db84a74ab5b280ff3f6061d1d55fa6fc1e4f4752042b2",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4953,7 +4961,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/clipboard.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/exif-orientation.ts": {
-      "sha256": "fbca93e04682d00139c319a0721417d47b505e0c6e5787f4d9d9dba164194ad0",
+      "sha256": "cd1d00822be53a7d38a84083756130f818ec4ed0d905e54a9745463e2ba829a8",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/exif-orientation.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/frontmatter.ts": {

@@ -20,6 +20,48 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Shared image orientation
+
+Native EXIF orientation now forwards to `compat/image-orientation.ts`. A small
+durable patch exports its existing EXIF reader and pixel transposition helper
+through `images`. The adapter retains Photon Node 0.3.4 objects, in-place flips,
+new objects for transposition and caller-owned cleanup. Native's WebP chunk
+bound is optional in the shared reader and enabled by the adapter. The durable
+default remains unchanged. Encoding, quality selection, resize limits, worker
+loading and packaged WASM fallback remain pending reuse analysis.
+
+Before replacement, nine checks and 240 assertions pass against Native's
+original implementation. After replacement, eleven checks and 244 assertions
+pass, including two new shared-export and patch-integrity checks. Fixed pixel
+layouts cover all eight orientations, JPEG and three WebP layouts, both TIFF
+byte orders, dimensions, input ownership, missing metadata and truncation.
+They use the actual Photon Node WASM. These checks do not establish the full
+image pipeline, worker fallback or packaged application behavior.
+
+Five explicit roots, including one durable declaration, pass strict checks
+with 226 source files and zero diagnostics. One allowed Native source and its
+record reproduce with `sourceFiles: 1` and `complete: false`. The complete
+22-file patch applies cleanly and matches the installed files byte for byte.
+The standalone consumer installs 93 packages from 94 existing lock records
+with a frozen lock, no network and no lifecycle scripts. All 40 checks and
+394 assertions pass. This uses existing cache files and does not check registry
+tarball integrity again or establish a complete root installation.
+
+The first lock refresh attempts fail because offline registry metadata is
+missing. Reusing the earlier frozen lock with the existing Photon Node record
+allows installation, but the warm cache initially retains the old 18-file
+artifact and the new exports are missing. An independent cache applies all
+22 files. Both patch bodies share their first 76271 bytes; Bun 1.3.14 uses the
+same cache tag for them. Its internal hash behavior has not been verified.
+
+The canonical patch now starts with `# Content SHA-256: ...`, calculated from
+the complete following body with LF line endings. Updating the patch also
+requires updating this digest. The regression check fails without that header
+and passes with it. The prefaced patch installs correctly with the old cache
+present, preserves the frozen lock and matches all 22 files. Its SHA-256 is
+`fb00459d27fd402281f08d11151ad822713b4e8bb8f6bd7d0c01e05001599d33`.
+This is an artifact workaround, not a verified fix to Bun itself.
+
 ## Public ZIP helpers
 
 The Native ZIP writer forwards to `compat/archive.ts`. `fflate@0.8.2` owns ZIP
@@ -102,7 +144,7 @@ support, result reuse, script failure, callback refusal and a storage failure
 after append. A storage failure closes the Harness; neither the Native entry
 nor `run.result` is published.
 
-The complete patch applies cleanly to all 18 target files. A new standalone
+The earlier codemode patch applies cleanly to all 18 target files. A new standalone
 consumer installs with lifecycle scripts disabled, network access denied and
 an unchanged frozen lock. Its 29 tests and 150 assertions pass. Patch SHA-256:
 `2f95b3d45069ca1cdc5faa5ce204b3ac12a60d5b6647715860c4e579579a1d46`.

@@ -5,6 +5,7 @@ export function portSharedHelpers(path: string, body: string): string {
   if (path === 'extensions/codemode/execute.ts') return portCodemodeRuntime(body);
   if (path === 'utils/zip.ts') return portZipRuntime(body);
   if (path === 'utils/tools-manager.ts') return portToolArchives(body);
+  if (path === 'utils/exif-orientation.ts') return portImageOrientation(body);
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
@@ -97,6 +98,23 @@ function portCodemodeRuntime(body: string): string {
   }
   return '/** Native policy over the public durable codemode executor. */\n'
     + 'export { executeNativeCodemode as executeCodemode, readCodemodeStore } from "../../../compat/codemode-native.ts";\n';
+}
+
+function portImageOrientation(body: string): string {
+  const parsed = ts.createSourceFile('exif-orientation.ts', body, ts.ScriptTarget.Latest, true);
+  const exports = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node) ||
+    ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword));
+  const apply = exports[0];
+  if (exports.length !== 1 || !apply || !ts.isFunctionDeclaration(apply) || apply.name?.text !== 'applyExifOrientation' ||
+      apply.modifiers?.some(modifier => modifier.kind !== ts.SyntaxKind.ExportKeyword) ||
+      apply.parameters.some(parameter => parameter.questionToken || parameter.initializer || parameter.dotDotDotToken) ||
+      apply.parameters.map(parameter => parameter.name.getText(parsed)).join(',') !== 'photon,image,originalBytes' ||
+      apply.parameters.map(parameter => parameter.type?.getText(parsed)).join(',') !== 'Photon,PhotonImageType,Uint8Array' ||
+      apply.type?.getText(parsed) !== 'PhotonImageType') {
+    throw new Error('Native EXIF orientation boundary changed');
+  }
+  return '/** Native Photon ownership over durable\'s shared EXIF algorithms. */\n'
+    + 'export { applyExifOrientation } from "../../compat/image-orientation.ts";\n';
 }
 
 function portZipRuntime(body: string): string {

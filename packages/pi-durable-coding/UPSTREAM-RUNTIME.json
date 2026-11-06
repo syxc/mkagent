@@ -1711,8 +1711,10 @@
       "source": "packages/coding-agent/src/utils/exif-orientation.ts",
       "target": "src/pi/utils/exif-orientation.ts",
       "sha256": "fbca93e04682d00139c319a0721417d47b505e0c6e5787f4d9d9dba164194ad0",
-      "portSha256": "fbca93e04682d00139c319a0721417d47b505e0c6e5787f4d9d9dba164194ad0",
-      "changes": []
+      "portSha256": "cd1d00822be53a7d38a84083756130f818ec4ed0d905e54a9745463e2ba829a8",
+      "changes": [
+        "shared-durable-image-orientation"
+      ]
     },
     {
       "source": "packages/coding-agent/src/utils/frontmatter.ts",

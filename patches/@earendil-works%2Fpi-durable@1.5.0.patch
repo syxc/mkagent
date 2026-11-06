@@ -1,3 +1,4 @@
+# Content SHA-256: ec3b035371f80bb90dab260d6826e17b9d72568829705a9118505f07d04b363f
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -1342,6 +1343,83 @@ index eb64e474162b158a43563e6c68d8ffea8c18b74a..caffdbee4d785abc036f1b2a377e9903
 \ No newline at end of file
 +export {};
 \ No newline at end of file
+diff --git a/dist/images/exif.d.ts b/dist/images/exif.d.ts
+index 718b1de37aa22c129900c149517ab8e9552a0bb6..35f6a29560f3a9b426bce40c6fe6ab354c3f0e71 100644
+--- a/dist/images/exif.d.ts
++++ b/dist/images/exif.d.ts
+@@ -1,3 +1,3 @@
+ /** The EXIF orientation of a JPEG or WebP, 1 to 8; 1 when absent or unreadable. */
+-export declare function exifOrientation(bytes: Uint8Array): number;
++export declare function exifOrientation(bytes: Uint8Array, checkWebpChunkBounds?: boolean): number;
+ //# sourceMappingURL=exif.d.ts.map
+\ No newline at end of file
+diff --git a/dist/images/exif.js b/dist/images/exif.js
+index 2b8def67ba27970f6a5bf9b0aca9a2e701fe05b9..dab497c2307ea245fad64b322bd9b181624a0a7a 100644
+--- a/dist/images/exif.js
++++ b/dist/images/exif.js
+@@ -1,7 +1,7 @@
+ // EXIF orientation of JPEG and WebP files, read from the bytes without decoding the image.
+ /** The EXIF orientation of a JPEG or WebP, 1 to 8; 1 when absent or unreadable. */
+-export function exifOrientation(bytes) {
+-    const tiff = tiffStart(bytes);
++export function exifOrientation(bytes, checkWebpChunkBounds = false) {
++    const tiff = tiffStart(bytes, checkWebpChunkBounds);
+     if (tiff < 0 || tiff + 8 > bytes.length)
+         return 1;
+     const little = bytes[tiff] === 0x49 && bytes[tiff + 1] === 0x49;
+@@ -26,7 +26,7 @@ export function exifOrientation(bytes) {
+     return 1;
+ }
+ /** Where the TIFF header of a JPEG's APP1 or a WebP's EXIF chunk starts; -1 when there is none. */
+-function tiffStart(bytes) {
++function tiffStart(bytes, checkWebpChunkBounds) {
+     if (bytes[0] === 0xff && bytes[1] === 0xd8) {
+         for (let offset = 2; offset + 4 <= bytes.length;) {
+             if (bytes[offset] !== 0xff)
+@@ -50,8 +50,12 @@ function tiffStart(bytes) {
+                 (bytes[offset + 7] << 24)) >>>
+                 0;
+             // Some WebP files prefix the TIFF header with "Exif\0\0".
+-            if (ascii(bytes, offset, "EXIF"))
++            if (ascii(bytes, offset, "EXIF")) {
++                // Native's original reader checks the signed declared chunk size before reading its TIFF header.
++                if (checkWebpChunkBounds && offset + 8 + (size | 0) > bytes.length)
++                    return -1;
+                 return isExifHeader(bytes, offset + 8) ? offset + 14 : offset + 8;
++            }
+             // RIFF chunks are padded to an even size.
+             offset += 8 + size + (size % 2);
+         }
+diff --git a/dist/images/index.d.ts b/dist/images/index.d.ts
+index 72d700bcf94cc96f21d689ad85f82468cc226caf..156456d73e8d4d6676ed956cd2d1f6163248963c 100644
+--- a/dist/images/index.d.ts
++++ b/dist/images/index.d.ts
+@@ -1,5 +1,12 @@
+-import { type SyncInitInput } from "@silvia-odwyer/photon/photon_rs.js";
++import { type PhotonImage, type SyncInitInput } from "@silvia-odwyer/photon/photon_rs.js";
+ import type { ImageProcessor } from "../tools/image-processor.ts";
++export { exifOrientation } from "./exif.js";
++/** Move RGBA pixels for orientations 5 to 8 without allocating in a particular Photon runtime. */
++export declare function transposeExifPixels(image: Pick<PhotonImage, "get_width" | "get_height" | "get_raw_pixels">, orientation: number): {
++    pixels: Uint8Array;
++    width: number;
++    height: number;
++};
+ /**
+  * An `ImageProcessor` on Photon (Rust compiled to WebAssembly), for `createCodingTools({ images })`. `wasm` is
+  * Photon's `photon_rs_bg.wasm` as bytes or as a compiled module: `@earendil-works/pi-durable/images/node` reads it from
+diff --git a/dist/images/index.js b/dist/images/index.js
+index 10964639c9ac7e6c74b4023185a6deb9846a50b4..274ac2f27dbe44beef5924b860320c134b172507 100644
+--- a/dist/images/index.js
++++ b/dist/images/index.js
+@@ -2,6 +2,7 @@
+ import { fliph, flipv, initSync, PhotonImage, resize, SamplingFilter, } from "@silvia-odwyer/photon/photon_rs.js";
+ import { base64Length, INLINE_IMAGE_TYPES, toBase64 } from "../tools/image-processor.js";
+ import { exifOrientation } from "./exif.js";
++export { exifOrientation, transposed as transposeExifPixels };
+ /** JPEG qualities tried in order. */
+ const JPEG_QUALITIES = [80, 70, 55, 40];
+ /**
 diff --git a/dist/search.d.ts b/dist/search.d.ts
 index 0cedcf1631d9b2c31824dd2bed86cc685604cecf..f13098012c7d9761613570910ead1df644accff2 100644
 --- a/dist/search.d.ts
