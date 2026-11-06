@@ -82,3 +82,22 @@ test('Native resize generation refuses changed public declarations', async () =>
     expect(() => portSharedHelpers('utils/image-resize-core.ts', changed)).toThrow('Native image resize boundary changed');
   }
 });
+
+test('Native MIME generation refuses changed signatures or the file read limit', async () => {
+  async function sourceAt(relative: string) {
+    const path = await realpath(new URL(relative, import.meta.url));
+    if (path.toLowerCase().includes('runtime-credentials')) throw new Error('Unexpected source alias');
+    return readFile(path, 'utf8');
+  }
+  const source = await sourceAt('../src/compat/image-mime.ts');
+  const expected = await sourceAt('../src/pi/utils/mime.ts');
+  expect(portSharedHelpers('utils/mime.ts', source)).toBe(expected);
+  for (const changed of [
+    source.replace('= 4100;', '= 4096;'),
+    source.replace('export function', 'export default function'),
+    source.replace('buffer: Uint8Array', 'buffer: ArrayBuffer'),
+  ]) {
+    expect(changed).not.toBe(source);
+    expect(() => portSharedHelpers('utils/mime.ts', changed)).toThrow('Native image MIME boundary changed');
+  }
+});

@@ -1808,8 +1808,10 @@
       "source": "packages/coding-agent/src/utils/mime.ts",
       "target": "src/pi/utils/mime.ts",
       "sha256": "561d5511a976cdf4fc2d1b2ac773b21820bbad62e954e39c473f77c46a77f0af",
-      "portSha256": "561d5511a976cdf4fc2d1b2ac773b21820bbad62e954e39c473f77c46a77f0af",
-      "changes": []
+      "portSha256": "9776fa3b491e80b1edcc2d44925f5343a2d4a4ad214d07f5cff726d0028e6e8d",
+      "changes": [
+        "shared-durable-image-mime"
+      ]
     },
     {
       "source": "packages/coding-agent/src/utils/open-browser.ts",

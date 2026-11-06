@@ -7,6 +7,7 @@ export function portSharedHelpers(path: string, body: string): string {
   if (path === 'utils/tools-manager.ts') return portToolArchives(body);
   if (path === 'utils/exif-orientation.ts') return portImageOrientation(body);
   if (path === 'utils/image-resize-core.ts') return portImageResize(body);
+  if (path === 'utils/mime.ts') return portImageMime(body);
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
@@ -160,6 +161,32 @@ function portImageResize(body: string): string {
   return '/** Native image policy over the shared durable encoding loop. */\n'
     + 'export { IMAGE_RESIZE_WORKER_RESPONSE_TYPE, resizeImageInProcess } from "../../compat/image-resize.ts";\n'
     + 'export type { ImageResizeOptions, ResizedImage, ResizeImageWorkerResponse } from "../../compat/image-resize.ts";\n';
+}
+
+function portImageMime(body: string): string {
+  const parsed = ts.createSourceFile('mime.ts', body, ts.ScriptTarget.Latest, true);
+  const exported = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node) ||
+    ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword));
+  const expected = [
+    ['detectSupportedImageMimeType', 'buffer', 'Uint8Array', 'string|null'],
+    ['detectSupportedImageMimeTypeFromFile', 'filePath', 'string', 'Promise<string|null>'],
+  ];
+  const limit = parsed.statements.filter(ts.isVariableStatement)
+    .flatMap(node => [...node.declarationList.declarations])
+    .find(node => node.name.getText(parsed) === 'IMAGE_TYPE_SNIFF_BYTES')?.initializer;
+  if (exported.length !== expected.length || !limit || !ts.isNumericLiteral(limit) || limit.text !== '4100' ||
+      exported.some((node, index) => !ts.isFunctionDeclaration(node) || !node.body || node.typeParameters?.length ||
+        node.asteriskToken || node.name?.text !== expected[index][0] ||
+        node.modifiers?.some(modifier => modifier.kind !== ts.SyntaxKind.ExportKeyword && modifier.kind !== ts.SyntaxKind.AsyncKeyword) ||
+        !!node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.AsyncKeyword) !== (index === 1) ||
+        node.parameters.length !== 1 || node.parameters[0].name.getText(parsed) !== expected[index][1] ||
+        node.parameters[0].type?.getText(parsed) !== expected[index][2] ||
+        node.parameters[0].questionToken || node.parameters[0].initializer || node.parameters[0].dotDotDotToken ||
+        node.type?.getText(parsed).replace(/\s/g, '') !== expected[index][3])) {
+    throw new Error('Native image MIME boundary changed');
+  }
+  return '/** Native null and file-prefix policy over durable image sniffing. */\n'
+    + 'export { detectSupportedImageMimeType, detectSupportedImageMimeTypeFromFile } from "../../compat/image-mime.ts";\n';
 }
 
 function portZipRuntime(body: string): string {

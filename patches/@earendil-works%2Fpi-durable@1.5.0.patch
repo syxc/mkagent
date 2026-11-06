@@ -1,4 +1,4 @@
-# Content SHA-256: 1beab8671ca3d15e670258e54d822714851053b83e90c1a8c303c90301c5d1e9
+# Content SHA-256: ecba5eed8a0c3adeacd2fb7d95c94754178a1a0a48e9e43ea474d8d89144c814
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -1415,14 +1415,15 @@ index 2b8def67ba27970f6a5bf9b0aca9a2e701fe05b9..f9aee0d6d9b48d5d38d5bcc22da11848
              offset += 8 + size + (size % 2);
          }
 diff --git a/dist/images/index.d.ts b/dist/images/index.d.ts
-index 72d700bcf94cc96f21d689ad85f82468cc226caf..ade002b93a795e954ecab4a015860a85979158bf 100644
+index 72d700bcf94cc96f21d689ad85f82468cc226caf..19f61bc1e148aa8ac583098b82c9840182bd4d15 100644
 --- a/dist/images/index.d.ts
 +++ b/dist/images/index.d.ts
-@@ -1,5 +1,26 @@
+@@ -1,5 +1,27 @@
 -import { type SyncInitInput } from "@silvia-odwyer/photon/photon_rs.js";
 +import { type PhotonImage, type SyncInitInput } from "@silvia-odwyer/photon/photon_rs.js";
  import type { ImageProcessor } from "../tools/image-processor.ts";
 +export { exifOrientation } from "./exif.js";
++export { detectSupportedImageMimeType } from "../tools/image.js";
 +/** Move RGBA pixels for orientations 5 to 8 without allocating in a particular Photon runtime. */
 +export declare function transposeExifPixels(image: Pick<PhotonImage, "get_width" | "get_height" | "get_raw_pixels">, orientation: number): {
 +    pixels: Uint8Array;
@@ -1447,18 +1448,19 @@ index 72d700bcf94cc96f21d689ad85f82468cc226caf..ade002b93a795e954ecab4a015860a85
   * An `ImageProcessor` on Photon (Rust compiled to WebAssembly), for `createCodingTools({ images })`. `wasm` is
   * Photon's `photon_rs_bg.wasm` as bytes or as a compiled module: `@earendil-works/pi-durable/images/node` reads it from
 diff --git a/dist/images/index.js b/dist/images/index.js
-index 10964639c9ac7e6c74b4023185a6deb9846a50b4..8b67f8e432fbf261b2b521144b2d69b1b4f67ef6 100644
+index 10964639c9ac7e6c74b4023185a6deb9846a50b4..105d0a655ee4cc068472952eb292381e1c39a5bf 100644
 --- a/dist/images/index.js
 +++ b/dist/images/index.js
-@@ -2,6 +2,7 @@
+@@ -2,6 +2,8 @@
  import { fliph, flipv, initSync, PhotonImage, resize, SamplingFilter, } from "@silvia-odwyer/photon/photon_rs.js";
  import { base64Length, INLINE_IMAGE_TYPES, toBase64 } from "../tools/image-processor.js";
  import { exifOrientation } from "./exif.js";
 +export { exifOrientation, transposed as transposeExifPixels };
++export { detectSupportedImageMimeType } from "../tools/image.js";
  /** JPEG qualities tried in order. */
  const JPEG_QUALITIES = [80, 70, 55, 40];
  /**
-@@ -52,23 +53,17 @@ function prepare(bytes, mimeType, limits) {
+@@ -52,23 +54,17 @@ function prepare(bytes, mimeType, limits) {
          const width = image.get_width();
          const height = image.get_height();
          const scale = Math.min(1, limits.maxWidth / width, limits.maxHeight / height);
@@ -1493,7 +1495,7 @@ index 10964639c9ac7e6c74b4023185a6deb9846a50b4..8b67f8e432fbf261b2b521144b2d69b1
      }
      catch {
          // Photon throws for bytes it cannot decode.
-@@ -79,27 +74,56 @@ function prepare(bytes, mimeType, limits) {
+@@ -79,27 +75,56 @@ function prepare(bytes, mimeType, limits) {
      }
  }
  /**

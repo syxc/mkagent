@@ -2328,13 +2328,21 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/src/compat/image-mime.ts": {
+      "sha256": "15b0abcfee72fd85d3b8a76ab0e832b2875152609ec9dac1b3589083dbece257",
+      "reason": "Keep Native null results and 4100-byte file sniffing over durable's shared image MIME detector."
+    },
+    "packages/pi-durable-coding/test/native-image-mime.test.ts": {
+      "sha256": "93f64ca404ac1bd10ca5993bc8a31d733ce96818dc1ae4aa41a03b5f7b984143",
+      "reason": "Pin original MIME header, BMP, APNG, subarray and file-prefix behavior and verify the public durable export."
+    },
     "packages/pi-durable-coding/src/compat/image-resize.ts": {
       "sha256": "3045f3e9d3cf6e2d8714787a4a03c61b0d9b5b44521e7f43e8a0e9a109a7c1dd",
       "reason": "Keep Native resize input, dimensions and worker protocol over durable's shared encoding and shrinking loop."
     },
     "packages/pi-durable-coding/test/native-image-resize.test.ts": {
-      "sha256": "78bb93d9e6d63e24fa8e2bd9373dad10475623142f14c6be87ffa167c309836a",
-      "reason": "Compare Native resizing with original byte and metadata snapshots through in-process, worker and public entries."
+      "sha256": "fd59c5fe1973c854c9ef809042f13216824efafd65f6a04437b2f4dbad3bfed9",
+      "reason": "Compare Native resizing with original byte and metadata snapshots through in-process, worker and public entries. Check image source port boundaries."
     },
     "packages/pi-durable-coding/test/durable-image-encoding.test.ts": {
       "sha256": "d810261460968bedd0ba6dae34f32deb316f292b7a4d1ecf5bcebeed6f1c7337",
@@ -2449,8 +2457,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "8bc1ce07fd0819364f90d6291ab740e0ec9ae9584cab5b5c23490965fda43e48",
-      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF and image resize boundaries."
+      "sha256": "f8f8d0bac09c5e142dbef4672d9d29c626510dfe5c86739dc5508659baad56b8",
+      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize and MIME boundaries."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3909,7 +3917,7 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "9ac4e52bff6c2849ecdc969a6321a47c8a31d7d120d8ae67f4cc9af05707febc",
+      "sha256": "cfc917ca3875152c0f267de6b829d1b5c608f0e6fa8ece9b6db1424df5f6138a",
       "reason": "Keep a canonical complete Git patch for frozen Bun installs, shared algorithms and host policies; stamp the full body so old Bun cache artifacts are not reused."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
@@ -3961,7 +3969,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "f095d25f3511d12f59f44220fc1dd4d8d076c67c514478eed91b0178b3ad87de",
+      "sha256": "ea257935213f55784191536390ed044cd28bf1b933c59411d92258824b7c9897",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -3981,7 +3989,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "3bd892bd663ba84504b155e951d7229d77f49272d33c96fd3511974515e2c84f",
+      "sha256": "8a04b9dbb509e9f50c2debba293a3b41876211cc045eb0ae8eef874ddea447e0",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -5037,7 +5045,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/management-http.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/mime.ts": {
-      "sha256": "561d5511a976cdf4fc2d1b2ac773b21820bbad62e954e39c473f77c46a77f0af",
+      "sha256": "9776fa3b491e80b1edcc2d44925f5343a2d4a4ad214d07f5cff726d0028e6e8d",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/mime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/open-browser.ts": {

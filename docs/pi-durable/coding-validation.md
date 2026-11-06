@@ -20,6 +20,40 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Shared image MIME detection
+
+The existing durable header detector is now exported through `images`.
+Native forwards through `compat/image-mime.ts`, which maps an unknown result
+from `undefined` to `null` and retains its 4100-byte file prefix. Eight private
+header parsing helpers are removed. The original Native source matches the
+pinned upstream SHA-256
+`561d5511a976cdf4fc2d1b2ac773b21820bbad62e954e39c473f77c46a77f0af`.
+No detector algorithm changes in the durable package.
+
+Before replacement, 20 checks and 122 assertions pass against Native.
+The shared implementation passes the same checks. Later public-export checks
+bring that suite to 139 assertions. Cases cover PNG header truncation, APNG,
+JPEG-LS, BMP headers and depths, unchanged bytes and subarrays. Actual files
+place the APNG marker at the last eight bytes of the prefix and one byte later.
+The latter file stays PNG under Native's prefix policy even though checking
+its complete bytes detects animation. File errors continue to reject.
+
+The four-file worktree image suite passes 77 checks and 560 assertions.
+Twenty-one explicit roots pass strict checks with 245 source files and zero
+diagnostics. The MIME source and its record reproduce with `sourceFiles: 1`
+and `complete: false`; declaration checks reject signature and prefix changes.
+
+The current 22-file patch applies cleanly. Both the existing cache and an
+independent cache install 93 packages from 94 lock records offline with a frozen
+lock and no lifecycle scripts. All patched files match the worktree byte for
+byte; the unchanged MIME implementation also matches. Both consumers pass
+84 checks and 648 assertions across five named files, including the actual
+Native MIME file entry. Native resizing and its worker remain worktree checks.
+The current patch SHA-256 is
+`cfc917ca3875152c0f267de6b829d1b5c608f0e6fa8ece9b6db1424df5f6138a`.
+These checks do not establish a complete root install, registry tarball
+integrity, clipboard integration, terminal registration or a release build.
+
 ## Shared image encoding
 
 Native resizing now forwards to `compat/image-resize.ts`. The durable patch
@@ -51,11 +85,33 @@ Both standalone consumers pass 64 checks and 509 assertions across four named
 files. They test public encoding, the default factory, EXIF and codemode;
 the Native loader and worker checks run in the isolated worktree.
 
-The current patch SHA-256 is
+The encoding-stage patch SHA-256 is
 `9ac4e52bff6c2849ecdc969a6321a47c8a31d7d120d8ae67f4cc9af05707febc`.
 No complete root install or release build is established. Registry tarball
-integrity is not checked again. Synchronous terminal conversion, worker
+integrity is not checked again. Terminal registration, worker
 fallback and packaged WASM layouts remain outside these checks.
+
+## Synchronous PNG conversion
+
+The Native converter already uses public Photon decoding and PNG encoding,
+with shared EXIF handling. Its remaining core owns and frees the image.
+The public TUI `ImageTranscoder` must return PNG base64 synchronously;
+the provider image processor has an asynchronous interface and may choose JPEG.
+
+A synchronous wrapper over `encodePhotonImageWithin` can force PNG by using
+an unlimited size and the default PNG preference. Fourteen comparisons of
+that wrapper with the actual Native `encodePng` body produce matching bytes:
+thirteen valid PNG outputs and one invalid input returning null. They cover
+all eight orientations and a byte subarray, and preserve input bytes.
+The source SHA-256 is
+`5c61e36a267b9bbd5beeb2bb3f2a0938ed7a05f7333d4a17355ea807fc7bcd3b`.
+The first probe cannot call its in-memory module export under Bun; the final
+probe evaluates the transpiled function body with its real image dependencies.
+
+The wrapper adds dimension reads and a base64 round trip to the byte entry.
+It removes no remaining image algorithm. The existing direct Photon call is
+retained as the smaller adapter. This probe checks the encoding core only;
+it does not execute the full conversion module or TUI registration.
 
 ## Shared image orientation
 
