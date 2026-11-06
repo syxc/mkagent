@@ -20,6 +20,50 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Shared Native head truncation
+
+Native head truncation, line counting, size formatting and default limits now
+use the durable implementations exported through `/tools`. The adapter retains
+Native limit getter order, invalid input errors and truncation labels. For
+`a\n` with a one-byte limit, Native still reports line truncation while durable
+reports byte truncation. The four tail, middle, line and UTF-8 suffix function
+bodies retain their exact original text. The durable truncation JavaScript
+changes only by exporting the existing line counter. Its algorithms retain
+their original text.
+
+Before replacement, the original Native entry supplied 875 recorded cases
+under Bun and Node. After replacement, both runtimes match all original values,
+error names, messages and codes. Another 200 JavaScript input cases per runtime
+match the original entry, including Buffer and typed-array inputs, null options,
+limit getters, getter failures and getter order. The source SHA-256 for this
+reference is
+`8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762`.
+
+The first Node comparison failed against the Bun-only baseline. Raw probes
+confirmed an existing Buffer difference: the same unpaired surrogate sequence
+has byte length 5 under Bun and 7 under Node. Native and durable agree within
+each runtime. All 38 differing cases contain these surrogates. The fixture keeps
+the separately captured original Node digests; it does not change the expected
+Bun values. These checks preserve each runtime's existing behavior.
+
+Five explicit strict type roots resolve 434 source files without diagnostics.
+The converter rejects seven changed declaration boundaries. Its single-file
+source check reports `sourceFiles: 1` and `complete: false`.
+
+All 30 patch files apply cleanly and match the installed files. The previous
+26 diffs outside the tools index files remain byte for byte unchanged. The patch
+SHA-256 is
+`33f837052d72fcd237e2d6cb3f7fd2a9c5e5c649a7adf4a13efca0f4faca1215`.
+A fresh independent cache links 99 original local packages. The offline frozen
+install disables lifecycle scripts and matches 30 patched files, 17 Native
+source, test and package files, and 46 runtime source files. Bun and Node each
+pass the same 918 test bodies. Bun reports 1882 assertions; Node runs the same
+assertions through its strict assert adapter. Both locks remain unchanged.
+
+Review stayed in the main thread. Registry tarball integrity, complete SDK and
+product integration, root installation and release builds remain unverified.
+F1/F3 remain open; this batch does not complete the overall architecture target.
+
 ## Shared read path candidates
 
 Native synchronous and asynchronous read paths now use the durable candidate

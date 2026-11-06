@@ -1,4 +1,4 @@
-# Content SHA-256: 4b781082b0ee39f242242aaa532d5edd4f35f5a86e900f886fc8c6e963073f03
+# Content SHA-256: fb7194a1ca87431b97f0c86726a3dcaf556bc19431602da1fdb5cf86578a4769
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -712,6 +712,62 @@ index d28306e526198175420d555b8058eb2f1976793a..d8590da0832c2863a28a21e1ea3090c4
      return {
          content: [{ type: "text", text: header }, ...content],
          ...(truncated.fullOutputPath === undefined ? {} : { fullOutputPath: truncated.fullOutputPath }),
+diff --git a/dist/env/node.d.ts b/dist/env/node.d.ts
+index 4be2ceeeeb00b6edc5b85caaa7bc8322e8047b8d..494357528e165da05690b3c4f43014310f844bbf 100644
+--- a/dist/env/node.d.ts
++++ b/dist/env/node.d.ts
+@@ -1,6 +1,20 @@
+ import type { Context } from "@earendil-works/chord";
++import type { ChildProcess } from "node:child_process";
+ import { type BinaryReader, type DirReader, type ExecutionEnv, ExecutionError, type FileChange, FileError, type FileInfo, type FileWatcher, type Result, type ShellExecOptions, type ShellExecResult, type TextLineReader, type WatchTarget } from "./index.ts";
+ import { type NodeWatchOptions } from "./node-watch.ts";
++/** Select argv or stdin for an explicitly resolved Bash path. */
++export declare function getBashShellConfig(shell: string): {
++    shell: string;
++    args: string[];
++    commandTransport?: "argv" | "stdin";
++};
++/** Kill a process tree or Unix process group, falling back to the child on Unix. */
++export declare function killProcessTree(pid: number): void;
++/** Wait for child output to finish, allowing a draining output spill to delay the idle deadline. */
++export declare function waitForChildProcess(child: ChildProcess, spillIsDraining: () => boolean): Promise<{
++    code: number | null;
++    signal: NodeJS.Signals | null;
++}>;
+ export declare class NodeExecutionEnv implements ExecutionEnv {
+     /** Every local environment sees the same files. */
+     readonly id: string;
+diff --git a/dist/env/node.js b/dist/env/node.js
+index 120ff2015d81eb795a090eae897910a58768373f..1bc0e58a3fe28b0722f4efd530e2f2c09713735d 100644
+--- a/dist/env/node.js
++++ b/dist/env/node.js
+@@ -160,7 +160,7 @@ function isLegacyWslBashPath(path) {
+     // Fall back to conventional launcher paths only when the Windows directory is unknown.
+     return /^[a-z]:\\windows\\(?:system32|sysnative)\\bash\.exe$/.test(normalized);
+ }
+-function getBashShellConfig(shell) {
++export function getBashShellConfig(shell) {
+     return isLegacyWslBashPath(shell) ? { shell, args: ["-s"], commandTransport: "stdin" } : { shell, args: ["-c"] };
+ }
+ async function getShellConfig(customShellPath) {
+@@ -211,7 +211,7 @@ function getShellEnv(baseEnv, extraEnv, inheritEnv = true) {
+         ...extraEnv,
+     };
+ }
+-function killProcessTree(pid) {
++export function killProcessTree(pid) {
+     if (process.platform === "win32") {
+         try {
+             const child = spawn(join(process.env.SystemRoot || "C:\\Windows", "System32", "taskkill.exe"), ["/F", "/T", "/PID", String(pid)], {
+@@ -239,7 +239,7 @@ function killProcessTree(pid) {
+         }
+     }
+ }
+-function waitForChildProcess(child, spillIsDraining) {
++export function waitForChildProcess(child, spillIsDraining) {
+     return new Promise((resolvePromise, reject) => {
+         let settled = false;
+         let exited = false;
 diff --git a/dist/harness/generation.d.ts b/dist/harness/generation.d.ts
 index 6b3121b5ace947b905cbe6e8cfa8d5e19c26ed62..ebdd9639525e14fb40c7a874ce92fde3a6b41d9f 100644
 --- a/dist/harness/generation.d.ts
@@ -1667,83 +1723,29 @@ index 1c5c127ea6b007eb4033486fcbde0d5e6b20cc16..802d2381bcde340b7da8f9b6a54ebe32
      const parts = [tool.description];
      schemaText(tool.parameters, parts);
      return parts.filter((part) => part.trim() !== "").join(" ");
-diff --git a/dist/env/node.d.ts b/dist/env/node.d.ts
-index 4be2ceeeeb00b6edc5b85caaa7bc8322e8047b8d..494357528e165da05690b3c4f43014310f844bbf 100644
---- a/dist/env/node.d.ts
-+++ b/dist/env/node.d.ts
-@@ -1,6 +1,20 @@
- import type { Context } from "@earendil-works/chord";
-+import type { ChildProcess } from "node:child_process";
- import { type BinaryReader, type DirReader, type ExecutionEnv, ExecutionError, type FileChange, FileError, type FileInfo, type FileWatcher, type Result, type ShellExecOptions, type ShellExecResult, type TextLineReader, type WatchTarget } from "./index.ts";
- import { type NodeWatchOptions } from "./node-watch.ts";
-+/** Select argv or stdin for an explicitly resolved Bash path. */
-+export declare function getBashShellConfig(shell: string): {
-+    shell: string;
-+    args: string[];
-+    commandTransport?: "argv" | "stdin";
-+};
-+/** Kill a process tree or Unix process group, falling back to the child on Unix. */
-+export declare function killProcessTree(pid: number): void;
-+/** Wait for child output to finish, allowing a draining output spill to delay the idle deadline. */
-+export declare function waitForChildProcess(child: ChildProcess, spillIsDraining: () => boolean): Promise<{
-+    code: number | null;
-+    signal: NodeJS.Signals | null;
-+}>;
- export declare class NodeExecutionEnv implements ExecutionEnv {
-     /** Every local environment sees the same files. */
-     readonly id: string;
-diff --git a/dist/env/node.js b/dist/env/node.js
-index 120ff2015d81eb795a090eae897910a58768373f..1bc0e58a3fe28b0722f4efd530e2f2c09713735d 100644
---- a/dist/env/node.js
-+++ b/dist/env/node.js
-@@ -160,7 +160,7 @@ function isLegacyWslBashPath(path) {
-     // Fall back to conventional launcher paths only when the Windows directory is unknown.
-     return /^[a-z]:\\windows\\(?:system32|sysnative)\\bash\.exe$/.test(normalized);
- }
--function getBashShellConfig(shell) {
-+export function getBashShellConfig(shell) {
-     return isLegacyWslBashPath(shell) ? { shell, args: ["-s"], commandTransport: "stdin" } : { shell, args: ["-c"] };
- }
- async function getShellConfig(customShellPath) {
-@@ -211,7 +211,7 @@ function getShellEnv(baseEnv, extraEnv, inheritEnv = true) {
-         ...extraEnv,
-     };
- }
--function killProcessTree(pid) {
-+export function killProcessTree(pid) {
-     if (process.platform === "win32") {
-         try {
-             const child = spawn(join(process.env.SystemRoot || "C:\\Windows", "System32", "taskkill.exe"), ["/F", "/T", "/PID", String(pid)], {
-@@ -239,7 +239,7 @@ function killProcessTree(pid) {
-         }
-     }
- }
--function waitForChildProcess(child, spillIsDraining) {
-+export function waitForChildProcess(child, spillIsDraining) {
-     return new Promise((resolvePromise, reject) => {
-         let settled = false;
-         let exited = false;
 diff --git a/dist/tools/index.d.ts b/dist/tools/index.d.ts
-index dc06b0be86a205a7aba4ab2c06ec4e003d731165..3d3d8e83aa358bc8036007dfc4451d804ded04eb 100644
+index dc06b0be86a205a7aba4ab2c06ec4e003d731165..963704a8f3e87d26716d7704b8c66c0a6c4a5d0d 100644
 --- a/dist/tools/index.d.ts
 +++ b/dist/tools/index.d.ts
-@@ -4,6 +4,7 @@ export { createEditTool, type EditToolDetails, type EditToolInput } from "./edit
+@@ -4,6 +4,8 @@ export { createEditTool, type EditToolDetails, type EditToolInput } from "./edit
  export { DEFAULT_IMAGE_LIMITS, type ImageLimits, type ImageProcessor, type PreparedImage, } from "./image-processor.ts";
  export { createReadTool, type ReadToolDetails, type ReadToolInput, type ReadToolOptions } from "./read.ts";
  export { createWriteTool, type WriteToolInput } from "./write.ts";
 +export { readPathVariants } from "./path-utils.ts";
++export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize, splitLinesForCounting, truncateHead, type TruncationOptions, type TruncationResult } from "../truncate.ts";
  /**
   * The `coding-tools` extension: `read`, `write`, `edit`, and `bash`; nothing installs it automatically.
   * `createPowerShellTool()` adds `powershell`. `images` prepares the images `read` returns (see `ReadToolOptions`).
 diff --git a/dist/tools/index.js b/dist/tools/index.js
-index 77187bb5df6507b0f291ab9c27c932e68b780889..b9955c670b80a28fa155773628562dac9c9db632 100644
+index 77187bb5df6507b0f291ab9c27c932e68b780889..7ff1182aafc1c742edac1d7157173b174ac36b14 100644
 --- a/dist/tools/index.js
 +++ b/dist/tools/index.js
-@@ -8,6 +8,7 @@ export { createEditTool } from "./edit.js";
+@@ -8,6 +8,8 @@ export { createEditTool } from "./edit.js";
  export { DEFAULT_IMAGE_LIMITS, } from "./image-processor.js";
  export { createReadTool } from "./read.js";
  export { createWriteTool } from "./write.js";
 +export { readPathVariants } from "./path-utils.js";
++export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize, splitLinesForCounting, truncateHead } from "../truncate.js";
  /**
   * The `coding-tools` extension: `read`, `write`, `edit`, and `bash`; nothing installs it automatically.
   * `createPowerShellTool()` adds `powershell`. `images` prepares the images `read` returns (see `ReadToolOptions`).
@@ -1792,3 +1794,28 @@ index 547e6a35c473f5c6af5e7455500e51a535edf05b..b2ef5b12acd2eaca4d4fa2f573fbbc4d
 +}
  //# sourceMappingURL=path-utils.js.map
 \ No newline at end of file
+diff --git a/dist/truncate.d.ts b/dist/truncate.d.ts
+index 9e5b261f9ca5f5903c232398d3eead76f3d5b823..4a3ec5a5ad8e42242f9a0aaeae6527e6b339e4c3 100644
+--- a/dist/truncate.d.ts
++++ b/dist/truncate.d.ts
+@@ -41,6 +41,7 @@ export interface TruncationOptions {
+     maxBytes?: number;
+ }
+ export { utf8ByteLength };
++export declare function splitLinesForCounting(content: string): string[];
+ /**
+  * Format bytes as human-readable size.
+  */
+diff --git a/dist/truncate.js b/dist/truncate.js
+index d7cba0e762370619870243e9962d5466b7e30d75..e385473b9b4dfac7110b436085586ac8ccac891a 100644
+--- a/dist/truncate.js
++++ b/dist/truncate.js
+@@ -12,7 +12,7 @@ export const DEFAULT_MAX_LINES = 2000;
+ export const DEFAULT_MAX_BYTES = 50 * 1024; // 50KB
+ // One implementation, shared with the output buffer.
+ export { utf8ByteLength };
+-function splitLinesForCounting(content) {
++export function splitLinesForCounting(content) {
+     if (content.length === 0)
+         return [];
+     const lines = content.split("\n");

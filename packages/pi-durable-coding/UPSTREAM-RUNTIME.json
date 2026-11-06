@@ -909,8 +909,10 @@
       "source": "packages/coding-agent/src/core/tools/truncate.ts",
       "target": "src/pi/core/tools/truncate.ts",
       "sha256": "8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762",
-      "portSha256": "8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762",
-      "changes": []
+      "portSha256": "395a2ba401985a434cd20c9e294cd11f13d9b39d436a2608b4ebfaa9a68c6ee6",
+      "changes": [
+        "shared-durable-head-truncation"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/write.ts",

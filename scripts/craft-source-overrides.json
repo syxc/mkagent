@@ -2485,8 +2485,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "6b1c65402b4a7eff29ac199411aed6233aeb2a58688a9b4a75785cc2d252a066",
-      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize, MIME, ANSI, child wait, shell and read path boundaries."
+      "sha256": "bd23dad551ced7b83360a85a285bb0541fff3ac57599e5535b82b8fd3133ffee",
+      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize, MIME, ANSI, child wait, shell, read path and truncation boundaries."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3945,7 +3945,7 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "1f6fa31edaf5ade9e683fbcc12ca771fc53ee2fa8938687b6ca9127820c7b66b",
+      "sha256": "33f837052d72fcd237e2d6cb3f7fd2a9c5e5c649a7adf4a13efca0f4faca1215",
       "reason": "Keep a canonical complete Git patch for frozen Bun installs, shared algorithms and host policies; stamp the full body so old Bun cache artifacts are not reused."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
@@ -3997,7 +3997,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "8efc7f734aed3f7b4daf58f6ed132eecba04ef4de005d42ad23b6b86dbe6b1c4",
+      "sha256": "a47a954322e29fe8ef2c2c0e7403a89fd43336baf0492cce9991f584ac847c73",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -4017,7 +4017,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "416d25cf3f9845800e297e098621d2dd281ec8b6959f2ac546e0f0eb128b8212",
+      "sha256": "cbe646e13a892cbdd0821bb9a038a8e3c9e72de550d47cc67dfa06395cc82924",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4569,8 +4569,8 @@
       "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
     },
     "packages/pi-durable-coding/src/pi/core/tools/truncate.ts": {
-      "sha256": "8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/truncate.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "395a2ba401985a434cd20c9e294cd11f13d9b39d436a2608b4ebfaa9a68c6ee6",
+      "reason": "Pinned Pi v1.5.0 tool truncation port; share durable head, line counting, size and limits while retaining Native labels and errors."
     },
     "packages/pi-durable-coding/src/pi/core/tools/write.ts": {
       "sha256": "b93b6a83eaee6959ae713934bbcdba834a39b023694a3ca986c73b331f771a3d",
@@ -5323,6 +5323,22 @@
     "packages/pi-durable-coding/test/native-read-path.test.ts": {
       "sha256": "86a89e41317f879ea8b799d2b33c4623313b1f2aef7a28eb7c407ad26acd8b14",
       "reason": "Pin actual Native sync and async read path order, repeated probes, unchanged candidates and invalid URL errors."
+    },
+    "packages/pi-durable-coding/src/compat/truncate.ts": {
+      "sha256": "b27402cc113c27daa9d146d55315260812b1a022d051577221d3239959e33df4",
+      "reason": "Thin durable head truncation adapter preserving Native limit getter order, errors and truncation labels."
+    },
+    "packages/pi-durable-coding/test/native-truncate.test.ts": {
+      "sha256": "e6f489531ae11a19411a2d5af9796d3daaf0f4e2a1dadf25692c8f273205d865",
+      "reason": "Pin actual Native truncation results to original Bun and Node baselines, including getter order and Buffer errors."
+    },
+    "packages/pi-durable-coding/test/fixtures/native-truncate-cases.ts": {
+      "sha256": "35ae0480ee512fb0eac81a5508bacb7f0d45566f688434d310eb6e502faadecd",
+      "reason": "Explicit Native truncation compatibility cases covering boundaries, Unicode, invalid limits and retained entry points."
+    },
+    "packages/pi-durable-coding/test/fixtures/native-truncate-1.5.0.json": {
+      "sha256": "426b5cf4e2b82ca0d56b44effdeabdcc155d41d2a800b37024da6b0e66c0619d",
+      "reason": "875 result digests captured from original Pi v1.5.0 Native code, retaining 38 existing Node versus Bun surrogate differences."
     }
   },
   "deleted": {

@@ -13,6 +13,7 @@ export function portSharedHelpers(path: string, body: string): string {
   if (path === 'utils/child-process.ts') return portChildProcess(body);
   if (path === 'utils/shell.ts') return portShell(body);
   if (path === 'core/tools/path-utils.ts') return portReadPaths(body);
+  if (path === 'core/tools/truncate.ts') return portTruncation(body);
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
@@ -325,6 +326,46 @@ function portReadPaths(body: string): string {
   if (remaining.size) throw new Error('Native read path declarations changed');
   for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
   return 'import { findReadPath, findReadPathAsync } from "../../../compat/read-path.ts";\n' + body;
+}
+
+function portTruncation(body: string): string {
+  const parsed = ts.createSourceFile('truncate.ts', body, ts.ScriptTarget.Latest, true);
+  const expected: Record<string, string> = {
+    DEFAULT_MAX_LINES: '7b4d08a1720cf3838212fc9740116c103bc1c62f22209956d7a7719999e64374',
+    DEFAULT_MAX_BYTES: '7a8d5a98971a2ef71318ab0e5e74d5950848bad1b9a4a2e9f79927c6b30f01d2',
+    TruncationResult: '60fbec2ea2f68e45e297f39d014243e58322e39d64258036f3db97ea9d6bae15',
+    TruncationOptions: 'f29fa289a0d02f53d9dd89bbc7e3a5ef759ffa410160cf537bcceaa52559c172',
+    splitLinesForCounting: 'c16490ab83da37e63ee9134b3392d884e112b93c0d11072ba668d0e2e283deb1',
+    formatSize: '732147ecdfd179ec787e25aad455118aea89f7a90590d38ad850184f659274ed',
+    truncateHead: '513b473a840717d9c241e6a996d860582f574b537cb796d839334b6089787250',
+  };
+  const remaining = new Set(Object.keys(expected));
+  const edits: Array<{ start: number; end: number; text: string }> = [];
+  for (const node of parsed.statements) {
+    const name = ts.isVariableStatement(node) ? node.declarationList.declarations[0]?.name.getText(parsed)
+      : ts.isFunctionDeclaration(node) || ts.isInterfaceDeclaration(node) ? node.name?.text : undefined;
+    if (!name || !Object.hasOwn(expected, name)) continue;
+    if (!remaining.delete(name) || createHash('sha256').update(node.getText(parsed)).digest('hex') !== expected[name]) {
+      throw new Error('Native truncation declaration boundary changed');
+    }
+    if (ts.isInterfaceDeclaration(node)) continue;
+    if (ts.isVariableStatement(node)) {
+      const end = body.indexOf('\n', node.end);
+      edits.push({ start: node.getStart(parsed), end: end < 0 ? node.end : end + 1, text: '' });
+    } else {
+      const text = name === 'formatSize'
+        ? 'export function formatSize(bytes: number): string {\n\treturn sharedFormatSize(bytes);\n}'
+        : name === 'truncateHead'
+          ? 'export function truncateHead(content: string, options: TruncationOptions = {}): TruncationResult {\n\treturn sharedTruncateHead(content, options);\n}'
+          : '';
+      edits.push({ start: text ? node.getStart(parsed) : node.getFullStart(), end: node.end, text });
+    }
+  }
+  if (remaining.size) throw new Error('Native truncation declarations changed');
+  for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
+  return 'import { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize as sharedFormatSize, splitLinesForCounting } from "@earendil-works/pi-durable/tools";\n'
+    + 'import { truncateHead as sharedTruncateHead } from "../../../compat/truncate.ts";\n'
+    + 'export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES };\n' + body;
 }
 
 function portZipRuntime(body: string): string {
