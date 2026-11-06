@@ -13,13 +13,65 @@ or expand the scope of this architecture work.
 The review on 2026-11-06 uses code baseline `f4f9f26`. The pi-durable kernel is
 already integrated. Most Coding functionality has implementation and historical
 evidence; its completeness still requires verification. The current
-priority is package reuse and thin external adapters that reduce upgrade work.
+priority is to reuse pi-durable built-ins, then use independent packages for
+missing capabilities, and retain thin adapters only where contracts still differ.
 The [follow-up list](coding-follow-up.md) records the revised work and the
 blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
-## Current shared implementation follow-up
+## Durable built-ins follow-up after 13abdc2
+
+The production host already installs durable's `codemode`, `tool-search`,
+`tools` and `images` modules. `tools/codemode.ts` creates the durable extension
+with the public pi-codemode sandbox. `CodingHost` converts registry tools through
+`hostToolToAgent` and injects them through `baseToolsOverride`. This assembly was
+confirmed by static inspection; the complete product entry point was not run.
+
+A real QuickJS Worker test then exposed a bridge failure: Worker callbacks did
+not retain the async context required by the Agent's commit function. The
+captured failures were `Agent commit outside a durable task phase`.
+`currentCodingToolInvocation()` now captures the current async context and
+restores it for later flushes. Durable still owns the codemode implementation,
+its journal and its official nested ToolTasks. The other two engine commit
+bindings execute within `withPhase`; official host reentry creates its own
+phase. The search of these bridge and engine sites found no second unbound
+flush callback.
+
+The new `host-builtins.test.ts` uses the real Agent, Harness, production
+codemode factory, sandbox Worker and approval wrapper. It verifies an approved
+child call and its official task owner, rejects a model-only target from a
+script, and passes tool-search activation to the owning coding run. The
+denial check also requires the target's name in the result and no bridge
+exception, so an unrelated execution failure cannot satisfy it.
+This test does not instantiate the complete AgentSession or validate its
+tool-declaration updates, branches, reopen or restart behavior.
+
+The cancellation helper now uses the public `pi-ai/utils/abort` module.
+`operationSignal` forwards directly. `raceWithAbortSignal` retains only the old
+optional-signal behavior, including the original Promise object when no signal
+is supplied. Six tests cover identity, abort reasons, listener cleanup and
+observation of an abandoned rejection. The generator checks export names,
+export count and parameter count before producing this wrapper. That guard
+does not establish type or behavioral compatibility with a future version.
+
+| Check | Result and scope |
+| --- | --- |
+| Final isolated regression | 21 explicit files, 186 passes, 1082 assertions and no failures. This is the 19-file shared implementation suite below plus `shared-abort.test.ts` and `host-builtins.test.ts`. |
+| Real built-ins | Three tests and 22 assertions pass. The Worker commit failure was observed before the scope fix; both codemode scenarios then pass without bridge exceptions. Tool-search coverage ends at the activation callback. |
+| Cancellation types | A strict, single-root consumer check passes for the public cancellation API and optional-signal wrapper. This is not a full SDK check. |
+| Scoped reproduction | `vendor-coding-runtime.ts --check --file=utils/abort.ts` passes with one source file and `complete: false`; it does not traverse the runtime closure. |
+| Source registration | The cancellation source, generator, runtime manifest, cancellation test, engine and built-ins test have local registry entries. This does not replace the full Craft audit. |
+| Independent review | Separate static reviews of the cancellation change and the Worker scope fix found no confirmed actionable defect. Neither reviewer ran tests. The second review does not establish runtime coverage of multi-Agent Worker concurrency, journal writes or late callbacks. |
+| Blocked checks | Full runtime generation, full Craft audit, full SDK/repository type checks, complete coding/product suites and worker/server builds remain unrun because they can reach restricted source. No new cross-platform or packaged product result is claimed. |
+
+The SDK's native codemode and tool-search extensions still expose factory,
+session-entry, rendering and tool-activation contracts. The native search
+ranker also accepts namespace text. Mapping these contracts onto the durable
+modules needs further work; different API shapes alone do not justify keeping
+the copies. Their replacement and the full source-necessity audit remain open.
+
+## Shared implementation follow-up at 13abdc2
 
 The changes after `f2b90d5` share package management, message conversion,
 model facades, settings merge, session storage, extension execution, token

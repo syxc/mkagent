@@ -70,7 +70,9 @@ const invocation = new AsyncLocalStorage<Invocation>();
 export function currentCodingToolInvocation(): CodingToolInvocation & { flush(tx: Tx): Promise<void> } {
   const scope = invocation.getStore();
   if (!scope?.tool) throw new Error('Host tool execution requires a durable coding tool invocation');
-  return { ...scope.tool, flush: scope.host.commit };
+  // Worker messages and progress timers can invoke the host API without this async context.
+  const resume = AsyncLocalStorage.snapshot();
+  return { ...scope.tool, flush: tx => resume(() => scope.host.commit(tx)) };
 }
 
 /** A stable execution owner for all prompts, continuations and child calls of one Agent. */

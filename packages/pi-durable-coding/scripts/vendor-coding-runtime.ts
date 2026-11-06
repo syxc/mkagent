@@ -176,6 +176,25 @@ while (queue.length) {
     body = portImageAssets(path, body);
     changes.add('installed-image-worker-and-versioned-bundle-wasm');
   }
+  if (path === 'utils/abort.ts') {
+    const exports = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node)
+      || (ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)));
+    if (exports.length !== 2 || new Set(exports.map(node => ts.isFunctionDeclaration(node) ? node.name?.text : undefined)).size !== 2
+      || !exports.every(node => ts.isFunctionDeclaration(node)
+      && ((node.name?.text === 'operationSignal' && node.parameters.length === 1)
+        || (node.name?.text === 'raceWithAbortSignal' && node.parameters.length === 2)))) {
+      throw new Error('Public cancellation API changed; review the optional-signal compatibility wrapper');
+    }
+    body = `import { raceWithAbortSignal as race } from "@earendil-works/pi-ai/utils/abort";
+export { operationSignal } from "@earendil-works/pi-ai/utils/abort";
+
+/** Retain the coding API's optional signal over the public shared implementation. */
+export function raceWithAbortSignal<T>(operation: Promise<T>, signal: AbortSignal | undefined): Promise<T> {
+\treturn signal ? race(operation, signal) : operation;
+}
+`;
+    changes.add('public-pi-ai-abort-helper');
+  }
   if (path === 'core/extensions/types.ts' || path === 'core/tools/tool-definition-wrapper.ts') {
     body = portToolDefinition(path, body);
     changes.add('explicit-durable-tool-replay-policy');

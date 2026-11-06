@@ -1653,8 +1653,10 @@
       "source": "packages/coding-agent/src/utils/abort.ts",
       "target": "src/pi/utils/abort.ts",
       "sha256": "f3a3265a2fb2b577bf32334ae8849c1f3dd1ac1487b81d7bc2d5007897fb5790",
-      "portSha256": "f3a3265a2fb2b577bf32334ae8849c1f3dd1ac1487b81d7bc2d5007897fb5790",
-      "changes": []
+      "portSha256": "6d7f5f4c81e07bc5f6dd8f1ad5dcd28ff05f30adce472b508484d57bdc4e7325",
+      "changes": [
+        "public-pi-ai-abort-helper"
+      ]
     },
     {
       "source": "packages/coding-agent/src/utils/ansi.ts",

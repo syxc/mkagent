@@ -3849,8 +3849,8 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "a89d81b7d6c0a455a0dd4550aa33552102e95a4f6336b513d561870e8e62bc59",
-      "reason": "Record pinned runtime sources and permitted public protocol import reductions with source and output hashes. Record permitted shared runtime seams; this does not claim a complete runtime audit."
+      "sha256": "f24d39ea3c946e6bd1966899ff2b6704412f9d307221d913678caaf14ef937b0",
+      "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "b8c97d0c1abaafc1908c4f40b427742e3ee10a78c3e17949aae9e92e473d0f29",
@@ -3869,8 +3869,8 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "34c974c6f81a1a03977bb34c1cf3f1f2031afeb7d5a270d0107203faa04471d6",
-      "reason": "Preserve public protocol type imports and rewrite only runtime imports at the durable Agent boundary. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
+      "sha256": "85db5108b1fe9e0d243ca0ea736615af30073ece9bcc1a091f3830f6fe9ef815",
+      "reason": "Reproduce permitted coding runtime transformations, public package reuse and scoped checks without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -3885,8 +3885,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
-      "sha256": "111f563091638f5decb50f446b7f6048bfdcdf5a0a4d084cffba88a4b078f661",
-      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in engine.ts."
+      "sha256": "4e1d5c6e3adc31ee950c513e7e2a359006f7e92276b061022ab3e01a2c571c60",
+      "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler; restore the originating async context for builtin Worker and progress callbacks."
     },
     "packages/pi-durable-coding/src/durable-coding/index.ts": {
       "sha256": "32898b73b64f687a315137b0f0c33c25961be8b5c825f13437f08a48b7038f71",
@@ -4845,8 +4845,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/package-manager-cli.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/abort.ts": {
-      "sha256": "f3a3265a2fb2b577bf32334ae8849c1f3dd1ac1487b81d7bc2d5007897fb5790",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/abort.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "6d7f5f4c81e07bc5f6dd8f1ad5dcd28ff05f30adce472b508484d57bdc4e7325",
+      "reason": "Use the public pi-ai cancellation helper with a thin optional-signal wrapper that preserves the coding API."
     },
     "packages/pi-durable-coding/src/pi/utils/ansi.ts": {
       "sha256": "0559e8db84dacf6ca15125d52d46231be26afa943b9b90a070d144b99fa84cbb",
@@ -5147,6 +5147,14 @@
     "packages/pi-agent-server/src/test-fixtures/mcp-oauth-worker.ts": {
       "sha256": "9c8fb50d1b47c94399fdc6712e47dcdfed0c7c7302cd1c4fd372800e87963101",
       "reason": "Supply isolated native worker protocol receipts, temporary credentials and a model endpoint that rejects every request."
+    },
+    "packages/pi-durable-coding/test/shared-abort.test.ts": {
+      "sha256": "1b9c6f249a3a8081d05529f61ade9b91bc061a30db9d176b1b0ef40cd17f2ccc",
+      "reason": "Verify the shared public cancellation helper preserves promise identity, abort reasons, listener cleanup and observation of abandoned rejections."
+    },
+    "packages/pi-durable-coding/test/host-builtins.test.ts": {
+      "sha256": "1c57ae6955d9312b7e4ceb5814f374cebf4a75daa970988341cec1fffd3691fe",
+      "reason": "Exercise the real durable codemode sandbox through the coding Agent, production approval, official child ownership, caller restrictions and tool-search activation receipts."
     }
   },
   "deleted": {
