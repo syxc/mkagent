@@ -22,6 +22,80 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Partial SDK patch generator guard
+
+The historical `scripts/patch-durable.ts` produces four harness files. Its
+write path still replaced the canonical patch, which now has 28 file
+sections. The new scope check rejects existing sections outside those four
+files, renamed paths outside that scope and unrecognized Git file headers.
+The generator and check share one file list. Both normal mode and `--check`
+reject the complete patch before Git calls, semantic analysis or writes.
+
+The new focused test file passes 9 tests under each of Bun and Node. A
+separate CLI check uses missing SDK input directories and confirms that both
+modes stop at the scope check. Three explicit tooling type roots cover 223
+files with zero diagnostics. The complete patch remains unchanged at SHA-256
+`bf8ec9e12c2516923cd67c969b2350e6fc609b0f9043c81ff3f112db6b96f739`.
+These checks do not run the full generator or its SDK type analysis.
+
+## Public synchronous context adapter assessment
+
+The public `ConversationTranscript.merge()` can bridge a synthetic committed
+view to the existing synchronous Native projection. Bun and Node each
+complete 18 controlled cases, with 24 original message identity checks and
+zero loader calls. Cases cover excluded assistant results, missing and
+duplicate tool results, call order, system baselines, retained heads, custom
+messages and uncommitted user or tool-result messages.
+
+Flattening the merged public records differs in 14 cases. The bridge passes
+all 18 cases by retaining the Native projection, pending-message overlay and
+all ten selected context declarations. It therefore removes no copied model
+policy. The public declaration of `Conversation.context()` returns a Promise
+of committed context; an asynchronous cache adapter was not implemented or
+tested here. The existing synchronous implementation stays in place. No new
+SDK helper exports or context patches were added.
+
+The local investigation fixture is `.scratch/context-public-transcript.ts`,
+SHA-256 `4da93d352826a676c0ec76be41af270ffeef58a2230155e2eb7a98a4a25569eb`.
+It is a task artifact, not part of the committed test suite. This assessment
+does not prove that every future public adapter must retain the current code.
+
+## Public command execution adapter assessment
+
+An external adapter calls `NodeExecutionEnv.exec()` with argv, converts the
+Native timeout to seconds and collects each decoded output stream under one
+byte budget. Bun and Node each complete ten controlled comparisons: seven
+match, while malformed UTF-8, incomplete UTF-8 and a leading BOM differ.
+At a one-byte cap, raw `FF` and UTF-8 `EF BF BD` produce the same SDK callback
+text but require different Native truncation results.
+
+Public spill preserves the original bytes, so it was also tested. A stdout
+BOM followed by stderr `a`, and a stderr BOM followed by stderr `a`, produce
+identical merged spill bytes and decoded callbacks. At a three-byte cap,
+Native must retain the BOM on different streams. Neither the merged bytes
+nor those callbacks identify the original BOM stream. A separate timeout
+probe confirms that the Native SIGTERM handler writes its cleanup marker,
+while SDK process-group termination does not.
+
+The Native command implementation stays in place and continues to use the
+shared child wait helper. Recreating raw stream framing, byte accounting and
+signal handling in a child wrapper would retain those responsibilities and
+add a transport. No such wrapper or SDK execution patch was added. These
+macOS probes do not validate Windows or the five-second forced-kill fallback.
+The local fixture is `.scratch/exec-public-env.ts`, SHA-256
+`706d61a93c247eb3fdd7e412b7627546dd6e04a8df286aaf2ccb10afff614272`.
+
+The first Bun empty-output fixture used `-e ""`, which prints Bun help and
+tripped the zero-byte cap. It now uses `void 0;`. Earlier Bun runs also left
+the repository preload enabled and are excluded from the final evidence.
+An empty explicit config still attempted that preload; a stricter sandbox
+blocked it. Later zero-output, zero-exit runs were not counted as passes.
+Final runs use an explicit working directory outside the repository, no
+config override and `--no-env-file`, including Bun child processes. The
+sandbox denies network, restricted source and the repository preload file.
+Both runtimes then emit the reported case summaries, and Bun emits the
+focused test results. No full SDK, Coding suite or product check was run.
+
 ## Public SDK head and tail truncation
 
 Both Native head and tail truncation now call the existing public
@@ -1804,9 +1878,12 @@ them, or read local or upstream `runtime-credentials.ts` through another tool.
 Partial hash checks do not establish full reproduction.
 
 Set `CRAFT_AGENT_SOURCE` to the isolated pinned Craft checkout. The earlier
-helper port uses `scripts/vendor-upstream.ts` in the coding package. Durable
-patch reproduction uses `scripts/patch-durable.ts` with the pinned checkout,
-installed durable directory and pristine durable directory.
+helper port uses `scripts/vendor-upstream.ts` in the coding package.
+`scripts/patch-durable.ts` covers only the historical four-file boundary
+patch and now rejects the current complete patch in both modes. Rebuild and
+verify the complete patch against pristine locked dependencies while
+preserving every required section. The four-file tool does not reproduce
+the current 28-file patch.
 
 The headless build replaces its output directory. Use a new directory owned
 by the validation task.

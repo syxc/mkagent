@@ -1,4 +1,21 @@
 /** Minimal source transformations for durable's native coding boundaries. */
+export const BOUNDARY_PATCH_FILES = Object.freeze([
+  'dist/harness/generation.js', 'dist/harness/generation.d.ts',
+  'dist/harness/types.d.ts', 'dist/harness/live.d.ts',
+]);
+
+/** Refuse to discard SDK changes outside this historical generator's scope. */
+export function assertBoundaryPatchScope(patch: string): void {
+  for (const line of patch.split(/\r?\n/)) {
+    if (!line.startsWith('diff --git ')) continue;
+    const paths = /^diff --git a\/(\S+) b\/(\S+)$/.exec(line);
+    if (!paths || !BOUNDARY_PATCH_FILES.includes(paths[1]!) || !BOUNDARY_PATCH_FILES.includes(paths[2]!)) {
+      throw new Error('The historical four-file boundary generator cannot replace the complete SDK patch. '
+        + 'Preserve every existing patch section when rebuilding from pristine dependencies.');
+    }
+  }
+}
+
 export const codingTypes = `
 type CodingPlan =
   | { kind: "answer"; continuation?: UserInput }

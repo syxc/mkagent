@@ -1,14 +1,16 @@
 /** Reproduce and type-check the durable coding boundary patch from pinned inputs. */
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import ts from 'typescript';
-import { codingHook, patchGeneration, replaceOnce } from './durable-boundary-source.ts';
+import { assertBoundaryPatchScope, BOUNDARY_PATCH_FILES, codingHook, patchGeneration, replaceOnce } from './durable-boundary-source.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const [checkout, installed, pristine, ...flags] = process.argv.slice(2);
 if (!checkout || !installed || !pristine) throw new Error('Usage: bun patch-durable.ts /pi-checkout /installed-durable /pristine-durable [--check]');
+const patchPath = join(import.meta.dir, '../../../patches/@earendil-works%2Fpi-durable@1.5.0.patch');
+if (existsSync(patchPath)) assertBoundaryPatchScope(readFileSync(patchPath, 'utf8'));
 const upstream = resolve(checkout);
 const target = resolve(installed);
 const baseline = resolve(pristine);
@@ -42,8 +44,8 @@ const batchImplementation = parsedBatch.statements.filter(statement => !ts.isImp
   .map(statement => statement.getFullText(parsedBatch)).join('\n');
 const source = patchGeneration(original, batchImplementation);
 const stripMap = (value: string) => value.replace(/\n\/\/# sourceMappingURL=.*$/, '');
-const originals = new Map(['generation.js', 'generation.d.ts', 'types.d.ts', 'live.d.ts'].map(name => [
-  `dist/harness/${name}`, readFileSync(join(baseline, 'dist/harness', name), 'utf8'),
+const originals = new Map(BOUNDARY_PATCH_FILES.map(path => [
+  path, readFileSync(join(baseline, path), 'utf8'),
 ]));
 const outputs = new Map<string, string>([
   ['dist/harness/generation.js', javascript(source)],
@@ -98,7 +100,7 @@ const manifest = JSON.stringify({
 const files = [...outputs].map(([path, value]) => [join(target, path), value]);
 files.push(
   [join(import.meta.dir, '../DURABLE-PATCH.json'), manifest],
-  [join(import.meta.dir, '../../../patches/@earendil-works%2Fpi-durable@1.5.0.patch'), patch],
+  [patchPath, patch],
 );
 for (const [path, content] of files) {
   if (checking) {
