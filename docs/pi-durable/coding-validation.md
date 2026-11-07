@@ -18,9 +18,76 @@ External thin adapters bridge contract differences. SDK source patches require
 a concrete gap that those interfaces and adapters cannot meet. Upgrade review
 and adaptation effort take priority over line counts.
 The [follow-up list](coding-follow-up.md) records the revised work and the
-blocked source checks. Normal-profile AgentSession and projection requirements
+remaining checks. The user has since withdrawn the source-reading ban and
+authorized full checks in the normal workspace and HOME. A tool policy still
+rejects direct inspection of `runtime-credentials.ts`; this does not invalidate
+completed generation, type, build or audit checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
+
+## Latest SDK integration checks after 13b7caf
+
+This section records the current worktree. Earlier sections retain their
+original inputs, restrictions and evidence counts.
+
+The shared Photon change removes the private Node loader and global file-reader
+override. Native and durable use the same public package and one packaged WASM.
+The CodingHost fix keeps internal durable forwarding tools out of Native and
+plugin catalogs before and after tool updates and reloads.
+
+The core patch now exports eight consumed operations. The 22-line facade drops
+`withToolChanges` and `prepareToolCallArguments`; both functions keep their
+original internal core callers. The four-file patch retains the Agent execution
+backend that Native fixes to durable.
+
+| Check | Current result and scope |
+|---|---|
+| Full CI | `bun --no-env-file run validate:ci` passes, including all workspace types, SDK declarations, shared and documentation-tool tests, and i18n checks. |
+| Lint | `CRAFT_AGENT_SOURCE=... bun --no-env-file run lint` passes with zero errors and 107 existing warnings. |
+| Main repository batch | 479 files, 6715 passed, 11 skipped, zero failures in 437.06 seconds. Includes the 19 owner cases and real Native journal/SIGKILL recovery. This does not include the isolated batch below. |
+| Isolated repository batch | All 35 files pass in fresh processes with the repository runner's selection: 301 tests, 2083 Bun `expect()` calls, zero skips and failures. The seven suites that create their own HOME use that fixture's default agent directory; the others retain a task-owned empty directory. |
+| Pinned behavior | All 17 reference scenarios pass. The plugin contract passes 28 UI effects, four local replies and idle. |
+| Product builds | `server:build` with a task-owned output and `electron:build` pass. The relocated headless server returns HTTP 200 and `status: ok` on an ephemeral loopback port with an offline child and fresh configuration. |
+| Product resource | The headless output has exactly one `photon_rs_bg.wasm`, matching the installed public package, and no obsolete coding-specific WASM. Focused Node/Bun image artifact checks remain recorded in the Photon section. |
+| Core patch replay | All four pristine 1.5.0 files accept the reduced patch and match both the root installation and a new independent frozen consumer byte for byte. |
+| Core consumer | Bun and Node verify the eight retained operations, absence of the two unused exports and execution backend injection. Its strict NodeNext type check passes. |
+| Complete reproduction | The actual pinned-runtime `--check` passes for 248 TypeScript files and nine assets. Auxiliary `vendor-upstream.ts --check` passes for 12 source files and 28 shared forwards. |
+| Craft provenance | The fixed independent v0.15.6 checkout audit passes for 2228 files: 1455 common paths, 874 normalized-identical files, 581 modified files, 773 project-only files and 858 reviewed upstream-only deletions. |
+| Independent review | The reviewer read all 1632 lines of the supplied Git diff, checked 102 changed hunks across 29 tracked files, and read all five new files. No new high-confidence code findings remain. It confirmed production readers for the eight retained operations and no readers for the two removed exports. The main thread verified the final test counts and document status. |
+
+The first complete main batch had 6696 passes, 11 skips and 19 failures.
+The owner fixtures used an empty application configuration but read an unrelated
+browser preference. The same 19 tests failed before that preference was stubbed,
+then passed individually and in the final main batch. The first CI attempt also
+caught an insufficient host-tool map return type; the corrected type and full CI
+pass.
+
+The next failure was in the isolated Coding product fixture. It changed HOME
+but inherited `PI_CODING_AGENT_DIR`, which takes priority when selecting global
+extensions. The startup UI therefore never arrived. With only that outer
+override removed, the unchanged test passed all 43 assertions. The fixture now
+selects its own agent directory and restores the prior value; the original
+environment then also passes all 43 assertions.
+
+The final regression evidence combines the successful main batch and the later
+complete isolated batch: 7016 passes, 11 skips, 24363 Bun `expect()` calls and zero
+failures across 514 files. Only an isolated fixture and documentation changed
+after the main batch. The original root command's exit status remains 1; it is
+not relabeled as a successful single run. Two intermediate isolated environment
+attempts failed and do not count as passes. Removing the agent-directory fence
+from every suite caused the PR fixture to fail. Supplying `~/.pi/agent` caused
+six native fixtures to miss their resources because the worker uses that
+explicit path without tilde expansion. The final run removes the outer override
+only for the seven suites that establish their own HOME and native resources.
+The PR fixture retains the empty-directory fence and passes. All 35 files
+were executed, and the final runner exits 0 with an empty failure list.
+
+Generation, types, builds and the full Craft audit are no longer blocked by the
+withdrawn source-reading ban. Direct body inspection of
+`src/pi/core/runtime-credentials.ts` still receives
+`Path access control: protected credentials/secrets file`. That prevents its
+manual necessity review. F1/F3 remain open, and these checks do not prove that
+every retained SDK source file is necessary.
 
 ## Partial SDK patch generator guard
 
@@ -588,7 +655,10 @@ Production keeps the original backend. This comparison does not validate
 file locking, read-only file validation, shared reloads or the opaque
 credential orchestration.
 
-## Shared core request and tool operations
+## Historical shared core request and tool operations
+
+This is the initial ten-operation stage. The current patch exports eight
+consumed operations; see the latest integration checks above.
 
 Native request and tool operations now call the pinned `pi-agent-core` package.
 The operation changes cover two of the four patched files and export ten
@@ -1045,7 +1115,7 @@ integrity, clipboard integration, terminal registration or a release build.
 
 Native resizing now forwards to `compat/image-resize.ts`. The durable patch
 exposes its encoding and shrinking loop with a callback for the caller's
-Photon runtime. Native retains Photon Node 0.3.4, sequential dimension rounding,
+Photon runtime. Native retains sequential dimension rounding,
 original-byte returns, result dimensions and the worker reply tag. Its policy
 keeps the configured JPEG quality followed by 85, 70, 55 and 40, eager encoding,
 the smaller initial PNG or JPEG, PNG on ties and strict `< maxBytes`. The durable
@@ -1100,11 +1170,57 @@ It removes no remaining image algorithm. The existing direct Photon call is
 retained as the smaller adapter. This probe checks the encoding core only;
 it does not execute the full conversion module or TUI registration.
 
+## Shared Photon runtime and release asset
+
+Native now uses durable's public `@silvia-odwyer/photon@0.3.3` package.
+`compat/photon.ts` initializes its public module and caches success or failure.
+It does not replace the global file reader or search the project directory.
+The former Node 0.3.4 package remains a development oracle. Server and Desktop
+packaging select one `photon_rs_bg.wasm`; a successful server build also removes
+the obsolete generated `coding_photon_rs_bg.wasm`.
+
+The generator forwards the two public declarations in `utils/photon.ts`.
+Changes to the discarded private loader body no longer require port edits.
+Eight changed public-boundary cases are rejected. An old-package import outside
+the two explicit image adapters requires a new compatibility decision.
+
+Final checks in this working tree after `13b7caf`:
+
+| Check | Result and scope |
+|---|---|
+| Node | 12 tests pass across the three `shared-photon` test files. |
+| Bun | 89 tests pass across those files and the four existing image suites, including the real image worker. |
+| Existing golden outputs | The 17 Native and 17 durable-default cases retain their original bytes and metadata. |
+| Native PNG entry points | Byte conversion, Base64 conversion and the synchronous transcoder match the old Node codec for PNG, JPEG, WebP and GIF. |
+| Relocated artifacts | A Node ESM bundle and a Bun compiled executable match an existing resize golden result using one adjacent WASM. Invalid project-local WASM is ignored. Removing the adjacent asset returns cached `null` in fresh processes, despite the build machine's dependencies remaining present. |
+| Types | 12 explicit roots, 310 source files, zero diagnostics using the coding package's compiler options. Restricted source reads are rejected before the compiler reads a file. |
+| Dependencies | The coding workspace's dependency and optional-dependency lock closure reaches 180 records, with only Photon 0.3.3 and no Photon Node or complete coding-agent package. Other declared package dependency resolutions are unchanged by lockfile alias rearrangement. |
+| Permitted source | All 245 allowed manifest TypeScript files were canonicalized and searched individually; no old package references remain. Opaque files were excluded. |
+| Reproduction | The actual generator passes `--check --file=utils/photon.ts --file=utils/exif-orientation.ts` against the clean pinned upstream revision, with `sourceFiles: 2` and `complete: false`. |
+| Frozen install | Root `bun install --frozen-lockfile --ignore-scripts` passes. This reused the normal cache and did not recheck registry tarball integrity. |
+| Bounded independent review | The 14 fixed implementation, manifest, packaging and test files were reviewed read-only, with no confirmed findings. The review did not execute code or cover the full product. |
+
+The initial manual NodeNext and root-only compiler configurations did not
+match this package. The scoped checks also found an AST member-inference error
+and a missing MIME argument in a new test; both are fixed. The final type check
+merges the root and package options, including Bundler resolution and the
+package's indexed-access setting.
+
+The canonical 28-file durable patch is unchanged, with SHA-256
+`bf8ec9e12c2516923cd67c969b2350e6fc609b0f9043c81ff3f112db6b96f739`.
+Only the confirmed Photon dependency and loader provenance records were
+updated. These scoped results do not establish equivalence of every Photon API.
+After the user withdrew the source-reading ban, full runtime reproduction,
+workspace type checking, SDK declarations and the server/worker build passed.
+The complete headless build also passed after removing the obsolete WASM from
+its artifact checklist. Current regression and audit results are recorded
+separately. Terminal registration was not rerun.
+
 ## Shared image orientation
 
 Native EXIF orientation now forwards to `compat/image-orientation.ts`. A small
 durable patch exports its existing EXIF reader and pixel transposition helper
-through `images`. The adapter retains Photon Node 0.3.4 objects, in-place flips,
+through `images`. The adapter retains in-place flips,
 new objects for transposition and caller-owned cleanup. The shared reader's
 optional Native mode preserves WebP chunk bounds, short-chunk prefix checks,
 signed chunk traversal and signed little-endian TIFF offsets. The durable
@@ -1631,10 +1747,11 @@ passed. Bun produces identical JavaScript before and after the correction.
 
 The source registry matches all 53 changed coding files. Thirty-one permitted
 runtime source and output records match their pinned manifest hashes.
-These are scoped checks; the full audit remains blocked.
-Remaining source reasons and upgrade checks are recorded in the
-[architecture](coding-architecture.md). F5 remains blocked; the complete task
-has not passed final acceptance.
+These were scoped checks under the earlier source restriction. The complete
+runtime and Craft audits have since passed, as recorded in the latest checks
+above. Remaining source reasons and upgrade checks are recorded in the
+[architecture](coding-architecture.md). F1/F3 remain open for the protected
+body's necessity review; the complete task has not passed final acceptance.
 
 ## Earlier f4f9f26 baseline
 The f4f9f26 package-assembly changes use public core protocol types and
@@ -1732,11 +1849,11 @@ checkpoint. The last handoff in tool-call order wins, including an empty
 summary. Accepted steering follows that summary. Recovery retains the new
 context without repeating the completed tool.
 
-The server bundle includes separate Photon WASM files for the durable and
-native coding tools, native themes, HTML export templates and the Pi MIT
-license. Headless archives also include the root LICENSE and NOTICE. Image
-workers resolve from the installed module; the project directory cannot
-supply an executable worker.
+Current packaging selects one shared Photon WASM, native themes, HTML export
+templates and the Pi MIT license. The full product output was not rebuilt
+after the shared Photon change. Headless archives also include the root LICENSE
+and NOTICE. Image workers resolve from the installed module; the project
+directory cannot supply an executable worker.
 
 The current production dependency graph uses the public `pi-agent-core`
 protocol, proxy and patched operation APIs. The dependency policy prohibits the complete
@@ -1852,8 +1969,8 @@ the durable GenerationTask path and keep their Pi-resource isolation.
 
 Whole-product acceptance is still open. The checks above do not cover every
 MkAgent default-profile feature, product session operation or Desktop/WebUI
-flow. Those paths must be exercised in isolated environments before completion
-is claimed.
+flow. Those paths still need regression coverage before completion is claimed.
+Current work uses the requested main checkout and normal host environment.
 
 Unsafe legacy checkpoints, old checkpoint versions and uncertain effects fail
 closed with migration diagnostics. Startup does not silently discard them.
@@ -1867,10 +1984,10 @@ deferred assistant messages.
 
 ## Reproduction and upgrade
 
-Historical repository acceptance entry points are listed below. They do not
-constitute current permission to run checks that reach restricted source.
-The full coding suite, reference parity, validate:ci and worker/server builds
-are blocked in this session; use the scoped checks recorded above.
+Repository acceptance entry points are listed below. The user authorized full
+source checks, reference parity, validate:ci and builds in the main checkout
+with the normal HOME. Runtime fixtures use their own temporary data and local
+providers. Results remain specific to the commands actually completed.
 
 ```sh
 bun test ./packages/pi-durable-coding ./packages/pi-agent-server
@@ -1883,10 +2000,12 @@ bun install --frozen-lockfile --ignore-scripts
 bun run server:build --output <task-owned-output-directory> --compress
 ```
 
-The complete runtime generator check and full Craft audit are currently
-blocked because they read restricted credential source. Do not run or retry
-them, or read local or upstream `runtime-credentials.ts` through another tool.
-Partial hash checks do not establish full reproduction.
+The complete runtime generator check has passed for all 248 TypeScript outputs
+and nine resources. The full Craft audit uses a separate pinned checkout.
+A tool policy rejected direct reading of `runtime-credentials.ts` with
+`Path access control: protected credentials/secrets file`. Do not bypass that
+rejection through another tool or copy. Its manual necessity review remains
+open; partial hash checks alone do not establish full reproduction.
 
 Set `CRAFT_AGENT_SOURCE` to the isolated pinned Craft checkout. The earlier
 helper port uses `scripts/vendor-upstream.ts` in the coding package.

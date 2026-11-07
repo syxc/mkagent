@@ -1,3 +1,4 @@
+/// <reference path="./pi/utils/highlight-js.d.ts" />
 /** Complete native coding API with explicit host binding types. */
 export * from './pi/index.ts';
 export { initializeExtensionModels } from './pi/core/agent-session-services.ts';

@@ -176,7 +176,7 @@ export class CodingHost {
       for (const diagnostic of await initializeExtensionModels(resources.resourceLoader, models)) {
         host.error({ extensionPath: '<resources>', event: diagnostic.type, error: diagnostic.message });
       }
-      const tools = Object.fromEntries(host.registry.snapshot().tools().map(({ tool }) => [tool.name, hostToolToAgent(tool)]));
+      const tools = coding.hostTools();
       const modelTools = Object.entries(tools).filter(([, tool]) =>
         (tool.exposure === 'direct' || tool.exposure === 'model-only') && tool.defaultActive !== false)
         .map(([name]) => `+${name}`);
@@ -443,8 +443,15 @@ export class CodingHost {
     }
   }
 
-  updateTools(tools: ToolRegistration[]): void {
-    this.session.setBaseTools(Object.fromEntries(tools.map(tool => [tool.name, hostToolToAgent(tool)])));
+  private hostTools(): Record<string, ReturnType<typeof hostToolToAgent>> {
+    return Object.fromEntries(this.host.registry.snapshot().tools().flatMap(({ extension, tool }) =>
+      // Durable dispatch stays registered without becoming a Native tool declaration.
+      extension.name === 'pi.coding' || this.nativeTools.has(tool.name)
+        ? [] : [[tool.name, hostToolToAgent(tool)]]));
+  }
+
+  updateTools(): void {
+    this.session.setBaseTools(this.hostTools());
   }
 
   close(reason: SessionShutdownEvent['reason'] = 'quit'): Promise<void> {

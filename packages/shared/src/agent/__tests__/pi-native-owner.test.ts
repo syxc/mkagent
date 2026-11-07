@@ -1,4 +1,4 @@
-import { afterEach, expect, spyOn, test } from 'bun:test';
+import { afterEach, beforeEach, expect, spyOn, test } from 'bun:test';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,12 +9,21 @@ import { PiAgent } from '../pi-agent.ts';
 import type { PiNativeOwnerEvent, PiNativeOwnerHostPort } from '../backend/pi/native-owner-protocol.ts';
 import type { PiWorkerScope } from '../backend/pi/protocol.ts';
 import type { PiWorkerLease } from '../backend/pi/worker-connection.ts';
+import * as configStorage from '../../config/storage.ts';
 
 const agents: PiAgent[] = [];
 const children = new Set<ChildProcess>();
 const directories: string[] = [];
+let restoreBrowserTools = () => {};
+
+beforeEach(() => {
+  // Owner transport fixtures do not load application configuration or browser tools.
+  const enabled = spyOn(configStorage, 'getBrowserToolEnabled').mockReturnValue(false);
+  restoreBrowserTools = () => enabled.mockRestore();
+});
 
 afterEach(async () => {
+  restoreBrowserTools();
   for (const agent of agents.splice(0)) agent.destroy();
   for (const child of children) {
     if (child.exitCode !== null || child.signalCode !== null) continue;

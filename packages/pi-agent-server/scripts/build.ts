@@ -1,4 +1,4 @@
-import { copyFileSync, cpSync, mkdirSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
@@ -6,7 +6,6 @@ const packageDir = dirname(import.meta.dir);
 const outdir = join(packageDir, 'dist');
 const codemodeRequire = createRequire(import.meta.resolveSync('@earendil-works/pi-codemode'));
 const durableRequire = createRequire(import.meta.resolveSync('@earendil-works/pi-durable'));
-const codingRequire = createRequire(import.meta.resolveSync('@mkagent/pi-durable-coding/native'));
 
 const build = await Bun.build({
   entrypoints: [join(packageDir, 'src/index.ts'), join(packageDir, 'src/tools/codemode-worker.ts')],
@@ -25,7 +24,7 @@ mkdirSync(outdir, { recursive: true });
 copyFileSync(codemodeRequire.resolve('quickjs-wasi/quickjs.wasm'), join(outdir, 'quickjs.wasm'));
 // read resolves this beside the bundle; source mode falls back to the package.
 copyFileSync(durableRequire.resolve('@silvia-odwyer/photon/photon_rs_bg.wasm'), join(outdir, 'photon_rs_bg.wasm'));
-copyFileSync(codingRequire.resolve('@silvia-odwyer/photon-node/photon_rs_bg.wasm'), join(outdir, 'coding_photon_rs_bg.wasm'));
+rmSync(join(outdir, 'coding_photon_rs_bg.wasm'), { force: true });
 copyFileSync(join(packageDir, '..', 'pi-durable-coding', 'LICENSE.pi'), join(outdir, 'LICENSE.pi'));
 for (const [source, target] of [
   ['modes/interactive/theme', 'theme'], ['modes/interactive/assets', 'assets'], ['core/export-html', 'export-html'],

@@ -149,7 +149,7 @@ describe('pi-agent-server bundle', () => {
     expect(existsSync(canary)).toBe(false);
   });
 
-  it('prepares a native image with only the relocated coding Photon module', () => {
+  it('prepares a native image beside the relocated shared Photon module', () => {
     const artifact = join(scratchDir, 'native-image-artifact');
     const project = join(scratchDir, 'native-image-cwd');
     mkdirSync(artifact);
@@ -160,20 +160,8 @@ describe('pi-agent-server bundle', () => {
       '--target=bun', '--format=esm', '--external=koffi',
     ], { cwd: packageDir, encoding: 'utf8', timeout: 120_000 });
     expect(build.status).toBe(0);
-    const wasm = join(packageDir, 'dist', 'coding_photon_rs_bg.wasm');
-    if (existsSync(wasm)) copyFileSync(wasm, join(artifact, 'coding_photon_rs_bg.wasm'));
-    const preload = join(artifact, 'guard-source-wasm.ts');
-    writeFileSync(preload, `
-      import { createRequire } from 'node:module';
-      const fs = createRequire(import.meta.url)('node:fs');
-      const original = fs.readFileSync.bind(fs);
-      fs.readFileSync = (file, ...args) => {
-        if (String(file).includes('node_modules') && String(file).endsWith('photon_rs_bg.wasm'))
-          throw Object.assign(new Error('No build-machine WASM in this distribution'), { code: 'ENOENT' });
-        return original(file, ...args);
-      };
-    `);
-    const proc = spawnSync(process.execPath, ['--preload', preload, output], {
+    copyFileSync(join(packageDir, 'dist', 'photon_rs_bg.wasm'), join(artifact, 'photon_rs_bg.wasm'));
+    const proc = spawnSync(process.execPath, [output], {
       cwd: project, env: createOfflineEnvironment(), encoding: 'utf8', timeout: RUN_TIMEOUT_MS,
     });
     expect(proc.status).toBe(0);
@@ -182,7 +170,7 @@ describe('pi-agent-server bundle', () => {
 
   it('ships the Photon image module next to the bundle', () => {
     expect(existsSync(join(packageDir, 'dist', 'photon_rs_bg.wasm'))).toBe(true);
-    expect(existsSync(join(packageDir, 'dist', 'coding_photon_rs_bg.wasm'))).toBe(true);
+    expect(existsSync(join(packageDir, 'dist', 'coding_photon_rs_bg.wasm'))).toBe(false);
     expect(readFileSync(join(packageDir, 'dist', 'LICENSE.pi'), 'utf8')).toContain('Copyright (c) 2025 Mario Zechner');
   });
 
@@ -199,7 +187,7 @@ describe('pi-agent-server bundle', () => {
     expect(build.status).toBe(0);
     const assets = join(packageDir, 'dist', 'coding-assets');
     if (existsSync(assets)) cpSync(assets, join(artifact, 'coding-assets'), { recursive: true });
-    copyFileSync(join(packageDir, 'dist', 'coding_photon_rs_bg.wasm'), join(artifact, 'coding_photon_rs_bg.wasm'));
+    copyFileSync(join(packageDir, 'dist', 'photon_rs_bg.wasm'), join(artifact, 'photon_rs_bg.wasm'));
     const proc = spawnSync(process.execPath, [output, '--export'], {
       cwd: project, env: createOfflineEnvironment(), encoding: 'utf8', timeout: RUN_TIMEOUT_MS,
     });

@@ -1129,9 +1129,7 @@ export class DurableKernel {
   updateTools(extension: Extension): void {
     this.hostTools = extension;
     this.installTools();
-    const nativeNames = new Set(this.nativeTools.map(tool => tool.name));
-    this.coding?.updateTools(this.registry!.snapshot().tools()
-      .flatMap(({ tool }) => nativeNames.has(tool.name) ? [] : [tool]));
+    this.coding?.updateTools();
   }
 
   /** Keep auxiliary host extensions and native declarations aligned with reloaded configuration. */

@@ -1,7 +1,7 @@
 import { exifOrientation, transposeExifPixels } from '@earendil-works/pi-durable/images';
-import type { PhotonImage } from '@silvia-odwyer/photon-node';
+import type { PhotonImage } from '@silvia-odwyer/photon/photon_rs.js';
 
-type Photon = typeof import('@silvia-odwyer/photon-node');
+type Photon = Pick<typeof import('@silvia-odwyer/photon/photon_rs.js'), 'PhotonImage' | 'fliph' | 'flipv'>;
 
 /** Keep Native's Photon ownership while durable owns metadata and pixel layout. */
 export function applyExifOrientation(photon: Photon, image: PhotonImage, originalBytes: Uint8Array): PhotonImage {

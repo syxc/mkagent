@@ -263,8 +263,8 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "apps/electron/scripts/copy-assets.ts": {
-      "sha256": "8392f64eca1b8b8fa5c9943de945ab3879f49f11b69318ed9587a5ce03111391",
-      "reason": "Package the durable coding subprocess, both Photon versions, Pi license, native themes and HTML export assets."
+      "sha256": "e6164bd7f0e2e03156b6ee5bd36c2be6314f19c62b59b3c966e344e11822062a",
+      "reason": "Package the durable coding subprocess, one shared Photon WASM, Pi license, native themes and HTML export assets."
     },
     "apps/electron/src/__tests__/transport.test.ts": {
       "sha256": "4ed2a7275236f0f8d631d4a27bac86891b1fbd533e21605e8e28c627484b3711",
@@ -971,8 +971,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "40c38af07159270c1a56635a74b8c883e0dabe5efd7da29168b1b462027e2969",
-      "reason": "Lock independent Pi packages, including the public core protocol, proxy and patched operations, while pi-durable owns execution. Declare existing locked archive packages and the coding workspace ANSI matcher."
+      "sha256": "96e80630d7507c69a62198ac191f3a831a0b12bc9f5145ebefa6f91743d69484",
+      "reason": "Lock independent Pi packages while pi-durable owns execution. Share Photon 0.3.3 in production and retain Photon Node only as a development oracle; preserve other resolved dependency versions."
     },
     "package.json": {
       "sha256": "60f6bdb53e0e226e82843e6557cc39e3107cf692fdea2666297894434aeff260",
@@ -2211,8 +2211,8 @@
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "scripts/build-server.ts": {
-      "sha256": "b19c6c3c099dccb930d013c1695ef9605989adb99738ffa836830270a6977814",
-      "reason": "Include Pi runtime resources and license notices in the standalone headless archive and verify their presence."
+      "sha256": "b4c4bc7c9c2677061eda849f9e8730e3d6428576c83c3a8e80b37c26b1d7c5ac",
+      "reason": "Include Pi runtime resources and license notices in the standalone headless archive; require the single shared Photon WASM."
     },
     "scripts/check-i18n-parity.ts": {
       "sha256": "1c2d2bc8d2c6154d7cad20af822e4f7413192f47c0d3f46e6a39a7e36026805c",
@@ -2235,8 +2235,8 @@
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "packages/pi-agent-server/src/bundle-smoke.test.ts": {
-      "sha256": "a6cfaaa9c0aaef53f2f5f24c997270b51bfdf940f7024b904efb8f2bb836bed4",
-      "reason": "Extend offline bundle tests for durable assets, codemode/MCP defaults, initialization races, tools, runtime updates, cancellation and OAuth ownership. Gate opening on the actual runtime config update instead of a fixed delay, and locate the open call independently of its generated variable name."
+      "sha256": "233b33c0d8f38d3cd9abb1bb633037cfdc4638ae577d198a22c69dcec3c7aada",
+      "reason": "Extend offline bundle tests for durable assets, codemode/MCP defaults, initialization races, tools, runtime updates, cancellation and OAuth ownership. Verify relocated Native images and HTML export with one shared Photon WASM and reject the obsolete second asset."
     },
     "packages/pi-agent-server/src/mini-model-query.test.ts": {
       "sha256": "949aca864489239e0e589e1feb080a22b438934d0dff3c5915b75bb1802388b2",
@@ -2328,6 +2328,26 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/src/compat/photon.ts": {
+      "sha256": "c67028622c6735c78fc9f4dcc3b39c4b44168a6de0df7bc077096f16cff67e44",
+      "reason": "Initialize the shared public Photon module from installed or adjacent assets without replacing global file reads or searching the project directory."
+    },
+    "packages/pi-durable-coding/test/shared-photon.test.ts": {
+      "sha256": "9cbca234f6c3948128721be2159a90b3f60b7497b38650ebf89f97716e159c37",
+      "reason": "Verify shared module identity, concurrent loading, unchanged global file reads and real PNG entry points against the original Node codec."
+    },
+    "packages/pi-durable-coding/test/shared-photon-port.test.ts": {
+      "sha256": "be0c7563d35db7a2474d1791b112ac46440ae1d8370500ee0980b2678536c6e4",
+      "reason": "Reject public Photon API drift while allowing discarded private loader bodies to change without port edits."
+    },
+    "packages/pi-durable-coding/test/shared-photon-bundle.test.ts": {
+      "sha256": "2fa554cd7dfc4b1ba304cbea0d58c0725227534dab2abc0328539e44f6c095b8",
+      "reason": "Exercise relocated Node and Bun compiled image entry points with one WASM, invalid project assets and missing adjacent resources."
+    },
+    "packages/pi-durable-coding/test/fixtures/shared-photon-probe.ts": {
+      "sha256": "da8ff01e9670dab65f31d6158985b990c15b0bde27edee338de450a66b365fad",
+      "reason": "Run the real shared image adapter in fresh relocated processes and verify cached failure without build-machine asset fallback."
+    },
     "packages/pi-durable-coding/test/durable-boundary-source.test.ts": {
       "sha256": "6c900a6989e98d6c30dc56064ae833f200fd3c4ca20ed1287447b81a4404a702",
       "reason": "Prevent replacement of any existing SDK patch, cover read-only scope checks, and preserve a patch created after preflight."
@@ -2393,7 +2413,7 @@
       "reason": "Pin default image factory outcomes captured from the unpatched durable 1.5.0 package."
     },
     "packages/pi-durable-coding/src/compat/image-orientation.ts": {
-      "sha256": "cdceab458b7c2ab71db26699a487e621403836fe8812e6115031164f8b5ed2d5",
+      "sha256": "b729b891ada5294568110a728079a713bf13bcc1b8e526d14ed6f492f201b74e",
       "reason": "Reuse durable EXIF metadata and pixel transposition while retaining Native Photon ownership and WebP chunk bounds."
     },
     "packages/pi-durable-coding/test/native-image-orientation.test.ts": {
@@ -2489,7 +2509,7 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "c8012c051606bc27a9db3821c44eb2e0d1e377c5bd8907040e2e97af968ef50e",
+      "sha256": "a9a278e577b08ef9a43839b258b1c9aed7cffd9a42a02f3995fd0a8a91879e4d",
       "reason": "Register shared helper paths, transforms, provenance labels and added dependencies once. Preserve guarded declaration replacements and the existing string-only interface."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
@@ -2525,8 +2545,8 @@
       "reason": "Preserve legacy host and plugin contracts through thin policies over shared coding implementations."
     },
     "packages/pi-durable-coding/test/scoped-port-check.test.ts": {
-      "sha256": "9deff2e5a85fc49a03caf7fa93db8a7048cb748e0078c9299d2f00f3a1817074",
-      "reason": "Verify shared implementation compatibility, structural consumer types and scoped reproduction boundaries."
+      "sha256": "461c4e054580b735c5faefe7c2329d44ef3af0ea5eb2af6908d8c2a8dc0a0ba0",
+      "reason": "Verify scoped path and option boundaries after the user withdrew the source filename restriction."
     },
     "packages/pi-durable-coding/test/shared-context-tokens.test.ts": {
       "sha256": "f17f9df4085baac4983692c07bba8df4fa6b054441021940984cb19d67db099c",
@@ -2809,8 +2829,8 @@
       "reason": "Reproduce delayed Request validation across ownership changes and retain each owner's API error file."
     },
     "packages/shared/src/agent/__tests__/pi-native-owner.test.ts": {
-      "sha256": "fdd148d3733910bf8851bd1eebe32ad3ebc68d0098f908c1ea3ae6eef6459a52",
-      "reason": "Verify physical worker adoption, scoped release and final projection receipts, including failed registration cleanup."
+      "sha256": "231dbdd04151c59930414ed306c45ba958c3e243856dd25ebdef45fa0a5adeda",
+      "reason": "Verify physical worker adoption, scoped release and final projection receipts, including failed registration cleanup. Stub the unrelated browser preference so transport fixtures run without application configuration."
     },
     "packages/shared/src/agent/backend/pi/native-owner-protocol.ts": {
       "sha256": "4f2510007f4fb4d15498a572ee2553d7bd02eb452b7697762ac20fb7657497e8",
@@ -2949,8 +2969,8 @@
       "reason": "Compose public Jiti transforms with source metadata and a versioned cache while preserving Bun host stack hooks."
     },
     "packages/pi-durable-coding/test/plugin-transpiler.test.ts": {
-      "sha256": "fbed5c89b8d22adc05552da6f72d3f7d21ca20108f8b4a624a414253943e2ce3",
-      "reason": "Verify both real loaders preserve per-file metadata, resource reads, reload and stack handlers despite existing Jiti disk caches."
+      "sha256": "47c447eedbb596c2c8dbe1170b4df4c89b16dc1773863b2abe05ce114a909696",
+      "reason": "Verify both real loaders preserve per-file metadata, resource reads, reload and stack handlers despite existing Jiti disk caches. Canonicalize fixture directories to match Bun native dependency imports on macOS."
     },
     ".github/workflows/ci.yml": {
       "sha256": "f42a6325a26770a557971e4ce6f44fe49f5659e813666312eff06dfdb1c8edda",
@@ -3113,8 +3133,8 @@
       "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path"
     },
     "packages/server-core/src/sessions/coding-runtime.isolated.ts": {
-      "sha256": "d7aa4ebf12965a00a522e85441b0889854e6bf040121b8f95c0197b6056989c4",
-      "reason": "Build the current Pi subprocess before the retained Coding product test, preserving export, import, resumed history and branch-anchor assertions."
+      "sha256": "ba2d065dad0d716a6ffeef09f3a273c6324e4da1eea8b44902b3c62415f33ede",
+      "reason": "Build the current Pi subprocess before the retained Coding product test. Select and restore the fixture agent directory so an inherited override cannot bypass its UI extension; preserve export, import, resumed history and branch-anchor assertions."
     },
     "packages/server-core/src/sessions/native-endpoint-refresh.isolated.ts": {
       "sha256": "130f53c0a3bab5e659b296f2ac6d800f2adf1fb28500f01b89e221ebfbbec675",
@@ -3293,8 +3313,8 @@
       "reason": "Cross-platform bounded retry runner hardens dependency installation and Electron packaging downloads"
     },
     "packages/pi-agent-server/scripts/build.ts": {
-      "sha256": "25783f11a124d02d693f67babbf25c76a0c7f12aa81db3abd13812371ea912b5",
-      "reason": "Bundle the native durable coding server and copy its exact Photon WASM version, license and non-code SDK assets."
+      "sha256": "f9d4ceac8649f7cc58733989f6fd976489ae03dca541443a2388b634ef0e9f9b",
+      "reason": "Bundle the durable coding server with one shared Photon WASM, remove its obsolete generated duplicate, and copy the license and non-code SDK assets."
     },
     "packages/pi-agent-server/src/cache-warmer.ts": {
       "sha256": "7d1ca54d32dc242776a6fe34cce44810554fe5d4243ee0d42f135619f048d8af",
@@ -3377,8 +3397,8 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "aee6145236ad2b884aec8d0a9c83501fb172953ec309ee3a5d27ef343cdc567c",
-      "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness. Verify copied native journals before Harness opening and reject conflicting legacy target history."
+      "sha256": "42f5b7c1e469f530e03ea2a91946f2933f270af67875750999a941fd83e3d8c3",
+      "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness. Verify copied native journals before Harness opening and reject conflicting legacy target history. Let CodingHost derive refreshed declarations from registry ownership."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
       "sha256": "ac9ac73a7242d3ea9262b06a11e83f6a04877e2263e0427d8ff9ab6852eced7a",
@@ -3673,8 +3693,8 @@
       "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery, approved file writes and native plugin execution with host-only resources across restart."
     },
     "packages/pi-agent-server/src/coding-host.ts": {
-      "sha256": "cf2afd216058317a6c4801dd3b0c05ab0675233b21dd0b48cb3dddc990673092",
-      "reason": "Adapt native resources and actions to durable boundaries, share host input capture and commit setup projections before deferred target activation."
+      "sha256": "2b3e7a18068a1ca4933e02e336af15486e69a761824658cf5ff136232c8ce619",
+      "reason": "Adapt native resources and actions to durable boundaries, share host input capture and commit setup projections before deferred target activation. Exclude internal pi.coding dispatch and Native-owned registrations from host declarations at initial load, update and reload."
     },
     "packages/pi-agent-server/test/coding-bundle.e2e.test.ts": {
       "sha256": "ac2e989a11f4a9858017f47bcd93b6db01a279c1337ed0efa49dfe1aa8892957",
@@ -3693,8 +3713,8 @@
       "reason": "Record selected source ports, unchanged fixtures and shared native helper adapters. Record six selected helper sources, six unchanged fixtures and 28 shared entries."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "1aef9e23db8dddc31155300bcd0d0f976630e5c3fcfede73b63dc172d4694f4c",
-      "reason": "Declare independent coding capabilities using official Pi libraries and loader dependencies. Pin public ZIP and ANSI packages already present in the lock."
+      "sha256": "b6664667a9c059f0588870bec24bf5a174dbe8b35d624fc93f1469707bda9828",
+      "reason": "Declare independent coding capabilities and existing ZIP and ANSI packages; share durable's Photon version in production and keep the original Node codec as a development oracle."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -3957,8 +3977,8 @@
       "reason": "Keep the canonical frozen-install patch and full-body cache stamp. Truncation uses public Chord without SDK algorithm or export patches."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
-      "sha256": "53af9ef53c9ada189e0122a646c18ccf20bc16c2720fa56c25a3a2de22690352",
-      "reason": "Exercise durable native coding behavior and isolated recovery through the coding-host-catalog.e2e.test.ts fixture."
+      "sha256": "ee864d6fee7ac95fc1ce126e0784733ce1891e600b47481ddcb5d73bc3fa0ce4",
+      "reason": "Verify host catalog updates retain independent and Native-owned tools, preserve exposure policies and hide internal dispatch from both session and plugin catalogs before updates, after updates and after reload."
     },
     "packages/pi-agent-server/src/coding-host-handoff.e2e.test.ts": {
       "sha256": "9a4491e102171f84b710c141ebd8f88399bad860e392c1acaebd1198c466204c",
@@ -4017,12 +4037,12 @@
       "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "7b2d64dd79db7217588f9f2c887a46481c3650bcb205eb5a43d697564c586f87",
-      "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
+      "sha256": "862505e08e26bfe56b0d4ad68207c796532365abbe2acea09c1b78c9a63f0aa0",
+      "reason": "Record the complete pinned runtime closure, shared Photon provenance and public dependencies, including chord, with only the eight consumed core operations."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
-      "sha256": "b8c97d0c1abaafc1908c4f40b427742e3ee10a78c3e17949aae9e92e473d0f29",
-      "reason": "Reproduce the pinned native coding runtime and its controlled host transformation in asset-runtime-port.ts."
+      "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
+      "reason": "Guard the public Photon loader API without binding discarded private bodies, and reproduce installed image worker and non-code asset boundaries."
     },
     "packages/pi-durable-coding/scripts/model-runtime-port.ts": {
       "sha256": "96a9eee13bdbd72a8fb7feca1b3b1af2caaba15392fb9296d58240798f6b931d",
@@ -4037,8 +4057,8 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "0abd9bcb42544988cb9968c1e67e6505e4aaf59d5b34932ccc45c6deb58db3fd",
-      "reason": "Reproduce permitted coding transformations and consume shared helper provenance and dependency metadata without duplicate path registration or restricted source expansion."
+      "sha256": "3710b17b679c5e5498cc8607678a1dc77515c1726b187a3f6a2f13feb7283688",
+      "reason": "Reproduce complete coding transformations and shared helper provenance; retain scoped path validation, reject new unadapted Photon Node imports and forward only consumed core operations."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4133,12 +4153,12 @@
       "reason": "Bridge real host APIs and native results without losing wrapper contracts, owned children, callback scope or transaction boundaries."
     },
     "packages/pi-durable-coding/src/native-operations.ts": {
-      "sha256": "15b22ca4441b96a002fc8bc0c47cdec5ead2c04b3a0ab01e815ed7281fc9a48b",
-      "reason": "Forward pinned core request and tool operations through the public patched API while preserving Native mutable identity defaults and durable scheduling."
+      "sha256": "7380c823e485933b08fc791eaab1fc8f88e5da85face6377e7d9540c1206dfec",
+      "reason": "Forward the eight consumed core request and tool operations while preserving Native mutable identity defaults and durable scheduling; omit unused helper re-exports."
     },
     "packages/pi-durable-coding/src/native.ts": {
-      "sha256": "e5f079c7d291cb8f56cb12986261045702d71318d3e44b8c3187b0ef993418c1",
-      "reason": "Provide the independent native coding host adapter and public contracts in native.ts."
+      "sha256": "dc4426386629b9bb4bc4b54091cde5d79711d92c10c72d492e57915b6418cf47",
+      "reason": "Provide the Native SDK entry and include existing highlighter declarations for source consumers without an upstream source patch."
     },
     "packages/pi-durable-coding/src/node-process.d.ts": {
       "sha256": "959e922213bca94a52f0cef283db6ca9edd2c084f4c149854fa3499f1ea3c4c4",
@@ -5109,7 +5129,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/paths.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/photon.ts": {
-      "sha256": "755f6673a323a306a32eb7642395d42eb8ec05b39721fd3ca96991152d71e3cd",
+      "sha256": "57552081867bbafec842538626424f3ef741053d0473eb3382b89375b94f9635",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/photon.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/pi-user-agent.ts": {
@@ -5389,8 +5409,8 @@
       "reason": "Verify Native identity isolation, existing core defaults, tool preparation and hook cancellation across the public core operation boundary."
     },
     "patches/@earendil-works%2Fpi-agent-core@1.5.0.patch": {
-      "sha256": "6cb5521a3d2bd9859694851f2f0e12ad22f5fe4d86dc6a0ae1d3fd1237ba8d2c",
-      "reason": "Expose ten existing pinned request and tool operations and declarations; accept Native default identity without changing upstream loop driver bodies. Reuse core Agent state and lifecycle through a durable execution backend while preserving Native defaults and Proxy receivers."
+      "sha256": "9fcad927beb627b5793427d24908211807c63414b299b6e8efd4dbe70da7526b",
+      "reason": "Expose only the eight consumed pinned request and tool operations and declarations; accept Native default identity without changing upstream loop driver bodies. Reuse core Agent state and lifecycle through a durable execution backend while preserving Native defaults and Proxy receivers. Keep the two unused helpers private."
     },
     "packages/pi-durable-coding/scripts/agent-facade-port.ts": {
       "reason": "Generate a thin durable Agent subclass and extract three separate Native defaults from pinned source.",

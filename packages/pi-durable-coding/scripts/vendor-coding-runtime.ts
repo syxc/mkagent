@@ -28,8 +28,9 @@ for (const option of options) {
 }
 if (selected.length && (!checking || inventory)) throw new Error('--file requires --check and cannot generate a partial inventory');
 for (const file of selected) {
-  if (!/^(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)*\.ts$/.test(file) || file.split('/').includes('..') || file.startsWith('/') ||
-      file.split('/').at(-1)?.toLowerCase() === 'runtime-credentials.ts') throw new Error(`Source is not permitted for a scoped check: ${file}`);
+  if (!/^(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)*\.ts$/.test(file) || file.split('/').includes('..') || file.startsWith('/')) {
+    throw new Error(`Source is not permitted for a scoped check: ${file}`);
+  }
 }
 const scoped = selected.length > 0;
 const head = Bun.spawnSync(['git', '-C', upstream, 'rev-parse', 'HEAD']);
@@ -70,6 +71,13 @@ while (queue.length) {
   const changes = new Set<string>();
   const inspect = (literal: ts.StringLiteralLike) => {
     const specifier = literal.text;
+    if (specifier === '@silvia-odwyer/photon-node') {
+      if (path !== 'utils/photon.ts' && path !== 'utils/exif-orientation.ts') {
+        throw new Error('Native Photon import needs an explicit shared adapter: ' + path);
+      }
+      dependencies.add('@silvia-odwyer/photon');
+      return;
+    }
     if (specifier === '@earendil-works/pi-agent-core') {
       // Public protocol types do not cross the execution boundary.
       if (ts.isImportDeclaration(literal.parent) && literal.parent.importClause?.isTypeOnly) {
@@ -174,7 +182,7 @@ while (queue.length) {
     body = portMcpOAuth(body);
     changes.add('cancellable-host-oauth-refresh-lock');
   }
-  if (path === 'utils/image-resize.ts' || path === 'utils/photon.ts') {
+  if (path === 'utils/image-resize.ts') {
     body = portImageAssets(path, body);
     changes.add('installed-image-worker-and-versioned-bundle-wasm');
   }
@@ -310,7 +318,7 @@ for (const [path, target] of [
 const helperSource = readFileSync(join(upstream, 'packages/agent/src/agent-loop.ts'), 'utf8');
 const helperAST = ts.createSourceFile('agent-loop.ts', helperSource, ts.ScriptTarget.Latest, true);
 const helperNames = new Set([
-  'declareToolChanges', 'withToolChanges', 'streamAssistantResponse', 'prepareToolCallArguments',
+  'declareToolChanges', 'streamAssistantResponse',
   'prepareToolCall', 'createErrorToolResult', 'emitToolExecutionEnd', 'createToolResultMessage',
   'emitToolResultMessage', 'shouldTerminateToolBatch',
 ]);

@@ -1,4 +1,6 @@
-/** Resolve executable image workers and WASM only from the installed coding runtime. */
+import ts from 'typescript';
+
+/** Resolve executable image workers only from the installed coding runtime. */
 export function portImageAssets(path: string, source: string): string {
   const edit = (before: string, after: string) => {
     if (!source.includes(before)) throw new Error('Pinned image asset boundary changed: ' + path);
@@ -16,24 +18,39 @@ export function portImageAssets(path: string, source: string): string {
 `,
     '\t// A project directory cannot supply executable image workers. Use the module URL or process locally.\n',
   );
-  if (path === 'utils/photon.ts') {
-    edit('import { fileURLToPath } from "url";', 'import { fileURLToPath } from "url";\nimport { isBunBinary } from "../config.ts";');
-    edit(
-    `\tconst execDir = path.dirname(process.execPath);
-\treturn [
-\t\tpath.join(execDir, WASM_FILENAME),
-\t\tpath.join(execDir, "photon", WASM_FILENAME),
-\t\tpath.join(process.cwd(), WASM_FILENAME),
-\t];`,
-    `\tconst moduleDir = path.dirname(fileURLToPath(import.meta.url));
-\treturn [
-\t\tpath.join(moduleDir, "coding_photon_rs_bg.wasm"),
-\t\t...(isBunBinary
-\t\t\t? [path.join(path.dirname(process.execPath), "coding_photon_rs_bg.wasm")] : []),
-\t];`,
-    );
-  }
   return source;
+}
+
+/** Keep public declarations independent of the discarded CJS loader implementation. */
+export function portPhotonRuntime(source: string): string {
+  const parsed = ts.createSourceFile('photon.ts', source, ts.ScriptTarget.Latest, true);
+  const exports = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node)
+    || (ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)));
+  const load = exports.find(ts.isFunctionDeclaration);
+  const image = exports.find(ts.isExportDeclaration);
+  const modules = new Set(['@silvia-odwyer/photon-node', '@silvia-odwyer/photon/photon_rs.js']);
+  const result = load?.type;
+  const union = result && ts.isTypeReferenceNode(result) && result.typeName.getText(parsed) === 'Promise'
+    && result.typeArguments?.length === 1 ? result.typeArguments[0] : undefined;
+  const members: readonly ts.TypeNode[] = union && ts.isUnionTypeNode(union) ? union.types : [];
+  const namespace = members.find(ts.isImportTypeNode);
+  const specifiers = image?.exportClause && ts.isNamedExports(image.exportClause) ? image.exportClause.elements : [];
+  if (exports.length !== 2 || !load || load.name?.text !== 'loadPhoton' || load.parameters.length
+    || load.typeParameters?.length || load.asteriskToken
+    || !load.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.AsyncKeyword)
+    || load.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.DefaultKeyword)
+    || members.length !== 2 || !members.some(node => ts.isLiteralTypeNode(node) && node.literal.kind === ts.SyntaxKind.NullKeyword)
+    || !namespace?.isTypeOf || namespace.qualifier || namespace.typeArguments?.length
+    || !ts.isLiteralTypeNode(namespace.argument) || !ts.isStringLiteral(namespace.argument.literal)
+    || !modules.has(namespace.argument.literal.text)
+    || !image || !image.moduleSpecifier || !ts.isStringLiteral(image.moduleSpecifier)
+    || !modules.has(image.moduleSpecifier.text) || specifiers.length !== 1
+    || !(image.isTypeOnly || specifiers[0]!.isTypeOnly)
+    || specifiers[0]!.name.text !== 'PhotonImageType' || specifiers[0]!.propertyName?.text !== 'PhotonImage') {
+    throw new Error('Native Photon public boundary changed');
+  }
+  return '/** Use the same public Photon runtime and WASM asset as durable. */\n'
+    + 'export { loadPhoton, type PhotonImageType } from "../../compat/photon.ts";\n';
 }
 
 /** Bundles carry the same non-code assets as the source package. */

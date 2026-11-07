@@ -114,9 +114,10 @@ behavior when replacing or reducing a port.
 
 `UPSTREAM-RUNTIME.json` records each source and output hash, asset and
 transformation in the full runtime port. `UPSTREAM.json` records the earlier
-compatibility helpers. Full runtime reproduction currently requires access to
-restricted credential source and must not run within this session. The permitted
-helper generator can reproduce its explicit source list. The runtime keeps
+compatibility helpers. The user has withdrawn the earlier source-read restrictions
+and authorized full generation, type checks, tests and builds in the designated
+workspace. Respect tool-enforced access rejections and record their actual scope.
+The helper generator can reproduce its explicit source list. The runtime keeps
 TypeScript declarations and binds Agent execution imports to the durable facade.
 Host consumers use `./native`, `./agent` and
 `./durable` exports.
@@ -247,10 +248,12 @@ unsupported checkpoints require explicit reconciliation before migration.
 
 ## Validation isolation and evidence
 
-All tests use the task worktree, temporary HOME/config, environment allowlist,
-random loopback ports and deterministic local providers. Do not use the live
-WebUI on port 9100, browser space 7, real credentials or the real Craft checkout.
-The isolated pinned Craft mirror is the source-audit reference.
+Run checks in the designated workspace with the normal HOME and network environment.
+Tests use temporary data/config directories, random loopback ports and deterministic
+local providers. Recovery and reference fixtures may set their child process HOME
+to their own temporary directory. Do not use the live WebUI on port 9100, closed
+browser tasks 7 or 8, real credentials or the real Craft checkout.
+Use an independent pinned Craft checkout for the source audit.
 
 The final validation report must separate unit/contract coverage, real Harness
 behavior, packaged subprocess behavior and platform checks. It must list every

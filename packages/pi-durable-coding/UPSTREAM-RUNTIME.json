@@ -4,13 +4,14 @@
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "policy": "Complete public coding source, preserved TypeScript declarations; execution binds to the local durable Agent boundary.",
   "dependencies": {
+    "@earendil-works/chord": "1.5.0",
     "@earendil-works/pi-agent-core": "1.5.0",
     "@earendil-works/pi-ai": "1.5.0",
     "@earendil-works/pi-codemode": "1.5.0",
     "@earendil-works/pi-durable": "1.5.0",
     "@earendil-works/pi-mcp": "1.5.0",
     "@earendil-works/pi-tui": "1.5.0",
-    "@silvia-odwyer/photon-node": "0.3.4",
+    "@silvia-odwyer/photon": "0.3.3",
     "ansi-regex": "6.2.2",
     "chalk": "6.0.0",
     "cross-spawn": "7.0.6",
@@ -70,7 +71,7 @@
       "source": "packages/agent/src/agent-loop.ts",
       "target": "src/native-operations.ts",
       "sha256": "9d7589b5071ea3b8b3e3c624f9cfc09a976ebf7436024a58213837de4645167d",
-      "portSha256": "15b22ca4441b96a002fc8bc0c47cdec5ead2c04b3a0ab01e815ed7281fc9a48b",
+      "portSha256": "7380c823e485933b08fc791eaab1fc8f88e5da85face6377e7d9540c1206dfec",
       "changes": [
         "public-core-operations-with-native-identity"
       ]
@@ -1850,9 +1851,9 @@
       "source": "packages/coding-agent/src/utils/photon.ts",
       "target": "src/pi/utils/photon.ts",
       "sha256": "806c3941b96e09705e26cd2d449ee8971b3498bbde495f7512b20906120d96a9",
-      "portSha256": "755f6673a323a306a32eb7642395d42eb8ec05b39721fd3ca96991152d71e3cd",
+      "portSha256": "57552081867bbafec842538626424f3ef741053d0473eb3382b89375b94f9635",
       "changes": [
-        "installed-image-worker-and-versioned-bundle-wasm"
+        "shared-durable-photon-runtime"
       ]
     },
     {

@@ -12,12 +12,12 @@
 |---|---|---|
 | 产品主体的 Coding 能力及分层装配 | 已实现待验证 | 已有 CodingHost、AgentSession 与 durable binding。当前重点是公开包复用、宿主边界及维护成本核对；不以普通 profile 是否使用 AgentSession 或原生投影单独判定完成。 |
 | pi-durable 为唯一执行调度内核 | 已实现且验证 | 普通 profile 使用 GenerationTask，coding 使用 `pi.coding.session/run/tool`；原生 Agent facade、嵌套调用和边界恢复通过实际 Harness 与固定原版行为对照。不同产品模式不要求相同任务类型。 |
-| 内置能力优先，缺失能力再由外部包补足 | 已实现待验证 | 宿主已安装 durable 的 codemode、tool-search、tools、images，coding 通过工具桥接复用。SDK 搜索、Native codemode 完整执行、读取候选和编辑差异等入口已共用 durable。头、尾截断均接原有公开 chord 接口，Native 策略留在外部，SDK 截断文件和专有导出均不再需要补丁。取消和等待 helper 使用 pi-ai。原版对照及独立冻结消费者通过，具体范围见[验证记录](coding-validation.md)。完整插件加载、产品及恢复契约尚未闭合。 |
-| 允许按需引用 pi-agent-core，禁止生产依赖完整 pi-coding-agent | 已实现且验证 | 当前 coding 包使用独立 Pi 1.5.0 包和本地固定源码闭包；公开协议类型、`streamProxy`、十个请求与工具操作及 Agent 状态和事件处理均已引用 core。115 行 Native 子类固定注入 durable，保留默认对象、队列身份及恢复。27 组原版对照在 Bun、Node 下均未调用上游 loop；新冻结消费者的 Bun 32 项和 Node 10 项通过。完整插件与产品链仍按 F4 记录边界。 |
-| 既定插件契约整体验收 | 已实现待验证 | 已有官方插件、17 个原版行为场景和实际产品证据；架构调整须按 F4 验证受影响契约，选定交互不扩大为任意插件或平台组合的结论。 |
-| 尽量减少源码移植与升级适配 | 已实现待验证 | 前轮恢复 28 份公开类型导入并减少 14 份重复 helper；本轮再统一包管理、消息、模型、设置、会话、runner、token 及资源算法，辅助源码降至 6 项、共享入口增至 28 个。追加静态对照覆盖 245 份允许源码，删除过时监听器转换后，三个运行模式与锁定上游逐字节一致；其余源码必要性继续核实。写入和输出的保留契约适配在两个运行时分别通过 18 组和 165 组对照，但未减少自有算法，生产保持原版。同步预览原型仍须完整 Native 投影规则，命令执行也已核实公开回调及 raw spill 的具体缺口，两者暂保留现实现。历史四文件生成器改为只新建补丁，拒绝覆盖任何现有补丁，并以独占创建防止竞争覆盖。薄适配保留旧契约，严格消费者回归防止类型收紧。最新测试与独立复核范围见[验证记录](coding-validation.md)。完整 SDK 必要性、产品及来源检查仍未闭合，不声明整体维护目标已经满足。 |
+| 内置能力优先，缺失能力再由外部包补足 | 已实现待验证 | 宿主已安装 durable 的 codemode、tool-search、tools、images，coding 通过工具桥接复用。SDK 搜索、Native codemode 完整执行、读取候选和编辑差异等入口已共用 durable。头、尾截断均接原有公开 chord 接口，Native 策略留在外部，SDK 截断文件和专有导出均不再需要补丁。取消和等待 helper 使用 pi-ai，Photon 共用公开包。固定原版、冻结消费者、当前插件及 Native 恢复回归通过，具体范围见[验证记录](coding-validation.md)。F1/F3 的受保护正文必要性仍未核实，不能据此声明所有保留源码已达最小。 |
+| 允许按需引用 pi-agent-core，禁止生产依赖完整 pi-coding-agent | 已实现且验证 | 当前 coding 包使用独立 Pi 1.5.0 包和本地固定源码闭包；公开协议类型、`streamProxy`、八个实际使用的请求与工具操作及 Agent 状态和事件处理均已引用 core。本轮删除两项无调用转发和对应的新增 core 导出。115 行 Native 子类固定注入 durable，保留默认对象、队列身份及恢复。历史 27 组原版对照在 Bun、Node 下均未调用上游 loop；本轮四文件干净重放、独立 frozen 消费者的 Bun/Node 执行器注入检查通过。完整插件与产品链仍按 F4 记录边界。 |
+| 既定插件契约整体验收 | 已实现且验证 | 本轮 17 个原版场景、插件契约的 28 项 UI 效果、4 项本地回复和 idle 通过；479 文件主批和 35 文件隔离批分次通过，包含原样插件、产品 owner、fork、信任及授权等受影响行为。合计 7016 项通过、11 项跳过、0 失败。此状态限定于既定及本轮受影响契约，不扩大为任意插件或平台组合。 |
+| 尽量减少源码移植与升级适配 | 已实现待验证 | 前轮恢复 28 份公开类型导入并减少 14 份重复 helper；本轮再统一包管理、消息、模型、设置、会话、runner、token 及资源算法，辅助源码降至 6 项、共享入口增至 28 个。追加静态对照覆盖 245 份允许源码，删除过时监听器转换后，三个运行模式与锁定上游逐字节一致；其余源码必要性继续核实。写入和输出的保留契约适配在两个运行时分别通过 18 组和 165 组对照，但未减少自有算法，生产保持原版。同步预览原型仍须完整 Native 投影规则，命令执行也已核实公开回调及 raw spill 的具体缺口，两者暂保留现实现。历史四文件生成器改为只新建补丁，拒绝覆盖任何现有补丁，并以独占创建防止竞争覆盖。薄适配保留旧契约，严格消费者回归防止类型收紧。本轮再删除两个无调用的 core 导出，门面收窄为八个必要操作；Photon 共用公开包并移除私有加载器。完整生成和来源检查已通过，最新产品及独立复核见[验证记录](coding-validation.md)。凭据编排正文的必要性仍受工具保护，不声明全部源码已达最小或整体维护目标已经满足。 |
 | 独立 coding 模块及公开入口 | 已实现且验证 | `@mkagent/pi-durable-coding` 不依赖 MkAgent shared、server 或 UI。`a41e6b5` 干净 checkout 的独立消费者覆盖六个运行时入口及 rpc-ui 类型入口，声明与运行检查均通过。 |
-| 固定来源、许可与可复现转换 | 已实现待验证 | Pi v1.5.0 固定提交、MIT 许可和两套来源清单保持可追溯。辅助生成与指定运行时文件分别复现，最新范围见[验证记录](coding-validation.md)。定向模式不展开完整依赖图。早期检索曾遗漏禁读排除条件，无法排除底层扫描，后续仅访问逐项 realpath 核验的明确路径；完整运行时生成检查受阻。分类见[精简架构](coding-architecture.md)。 |
+| 固定来源、许可与可复现转换 | 已实现且验证 | Pi v1.5.0 固定提交、MIT 许可和两套来源清单保持可追溯。完整运行时生成检查通过，覆盖 248 份 TypeScript 和 9 项资源，并补齐公开 chord 依赖。辅助复现覆盖 12 项来源与 28 个共享入口，独立 Craft 固定副本的 2228 文件全量审计通过。core 四文件在干净源包、当前安装与新 frozen 消费者中逐字节一致。正文必要性的单文件路径保护单独计入 F1/F3，不等于来源检查受阻。 |
 | 普通模式资源隔离与 coding 项目信任 | 已实现且验证 | `resourcePolicy` 与执行选择分离；普通 profile 和 `host-only` 不自动发现原生资源，项目执行在导入前取得宿主决定。参见 `host-resources.test.ts`、`host-project-resources.test.ts` 和真实产品信任用例。 |
 
 ## 能力规格逐行对照
@@ -30,7 +30,7 @@
 |---|---|---|
 | read/write/edit/bash | 已实现且验证 | `packages/pi-agent-server/src/coding-host.e2e.test.ts` 与 bundled worker 运行实际插件工具、宿主审批和文件操作；既有 durable 工具回归覆盖失败、超时与取消。 |
 | grep/find/ls | 已实现且验证 | `search-output.test.ts` 实际运行 rg/fd/ls，覆盖 Unicode、隐藏文件、ignore、上下文、限制、空结果与路径错误；取消另有 20 项隔离用例。实际平台为 macOS arm64，跨平台结果单独记录。 |
-| Images and long output | 已实现且验证 | 两套 WASM、PNG、BMP、图片引用、fork remap 与 HTML 导出已有证据；`coding-output.e2e.test.ts` 经 durable host 检查完整 UTF-8 spill、尾部窗口、重开后的路径与 read 窗口。最新搬迁产物另行验证。 |
+| Images and long output | 已实现且验证 | Native 与 durable 已统一使用 Photon 0.3.3 和单份 Photon WASM，真实图片 worker、原版黄金结果、三个 PNG 入口及 Node/Bun 搬迁产物通过。PNG、BMP、图片引用、fork remap 与 HTML 导出保留历史证据；`coding-output.e2e.test.ts` 经 durable host 检查完整 UTF-8 spill、尾部窗口、重开后的路径与 read 窗口。最新完整产品检查见[验证记录](coding-validation.md)。 |
 | PowerShell | 已实现且验证 | coding profile 的 deferred 工具可由原生插件显式激活，执行经 durable 和宿主审批。macOS arm64 的真实 PowerShell 7.6.9 产品用例为 1 项、51 项断言，覆盖 Ask 拒绝与批准、中文输出和文件、exit 7、超时、Explore 拒绝及取消，超时与取消的进程均退出且没有延迟写入。替身的 20 项断言另计。Windows 实机仍未验收。 |
 | Permissions and metadata | 已实现且验证 | 宿主 allow、deny、修改参数、嵌套调用与动态目录已有实际工具证据，拒绝时没有相应工具副作用。受信任 Node 插件不是沙箱。 |
 | Project instructions | 已实现且验证 | 原生 global、ancestor、cwd、override 和 linked worktree 已有资源用例；真实 coding host 验证混合来源、reload、同内容不同文件的来源保留。宿主发现只列路径，不重复注入正文。 |

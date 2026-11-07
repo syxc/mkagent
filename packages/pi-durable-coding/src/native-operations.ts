@@ -7,9 +7,7 @@ export type { AgentEventSink } from "@earendil-works/pi-agent-core";
 export const DEFAULT_AGENT_IDENTITY = { attribution: PI_ATTRIBUTION };
 export {
   declareToolChanges,
-  withToolChanges,
   shouldTerminateToolBatch,
-  prepareToolCallArguments,
   prepareToolCall,
   createErrorToolResult,
   emitToolExecutionEnd,

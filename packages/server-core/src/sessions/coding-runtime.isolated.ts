@@ -12,8 +12,10 @@ it('runs Coding, defaults, frozen settings, forks, background handoffs and resta
   const root = mkdtempSync(join(tmpdir(), 'mkagent-coding-runtime-'))
   const previous = process.env.CONFIG_DIR
   const previousHome = process.env.HOME
+  const previousAgentDir = process.env.PI_CODING_AGENT_DIR
   process.env.CONFIG_DIR = root
   process.env.HOME = join(root, 'home')
+  process.env.PI_CODING_AGENT_DIR = join(root, 'home', '.pi', 'agent')
   const wsRoot = join(root, 'workspace')
   const repo = join(root, 'repo with spaces')
   mkdirSync(wsRoot); mkdirSync(repo)
@@ -176,6 +178,7 @@ it('runs Coding, defaults, frozen settings, forks, background handoffs and resta
     await manager.flushAllSessions(); manager.cleanup(); endpoint.stop()
     if (previous === undefined) delete process.env.CONFIG_DIR; else process.env.CONFIG_DIR = previous
     if (previousHome === undefined) delete process.env.HOME; else process.env.HOME = previousHome
+    if (previousAgentDir === undefined) delete process.env.PI_CODING_AGENT_DIR; else process.env.PI_CODING_AGENT_DIR = previousAgentDir
     rmSync(root, { recursive: true, force: true })
   }
 }, 120_000)

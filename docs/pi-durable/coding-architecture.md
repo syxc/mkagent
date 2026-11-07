@@ -31,7 +31,7 @@ flowchart TD
 | 包 | 用途 |
 |---|---|
 | `@earendil-works/pi-durable` | Harness、任务、事务、存储和恢复，以及生产宿主已安装的 `/codemode`、`/tool-search`、`/tools`、`/images` 内置模块 |
-| `@earendil-works/pi-agent-core` | 公开协议类型、消息声明合并、`streamProxy`、Agent 状态与事件处理，以及十个请求与工具操作。四文件补丁提供操作导出和执行接点；Native Agent 薄适配固定使用 durable 调度 |
+| `@earendil-works/pi-agent-core` | 公开协议类型、消息声明合并、`streamProxy`、Agent 状态与事件处理，以及八个请求与工具操作。四文件补丁提供必要操作导出和执行接点；Native Agent 薄适配固定使用 durable 调度 |
 | `@earendil-works/pi-ai` | 模型目录、provider、消息、流式请求、用量、内存模型存储、枚举 schema 内容、usage 总数及公开取消和等待 helper；旧接口保留所需的类型、signal 与取消错误适配 |
 | `@earendil-works/pi-mcp` | MCP 客户端与协议支持 |
 | `@earendil-works/pi-codemode` | QuickJS 沙箱，作为 durable codemode 的执行后端 |
@@ -49,9 +49,11 @@ flowchart TD
 
 ZIP 写入已转发到[归档适配](../../packages/pi-durable-coding/src/compat/archive.ts)。`fflate@0.8.2` 负责 ZIP 文件记录和目录，原有 DEFLATE 与 CRC 继续使用 Node 标准库。公开 `ZipInputFile` 接口保留输入顺序和重复文件名，也避免为每个条目保留压缩窗口。工具安装器等待 `JSZip@3.10.1` 完成 CRC 校验和普通文件解包，保留二进制查找、安装及清理流程。JSZip 规范化后保留同名的最后条目；适配要求独立空目录，在写入前检查保留条目的路径和文件类型。被覆盖的原始条目及实际 Windows 行为边界见[验证记录](coding-validation.md)。
 
-Native EXIF 方向处理已转发到[图像方向适配](../../packages/pi-durable-coding/src/compat/image-orientation.ts)。durable 补丁开放既有的元数据读取和像素转置 helper，Native 兼容参数保留 WebP 块边界、短块前缀判断、有符号块长度及小端 TIFF 偏移，默认解析行为保持原样。适配继续使用 Photon Node 0.3.4，保留翻转时的对象身份和转置时由调用方释放旧对象的契约。
+Native EXIF 方向处理已转发到[图像方向适配](../../packages/pi-durable-coding/src/compat/image-orientation.ts)。durable 补丁开放既有的元数据读取和像素转置 helper，Native 兼容参数保留 WebP 块边界、短块前缀判断、有符号块长度及小端 TIFF 偏移，默认解析行为保持原样。适配使用与 durable 相同的公开 Photon 0.3.3，保留翻转时的对象身份和转置时由调用方释放旧对象的契约。
 
-Native 缩放核心也转发到[缩放适配](../../packages/pi-durable-coding/src/compat/image-resize.ts)。编码与逐步缩小由 durable 共用循环负责，回调继续调用 Native Photon；兼容参数保留原质量阶梯、PNG/JPEG 选择和严格大小比较。适配保留分步尺寸取整、原字节早退、结果元数据及 worker 协议，既有 Photon 加载和发布资源位置继续使用 Native 路径。原包默认工厂与 Native 各有独立旧结果基线。同步 PNG 核心继续直接调用公开 Photon，durable 薄包装的 14 组对照没有发现可减少的算法，终端注册和完整发布布局仍未动态验证，具体范围见[验证记录](coding-validation.md)。
+Native 缩放核心也转发到[缩放适配](../../packages/pi-durable-coding/src/compat/image-resize.ts)。编码与逐步缩小由 durable 共用循环负责，回调调用共享 Photon；兼容参数保留原质量阶梯、PNG/JPEG 选择和严格大小比较。适配保留分步尺寸取整、原字节早退、结果元数据及 worker 协议，原包默认工厂与 Native 各有独立旧结果基线。同步 PNG 核心继续直接调用公开 Photon，durable 薄包装的 14 组对照没有发现可减少的算法。
+
+Native Photon 入口现只转发到[共享加载适配](../../packages/pi-durable-coding/src/compat/photon.ts)，通过公开 `initSync` 初始化同一包实例，不再替换全局 `fs.readFileSync`。生产清单统一为 `@silvia-odwyer/photon@0.3.3`，旧 Node 包仅用于开发测试中的原版对照。构建脚本只选择 `photon_rs_bg.wasm`，并清除旧构建留下的专用 WASM。生成器检查两个公开声明，不再绑定已删除加载器的私有正文。Node 搬迁包和 Bun 独立可执行文件已通过单资源及缺失资源检查，完整产品发布与终端注册仍未重验，具体范围见[验证记录](coding-validation.md)。
 
 规范依赖补丁现在包含 28 个文件，首行记录后续正文按 LF 换行计算的完整 SHA-256。更新补丁时须同步摘要；回归用例检查两者一致，以免复用旧 Bun 缓存产物。当前 28 个文件已在独立缓存的冻结安装中逐一核对，较早版本的既有缓存验证范围见[验证记录](coding-validation.md)。
 
@@ -99,7 +101,7 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 |---|---|
 | `src/pi/**` | `packages/coding-agent/src/**` 的公开导入闭包，共 244 份 TypeScript 和 9 项主题、交互及 HTML 导出资源。保留 `AgentSession`、SDK、工具、扩展、资源和会话等实现；部分文件经过适配。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 115 行 core 子类，保留 durable 队列身份、恢复和独立默认值。三个默认声明仍从锁定上游提取；stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
-| `src/native-operations.ts` | 24 行门面，调用 core 包公开的 10 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
+| `src/native-operations.ts` | 22 行门面，调用 core 包公开的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
 | `src/upstream/**` | 6 项选取源码：旧扩展 loader、Git 路径、上下文文件、资源去重、boundary drafts 和同步 durable context；另有 28 个共享入口。资源纯函数也由原生模块复用，不保留第二份算法。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
@@ -110,7 +112,7 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 三个运行模式已恢复上游的 `process.off` 写法，文件与锁定上游逐字节一致，来源记录不再包含转换。已有 `node-process.d.ts` 负责环境类型补充，生成器不再改写运行时调用，也删除了一条无效的相同字符串替换。窄范围类型、真实监听器清理及定向生成范围见[验证记录](coding-validation.md)。
 
-请求及工具操作不再复制函数正文。core 补丁仅修改发布的 JavaScript 和类型声明，公开十个已有函数，并为流式请求补充可选默认身份参数。Native 保留原来的身份对象，其他九个函数直接转发。独立消费者须同时应用根目录登记的 durable 与 core 补丁。原版 58 场景、真实 durable task 入口和新冻结消费者通过；类型证据仅覆盖协议投影，完整 SDK 边界继续受限。
+请求及工具操作不再复制函数正文。core 补丁仅修改发布的 JavaScript 和类型声明，公开八个实际使用的函数，并为流式请求补充可选默认身份参数。Native 保留原来的身份对象，其他七个函数直接转发。本轮移除 `withToolChanges` 和 `prepareToolCallArguments` 的无调用转发及新增导出，这两个 helper 继续由 core 内部调用，不扩大补丁的公开 API。独立消费者须同时应用根目录登记的 durable 与 core 补丁。原版 58 场景保留为历史对照；本轮实际 task 回归、四文件干净补丁重放和独立 frozen 消费者的 Bun、Node 运行均通过，完整 SDK 声明及全仓类型的最终结果见验证记录。
 
 Agent 的状态初始化、提示输入、事件归约、取消和等待也改由 core 类处理，Native 仅保留 durable 接点。core 的新增运行时正文净增加 4 行，不将原有类复制进补丁。执行后端以普通私有字段保存，保留透明 `Proxy` 的接收者行为；最初的 `#private` 原型在新增回归中失败，已修正。最终原版对照在 Bun、Node 下各通过 27 组，未调用上游 loop；冻结消费者及完整验证边界见[验证记录](coding-validation.md)。
 
@@ -138,12 +140,12 @@ Pi v1.5.0 尚未将 `AgentSession`、工具工厂、扩展与资源加载等 cod
 
 ## 保留源码的依据与升级核对
 
-本轮逐类核对后的边界如下。公开导入闭包是当前 SDK 导出面的依赖集合，不作为“所有文件都绝对必要”的证明；受限源码的具体内容仍未核验。
+本轮逐类核对后的边界如下。公开导入闭包是当前 SDK 导出面的依赖集合，不作为“所有文件都绝对必要”的证明。用户已撤销项目及锁定上游的源码禁读；仅 `runtime-credentials.ts` 的单独正文读取仍被工具路径策略拒绝，其内部必要性尚未核验。
 
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
-| 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。允许范围内已核对 AgentSession 与虚拟模块表的 durable 运行时转接；SDK 的具体接线保持不透明边界。 | 公开类型、消息声明合并、执行入口及 SDK 受限接线 |
-| Agent 外观及请求操作 | core 四文件补丁公开十个操作，并允许 Agent 注入执行后端及必要的受保护接点。115 行 Native 子类复用 core 的状态和生命周期，固定注入 durable；24 行操作门面保留 Native 默认身份。队列只暴露所需操作，活动状态只暴露只读标记，默认对象及 stream 注册仍独立。 | core 接点、默认对象、透明 Proxy、事件等待、队列身份和任务恢复版本 |
+| 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |
+| Agent 外观及请求操作 | core 四文件补丁公开八个实际使用的操作，并允许 Agent 注入执行后端及必要的受保护接点。115 行 Native 子类复用 core 的状态和生命周期，固定注入 durable；22 行操作门面保留 Native 默认身份。队列只暴露所需操作，活动状态只暴露只读标记，默认对象及 stream 注册仍独立。 | 八个操作导出、core 接点、默认对象、透明 Proxy、事件等待、队列身份和任务恢复版本 |
 | Native codemode | 内置执行器、模型准备和 formatter 已复用。公开选项承接 store、租约、发现覆盖、调用观察和结果投影；外层保留 Native 字符串 ID、实时展示、原始分支写入及 worker 策略。隐藏转发器使动态 Native 工具走实际子任务和既有审批管道，不另建执行循环。 | 公开接点、工具及模型目录变化、Native 行与用量、取消、journal 回执及沙箱释放 |
 | Coding 会话、扩展及展示 | 独立公开包未提供 AgentSession、coding loader 和 InteractiveMode；完整 coding 包只有根入口及 rpc-entry。当前 `./native` 保留完整 SDK 导出面，不能直接删掉其传递依赖而维持该入口。 | SDK 导出、插件事件、终端宿主及资源闭包；不把静态存在当行为验收 |
 | 共享 helper 与宿主策略 | 28 个旧入口共用实现，18 个直接转发，10 个保留外部策略。skills、prompt templates 和包管理固定旧入口的 `.pi` 目录；system prompt 保留宿主文档 URL。JavaScript 兼容边界保留原有宽输入与返回值。 | helper 导出、目录保护、结构类型、默认及自定义提示词 |
@@ -154,10 +156,10 @@ Pi v1.5.0 尚未将 `AgentSession`、工具工厂、扩展与资源加载等 cod
 | 旧 package manager | 共用原生实现，旧入口只适配目录、离线回调和 skipped 结果。共享构造参数默认保持原生目录；设置参数只要求实际使用的六个方法，兼容现有结构对象。 | 两种 resolve/update 返回、离线回调、项目目录及错误语义 |
 | 旧模型、设置、会话及 token | registry 继承共享外观，设置合并和 token 估算共用原生函数。会话存储、迁移、索引、分支及工厂共用原生类；可选投影策略保留 durable head、贡献消息与已折叠编辑，默认仍为原生规则。 | 静态及脱离类调用、实例类型、JSONL 迁移、消息身份、旧 usage 失效、声明输出 |
 | 资源与上下文选取源码 | Git、上下文文件与资源去重未由独立公开包提供，选取成轻量共享实现，原生和旧入口均调用它们。boundary drafts 使用 AgentSession 私有方法。公开 `ConversationTranscript` 同步薄适配在两个运行时各通过 18 组场景，但仍须保留未提交消息、身份映射及完整投影规则，没有减少十个上下文选取声明，因此保留现实现。异步 context 缓存方案未实施验证。 | 三份纯函数的双入口调用、信任默认值、private 方法、同步预览及消息身份 |
-| MCP OAuth、模型与打包适配 | MCP 协议和授权流程已用公开 pi-mcp；宿主持久化、跨进程刷新锁、取消、凭据接口及打包路径不由该公开协议包提供。受限凭据源码不在本次允许核实的范围，不对其内部必要性作完成声明。 | 主机生命周期、锁、取消、安装资源；受限项仍待核实 |
+| MCP OAuth、模型与打包适配 | MCP 协议和授权流程已用公开 pi-mcp；宿主持久化、跨进程刷新锁、取消、凭据接口及打包路径不由该公开协议包提供。凭据编排正文的单独读取被工具保护拒绝，不对其内部必要性作完成声明。 | 主机生命周期、锁、取消、安装资源；正文人工核查仍待完成 |
 | durable 补丁 | 根 SDK 的 NativeCodingRuntime 和历史 checkpoint 仍依赖旧阶段，不能仅因新 CodingHost 已换用本地任务而删除。 | 旧 SDK 兼容和存量 checkpoint 迁移 |
 
-静态源码图外另有五项，不能作为删除清单。两个 worker 由配置路径和图片处理的 URL 加载，highlight 声明补齐 `.js` 子路径及语言通配符类型。`client-identity.ts` 保留版本及 telemetry 决定，`remote-catalog-provider.ts` 保留目录版本、ETag、离线恢复与个性化发布策略；本轮没有调用其中的网络或身份逻辑。后两项在允许图中没有调用边，是否可移除仍须核实不透明 SDK 与模型入口。公开凭据协议也不能直接替代 Native 同步及异步原始 JSON 锁回调；现实现已使用 `proper-lockfile` 和标准文件 API，其调用方与受限编排仍未整体核实。
+此前静态源码图外的五项已补充入口核对。两个 worker 由配置路径和图片处理的 URL 加载，highlight 声明补齐 `.js` 子路径及语言通配符类型，并由 Native 门面显式引用以供共享包消费者加载。SDK 调用 `getClientIdentity(settingsManager)`；ModelRuntime 调用 `withPersonalizedCatalog` 和 `withRemoteCatalog`。`client-identity.ts` 和 `remote-catalog-provider.ts` 有实际调用，不能按此前不完整的静态图当作死代码删除。本轮没有访问真实身份或远程模型目录。公开凭据协议也不能直接替代 Native 同步及异步原始 JSON 锁回调；现实现已使用 `proper-lockfile` 和标准文件 API，凭据编排正文的必要性仍待工具保护允许后核查。
 
 内存原始后端另做了公开 `InMemoryCredentialStore` 排队适配。保留同步原始值、结果 Promise 等待及 Native 取消包装后，Bun 和 Node 的已测值与队列观察一致，但去类型和注释后的运行时正文仍是 26 行，已计新增 import。适配还需生成接点，没有减少维护正文，因此保留原版；这项判断不覆盖文件锁、只读校验和受限编排。
 
@@ -181,10 +183,17 @@ Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只�
 bun packages/pi-durable-coding/scripts/vendor-upstream.ts /absolute/pi-checkout --check
 ```
 
-运行时提供 `--check --file=core/session-manager.ts` 等定向模式，只读显式文件，不展开导入依赖、不处理完整资源或 Agent 闭包，也不写清单。本轮逐项核验 realpath 和摘要后，复现了 241 份明确列出的 Coding 源码，全部产物和来源记录一致。路径校验现接受 `execute.lazy.ts` 等合法分段文件名；9 个空路径、越界、错误分段及受限名称输入仍被拒绝，输出为 `complete: false`。
+运行时提供 `--check --file=core/session-manager.ts` 等定向模式，只读显式文件，不展开导入依赖、不处理完整资源或 Agent 闭包，也不写清单。此前分段复现了 241 份 Coding 源码，产物和来源记录一致。路径校验接受 `execute.lazy.ts` 等合法分段文件名；撤销旧源码禁令后移除 3 个文件名禁令用例，保留 6 个参数、空路径及越界拒绝用例。定向输出仍为 `complete: false`。
 
-其余四个 Agent 输出通过实际生成器片段核对，读取端口只允许四个指定上游输入。9 项静态资源分别核对复制字节、来源摘要和记录，锁定许可也一致。累计覆盖 245 份允许 TypeScript 和 9 项资源，未执行完整生成器；三个不透明入口及完整依赖、core 导入汇总继续排除。
+早期另外四个 Agent 输出和 9 项静态资源分别核对，累计覆盖 245 份 TypeScript。该分段结果是历史证据。用户撤销源码禁读后，完整运行时生成检查已经执行并通过，覆盖 248 份 TypeScript、9 项资源、许可、完整依赖及 core 导入汇总。首次检查发现清单漏记公开 chord 依赖，补齐后通过。
 
-完整运行时的 `vendor-coding-runtime.ts --check` 和全量 Craft 审计会读取受限凭据源码，当前不得执行或重试，也不得通过其他脚本间接读取本地或上游的 `runtime-credentials.ts`。F5 保留阻塞，局部核对不等于完整复现。
+完整运行时复现命令如下；Craft 审计使用独立固定版本 checkout，具体结果见验证记录。
+
+```sh
+bun packages/pi-durable-coding/scripts/vendor-coding-runtime.ts /absolute/pi-checkout --check
+CRAFT_AGENT_SOURCE=/absolute/craft-checkout bun run audit:craft-reuse
+```
+
+工具曾拒绝单独查看 `runtime-credentials.ts` 正文，理由为 `Path access control: protected credentials/secrets file`。不得换工具或副本绕过这项拒绝。该项人工核查未完成，与实际通过的生成、类型、构建及审计分别记录。
 
 修改获准范围的移植逻辑时，同步生成规则及来源记录，不绕过访问边界。升级时核对独立包版本、必要移植清单、MIT 许可和 durable 补丁，并按影响验证固定原版 Pi 对照、实际 worker、恢复及产品流程。

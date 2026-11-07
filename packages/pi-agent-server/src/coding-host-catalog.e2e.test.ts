@@ -52,10 +52,21 @@ test('host catalog updates retain independent extensions and native tool ownersh
     pi.registerTool({ name: 'native_tool', label: 'Native', description: 'native tool',
       parameters: { type: 'object', properties: {} },
       execute: async () => ({ content: [{ type: 'text', text: 'native' }] }) });
+    pi.registerCommand('catalog', { handler: async () => {
+      pi.appendEntry('catalog', pi.getAllTools().map(tool => tool.name).sort());
+    } });
+    pi.registerCommand('refresh', { handler: async (_args, ctx) => { await ctx.reload(); } });
   `);
   state.options.toolsExtension = defineExtension({ name: 'host', tools: [tool('original')] });
   state.options.extensions = [defineExtension({ name: 'independent', tools: [tool('independent')] })];
   const kernel = await state.open();
+  const expectPluginCatalog = async (names: string[]) => {
+    await kernel.submitPrompt('/catalog');
+    const entry = coding(kernel).session.sessionManager.getEntries()
+      .findLast(entry => entry.type === 'custom' && entry.customType === 'catalog');
+    expect(entry?.type === 'custom' ? entry.data : undefined).toEqual(names);
+  };
+  await expectPluginCatalog(['independent', 'native_tool', 'original']);
   await kernel.submitPrompt('before');
   await kernel.waitForIdle();
   expect(getCurrentTools(state.calls[0].messages).map(tool => tool.name).sort())
@@ -67,6 +78,11 @@ test('host catalog updates retain independent extensions and native tool ownersh
     .toEqual(['independent', 'native_tool', 'updated']);
   expect(coding(kernel).session.getAllTools().map(tool => tool.name).sort())
     .toEqual(['independent', 'native_tool', 'updated']);
+  await expectPluginCatalog(['independent', 'native_tool', 'updated']);
+  await kernel.submitPrompt('/refresh');
+  expect(coding(kernel).session.getAllTools().map(tool => tool.name).sort())
+    .toEqual(['independent', 'native_tool', 'updated']);
+  await expectPluginCatalog(['independent', 'native_tool', 'updated']);
   expect(state.errors.filter(error => error.includes('[coding:'))).toEqual([]);
 });
 

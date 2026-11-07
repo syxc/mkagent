@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -9,7 +9,8 @@ afterEach(() => { for (const directory of directories.splice(0)) rmSync(director
 
 for (const path of ['../src/upstream/core/extensions/loader.js', '../src/pi/core/extensions/loader.ts']) {
   test(`plugin import metadata resolves per file through ${path}`, () => {
-    const directory = mkdtempSync(join(tmpdir(), 'plugin-metadata-'));
+    // Bun canonicalizes native dependency imports, including macOS's /var alias.
+    const directory = realpathSync(mkdtempSync(join(tmpdir(), 'plugin-metadata-')));
     directories.push(directory);
     const nested = join(directory, 'nested 中文');
     mkdirSync(nested);

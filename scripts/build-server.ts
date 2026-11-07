@@ -116,7 +116,6 @@ for (const path of [
   join(output, 'resources', 'pi-agent-server', 'codemode-worker.js'),
   join(output, 'resources', 'pi-agent-server', 'quickjs.wasm'),
   join(output, 'resources', 'pi-agent-server', 'photon_rs_bg.wasm'),
-  join(output, 'resources', 'pi-agent-server', 'coding_photon_rs_bg.wasm'),
   join(output, 'resources', 'pi-agent-server', 'LICENSE.pi'),
   join(output, 'resources', 'pi-agent-server', 'coding-assets', 'theme', 'dark.json'),
   join(output, 'resources', 'pi-agent-server', 'coding-assets', 'export-html', 'template.html'),

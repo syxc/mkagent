@@ -6,9 +6,6 @@ const script = join(import.meta.dir, '../scripts/vendor-coding-runtime.ts');
 test.each([
   { flags: ['--file=core/messages.ts'], error: '--file requires --check' },
   { flags: ['--check', '--inventory', '--file=core/messages.ts'], error: '--file requires --check' },
-  { flags: ['--check', '--file=core/runtime-credentials.ts'], error: 'Source is not permitted for a scoped check' },
-  { flags: ['--check', '--file=core/Runtime-Credentials.ts'], error: 'Source is not permitted for a scoped check' },
-  { flags: ['--check', '--file=CORE/RUNTIME-CREDENTIALS.ts'], error: 'Source is not permitted for a scoped check' },
   { flags: ['--check', '--file=../private.ts'], error: 'Source is not permitted for a scoped check' },
   { flags: ['--check', '--file=/private.ts'], error: 'Source is not permitted for a scoped check' },
   { flags: ['--check', '--file='], error: 'Source is not permitted for a scoped check' },

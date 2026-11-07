@@ -1,4 +1,4 @@
-# Content SHA-256: d0c1bfb23f50ad2a4a729f9a406eebd1cc32a821e3808fbf8f5bf5fa355e4e01
+# Content SHA-256: f324a325093d6c4d236f2417147de2721699b885a99818d2ff19d2d9b3de809e
 diff --git a/dist/agent-loop.js b/dist/agent-loop.js
 --- a/dist/agent-loop.js
 +++ b/dist/agent-loop.js
@@ -11,15 +11,6 @@ diff --git a/dist/agent-loop.js b/dist/agent-loop.js
      let systemIndex = -1;
      for (let i = pendingMessages.length - 1; i >= 0; i--) {
          if (pendingMessages[i].role === "system") {
-@@ -250,7 +250,7 @@
- }
- const NO_CHANGES = { toolsAdded: [], toolsRemoved: [] };
- /** Copy a system message with its tool fields replaced by `changes`; empty lists omit the field. */
--function withToolChanges(message, { toolsAdded, toolsRemoved }) {
-+export function withToolChanges(message, { toolsAdded, toolsRemoved }) {
-     const { toolsAdded: _added, toolsRemoved: _removed, ...rest } = message;
-     return {
-         ...rest,
 @@ -262,7 +262,7 @@
   * Stream an assistant response from the LLM.
   * This is where AgentMessage[] gets transformed to Message[] for the LLM.
@@ -46,8 +37,7 @@ diff --git a/dist/agent-loop.js b/dist/agent-loop.js
 +export function shouldTerminateToolBatch(finalizedCalls) {
      return finalizedCalls.length > 0 && finalizedCalls.every((finalized) => finalized.result.terminate === true);
  }
--function prepareToolCallArguments(tool, toolCall) {
-+export function prepareToolCallArguments(tool, toolCall) {
+ function prepareToolCallArguments(tool, toolCall) {
      if (!tool.prepareArguments) {
          return toolCall;
      }
@@ -102,21 +92,19 @@ diff --git a/dist/agent-loop.d.ts b/dist/agent-loop.d.ts
   * Transforms to Message[] only at the LLM call boundary.
   */
 -import { type AssistantMessage, type ClientIdentity, EventStream } from "@earendil-works/pi-ai";
-+import { type AssistantMessage, type ClientIdentity, EventStream, type SystemMessage, type ToolResultMessage, type ToolStateChanges } from "@earendil-works/pi-ai";
++import { type AssistantMessage, type ClientIdentity, EventStream, type ToolResultMessage } from "@earendil-works/pi-ai";
  import type { AgentContext, AgentEvent, AgentLoopConfig, AgentMessage, AgentTool, AgentToolCall, AgentToolCallOutcome, AgentToolResult, StreamFn } from "./types.ts";
  export type AgentEventSink = (event: AgentEvent) => Promise<void> | void;
  /**
-@@ -50,5 +50,17 @@
+@@ -50,5 +50,15 @@
   * errors come back as `isError: true`.
   */
  export declare function runToolCall(toolCall: AgentToolCall, options: RunToolCallOptions): Promise<AgentToolCallOutcome>;
 +type PreparedToolCall = { kind: "prepared"; toolCall: AgentToolCall; tool: AgentTool<any>; args: unknown };
 +type ImmediateToolCallOutcome = { kind: "immediate"; result: AgentToolResult<any>; isError: boolean };
 +export declare function declareToolChanges(context: AgentContext, pendingMessages: AgentMessage[]): AgentMessage[];
-+export declare function withToolChanges(message: SystemMessage, changes: ToolStateChanges): SystemMessage;
 +export declare function streamAssistantResponse(context: AgentContext, config: AgentLoopConfig, signal: AbortSignal | undefined, emit: AgentEventSink, streamFunction: StreamFn, defaultIdentity?: ClientIdentity): Promise<AssistantMessage>;
 +export declare function shouldTerminateToolBatch(finalizedCalls: AgentToolCallOutcome[]): boolean;
-+export declare function prepareToolCallArguments(tool: AgentTool<any>, toolCall: AgentToolCall): AgentToolCall;
 +export declare function prepareToolCall(currentContext: AgentContext, assistantMessage: AssistantMessage, toolCall: AgentToolCall, config: ToolCallHooks, signal: AbortSignal | undefined, tools?: readonly AgentTool<any>[]): Promise<PreparedToolCall | ImmediateToolCallOutcome>;
 +export declare function createErrorToolResult(message: string): AgentToolResult<any>;
 +export declare function emitToolExecutionEnd(finalized: AgentToolCallOutcome, emit: AgentEventSink): Promise<void>;
