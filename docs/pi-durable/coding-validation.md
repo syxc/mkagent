@@ -83,6 +83,15 @@ within valid path segments. Nine empty, escaping, malformed or restricted
 inputs still fail before reading Coding input files. This check reports `complete: false`;
 opaque files, resources and the separate Agent boundary outputs are excluded.
 
+The four separate Agent boundary outputs also reproduce through the actual
+generator tail, with input reads restricted to four preflighted paths.
+Those bytes and source records match. All nine static assets match their
+pinned copies, both digests and unchanged-source records; the MIT license
+also matches. The combined checks cover 245 permitted TypeScript outputs
+and nine assets without changing the manifest. They exclude three opaque
+files and do not rebuild the complete dependency or core-import aggregates.
+This remains partial evidence, not a full generator or Craft audit result.
+
 ## Shared core Agent facade
 
 The 662-line Native Agent implementation is now a 115-line subclass of the

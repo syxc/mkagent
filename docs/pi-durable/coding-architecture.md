@@ -169,7 +169,9 @@ Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只�
 bun packages/pi-durable-coding/scripts/vendor-upstream.ts /absolute/pi-checkout --check
 ```
 
-运行时提供 `--check --file=core/session-manager.ts` 等定向模式，只读显式文件，不展开导入依赖、不处理完整资源或 Agent 闭包，也不写清单。本轮逐项核验 realpath 和摘要后，复现了 241 份明确列出的 Coding 源码，全部产物和来源记录一致。路径校验现接受 `execute.lazy.ts` 等合法分段文件名；9 个空路径、越界、错误分段及受限名称输入仍被拒绝。输出为 `complete: false`，Agent 薄适配另按单文件 helper 复现，三个不透明入口和资源继续排除。
+运行时提供 `--check --file=core/session-manager.ts` 等定向模式，只读显式文件，不展开导入依赖、不处理完整资源或 Agent 闭包，也不写清单。本轮逐项核验 realpath 和摘要后，复现了 241 份明确列出的 Coding 源码，全部产物和来源记录一致。路径校验现接受 `execute.lazy.ts` 等合法分段文件名；9 个空路径、越界、错误分段及受限名称输入仍被拒绝，输出为 `complete: false`。
+
+其余四个 Agent 输出通过实际生成器片段核对，读取端口只允许四个指定上游输入。9 项静态资源分别核对复制字节、来源摘要和记录，锁定许可也一致。累计覆盖 245 份允许 TypeScript 和 9 项资源，未执行完整生成器；三个不透明入口及完整依赖、core 导入汇总继续排除。
 
 完整运行时的 `vendor-coding-runtime.ts --check` 和全量 Craft 审计会读取受限凭据源码，当前不得执行或重试，也不得通过其他脚本间接读取本地或上游的 `runtime-credentials.ts`。F5 保留阻塞，局部核对不等于完整复现。
 
