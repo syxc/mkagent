@@ -4017,7 +4017,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "63d6279af0d85df65ca4aec26366c60f626708e7f4c8d7fa1fa7ef1a3583aae3",
+      "sha256": "ff18666dbcbe3955ae67145ddde11db397b98ac780d194724644186d2bf1127a",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {

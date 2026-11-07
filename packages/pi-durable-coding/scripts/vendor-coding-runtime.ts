@@ -28,7 +28,7 @@ for (const option of options) {
 }
 if (selected.length && (!checking || inventory)) throw new Error('--file requires --check and cannot generate a partial inventory');
 for (const file of selected) {
-  if (!/^[\w/-]+(?:\.d)?\.ts$/.test(file) || file.split('/').includes('..') || file.startsWith('/') ||
+  if (!/^(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)*\.ts$/.test(file) || file.split('/').includes('..') || file.startsWith('/') ||
       file.split('/').at(-1)?.toLowerCase() === 'runtime-credentials.ts') throw new Error(`Source is not permitted for a scoped check: ${file}`);
 }
 const scoped = selected.length > 0;

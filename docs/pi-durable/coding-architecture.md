@@ -149,6 +149,8 @@ Pi v1.5.0 尚未将 `AgentSession`、工具工厂、扩展与资源加载等 cod
 
 静态源码图外另有五项，不能作为删除清单。两个 worker 由配置路径和图片处理的 URL 加载，highlight 声明补齐 `.js` 子路径及语言通配符类型。`client-identity.ts` 保留版本及 telemetry 决定，`remote-catalog-provider.ts` 保留目录版本、ETag、离线恢复与个性化发布策略；本轮没有调用其中的网络或身份逻辑。后两项在允许图中没有调用边，是否可移除仍须核实不透明 SDK 与模型入口。公开凭据协议也不能直接替代 Native 同步及异步原始 JSON 锁回调；现实现已使用 `proper-lockfile` 和标准文件 API，其调用方与受限编排仍未整体核实。
 
+内存原始后端另做了公开 `InMemoryCredentialStore` 排队适配。保留同步原始值、结果 Promise 等待及 Native 取消包装后，Bun 和 Node 的已测值与队列观察一致，但去类型和注释后的运行时正文仍是 26 行，已计新增 import。适配还需生成接点，没有减少维护正文，因此保留原版；这项判断不覆盖文件锁、只读校验和受限编排。
+
 原生 skills 和 prompt templates 原来只使用安装配置的项目目录常量，公开参数无法保留旧入口固定 `.pi` 的契约。共享函数各增加一个可选的项目目录参数，默认仍为原生目录；两个外部包装传入旧目录。两份源码共五处行替换，生成规则检查函数签名及三处目录表达式。独立复核发现的 `.tau` 回归已在新进程复现并修复，用例同时检查两套目录和显式资源的项目归属。
 
 Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只提供 `getProvider`。该函数只读取这一个方法，完整类的私有状态无法由结构包装直接满足。保留一处类型参数接点，将约束收窄为 `Pick<ModelConfig, 'getProvider'>`，JavaScript 与原版相同。实际 `native-models.ts` 调用方先复现两处类型错误，修正后类型检查及声明构建通过；升级时核对该方法的输入输出和新增读取。
@@ -167,7 +169,7 @@ Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只�
 bun packages/pi-durable-coding/scripts/vendor-upstream.ts /absolute/pi-checkout --check
 ```
 
-运行时提供 `--check --file=core/session-manager.ts` 等定向模式，只读显式文件，不展开导入依赖、不处理完整资源或 Agent 闭包，也不写清单。空路径、越界路径、受限文件的大小写形式及部分 inventory 均会被拒绝。本轮仅复现七份明确获准文件，输出为 `complete: false`。
+运行时提供 `--check --file=core/session-manager.ts` 等定向模式，只读显式文件，不展开导入依赖、不处理完整资源或 Agent 闭包，也不写清单。本轮逐项核验 realpath 和摘要后，复现了 241 份明确列出的 Coding 源码，全部产物和来源记录一致。路径校验现接受 `execute.lazy.ts` 等合法分段文件名；9 个空路径、越界、错误分段及受限名称输入仍被拒绝。输出为 `complete: false`，Agent 薄适配另按单文件 helper 复现，三个不透明入口和资源继续排除。
 
 完整运行时的 `vendor-coding-runtime.ts --check` 和全量 Craft 审计会读取受限凭据源码，当前不得执行或重试，也不得通过其他脚本间接读取本地或上游的 `runtime-credentials.ts`。F5 保留阻塞，局部核对不等于完整复现。
 
