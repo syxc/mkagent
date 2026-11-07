@@ -181,6 +181,55 @@ array identity and failure policies around the existing image pipeline.
 Their remaining source necessity has not been established by these probes.
 Full SDK, product and source checks retain their existing restrictions.
 
+## Native write and streaming output candidates after 0d1a83d
+
+The write probe extracts the original `execute` method and path helpers by AST.
+It uses the actual Native mutation queue and public durable write tool, with
+controlled file-operation callbacks. It does not import the complete Native
+tool definition or renderer. Bun and Node each compare 18 scenarios: cancellation,
+operation-error identity, pending operations, path forms, context cwd and two
+queued calls. The ordinary environment adapter matches 17. With cancellation
+scheduled just after queue acquisition, Native starts directory creation and
+writing, then reports cancellation; the adapter reports cancellation without
+starting either operation.
+
+Starting Native work before the durable adapter preserves all 18 results and
+operation traces. That adapter retains the complete Native write algorithm and
+adds environment fields and another queue to obtain the shared result format.
+The production implementation remains unchanged because this form adds
+maintenance work.
+
+The output probe calls the actual Native `OutputAccumulator`. Its 165 streaming
+cases combine 11 inputs, three chunk sizes and five limits. Each case observes
+every append, repeated finish, final snapshot, last-line byte count and bounded
+full-output read. Spill files must contain the concatenated original byte
+chunks and have mode 0600. Inputs include escape sequences, NUL, split UTF-8,
+invalid bytes, BOM, long lines and empty output. Temporary files are isolated.
+No shell process or real clipboard is used.
+
+Under both runtimes, replacing the rolling tail with public chord `OutputBuffer`
+matches 129 complete case sequences. An isolated prototype that skips snapshot
+sanitization matches 142. Its 23 differences include 12 zero-limit cases and 11
+positive-limit cases. With a 12-byte, three-line window, a long partial line
+followed by a newline gives an empty Native snapshot at one append; the raw
+window still returns twelve characters from that line. Truncation reasons
+also differ in other cases.
+
+A third adapter preserves Native trim thresholds and partial-line state around
+the raw buffer. It matches all 165 sequences in each runtime, including the
+original spill bytes. With the same TypeScript transpiler and comments removed,
+the runtime body grows from 200 to 203 lines, before adding a public raw-snapshot
+option, declarations or patch guards. The production collector remains unchanged.
+The first Bun launch rejected a long data URL before the checks ran. The final
+harness evaluates the same inspected code in memory and passes in both runtimes.
+
+The inspected clipboard modules already use public Pi TUI `getNativeClipboard`;
+image MIME detection already shares durable. The remaining code selects platform
+fallbacks, distinguishes empty and unavailable image backends, and keeps Native
+conversion and OSC 52 policies. This is source evidence only. It does not verify
+real clipboard behavior or establish the necessity of the full SDK closure.
+F1/F3 and the restricted SDK, product and source checks remain open.
+
 ## Remaining truncation candidates
 
 A prototype uses public chord `boundOutput` for the Native partial tail and

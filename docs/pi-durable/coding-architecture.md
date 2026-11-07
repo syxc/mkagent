@@ -131,10 +131,11 @@ Pi v1.5.0 尚未将 `AgentSession`、工具工厂、扩展与资源加载等 cod
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变；只有 SDK、AgentSession 和虚拟模块表三处运行时导入改接 durable。 | 公开类型、消息声明合并、这三处执行入口 |
-| Agent 外观及请求操作 | 上游 Agent 自己调用原版循环，没有公开的调度器注入点；10 个选取操作均为模块私有函数。公开 `runToolCall` 将准备、执行和 afterToolCall 合在一次调用中，缺少当前任务所需的分阶段 checkpoint 接口。保留外观移植与操作抽取，任务由 durable 调度。 | facade 状态、操作语义和任务恢复版本 |
+| Agent 外观及请求操作 | 上游 Agent 自己调用原版循环，没有公开的调度器注入点。公开 `runToolCall` 将准备、执行和 afterToolCall 合在一次调用中，缺少当前任务所需的分阶段 checkpoint 接口。core 两文件补丁已公开十个原模块私有操作，Native 通过 24 行门面引用并保留默认身份对象。Agent 外观仍为本地移植，任务由 durable 调度。 | facade 状态、core 操作和身份语义、任务恢复版本 |
 | Native codemode | 内置执行器、模型准备和 formatter 已复用。公开选项承接 store、租约、发现覆盖、调用观察和结果投影；外层保留 Native 字符串 ID、实时展示、原始分支写入及 worker 策略。隐藏转发器使动态 Native 工具走实际子任务和既有审批管道，不另建执行循环。 | 公开接点、工具及模型目录变化、Native 行与用量、取消、journal 回执及沙箱释放 |
 | Coding 会话、扩展及展示 | 独立公开包未提供 AgentSession、coding loader 和 InteractiveMode；完整 coding 包只有根入口及 rpc-entry。当前 `./native` 保留完整 SDK 导出面，不能直接删掉其传递依赖而维持该入口。 | SDK 导出、插件事件、终端宿主及资源闭包；不把静态存在当行为验收 |
 | 共享 helper 与宿主策略 | 28 个旧入口共用实现，18 个直接转发，10 个保留外部策略。skills、prompt templates 和包管理固定旧入口的 `.pi` 目录；system prompt 保留宿主文档 URL。JavaScript 兼容边界保留原有宽输入与返回值。 | helper 导出、目录保护、结构类型、默认及自定义提示词 |
+| Native 写入与流式输出 | 写入薄适配在两个运行时各保留 18 个场景，但仍需完整 Native 文件操作及队列策略。输出窗口的 raw 选项仍改变 23 组中间状态；保留原裁剪策略后各有 165 组一致，但运行时正文由 200 行增至 203 行，还需新的 raw API。两者暂保留原版，范围见验证记录。 | 取得队列后的取消、未完成操作、部分行快照、日志原始字节和权限 |
 | 旧扩展入口 | runner 共用原生实现，通过可选依赖绑定 headless theme 与宿主提示词，默认调用不变。loader 的虚拟模块映射及初始化状态为模块私有，公开加载参数不能注入旧入口的模块契约；保留该项源码转换。两个入口共用 Bun 转译适配。 | 两种加载入口、失败回滚、元数据、theme 和文档 URL |
 | 旧 package manager | 共用原生实现，旧入口只适配目录、离线回调和 skipped 结果。共享构造参数默认保持原生目录；设置参数只要求实际使用的六个方法，兼容现有结构对象。 | 两种 resolve/update 返回、离线回调、项目目录及错误语义 |
 | 旧模型、设置、会话及 token | registry 继承共享外观，设置合并和 token 估算共用原生函数。会话存储、迁移、索引、分支及工厂共用原生类；可选投影策略保留 durable head、贡献消息与已折叠编辑，默认仍为原生规则。 | 静态及脱离类调用、实例类型、JSONL 迁移、消息身份、旧 usage 失效、声明输出 |
