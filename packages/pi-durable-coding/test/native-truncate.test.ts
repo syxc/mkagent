@@ -56,3 +56,44 @@ test('Native head reads each limit getter once in the original order', () => {
   expect(result.maxLines).toBe(1);
   expect(result.maxBytes).toBe(1);
 });
+
+test('Native tail retains an empty final line at a fractional byte limit', () => {
+  const result = native.truncateTail('a\n\n', { maxBytes: 1.5, maxLines: 3 });
+  expect(result.content).toBe('');
+  expect(result.outputLines).toBe(1);
+  expect(result.outputBytes).toBe(0);
+  expect(result.truncatedBy).toBe('bytes');
+  expect(result.lastLinePartial).toBe(false);
+});
+
+test('Native tail keeps original surrogate text within its Buffer byte allowance', () => {
+  const kept = ['中\uFEFFa\uFEFF\udc00', '\ud800\ud800\uFEFF\udc00\ud800'];
+  const maxBytes = kept.reduce((bytes, line) => bytes + Buffer.byteLength(line, 'utf-8'), 1);
+  const result = native.truncateTail(`prefix\n${kept.join('\n')}\n`, { maxLines: 1.5, maxBytes });
+  expect(result.content).toBe(kept.join('\n'));
+  expect(result.outputLines).toBe(2);
+  expect(result.outputBytes).toBe(Buffer.byteLength(kept.join('\n'), 'utf-8'));
+  expect(result.truncatedBy).toBe('lines');
+  expect(result.lastLinePartial).toBe(false);
+});
+
+test('Native tail retains fractional Buffer cuts within a UTF-8 character', () => {
+  const result = native.truncateTail('é', { maxBytes: 0.5 });
+  expect(result.content).toBe('\uFFFD');
+  expect(result.outputLines).toBe(1);
+  expect(result.lastLinePartial).toBe(true);
+  expect(result.truncatedBy).toBe('bytes');
+});
+
+test('Native tail reads each limit getter once in the original order', () => {
+  const calls: string[] = [];
+  const result = native.truncateTail('a\nb', {
+    get maxLines() { calls.push('lines'); return calls.length; },
+    get maxBytes() { calls.push('bytes'); return calls.length - 1; },
+  });
+  expect(calls).toEqual(['lines', 'bytes']);
+  expect(result.content).toBe('b');
+  expect(result.truncatedBy).toBe('lines');
+  expect(result.maxLines).toBe(1);
+  expect(result.maxBytes).toBe(1);
+});

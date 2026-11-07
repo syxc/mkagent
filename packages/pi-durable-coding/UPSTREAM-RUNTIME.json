@@ -918,9 +918,9 @@
       "source": "packages/coding-agent/src/core/tools/truncate.ts",
       "target": "src/pi/core/tools/truncate.ts",
       "sha256": "8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762",
-      "portSha256": "395a2ba401985a434cd20c9e294cd11f13d9b39d436a2608b4ebfaa9a68c6ee6",
+      "portSha256": "c2071765d79b345f17b11dd5731fcebb03c6ba4da7ccc3344f93bd05561bb977",
       "changes": [
-        "shared-durable-head-truncation"
+        "shared-durable-head-public-chord-tail"
       ]
     },
     {

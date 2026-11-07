@@ -48,7 +48,7 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
     change: 'shared-durable-read-path-variants', dependency: '@earendil-works/pi-durable', apply: portReadPaths,
   },
   'core/tools/truncate.ts': {
-    change: 'shared-durable-head-truncation', dependency: '@earendil-works/pi-durable', apply: portTruncation,
+    change: 'shared-durable-head-public-chord-tail', dependency: '@earendil-works/pi-durable', apply: portTruncation,
   },
   'core/tools/edit-diff.ts': {
     change: 'shared-durable-edit-diff', dependency: '@earendil-works/pi-durable', apply: portEditDiff,

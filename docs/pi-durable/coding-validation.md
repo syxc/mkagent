@@ -13,12 +13,75 @@ or expand the scope of this architecture work.
 The review on 2026-11-06 uses code baseline `f4f9f26`. The pi-durable kernel is
 already integrated. Most Coding functionality has implementation and historical
 evidence; its completeness still requires verification. The current
-priority is to reuse pi-durable built-ins, then use independent packages for
-missing capabilities, and retain thin adapters only where contracts still differ.
+priority is SDK integration through public interfaces and extension points.
+External thin adapters bridge contract differences. SDK source patches require
+a concrete gap that those interfaces and adapters cannot meet. Upgrade review
+and adaptation effort take priority over line counts.
 The [follow-up list](coding-follow-up.md) records the revised work and the
 blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
+
+## Public SDK tail truncation
+
+Native tail truncation now calls the existing public
+`@earendil-works/chord/output` API. The external adapter retains Native line
+counts, truncation labels, partial lines, fractional limits, getter order and
+original UTF-16 text. Complete lines use Native Buffer byte weights when lone
+surrogates differ from TextEncoder. The adapter limits candidate lines and
+UTF-16 suffixes before calling the SDK, so discarded prefixes need no second
+encoding or line scan.
+
+The Native line-count policy also moved outside the SDK. Both installed
+`dist/truncate.js` and `dist/truncate.d.ts` now match the original cached
+package. The durable patch drops from 30 files to 28; the other 26 diffs remain
+byte for byte unchanged. Clean replay matches all installed targets. Patch
+SHA-256 is
+`439c3fa99e6a3e7aa07511aa0cad44b7bfe40496e106e2dc106f121ceea3e7e1`.
+
+Generation checks the public tail signature and references to its removed
+private helper. It accepts changes to either implementation body and accepts
+a changed or absent unused private helper. Five API or reference mutations
+are rejected; four internal changes preserve the generated output. Existing
+head guards remain. The actual single-file check reports one source file and
+`complete: false`.
+
+The first adapter failed on empty negative-byte limits, NaN line limits,
+fractional whole-line budgets and Bun surrogate byte counts. Corrected policy
+mapping passes all 875 original cases with full values and errors under Bun
+and Node. Each runtime also passes 200 head JavaScript cases, 304 original
+tail cases, 20,000 deterministic random tail cases and 210 tail JavaScript
+cases. Seven explicit strict roots resolve 437 files with no diagnostics.
+
+A fresh consumer installs 99 original cached packages offline with lifecycle
+scripts disabled and a frozen lock. Its 28 patched files, six Native files
+and two restored SDK files match the worktree and cache. The worktree suite
+passes 884 tests and 1793 assertions. Bun and Node each pass the same 884
+consumer test bodies. Both lockfiles remain unchanged.
+
+First calls use fresh processes with 10 MiB inputs and default limits.
+The reference imports the pinned Native source; the adapter uses the actual
+generated entry. Import time is excluded. Three samples per combination give:
+
+| Runtime | Input | Native median (ms) | Adapter median (ms) | Adapter range (ms) |
+| --- | --- | ---: | ---: | --- |
+| Bun | ASCII line | 8.44 | 7.82 | 7.69-7.85 |
+| Bun | Unicode line | 7.92 | 2.53 | 2.52-3.19 |
+| Bun | 1,048,576 short lines | 35.27 | 41.82 | 39.78-42.25 |
+| Node | ASCII line | 8.16 | 5.43 | 5.03-5.57 |
+| Node | Unicode line | 32.83 | 15.19 | 15.02-15.41 |
+| Node | 1,048,576 short lines | 67.84 | 67.75 | 65.92-72.44 |
+
+All 36 samples match their input's reference output digest. On the short-line input, the largest RSS after
+the call is 100.66/119.17 MiB for Native/adapter under Bun and
+163.11/160.48 MiB under Node. RSS includes imported modules and is not a peak
+measurement. The earlier adapter rescanned the full prefix and took
+87.13ms/112.51ms at the Bun/Node medians; that implementation is not retained.
+These samples do not establish every input's performance.
+
+Review stays in the main thread. Complete SDK, product and source checks
+remain restricted. The boundary generator covers four harness files and was
+not used to regenerate the complete 28-file patch. F1/F3 and F5 remain open.
 
 ## Shared generation rule ownership
 
@@ -555,7 +618,8 @@ production and candidate medians are 7.59ms and 14.68ms for ASCII, and 32.04ms
 and 39.46ms for Unicode. Output digests match. These samples do not establish
 performance for every input or runtime.
 
-The tail implementation remains unchanged. Sharing only the two-line prefix
+That partial-tail prototype was retained at that stage. The public SDK tail
+adapter above supersedes that decision. Sharing only the two-line prefix
 scan would retain the local suffix boundary rule while adding another package
 boundary inside the same middle operation. That operation remains unchanged.
 The single-line helper already uses standard string slicing and retains the
@@ -590,14 +654,14 @@ and release checks remain outside this evidence. F1/F3 remain open.
 
 ## Shared Native head truncation
 
-Native head truncation, line counting, size formatting and default limits now
-use the durable implementations exported through `/tools`. The adapter retains
+The original head-sharing stage routed Native head truncation, line counting,
+size formatting and default limits through durable `/tools`. The adapter retains
 Native limit getter order, invalid input errors and truncation labels. For
 `a\n` with a one-byte limit, Native still reports line truncation while durable
-reports byte truncation. The four tail, middle, line and UTF-8 suffix function
-bodies retain their exact original text. The durable truncation JavaScript
-changes only by exporting the existing line counter. Its algorithms retain
-their original text.
+reports byte truncation. At that stage, the four tail, middle, line and UTF-8
+suffix bodies retained their original text, and durable exported its existing
+line counter. The public SDK tail adapter above removes that counter export
+and restores the two SDK truncation files.
 
 Before replacement, the original Native entry supplied 875 recorded cases
 under Bun and Node. After replacement, both runtimes match all original values,

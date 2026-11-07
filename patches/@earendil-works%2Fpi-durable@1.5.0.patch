@@ -1,4 +1,4 @@
-# Content SHA-256: df30f6cfbdf36c30f98171c2449b68e9075c89de4d85164e806b8b353f1f87bb
+# Content SHA-256: 60b64cfae298d67b2c0a4275d8c4fe0ae6626f09b3935d3f1a6dc38f047c8f3e
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -1724,7 +1724,7 @@ index 1c5c127ea6b007eb4033486fcbde0d5e6b20cc16..802d2381bcde340b7da8f9b6a54ebe32
      schemaText(tool.parameters, parts);
      return parts.filter((part) => part.trim() !== "").join(" ");
 diff --git a/dist/tools/index.d.ts b/dist/tools/index.d.ts
-index dc06b0be86a205a7aba4ab2c06ec4e003d731165..2574c4f7e4601a3e28091bfa6da260e1aefc6623 100644
+index dc06b0be86a205a7aba4ab2c06ec4e003d731165..d338d6debfb33372647328305d27ebfa301c07b2 100644
 --- a/dist/tools/index.d.ts
 +++ b/dist/tools/index.d.ts
 @@ -1,9 +1,12 @@
@@ -1736,12 +1736,12 @@ index dc06b0be86a205a7aba4ab2c06ec4e003d731165..2574c4f7e4601a3e28091bfa6da260e1
  export { createReadTool, type ReadToolDetails, type ReadToolInput, type ReadToolOptions } from "./read.ts";
  export { createWriteTool, type WriteToolInput } from "./write.ts";
 +export { readPathVariants } from "./path-utils.ts";
-+export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize, splitLinesForCounting, truncateHead, type TruncationOptions, type TruncationResult } from "../truncate.ts";
++export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize, truncateHead, type TruncationOptions, type TruncationResult } from "../truncate.ts";
  /**
   * The `coding-tools` extension: `read`, `write`, `edit`, and `bash`; nothing installs it automatically.
   * `createPowerShellTool()` adds `powershell`. `images` prepares the images `read` returns (see `ReadToolOptions`).
 diff --git a/dist/tools/index.js b/dist/tools/index.js
-index 77187bb5df6507b0f291ab9c27c932e68b780889..897c8dd2915c411f12be94f1c8ff3e4af134f7fd 100644
+index 77187bb5df6507b0f291ab9c27c932e68b780889..9fd5833ccbc2d7cf3492b36e3c5f574d70a1906d 100644
 --- a/dist/tools/index.js
 +++ b/dist/tools/index.js
 @@ -1,3 +1,4 @@
@@ -1754,7 +1754,7 @@ index 77187bb5df6507b0f291ab9c27c932e68b780889..897c8dd2915c411f12be94f1c8ff3e4a
  export { createReadTool } from "./read.js";
  export { createWriteTool } from "./write.js";
 +export { readPathVariants } from "./path-utils.js";
-+export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize, splitLinesForCounting, truncateHead } from "../truncate.js";
++export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize, truncateHead } from "../truncate.js";
  /**
   * The `coding-tools` extension: `read`, `write`, `edit`, and `bash`; nothing installs it automatically.
   * `createPowerShellTool()` adds `powershell`. `images` prepares the images `read` returns (see `ReadToolOptions`).
@@ -1803,28 +1803,3 @@ index 547e6a35c473f5c6af5e7455500e51a535edf05b..7867e6eb7b56c56f5a040af572e17020
 +}
  //# sourceMappingURL=path-utils.js.map
 \ No newline at end of file
-diff --git a/dist/truncate.d.ts b/dist/truncate.d.ts
-index 9e5b261f9ca5f5903c232398d3eead76f3d5b823..4a3ec5a5ad8e42242f9a0aaeae6527e6b339e4c3 100644
---- a/dist/truncate.d.ts
-+++ b/dist/truncate.d.ts
-@@ -41,6 +41,7 @@ export interface TruncationOptions {
-     maxBytes?: number;
- }
- export { utf8ByteLength };
-+export declare function splitLinesForCounting(content: string): string[];
- /**
-  * Format bytes as human-readable size.
-  */
-diff --git a/dist/truncate.js b/dist/truncate.js
-index d7cba0e762370619870243e9962d5466b7e30d75..e385473b9b4dfac7110b436085586ac8ccac891a 100644
---- a/dist/truncate.js
-+++ b/dist/truncate.js
-@@ -12,7 +12,7 @@ export const DEFAULT_MAX_LINES = 2000;
- export const DEFAULT_MAX_BYTES = 50 * 1024; // 50KB
- // One implementation, shared with the output buffer.
- export { utf8ByteLength };
--function splitLinesForCounting(content) {
-+export function splitLinesForCounting(content) {
-     if (content.length === 0)
-         return [];
-     const lines = content.split("\n");

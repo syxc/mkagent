@@ -249,11 +249,38 @@ export function portTruncation(body: string): string {
     formatSize: '732147ecdfd179ec787e25aad455118aea89f7a90590d38ad850184f659274ed',
     truncateHead: '513b473a840717d9c241e6a996d860582f574b537cb796d839334b6089787250',
   };
-  const remaining = new Set(Object.keys(expected));
+  const signatures: Record<string, string> = {
+    truncateTail: 'export function truncateTail(content: string, options: TruncationOptions = {}): TruncationResult',
+  };
+  const remaining = new Set([...Object.keys(expected), ...Object.keys(signatures)]);
   const edits: Array<{ start: number; end: number; text: string }> = [];
   for (const node of parsed.statements) {
     const name = ts.isVariableStatement(node) ? node.declarationList.declarations[0]?.name.getText(parsed)
       : ts.isFunctionDeclaration(node) || ts.isInterfaceDeclaration(node) ? node.name?.text : undefined;
+    if (name && Object.hasOwn(signatures, name)) {
+      if (!ts.isFunctionDeclaration(node) || !node.body || !remaining.delete(name) ||
+          body.slice(node.getStart(parsed), node.body.getStart(parsed)).replace(/\s+/g, ' ').trim() !== signatures[name]) {
+        throw new Error('Native tail truncation signature changed');
+      }
+      const text = 'export function truncateTail(content: string, options: TruncationOptions = {}): TruncationResult {\n\treturn sharedTruncateTail(content, options);\n}';
+      edits.push({ start: node.getStart(parsed), end: node.end, text });
+      continue;
+    }
+    if (name === 'truncateStringToBytesFromEnd') {
+      if (!ts.isFunctionDeclaration(node) ||
+          node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)) {
+        throw new Error('Native tail helper is no longer private');
+      }
+      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
+      continue;
+    }
+    const inspect = (child: ts.Node): void => {
+      if (ts.isIdentifier(child) && child.text === 'truncateStringToBytesFromEnd') {
+        throw new Error('Native tail helper has an unexpected reference');
+      }
+      ts.forEachChild(child, inspect);
+    };
+    inspect(node);
     if (!name || !Object.hasOwn(expected, name)) continue;
     if (!remaining.delete(name) || createHash('sha256').update(node.getText(parsed)).digest('hex') !== expected[name]) {
       throw new Error('Native truncation declaration boundary changed');
@@ -273,8 +300,8 @@ export function portTruncation(body: string): string {
   }
   if (remaining.size) throw new Error('Native truncation declarations changed');
   for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
-  return 'import { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize as sharedFormatSize, splitLinesForCounting } from "@earendil-works/pi-durable/tools";\n'
-    + 'import { truncateHead as sharedTruncateHead } from "../../../compat/truncate.ts";\n'
+  return 'import { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize as sharedFormatSize } from "@earendil-works/pi-durable/tools";\n'
+    + 'import { truncateHead as sharedTruncateHead, truncateTail as sharedTruncateTail, splitLinesForCounting } from "../../../compat/truncate.ts";\n'
     + 'export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES };\n' + body;
 }
 

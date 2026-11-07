@@ -1,5 +1,5 @@
-import { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize as sharedFormatSize, splitLinesForCounting } from "@earendil-works/pi-durable/tools";
-import { truncateHead as sharedTruncateHead } from "../../../compat/truncate.ts";
+import { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize as sharedFormatSize } from "@earendil-works/pi-durable/tools";
+import { truncateHead as sharedTruncateHead, truncateTail as sharedTruncateTail, splitLinesForCounting } from "../../../compat/truncate.ts";
 export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES };
 /**
  * Shared truncation utilities for tool outputs.
@@ -70,99 +70,7 @@ export function truncateHead(content: string, options: TruncationOptions = {}): 
  * May return partial first line if the last line of original content exceeds byte limit.
  */
 export function truncateTail(content: string, options: TruncationOptions = {}): TruncationResult {
-	const maxLines = options.maxLines ?? DEFAULT_MAX_LINES;
-	const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
-
-	const totalBytes = Buffer.byteLength(content, "utf-8");
-	const lines = splitLinesForCounting(content);
-	const totalLines = lines.length;
-
-	// Check if no truncation needed
-	if (totalLines <= maxLines && totalBytes <= maxBytes) {
-		return {
-			content,
-			truncated: false,
-			truncatedBy: null,
-			totalLines,
-			totalBytes,
-			outputLines: totalLines,
-			outputBytes: totalBytes,
-			lastLinePartial: false,
-			firstLineExceedsLimit: false,
-			maxLines,
-			maxBytes,
-		};
-	}
-
-	// Work backwards from the end
-	const outputLinesArr: string[] = [];
-	let outputBytesCount = 0;
-	let truncatedBy: "lines" | "bytes" = "lines";
-	let lastLinePartial = false;
-
-	for (let i = lines.length - 1; i >= 0 && outputLinesArr.length < maxLines; i--) {
-		const line = lines[i];
-		const lineBytes = Buffer.byteLength(line, "utf-8") + (outputLinesArr.length > 0 ? 1 : 0); // +1 for newline
-
-		if (outputBytesCount + lineBytes > maxBytes) {
-			truncatedBy = "bytes";
-			// Edge case: if we haven't added ANY lines yet and this line exceeds maxBytes,
-			// take the end of the line (partial)
-			if (outputLinesArr.length === 0) {
-				const truncatedLine = truncateStringToBytesFromEnd(line, maxBytes);
-				outputLinesArr.unshift(truncatedLine);
-				outputBytesCount = Buffer.byteLength(truncatedLine, "utf-8");
-				lastLinePartial = true;
-			}
-			break;
-		}
-
-		outputLinesArr.unshift(line);
-		outputBytesCount += lineBytes;
-	}
-
-	// If we exited due to line limit
-	if (outputLinesArr.length >= maxLines && outputBytesCount <= maxBytes) {
-		truncatedBy = "lines";
-	}
-
-	const outputContent = outputLinesArr.join("\n");
-	const finalOutputBytes = Buffer.byteLength(outputContent, "utf-8");
-
-	return {
-		content: outputContent,
-		truncated: true,
-		truncatedBy,
-		totalLines,
-		totalBytes,
-		outputLines: outputLinesArr.length,
-		outputBytes: finalOutputBytes,
-		lastLinePartial,
-		firstLineExceedsLimit: false,
-		maxLines,
-		maxBytes,
-	};
-}
-
-/**
- * Truncate a string to fit within a byte limit (from the end).
- * Handles multi-byte UTF-8 characters correctly.
- */
-function truncateStringToBytesFromEnd(str: string, maxBytes: number): string {
-	const buf = Buffer.from(str, "utf-8");
-	if (buf.length <= maxBytes) {
-		return str;
-	}
-
-	// Start from the end, skip maxBytes back
-	let start = buf.length - maxBytes;
-
-	// Find a valid UTF-8 boundary (start of a character)
-	while (start < buf.length && (buf[start] & 0xc0) === 0x80) {
-		start++;
-	}
-
-	return buf.slice(start).toString("utf-8");
+	return sharedTruncateTail(content, options);
 }
 
 /**
