@@ -222,10 +222,6 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     body = portToolDefinition(path, body);
     changes.add('explicit-durable-tool-replay-policy');
   }
-  if (body.includes('process.off(')) {
-    body = body.replaceAll('process.off(', 'process.removeListener(');
-    changes.add('node-and-bun-process-listener-types');
-  }
   if (path === 'core/tools/find.ts') {
     body = body.replace('path.PlatformPath', 'typeof path');
     changes.add('node-path-platform-type');
@@ -331,7 +327,6 @@ for (const [path, target] of [
     body = body.replace('export interface AgentOptions {', 'export interface AgentOptions {\n\tdurable?: DurableLoopBinding;');
     body = body.replace('private _state: MutableAgentState;', 'private _state: MutableAgentState;\n\tpublic readonly durable: DurableLoopBinding;');
     body = body.replace('this._state = createMutableAgentState(runtimeOptions.initialState);', 'this._state = createMutableAgentState(runtimeOptions.initialState);\n\t\tthis.durable = runtimeOptions.durable ?? new DurableLoopBinding();');
-    body = body.replace('let skipInitialSteeringPoll = options.skipInitialSteeringPoll === true;', 'let skipInitialSteeringPoll = options.skipInitialSteeringPoll === true;');
     body = body.replace('model: this._state.model,\n\t\t\treasoning:', 'durable: this.durable,\n\t\t\tmodel: this._state.model,\n\t\t\treasoning:');
     changes.push('durable-loop-backend');
     body = portAgentFacade(body);

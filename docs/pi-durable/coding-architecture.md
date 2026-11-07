@@ -98,6 +98,10 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 248 份源码和 9 项资源，由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)生成。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 12 项来源产物及 28 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
+追加静态对照覆盖其中 245 份 TypeScript，按逐项核验的路径读取本地与上游源码。忽略注释和模块目标后，206 份语法相同，4 份生成的 JavaScript 相同，35 份仍有差异；3 个解析边界保持未分类。该分类衡量正文差异，不证明行为等价、完整类型兼容或源码必要性，模块目标变更也仍需升级核对。
+
+三个运行模式已恢复上游的 `process.off` 写法，文件与锁定上游逐字节一致，来源记录不再包含转换。已有 `node-process.d.ts` 负责环境类型补充，生成器不再改写运行时调用，也删除了一条无效的相同字符串替换。窄范围类型、真实监听器清理及定向生成范围见[验证记录](coding-validation.md)。
+
 `src/legacy/**` 单独维护 7 份宿主兼容策略。旧包管理、消息、模型、设置、token、会话及 runner 路径只生成转发，生成器不再保存这些策略的第二份文字模板。它们复用移植实现，不计为直接引用独立公开包。
 
 这里的“移植”包含原样复制和可复现转换。清单记录原文件哈希、产物哈希及变更；转换覆盖 Agent 执行边界、宿主模型与凭据接口、项目信任、资源策略、工具回放、OAuth、插件解析及打包资源路径。转换规则保存在生成脚本及同目录的 `*-port.ts` 中。

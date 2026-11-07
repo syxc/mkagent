@@ -3997,7 +3997,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "1c2141bf62e6ad590c82a2bc9df3e171208eda67a38b1acf62b08572e273f2f5",
+      "sha256": "37793691d4bce6296a3318f763df64fab9c213a8604cfff07854ec805b5df02a",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -4017,7 +4017,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "8e10dce15632985134517ccd69c2b6e6421215f959d8a654035a9af388d1b04c",
+      "sha256": "8d72a8d9cd48ae690f47f8acf4f61f7bffc5d254e9f488f44a0f18ef320da289",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4913,8 +4913,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/external-editor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/interactive-mode.ts": {
-      "sha256": "afc5c5c5781f592c4427c2a17798759cb702e4aa41721043a952d5f1c64934c1",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
+      "sha256": "ee4ba8aeee85b772aee57b342356da3030eed3b2c32656fa9c0927e6a81fbab0",
+      "reason": "Preserve the pinned Pi v1.5.0 mode source unchanged; Node and Bun listener types use the existing ambient declaration."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/model-catalog-refresh.ts": {
       "sha256": "a7a10647deaba5036019737c376ab3f73eed12703dafeb8cb8920581ec8672e2",
@@ -4969,8 +4969,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/json-event.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/print-mode.ts": {
-      "sha256": "64680adc3f5cbeab5a518037a2dbc451686cff060fd7bdec40e076f80f2bd0ef",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/print-mode.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "8cfd22f5dd18386f3cb0dea82e232d2cd54741dd77db882ada954bde1c7097e6",
+      "reason": "Preserve the pinned Pi v1.5.0 mode source unchanged; Node and Bun listener types use the existing ambient declaration."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/jsonl.ts": {
       "sha256": "95723d349fcebad1f1da7ce103d02ba7d5e2c876b7d178d41d8b56beedbd93e0",
@@ -4981,8 +4981,8 @@
       "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-mode.ts": {
-      "sha256": "002b3fdd592af221c47e1c97f2cf364f40b6aa1039a7ed09189355b07a9cbee8",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/rpc-mode.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "d534e0fa1484844a097963d5f4fb4df9397c5a1b5e29e42aed7575ab6f67989b",
+      "reason": "Preserve the pinned Pi v1.5.0 mode source unchanged; Node and Bun listener types use the existing ambient declaration."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-types.ts": {
       "sha256": "be06a1d53916e03e9274cce9e4833692b235494e4047f1f7139d7f0147daae1a",

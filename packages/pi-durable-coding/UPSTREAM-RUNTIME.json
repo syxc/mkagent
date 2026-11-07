@@ -1521,10 +1521,8 @@
       "source": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
       "target": "src/pi/modes/interactive/interactive-mode.ts",
       "sha256": "ee4ba8aeee85b772aee57b342356da3030eed3b2c32656fa9c0927e6a81fbab0",
-      "portSha256": "afc5c5c5781f592c4427c2a17798759cb702e4aa41721043a952d5f1c64934c1",
-      "changes": [
-        "node-and-bun-process-listener-types"
-      ]
+      "portSha256": "ee4ba8aeee85b772aee57b342356da3030eed3b2c32656fa9c0927e6a81fbab0",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/model-catalog-refresh.ts",
@@ -1621,10 +1619,8 @@
       "source": "packages/coding-agent/src/modes/print-mode.ts",
       "target": "src/pi/modes/print-mode.ts",
       "sha256": "8cfd22f5dd18386f3cb0dea82e232d2cd54741dd77db882ada954bde1c7097e6",
-      "portSha256": "64680adc3f5cbeab5a518037a2dbc451686cff060fd7bdec40e076f80f2bd0ef",
-      "changes": [
-        "node-and-bun-process-listener-types"
-      ]
+      "portSha256": "8cfd22f5dd18386f3cb0dea82e232d2cd54741dd77db882ada954bde1c7097e6",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/modes/rpc/jsonl.ts",
@@ -1644,10 +1640,8 @@
       "source": "packages/coding-agent/src/modes/rpc/rpc-mode.ts",
       "target": "src/pi/modes/rpc/rpc-mode.ts",
       "sha256": "d534e0fa1484844a097963d5f4fb4df9397c5a1b5e29e42aed7575ab6f67989b",
-      "portSha256": "002b3fdd592af221c47e1c97f2cf364f40b6aa1039a7ed09189355b07a9cbee8",
-      "changes": [
-        "node-and-bun-process-listener-types"
-      ]
+      "portSha256": "d534e0fa1484844a097963d5f4fb4df9397c5a1b5e29e42aed7575ab6f67989b",
+      "changes": []
     },
     {
       "source": "packages/coding-agent/src/modes/rpc/rpc-types.ts",

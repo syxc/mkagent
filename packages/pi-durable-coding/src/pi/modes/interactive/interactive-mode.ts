@@ -4499,7 +4499,7 @@ export class InteractiveMode {
 				void this.shutdown({ fromSignal: true });
 			};
 			process.prependListener(signal, handler);
-			this.signalCleanupHandlers.push(() => process.removeListener(signal, handler));
+			this.signalCleanupHandlers.push(() => process.off(signal, handler));
 		}
 
 		const terminalErrorHandler = (error: Error) => {
@@ -4521,7 +4521,7 @@ export class InteractiveMode {
 		// in pi) leaves the terminal in raw mode with no cursor.
 		const uncaughtExceptionHandler = (error: Error) => this.uncaughtCrash(error);
 		process.prependListener("uncaughtException", uncaughtExceptionHandler);
-		this.signalCleanupHandlers.push(() => process.removeListener("uncaughtException", uncaughtExceptionHandler));
+		this.signalCleanupHandlers.push(() => process.off("uncaughtException", uncaughtExceptionHandler));
 	}
 
 	private unregisterSignalHandlers(): void {

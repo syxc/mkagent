@@ -20,6 +20,54 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Source comparison and process listeners
+
+An explicit-path AST review covers 245 of the 248 TypeScript source records.
+The forbidden credential source stays unread. The parser profile also excludes
+the SDK and model-runtime entry files. The nine resource records remain outside
+this TypeScript comparison. Every selected local and upstream path is checked
+through realpath before its contents are read.
+
+After removing comments and normalizing import, export and literal dynamic
+module targets, 206 files have the same TypeScript syntax as upstream.
+Four more have the same emitted JavaScript, including type-only files.
+The remaining 35 differ. These counts measure source differences. They do not
+prove behavior, type compatibility, file necessity or minimum maintenance cost.
+Module target changes still require review.
+
+The review found an obsolete `process.off` to `removeListener` conversion.
+The existing `src/node-process.d.ts` already provides both signatures over
+`ProcessEventMap`. Removing the rule restores `interactive-mode.ts`,
+`print-mode.ts` and `rpc-mode.ts` byte for byte to the pinned upstream files.
+Their source records now have equal source and port hashes and no transforms.
+The generator also drops a string replacement whose two arguments were equal.
+
+| Check | Result and scope |
+| --- | --- |
+| Source parity | All bytes of the three mode files match the pinned upstream files. Their implementation and declarations receive no other changes. |
+| Runtime behavior | Six source cleanup expressions pass 228 assertions in Bun and 228 in Node. Each runtime compares the restored method with its previous cleanup method. Cases cover missing, repeated and distinct listeners, cleanup return values and removal identity. No OS signal is sent. |
+| Types | Two explicit roots, the six extracted expressions and the existing ambient declaration, cover 239 source files with zero diagnostics. The full CLI and SDK type graph is not loaded. |
+| Scoped reproduction | One check with the three explicit `--file` arguments passes with `sourceFiles: 3` and `complete: false`. |
+| Existing frozen consumer | Four explicit source copies match in the previously installed consumer. Bun and Node each pass 228 assertions there. No new installation runs; both lockfiles remain unchanged. |
+| Review | Main-thread review checks the four restored calls, the two deleted generator rules and the source records. No review is delegated. |
+
+Early checks caught fixture errors before final validation: the positional
+argument parser treated `--types` as a path; a parity check caught two calls
+that upstream already spelled `removeListener`; and an assumed duplicate
+listener count failed in Bun. The corrected check compares the old and restored
+methods within each runtime. All final checks above pass.
+
+The static parser first rejected the four records outside `src/pi/`; it now
+allows those four explicit paths. A narrower filename exclusion trial hit
+`EPERM` while resolving model-runtime. The parser restored its three entry
+exclusions and did not retry that read. The static graph also omits worker
+entrypoints loaded through URLs or bundle paths and ambient declarations.
+Those omissions do not establish dead code.
+
+This step does not run the full SDK, plugin loader, CLI shutdown, terminal,
+worker/server builds or complete source audit. F1/F3 remain open. The selected
+request and tool operations are the next reuse candidate.
+
 ## Shared Native edit differences
 
 Native edit matching, replacements, line-ending conversion and diff display now

@@ -61,7 +61,7 @@ export async function runPrintMode(runtimeHost: AgentSessionRuntime, options: Pr
 				});
 			};
 			process.on(signal, handler);
-			signalCleanupHandlers.push(() => process.removeListener(signal, handler));
+			signalCleanupHandlers.push(() => process.off(signal, handler));
 		}
 	};
 
