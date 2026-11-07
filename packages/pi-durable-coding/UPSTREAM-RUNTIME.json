@@ -259,8 +259,10 @@
       "source": "packages/coding-agent/src/core/compaction/compaction.ts",
       "target": "src/pi/core/compaction/compaction.ts",
       "sha256": "32714966eb644da31cd84e8eb172965256160626b3d26ae9752c3894300f2b0b",
-      "portSha256": "32714966eb644da31cd84e8eb172965256160626b3d26ae9752c3894300f2b0b",
-      "changes": []
+      "portSha256": "a0650f9779741a049dedb301e0961790f57d3ee53f921ae5ab2e1ab2dc1c7459",
+      "changes": [
+        "public-pi-ai-context-token-total"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/compaction/index.ts",
@@ -416,8 +418,10 @@
       "source": "packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts",
       "target": "src/pi/core/extensions/pi-ai-extension-view.ts",
       "sha256": "119d56316bd9b344fea619f5441367c2a916de58d0ffc8aa665b5c9d44244455",
-      "portSha256": "119d56316bd9b344fea619f5441367c2a916de58d0ffc8aa665b5c9d44244455",
-      "changes": []
+      "portSha256": "35769c1446400219e554e31712e5bc8da0c90bbdf1c0f41df39c151abb5bc8d4",
+      "changes": [
+        "public-pi-ai-typebox-string-enum"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/extensions/runner.ts",
@@ -534,8 +538,10 @@
       "source": "packages/coding-agent/src/core/models-store.ts",
       "target": "src/pi/core/models-store.ts",
       "sha256": "9a93afb3ad9123e59cb61606e77d431b38bbeb3063afc0e2974341109f23db02",
-      "portSha256": "9a93afb3ad9123e59cb61606e77d431b38bbeb3063afc0e2974341109f23db02",
-      "changes": []
+      "portSha256": "3fc330245d487383d34f4115f61dbbf24f905a4b48669a872f529d21f4c8685c",
+      "changes": [
+        "public-pi-ai-memory-models-store"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/nested-tool-calls.ts",

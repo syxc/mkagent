@@ -16,7 +16,32 @@ export function portSharedHelpers(path: string, body: string): string {
   if (path === 'core/tools/path-utils.ts') return portReadPaths(body);
   if (path === 'core/tools/truncate.ts') return portTruncation(body);
   if (path === 'core/tools/edit-diff.ts') return portEditDiff(body);
-  const files: Record<string, { names: string[]; imports: string }> = {
+  const files: Record<string, {
+    names: string[]; imports: string; hashes?: Record<string, string>; replacements?: Record<string, string>;
+  }> = {
+    'core/models-store.ts': {
+      names: ['InMemoryCodingAgentModelsStore'],
+      imports: 'import { InMemoryModelsStore } from "@earendil-works/pi-ai";',
+      hashes: { InMemoryCodingAgentModelsStore: '93c704e7001cb783e30cf6e696fa6203fea7a9cb6e75648f48988c75a6dfdc67' },
+      replacements: { InMemoryCodingAgentModelsStore: 'export class InMemoryCodingAgentModelsStore extends InMemoryModelsStore {}' },
+    },
+    'core/extensions/pi-ai-extension-view.ts': {
+      names: ['StringEnum'],
+      imports: 'import { StringEnum as publicStringEnum } from "@earendil-works/pi-ai/compat";',
+      hashes: { StringEnum: 'a59c509757fc3a565d5f9173c92c76c04af9eeb60ff6b4b830f58724ce838afc' },
+      replacements: { StringEnum: `/** Keep TypeBox branding and literal inference at the Native plugin boundary. */
+export function StringEnum<T extends readonly string[]>(
+\tvalues: T,
+\toptions?: { description?: string; default?: T[number] },
+): TUnsafe<T[number]> {
+\treturn Type.Unsafe<T[number]>(publicStringEnum(values, options));
+}` },
+    },
+    'core/compaction/compaction.ts': {
+      names: ['calculateContextTokens'],
+      imports: 'import { calculateContextTokens } from "@earendil-works/pi-ai/utils/estimate";\nexport { calculateContextTokens };',
+      hashes: { calculateContextTokens: 'cc4888354594efe4b7024cf5b02b0f09bbb4e7fb21c396f725af38657f3b7c9b' },
+    },
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
       imports: 'import { findGitPaths, type GitPaths } from "../../upstream/core/git-paths.ts";\nexport { findGitPaths, type GitPaths };',
@@ -43,14 +68,20 @@ export function portSharedHelpers(path: string, body: string): string {
   let sharedRanker = false;
   let sharedDocument = false;
   for (const statement of parsed.statements) {
-    if ((ts.isFunctionDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement)) &&
+    if ((ts.isFunctionDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement) ||
+        ts.isClassDeclaration(statement)) &&
         statement.name && remaining.delete(statement.name.text)) {
+      const expected = rule.hashes?.[statement.name.text];
+      if (expected && createHash('sha256').update(statement.getText(parsed)).digest('hex') !== expected) {
+        throw new Error(`Public helper declaration changed: ${path}: ${statement.name.text}`);
+      }
       if (path === 'extensions/tool-search/tool.ts' && statement.name.text === 'tokenize' &&
           (!ts.isFunctionDeclaration(statement) || statement.parameters.length !== 1 ||
             statement.parameters[0].type?.kind !== ts.SyntaxKind.StringKeyword || statement.type?.getText(parsed) !== 'string[]')) {
         throw new Error('Tool search tokenizer boundary changed');
       }
-      edits.push({ start: statement.getFullStart(), end: statement.end, text: '' });
+      edits.push({ start: statement.getFullStart(), end: statement.end,
+        text: rule.replacements?.[statement.name.text] ? '\n\n' + rule.replacements[statement.name.text] : '' });
     }
     if (path === 'extensions/tool-search/tool.ts' && ts.isFunctionDeclaration(statement) &&
         statement.name?.text === 'createToolSearchDocument') {
@@ -90,6 +121,10 @@ export function portSharedHelpers(path: string, body: string): string {
   if (path === 'extensions/tool-search/tool.ts' && (!sharedRanker || !sharedDocument)) throw new Error('Tool search public boundary changed');
   if (remaining.size) throw new Error(`Shared declarations changed: ${path}: ${[...remaining].join(', ')}`);
   for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
+  if (path === 'core/extensions/pi-ai-extension-view.ts') {
+    const original = 'import { type TUnsafe, Type } from "typebox";';
+    if (body.split(original).length !== 2) throw new Error('Native TypeBox import changed');
+  }
   if (path === 'core/resource-loader.ts') body = body.replace('import { findGitPaths } from "./footer-data-provider.ts";\n', '');
   return rule.imports + '\n' + body;
 }

@@ -2485,8 +2485,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "49296dc1d563e282aa8aaf6fdc8c3bc2f48cae1871dc4ba83d7f2732016b873d",
-      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize, MIME, ANSI, child wait, shell, read path and truncation boundaries. Route guarded Native edit differences through durable."
+      "sha256": "07a00f084b9c65a85b727100005ead8b8c1cca9b8b6be11226c81364fd75320f",
+      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize, MIME, ANSI, child wait, shell, read path and truncation boundaries. Route guarded Native edit differences through durable. Guard public pi-ai model storage, Native TypeBox enum wrapping and context token totals."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3996,8 +3996,20 @@
       "sha256": "2d4cb41561eae410c17e3294ef58936e4dc0d6df851bd9b67beef1320705d290",
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
+    "packages/pi-durable-coding/test/agent-recovery.test.ts": {
+      "sha256": "46d557f91071f258282d73caf36bbe215bde5584d1fcdf3192008872c2e0a2f7",
+      "reason": "Verify real JSONL Agent SIGKILL recovery, replay policies, failed binding retries, invalid task initialization and ordinary message identity."
+    },
+    "packages/pi-durable-coding/test/fixtures/agent-recovery-process.ts": {
+      "sha256": "29be24423ec2e8fc53805084b2a37bf56eb216b76b37a82c32e9e2295b31f198",
+      "reason": "Run each side of the isolated Agent JSONL crash and reopen contract in a separate process."
+    },
+    "packages/pi-durable-coding/test/shared-public-leaves.test.ts": {
+      "sha256": "ef115bda1e3fa0fdcfe37c4c8592ea344a71376ac12eab0cb94b1c5109139e5d",
+      "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
+    },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "22214da5106e699900317b0f7bdf66f09fb27b5204e599a9cea1a154c1949a80",
+      "sha256": "29c9302c032d57cb7d183f1aa5921f8b9f382311396cbaa76d19efda26827ae0",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -4017,8 +4029,8 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "ff18666dbcbe3955ae67145ddde11db397b98ac780d194724644186d2bf1127a",
-      "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
+      "sha256": "8b6ca18272fe596b1af88788c407d72f349b83d6a21aca0d3b5c4f9eb6337d67",
+      "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source. Register public pi-ai storage, enum and usage transformations."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4033,8 +4045,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse core Agent state and lifecycle through a durable execution backend while preserving Native defaults and Proxy receivers."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
-      "sha256": "6aa9348c9bdf2a295f27e436ef2127cc4508443df4cbfeadf3cb7e5381c901b0",
-      "reason": "Bind real CodingToolTask and official ToolTask APIs to native invocation scopes, preserving task ownership and transactional journal preparation across detached callbacks."
+      "sha256": "41598871ceff795682046bf0a5bc19f78e9e372cbee608dfee3ba4dbe78904f2",
+      "reason": "Bind real CodingToolTask and official ToolTask APIs to native invocation scopes, preserving task ownership and transactional journal preparation across detached callbacks. Restore standalone Agent checkpoints only on recovery, validate task ownership before seeding and release failed binding callbacks."
     },
     "packages/pi-durable-coding/src/durable-coding/index.ts": {
       "sha256": "32898b73b64f687a315137b0f0c33c25961be8b5c825f13437f08a48b7038f71",
@@ -4221,8 +4233,8 @@
       "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
     },
     "packages/pi-durable-coding/src/pi/core/compaction/compaction.ts": {
-      "sha256": "32714966eb644da31cd84e8eb172965256160626b3d26ae9752c3894300f2b0b",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
+      "sha256": "a0650f9779741a049dedb301e0961790f57d3ee53f921ae5ab2e1ab2dc1c7459",
+      "reason": "Preserve upstream public pi-agent-core protocol types and reuse public pi-ai context token totals without duplicating their calculation."
     },
     "packages/pi-durable-coding/src/pi/core/compaction/index.ts": {
       "sha256": "f82bde781410ae1a638989ff91bde9cc7045341a76bb9757de2ea6beea4c077d",
@@ -4309,8 +4321,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/loader.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/pi-ai-extension-view.ts": {
-      "sha256": "119d56316bd9b344fea619f5441367c2a916de58d0ffc8aa665b5c9d44244455",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "35769c1446400219e554e31712e5bc8da0c90bbdf1c0f41df39c151abb5bc8d4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse the public enum builder while retaining Native TypeBox branding and literal inference."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/runner.ts": {
       "sha256": "601d3c1e78616a9d898460e3b0c90e93d2f302a55b6211f6a546a6a5025027d2",
@@ -4369,8 +4381,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/model-runtime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/models-store.ts": {
-      "sha256": "9a93afb3ad9123e59cb61606e77d431b38bbeb3063afc0e2974341109f23db02",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/models-store.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "3fc330245d487383d34f4115f61dbbf24f905a4b48669a872f529d21f4c8685c",
+      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/models-store.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse the public in-memory model store through a Native subclass."
     },
     "packages/pi-durable-coding/src/pi/core/nested-tool-calls.ts": {
       "sha256": "15b0d9d5b24df2add64e7347b4f904c1948f97a0dd6512eb4f7de7884a9286b7",

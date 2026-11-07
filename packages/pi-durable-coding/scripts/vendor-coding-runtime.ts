@@ -257,7 +257,9 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       path === 'utils/zip.ts' || path === 'utils/tools-manager.ts' || path === 'utils/exif-orientation.ts' ||
       path === 'utils/image-resize-core.ts' || path === 'utils/mime.ts' || path === 'utils/ansi.ts' ||
       path === 'utils/child-process.ts' || path === 'utils/shell.ts' || path === 'core/tools/path-utils.ts' ||
-      path === 'core/tools/truncate.ts' || path === 'core/tools/edit-diff.ts') {
+      path === 'core/tools/truncate.ts' || path === 'core/tools/edit-diff.ts' ||
+      path === 'core/models-store.ts' || path === 'core/extensions/pi-ai-extension-view.ts' ||
+      path === 'core/compaction/compaction.ts') {
     body = portSharedHelpers(path, body);
     changes.add(path === 'extensions/tool-search/tool.ts' ? 'shared-durable-tool-search-ranking'
       : path === 'extensions/codemode/execute.ts' ? 'shared-durable-codemode-executor'
@@ -270,6 +272,9 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       : path === 'core/tools/path-utils.ts' ? 'shared-durable-read-path-variants'
       : path === 'core/tools/truncate.ts' ? 'shared-durable-head-truncation'
       : path === 'core/tools/edit-diff.ts' ? 'shared-durable-edit-diff'
+      : path === 'core/models-store.ts' ? 'public-pi-ai-memory-models-store'
+      : path === 'core/extensions/pi-ai-extension-view.ts' ? 'public-pi-ai-typebox-string-enum'
+      : path === 'core/compaction/compaction.ts' ? 'public-pi-ai-context-token-total'
       : path === 'utils/zip.ts' ? 'public-fflate-zip-writer'
       : path === 'utils/tools-manager.ts' ? 'public-jszip-tool-archives' : 'shared-lightweight-resource-algorithms');
     if (path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts' ||

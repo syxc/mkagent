@@ -1,3 +1,4 @@
+import { InMemoryModelsStore } from "@earendil-works/pi-ai";
 import { join } from "node:path";
 import type { ModelsStore, ModelsStoreEntry, ModelsStoreOperationOptions } from "@earendil-works/pi-ai";
 import { getAgentDir } from "../config.ts";
@@ -23,25 +24,7 @@ type ModelsFileReadState = {
 // Optimize the common path without retaining an unbounded set of custom paths.
 let sharedModelsFileReadState: { path: string; readState: ModelsFileReadState } | undefined;
 
-export class InMemoryCodingAgentModelsStore implements ModelsStore {
-	private readonly entries = new Map<string, ModelsStoreEntry>();
-
-	async read(providerId: string, options?: ModelsStoreOperationOptions): Promise<ModelsStoreEntry | undefined> {
-		options?.signal?.throwIfAborted();
-		const entry = this.entries.get(providerId);
-		return entry ? structuredClone(entry) : undefined;
-	}
-
-	async write(providerId: string, entry: ModelsStoreEntry, options?: ModelsStoreOperationOptions): Promise<void> {
-		options?.signal?.throwIfAborted();
-		this.entries.set(providerId, structuredClone(entry));
-	}
-
-	async delete(providerId: string, options?: ModelsStoreOperationOptions): Promise<void> {
-		options?.signal?.throwIfAborted();
-		this.entries.delete(providerId);
-	}
-}
+export class InMemoryCodingAgentModelsStore extends InMemoryModelsStore {}
 
 /** Locked JSON-backed storage for dynamically refreshed provider catalogs. */
 export class FileModelsStore implements ModelsStore {

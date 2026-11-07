@@ -1,3 +1,5 @@
+import { calculateContextTokens } from "@earendil-works/pi-ai/utils/estimate";
+export { calculateContextTokens };
 /**
  * Context compaction for long sessions.
  *
@@ -128,18 +130,6 @@ export const DEFAULT_COMPACTION_SETTINGS: CompactionSettings = {
 	reserveTokens: 16384,
 	keepRecentTokens: 20000,
 };
-
-// ============================================================================
-// Token calculation
-// ============================================================================
-
-/**
- * Calculate total context tokens from usage.
- * Uses the native totalTokens field when available, falls back to computing from components.
- */
-export function calculateContextTokens(usage: Usage): number {
-	return usage.totalTokens || usage.input + usage.output + usage.cacheRead + usage.cacheWrite;
-}
 
 /**
  * Get usage from an assistant message if available.

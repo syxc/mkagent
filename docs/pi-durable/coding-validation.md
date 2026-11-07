@@ -20,6 +20,105 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Agent cold recovery and public pi-ai helpers
+
+The added `agent-recovery.test.ts` kills a separate process with SIGKILL after
+a real JSONL tool execute intent is committed. A second process opens that
+store, restores the public Agent and sends another prompt. The four cases
+combine the stored and current `safe` or `never` replay policies. The effect
+runs again only when both policies are `safe`. Model requests, events,
+durable history, Agent state and effect files are checked.
+
+The first failing run showed that a binding without a Native journal did not
+restore committed user and assistant messages into Agent state. Recovery now
+restores those messages with a separate array. Task appends and Agent event
+appends therefore retain separate arrays. A second failing run showed that
+the next prompt appended the restored initial history a second time.
+Recovery now marks that history as present after it validates the stored
+task's existence, kind and conversation.
+
+Two failure paths also failed before repair. An unknown numeric task ID
+suppressed initial history on the next prompt. An `onBound` exception left
+the binding busy and prevented another recovery attempt. Task validation now
+precedes the initialization flag, and the callback runs inside the cleanup
+scope. Each crash case first checks a failed binding callback, then retries.
+The normal-run message identity check also failed: the new restorer ran on
+new tasks and replaced existing message objects. Message restoration without
+a journal is now enabled only by `recover()`. The journal identity branch
+keeps its previous behavior.
+
+Three source files now reuse public pi-ai implementations. The in-memory
+model store inherits `InMemoryModelsStore`; usage totals use
+`pi-ai/utils/estimate`; the Native `StringEnum` keeps its `TUnsafe` signature
+and calls the coding package's `Type.Unsafe` around the public schema
+builder. These files change from 147, 28 and 1104 lines to 130, 21 and 1094
+lines, a reduction of 34 lines.
+
+Direct `StringEnum` forwarding failed the original declaration comparison
+in Bun and Node. It lost the non-enumerable `~unsafe` marker and array
+cloning. It also accepted an invalid literal in a negative type check.
+The wrapper restores these contracts. The public builder has no runtime
+imports, so it does not bring a second TypeBox instance. The extracted
+baseline and actual Native module resolve the same installed TypeBox entry.
+The final comparisons cover storage cloning, cancellation, field replacement
+and subclass calls, 36 enum cases and 40 usage cases in each runtime.
+The model store intentionally gains a public base class: methods are
+inherited, their function identities change, and instances also satisfy
+`instanceof InMemoryModelsStore`. Name, constructor arity, own fields and the
+checked operation results retain their previous values.
+
+The final affected regression set passes 41 tests in six files with 301 Bun
+assertions. A new consumer installs 105 cached packages with frozen locks
+and network denied. Its final source snapshot passes the same 41 Bun tests
+and 19 Node tests. Node uses experimental TypeScript transformation.
+All 45 local runtime files and 34 patched package files match the worktree;
+the root and consumer locks retain their recorded digests. The four core
+patch files also match a clean replay against saved original files.
+Registry tarball integrity is not checked again.
+
+The first expanded consumer attempt missed cached packages because the
+wrapper's `BUN_INSTALL_CACHE_DIR` took precedence over `--cache-dir`.
+An explicit isolated cache fixed installation. The final install uses a
+new empty consumer. The cache also keeps retry 0.12.0 for proper-lockfile
+separate from the existing retry 0.13.1 record.
+
+The three explicit generator checks pass with `complete: false`.
+The declaration guards reject 13 source mutations and preserve unrelated
+suffixes in all three files. The scoped type checks pass with six Agent
+roots and 1025 source files, and three helper roots and 1321 source files.
+The former checks the actual facade, tests and extracted recovery body;
+other durable methods remain projected. The latter checks the actual enum,
+test, generation rules and extracted storage class; token re-export is
+projected. Neither check loads the complete SDK type graph.
+
+A read-tool adapter prototype also compares the extracted Native definition
+with the real durable read tool. Paths and image processing are controlled
+boundaries. Both runtimes agree in 31 text and cancellation cases after
+compatibility handling; the direct adapter differs in six cases.
+The working prototype needs BOM and first-line handling, an earlier abort
+listener cleanup and a MIME override that depends on the private first
+reader call. With the same compiler and comments removed, the original
+definition has 126 runtime lines; the candidate has 90 plus 51 adapter lines.
+Imports are extra. The production read tool therefore stays unchanged.
+
+An exact-body search checks 1328 top-level declarations in 245 permitted
+Native files against 679 bodies reachable through 204 export roots in seven
+public Pi packages. It reads 382 modules and skips five nonrelative
+re-exports. Seven matches remain: five one-expression object predicates,
+Native `defineTool` and the stream setter. The classifier predicate module
+imports model cost, headers and provider retry code. Five new conversion
+points for that expression do not reduce the maintenance work.
+`defineTool` retains the Native TypeBox, state and unconstrained details
+types; calling the public identity function still needs the Native type
+boundary. The stream setter needs a separate binding from core.
+These are bounded candidate decisions, not a complete API reuse or SDK
+necessity proof.
+
+The new crash evidence covers one tool execution boundary without a Native
+journal. It does not replace complete journal, plugin loader, product,
+worker or release checks. Those checks and the complete source audit remain
+subject to the existing access limits.
+
 ## Source comparison and process listeners
 
 An explicit-path AST review covers 245 of the 248 TypeScript source records.
@@ -28,8 +127,9 @@ the SDK and model-runtime entry files. The nine resource records remain outside
 this TypeScript comparison. Every selected local and upstream path is checked
 through realpath before its contents are read.
 
-After removing comments and normalizing import, export and literal dynamic
-module targets, 206 files have the same TypeScript syntax as upstream.
+At the comparison baseline before the three pi-ai changes above, removing
+comments and normalizing import, export and literal dynamic module targets
+leaves 206 files with the same TypeScript syntax as upstream.
 Four more have the same emitted JavaScript, including type-only files.
 The remaining 35 differ. These counts measure source differences. They do not
 prove behavior, type compatibility, file necessity or minimum maintenance cost.
@@ -147,8 +247,10 @@ and asynchronous raw-JSON lock callbacks. Its existing file implementation
 uses proper-lockfile and standard file APIs; the restricted orchestration
 remains outside this review.
 
-Full plugin loading, SDK construction, process-crash recovery, product
-checks and the complete source audit do not run. F1/F3 remain open for the
+That facade batch did not run process-crash recovery. The later independent
+Agent crash check above has a narrower scope than full Native recovery.
+Full plugin loading, SDK construction, product checks and the complete source
+audit do not run. F1/F3 remain open for the
 opaque dependency boundary; F4/F5 retain their stated validation limits.
 
 ## Raw in-memory credential backend

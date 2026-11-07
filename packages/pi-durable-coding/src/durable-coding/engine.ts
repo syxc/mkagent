@@ -247,11 +247,18 @@ export class DurableLoopBinding {
     const backend = await this.backend();
     const id = taskId ?? await this.pendingRun();
     if (id === undefined) return;
+    const task = await backend.harness.getTask(id, backend.context);
+    if (!task) throw new Error(`Task ${id} does not exist`);
+    if (task.conversationId !== backend.conversation.id || task.kind !== 'pi.coding.run') {
+      throw new Error(`Task ${id} is not a coding run for this Agent`);
+    }
+    // The persisted run already contains this binding's initial transcript.
+    this.seeded = true;
     this.remember(config, initial);
-    const host = await this.createExecution(initial, config, emit, signal, streamFn);
+    const host = await this.createExecution(initial, config, emit, signal, streamFn, true);
     this.execution = host;
-    onBound?.();
     try {
+      onBound?.();
       const receipt = await backend.harness.waitForTask(id, backend.context);
       const outcome = receipt.state.outcome;
       if (outcome.status !== 'completed') {
@@ -357,7 +364,7 @@ export class DurableLoopBinding {
 
   private async createExecution(
     initial: AgentContext, config: AgentLoopConfig, emit: AgentEventSink,
-    signal: AbortSignal | undefined, streamFn: StreamFn,
+    signal: AbortSignal | undefined, streamFn: StreamFn, recovering = false,
   ): Promise<LoopExecution> {
     const backend = await this.backend();
     const identities = this.options.journal && new NativeMessageIdentities(this.options.journal,
@@ -404,7 +411,11 @@ export class DurableLoopBinding {
         this.restoreMessages?.(host.context.messages);
       },
       captureMessageReferences: identities && (state => identities.capture(state)),
-      restoreCheckpoint: identities && (state => identities.restore(state)),
+      restoreCheckpoint: state => {
+        if (identities) identities.restore(state);
+        // Agent and task append independently while retaining the same message objects.
+        else if (recovering) this.restoreMessages?.([...state.messages]);
+      },
       commit: async tx => {
         const scope = invocation.getStore();
         if (!scope || scope.host !== host) throw new Error('Agent commit outside a durable task phase');
