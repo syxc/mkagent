@@ -53,6 +53,32 @@ blocked by the source access boundary. This refactor removes repeated
 registration work; it does not establish that the complete SDK retention
 or upgrade cost is minimal.
 
+## Native edit execution adapter assessment
+
+The Native `core/tools/edit.ts` file matches its pinned upstream bytes and
+has no recorded transformation. Its matching and diff algorithms already
+use durable. A scoped prototype extracts the actual Native definition and
+calls the public durable `createEditTool()` through an environment adapter.
+It uses the real Native mutation queue and shared edit algorithms. Path
+resolution, filesystem operations and renderers are controlled boundaries;
+the complete tool module is not imported.
+
+The first adapter matched 23 of 24 cases in both Bun and Node. Cancellation
+immediately after taking the Native queue skipped an access operation that
+the original had already started. Starting access before entering the
+public tool preserves that case. The final prototype matches all 24 cases
+in both runtimes, including BOM, CRLF, multiple edits, invalid edits,
+operation errors and cancellation during access, read and write.
+
+With the same compiler removing types and comments, the original definition
+is 57 lines. The candidate definition is 20 lines and its adapter module is
+35 lines. Adopting it would add a transformation of currently unchanged
+upstream code, environment mappings and a second mutation queue to review.
+The two-line reduction does not justify those additional upgrade checks.
+Production retains the original definition and its existing shared
+algorithms. These prototype results do not establish complete plugin,
+remote filesystem or concurrent edit/write equivalence.
+
 ## Agent cold recovery and public pi-ai helpers
 
 The added `agent-recovery.test.ts` kills a separate process with SIGKILL after
