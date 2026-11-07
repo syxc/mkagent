@@ -26,15 +26,26 @@ The baseline product test then passed with 1 test and 43 assertions.
 
 The historical `scripts/patch-durable.ts` produces four harness files. Its
 write path still replaced the canonical patch, which now has 28 file
-sections. The new scope check rejects existing sections outside those four
-files, renamed paths outside that scope and unrecognized Git file headers.
-The generator and check share one file list. Both normal mode and `--check`
-reject the complete patch before Git calls, semantic analysis or writes.
+sections. The first scope-only guard in `7c955cb` still allowed independent
+changes in those four files, empty patches and non-Git patches. Three added
+regression cases fail on that guard before the correction.
 
-The new focused test file passes 9 tests under each of Bun and Node. A
-separate CLI check uses missing SDK input directories and confirms that both
-modes stop at the scope check. Three explicit tooling type roots cover 223
-files with zero diagnostics. The complete patch remains unchanged at SHA-256
+Normal mode now refuses every existing patch. It can create an absent patch
+with exclusive `wx` creation before it writes installed SDK files or the
+manifest. This also preserves a patch created after preflight. The read-only
+`--check` retains the historical four-file scope and subsequent exact content
+comparison. It rejects missing patches, patches without Git file sections,
+out-of-scope paths and unrecognized Git file headers. Both modes reject the
+current complete patch before Git calls, semantic analysis or writes.
+
+The focused suite passes 18 tests under each of Bun and Node. Twelve
+controlled CLI fixtures use compiler and Git probes: nine stop before Git,
+and three reach only the failing Git probe. All fixture outputs remain
+unchanged. Two further calls execute the repository CLI with missing SDK
+input directories and preserve the actual patch and manifest. Three explicit
+tooling type roots cover 220 files with zero diagnostics; their compiler host
+limits source reads to those inputs and five verified dependency roots.
+The complete patch remains unchanged at SHA-256
 `bf8ec9e12c2516923cd67c969b2350e6fc609b0f9043c81ff3f112db6b96f739`.
 These checks do not run the full generator or its SDK type analysis.
 
@@ -1880,7 +1891,9 @@ Partial hash checks do not establish full reproduction.
 Set `CRAFT_AGENT_SOURCE` to the isolated pinned Craft checkout. The earlier
 helper port uses `scripts/vendor-upstream.ts` in the coding package.
 `scripts/patch-durable.ts` covers only the historical four-file boundary
-patch and now rejects the current complete patch in both modes. Rebuild and
+patch. Its default mode only creates an absent patch; it never replaces an
+existing patch. Read-only `--check` accepts only the historical scope, so both
+modes reject the current complete patch. Rebuild and
 verify the complete patch against pristine locked dependencies while
 preserving every required section. The four-file tool does not reproduce
 the current 28-file patch.

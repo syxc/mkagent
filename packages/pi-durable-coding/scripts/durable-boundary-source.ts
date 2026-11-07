@@ -1,19 +1,37 @@
 /** Minimal source transformations for durable's native coding boundaries. */
+import { writeFileSync } from 'node:fs';
+
 export const BOUNDARY_PATCH_FILES = Object.freeze([
   'dist/harness/generation.js', 'dist/harness/generation.d.ts',
   'dist/harness/types.d.ts', 'dist/harness/live.d.ts',
 ]);
 
-/** Refuse to discard SDK changes outside this historical generator's scope. */
-export function assertBoundaryPatchScope(patch: string): void {
+/** Never replace an existing patch; limit read-only checks to the historical scope. */
+export function assertBoundaryPatchScope(patch: string | undefined, checking = false): void {
+  if (patch === undefined) {
+    if (checking) throw new Error('The historical --check requires an existing Git patch.');
+    return;
+  }
+  if (!checking) {
+    throw new Error('The historical four-file boundary generator cannot overwrite an existing SDK patch. '
+      + 'Use --check only for a four-file boundary patch; preserve the complete SDK patch when rebuilding.');
+  }
+  let sections = 0;
   for (const line of patch.split(/\r?\n/)) {
-    if (!line.startsWith('diff --git ')) continue;
+    if (!line.startsWith('diff --git')) continue;
     const paths = /^diff --git a\/(\S+) b\/(\S+)$/.exec(line);
     if (!paths || !BOUNDARY_PATCH_FILES.includes(paths[1]!) || !BOUNDARY_PATCH_FILES.includes(paths[2]!)) {
       throw new Error('The historical four-file boundary generator cannot replace the complete SDK patch. '
         + 'Preserve every existing patch section when rebuilding from pristine dependencies.');
     }
+    sections++;
   }
+  if (!sections) throw new Error('The historical --check requires a Git patch with boundary file sections.');
+}
+
+/** A patch created after preflight must also survive, before any SDK output is written. */
+export function createBoundaryPatch(path: string, patch: string): void {
+  writeFileSync(path, patch, { flag: 'wx' });
 }
 
 export const codingTypes = `

@@ -4,17 +4,17 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import ts from 'typescript';
-import { assertBoundaryPatchScope, BOUNDARY_PATCH_FILES, codingHook, patchGeneration, replaceOnce } from './durable-boundary-source.ts';
+import { assertBoundaryPatchScope, BOUNDARY_PATCH_FILES, codingHook, createBoundaryPatch, patchGeneration, replaceOnce } from './durable-boundary-source.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const [checkout, installed, pristine, ...flags] = process.argv.slice(2);
 if (!checkout || !installed || !pristine) throw new Error('Usage: bun patch-durable.ts /pi-checkout /installed-durable /pristine-durable [--check]');
 const patchPath = join(import.meta.dir, '../../../patches/@earendil-works%2Fpi-durable@1.5.0.patch');
-if (existsSync(patchPath)) assertBoundaryPatchScope(readFileSync(patchPath, 'utf8'));
+const checking = flags.includes('--check');
+assertBoundaryPatchScope(existsSync(patchPath) ? readFileSync(patchPath, 'utf8') : undefined, checking);
 const upstream = resolve(checkout);
 const target = resolve(installed);
 const baseline = resolve(pristine);
-const checking = flags.includes('--check');
 const head = Bun.spawnSync(['git', '-C', upstream, 'rev-parse', 'HEAD']);
 const dirty = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--', 'packages/durable/src']);
 if (head.exitCode || head.stdout.toString().trim() !== revision || dirty.exitCode || dirty.stdout.toString().trim()) {
@@ -100,8 +100,9 @@ const manifest = JSON.stringify({
 const files = [...outputs].map(([path, value]) => [join(target, path), value]);
 files.push(
   [join(import.meta.dir, '../DURABLE-PATCH.json'), manifest],
-  [patchPath, patch],
 );
+if (checking) files.push([patchPath, patch]);
+else createBoundaryPatch(patchPath, patch);
 for (const [path, content] of files) {
   if (checking) {
     if (readFileSync(path, 'utf8') !== content) throw new Error(`Patch output differs: ${path}`);

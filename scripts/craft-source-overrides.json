@@ -2329,8 +2329,8 @@
   },
   "mkOnly": {
     "packages/pi-durable-coding/test/durable-boundary-source.test.ts": {
-      "sha256": "e5b83f8e7283d3651f4252581924df73b8fdb45304ab078e9d1cc0eb7a2e24cb",
-      "reason": "Prevent the historical four-file generator from discarding additional SDK patch sections."
+      "sha256": "6c900a6989e98d6c30dc56064ae833f200fd3c4ca20ed1287447b81a4404a702",
+      "reason": "Prevent replacement of any existing SDK patch, cover read-only scope checks, and preserve a patch created after preflight."
     },
     "packages/pi-durable-coding/src/compat/shell.ts": {
       "sha256": "d571f33ef9cc91f76a83a70a3c8836fb54fede2256412af9b22923c3660bf6b0",
@@ -3697,12 +3697,12 @@
       "reason": "Declare independent coding capabilities using official Pi libraries and loader dependencies. Pin public ZIP and ANSI packages already present in the lock."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
-      "sha256": "0f2b2a431209a14500d602ca5558927e7f2255800bd090f4b61c432f0b3defd4",
-      "reason": "Transform preparation, awaited events, atomic drafts, continuation and checkpoint migration. Reject partial replacement of the complete SDK patch."
+      "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
+      "reason": "Transform preparation, awaited events, atomic drafts, continuation and checkpoint migration. Refuse replacement of existing SDK patches and use exclusive creation after preflight."
     },
     "packages/pi-durable-coding/scripts/patch-durable.ts": {
-      "sha256": "b55ce127fc5f02c560f06ef4978582f17c81f45aa0b722bca108d7d7060c5599",
-      "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Check existing patch scope before Git, type analysis or writes."
+      "sha256": "8bc84b267ae7ac0286cf8a8547e58e109f153c9433daa303cab0de9501932aca",
+      "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
       "sha256": "c98642a3b264e7123512453397177cd2c6742124f11feb1e6b0d582e0f0548f2",
