@@ -52,6 +52,49 @@ They do not instantiate the complete edit-tool definition, its renderers or
 the plugin loader. Full SDK, product, source and platform checks retain their
 existing restrictions. F1/F3 remain open.
 
+## File mutation and HTML candidates after b796f2c
+
+The file-mutation queue has two prototype adapters. An environment
+adapter preserves Native path resolution, separate queue identity and
+serialized key registration while calling durable's queue. Under both Bun and
+Node, 33 invariant checks cover the original, environment and synchronous-slot
+implementations. Cases include existing aliases, missing paths, `ENOTDIR`,
+different-file parallelism, delayed keys, callback failure, key-error identity,
+registration recovery and nested operations on different files.
+
+The environment adapter adds awaits and changes a controlled `realpath`
+substitute's ordering. Native starts callback A before key B finishes; the
+adapter finishes key B first. A simulated file creation also changes whether
+operation B waits for A. A synchronous reservation factory extracted from the
+existing durable allocation and cleanup statements preserves both observed
+results. That alternative changes Native from 61 to 50 lines and durable from
+52 to 61 lines. It saves two runtime lines in total, before public declarations,
+exports and generation guards. The original production implementations remain
+unchanged. This is a maintenance-cost decision after testing both adapters,
+not a claim that protocol adaptation is impossible.
+
+The existing public `html-entities@2.6.0` XML mode differs from Native for NUL,
+C1 controls, U+10FFFF, invalid numbers and `#0x10`. A named-entity-only adapter
+preserves the original numeric parser, scanner and JavaScript error behavior.
+It matches 20434 complete value/error comparisons in each runtime, including
+scanner offsets, length limits and malformed entities. Native would change
+from 51 to 48 lines while adding a direct runtime dependency for five names.
+The original module remains unchanged.
+
+The first HTML audit expected a literal table and rejected its pure reference
+generator. The first comparison launches then failed because the candidate
+file had not been created. After inspecting that generator and its calls, the
+harness generated the candidate and both runtime comparisons passed.
+
+The manifest contains 257 records: 248 TypeScript files and nine assets.
+This count does not establish the necessity of all recorded sources.
+The inspected user-agent helper already calls public pi-ai. Git parsing
+already uses `hosted-git-info`; output-file creation keeps exclusive `wx` and
+0600 permissions through Node APIs. Tool-result image handling keeps Native
+array identity and failure policies around the existing image pipeline.
+Their remaining source necessity has not been established by these probes.
+Full SDK, product and source checks retain their existing restrictions.
+
 ## Remaining truncation candidates
 
 A prototype uses public chord `boundOutput` for the Native partial tail and
