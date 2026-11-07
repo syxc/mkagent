@@ -47,6 +47,21 @@ new tasks and replaced existing message objects. Message restoration without
 a journal is now enabled only by `recover()`. The journal identity branch
 keeps its previous behavior.
 
+Four more cases use real stored task records. A run in another conversation
+and a task of another kind fail before the binding callback or scheduler
+can change their records. A coding child owned by this conversation's
+session task passes validation; its callback deliberately stops execution.
+Joining a completed run on the already loaded Agent retains its message
+objects and makes no new model request. These checks do not run a complete
+Native session lifecycle.
+
+The first fixtures omitted explicit stream bindings and read a nonexistent
+`ownerTaskId` field. Both setups were corrected against the public contract.
+The final inputs include the required `reasoning` property, task receipts
+use the terminal-state discriminator, and the mixed task result specifies
+the commit's `TaskId` type. The narrow checker also includes the registry
+field and projected task definitions used by these cases.
+
 Three source files now reuse public pi-ai implementations. The in-memory
 model store inherits `InMemoryModelsStore`; usage totals use
 `pi-ai/utils/estimate`; the Native `StringEnum` keeps its `TUnsafe` signature
@@ -67,10 +82,10 @@ inherited, their function identities change, and instances also satisfy
 `instanceof InMemoryModelsStore`. Name, constructor arity, own fields and the
 checked operation results retain their previous values.
 
-The final affected regression set passes 41 tests in six files with 301 Bun
-assertions. A new consumer installs 105 cached packages with frozen locks
-and network denied. Its final source snapshot passes the same 41 Bun tests
-and 19 Node tests. Node uses experimental TypeScript transformation.
+The final affected regression set passes 45 tests in six files with 301 Bun
+`expect` calls. A new consumer installs 105 cached packages with frozen locks
+and network denied. Its final source snapshot passes the same 45 Bun tests
+and 23 Node tests. Node uses experimental TypeScript transformation.
 All 45 local runtime files and 34 patched package files match the worktree;
 the root and consumer locks retain their recorded digests. The four core
 patch files also match a clean replay against saved original files.
@@ -85,9 +100,10 @@ separate from the existing retry 0.13.1 record.
 The three explicit generator checks pass with `complete: false`.
 The declaration guards reject 13 source mutations and preserve unrelated
 suffixes in all three files. The scoped type checks pass with six Agent
-roots and 1025 source files, and three helper roots and 1321 source files.
-The former checks the actual facade, tests and extracted recovery body;
-other durable methods remain projected. The latter checks the actual enum,
+roots and 1026 source files, and three helper roots and 1321 source files.
+The former checks the actual facade, tests, extracted recovery body and
+required run input fields; other durable methods and task definitions remain
+projected. The latter checks the actual enum,
 test, generation rules and extracted storage class; token re-export is
 projected. Neither check loads the complete SDK type graph.
 

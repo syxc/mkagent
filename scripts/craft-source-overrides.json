@@ -3997,8 +3997,8 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/test/agent-recovery.test.ts": {
-      "sha256": "46d557f91071f258282d73caf36bbe215bde5584d1fcdf3192008872c2e0a2f7",
-      "reason": "Verify real JSONL Agent SIGKILL recovery, replay policies, failed binding retries, invalid task initialization and ordinary message identity."
+      "sha256": "f1dfae3e7c0b9a6f2a46378b7cd168fa6c4312a5728fe858098dae92aa80aec2",
+      "reason": "Verify real JSONL Agent SIGKILL recovery, replay policies, failed binding retries, invalid task initialization and ordinary message identity. Cover real foreign task records, session-owned coding children and completed run joins."
     },
     "packages/pi-durable-coding/test/fixtures/agent-recovery-process.ts": {
       "sha256": "29be24423ec2e8fc53805084b2a37bf56eb216b76b37a82c32e9e2295b31f198",
