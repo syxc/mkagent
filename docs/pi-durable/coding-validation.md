@@ -20,6 +20,32 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Read path normalization compatibility
+
+Commit `86bb0a4` cached NFD for both callers. The original Native entries cache
+it once; the original durable resolver computes it twice before any existence
+probe. Instrumenting the original package under Bun and Node confirms that an
+error from the second call propagates before probing. The shared version
+incorrectly skipped that call and error.
+
+The generator now keeps Native reuse by default, while the durable resolver
+requests recomputation. Two regression tests first failed on the cached
+version and then passed. Five tests and 13 assertions cover lazy evaluation,
+Native sync and async reuse, durable call order and original error identity.
+The 24 original durable path results and probe sequences still match.
+
+Eight explicit strict type roots resolve 440 files without diagnostics.
+All 30 patch files apply cleanly; the other 28 diffs remain unchanged.
+The new patch SHA-256 is
+`ee13f36ae265d1def92c02d30c8af75561f36a153e736c88651e186cbf3fb541`.
+A fresh independent cache uses 99 original local packages. The offline frozen
+install disables lifecycle scripts. All 30 patched files, 18 Native files and
+46 runtime files match the working tree. Bun and Node each pass the same 923
+test bodies and 1895 assertions. Both locks remain unchanged.
+
+Review stayed in the main thread. Complete SDK, product, root installation
+and release checks remain outside this evidence. F1/F3 remain open.
+
 ## Shared Native head truncation
 
 Native head truncation, line counting, size formatting and default limits now

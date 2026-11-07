@@ -57,7 +57,7 @@ Native 子进程等待通过[薄适配](../../packages/pi-durable-coding/src/com
 
 Native shell 的 Bash 传参选择和进程树清理也通过[薄适配](../../packages/pi-durable-coding/src/compat/shell.ts)共用 durable 的既有函数。Native 保留同步查找、错误、PowerShell、环境和 detached 子进程集合；macOS 的组 `SIGSTOP` 策略在适配中保留，后续清理由内核执行。`env/node.js` 相对原包仅增加三个函数的公开导出，全部算法正文不变。局部生成检查和冻结消费证据见[验证记录](coding-validation.md)。
 
-Native 同步与异步读取路径通过[薄适配](../../packages/pi-durable-coding/src/compat/read-path.ts)共用 durable 的候选生成器。截图空格、NFD 和弯引号规则只保留一份；Native 仍按需计算候选，跳过与原路径相同的候选，并保留其他候选间的重复探测。durable 默认入口仍先生成全部候选，再用 `Set` 去重。两种入口继续使用各自的路径解析和存在性检查。
+Native 同步与异步读取路径通过[薄适配](../../packages/pi-durable-coding/src/compat/read-path.ts)共用 durable 的候选生成器。截图空格、NFD 和弯引号规则只保留一份；Native 仍按需计算候选，跳过与原路径相同的候选，并保留其他候选间的重复探测。durable 默认入口仍先生成全部候选，再用 `Set` 去重。生成器默认复用首次 NFD，durable 显式选择重新计算，保留其原来的两次调用及首次探测前的错误。两种入口继续使用各自的路径解析和存在性检查。
 
 Native 头部截断、行计数、大小显示和默认上限也共用 durable。截断[薄适配](../../packages/pi-durable-coding/src/compat/truncate.ts)保留 Native 的行或字节标记、限制 getter 顺序及错误；尾部、中间、单行和 UTF-8 后缀处理仍保留原文。durable 仅增加既有行计数器和 `/tools` 的公开导出，算法正文不变。Bun 与 Node 原版对未配对代理码元的字节计数已有差异，两个运行时分别固定原版基线，具体范围见[验证记录](coding-validation.md)。
 

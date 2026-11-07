@@ -3945,7 +3945,7 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "33f837052d72fcd237e2d6cb3f7fd2a9c5e5c649a7adf4a13efca0f4faca1215",
+      "sha256": "ee13f36ae265d1def92c02d30c8af75561f36a153e736c88651e186cbf3fb541",
       "reason": "Keep a canonical complete Git patch for frozen Bun installs, shared algorithms and host policies; stamp the full body so old Bun cache artifacts are not reused."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
@@ -5339,6 +5339,10 @@
     "packages/pi-durable-coding/test/fixtures/native-truncate-1.5.0.json": {
       "sha256": "426b5cf4e2b82ca0d56b44effdeabdcc155d41d2a800b37024da6b0e66c0619d",
       "reason": "875 result digests captured from original Pi v1.5.0 Native code, retaining 38 existing Node versus Bun surrogate differences."
+    },
+    "packages/pi-durable-coding/test/read-path-normalization.test.ts": {
+      "sha256": "5f83961c6af634f350feda3d38978f8d80fca2ad23d7a3d2ca6a43c78d03277b",
+      "reason": "Pin Native lazy NFD reuse and durable repeated normalization, including second-call error identity and order before filesystem probes."
     }
   },
   "deleted": {
