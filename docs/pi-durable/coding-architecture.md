@@ -65,7 +65,7 @@ Native shell 的 Bash 传参选择和进程树清理也通过[薄适配](../../p
 
 Native 同步与异步读取路径通过[薄适配](../../packages/pi-durable-coding/src/compat/read-path.ts)共用 durable 的候选生成器。截图空格、NFD 和弯引号规则只保留一份；Native 仍按需计算候选，跳过与原路径相同的候选，并保留其他候选间的重复探测。durable 默认入口仍先生成全部候选，再用 `Set` 去重。生成器默认复用首次 NFD，durable 显式选择重新计算，保留其原来的两次调用及首次探测前的错误。两种入口继续使用各自的路径解析和存在性检查。
 
-Native 头部截断、大小显示和默认上限共用 durable，尾部截断使用原有公开 `chord/output`。[薄适配](../../packages/pi-durable-coding/src/compat/truncate.ts)保留 Native 的行或字节标记、空行、限制 getter 顺序、错误和代理码元策略，并在调用 SDK 前选择候选行及 UTF-16 后缀。行计数策略留在外部适配层，两个 SDK 截断文件已恢复为原始缓存内容，durable 补丁由 30 文件降为 28；其余 26 份差异不变。生成转换检查尾部公开签名和剩余引用，不要求同步核对已替换的算法正文或无引用私有 helper 的签名。中间和单行处理仍保留原文。两个运行时的原版行为、冻结消费者及首调用开销见[验证记录](coding-validation.md)。
+Native 头、尾截断均使用原有公开 `chord/output`，[薄适配](../../packages/pi-durable-coding/src/compat/truncate.ts)集中保留 Native 的字节、行数、标签、getter、首行拒绝及部分尾行策略。默认上限和行计数留在外部适配层，大小显示保留 Native 的三条规则。两个 SDK 截断文件保持原始缓存内容，截断专有导出补丁已撤掉；durable 补丁仍为 28 文件，其余 26 份差异不变。生成转换只检查两个截断入口的公开签名和剩余私有 helper 引用，不再绑定头、尾的算法正文。相同 7 个类型根从 437 个文件降至 225 个，未发现诊断。中间和单行处理仍保留原文。两个运行时的原版行为、冻结消费者及首调用开销见[验证记录](coding-validation.md)。
 
 Native [编辑差异入口](../../packages/pi-durable-coding/src/pi/core/tools/edit-diff.ts)通过 9 个公开函数共用 durable 的匹配、替换、换行和 diff 算法，18 个重复算法正文被移除。Native 保留自己的函数签名和类型声明，插件接口扩展仍作用于返回类型；文件解析、读取权限、BOM、预览和错误转换继续由原来的两个预览函数负责，正文不变。内核仅新增公开导出，既有算法及类型不变；两套 diff 的 19 份运行时文件一致。源码由 556 行降为 186 行，原版结果、真实文件预览及冻结消费者范围见[验证记录](coding-validation.md)。
 

@@ -246,10 +246,9 @@ export function portTruncation(body: string): string {
     TruncationResult: '60fbec2ea2f68e45e297f39d014243e58322e39d64258036f3db97ea9d6bae15',
     TruncationOptions: 'f29fa289a0d02f53d9dd89bbc7e3a5ef759ffa410160cf537bcceaa52559c172',
     splitLinesForCounting: 'c16490ab83da37e63ee9134b3392d884e112b93c0d11072ba668d0e2e283deb1',
-    formatSize: '732147ecdfd179ec787e25aad455118aea89f7a90590d38ad850184f659274ed',
-    truncateHead: '513b473a840717d9c241e6a996d860582f574b537cb796d839334b6089787250',
   };
   const signatures: Record<string, string> = {
+    truncateHead: 'export function truncateHead(content: string, options: TruncationOptions = {}): TruncationResult',
     truncateTail: 'export function truncateTail(content: string, options: TruncationOptions = {}): TruncationResult',
   };
   const remaining = new Set([...Object.keys(expected), ...Object.keys(signatures)]);
@@ -260,9 +259,10 @@ export function portTruncation(body: string): string {
     if (name && Object.hasOwn(signatures, name)) {
       if (!ts.isFunctionDeclaration(node) || !node.body || !remaining.delete(name) ||
           body.slice(node.getStart(parsed), node.body.getStart(parsed)).replace(/\s+/g, ' ').trim() !== signatures[name]) {
-        throw new Error('Native tail truncation signature changed');
+        throw new Error('Native truncation public signature changed');
       }
-      const text = 'export function truncateTail(content: string, options: TruncationOptions = {}): TruncationResult {\n\treturn sharedTruncateTail(content, options);\n}';
+      const shared = name === 'truncateHead' ? 'sharedTruncateHead' : 'sharedTruncateTail';
+      const text = `${signatures[name]} {\n\treturn ${shared}(content, options);\n}`;
       edits.push({ start: node.getStart(parsed), end: node.end, text });
       continue;
     }
@@ -290,18 +290,12 @@ export function portTruncation(body: string): string {
       const end = body.indexOf('\n', node.end);
       edits.push({ start: node.getStart(parsed), end: end < 0 ? node.end : end + 1, text: '' });
     } else {
-      const text = name === 'formatSize'
-        ? 'export function formatSize(bytes: number): string {\n\treturn sharedFormatSize(bytes);\n}'
-        : name === 'truncateHead'
-          ? 'export function truncateHead(content: string, options: TruncationOptions = {}): TruncationResult {\n\treturn sharedTruncateHead(content, options);\n}'
-          : '';
-      edits.push({ start: text ? node.getStart(parsed) : node.getFullStart(), end: node.end, text });
+      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
     }
   }
   if (remaining.size) throw new Error('Native truncation declarations changed');
   for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
-  return 'import { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize as sharedFormatSize } from "@earendil-works/pi-durable/tools";\n'
-    + 'import { truncateHead as sharedTruncateHead, truncateTail as sharedTruncateTail, splitLinesForCounting } from "../../../compat/truncate.ts";\n'
+  return 'import { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, truncateHead as sharedTruncateHead, truncateTail as sharedTruncateTail, splitLinesForCounting } from "../../../compat/truncate.ts";\n'
     + 'export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES };\n' + body;
 }
 

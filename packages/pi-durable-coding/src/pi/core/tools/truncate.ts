@@ -1,5 +1,4 @@
-import { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, formatSize as sharedFormatSize } from "@earendil-works/pi-durable/tools";
-import { truncateHead as sharedTruncateHead, truncateTail as sharedTruncateTail, splitLinesForCounting } from "../../../compat/truncate.ts";
+import { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, truncateHead as sharedTruncateHead, truncateTail as sharedTruncateTail, splitLinesForCounting } from "../../../compat/truncate.ts";
 export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES };
 /**
  * Shared truncation utilities for tool outputs.
@@ -49,7 +48,13 @@ export interface TruncationOptions {
  * Format bytes as human-readable size.
  */
 export function formatSize(bytes: number): string {
-	return sharedFormatSize(bytes);
+	if (bytes < 1024) {
+		return `${bytes}B`;
+	} else if (bytes < 1024 * 1024) {
+		return `${(bytes / 1024).toFixed(1)}KB`;
+	} else {
+		return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+	}
 }
 
 /**

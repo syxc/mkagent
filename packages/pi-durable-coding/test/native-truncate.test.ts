@@ -57,6 +57,26 @@ test('Native head reads each limit getter once in the original order', () => {
   expect(result.maxBytes).toBe(1);
 });
 
+test('Native head retains an empty first line within a fractional byte allowance', () => {
+  const result = native.truncateHead('\nabc\n', { maxBytes: 0.5 });
+  expect(result.content).toBe('');
+  expect(result.outputLines).toBe(1);
+  expect(result.outputBytes).toBe(0);
+  expect(result.truncatedBy).toBe('bytes');
+  expect(result.firstLineExceedsLimit).toBe(false);
+});
+
+test('Native head preserves surrogate lines within their Buffer byte allowance', () => {
+  const kept = ['\ud800', '\udc00'];
+  const maxBytes = kept.reduce((bytes, line) => bytes + Buffer.byteLength(line, 'utf-8'), 1);
+  const result = native.truncateHead(`${kept.join('\n')}\nlast\n`, { maxLines: 1.5, maxBytes });
+  expect(result.content).toBe(kept.join('\n'));
+  expect(result.outputLines).toBe(2);
+  expect(result.outputBytes).toBe(Buffer.byteLength(kept.join('\n'), 'utf-8'));
+  expect(result.truncatedBy).toBe('lines');
+  expect(result.firstLineExceedsLimit).toBe(false);
+});
+
 test('Native tail retains an empty final line at a fractional byte limit', () => {
   const result = native.truncateTail('a\n\n', { maxBytes: 1.5, maxLines: 3 });
   expect(result.content).toBe('');

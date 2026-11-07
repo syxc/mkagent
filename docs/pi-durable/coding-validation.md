@@ -22,7 +22,70 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
-## Public SDK tail truncation
+## Public SDK head and tail truncation
+
+Both Native head and tail truncation now call the existing public
+`@earendil-works/chord/output` API. One external adapter keeps Native limits,
+line counts, labels, first-line rejection and partial-tail policy. Size
+formatting keeps the original Native display rules. The SDK needs no
+truncation exports or algorithm patches. Its two truncation files still match
+the original cache; the patch still covers 28 files, with the other 26 diffs
+unchanged. Its current SHA-256 is
+`bf8ec9e12c2516923cd67c969b2350e6fc609b0f9043c81ff3f112db6b96f739`.
+
+Bun and Node each match all 875 original cases with full values and errors.
+Each also matches 20,000 deterministic random cases and 210 selected
+JavaScript cases per direction. These include property getters and primitive
+limit coercion; they do not cover objects with stateful numeric coercion.
+The final fresh consumer installs 99 cached packages offline with scripts
+disabled. Both runtimes pass the same 886 test bodies; Bun records 1803
+assertions. Its 28 patched files, six Native files, two original SDK truncation
+files and three public Chord files match. Both lockfiles remain unchanged.
+
+The same seven strict type roots now resolve 225 files, down from 437, with
+no diagnostics. The truncation entry no longer imports durable tools.
+Generation checks both public truncation signatures and retained references
+to the removed private helper. Eight API or reference mutations fail; three
+body changes and two unused private-helper changes preserve the output.
+The actual single-file generator check passes with `complete: false`.
+
+First calls use the final generated entry, default limits and 10 MiB inputs.
+Each row uses three fresh processes per implementation; import time is
+excluded. The final measurements follow removal of an unnecessary full
+line-array copy.
+
+| Runtime | Direction | Input | Native median (ms) | Adapter median (ms) | Adapter range (ms) |
+| --- | --- | --- | ---: | ---: | --- |
+| Bun | Head | ASCII line | 7.07 | 7.07 | 6.93-7.12 |
+| Bun | Head | Unicode line | 2.18 | 2.28 | 2.11-2.33 |
+| Bun | Head | 1,048,576 short lines | 36.28 | 34.95 | 31.85-37.39 |
+| Bun | Tail | ASCII line | 8.60 | 7.41 | 7.40-7.66 |
+| Bun | Tail | Unicode line | 7.76 | 2.69 | 2.46-2.80 |
+| Bun | Tail | 1,048,576 short lines | 34.25 | 34.52 | 29.85-36.86 |
+| Node | Head | ASCII line | 4.96 | 4.78 | 4.70-5.07 |
+| Node | Head | Unicode line | 14.43 | 14.51 | 14.37-14.56 |
+| Node | Head | 1,048,576 short lines | 66.69 | 66.33 | 65.99-66.67 |
+| Node | Tail | ASCII line | 8.03 | 5.07 | 5.03-5.18 |
+| Node | Tail | Unicode line | 32.49 | 15.00 | 14.82-15.17 |
+| Node | Tail | 1,048,576 short lines | 67.01 | 66.19 | 66.16-66.24 |
+
+All 72 samples match their input's reference output digest. On short lines,
+maximum RSS after the call is 99.91/101.52 MiB for Native/adapter head and
+103.72/101.98 MiB for tail under Bun. Node gives 163.19/164.92 MiB for head
+and 162.72/164.89 MiB for tail. RSS includes imports and is not a peak
+measurement. These samples do not establish every input's performance.
+
+The first install command used the repository worktree because the isolation
+wrapper resets its directory. Manifest resolution failed under network
+denial. A second flag placement treated `install` as a script. The successful
+command sets the consumer directory inside the sandboxed subprocess.
+Complete SDK, product and source checks remain restricted. F1/F3, F4 and F5
+remain open.
+
+## Public SDK tail truncation stage
+
+This section records `1bd9bba`. The head-and-tail integration above supersedes
+its head dependency and performance measurements.
 
 Native tail truncation now calls the existing public
 `@earendil-works/chord/output` API. The external adapter retains Native line
@@ -72,7 +135,8 @@ generated entry. Import time is excluded. Three samples per combination give:
 | Node | Unicode line | 32.83 | 15.19 | 15.02-15.41 |
 | Node | 1,048,576 short lines | 67.84 | 67.75 | 65.92-72.44 |
 
-All 36 samples match their input's reference output digest. On the short-line input, the largest RSS after
+All 36 samples match their input's reference output digest. On the short-line
+input, the largest RSS after
 the call is 100.66/119.17 MiB for Native/adapter under Bun and
 163.11/160.48 MiB under Node. RSS includes imported modules and is not a peak
 measurement. The earlier adapter rescanned the full prefix and took

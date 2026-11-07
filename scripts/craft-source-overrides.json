@@ -2485,12 +2485,12 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "6da07c7b80d5641cd478ccc2f2985fa29e7dae14489b9983f723ba4c514093ee",
+      "sha256": "c8012c051606bc27a9db3821c44eb2e0d1e377c5bd8907040e2e97af968ef50e",
       "reason": "Register shared helper paths, transforms, provenance labels and added dependencies once. Preserve guarded declaration replacements and the existing string-only interface."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "db8a086b2f624a14de4e1a894f3f2ee75987cab978a8619250cad2866d3e9542",
-      "reason": "Preserve Native forwarding guards separately from rule registration. Tail truncation checks its public signature and retained references without binding replaced implementation bodies."
+      "sha256": "e51a4c54b9763e2588b8ca59cf7a64ffc5024606ced92a425d65401d2a87476a",
+      "reason": "Preserve Native forwarding guards separately from rule registration. Truncation checks both public signatures and retained private-helper references without binding replaced bodies."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3949,8 +3949,8 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "439c3fa99e6a3e7aa07511aa0cad44b7bfe40496e106e2dc106f121ceea3e7e1",
-      "reason": "Keep the canonical frozen-install patch and full-body cache stamp. Restore both original SDK truncation files and keep Native line-count policy in the external adapter."
+      "sha256": "bf8ec9e12c2516923cd67c969b2350e6fc609b0f9043c81ff3f112db6b96f739",
+      "reason": "Keep the canonical frozen-install patch and full-body cache stamp. Truncation uses public Chord without SDK algorithm or export patches."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
       "sha256": "53af9ef53c9ada189e0122a646c18ccf20bc16c2720fa56c25a3a2de22690352",
@@ -4013,7 +4013,7 @@
       "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "055b022a3801ad4cb2c79e01af61a29f9b9e6d1c7301fed6b0d840a6e5d8e218",
+      "sha256": "7b2d64dd79db7217588f9f2c887a46481c3650bcb205eb5a43d697564c586f87",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -4585,8 +4585,8 @@
       "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
     },
     "packages/pi-durable-coding/src/pi/core/tools/truncate.ts": {
-      "sha256": "c2071765d79b345f17b11dd5731fcebb03c6ba4da7ccc3344f93bd05561bb977",
-      "reason": "Pinned Pi v1.5.0 truncation facade; use durable head and public Chord tail through external Native policy adapters."
+      "sha256": "56d31aab381f14820ef5db0847faa32bb07d4a3c0012ee7a5b6a18c21445ac1e",
+      "reason": "Pinned Pi v1.5.0 facade; head and tail share public Chord through external policy. Retain Native size formatting, middle and single-line code."
     },
     "packages/pi-durable-coding/src/pi/core/tools/write.ts": {
       "sha256": "b93b6a83eaee6959ae713934bbcdba834a39b023694a3ca986c73b331f771a3d",
@@ -5341,12 +5341,12 @@
       "reason": "Pin actual Native sync and async read path order, repeated probes, unchanged candidates and invalid URL errors."
     },
     "packages/pi-durable-coding/src/compat/truncate.ts": {
-      "sha256": "1cec8af7dc4f09a5619d63ca2c4002efb2836c1b336fa6525f42e68ff84f9153",
-      "reason": "External durable head and public Chord tail adapters preserving Native limits, labels, errors and UTF-16 text; keep line-count policy outside the SDK."
+      "sha256": "3a2111fdf76baa68f482a6fee3c0ac82d7d3ecbaef45d730d9205d8366bc55b3",
+      "reason": "Share public Chord bounds in both directions; preserve Native metadata and byte policy externally without SDK truncation exports."
     },
     "packages/pi-durable-coding/test/native-truncate.test.ts": {
-      "sha256": "ae2189408ccffcc0ab73fe9bddf3fe1ff5f0590bfff4bdb0b8ac13a44a469202",
-      "reason": "Pin Native truncation to original Bun and Node baselines, including getter order, errors, empty final lines, fractional cuts and surrogate byte weights."
+      "sha256": "32764897b1c0c7bbd6284456a293854b5958aef03cff9decfeb68df1c1cb53cc",
+      "reason": "Pin Native truncation to Bun and Node baselines, including getter order, errors, first and last empty lines, fractional cuts and surrogate byte weights."
     },
     "packages/pi-durable-coding/test/fixtures/native-truncate-cases.ts": {
       "sha256": "35ae0480ee512fb0eac81a5508bacb7f0d45566f688434d310eb6e502faadecd",
