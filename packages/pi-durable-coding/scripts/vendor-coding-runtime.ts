@@ -10,7 +10,7 @@ import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
 import { portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
-import { portSharedHelpers } from './shared-helper-port.ts';
+import { applySharedHelperPort } from './shared-helper-port.ts';
 import { portCompatRuntime } from './compat-runtime-port.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
@@ -252,39 +252,11 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     body = portBundledAssets(body);
     changes.add('installed-native-bundle-assets');
   }
-  if (path === 'core/footer-data-provider.ts' || path === 'core/resource-loader.ts' ||
-      path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts' ||
-      path === 'utils/zip.ts' || path === 'utils/tools-manager.ts' || path === 'utils/exif-orientation.ts' ||
-      path === 'utils/image-resize-core.ts' || path === 'utils/mime.ts' || path === 'utils/ansi.ts' ||
-      path === 'utils/child-process.ts' || path === 'utils/shell.ts' || path === 'core/tools/path-utils.ts' ||
-      path === 'core/tools/truncate.ts' || path === 'core/tools/edit-diff.ts' ||
-      path === 'core/models-store.ts' || path === 'core/extensions/pi-ai-extension-view.ts' ||
-      path === 'core/compaction/compaction.ts') {
-    body = portSharedHelpers(path, body);
-    changes.add(path === 'extensions/tool-search/tool.ts' ? 'shared-durable-tool-search-ranking'
-      : path === 'extensions/codemode/execute.ts' ? 'shared-durable-codemode-executor'
-      : path === 'utils/exif-orientation.ts' ? 'shared-durable-image-orientation'
-      : path === 'utils/image-resize-core.ts' ? 'shared-durable-image-encoding'
-      : path === 'utils/mime.ts' ? 'shared-durable-image-mime'
-      : path === 'utils/ansi.ts' ? 'public-ansi-regex-complete-matcher'
-      : path === 'utils/child-process.ts' ? 'shared-durable-child-process-wait'
-      : path === 'utils/shell.ts' ? 'shared-durable-shell-algorithms'
-      : path === 'core/tools/path-utils.ts' ? 'shared-durable-read-path-variants'
-      : path === 'core/tools/truncate.ts' ? 'shared-durable-head-truncation'
-      : path === 'core/tools/edit-diff.ts' ? 'shared-durable-edit-diff'
-      : path === 'core/models-store.ts' ? 'public-pi-ai-memory-models-store'
-      : path === 'core/extensions/pi-ai-extension-view.ts' ? 'public-pi-ai-typebox-string-enum'
-      : path === 'core/compaction/compaction.ts' ? 'public-pi-ai-context-token-total'
-      : path === 'utils/zip.ts' ? 'public-fflate-zip-writer'
-      : path === 'utils/tools-manager.ts' ? 'public-jszip-tool-archives' : 'shared-lightweight-resource-algorithms');
-    if (path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts' ||
-        path === 'utils/exif-orientation.ts' || path === 'utils/image-resize-core.ts' ||
-        path === 'utils/mime.ts' || path === 'utils/child-process.ts' ||
-        path === 'utils/shell.ts' || path === 'core/tools/path-utils.ts' ||
-        path === 'core/tools/truncate.ts' || path === 'core/tools/edit-diff.ts') dependencies.add('@earendil-works/pi-durable');
-    if (path === 'utils/zip.ts') dependencies.add('fflate');
-    if (path === 'utils/tools-manager.ts') dependencies.add('jszip');
-    if (path === 'utils/ansi.ts') dependencies.add('ansi-regex');
+  const helper = applySharedHelperPort(path, body);
+  if (helper) {
+    body = helper.body;
+    changes.add(helper.change);
+    if (helper.dependency) dependencies.add(helper.dependency);
   }
   if (path === 'core/extensions/runner.ts' || path === 'core/session-manager.ts') {
     body = portCompatRuntime(path, body);

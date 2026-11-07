@@ -20,6 +20,39 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Shared generation rule ownership
+
+The 18 shared replacements now register their source path, transform,
+provenance label and added dependency together. The runtime generator consumes
+that result instead of repeating path filters, label selection and dependency
+conditions. Whole-module transforms moved to `shared-runtime-port.ts`;
+declaration replacement remains in `shared-helper-port.ts`. The original
+`portSharedHelpers(path, body)` string interface remains available.
+
+Before the refactor, a scoped capture read the actual generator branch to
+record all 18 labels and dependency additions. It also recorded hashes of
+the pinned inputs and shared-transform outputs. In Bun and Node, the new
+registry matches all those values. All 18 generated files still match their
+recorded output hashes, and the actual generator passes `--check` with those 18 explicit
+`--file` arguments. This check reports `complete: false`.
+
+The 11 moved guard implementations are unchanged apart from their exports.
+All 18 rules still reject missing declarations. The existing public-leaf
+check also rejects 13 declaration drifts and preserves three unrelated
+suffixes. Four unknown paths, including JavaScript prototype names, return
+no rule and retain the input
+through the original string interface. The existing scoped-command suite
+passes 9 tests and 27 assertions. The narrow public-leaf type check includes
+the new transform module, checks 1322 source files from three explicit
+roots, and reports no diagnostics. Its existing projections remain in use;
+this is not a complete SDK type check.
+
+Runtime source, dependency versions, locks and the runtime provenance
+manifest did not change. Complete generation and the Craft audit remain
+blocked by the source access boundary. This refactor removes repeated
+registration work; it does not establish that the complete SDK retention
+or upgrade cost is minimal.
+
 ## Agent cold recovery and public pi-ai helpers
 
 The added `agent-recovery.test.ts` kills a separate process with SIGKILL after
