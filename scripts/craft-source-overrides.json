@@ -3997,7 +3997,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "1bc62a09b721a44af77f09cc65db1136ef20c744bb3adc88018812384ab6b8e4",
+      "sha256": "22214da5106e699900317b0f7bdf66f09fb27b5204e599a9cea1a154c1949a80",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -4013,11 +4013,11 @@
       "reason": "Port package operations and explicit host project directories while retaining pinned discovery and trust policies. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/session-runtime-port.ts": {
-      "sha256": "ed2076eee6e263dc93fdc74326b134e21bd3c7db7df14c3562fce3244f7bf949",
+      "sha256": "3a9fba6c2390bc80ef4be2df287068e9182cacc294dd628f43caeceaa00818de",
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "77d0e2a41399992adf24c687063602ccfe3fbcc9127a0293bc069c52ce699dfa",
+      "sha256": "63d6279af0d85df65ca4aec26366c60f626708e7f4c8d7fa1fa7ef1a3583aae3",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4029,8 +4029,8 @@
       "reason": "Provide the independent native coding host adapter and public contracts in compaction-reserve.ts."
     },
     "packages/pi-durable-coding/src/durable-agent.ts": {
-      "sha256": "fd54a4c3d3ca1181d549fc8d6ae4d8817fff782febf46527089d048422d0aa46",
-      "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "79003f50914419a8754c1db3e2fe1e196f18f370a52aa93b290377858e32f137",
+      "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse core Agent state and lifecycle through a durable execution backend while preserving Native defaults and Proxy receivers."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
       "sha256": "6aa9348c9bdf2a295f27e436ef2127cc4508443df4cbfeadf3cb7e5381c901b0",
@@ -5369,8 +5369,16 @@
       "reason": "Verify Native identity isolation, existing core defaults, tool preparation and hook cancellation across the public core operation boundary."
     },
     "patches/@earendil-works%2Fpi-agent-core@1.5.0.patch": {
-      "sha256": "93ef464a667d1faca6579c33e50ac2eeb58eb46e754829972675e97a55d2cf65",
-      "reason": "Expose ten existing pinned request and tool operations and declarations; accept Native default identity without changing upstream loop driver bodies."
+      "sha256": "6cb5521a3d2bd9859694851f2f0e12ad22f5fe4d86dc6a0ae1d3fd1237ba8d2c",
+      "reason": "Expose ten existing pinned request and tool operations and declarations; accept Native default identity without changing upstream loop driver bodies. Reuse core Agent state and lifecycle through a durable execution backend while preserving Native defaults and Proxy receivers."
+    },
+    "packages/pi-durable-coding/scripts/agent-facade-port.ts": {
+      "reason": "Generate a thin durable Agent subclass and extract three separate Native defaults from pinned source.",
+      "sha256": "337d2f009575a9f03ae8bb3417c2cfd117b7d39ed3cb7dc0b0cc24fd09e0533f"
+    },
+    "packages/pi-durable-coding/test/agent-facade.test.ts": {
+      "reason": "Verify Native defaults, constructor reads, transparent proxies, queue snapshots and awaited event settlement.",
+      "sha256": "f7bab0e79ec36655bbd14c2f0a60fbe4ff721dab5e5d3f0f0b1cf141d198d2aa"
     }
   },
   "deleted": {

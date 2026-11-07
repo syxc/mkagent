@@ -1,4 +1,4 @@
-# Content SHA-256: bcd57e196c7216a13b159e09d0f941591c4bf82ef2255c8102506da5ff5d2c1f
+# Content SHA-256: d0c1bfb23f50ad2a4a729f9a406eebd1cc32a821e3808fbf8f5bf5fa355e4e01
 diff --git a/dist/agent-loop.js b/dist/agent-loop.js
 --- a/dist/agent-loop.js
 +++ b/dist/agent-loop.js
@@ -124,4 +124,174 @@ diff --git a/dist/agent-loop.d.ts b/dist/agent-loop.d.ts
 +export declare function emitToolResultMessage(toolResultMessage: ToolResultMessage, emit: AgentEventSink): Promise<void>;
  export {};
  //# sourceMappingURL=agent-loop.d.ts.map
+\ No newline at end of file
+diff --git a/dist/agent.js b/dist/agent.js
+--- a/dist/agent.js
++++ b/dist/agent.js
+@@ -27,7 +27,7 @@
+     contextWindow: 0,
+     maxTokens: 0,
+ };
+-function createMutableAgentState(initialState) {
++function createMutableAgentState(initialState, defaultModel = DEFAULT_MODEL) {
+     let tools = initialState?.tools?.slice() ?? [];
+     let messages = initialState?.messages?.slice() ?? [];
+     const initialMessage = createInitialSystemMessage(initialState?.systemPrompt, tools.map(toToolDeclaration));
+@@ -37,7 +37,7 @@
+         get systemPrompt() {
+             return getCurrentSystemPrompt(messages);
+         },
+-        model: initialState?.model ?? DEFAULT_MODEL,
++        model: initialState?.model ?? defaultModel,
+         thinkingLevel: initialState?.thinkingLevel ?? "off",
+         get tools() {
+             return tools;
+@@ -66,6 +66,7 @@
+     enqueue(message) {
+         this.messages.push(message);
+     }
++    snapshot() { return this.messages.slice(); }
+     hasItems() {
+         return this.messages.length > 0;
+     }
+@@ -92,6 +93,7 @@
+  */
+ export class Agent {
+     _state;
++    _executionBackend;
+     listeners = new Set();
+     steeringQueue;
+     followUpQueue;
+@@ -121,13 +123,15 @@
+     toolExecution;
+     /** Request identity forwarded to the stream function, over `DEFAULT_AGENT_IDENTITY`. */
+     identity;
+-    constructor(options) {
++    constructor(options, execution = undefined) {
++        this._executionBackend = execution;
+         // Older compiled consumers may omit options or streamFn even though the current API requires them.
+         const runtimeOptions = options ?? {};
+-        this._state = createMutableAgentState(runtimeOptions.initialState);
+-        this.convertToLlm = runtimeOptions.convertToLlm ?? defaultConvertToLlm;
++        this._state = createMutableAgentState(runtimeOptions.initialState, execution?.defaultModel);
++        execution?.initialize?.(this, messages => { this._state.messages = messages; });
++        this.convertToLlm = runtimeOptions.convertToLlm ?? execution?.defaultConvertToLlm ?? defaultConvertToLlm;
+         this.transformContext = runtimeOptions.transformContext;
+-        this.streamFunction = runtimeOptions.streamFn ?? getDefaultStreamFn();
++        this.streamFunction = runtimeOptions.streamFn ?? (execution?.getDefaultStreamFn ?? getDefaultStreamFn)();
+         this.getApiKey = runtimeOptions.getApiKey;
+         this.onPayload = runtimeOptions.onPayload;
+         this.onResponse = runtimeOptions.onResponse;
+@@ -289,12 +293,12 @@
+     }
+     async runPromptMessages(messages, options = {}) {
+         await this.runWithLifecycle(async (signal) => {
+-            await runAgentLoop(messages, this.createContextSnapshot(), this.createLoopConfig(options), (event) => this.processEvents(event), signal, this.streamFunction);
++            await (this._executionBackend?.run ?? runAgentLoop)(messages, this.createContextSnapshot(), this.createLoopConfig(options), (event) => this.processEvents(event), signal, this.streamFunction);
+         });
+     }
+     async runContinuation() {
+         await this.runWithLifecycle(async (signal) => {
+-            await runAgentLoopContinue(this.createContextSnapshot(), this.createLoopConfig(), (event) => this.processEvents(event), signal, this.streamFunction);
++            await (this._executionBackend?.continue ?? runAgentLoopContinue)(this.createContextSnapshot(), this.createLoopConfig(), (event) => this.processEvents(event), signal, this.streamFunction);
+         });
+     }
+     createContextSnapshot() {
+@@ -372,7 +376,7 @@
+             api: this._state.model.api,
+             provider: this._state.model.provider,
+             model: this._state.model.id,
+-            usage: EMPTY_USAGE,
++            usage: this._executionBackend?.defaultUsage ?? EMPTY_USAGE,
+             stopReason: aborted ? "aborted" : "error",
+             errorMessage: error instanceof Error ? error.message : String(error),
+             timestamp: Date.now(),
+diff --git a/dist/agent.d.ts b/dist/agent.d.ts
+--- a/dist/agent.d.ts
++++ b/dist/agent.d.ts
+@@ -1,5 +1,6 @@
+-import { type ClientIdentity, type ImageContent, type Message, type SimpleStreamOptions, type ThinkingBudgets, type Transport } from "@earendil-works/pi-ai";
+-import type { AfterToolCallContext, AfterToolCallResult, AgentEvent, AgentLoopTurnUpdate, AgentMessage, AgentState, BeforeToolCallContext, BeforeToolCallResult, FinishTurn, PrepareNextTurnContext, PrepareRequest, QueueMode, StreamFn, ToolExecutionMode } from "./types.ts";
++import { type ClientIdentity, type ImageContent, type Message, type SimpleStreamOptions, type ThinkingBudgets, type Transport, type Usage } from "@earendil-works/pi-ai";
++import type { AfterToolCallContext, AfterToolCallResult, AgentContext, AgentEvent, AgentLoopConfig, AgentLoopTurnUpdate, AgentMessage, AgentState, BeforeToolCallContext, BeforeToolCallResult, FinishTurn, PrepareNextTurnContext, PrepareRequest, QueueMode, StreamFn, ToolExecutionMode } from "./types.ts";
++import type { runAgentLoop, runAgentLoopContinue } from "./agent-loop.js";
+ export type { QueueMode } from "./types.ts";
+ /** Initial state for {@link Agent}. `systemPrompt` and `tools` become the leading system message unless `messages` already starts with one. */
+ export type AgentInitialState = Partial<Omit<AgentState, "pendingToolCalls" | "isStreaming" | "streamingMessage" | "errorMessage">>;
+@@ -32,6 +33,22 @@
+      */
+     identity?: ClientIdentity;
+ }
++/** Replace scheduling while retaining the core state and lifecycle contracts. */
++export interface AgentExecution {
++    run: typeof runAgentLoop;
++    continue: typeof runAgentLoopContinue;
++    defaultModel?: AgentState["model"];
++    defaultUsage?: Usage;
++    defaultConvertToLlm?: AgentOptions["convertToLlm"];
++    getDefaultStreamFn?: () => StreamFn;
++    initialize?: (agent: Agent, restoreMessages: (messages: AgentMessage[]) => void) => void;
++}
++interface AgentPendingQueue {
++    mode: QueueMode;
++    enqueue(message: AgentMessage): void;
++    snapshot(): AgentMessage[];
++    clear(): void;
++}
+ /**
+  * Stateful wrapper around the low-level agent loop.
+  *
+@@ -39,10 +56,11 @@
+  * and exposes queueing APIs for steering and follow-up messages.
+  */
+ export declare class Agent {
++    private readonly _executionBackend?;
+     private _state;
+     private readonly listeners;
+-    private readonly steeringQueue;
+-    private readonly followUpQueue;
++    protected readonly steeringQueue: AgentPendingQueue;
++    protected readonly followUpQueue: AgentPendingQueue;
+     convertToLlm: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
+     transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
+     streamFunction: StreamFn;
+@@ -56,7 +74,7 @@
+     prepareRequest?: PrepareRequest;
+     prepareNextTurn?: (signal?: AbortSignal) => Promise<AgentLoopTurnUpdate | undefined> | AgentLoopTurnUpdate | undefined;
+     prepareNextTurnWithContext?: (context: PrepareNextTurnContext, signal?: AbortSignal) => Promise<AgentLoopTurnUpdate | undefined> | AgentLoopTurnUpdate | undefined;
+-    private activeRun?;
++    protected readonly activeRun?: object;
+     /** Session identifier forwarded to providers for cache-aware backends. */
+     sessionId?: string;
+     /** Optional per-level thinking token budgets forwarded to the stream function. */
+@@ -69,7 +87,7 @@
+     toolExecution: ToolExecutionMode;
+     /** Request identity forwarded to the stream function, over `DEFAULT_AGENT_IDENTITY`. */
+     identity?: ClientIdentity;
+-    constructor(options: AgentOptions);
++    constructor(options: AgentOptions, execution?: AgentExecution);
+     /**
+      * Subscribe to agent lifecycle events.
+      *
+@@ -127,9 +145,9 @@
+     private normalizePromptInput;
+     private runPromptMessages;
+     private runContinuation;
+-    private createContextSnapshot;
+-    private createLoopConfig;
+-    private runWithLifecycle;
++    protected createContextSnapshot(): AgentContext;
++    protected createLoopConfig(options?: { skipInitialSteeringPoll?: boolean }): AgentLoopConfig;
++    protected runWithLifecycle(executor: (signal: AbortSignal) => Promise<void>): Promise<void>;
+     private handleRunFailure;
+     private finishRun;
+     /**
+@@ -139,6 +157,6 @@
+      * considered idle later, after all awaited listeners for `agent_end` finish
+      * and `finishRun()` clears runtime-owned state.
+      */
+-    private processEvents;
++    protected processEvents(event: AgentEvent): Promise<void>;
+ }
+ //# sourceMappingURL=agent.d.ts.map
 \ No newline at end of file

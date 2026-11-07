@@ -8,7 +8,8 @@ import { portModelRuntime, portProviderComposer } from './model-runtime-port.ts'
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
-import { portAgentFacade, portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
+import { portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
+import { portAgentFacade } from './agent-facade-port.ts';
 import { portSharedHelpers } from './shared-helper-port.ts';
 import { portCompatRuntime } from './compat-runtime-port.ts';
 
@@ -312,7 +313,7 @@ function assets(directory: string) {
   }
 }
 for (const directory of ['modes/interactive/theme', 'modes/interactive/assets', 'core/export-html']) assets(directory);
-// Reuse the public state facade and protocol, while replacing its execution implementation.
+// Reuse the public core state facade and protocol with a durable execution backend.
 // The native agent-loop implementation is deliberately outside this source closure.
 for (const [path, target] of [
   ['agent.ts', 'src/durable-agent.ts'],
@@ -322,15 +323,8 @@ for (const [path, target] of [
   let body = original.replaceAll('"./types.ts"', '"./agent-runtime.ts"');
   const changes = ['local-agent-protocol'];
   if (path === 'agent.ts') {
-    body = body.replace('"./agent-loop.ts"', '"./durable-loop.ts"');
-    body = 'import { DurableLoopBinding } from "./durable-coding/engine.ts";\n' + body;
-    body = body.replace('export interface AgentOptions {', 'export interface AgentOptions {\n\tdurable?: DurableLoopBinding;');
-    body = body.replace('private _state: MutableAgentState;', 'private _state: MutableAgentState;\n\tpublic readonly durable: DurableLoopBinding;');
-    body = body.replace('this._state = createMutableAgentState(runtimeOptions.initialState);', 'this._state = createMutableAgentState(runtimeOptions.initialState);\n\t\tthis.durable = runtimeOptions.durable ?? new DurableLoopBinding();');
-    body = body.replace('model: this._state.model,\n\t\t\treasoning:', 'durable: this.durable,\n\t\t\tmodel: this._state.model,\n\t\t\treasoning:');
-    changes.push('durable-loop-backend');
-    body = portAgentFacade(body);
-    changes.push('durable-state-recovery');
+    body = portAgentFacade(original);
+    changes.push('public-core-agent-facade', 'durable-loop-backend', 'durable-state-recovery');
   }
   save(target, body);
   records.push({ source: 'packages/agent/src/' + path, target, sha256: hash(original), portSha256: hash(body), changes });

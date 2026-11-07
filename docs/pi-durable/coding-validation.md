@@ -33,7 +33,14 @@ module targets, 206 files have the same TypeScript syntax as upstream.
 Four more have the same emitted JavaScript, including type-only files.
 The remaining 35 differ. These counts measure source differences. They do not
 prove behavior, type compatibility, file necessity or minimum maintenance cost.
-Module target changes still require review.
+The module target review also checks all 245 pairs against their recorded
+digests. It finds 1014 relative references to the same source records,
+484 unchanged package or standard-library references, and five unchanged
+module augmentations. The Agent loop, AgentSession tool calls and plugin core
+namespace deliberately use the local durable boundary. The remaining
+unrecorded relative type rewrite is the stream module's public `StreamFn`
+alias. A changed declaration signature can appear as both an added and a
+removed reference; these counts are not independent behavior changes.
 
 The review found an obsolete `process.off` to `removeListener` conversion.
 The existing `src/node-process.d.ts` already provides both signatures over
@@ -67,10 +74,70 @@ Those omissions do not establish dead code.
 This step does not run the full SDK, plugin loader, CLI shutdown, terminal,
 worker/server builds or complete source audit. F1/F3 remain open.
 
+## Shared core Agent facade
+
+The 662-line Native Agent implementation is now a 115-line subclass of the
+independent core Agent. Core owns state initialization, prompt normalization,
+event reduction, abort and settlement. Native supplies the durable execution
+functions and retains queue identity, recovery and separate defaults.
+The durable package's public Agent type does not provide this Native state
+and event facade. Its Harness and tasks continue to own scheduling.
+
+The core patch now covers four files. The two added Agent files provide an
+optional execution backend, queue snapshots and the protected operations
+needed for recovery. The queue declarations expose the mode and three methods; the
+active-run declaration exposes a read-only marker. The runtime patch adds
+four net lines and does not copy the Agent implementation. Three Native
+default declarations still come directly from the pinned source.
+
+Native instances now also satisfy `instanceof CoreAgent`; they continue to
+satisfy `instanceof Agent`. Both constructors retain `length === 1`.
+The first execution parameter changed core's arity to two. A new assertion
+failed before the parameter gained an explicit default and passes after
+the fix. Internal field and prototype layouts are not identical.
+
+| Check | Result and scope |
+| --- | --- |
+| Original comparison | Bun and Node each pass 27 scenarios against the saved Native implementation. Cases cover constructor getter order, state copies, input forms, both queue modes, continuation, failures, cancellation, awaited events, recovery callbacks and transparent proxies. Core loop functions are replaced by throwing guards; neither runtime calls them. Pi-ai resolves from each actual package location. |
+| Production tasks | Four explicit files pass 32 tests in the worktree. Bun reports 229 `expect` calls; the five new tests also use Node assertions. Existing cases exercise real durable tasks, shared registries, cancellation and tool recovery. |
+| Types | Four strict roots cover 1020 source files with zero diagnostics. The actual facade, stream module, generator helper and new tests are checked. Durable method declarations and the core protocol form an explicit projection. This is not a full SDK or durable implementation type check. |
+| Reproduction | The facade helper reproduces the Native file from the one permitted upstream Agent file. The source and port hashes match the runtime record. The full runtime generator remains excluded. |
+| Clean replay | All four core files replay from saved original artifacts and match the installed files. The existing request-operation hunks remain unchanged. |
+| Frozen consumer | A new isolated cache installs 100 packages with both patches, a frozen lockfile and lifecycle scripts disabled under network denial. All four core files and 25 local runtime files match. Bun passes 32 tests; Node passes 10 tests with native type transformation. Root and consumer locks remain unchanged. The core seed uses installed artifacts with four saved originals; registry tarball integrity is not rechecked. |
+| Review | Main-thread review checks the execution calls, default object isolation, queue identity, lifecycle and the Proxy receiver. No review is delegated. |
+
+The first backend used a JavaScript private field. A new transparent-Proxy
+regression failed in the execution path and again in failure handling.
+The final backend uses the same ordinary-field semantics as the existing
+core class, and the regression passes. An earlier comparison fixture also
+failed to resolve an import-only package through `createRequire`; it now
+uses ESM resolution, with Node's explicit parent-resolution flag.
+
+One consumer installation attempt used `--cache-dir` while the wrapper
+set `BUN_INSTALL_CACHE_DIR`. It missed cached tarballs and failed under
+network denial. The final fresh consumer sets `BUN_INSTALL_CACHE_DIR`
+explicitly and installs all 100 packages.
+
+The source graph leaves five permitted files outside its ordinary import
+closure. Configuration and URL loading retain the codemode and image
+workers. The highlight declaration supplies `.js` subpaths and language
+wildcards. Client identity and remote catalog policy have no caller in this
+permitted graph; their use through the opaque SDK and model entry remains
+unverified. Neither identity logic nor catalog network requests execute.
+The public credential protocol also does not supply Native's synchronous
+and asynchronous raw-JSON lock callbacks. Its existing file implementation
+uses proper-lockfile and standard file APIs; the restricted orchestration
+remains outside this review.
+
+Full plugin loading, SDK construction, process-crash recovery, product
+checks and the complete source audit do not run. F1/F3 remain open for the
+opaque dependency boundary; F4/F5 retain their stated validation limits.
+
 ## Shared core request and tool operations
 
 Native request and tool operations now call the pinned `pi-agent-core` package.
-A two-file patch exports ten existing operations and their declarations.
+The operation changes cover two of the four patched files and export ten
+existing operations and their declarations.
 The generator keeps the upstream name check and emits a 24-line facade in place
 of the 260-line implementation. No complete coding-agent dependency is added.
 

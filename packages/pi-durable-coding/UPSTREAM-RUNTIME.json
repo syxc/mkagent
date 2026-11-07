@@ -58,9 +58,10 @@
       "source": "packages/agent/src/agent.ts",
       "target": "src/durable-agent.ts",
       "sha256": "6d0e56bf4443f0cfc5c6a82ce31a3b99f15ff816075bed36403dfa0c95a609c6",
-      "portSha256": "fd54a4c3d3ca1181d549fc8d6ae4d8817fff782febf46527089d048422d0aa46",
+      "portSha256": "79003f50914419a8754c1db3e2fe1e196f18f370a52aa93b290377858e32f137",
       "changes": [
         "local-agent-protocol",
+        "public-core-agent-facade",
         "durable-loop-backend",
         "durable-state-recovery"
       ]

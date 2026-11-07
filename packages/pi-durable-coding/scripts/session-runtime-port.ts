@@ -5,49 +5,6 @@ function edit(source: string, before: string, after: string): string {
   return source.replace(before, after);
 }
 
-export function portAgentFacade(source: string): string {
-  let body = edit('import type { TaskId } from "@earendil-works/pi-durable";\n' + source,
-    'this.durable = runtimeOptions.durable ?? new DurableLoopBinding();',
-    'this.durable = runtimeOptions.durable ?? new DurableLoopBinding();\n\t\tthis.durable.setMessageRestorer(messages => { this._state.messages = messages; });');
-  body = edit(body, '\thasItems(): boolean {',
-    '\tsnapshot(): AgentMessage[] { return this.messages.slice(); }\n\n\thasItems(): boolean {');
-  for (const method of ['steer', 'followUp']) body = edit(body,
-    `\t${method}(message: AgentMessage): void {`,
-    `\t${method}(message: AgentMessage): void {\n\t\tthis.durable.identifyQueuedMessage(message);`);
-  for (const [method, queue] of [['clearSteeringQueue', 'steeringQueue'], ['clearFollowUpQueue', 'followUpQueue']]) {
-    body = edit(body, `\t${method}(): void {`,
-      `\t${method}(): void {\n\t\tthis.durable.discardQueuedInputs(this.${queue}.snapshot());`);
-  }
-  body = edit(body, '\tprivate normalizePromptInput(', `\t/** Serialize pending inputs without draining their native queue modes. */
-\texportDurableQueues() {
-\t\treturn { steering: this.steeringQueue.snapshot(), followUp: this.followUpQueue.snapshot(),
-\t\t\tsteeringMode: this.steeringMode, followUpMode: this.followUpMode };
-\t}
-
-\trestoreDurableQueues(state: ReturnType<Agent["exportDurableQueues"]>): void {
-\t\tthis.steeringQueue.clear();
-\t\tthis.followUpQueue.clear();
-\t\tthis.steeringMode = state.steeringMode;
-\t\tthis.followUpMode = state.followUpMode;
-\t\tfor (const message of state.steering) this.steer(message);
-\t\tfor (const message of state.followUp) this.followUp(message);
-\t}
-
-\t/** Resume a persisted durable run after the session has rebound its resources and listeners. */
-\tasync resumeDurable(onBound?: () => void, taskId?: TaskId): Promise<boolean> {
-\t\tif (this.activeRun) throw new Error("Agent is already processing.");
-\t\tif (taskId === undefined && await this.durable.pendingRun() === undefined) return false;
-\t\tawait this.runWithLifecycle(signal => this.durable.recover(
-\t\t\tthis.createContextSnapshot(), this.createLoopConfig(), event => this.processEvents(event),
-\t\t\tsignal, this.streamFunction, onBound, taskId,
-\t\t));
-\t\treturn true;
-\t}
-
-\tprivate normalizePromptInput(`);
-  return body;
-}
-
 export function portAgentSession(source: string): string {
   let body = edit(source, '\tbaseToolsOverride?: Record<string, AgentTool>;',
     '\tbaseToolsOverride?: Record<string, AgentTool>;\n\t/** Host execution policy applies after native tool registration and before declarations. */\n\twrapTool?: (tool: AgentTool, source?: SourceInfo) => AgentTool;\n\tonAction?: (work: () => Promise<void>) => Promise<void>;\n\tonToolsChanged?: (tools: AgentTool[]) => void;');
