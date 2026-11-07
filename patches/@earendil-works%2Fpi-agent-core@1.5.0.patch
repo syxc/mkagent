@@ -1,0 +1,127 @@
+# Content SHA-256: bcd57e196c7216a13b159e09d0f941591c4bf82ef2255c8102506da5ff5d2c1f
+diff --git a/dist/agent-loop.js b/dist/agent-loop.js
+--- a/dist/agent-loop.js
++++ b/dist/agent-loop.js
+@@ -221,7 +221,7 @@
+  * the executable set, so replay always yields exactly `context.tools`. Otherwise a new
+  * system message is inserted before the first non-system pending message.
+  */
+-function declareToolChanges(context, pendingMessages) {
++export function declareToolChanges(context, pendingMessages) {
+     let systemIndex = -1;
+     for (let i = pendingMessages.length - 1; i >= 0; i--) {
+         if (pendingMessages[i].role === "system") {
+@@ -250,7 +250,7 @@
+ }
+ const NO_CHANGES = { toolsAdded: [], toolsRemoved: [] };
+ /** Copy a system message with its tool fields replaced by `changes`; empty lists omit the field. */
+-function withToolChanges(message, { toolsAdded, toolsRemoved }) {
++export function withToolChanges(message, { toolsAdded, toolsRemoved }) {
+     const { toolsAdded: _added, toolsRemoved: _removed, ...rest } = message;
+     return {
+         ...rest,
+@@ -262,7 +262,7 @@
+  * Stream an assistant response from the LLM.
+  * This is where AgentMessage[] gets transformed to Message[] for the LLM.
+  */
+-async function streamAssistantResponse(context, config, signal, emit, streamFunction) {
++export async function streamAssistantResponse(context, config, signal, emit, streamFunction, defaultIdentity = DEFAULT_AGENT_IDENTITY) {
+     // Apply context transform if configured (AgentMessage[] → AgentMessage[])
+     let messages = context.messages;
+     if (config.transformContext) {
+@@ -276,7 +276,7 @@
+     const response = await streamFunction(config.model, llmContext, {
+         ...config,
+         apiKey: resolvedApiKey,
+-        identity: mergeClientIdentity(DEFAULT_AGENT_IDENTITY, config.identity),
++        identity: mergeClientIdentity(defaultIdentity, config.identity),
+         signal,
+     });
+     // Record the requested level, whichever stream function answered.
+@@ -468,10 +468,10 @@
+         terminate: shouldTerminateToolBatch(orderedFinalizedCalls),
+     };
+ }
+-function shouldTerminateToolBatch(finalizedCalls) {
++export function shouldTerminateToolBatch(finalizedCalls) {
+     return finalizedCalls.length > 0 && finalizedCalls.every((finalized) => finalized.result.terminate === true);
+ }
+-function prepareToolCallArguments(tool, toolCall) {
++export function prepareToolCallArguments(tool, toolCall) {
+     if (!tool.prepareArguments) {
+         return toolCall;
+     }
+@@ -484,7 +484,7 @@
+         arguments: preparedArguments,
+     };
+ }
+-async function prepareToolCall(currentContext, assistantMessage, toolCall, config, signal, tools = currentContext.tools ?? []) {
++export async function prepareToolCall(currentContext, assistantMessage, toolCall, config, signal, tools = currentContext.tools ?? []) {
+     const tool = tools.find((t) => t.name === toolCall.name);
+     if (!tool) {
+         return {
+@@ -643,13 +643,13 @@
+         durationMs: executed.durationMs,
+     };
+ }
+-function createErrorToolResult(message) {
++export function createErrorToolResult(message) {
+     return {
+         content: [{ type: "text", text: message }],
+         details: {},
+     };
+ }
+-async function emitToolExecutionEnd(finalized, emit) {
++export async function emitToolExecutionEnd(finalized, emit) {
+     await emit({
+         type: "tool_execution_end",
+         toolCallId: finalized.toolCall.id,
+@@ -659,7 +659,7 @@
+         ...(finalized.durationMs === undefined ? {} : { durationMs: finalized.durationMs }),
+     });
+ }
+-function createToolResultMessage(finalized) {
++export function createToolResultMessage(finalized) {
+     return {
+         role: "toolResult",
+         toolCallId: finalized.toolCall.id,
+@@ -674,7 +674,7 @@
+         timestamp: Date.now(),
+     };
+ }
+-async function emitToolResultMessage(toolResultMessage, emit) {
++export async function emitToolResultMessage(toolResultMessage, emit) {
+     await emit({ type: "message_start", message: toolResultMessage });
+     await emit({ type: "message_end", message: toolResultMessage });
+ }
+diff --git a/dist/agent-loop.d.ts b/dist/agent-loop.d.ts
+--- a/dist/agent-loop.d.ts
++++ b/dist/agent-loop.d.ts
+@@ -2,7 +2,7 @@
+  * Agent loop that works with AgentMessage throughout.
+  * Transforms to Message[] only at the LLM call boundary.
+  */
+-import { type AssistantMessage, type ClientIdentity, EventStream } from "@earendil-works/pi-ai";
++import { type AssistantMessage, type ClientIdentity, EventStream, type SystemMessage, type ToolResultMessage, type ToolStateChanges } from "@earendil-works/pi-ai";
+ import type { AgentContext, AgentEvent, AgentLoopConfig, AgentMessage, AgentTool, AgentToolCall, AgentToolCallOutcome, AgentToolResult, StreamFn } from "./types.ts";
+ export type AgentEventSink = (event: AgentEvent) => Promise<void> | void;
+ /**
+@@ -50,5 +50,17 @@
+  * errors come back as `isError: true`.
+  */
+ export declare function runToolCall(toolCall: AgentToolCall, options: RunToolCallOptions): Promise<AgentToolCallOutcome>;
++type PreparedToolCall = { kind: "prepared"; toolCall: AgentToolCall; tool: AgentTool<any>; args: unknown };
++type ImmediateToolCallOutcome = { kind: "immediate"; result: AgentToolResult<any>; isError: boolean };
++export declare function declareToolChanges(context: AgentContext, pendingMessages: AgentMessage[]): AgentMessage[];
++export declare function withToolChanges(message: SystemMessage, changes: ToolStateChanges): SystemMessage;
++export declare function streamAssistantResponse(context: AgentContext, config: AgentLoopConfig, signal: AbortSignal | undefined, emit: AgentEventSink, streamFunction: StreamFn, defaultIdentity?: ClientIdentity): Promise<AssistantMessage>;
++export declare function shouldTerminateToolBatch(finalizedCalls: AgentToolCallOutcome[]): boolean;
++export declare function prepareToolCallArguments(tool: AgentTool<any>, toolCall: AgentToolCall): AgentToolCall;
++export declare function prepareToolCall(currentContext: AgentContext, assistantMessage: AssistantMessage, toolCall: AgentToolCall, config: ToolCallHooks, signal: AbortSignal | undefined, tools?: readonly AgentTool<any>[]): Promise<PreparedToolCall | ImmediateToolCallOutcome>;
++export declare function createErrorToolResult(message: string): AgentToolResult<any>;
++export declare function emitToolExecutionEnd(finalized: AgentToolCallOutcome, emit: AgentEventSink): Promise<void>;
++export declare function createToolResultMessage(finalized: AgentToolCallOutcome): ToolResultMessage;
++export declare function emitToolResultMessage(toolResultMessage: ToolResultMessage, emit: AgentEventSink): Promise<void>;
+ export {};
+ //# sourceMappingURL=agent-loop.d.ts.map
+\ No newline at end of file

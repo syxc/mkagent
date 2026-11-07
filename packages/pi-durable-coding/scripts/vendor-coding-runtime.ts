@@ -348,22 +348,27 @@ const functions = helperAST.statements.filter((node): node is ts.FunctionDeclara
 if (functions.length !== helperNames.size) throw new Error('Pinned agent operation helpers changed');
 const helperBody = [
   '// Native Pi request and tool preparation operations; scheduling belongs to pi-durable tasks.',
-  'import { getCurrentTools, getToolStateChanges, mergeClientIdentity, normalizeContext, PI_ATTRIBUTION, toToolDeclaration, validateToolArguments, type AssistantMessage, type SystemMessage, type ToolResultMessage, type ToolStateChanges } from "@earendil-works/pi-ai";',
-  'import type { AgentContext, AgentLoopConfig, AgentMessage, AgentTool, AgentToolCall, AgentToolCallOutcome, AgentToolResult, StreamFn } from "./agent-runtime.ts";',
-  'export type AgentEventSink = (event: import("./agent-runtime.ts").AgentEvent) => Promise<void> | void;',
-  'type ToolCallHooks = Pick<AgentLoopConfig, "beforeToolCall" | "afterToolCall">;',
-  'type PreparedToolCall = { kind: "prepared"; toolCall: AgentToolCall; tool: AgentTool<any>; args: unknown };',
-  'type ImmediateToolCallOutcome = { kind: "immediate"; result: AgentToolResult<any>; isError: boolean };',
-  'type FinalizedToolCallOutcome = AgentToolCallOutcome;',
-  'const NO_CHANGES: ToolStateChanges = { toolsAdded: [], toolsRemoved: [] };',
+  'import { streamAssistantResponse as streamCoreResponse, type AgentEventSink } from "@earendil-works/pi-agent-core";',
+  'import { PI_ATTRIBUTION, type AssistantMessage } from "@earendil-works/pi-ai";',
+  'import type { AgentContext, AgentLoopConfig, StreamFn } from "./agent-runtime.ts";',
+  'export type { AgentEventSink } from "@earendil-works/pi-agent-core";',
+  '// Keep Native defaults separate from the mutable public core identity.',
   'export const DEFAULT_AGENT_IDENTITY = { attribution: PI_ATTRIBUTION };',
-  ...functions.map(node => 'export ' + node.getText(helperAST)),
+  'export {',
+  ...functions.filter(node => node.name!.text !== 'streamAssistantResponse').map(node => '  ' + node.name!.text + ','),
+  '} from "@earendil-works/pi-agent-core";',
+  'export function streamAssistantResponse(',
+  '  context: AgentContext, config: AgentLoopConfig, signal: AbortSignal | undefined,',
+  '  emit: AgentEventSink, streamFunction: StreamFn,',
+  '): Promise<AssistantMessage> {',
+  '  return streamCoreResponse(context, config, signal, emit, streamFunction, DEFAULT_AGENT_IDENTITY);',
+  '}',
   '',
 ].join('\n');
 save('src/native-operations.ts', helperBody);
 records.push({
   source: 'packages/agent/src/agent-loop.ts', target: 'src/native-operations.ts',
-  sha256: hash(helperSource), portSha256: hash(helperBody), changes: ['selected-native-operations-without-scheduler'],
+  sha256: hash(helperSource), portSha256: hash(helperBody), changes: ['public-core-operations-with-native-identity'],
 });
 // Clients need the exact native wire types without importing the coding implementation.
 const rpcSource = readFileSync(join(source, 'modes/rpc/rpc-types.ts'), 'utf8');

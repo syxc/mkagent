@@ -13,7 +13,7 @@
 | 产品主体的 Coding 能力及分层装配 | 已实现待验证 | 已有 CodingHost、AgentSession 与 durable binding。当前重点是公开包复用、宿主边界及维护成本核对；不以普通 profile 是否使用 AgentSession 或原生投影单独判定完成。 |
 | pi-durable 为唯一执行调度内核 | 已实现且验证 | 普通 profile 使用 GenerationTask，coding 使用 `pi.coding.session/run/tool`；原生 Agent facade、嵌套调用和边界恢复通过实际 Harness 与固定原版行为对照。不同产品模式不要求相同任务类型。 |
 | 内置能力优先，缺失能力再由外部包补足 | 已实现待验证 | 宿主已安装 durable 的 codemode、tool-search、tools、images，coding 通过工具桥接复用。SDK 搜索、Native codemode 完整执行、读取候选、头部截断和编辑差异等入口已共用 durable，取消和等待 helper 使用 pi-ai。原版对照及独立冻结消费者通过，具体范围见[验证记录](coding-validation.md)。完整插件加载、产品及恢复契约尚未闭合。 |
-| 允许按需引用 pi-agent-core，禁止生产依赖完整 pi-coding-agent | 已实现且验证 | 当前 coding 包使用独立 Pi 1.5.0 包和本地固定源码闭包；core 的公开协议类型和 `streamProxy` 已替代源码副本，没有生产整包依赖，也没有另启旧 Agent loop。 |
+| 允许按需引用 pi-agent-core，禁止生产依赖完整 pi-coding-agent | 已实现且验证 | 当前 coding 包使用独立 Pi 1.5.0 包和本地固定源码闭包；core 的公开协议类型、`streamProxy` 及补丁公开的十个请求与工具操作已替代源码副本。Native 保留默认身份薄适配，真实 durable task 和冻结消费者通过，没有生产整包依赖，也没有另启旧 Agent loop。 |
 | 既定插件契约整体验收 | 已实现待验证 | 已有官方插件、17 个原版行为场景和实际产品证据；架构调整须按 F4 验证受影响契约，选定交互不扩大为任意插件或平台组合的结论。 |
 | 尽量减少源码移植与升级适配 | 已实现待验证 | 前轮恢复 28 份公开类型导入并减少 14 份重复 helper；本轮再统一包管理、消息、模型、设置、会话、runner、token 及资源算法，辅助源码降至 6 项、共享入口增至 28 个。追加静态对照覆盖 245 份允许源码，删除过时监听器转换后，三个运行模式与锁定上游逐字节一致；其余源码必要性继续核实。薄适配保留旧契约，严格消费者回归防止类型收紧。最新测试与独立复核范围见[验证记录](coding-validation.md)。完整 SDK 必要性、产品及来源检查仍未闭合，不声明整体维护目标已经满足。 |
 | 独立 coding 模块及公开入口 | 已实现且验证 | `@mkagent/pi-durable-coding` 不依赖 MkAgent shared、server 或 UI。`a41e6b5` 干净 checkout 的独立消费者覆盖六个运行时入口及 rpc-ui 类型入口，声明与运行检查均通过。 |

@@ -69,9 +69,9 @@
       "source": "packages/agent/src/agent-loop.ts",
       "target": "src/native-operations.ts",
       "sha256": "9d7589b5071ea3b8b3e3c624f9cfc09a976ebf7436024a58213837de4645167d",
-      "portSha256": "8221637426549d2ed380b6ff0011ec58687482c88b4540cc41dbe5fcbc49b52f",
+      "portSha256": "15b22ca4441b96a002fc8bc0c47cdec5ead2c04b3a0ab01e815ed7281fc9a48b",
       "changes": [
-        "selected-native-operations-without-scheduler"
+        "public-core-operations-with-native-identity"
       ]
     },
     {

@@ -65,8 +65,46 @@ entrypoints loaded through URLs or bundle paths and ambient declarations.
 Those omissions do not establish dead code.
 
 This step does not run the full SDK, plugin loader, CLI shutdown, terminal,
-worker/server builds or complete source audit. F1/F3 remain open. The selected
-request and tool operations are the next reuse candidate.
+worker/server builds or complete source audit. F1/F3 remain open.
+
+## Shared core request and tool operations
+
+Native request and tool operations now call the pinned `pi-agent-core` package.
+A two-file patch exports ten existing operations and their declarations.
+The generator keeps the upstream name check and emits a 24-line facade in place
+of the 260-line implementation. No complete coding-agent dependency is added.
+
+The streaming operation takes an optional default identity. Existing five-argument
+core calls retain the core default. The Native facade passes its original mutable
+default object, so replacing fields on the public core default does not leak
+its settings into Native requests. Caller identity overrides still apply. The other nine operations
+forward directly. Scheduling remains in the existing durable tasks.
+
+| Check | Result and scope |
+| --- | --- |
+| Original behavior | Bun and Node each compare 58 scenarios against a copy captured before the change. Values, errors, reference relationships, context mutations and awaited event traces match for all ten operations. All model streams and tool callbacks use local fixtures. |
+| Source parity | The ten captured operation bodies match the original core artifact after TypeScript erasure. The patch changes one identity reference in the streaming body and preserves the other nine bodies. Fourteen other core functions retain their bodies. |
+| Actual task entrypoints | `durable-agent`, `durable-coding-tool-task` and `native-operations` pass 27 tests and 229 assertions. Their 24 local runtime files pass an explicit import review; the ten selected core operations contain no calls to upstream loop drivers. |
+| Types | Three explicit roots cover 820 source files with zero diagnostics through a public-protocol projection. The projection excludes execution barrels and treats the durable binding as opaque. This is not a full Native, SDK or declaration-build result. |
+| Reproduction | The helper section alone reproduces the facade from the pinned source and generator. The full runtime generator is not run. |
+| Patch replay | Both original artifact files accept the patch through `git apply --check` and replay to the installed bytes. Patch body SHA-256 is `bcd57e196c7216a13b159e09d0f941591c4bf82ef2255c8102506da5ff5d2c1f`. |
+| New frozen consumer | A network-denying sandbox installs 100 cached packages with scripts disabled. The core seed contains 26 installed 1.5.0 files with the two saved originals restored; tarball integrity is not checked again. Both patched core files and the Native facade match the root artifacts. |
+| Consumer behavior | Bun and Node each pass the two operation tests and all 58 original comparisons. Both lockfiles remain unchanged by installation and tests. Root workspace installation is not run. |
+
+Early checks failed and were corrected. The identity fixture used an unsupported
+field and then switched to the actual identity schema. The first type preflight
+followed execution barrels toward SDK entrypoints; its access guard blocked the
+restricted reads. That attempt failed with 84 diagnostics. The bounded projection
+then needed a package-metadata allowance and an explicit hook return type.
+The first install missed its cache and all network attempts were blocked; a new
+consumer with an explicit cache environment installed successfully. Git also
+caught a missing end-of-file marker that Bun had accepted. The standard marker
+was added before final replay and consumer validation.
+
+This step does not establish complete SDK types, plugin loading, CLI shutdown,
+crash recovery, Windows behavior, server builds or the minimum possible source
+closure. The comparator still reports 35 different files, including the reviewed
+facades. F1/F3 necessity review remains open.
 
 ## Shared Native edit differences
 
@@ -1129,7 +1167,7 @@ workers resolve from the installed module; the project directory cannot
 supply an executable worker.
 
 The current production dependency graph uses the public `pi-agent-core`
-protocol and proxy APIs. The dependency policy prohibits the complete
+protocol, proxy and patched operation APIs. The dependency policy prohibits the complete
 `pi-coding-agent` package and keeps execution within the durable boundary.
 The `./native`, `./agent` and `./durable` exports expose the native coding layer,
 durable Agent facade and host bindings. Declaration files come from the same

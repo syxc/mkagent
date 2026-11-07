@@ -31,7 +31,7 @@ flowchart TD
 | 包 | 用途 |
 |---|---|
 | `@earendil-works/pi-durable` | Harness、任务、事务、存储和恢复，以及生产宿主已安装的 `/codemode`、`/tool-search`、`/tools`、`/images` 内置模块 |
-| `@earendil-works/pi-agent-core` | 公开协议类型、消息声明合并和 `streamProxy`；Agent 与循环入口仍由本地 durable 实现提供 |
+| `@earendil-works/pi-agent-core` | 公开协议类型、消息声明合并和 `streamProxy`，以及通过两文件补丁公开的十个请求与工具操作；Agent 与循环入口仍由本地 durable 实现提供 |
 | `@earendil-works/pi-ai` | 模型目录、provider、消息、流式请求、用量及公开取消和等待 helper；旧接口只保留可选 signal 与取消错误适配 |
 | `@earendil-works/pi-mcp` | MCP 客户端与协议支持 |
 | `@earendil-works/pi-codemode` | QuickJS 沙箱，作为 durable codemode 的执行后端 |
@@ -91,7 +91,7 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 |---|---|
 | `src/pi/**` | `packages/coding-agent/src/**` 的公开导入闭包，共 244 份 TypeScript 和 9 项主题、交互及 HTML 导出资源。保留 `AgentSession`、SDK、工具、扩展、资源和会话等实现；部分文件经过适配。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | 来自 `packages/agent/src/` 的 Agent 外观和 stream 支持。改写本地导入，并把 Agent 循环接到 durable 后端。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 已改为公开包适配，不再生成上游副本。 |
-| `src/native-operations.ts` | 从上游 `agent-loop.ts` 选取 10 个请求、工具参数准备及结果处理函数。调度循环由本地任务实现。 |
+| `src/native-operations.ts` | 24 行门面，调用 core 包公开的 10 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
 | `src/upstream/**` | 6 项选取源码：旧扩展 loader、Git 路径、上下文文件、资源去重、boundary drafts 和同步 durable context；另有 28 个共享入口。资源纯函数也由原生模块复用，不保留第二份算法。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
@@ -101,6 +101,8 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 追加静态对照覆盖其中 245 份 TypeScript，按逐项核验的路径读取本地与上游源码。忽略注释和模块目标后，206 份语法相同，4 份生成的 JavaScript 相同，35 份仍有差异；3 个解析边界保持未分类。该分类衡量正文差异，不证明行为等价、完整类型兼容或源码必要性，模块目标变更也仍需升级核对。
 
 三个运行模式已恢复上游的 `process.off` 写法，文件与锁定上游逐字节一致，来源记录不再包含转换。已有 `node-process.d.ts` 负责环境类型补充，生成器不再改写运行时调用，也删除了一条无效的相同字符串替换。窄范围类型、真实监听器清理及定向生成范围见[验证记录](coding-validation.md)。
+
+请求及工具操作不再复制函数正文。core 补丁仅修改发布的 JavaScript 和类型声明，公开十个已有函数，并为流式请求补充可选默认身份参数。Native 保留原来的身份对象，其他九个函数直接转发。独立消费者须同时应用根目录登记的 durable 与 core 补丁。原版 58 场景、真实 durable task 入口和新冻结消费者通过；类型证据仅覆盖协议投影，完整 SDK 边界继续受限。
 
 `src/legacy/**` 单独维护 7 份宿主兼容策略。旧包管理、消息、模型、设置、token、会话及 runner 路径只生成转发，生成器不再保存这些策略的第二份文字模板。它们复用移植实现，不计为直接引用独立公开包。
 

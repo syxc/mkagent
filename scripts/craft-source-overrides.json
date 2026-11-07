@@ -971,12 +971,12 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "b62914b83aa4e40a0173a4266ac581bdfeb3a63b528f9f65a960d327856a4f8e",
-      "reason": "Lock independent Pi packages, including the public core protocol and proxy, while pi-durable owns execution. Declare existing locked archive packages and the coding workspace ANSI matcher."
+      "sha256": "40c38af07159270c1a56635a74b8c883e0dabe5efd7da29168b1b462027e2969",
+      "reason": "Lock independent Pi packages, including the public core protocol, proxy and patched operations, while pi-durable owns execution. Declare existing locked archive packages and the coding workspace ANSI matcher."
     },
     "package.json": {
-      "sha256": "b79a730bd5592712e5daf22a2abc12b42f4132323679217785b9d2e18c44c0d0",
-      "reason": "Retain MkAgent versions, client scripts and Lite dependency boundaries; remove the root coding-agent dependency and Pi-wide 1.1.0 overrides so the durable server can use 1.4.0 beside the shared compatibility packages. Start the WebUI backend and Vite together with shared port settings and coordinated shutdown; fail on an occupied frontend port without stopping its owner. Register the durable patch and coding-package type checks."
+      "sha256": "60f6bdb53e0e226e82843e6557cc39e3107cf692fdea2666297894434aeff260",
+      "reason": "Retain MkAgent versions, client scripts and Lite dependency boundaries; remove the root coding-agent dependency and Pi-wide 1.1.0 overrides so the durable server can use pinned independent packages beside the shared compatibility packages. Start the WebUI backend and Vite together with shared port settings and coordinated shutdown; fail on an occupied frontend port without stopping its owner. Register durable and core operation patches and coding-package type checks."
     },
     "packages/core/README.md": {
       "sha256": "cac1ded695383920e62457a566c3ececed3acc5568a733f7eff4ab78c69ba2cd",
@@ -3997,7 +3997,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "37793691d4bce6296a3318f763df64fab9c213a8604cfff07854ec805b5df02a",
+      "sha256": "1bc62a09b721a44af77f09cc65db1136ef20c744bb3adc88018812384ab6b8e4",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -4017,7 +4017,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "8d72a8d9cd48ae690f47f8acf4f61f7bffc5d254e9f488f44a0f18ef320da289",
+      "sha256": "77d0e2a41399992adf24c687063602ccfe3fbcc9127a0293bc069c52ce699dfa",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4113,8 +4113,8 @@
       "reason": "Bridge real host APIs and native results without losing wrapper contracts, owned children, callback scope or transaction boundaries."
     },
     "packages/pi-durable-coding/src/native-operations.ts": {
-      "sha256": "8221637426549d2ed380b6ff0011ec58687482c88b4540cc41dbe5fcbc49b52f",
-      "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent-loop.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "15b22ca4441b96a002fc8bc0c47cdec5ead2c04b3a0ab01e815ed7281fc9a48b",
+      "reason": "Forward pinned core request and tool operations through the public patched API while preserving Native mutable identity defaults and durable scheduling."
     },
     "packages/pi-durable-coding/src/native.ts": {
       "sha256": "e5f079c7d291cb8f56cb12986261045702d71318d3e44b8c3187b0ef993418c1",
@@ -5363,6 +5363,14 @@
     "packages/pi-durable-coding/test/fixtures/native-edit-diff-types.ts": {
       "sha256": "2e7201c1feb813c6bb7e46c34cbaf687e48576877738a9c349072ee13987ce8e",
       "reason": "Check that plugin augmentation of Native match and edit interfaces still reaches public function return types."
+    },
+    "packages/pi-durable-coding/test/native-operations.test.ts": {
+      "sha256": "2a30dce32d769725425a15d915d7c94dbcdaa51735b8651dec42a2d199f0704b",
+      "reason": "Verify Native identity isolation, existing core defaults, tool preparation and hook cancellation across the public core operation boundary."
+    },
+    "patches/@earendil-works%2Fpi-agent-core@1.5.0.patch": {
+      "sha256": "93ef464a667d1faca6579c33e50ac2eeb58eb46e754829972675e97a55d2cf65",
+      "reason": "Expose ten existing pinned request and tool operations and declarations; accept Native default identity without changing upstream loop driver bodies."
     }
   },
   "deleted": {
