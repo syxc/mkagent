@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
 import { writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
+import { dirname } from 'node:path';
+import { CONFIG_FILE as configFile } from '../interceptor-common.ts';
 
 let injectMetadataIntoToolSchema: typeof import('../unified-network-interceptor.ts').injectMetadataIntoToolSchema;
 let sanitizeEmptyTextCacheControl: typeof import('../unified-network-interceptor.ts').sanitizeEmptyTextCacheControl;
@@ -123,7 +123,6 @@ describe('sanitizeEmptyTextCacheControl', () => {
 });
 
 describe('upgradePromptCacheTtl', () => {
-  const configFile = join(homedir(), '.mkagent', 'config.json');
   let originalConfig: string | null = null;
 
   beforeEach(() => {
@@ -146,7 +145,7 @@ describe('upgradePromptCacheTtl', () => {
   });
 
   function enableExtendedCache() {
-    const dir = join(homedir(), '.mkagent');
+    const dir = dirname(configFile);
     mkdirSync(dir, { recursive: true });
     const existing = originalConfig ? JSON.parse(originalConfig) : {};
     writeFileSync(configFile, JSON.stringify({ ...existing, extendedPromptCache: true }));
@@ -154,7 +153,7 @@ describe('upgradePromptCacheTtl', () => {
   }
 
   function disableExtendedCache() {
-    const dir = join(homedir(), '.mkagent');
+    const dir = dirname(configFile);
     mkdirSync(dir, { recursive: true });
     const existing = originalConfig ? JSON.parse(originalConfig) : {};
     writeFileSync(configFile, JSON.stringify({ ...existing, extendedPromptCache: false }));

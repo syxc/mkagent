@@ -3,9 +3,8 @@
  * the MCP client, so only sessions with a configured server pay for it.
  *
  * Vendored from @earendil-works/pi-coding-agent 1.1.0 extensions/mcp/runtime.js — reconnect,
- * backoff, and logging behavior must stay identical. Deviation: OAuth sign-in is deferred — no
- * auth provider is installed, and a server that answers 401 fails loudly with a clear message
- * instead of starting the interactive flow.
+ * backoff, and logging behavior follow upstream. OAuth uses the pinned 1.5.0 provider, while
+ * interactive sign-in is owned by the host and never starts from an automatic connection.
  */
 import { homedir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
@@ -25,11 +24,14 @@ import {
   type ResourceTemplate,
   type Tool as McpTool,
 } from '@earendil-works/pi-mcp';
-import { McpOAuthAuthorizationRequiredError } from '@earendil-works/pi-mcp/oauth';
+import {
+  McpOAuthAuthorizationRequiredError, createMcpAuthProvider,
+  type McpAuthProvider, type McpOAuthCredentialStore, type McpOAuthSettings, type OAuthChallenge,
+} from '@mkagent/pi-durable-coding/mcp-oauth';
 import { resolveConfigValueOrThrow, resolveHeadersOrThrow } from './resolve-config-value.ts';
 import { isMcpAppResource } from './resources.ts';
 import { McpServerLog } from './log.ts';
-import type { McpServerEntry } from './mcp-servers.ts';
+import { isSecureMcpUrl, type McpServerEntry } from './mcp-servers.ts';
 
 const DEFAULT_TIMEOUT_SECONDS = 60;
 const STDERR_TAIL_CHARS = 2_000;
@@ -49,13 +51,16 @@ function isTransientError(error: unknown): boolean {
 }
 
 function signInRequiredMessage(entry: McpServerEntry): string {
-  return `MCP server "${entry.name}" requires OAuth sign-in, which is not supported by this kernel yet`;
+  if (entry.config.auth?.provider) {
+    return `MCP server "${entry.name}" requires credentials for provider "${entry.config.auth.provider}". Check the provider's credentials, then use /mcp reconnect ${entry.name}`;
+  }
+  return `MCP server "${entry.name}" requires OAuth sign-in. Use /mcp login ${entry.name}`;
 }
 
 /** HTTP servers authenticate with OAuth unless the config supplies an `Authorization` header or `auth`. */
 function usesOAuth(entry: McpServerEntry): boolean {
   const { config } = entry;
-  if (!('url' in config) || config.auth) return false;
+  if (typeof config.url !== 'string' || !isSecureMcpUrl(config.url) || config.auth) return false;
   return !Object.keys(config.headers ?? {}).some(header => header.toLowerCase() === 'authorization');
 }
 
@@ -68,12 +73,13 @@ function expandHome(value: string): string {
   return value;
 }
 
-export function createDefaultTransport(entry: McpServerEntry, cwd: string): McpTransport {
+export function createDefaultTransport(entry: McpServerEntry, cwd: string, authProvider?: McpAuthProvider): McpTransport {
   const { config, name } = entry;
   if ('url' in config && typeof config.url === 'string') {
     return new StreamableHttpTransport({
       url: config.url,
       headers: resolveHeadersOrThrow(config.headers as Record<string, string> | undefined, `MCP server "${name}"`),
+      authProvider,
     });
   }
   const env: Record<string, string> = {};
@@ -121,7 +127,10 @@ async function fetchResources(client: McpClient): Promise<{ resources: Resource[
 export interface McpServerConnectionOptions {
   entry: McpServerEntry;
   cwd: string;
-  createTransport: (entry: McpServerEntry, cwd: string) => McpTransport;
+  createTransport: typeof createDefaultTransport;
+  credentials?: McpOAuthCredentialStore;
+  /** Read the provider's current token on each request; MCP stores no copy. */
+  providerToken?: (provider: string) => Promise<string | undefined>;
   onTools: (connection: McpServerConnection) => void;
   onChange: (connection: McpServerConnection) => void;
   log: McpServerLog | undefined;
@@ -148,12 +157,16 @@ export class McpServerConnection {
   instructions: string | undefined;
   client: McpClient | undefined;
   opening: Promise<McpClient> | undefined;
+  private connecting = new AbortController();
   /** Aborted by `close()`; cancels a connect in progress, including the wait between retries. */
   shutdown = new AbortController();
   /** Stderr of the last stdio server that failed to connect. */
   stderrTail: string | undefined;
   cwd: string;
-  createTransport: (entry: McpServerEntry, cwd: string) => McpTransport;
+  createTransport: typeof createDefaultTransport;
+  authProvider: McpAuthProvider | undefined;
+  private signedOut = false;
+  challenge: OAuthChallenge | undefined;
   onTools: (connection: McpServerConnection) => void;
   onChange: (connection: McpServerConnection) => void;
   log: McpServerLog | undefined;
@@ -167,6 +180,32 @@ export class McpServerConnection {
     this.onChange = options.onChange;
     this.log = options.log;
     this.version = options.version;
+    const url = this.oauthUrl;
+    const providerName = this.entry.scope !== 'project' && typeof this.entry.config.url === 'string'
+      && isSecureMcpUrl(this.entry.config.url) ? this.entry.config.auth?.provider : undefined;
+    const provider: McpAuthProvider | undefined = url && options.credentials ? createMcpAuthProvider({
+      serverUrl: url,
+      store: options.credentials.forServer(this.name, url),
+      settings: () => this.oauthSettings(),
+      onChallenge: challenge => { this.challenge = challenge; },
+    }) : providerName ? {
+      token: async () => options.providerToken?.(providerName),
+      settled: async () => {},
+    } : undefined;
+    this.authProvider = provider ? {
+      token: async () => {
+        if (this.signedOut || this.closed) return undefined;
+        const token = await provider.token();
+        return this.signedOut || this.closed ? undefined : token;
+      },
+      ...(provider.onUnauthorized ? {
+        onUnauthorized: async context => {
+          if (this.signedOut || this.closed) throw new McpOAuthAuthorizationRequiredError();
+          await provider.onUnauthorized?.(context);
+        },
+      } : {}),
+      settled: () => provider.settled(),
+    } : undefined;
   }
 
   get name(): string {
@@ -181,12 +220,28 @@ export class McpServerConnection {
     return ((this.entry.config.timeout as number | undefined) ?? DEFAULT_TIMEOUT_SECONDS) * 1000;
   }
 
+  get oauthUrl(): string | undefined {
+    return usesOAuth(this.entry) ? this.entry.config.url : undefined;
+  }
+
+  oauthSettings(): McpOAuthSettings {
+    const oauth = this.entry.config.oauth;
+    if (!oauth) return {};
+    return {
+      ...oauth,
+      clientSecret: oauth.clientSecret === undefined ? undefined
+        : resolveConfigValueOrThrow(oauth.clientSecret, `MCP server "${this.name}" oauth.clientSecret`),
+      authServerMetadataUrl: oauth.authServerMetadataUrl ? new URL(oauth.authServerMetadataUrl) : undefined,
+    };
+  }
+
   getClient(): Promise<McpClient> {
     if (this.closed) return Promise.reject(new Error(`MCP server "${this.entry.name}" is shut down`));
     if (this.client?.connectionState === 'connected') return Promise.resolve(this.client);
-    this.opening ??= this.open().finally(() => {
-      this.opening = undefined;
-    });
+    if (!this.opening) {
+      this.connecting = new AbortController();
+      this.opening = this.open().finally(() => { this.opening = undefined; });
+    }
     return this.opening;
   }
 
@@ -250,20 +305,47 @@ export class McpServerConnection {
   }
 
   /** Connect again, for example after the server restarted. */
-  async reconnect(): Promise<void> {
-    await this.opening?.catch(() => undefined);
-    if (this.client) await this.dropClient(this.client);
-    await this.getClient();
+  async reconnect(signal?: AbortSignal): Promise<void> {
+    const cancel = () => this.connecting.abort();
+    signal?.throwIfAborted();
+    signal?.addEventListener('abort', cancel, { once: true });
+    try {
+      await this.opening?.catch(() => undefined);
+      signal?.throwIfAborted();
+      if (this.client) await this.dropClient(this.client);
+      signal?.throwIfAborted();
+      this.signedOut = false;
+      await this.getClient();
+    } finally {
+      signal?.removeEventListener('abort', cancel);
+    }
   }
 
-  /** OAuth servers that reject the request need an interactive sign-in this kernel does not carry. */
+  /** Wait for any token rotation before the caller removes the stored grant. */
+  async signOut(): Promise<void> {
+    this.signedOut = true;
+    if (!this.closed) this.markNeedsAuth();
+    await this.opening?.catch(() => undefined);
+    if (this.client) await this.dropClient(this.client);
+    await this.authProvider?.settled();
+    if (!this.closed) this.markNeedsAuth();
+  }
+
+  /** A 401 after refresh, or a scope challenge, needs explicit user sign-in. */
   needsSignIn(error: unknown): boolean {
-    return error instanceof McpOAuthAuthorizationRequiredError || error instanceof McpAuthRequiredError;
+    return error instanceof McpOAuthAuthorizationRequiredError
+      || (this.authProvider !== undefined && error instanceof McpAuthRequiredError);
   }
 
   markNeedsAuth(): void {
     this.state = 'needs-auth';
     this.error = undefined;
+    this.tools = [];
+    this.hasResources = false;
+    this.resources = [];
+    this.resourceTemplates = [];
+    this.instructions = undefined;
+    this.onTools(this);
     this.changed();
   }
 
@@ -286,11 +368,13 @@ export class McpServerConnection {
         return await this.connectOnce();
       } catch (error) {
         const delay = retries[attempt];
-        if (this.closed || delay === undefined || !isTransientError(error)) {
+        if (this.closed || this.connecting.signal.aborted || delay === undefined || !isTransientError(error)) {
           throw this.connectFailed(error);
         }
-        await sleep(delay, undefined, { signal: this.shutdown.signal }).catch(() => undefined);
-        if (this.closed) throw this.connectFailed(error);
+        await sleep(delay, undefined, {
+          signal: AbortSignal.any([this.shutdown.signal, this.connecting.signal]),
+        }).catch(() => undefined);
+        if (this.closed || this.connecting.signal.aborted) throw this.connectFailed(error);
       }
     }
   }
@@ -312,9 +396,10 @@ export class McpServerConnection {
       return closing;
     };
     this.shutdown.signal.addEventListener('abort', closeClient, { once: true });
+    this.connecting.signal.addEventListener('abort', closeClient, { once: true });
     let transport: McpTransport | undefined;
     try {
-      transport = this.createTransport(this.entry, this.cwd);
+      transport = this.createTransport(this.entry, this.cwd, this.authProvider);
       await client.connect(transport);
       client.onNotification('notifications/tools/list_changed', () => {
         void this.refreshTools(client);
@@ -330,7 +415,8 @@ export class McpServerConnection {
         client.serverCapabilities?.tools ? client.listTools() : Promise.resolve([] as McpTool[]),
         hasResources ? fetchResources(client) : { resources: [], resourceTemplates: [] },
       ]);
-      if (this.closed) throw new Error('shut down while connecting');
+      if (this.closed || this.connecting.signal.aborted) throw new Error('cancelled while connecting');
+      if (this.signedOut) throw new McpOAuthAuthorizationRequiredError();
       if (client.connectionState !== 'connected') throw new Error('connection closed during setup');
       this.client = client;
       this.tools = tools;
@@ -351,6 +437,7 @@ export class McpServerConnection {
       throw error;
     } finally {
       this.shutdown.signal.removeEventListener('abort', closeClient);
+      this.connecting.signal.removeEventListener('abort', closeClient);
     }
   }
 
@@ -404,5 +491,7 @@ export class McpServerConnection {
     const client = this.client;
     this.client = undefined;
     await Promise.all([client?.close().catch(() => undefined), this.opening?.catch(() => undefined)]);
+    // A completed refresh can rotate its token even after the transport was closed.
+    await this.authProvider?.settled();
   }
 }

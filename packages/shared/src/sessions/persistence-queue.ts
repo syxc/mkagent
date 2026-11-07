@@ -1,14 +1,19 @@
-import { writeFile, rename, unlink } from 'fs/promises'
+import { writeFile, rename } from 'fs/promises'
 import { dirname } from 'path'
 import type { StoredSession, SessionHeader } from './types.js'
 import { getSessionFilePath, ensureSessionsDir, ensureSessionDir } from './storage.js'
 import { toPortablePath } from '../utils/paths.js'
-import { createSessionHeader, makeSessionPathPortable, readSessionHeader } from './jsonl.js'
+import { createSessionHeader, makeSessionPathPortable, readSessionHeader, serializeSessionMessages } from './jsonl.js'
 import { debug } from '../utils/debug.js'
 
 interface PendingWrite {
   data: StoredSession
   timer: ReturnType<typeof setTimeout>
+}
+
+interface ActiveWrite {
+  promise: Promise<void>
+  cancellation: { cancelled: boolean }
 }
 
 interface HeaderMetadataSignature {
@@ -44,7 +49,7 @@ function mergeHeaderWithExternalMetadata(localHeader: SessionHeader, diskHeader:
 /**
  * Debounced async session persistence queue.
  * Prevents main thread blocking by using async writes and coalescing
- * rapid successive persist calls into a single write.
+ * rapid successive enqueues into a single write.
  *
  * IMPORTANT: Writes are serialized per-session to prevent race conditions
  * when rapid successive flushes (e.g., clearSessionForRecovery + onSdkSessionIdUpdate)
@@ -52,7 +57,7 @@ function mergeHeaderWithExternalMetadata(localHeader: SessionHeader, diskHeader:
  */
 class SessionPersistenceQueue {
   private pending = new Map<string, PendingWrite>()
-  private writeInProgress = new Map<string, Promise<void>>()
+  private writeInProgress = new Map<string, ActiveWrite>()
   private lastWrittenHeaderSignature = new Map<string, string>()
   private debounceMs: number
 
@@ -78,18 +83,57 @@ class SessionPersistenceQueue {
   }
 
   /**
+   * Persist a snapshot through the same writer as debounced saves.
+   * Resolves after replacement succeeds and rejects on a write failure.
+   */
+  persist(session: StoredSession): Promise<void> {
+    this.takePending(session.id)
+    return this.scheduleWrite(session, true)
+  }
+
+  private takePending(sessionId: string): StoredSession | undefined {
+    const entry = this.pending.get(sessionId)
+    if (!entry) return
+    clearTimeout(entry.timer)
+    this.pending.delete(sessionId)
+    return entry.data
+  }
+
+  private async scheduleWrite(data: StoredSession, requireReceipt: boolean): Promise<void> {
+    const sessionId = data.id
+    const inProgress = this.writeInProgress.get(sessionId)
+    const cancellation = inProgress && !inProgress.cancellation.cancelled
+      ? inProgress.cancellation
+      : { cancelled: false }
+    // A failed receipt must not poison later saves. Each caller still observes
+    // the result of its own write, even when another write follows immediately.
+    const writePromise = (inProgress?.promise.catch(() => {}) ?? Promise.resolve()).then(() => {
+      if (cancellation.cancelled) {
+        if (requireReceipt) throw new Error(`Session persistence cancelled: ${sessionId}`)
+        return
+      }
+      return this.write(data)
+    })
+    const active = { promise: writePromise, cancellation }
+    this.writeInProgress.set(sessionId, active)
+    try {
+      await writePromise
+    } finally {
+      if (this.writeInProgress.get(sessionId) === active) {
+        this.writeInProgress.delete(sessionId)
+      }
+    }
+  }
+
+  /**
    * Write a session to disk immediately in JSONL format.
    * Uses atomic write (write-to-temp-then-rename) to prevent corruption on crash.
    */
-  private async write(sessionId: string): Promise<void> {
-    const entry = this.pending.get(sessionId)
-    if (!entry) return
-
-    clearTimeout(entry.timer)
-    this.pending.delete(sessionId)
-
+  private async write(data: StoredSession): Promise<void> {
+    const sessionId = data.id
+    const previousSig = this.lastWrittenHeaderSignature.get(sessionId)
+    let finalSignature: string | undefined
     try {
-      const { data } = entry
       ensureSessionsDir(data.workspaceRootPath)
       ensureSessionDir(data.workspaceRootPath, sessionId)
 
@@ -105,11 +149,10 @@ class SessionPersistenceQueue {
       }
 
       // Create JSONL content: header + messages (one per line)
-      // Filter out intermediate messages - they're transient streaming status updates
+      // Keep intermediate and archived rows; only active rows contribute header metadata.
       const localHeader = createSessionHeader(storageSession)
       const localSig = getHeaderMetadataSignature(localHeader)
       const diskHeader = readSessionHeader(filePath)
-      const previousSig = this.lastWrittenHeaderSignature.get(sessionId)
       const diskSig = diskHeader ? getHeaderMetadataSignature(diskHeader) : undefined
 
       // Queue writes should never clobber session metadata changed externally
@@ -130,12 +173,11 @@ class SessionPersistenceQueue {
         debug(`[PersistenceQueue] Session ${sessionId} metadata mismatch detected (${mode}${baseline})`)
       }
 
-      const persistableMessages = storageSession.messages
       // Use original absolute sessionDir (before toPortablePath) for path replacement
       const sessionDir = dirname(filePath)
       const lines = [
         makeSessionPathPortable(JSON.stringify(header), sessionDir),
-        ...persistableMessages.map(m => makeSessionPathPortable(JSON.stringify(m), sessionDir)),
+        ...serializeSessionMessages(storageSession, sessionDir),
       ]
 
       // Atomic write: write to .tmp then rename over the real file.
@@ -143,20 +185,22 @@ class SessionPersistenceQueue {
       // the original session.jsonl remains intact.
       //
       // Update signature BEFORE the write so that fs.watch events fired
-      // during unlink/rename are correctly identified as self-writes.
+      // during replacement are correctly identified as self-writes.
       // Without this, onSessionMetadataChange sees the stale signature
       // and reverts in-memory metadata on idle sessions.
-      const finalSignature = getHeaderMetadataSignature(header)
+      finalSignature = getHeaderMetadataSignature(header)
       this.lastWrittenHeaderSignature.set(sessionId, finalSignature)
 
       const tmpFile = filePath + '.tmp'
       await writeFile(tmpFile, lines.join('\n') + '\n', 'utf-8')
-      // On Windows, rename fails if target exists. Delete first for cross-platform compatibility.
-      try { await unlink(filePath) } catch { /* ignore if doesn't exist */ }
       await rename(tmpFile, filePath)
       debug(`[PersistenceQueue] Wrote session ${sessionId}`)
     } catch (error) {
-      console.error(`[PersistenceQueue] Failed to write session ${sessionId}:`, error)
+      if (finalSignature !== undefined && this.lastWrittenHeaderSignature.get(sessionId) === finalSignature) {
+        if (previousSig === undefined) this.lastWrittenHeaderSignature.delete(sessionId)
+        else this.lastWrittenHeaderSignature.set(sessionId, previousSig)
+      }
+      throw error
     }
   }
 
@@ -166,30 +210,25 @@ class SessionPersistenceQueue {
    * to prevent race conditions on the shared .tmp file.
    */
   async flush(sessionId: string): Promise<void> {
-    const entry = this.pending.get(sessionId)
-    const inProgress = this.writeInProgress.get(sessionId)
-    if (!entry) {
-      await inProgress
-      return
-    }
-    clearTimeout(entry.timer)
-
-    // Register the whole chain before yielding so timers and flushes share one writer.
-    const writePromise = (inProgress ?? Promise.resolve()).then(() => this.write(sessionId))
-    this.writeInProgress.set(sessionId, writePromise)
+    // Claim this snapshot before yielding; a queued flush must not consume
+    // newer data admitted after a strict receipt was requested.
+    const data = this.takePending(sessionId)
     try {
-      await writePromise
-    } finally {
-      if (this.writeInProgress.get(sessionId) === writePromise) {
-        this.writeInProgress.delete(sessionId)
-      }
+      await (data ? this.scheduleWrite(data, false) : this.writeInProgress.get(sessionId)?.promise)
+    } catch (error) {
+      // Timer-driven saves retain their best-effort behavior. Transactions
+      // that require an acknowledgement use persist() instead.
+      console.error(`[PersistenceQueue] Failed to write session ${sessionId}:`, error)
     }
   }
 
   /**
-   * Cancel a pending write for a session (e.g., when deleting the session).
+   * Cancel writes that have not started (e.g., when deleting the session).
+   * An active filesystem operation must finish before its directory is removed.
    */
   cancel(sessionId: string): void {
+    const inProgress = this.writeInProgress.get(sessionId)
+    if (inProgress) inProgress.cancellation.cancelled = true
     const entry = this.pending.get(sessionId)
     if (entry) {
       clearTimeout(entry.timer)

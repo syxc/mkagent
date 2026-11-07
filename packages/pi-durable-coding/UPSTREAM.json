@@ -1,0 +1,272 @@
+{
+  "repository": "https://github.com/earendil-works/pi",
+  "version": "1.5.0",
+  "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
+  "policy": "Selected source ports and forwards to shared implementations. No full pi-coding-agent package dependency. Reproduced by scripts/vendor-upstream.ts.",
+  "typescript": "5.9.3",
+  "files": [
+    {
+      "source": "packages/coding-agent/src/core/extensions/loader.ts",
+      "target": "src/upstream/core/extensions/loader.js",
+      "sha256": "873cbe2ae4a15e9563c5a563d447b7aa3a05cca45e145d4250d54ad601bdc85f",
+      "portSha256": "6d41512eda5df01a13dab7a63319cf1be9493d68f42cda68ed51ac3dcab38d77",
+      "changes": [
+        "erase-types",
+        "extension-module-resolution",
+        "preserve-host-stack-formatting-after-babel-bootstrap"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/footer-data-provider.ts",
+      "target": "src/upstream/core/git-paths.ts",
+      "sha256": "024ae5b3f50a15db9c149f644845ffb267df838b3a555a0756db95043e05a0e2",
+      "portSha256": "75b5ff0072877dc915d4c646174620891349924f5aa2a15e81632610df8c917c",
+      "selection": [
+        "GitPaths",
+        "findGitPaths"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/resource-loader.ts",
+      "target": "src/upstream/core/context-files.ts",
+      "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
+      "portSha256": "c10627dd252a97a451f13b8cd69bffc6abf1c39eb35101647d9b645950cd8073",
+      "selection": [
+        "loadContextFileFromDir",
+        "findShadowedContextFile",
+        "loadProjectContextFiles"
+      ],
+      "changes": [
+        "host-project-context-trust"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/resource-loader.ts",
+      "target": "src/upstream/core/resource-collisions.ts",
+      "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
+      "portSha256": "a4a5baee89c3d6009a3defdf75b4a8c4023b7c5a15b556451eee4206afd3883b",
+      "selection": [
+        "DefaultResourceLoader.dedupePrompts"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/agent-session.ts",
+      "target": "src/upstream/core/boundary-drafts.js",
+      "sha256": "b7c24bf1c1366e931083100d921a80d390d66bacde4acf7472a7b57af1bb69aa",
+      "portSha256": "e47c7898af101e0434694dcd1fc14123059b26d504ecb698cdcd9572c4096694",
+      "selection": [
+        "AgentSession._applyBoundaryDrafts",
+        "AgentSession._buildBoundaryContext",
+        "AgentSession._replaceMessageInPlace"
+      ],
+      "changes": [
+        "erase-types"
+      ]
+    },
+    {
+      "source": "packages/durable/src/harness/context.ts",
+      "target": "src/upstream/durable/context.js",
+      "sha256": "160a047b022725ec799f4581ef7e52798632015dcd908755c3df6cd1e9f35fc8",
+      "portSha256": "dff86bd68e278d638477068ece35108701c7a64005458f4c8862fadebc373abe",
+      "selection": [
+        "EXCLUDED_STOP_REASONS",
+        "MISSING_RESULT_TEXT",
+        "findBaseline",
+        "carriesSystemMessage",
+        "leadWithSystem",
+        "contribute",
+        "orderToolResults",
+        "missingResult",
+        "deeplyFrozen",
+        "freezeJson"
+      ],
+      "changes": [
+        "erase-types"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/hello.ts",
+      "target": "test/fixtures/upstream/hello.ts",
+      "sha256": "0aa4e9800c2526914d4c1edb00b2cfa9bd9dd6da5218289994cccd5f5bfa4934",
+      "portSha256": "0aa4e9800c2526914d4c1edb00b2cfa9bd9dd6da5218289994cccd5f5bfa4934"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/input-transform.ts",
+      "target": "test/fixtures/upstream/input-transform.ts",
+      "sha256": "cf0f65d610631ca75d18aae1c8f1408139702f674cb2835f8c009b943776474b",
+      "portSha256": "cf0f65d610631ca75d18aae1c8f1408139702f674cb2835f8c009b943776474b"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/rpc-demo.ts",
+      "target": "test/fixtures/upstream/rpc-demo.ts",
+      "sha256": "3d54a396eee12eb04ea12d0ea03716a6edd3e8743502b6a529e3b8d429ae640d",
+      "portSha256": "3d54a396eee12eb04ea12d0ea03716a6edd3e8743502b6a529e3b8d429ae640d"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/confirm-destructive.ts",
+      "target": "test/fixtures/upstream/confirm-destructive.ts",
+      "sha256": "55502f82109df07e922ef3ec41af1b1a5ed33d4d6d56076654ab2bc88e2e0888",
+      "portSha256": "55502f82109df07e922ef3ec41af1b1a5ed33d4d6d56076654ab2bc88e2e0888"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/session-name.ts",
+      "target": "test/fixtures/upstream/session-name.ts",
+      "sha256": "a0b9fd94e2cc827931150cc409238b473da635ab1a1cddce633cae5937a3ae24",
+      "portSha256": "a0b9fd94e2cc827931150cc409238b473da635ab1a1cddce633cae5937a3ae24"
+    },
+    {
+      "source": "packages/coding-agent/test/suite/mcp-oauth-server.ts",
+      "target": "test/fixtures/upstream/mcp-oauth-server.ts",
+      "sha256": "c92e904082949668fcc63de3ecec5a0a82499cff35e4e27514a68015d5596bed",
+      "portSha256": "c92e904082949668fcc63de3ecec5a0a82499cff35e4e27514a68015d5596bed"
+    }
+  ],
+  "forwarded": [
+    {
+      "target": "src/upstream/core/source-info.ts",
+      "implementation": "src/pi/core/source-info.ts"
+    },
+    {
+      "target": "src/upstream/core/diagnostics.ts",
+      "implementation": "src/pi/core/diagnostics.ts"
+    },
+    {
+      "target": "src/upstream/core/event-bus.ts",
+      "implementation": "src/pi/core/event-bus.ts"
+    },
+    {
+      "target": "src/upstream/core/pi-manifest.ts",
+      "implementation": "src/pi/core/pi-manifest.ts"
+    },
+    {
+      "target": "src/upstream/utils/frontmatter.ts",
+      "implementation": "src/pi/utils/frontmatter.ts"
+    },
+    {
+      "target": "src/upstream/utils/text.ts",
+      "implementation": "src/pi/utils/text.ts"
+    },
+    {
+      "target": "src/upstream/utils/paths.ts",
+      "implementation": "src/pi/utils/paths.ts"
+    },
+    {
+      "target": "src/upstream/utils/child-process.ts",
+      "implementation": "src/pi/utils/child-process.ts"
+    },
+    {
+      "target": "src/upstream/utils/git.ts",
+      "implementation": "src/pi/utils/git.ts"
+    },
+    {
+      "target": "src/upstream/core/output-guard.ts",
+      "implementation": "src/pi/core/output-guard.ts"
+    },
+    {
+      "target": "src/upstream/core/exec.ts",
+      "implementation": "src/pi/core/exec.ts"
+    },
+    {
+      "target": "src/upstream/core/timings.ts",
+      "implementation": "src/pi/core/timings.ts"
+    },
+    {
+      "target": "src/upstream/core/mcp-servers.ts",
+      "implementation": "src/pi/core/mcp-servers.ts"
+    },
+    {
+      "target": "src/upstream/core/skills.ts",
+      "implementation": "src/pi/core/skills.ts",
+      "changes": [
+        "explicit-host-agent-directory",
+        "explicit-host-project-resource-directory"
+      ]
+    },
+    {
+      "target": "src/upstream/core/prompt-templates.ts",
+      "implementation": "src/pi/core/prompt-templates.ts",
+      "changes": [
+        "explicit-host-project-resource-directory"
+      ]
+    },
+    {
+      "target": "src/upstream/core/system-prompt.ts",
+      "implementation": "src/pi/core/system-prompt.ts",
+      "changes": [
+        "host-documentation-paths"
+      ]
+    },
+    {
+      "target": "src/upstream/core/extensions/types.js",
+      "implementation": "src/pi/core/extensions/types.ts"
+    },
+    {
+      "target": "src/upstream/core/extensions/pi-ai-extension-view.ts",
+      "implementation": "src/pi/core/extensions/pi-ai-extension-view.ts"
+    },
+    {
+      "target": "src/upstream/core/provider-composer.js",
+      "implementation": "src/pi/core/provider-composer.ts"
+    },
+    {
+      "target": "src/upstream/core/resolve-config-value.ts",
+      "implementation": "src/pi/core/resolve-config-value.ts"
+    },
+    {
+      "target": "src/upstream/utils/shell.ts",
+      "implementation": "src/pi/utils/shell.ts",
+      "changes": [
+        "selected-public-shell-api"
+      ]
+    },
+    {
+      "target": "src/upstream/core/package-manager.ts",
+      "implementation": "src/legacy/package-manager.ts",
+      "changes": [
+        "legacy-project-directory-and-offline-policy"
+      ]
+    },
+    {
+      "target": "src/upstream/core/messages.js",
+      "implementation": "src/legacy/messages.js",
+      "changes": [
+        "legacy-message-metadata-and-identity"
+      ]
+    },
+    {
+      "target": "src/upstream/core/model-registry.js",
+      "implementation": "src/legacy/model-registry.js",
+      "changes": [
+        "structural-model-runtime-constructor"
+      ]
+    },
+    {
+      "target": "src/upstream/core/settings-merge.js",
+      "implementation": "src/legacy/settings-merge.js",
+      "changes": [
+        "legacy-open-settings-shape"
+      ]
+    },
+    {
+      "target": "src/upstream/core/context-tokens.js",
+      "implementation": "src/legacy/context-tokens.js",
+      "changes": [
+        "legacy-open-token-inputs"
+      ]
+    },
+    {
+      "target": "src/upstream/core/extensions/runner.js",
+      "implementation": "src/legacy/extension-runner.js",
+      "changes": [
+        "legacy-headless-theme-and-system-prompt"
+      ]
+    },
+    {
+      "target": "src/upstream/core/session-manager.js",
+      "implementation": "src/legacy/session-manager.js",
+      "changes": [
+        "legacy-durable-projection-and-storage-factories"
+      ]
+    }
+  ]
+}

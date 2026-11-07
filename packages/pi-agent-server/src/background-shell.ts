@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { AgentEvent } from '@mkagent/core/types';
+import type { PiWorkerScope } from '../../shared/src/agent/backend/pi/protocol.ts';
 
 /** Model-facing result of a background shell task (old pi-coding-agent AgentToolResult shape). */
 interface ShellToolResult {
@@ -14,11 +15,12 @@ type Execute = (signal: AbortSignal, update: (result: ShellToolResult) => void) 
 
 /** Owns only commands launched by this Pi subprocess. Permission checking happens before start. */
 export class BackgroundShells {
-  private tasks = new Map<string, { controller: AbortController; done: Promise<void> }>();
+  private tasks = new Map<string, { controller: AbortController; done: Promise<void>; owner?: PiWorkerScope }>();
 
-  constructor(private emit: (event: AgentEvent) => void) {}
+  constructor(private emit: (event: AgentEvent, owner?: PiWorkerScope) => void) {}
 
-  start(options: { directory: string; toolUseId: string; command: string; execute: Execute }): ShellToolResult {
+  start(options: { directory: string; toolUseId: string; command: string; execute: Execute; owner?: PiWorkerScope }): ShellToolResult {
+    const owner = options.owner ? { ...options.owner } : undefined;
     const taskId = `shell-${randomUUID()}`;
     mkdirSync(options.directory, { recursive: true });
     const outputFile = join(options.directory, `${taskId}.output`);
@@ -41,24 +43,26 @@ export class BackgroundShells {
       } finally {
         if (controller.signal.aborted) status = 'stopped';
         this.tasks.delete(taskId);
-        this.emit({ type: 'task_completed', taskId, toolUseId: options.toolUseId, status, outputFile, launchedHere: true });
+        this.emit({ type: 'task_completed', taskId, toolUseId: options.toolUseId, status, outputFile, launchedHere: true }, owner);
       }
     });
-    this.tasks.set(taskId, { controller, done });
-    this.emit({ type: 'shell_backgrounded', shellId: taskId, toolUseId: options.toolUseId, command: options.command });
+    this.tasks.set(taskId, { controller, done, owner });
+    this.emit({ type: 'shell_backgrounded', shellId: taskId, toolUseId: options.toolUseId, command: options.command }, owner);
     return { content: [{ type: 'text', text: `Command running in background with ID: ${taskId}. Output is being written to: ${outputFile}. You will be notified when it completes.` }], details: undefined };
   }
 
-  async stop(taskId: string): Promise<boolean> {
+  async stop(taskId: string, owner?: PiWorkerScope): Promise<boolean> {
     const task = this.tasks.get(taskId);
-    if (!task) return false;
+    if (!task || task.owner?.ownerSessionId !== owner?.ownerSessionId ||
+        task.owner?.runtimeGeneration !== owner?.runtimeGeneration) return false;
     task.controller.abort();
     await task.done;
     return true;
   }
 
-  async dispose(): Promise<void> {
-    const tasks = [...this.tasks.values()];
+  async dispose(owner?: PiWorkerScope): Promise<void> {
+    const tasks = [...this.tasks.values()].filter(task => !owner ||
+      (task.owner?.ownerSessionId === owner.ownerSessionId && task.owner?.runtimeGeneration === owner.runtimeGeneration));
     for (const task of tasks) task.controller.abort();
     await Promise.all(tasks.map(task => task.done));
   }

@@ -30,7 +30,7 @@ export function importSessionValue<T>(bundle: SessionBundle, value: T, targetPat
   // Old v1 packages stored absolute paths, sometimes alongside a "~" header.
   // Infer those source roots only from structured references proven by bundled files.
   const marker = '/sessions/' + bundle.session.header.id + '/'
-  for (const message of bundle.session.messages) {
+  for (const message of [...bundle.session.messages, ...(bundle.session.nativeArchivedMessages ?? [])]) {
     const paths = [message.planPath, ...(message.attachments ?? []).flatMap(attachment =>
       [attachment.storedPath, attachment.thumbnailPath, attachment.markdownPath])]
     for (const path of paths) {
@@ -50,6 +50,12 @@ export function importSessionValue<T>(bundle: SessionBundle, value: T, targetPat
 
 export function importSessionMessages(bundle: SessionBundle, targetPath: string): StoredMessage[] {
   return importSessionValue(bundle, bundle.session.messages, targetPath)
+}
+
+export function importNativeArchivedMessages(bundle: SessionBundle, targetPath: string): StoredMessage[] | undefined {
+  return bundle.session.nativeArchivedMessages?.length
+    ? importSessionValue(bundle, bundle.session.nativeArchivedMessages, targetPath)
+    : undefined
 }
 
 export function restoreSessionBundleFiles(bundle: SessionBundle, targetPath: string): void {

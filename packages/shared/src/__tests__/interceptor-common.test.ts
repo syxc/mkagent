@@ -78,6 +78,15 @@ describe('interceptor-common', () => {
     expect(persisted.existingTool).toBeDefined();
     expect(persisted.newTool).toBeDefined();
   });
+
+  it('isolates reused provider tool IDs by the explicit session directory', () => {
+    toolMetadataStore.setSessionDir(sessionDirA);
+    toolMetadataStore.set('reused-id', { intent: 'source', timestamp: 1 });
+    toolMetadataStore.setSessionDir(sessionDirB);
+    toolMetadataStore.set('reused-id', { intent: 'target', timestamp: 2 });
+    expect(toolMetadataStore.get('reused-id', sessionDirA)?.intent).toBe('source');
+    expect(toolMetadataStore.get('reused-id', sessionDirB)?.intent).toBe('target');
+  });
 });
 
 // Regression for OSS #1033 (PR #1063 by lau0708): the debug log had no size

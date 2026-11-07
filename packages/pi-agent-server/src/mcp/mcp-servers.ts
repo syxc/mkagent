@@ -8,6 +8,8 @@
  * Adapted to ignore inherited exposure overrides and reject invalid exposures.
  */
 
+import type { McpOAuthConfig } from '@mkagent/pi-durable-coding/mcp-oauth';
+
 /** Where a tool of an MCP server is surfaced. */
 export type McpExposure = 'codemode' | 'deferred' | 'direct' | 'hidden';
 
@@ -21,7 +23,7 @@ export interface McpServerConfig {
   cwd?: string;
   headers?: Record<string, string>;
   auth?: { provider: string };
-  oauth?: Record<string, unknown>;
+  oauth?: McpOAuthConfig;
   enabled?: boolean;
   exposure?: McpExposure;
   toolExposure?: Record<string, McpExposure>;
@@ -126,8 +128,8 @@ function validateOAuth(value: unknown): string | undefined {
   if (value.clientName !== undefined && (typeof value.clientName !== 'string' || !value.clientName.trim())) {
     return 'oauth.clientName must be a non-empty string';
   }
-  if (value.clientRegistration !== undefined && value.clientRegistration !== 'dcr') {
-    if (value.clientRegistration !== 'cimd') return 'oauth.clientRegistration must be "dcr" or "cimd"';
+  if (value.clientRegistration !== undefined && value.clientRegistration !== 'auto' && value.clientRegistration !== 'dcr') {
+    if (value.clientRegistration !== 'cimd') return 'oauth.clientRegistration must be "auto", "dcr" or "cimd"';
     if (value.clientId !== undefined || value.clientName !== undefined) {
       return 'oauth.clientRegistration "cimd" cannot be combined with oauth.clientId or oauth.clientName';
     }
@@ -144,6 +146,13 @@ function validateOAuth(value: unknown): string | undefined {
     }
   }
   return undefined;
+}
+
+/** Credentials may use plaintext HTTP only for loopback development servers. */
+export function isSecureMcpUrl(value: string): boolean {
+  if (!URL.canParse(value)) return false;
+  const url = new URL(value);
+  return url.protocol === 'https:' || (url.protocol === 'http:' && LOOPBACK_HOSTS.includes(url.hostname));
 }
 
 function isExposure(value: unknown): value is McpExposure {
@@ -220,12 +229,14 @@ export function validateMcpServerConfig(name: string, raw: unknown): McpServerCo
     }
     const oauthError = validateOAuth(value.oauth);
     if (oauthError) return `server "${name}": ${oauthError}`;
+    if (value.oauth !== undefined && !isSecureMcpUrl(value.url)) {
+      return `server "${name}": oauth requires an https URL, or http on localhost, 127.0.0.1, or [::1]`;
+    }
     if (value.auth !== undefined) {
       if (!isRecord(value.auth) || typeof value.auth.provider !== 'string' || !value.auth.provider) {
         return `server "${name}": auth.provider must be a provider name`;
       }
-      const url = new URL(value.url);
-      if (url.protocol !== 'https:' && !LOOPBACK_HOSTS.includes(url.hostname)) {
+      if (!isSecureMcpUrl(value.url)) {
         return `server "${name}": auth requires an https URL, or http on localhost, 127.0.0.1, or [::1]`;
       }
     }

@@ -1,0 +1,34 @@
+{
+  "repository": "https://github.com/earendil-works/pi",
+  "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
+  "version": "1.5.0",
+  "patch": "coding-boundary-v1",
+  "generationTaskVersion": 4,
+  "typescript": "5.9.3",
+  "sourceSha256": "f1b78b84f7476b1d604d3ae04e11a2d61b2edb6983cfabe850cc6f0736e3ece7",
+  "patchedSourceSha256": "588f89195721022a46128f40ab2219f2a6d39c5321cbf86a410fa4def02acfd3",
+  "batchSourceSha256": "b1a9d61f692e00afdf7cfced555cec1ec718eb46095c592c43408dcf6ce3df31",
+  "files": [
+    {
+      "path": "dist/harness/generation.js",
+      "originalSha256": "65a11a5164ffdb95b2031c3ae937da848a8897e57d1823ff34f97692eec7c570",
+      "sha256": "3c42aebb63d492156a7aff46f583a59cf691c8cecdff9b2de59aa30cca259304"
+    },
+    {
+      "path": "dist/harness/types.d.ts",
+      "originalSha256": "eff2fd6232680d3367a9e7c69fe158b38e1aff2d5f182086bfe6bfc1f2b1bb66",
+      "sha256": "0684b393ea1790e75d5b4c3a45342e5824bff889bc683af12442b9956784650a"
+    },
+    {
+      "path": "dist/harness/live.d.ts",
+      "originalSha256": "5e305b82b744a101335027da61496f9463d2c3114fc78ce4f6f3e2f40001607a",
+      "sha256": "42485fd23552d51a3687e519f29711eb73af8d3c9f043cc67212cecd038c8bcb"
+    },
+    {
+      "path": "dist/harness/generation.d.ts",
+      "originalSha256": "b3d2a690e8ac9b479de824fccbfaa6fc478a9270a6320336d5480a1be56e10fc",
+      "sha256": "3ebc3a429bc1d25a76b48ab63ef50f0428341eb297b313c51078bc67c65a6665"
+    }
+  ],
+  "policy": "One durable scheduler. Commit each native event decision with its next checkpoint; replay its memo after restart."
+}

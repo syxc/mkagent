@@ -733,7 +733,7 @@ describe('validateBundle', () => {
   })
 
   it('rejects wrong version', () => {
-    expect(validateBundle({ version: 2, session: { header: { id: 'x', createdAt: 1 }, messages: [] }, files: [] })).toBe(false)
+    expect(validateBundle({ version: 3, session: { header: { id: 'x', createdAt: 1 }, messages: [] }, files: [] })).toBe(false)
   })
 
   it('rejects missing session', () => {

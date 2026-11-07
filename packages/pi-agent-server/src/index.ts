@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { BackgroundShells } from './background-shell.ts';
+import { NativeSessionProjectionError, readNativeSessionDescriptor } from './storage/native-session-projection.ts';
 import type { AgentEvent } from '@mkagent/core/types';
 /**
  * Pi Agent Server
@@ -18,6 +19,7 @@ import type { AgentEvent } from '@mkagent/core/types';
  */
 
 import http from 'node:http';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { createInterface } from 'node:readline';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
@@ -64,46 +66,36 @@ import { createSearchTool } from './tools/search/create-search-tool.ts';
 import { createBuiltinTools } from './tools/builtin.ts';
 import { wrapToolForKernel, type ToolWrapDeps } from './tools/wrap.ts';
 import { createCodemodeExtensionFor } from './tools/codemode.ts';
-import { loadMcpTools, closeMcpConnections, type McpToolsLoadResult } from './mcp/extension.ts';
+import { loadMcpTools, type McpToolsLoadResult } from './mcp/extension.ts';
+import { createNativeMcpExtension } from './mcp/native-extension.ts';
+import { McpAuthorization } from './mcp/authorization.ts';
+import { ProviderAuthorization } from './provider-authorization.ts';
+import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/pi-durable-coding/mcp-oauth';
 import { createToolSearchExtension } from '@earendil-works/pi-durable/tool-search';
+import type { CodemodeNamespace } from '@earendil-works/pi-durable/codemode';
 import { version as CLIENT_VERSION } from '../package.json';
-import type { PiCompactResult, PiContextUsagePayload } from '../../shared/src/agent/backend/pi/protocol.ts';
+import type { PiCompactResult, PiContextUsagePayload, PiProxyToolDefinition, PiWorkerInitConfig, PiWorkerScope } from '../../shared/src/agent/backend/pi/protocol.ts';
 import { adaptCredentialForPiSdk, type PiCredential } from './adapt-credential.ts';
 import { resolveCraftAgentDir } from './agent-dir.ts';
 import { toPiProviderId } from '../../shared/src/config/pi-provider-ids.ts';
 import { ProviderEndpointEnvironment, providerEndpointEnv } from './provider-endpoint-env.ts';
 import { DurableKernel, type KernelHooks, type KernelModelRef } from './kernel.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
+import { prepareHostResources, type ExtensionContext, type RpcExtensionUIResponse } from '@mkagent/pi-durable-coding/native';
+import { ExtensionUIHost, type ExtensionUIEvent } from './extension-ui.ts';
+import { NativeOwnerExchange } from './native-owner.ts';
+import { NativeHistoryReceipts, type NativeHistoryReceipt, type NativeHistoryRequest } from './native-history-receipts.ts';
+import type {
+  PiNativeOwnerActivation, PiNativeOwnerControl, PiNativeOwnerEventBody,
+} from '../../shared/src/agent/backend/pi/native-owner-protocol.ts';
 
 // ============================================================
 // Types — JSONL Protocol
 // ============================================================
 
 /** Init message from main process — configures the agent server */
-interface InitMessage {
+interface InitMessage extends PiWorkerInitConfig {
   type: 'init';
-  apiKey: string;
-  model: string;
-  cwd: string;
-  thinkingLevel: string;
-  workspaceRootPath: string;
-  sessionId: string;
-  sessionPath: string;
-  workingDirectory: string;
-  plansFolderPath: string;
-  miniModel?: string;
-  agentDir?: string;
-  providerType?: string;
-  authType?: string;
-  workspaceId?: string;
-  baseUrl?: string;
-  branchFromSdkSessionId?: string;
-  branchFromSessionPath?: string;
-  branchFromSdkTurnId?: string;
-  customEndpoint?: CustomEndpointConfig;
-  customModels?: Array<string | { id: string; contextWindow?: number; supportsImages?: boolean }>;
-  autoCompactWindow?: number;
-  piAuth?: { provider: string; credential: PiCredential };
 }
 
 interface RuntimeConfigUpdateMessage {
@@ -119,10 +111,15 @@ interface RuntimeConfigUpdateMessage {
 }
 
 /** Messages from main process (stdin) */
-type InboundMessage =
+type InboundMessage = (
+  | PiNativeOwnerControl
+  | { type: 'release_owner'; id: string }
+  | { type: 'extension_ui_available'; available: boolean }
+  | (RpcExtensionUIResponse & { uiEpoch: string; responseId: string })
   | { type: 'stop_background_task'; id: string; taskId: string }
   | InitMessage
-  | { type: 'prompt'; id: string; message: string; systemPrompt: string; images?: Array<{ type: 'image'; data: string; mimeType: string }> }
+  | { type: 'prompt'; id: string; inputId?: string; message: string; systemPrompt: string; images?: Array<{ type: 'image'; data: string; mimeType: string }>;
+      nativeInput?: { text: string; hostContextPrefix: string } }
   | { type: 'register_tools'; tools: ProxyToolDef[] }
   | { type: 'tool_execute_response'; requestId: string; result: ProxyToolResult }
   | { type: 'pre_tool_use_response'; requestId: string; action: 'allow' | 'block' | 'modify'; input?: Record<string, unknown>; reason?: string }
@@ -132,21 +129,20 @@ type InboundMessage =
   | { type: 'cancel_ephemeral_query'; id: string }
   | { type: 'ensure_session_ready'; id: string }
   | { type: 'set_model'; model: string }
+  | { type: 'set_session_name'; id: string; name: string }
+  | NativeHistoryReceipt
   | { type: 'set_thinking_level'; level: string }
   | { type: 'compact'; id: string; customInstructions?: string }
   | { type: 'cancel_compact'; id: string }
   | { type: 'set_auto_compaction'; id: string; enabled: boolean }
   | RuntimeConfigUpdateMessage
-  | { type: 'steer'; message: string }
+  | { type: 'steer'; inputId?: string; message: string }
   | { type: 'token_update'; piAuth: { provider: string; credential: PiCredential } }
-  | { type: 'shutdown' };
+  | { type: 'shutdown' }
+) & Partial<PiWorkerScope>;
 
 /** Proxy tool definition from main process */
-interface ProxyToolDef {
-  name: string;
-  description: string;
-  inputSchema: Record<string, unknown>;
-}
+type ProxyToolDef = PiProxyToolDefinition;
 
 /** Canonical tool metadata propagated on tool start events */
 interface ToolExecutionMetadata {
@@ -218,6 +214,14 @@ interface OutboundOAuthCredentialUpdate {
 interface OutboundError { type: 'error'; message: string; code?: string; id?: string }
 
 type OutboundMessage =
+  | PiNativeOwnerEventBody
+  | NativeHistoryRequest
+  | { type: 'callback_port'; callbackPort: number }
+  | { type: 'owner_released'; id: string; released: boolean; error?: string }
+  | { type: 'set_session_name_result'; id: string; success: boolean; errorMessage?: string }
+  | ExtensionUIEvent
+  | { type: 'extension_ui_response_result'; id: string; accepted: boolean }
+  | { type: 'prompt_result'; id: string; handled: boolean; completed: boolean }
   | { type: 'background_task_event'; event: AgentEvent }
   | { type: 'stop_background_task_result'; id: string; stopped: boolean }
   | OutboundReady
@@ -241,12 +245,15 @@ type OutboundMessage =
 
 let kernel: DurableKernel | null = null;
 let kernelPromise: Promise<DurableKernel> | null = null;
+// Separate from source startup: a startup hook can replace its own kernel.
+let ownerLoading: Promise<DurableKernel> | null = null;
 let initialization: Promise<void> = Promise.resolve();
 // Invalidated at receipt, before commands waiting on initialization can run.
 let inputGeneration = 0;
 let reinitializing = false;
 let shuttingDown: Promise<void> | undefined;
 let mcpLoad: McpToolsLoadResult | null = null;
+let foregroundAuthorization: { cancelAll(): Promise<void> } | undefined;
 let modelRuntime: ModelRuntime | null = null;
 let modelRuntimePromise: Promise<ModelRuntime> | null = null;
 
@@ -268,7 +275,20 @@ const endpointEnvironment = new ProviderEndpointEnvironment();
 
 // Mutable state
 let currentUserMessage = '';
-const backgroundShells = new BackgroundShells(event => send({ type: 'background_task_event', event }));
+let foregroundScope: PiWorkerScope | undefined;
+let foregroundActive = true;
+let foregroundEpoch = 0;
+let foregroundUI: ExtensionUIHost | undefined;
+const workerContext = new AsyncLocalStorage<{ scope?: PiWorkerScope; ui?: ExtensionUIHost; inputId?: string }>();
+const nativeHistory = new NativeHistoryReceipts((request, scope) => sendScoped(request, scope));
+const nativeOwner = new NativeOwnerExchange({
+  send: event => sendScoped(event, event),
+  withTargetScope: (scope, work) => {
+    if (!isForegroundScope(scope)) throw new Error('Native target scope is no longer active');
+    return workerContext.run({ scope, ui: foregroundUI, inputId: workerContext.getStore()?.inputId }, work);
+  },
+});
+const backgroundShells = new BackgroundShells((event, scope) => sendScoped({ type: 'background_task_event', event }, scope));
 
 // Pending promises for async handshakes
 const pendingPreToolUse = new Map<string, { resolve: (response: { action: string; input?: Record<string, unknown>; reason?: string }) => void }>();
@@ -292,16 +312,44 @@ function isPrefetchableTool(toolName: string): boolean {
 }
 
 // Callback server for call_llm
-let callbackServer: http.Server | null = null;
+interface CallbackBinding {
+  server: http.Server;
+  sockets: Set<import('node:net').Socket>;
+  active: boolean;
+}
+let callbackServer: CallbackBinding | null = null;
 let callbackPort = 0;
 
 // ============================================================
 // JSONL I/O
 // ============================================================
 
-function send(msg: OutboundMessage): void {
-  const line = JSON.stringify(msg);
+function currentWorkerScope(): PiWorkerScope | undefined {
+  const context = workerContext.getStore();
+  return context ? context.scope : foregroundScope;
+}
+
+function isForegroundScope(scope: PiWorkerScope | undefined): boolean {
+  return foregroundActive && scope?.ownerSessionId === foregroundScope?.ownerSessionId &&
+    scope?.runtimeGeneration === foregroundScope?.runtimeGeneration;
+}
+
+function sendScoped(msg: OutboundMessage, scope?: PiWorkerScope): void {
+  const line = JSON.stringify({ ...msg, ...scope });
   process.stdout.write(line + '\n');
+}
+
+function send(msg: OutboundMessage): void {
+  sendScoped(msg, currentWorkerScope());
+}
+
+function readWorkerScope(msg: Partial<PiWorkerScope>): PiWorkerScope | undefined {
+  if (msg.ownerSessionId === undefined && msg.runtimeGeneration === undefined) return undefined;
+  if (typeof msg.ownerSessionId !== 'string' || !msg.ownerSessionId ||
+      typeof msg.runtimeGeneration !== 'number' || !Number.isSafeInteger(msg.runtimeGeneration) || msg.runtimeGeneration < 1) {
+    throw new Error('Invalid Pi worker message scope');
+  }
+  return { ownerSessionId: msg.ownerSessionId, runtimeGeneration: msg.runtimeGeneration };
 }
 
 function debugLog(message: string): void {
@@ -314,33 +362,77 @@ function debugLog(message: string): void {
 // ============================================================
 
 async function startCallbackServer(): Promise<void> {
-  if (callbackServer) return;
+  if (!initConfig) throw new Error('Callback server requires initialization');
+  const config = initConfig;
+  const scope = currentWorkerScope();
+  const epoch = foregroundEpoch;
+  const assertOwner = () => {
+    if (epoch !== foregroundEpoch || !isForegroundScope(scope)) {
+      throw new EphemeralQueryCancelledError('Callback owner is no longer active');
+    }
+  };
+  assertOwner();
 
   const server = http.createServer(async (req, res) => {
+    const id = nextLocalEphemeralQueryId('callback');
+    let finished = false;
+    const cancel = () => {
+      finished = true;
+      ephemeralQueries.cancel(id, new EphemeralQueryCancelledError('Callback connection closed'));
+    };
+    const check = () => {
+      assertOwner();
+      if (!binding.active || finished || res.destroyed) throw new EphemeralQueryCancelledError('Callback retired');
+    };
+    const timer = setTimeout(() => {
+      cancel();
+      req.destroy();
+      res.destroy();
+    }, LLM_QUERY_TIMEOUT_MS);
+    timer.unref();
+    res.once('close', () => { clearTimeout(timer); cancel(); });
     if (req.method !== 'POST' || req.url !== '/call-llm') {
       res.writeHead(404);
       res.end();
       return;
     }
     try {
+      check();
       const chunks: Buffer[] = [];
-      for await (const chunk of req) chunks.push(chunk as Buffer);
+      for await (const chunk of req) {
+        check();
+        chunks.push(chunk as Buffer);
+      }
+      check();
       const body = JSON.parse(Buffer.concat(chunks).toString()) as Record<string, unknown>;
 
       debugLog('Received call_llm request via callback server');
-      const result = await preExecuteCallLlm(body);
+      const result = await workerContext.run({ scope }, () => preExecuteCallLlm(body, config, id, check));
+      check();
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
     } catch (error) {
+      if (!binding.active || epoch !== foregroundEpoch || !isForegroundScope(scope) || finished || res.destroyed) {
+        res.destroy();
+        return;
+      }
       const msg = error instanceof Error ? error.message : String(error);
       debugLog(`call_llm via callback failed: ${msg}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: msg }));
     }
   });
+  const binding: CallbackBinding = { server, sockets: new Set(), active: true };
+  callbackServer = binding;
+  server.on('connection', socket => {
+    binding.sockets.add(socket);
+    socket.once('close', () => binding.sockets.delete(socket));
+    if (!binding.active) socket.destroy();
+  });
 
   await new Promise<void>((resolve, reject) => {
     server.listen(0, '127.0.0.1', () => {
+      if (!binding.active) { reject(new EphemeralQueryCancelledError('Callback retired while listening')); return; }
       const addr = server.address();
       callbackPort = typeof addr === 'object' && addr ? addr.port : 0;
       debugLog(`Callback server listening on 127.0.0.1:${callbackPort}`);
@@ -349,15 +441,19 @@ async function startCallbackServer(): Promise<void> {
     server.on('error', reject);
   });
 
-  callbackServer = server;
+  assertOwner();
 }
 
-function stopCallbackServer(): void {
-  if (callbackServer) {
-    callbackServer.close();
-    callbackServer = null;
-    callbackPort = 0;
-  }
+function stopCallbackServer(): Promise<void> {
+  const binding = callbackServer;
+  if (!binding) return Promise.resolve();
+  binding.active = false;
+  callbackServer = null;
+  callbackPort = 0;
+  // close() alone leaves already accepted HTTP bodies and keep-alive sockets live.
+  const closed = new Promise<void>(resolve => binding.server.close(() => resolve()));
+  for (const socket of binding.sockets) socket.destroy();
+  return closed;
 }
 
 // ============================================================
@@ -570,18 +666,12 @@ function buildProxyTools(): ToolRegistration[] {
  * `isError` so the model gets an error tool result and the UI marks the call
  * failed, as a thrown error would.
  */
-function buildToolsExtension(cwd: string, mcpTools: readonly ToolRegistration[]): Extension {
+function toolWrapDependencies(cwd: string): ToolWrapDeps {
   if (!initConfig) throw new Error('Cannot build tools: init not received');
-  const builtinTools = createBuiltinTools(cwd);
-  const searchTool = createSearchTool(searchProvider);
-  const webFetchTool = createWebFetchTool(() =>
-    initConfig ? getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId) : null
-  );
-  const proxyTools = buildProxyTools();
-
-  const wrapDeps: ToolWrapDeps = {
+  return {
     requestApproval: requestPreToolUseApproval,
     backgroundShells,
+    ownerScope: currentWorkerScope(),
     tasksDirectory: join(resolveCraftAgentDir(initConfig), 'tasks'),
     // Same env options as the kernel's; background bash must not run through
     // durable's bash tool (its api is call-scoped and rejects after settle).
@@ -598,7 +688,16 @@ function buildToolsExtension(cwd: string, mcpTools: readonly ToolRegistration[])
     getSessionPath: () => initConfig ? getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId) : null,
     debugLog,
   };
+}
 
+function buildToolsExtension(cwd: string, mcpTools: readonly ToolRegistration[]): Extension {
+  const builtinTools = createBuiltinTools(cwd, { powerShell: initConfig?.agentProfile === 'coding' });
+  const searchTool = createSearchTool(searchProvider);
+  const webFetchTool = createWebFetchTool(() =>
+    initConfig ? getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId) : null
+  );
+  const proxyTools = buildProxyTools();
+  const wrapDeps = toolWrapDependencies(cwd);
   const wrapped = [
     ...builtinTools,
     searchTool,
@@ -617,112 +716,311 @@ function buildToolsExtension(cwd: string, mcpTools: readonly ToolRegistration[])
 // Kernel session lifecycle
 // ============================================================
 
-const kernelHooks: KernelHooks = {
-  emitEvent: (event) => send({ type: 'event', event: event as OutboundAgentEvent }),
-  sessionToolCompleted: (toolName, args, isError) => send({ type: 'session_tool_completed', toolName, args, isError }),
-  prefetchToolCall: (toolCallId, toolName, args) => {
-    if (reinitializing || shuttingDown) return;
-    const requestId = `prefetch-${toolCallId}`;
-    const promise = new Promise<{ content: string; isError: boolean }>((resolve) => {
-      pendingToolExecutions.set(requestId, { resolve });
-    });
-    send({
-      type: 'tool_execute_request',
-      requestId,
-      toolName,
-      args,
-    });
-    prefetchCache.set(toolCallId, promise);
-  },
-  isPrefetchableTool,
-  debugLog,
-};
+function releaseForegroundRequests(reason: string): void {
+  ephemeralQueries.cancelAll(new EphemeralQueryCancelledError(reason));
+  for (const controller of pendingCompactions.values()) controller.abort();
+  for (const pending of pendingPreToolUse.values()) pending.resolve({ action: 'block', reason });
+  pendingPreToolUse.clear();
+  for (const pending of pendingToolExecutions.values()) pending.resolve({ content: reason, isError: true });
+  pendingToolExecutions.clear();
+  prefetchCache.clear();
+}
+
+function createKernelHooks(scope: PiWorkerScope | undefined): KernelHooks {
+  return {
+    sessionIdentity: sessionId => sendScoped({ type: 'session_id_update', sessionId }, scope),
+    emitEvent: (event) => sendScoped({ type: 'event', event: event as OutboundAgentEvent }, scope),
+    sessionToolCompleted: (toolName, args, isError) => sendScoped({ type: 'session_tool_completed', toolName, args, isError }, scope),
+    prefetchToolCall: (toolCallId, toolName, args) => {
+      if (reinitializing || shuttingDown) return;
+      const requestId = `prefetch-${toolCallId}`;
+      const promise = new Promise<{ content: string; isError: boolean }>((resolve) => {
+        pendingToolExecutions.set(requestId, { resolve });
+      });
+      sendScoped({
+        type: 'tool_execute_request',
+        requestId,
+        toolName,
+        args,
+      }, scope);
+      prefetchCache.set(toolCallId, promise);
+    },
+    isPrefetchableTool,
+    debugLog,
+  };
+}
 
 async function ensureKernel(): Promise<DurableKernel> {
   if (kernel) return kernel;
+  if (ownerLoading) return ownerLoading;
   if (!kernelPromise) {
-    kernelPromise = openKernel().finally(() => { kernelPromise = null; });
+    const pending: Promise<DurableKernel> = openKernel().finally(() => {
+      if (kernelPromise === pending) kernelPromise = null;
+    });
+    kernelPromise = pending;
   }
   return kernelPromise;
 }
 
-async function openKernel(): Promise<DurableKernel> {
+async function openKernel(replacement?: PiNativeOwnerActivation, signal?: AbortSignal): Promise<DurableKernel> {
   if (!initConfig) throw new Error('Cannot create session: init not received');
+  const config = initConfig;
+  const scope = currentWorkerScope();
+  const epoch = foregroundEpoch;
+  const assertOwner = () => {
+    signal?.throwIfAborted();
+    if (epoch !== foregroundEpoch || !isForegroundScope(scope)) throw new Error('Kernel owner is no longer active');
+  };
+  assertOwner();
 
+  const codingUI = workerContext.getStore()?.ui;
   const cwd = resolvedCwd();
-  const sessionPath = getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId);
+  const sessionPath = getSessionPath(config.workspaceRootPath, config.sessionId);
 
   const initGeneration = credentialGeneration;
-  // MCP list changes publish a replacement tool set on the existing kernel.
-  // projectTrusted stays unset: project-scope `.mkagent/mcp.json` is implemented but not
-  // loaded until mkagent grows a project-trust concept (global mcp.json always loads).
-  // Kernel recreation on re-init leaves the previous load behind — close it.
-  if (mcpLoad) await closeMcpConnections(mcpLoad.connections);
+  const previousAuthorization = foregroundAuthorization;
+  await previousAuthorization?.cancelAll();
+  if (foregroundAuthorization === previousAuthorization) foregroundAuthorization = undefined;
+  // Resolve native resources and project MCP under the same trust decision.
+  const previousMcp = mcpLoad;
+  if (previousMcp) await previousMcp.close();
+  assertOwner();
+  if (mcpLoad === previousMcp) mcpLoad = null;
   let openingKernel: DurableKernel | undefined;
-  mcpLoad = await loadMcpTools({
-    agentDir: resolveCraftAgentDir(initConfig),
-    cwd,
-    version: CLIENT_VERSION,
-    debugLog,
-    onUpdate: tools => openingKernel?.updateTools(buildToolsExtension(cwd, tools)),
+  let mcpReady = false;
+  let loadedMcp: McpToolsLoadResult = {
+    tools: [], namespaces: [], connections: [], autoEnableCodemode: true, errors: [],
+    closed: false, async close() {}, async updateRegisteredServers() { throw new Error('MCP runtime is not ready'); },
+  };
+  const mcpNamespaces: CodemodeNamespace[] = [];
+  let codemodeExtension: ReturnType<typeof createCodemodeExtensionFor> | undefined;
+  const codingProfile = config.agentProfile === 'coding' || config.codingResources ? {
+    ...config.codingResources,
+    agentDir: config.codingResources?.agentDir
+      ?? (process.env.PI_CODING_AGENT_DIR?.trim() || join(homedir(), '.pi', 'agent')),
+  } : undefined;
+  const credentialDir = codingProfile?.resourcePolicy !== 'host-only' && codingProfile?.agentDir
+    ? codingProfile.agentDir : resolveCraftAgentDir(config);
+  const credentials = new McpOAuthCredentialStore(
+    new FileAuthStorageBackend(join(credentialDir, 'mcp-auth.json')), credentialDir,
+  );
+  const authorization = new McpAuthorization({ credentials, connections: () => loadedMcp.connections, assertOwner });
+  const providerAuthorization = new ProviderAuthorization({
+    models: () => {
+      assertOwner();
+      if (!openingKernel) throw new Error('Native model runtime is unavailable');
+      return openingKernel.currentModels();
+    },
+    assertOwner,
+    inputSecret: (title, placeholder, signal) => codingUI?.inputSecret(title, placeholder, signal)
+      ?? Promise.resolve(undefined),
+    loginOptions: { agentName: 'MkAgent', getDeviceId: () => {
+      if (!preparedResources) throw new Error('Native settings are unavailable');
+      return preparedResources.settingsManager.getOrCreateDeviceId();
+    } },
+    changed: async (provider, action, signal) => {
+      assertOwner();
+      const results = await Promise.allSettled(loadedMcp.connections
+        .filter(connection => connection.entry.config.auth?.provider === provider)
+        .map(connection => action === 'login' ? connection.reconnect(signal) : connection.signOut()));
+      assertOwner();
+      if (results.some(result => result.status === 'rejected')) throw new Error('MCP authentication refresh failed');
+    },
   });
-  for (const error of mcpLoad.errors) debugLog(`MCP: ${error}`);
+  const cancelAuthorization = async () => {
+    await Promise.all([authorization.cancelAll(), providerAuthorization.cancelAll()]);
+  };
+  let nativeModelRegistry: ExtensionContext['modelRegistry'] | undefined;
+  const nativeMcp = createNativeMcpExtension({ runtime: () => loadedMcp, assertOwner,
+    bindModelRegistry: registry => { nativeModelRegistry = registry; },
+  });
+  foregroundAuthorization = { cancelAll: cancelAuthorization };
+  codingUI?.onUnavailable(() => { void cancelAuthorization(); });
+  const getCodemodeExtension = () => codemodeExtension
+    ??= createCodemodeExtensionFor(mcpNamespaces, requestPreToolUseApproval);
+  const refreshMcp = async (projectTrusted?: boolean) => {
+    assertOwner();
+    await cancelAuthorization();
+    if (mcpLoad === loadedMcp) mcpLoad = null;
+    await loadedMcp.close();
+    assertOwner();
+    let next: McpToolsLoadResult | undefined;
+    next = await loadMcpTools({
+      agentDir: resolveCraftAgentDir(config),
+      nativeAgentDir: codingProfile?.resourcePolicy !== 'host-only' ? codingProfile?.agentDir : undefined,
+      cwd, projectTrusted, version: CLIENT_VERSION, debugLog, credentials,
+      providerToken: async provider => {
+        assertOwner();
+        const registry = nativeModelRegistry;
+        let token: string | undefined;
+        try {
+          token = registry ? await registry.getApiKeyForProvider(provider)
+            : (await (await ensureModelRuntime()).models.getAuth(provider))?.auth.apiKey;
+        } catch { return undefined; }
+        assertOwner();
+        return registry === nativeModelRegistry ? token : undefined;
+      },
+      beforeDisconnect: async connections => {
+        await Promise.all(connections.map(connection => authorization.cancelServer(connection.name)));
+      },
+      onUpdate: (tools, namespaces) => {
+        if (!next || mcpLoad !== next || epoch !== foregroundEpoch || !isForegroundScope(scope)) return;
+        mcpNamespaces.splice(0, mcpNamespaces.length, ...namespaces);
+        openingKernel?.updateTools(buildToolsExtension(cwd, tools));
+      },
+    });
+    try { assertOwner(); } catch (error) {
+      await next.close();
+      throw error;
+    }
+    loadedMcp = next;
+    mcpLoad = next;
+    mcpReady = true;
+    mcpNamespaces.splice(0, mcpNamespaces.length, ...next.namespaces);
+    if (next.autoEnableCodemode || codemodeExtension) {
+      openingKernel?.updateExtension(getCodemodeExtension(), next.autoEnableCodemode);
+    }
+    openingKernel?.updateTools(buildToolsExtension(cwd, next.tools));
+    for (const error of next.errors) debugLog(`MCP: ${error}`);
+  };
+  let preparedResources: Awaited<ReturnType<typeof prepareHostResources>> | undefined;
+  try {
+    if (codingProfile) {
+      codingUI?.bind({}, () => {});
+      preparedResources = await prepareHostResources({
+        ...codingProfile, cwd, getSystemPrompt: () => openingKernel?.systemPrompt ?? replacement?.systemPrompt,
+        extensionFactories: [authorization.extension(), providerAuthorization.extension(), nativeMcp],
+      }, () => (codingUI ?? new ExtensionUIHost(() => {})).projectTrustContext(cwd), debugLog,
+      async trusted => {
+        assertOwner();
+        if (mcpReady) await refreshMcp(trusted);
+      });
+    }
+    await refreshMcp(preparedResources?.settingsManager.isProjectTrusted());
+    assertOwner();
+  } catch (error) {
+    await cancelAuthorization();
+    await loadedMcp.close();
+    if (mcpLoad === loadedMcp) mcpLoad = null;
+    codingUI?.close();
+    throw error;
+  }
 
   const k = new DurableKernel({
     sessionPath,
     cwd,
     shellPath: process.env.MKAGENT_GIT_BASH_PATH?.trim() || undefined,
-    autoCompactWindow: initConfig.autoCompactWindow,
+    autoCompactWindow: config.autoCompactWindow,
     modelsSource: () => {
       if (!modelRuntime) throw new Error('Model runtime not initialized');
       return modelRuntime.models;
     },
-    hooks: kernelHooks,
-    toolsExtension: buildToolsExtension(cwd, mcpLoad.tools),
+    modelCredentialsSource: () => {
+      if (!modelRuntime) throw new Error('Model runtime not initialized');
+      return modelRuntime.codingCredentials;
+    },
+    hooks: createKernelHooks(scope),
+    toolsExtension: buildToolsExtension(cwd, loadedMcp.tools),
+    commitNativeHistory: (reference, hasName) => nativeHistory.commit(scope, reference, hasName),
+    replaceNativeSession: (request, runTarget) => {
+      let target: DurableKernel | undefined;
+      return nativeOwner.replace(currentWorkerScope(), { ...request, inputId: workerContext.getStore()?.inputId }, {
+        closeSource: async signal => {
+          signal.throwIfAborted();
+          inputGeneration++;
+          const callbacksClosed = stopCallbackServer();
+          releaseForegroundRequests('Native session replaced');
+          await cancelAuthorization();
+          await callbacksClosed;
+          await k.close(request.operation.type === 'switch' ? 'resume' : request.operation.type);
+          openingKernel = undefined;
+          if (kernel === k) kernel = null;
+          await loadedMcp.close();
+          if (mcpLoad === loadedMcp) mcpLoad = null;
+          codingUI?.close();
+          const { entryIds: _entryIds, ...reference } = await readNativeSessionDescriptor(sessionPath);
+          return reference;
+        },
+        bindTarget: async (activation, signal) => {
+          // Register before initialize's first await. Never join source kernelPromise
+          // here: startup replacement executes inside that very promise.
+          const loading = Promise.resolve().then(async () => {
+            signal.throwIfAborted();
+            await initialize({ ...activation.config, type: 'init' }, 'owner', signal);
+            signal.throwIfAborted();
+            proxyToolDefs = activation.tools;
+            return openKernel(activation, signal);
+          });
+          ownerLoading = loading;
+          try {
+            target = await loading;
+            const { entryIds: _entryIds, ...reference } = await readNativeSessionDescriptor(activation.config.sessionPath);
+            return { nativeSessionId: target.sessionId!, reference };
+          } finally {
+            if (ownerLoading === loading) ownerLoading = null;
+          }
+        },
+        runTarget: async (_activation, signal) => {
+          if (!target) throw new Error('Native replacement target was not bound');
+          await runTarget(target, signal);
+        },
+      });
+    },
+    ...(codingProfile ? {
+      codingUI,
+      coding: { ...codingProfile, preparedResources },
+      wrapCodingTool: tool => wrapToolForKernel(tool, toolWrapDependencies(cwd)),
+    } : {}),
     extensions: [
       // Codemode + tool_search default on (mcp.json autoEnableCodemode: false opts out of codemode).
-      ...(mcpLoad.autoEnableCodemode ? [createCodemodeExtensionFor(mcpLoad.namespaces, requestPreToolUseApproval)] : []),
+      ...(loadedMcp.autoEnableCodemode ? [getCodemodeExtension()] : []),
       createToolSearchExtension(),
     ],
   });
   openingKernel = k;
+  if (replacement) k.systemPrompt = replacement.systemPrompt;
 
   let model: KernelModelRef | undefined;
   let modelGeneration = runtimeConfigGeneration;
-  let requestedModel = initConfig.model;
+  let requestedModel = config.model;
   try {
     if (requestedModel) model = await resolveModelRef(requestedModel);
+    assertOwner();
     if (!model) {
       setInterceptorApiHints(undefined);
       throw new Error(`Could not resolve model: ${requestedModel || '(unset)'}`);
     }
     await k.open({
+      ...(replacement ? { codingReplacement: { reason: replacement.reason } } : {}),
       ...(model ? { model } : {}),
-      thinkingLevel: THINKING_TO_PI[initConfig.thinkingLevel as keyof typeof THINKING_TO_PI],
-      ...(initConfig.branchFromSessionPath ? { branchFromSessionPath: initConfig.branchFromSessionPath } : {}),
-      ...(initConfig.branchFromSdkTurnId ? { branchFromSdkTurnId: initConfig.branchFromSdkTurnId } : {}),
+      thinkingLevel: THINKING_TO_PI[config.thinkingLevel as keyof typeof THINKING_TO_PI],
+      ...(config.branchFromSessionPath ? { branchFromSessionPath: config.branchFromSessionPath } : {}),
+      ...(config.branchFromSdkTurnId ? { branchFromSdkTurnId: config.branchFromSdkTurnId } : {}),
+      ...(config.nativeFork ? { nativeFork: config.nativeFork } : {}),
+      ...(config.nativeResume ? { nativeResume: config.nativeResume } : {}),
+      ...(config.nativeParent ? { nativeParent: config.nativeParent } : {}),
     });
-    k.updateTools(buildToolsExtension(cwd, mcpLoad.tools));
+    assertOwner();
+    k.updateTools(buildToolsExtension(cwd, loadedMcp.tools));
     while (initGeneration === credentialGeneration && initConfig.model && modelGeneration !== runtimeConfigGeneration) {
       modelGeneration = runtimeConfigGeneration;
       requestedModel = initConfig.model;
       const updatedModel = await resolveModelRef(requestedModel);
       if (!updatedModel) throw new Error(`Could not resolve model after runtime update: ${requestedModel}`);
       await k.setModel(updatedModel);
+      assertOwner();
     }
   } catch (error) {
     openingKernel = undefined;
+    await cancelAuthorization();
     await k.close().catch(() => {});
-    await closeMcpConnections(mcpLoad.connections);
-    mcpLoad = null;
+    await loadedMcp.close();
+    if (mcpLoad === loadedMcp) mcpLoad = null;
     throw error;
   }
 
   kernel = k;
   debugLog(`Created durable kernel session: ${k.sessionId}`);
-
-  // Notify main process of session ID
-  send({ type: 'session_id_update', sessionId: k.sessionId });
 
   return k;
 }
@@ -736,13 +1034,21 @@ async function openKernel(): Promise<DurableKernel> {
 const MKAGENT_PI_EPHEMERAL_QUERY_DEADLINE_MS = LLM_QUERY_TIMEOUT_MS - 5_000;
 
 async function runEphemeralLlmQuery(id: string, request: LLMQueryRequest): Promise<LLMQueryResult> {
+  const scope = currentWorkerScope();
+  const epoch = foregroundEpoch;
+  const assertOwner = () => {
+    if (epoch !== foregroundEpoch || !isForegroundScope(scope)) throw new EphemeralQueryCancelledError('Query owner retired');
+  };
+  assertOwner();
   return ephemeralQueries.run(id, MKAGENT_PI_EPHEMERAL_QUERY_DEADLINE_MS, async (lifecycle) => {
-    await ensureModelRuntime();
+    lifecycle.throwIfCancelled();
+    assertOwner();
+    const runtime = await ensureModelRuntime();
     // Capture the pair after lazy construction; a committed replacement is synchronous.
-    const runtime = modelRuntime!;
     const config = initConfig;
     lifecycle.throwIfCancelled();
-    return queryLlm(request, lifecycle, {
+    assertOwner();
+    const result = await queryLlm(request, lifecycle, {
       models: runtime.models,
       getConfig: () => config ? {
         miniModel: config.miniModel,
@@ -752,15 +1058,22 @@ async function runEphemeralLlmQuery(id: string, request: LLMQueryRequest): Promi
       } : null,
       debugLog,
     });
+    lifecycle.throwIfCancelled();
+    assertOwner();
+    return result;
   });
 }
 
-async function preExecuteCallLlm(input: Record<string, unknown>): Promise<LLMQueryResult> {
-  const sessionPath = initConfig
-    ? getSessionPath(initConfig.workspaceRootPath, initConfig.sessionId)
-    : undefined;
+async function preExecuteCallLlm(
+  input: Record<string, unknown>, config: InitMessage, id: string, check: () => void,
+): Promise<LLMQueryResult> {
+  check();
+  const sessionPath = getSessionPath(config.workspaceRootPath, config.sessionId);
   const request = await buildCallLlmRequest(input, { backendName: 'Pi', sessionPath });
-  return runEphemeralLlmQuery(nextLocalEphemeralQueryId('callback'), request);
+  check();
+  const result = await runEphemeralLlmQuery(id, request);
+  check();
+  return result;
 }
 
 async function runMiniCompletion(prompt: string): Promise<string | null> {
@@ -791,7 +1104,17 @@ async function handleInit(msg: Extract<InboundMessage, { type: 'init' }>): Promi
   }
 }
 
-async function initialize(msg: Extract<InboundMessage, { type: 'init' }>): Promise<void> {
+async function initialize(
+  msg: Extract<InboundMessage, { type: 'init' }>, mode: 'init' | 'owner' = 'init', signal?: AbortSignal,
+): Promise<void> {
+  const scope = currentWorkerScope();
+  const epoch = foregroundEpoch;
+  const assertOwner = () => {
+    signal?.throwIfAborted();
+    if (epoch !== foregroundEpoch || !isForegroundScope(scope)) throw new Error('Initialization owner retired');
+  };
+  assertOwner();
+  const callbacksClosed = stopCallbackServer();
   // A re-init invalidates every utility query created under the old credentials.
   credentialGeneration++;
   ephemeralQueries.cancelAll(new EphemeralQueryCancelledError('Pi server reinitialized'));
@@ -808,7 +1131,9 @@ async function initialize(msg: Extract<InboundMessage, { type: 'init' }>): Promi
   prefetchCache.clear();
 
   await runtimeCommit;
-  if (kernelPromise) await kernelPromise.catch(() => undefined);
+  await callbacksClosed;
+  if (mode === 'init' && kernelPromise) await kernelPromise.catch(() => undefined);
+  assertOwner();
   if (kernel) {
     try {
       await kernel.close();
@@ -821,9 +1146,10 @@ async function initialize(msg: Extract<InboundMessage, { type: 'init' }>): Promi
 
   // Re-init invalidates the old MCP connections; a new kernel opens lazily below.
   if (mcpLoad) {
-    await closeMcpConnections(mcpLoad.connections);
+    await mcpLoad.close();
     mcpLoad = null;
   }
+  assertOwner();
 
   // Provider/custom-endpoint settings may have changed across re-init.
   modelRuntimePromise = null;
@@ -832,12 +1158,15 @@ async function initialize(msg: Extract<InboundMessage, { type: 'init' }>): Promi
   // Craft's stored provider ids → SDK ids, once, so every consumer below
   // (credential store, model resolution, search) sees the SDK's id.
   initConfig = msg.piAuth ? { ...msg, piAuth: toPiAuth(msg.piAuth) } : msg;
+  process.env.MKAGENT_SESSION_DIR = getSessionPath(msg.workspaceRootPath, msg.sessionId);
   applyProviderEndpointEnv(initConfig);
 
-  // Start callback server for call_llm (idempotent — skips if already running)
+  // Each owner receives a new listener; old accepted requests are revoked too.
   await startCallbackServer();
+  assertOwner();
 
-  send({
+  if (mode === 'owner') send({ type: 'callback_port', callbackPort });
+  else send({
     type: 'ready',
     sessionId: null,
     callbackPort,
@@ -862,7 +1191,8 @@ async function handlePrompt(msg: Extract<InboundMessage, { type: 'prompt' }>): P
 
     // Queued as followUp when a run is already active, matching the 1.1.0
     // streamingBehavior contract.
-    await k.submitPrompt(msg.message, msg.images);
+    const result = await k.submitPrompt(msg.message, msg.images, msg.nativeInput, msg.inputId);
+    if (generation === inputGeneration) send({ type: 'prompt_result', id: msg.id, ...result });
   } catch (error) {
     if (generation !== inputGeneration) return;
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -873,7 +1203,7 @@ async function handlePrompt(msg: Extract<InboundMessage, { type: 'prompt' }>): P
     // retry events the PiEventAdapter expects).
 
     debugLog(`Prompt failed: ${errorMsg}`);
-    send({ type: 'error', message: errorMsg, code: 'prompt_error' });
+    send({ type: 'error', id: msg.id, message: errorMsg, code: 'prompt_error' });
     // Send synthetic agent_end so the main process event queue unblocks.
     // willRetry: false — this is the terminal error path, no retry follows.
     send({ type: 'event', event: { type: 'agent_end', messages: [], willRetry: false } });
@@ -926,25 +1256,32 @@ function handleCancelEphemeralQuery(
 }
 
 async function handleAbort(): Promise<void> {
-  for (const controller of pendingCompactions.values()) controller.abort();
+  nativeOwner.cancel();
+  const resumeUI = workerContext.getStore()?.ui?.suspend();
+  try {
+    for (const controller of pendingCompactions.values()) controller.abort();
 
-  // Release host callbacks before waiting for SDK tasks that depend on them.
-  for (const [, pending] of pendingPreToolUse) {
-    pending.resolve({ action: 'block', reason: 'Aborted' });
-  }
-  pendingPreToolUse.clear();
-  for (const [, pending] of pendingToolExecutions) {
-    pending.resolve({ content: 'Aborted', isError: true });
-  }
-  pendingToolExecutions.clear();
-  prefetchCache.clear();
-
-  if (kernel) {
-    try {
-      await kernel.abort();
-    } catch (error) {
-      debugLog(`Abort failed: ${error instanceof Error ? error.message : String(error)}`);
+    // Release host callbacks before waiting for SDK tasks that depend on them.
+    for (const [, pending] of pendingPreToolUse) {
+      pending.resolve({ action: 'block', reason: 'Aborted' });
     }
+    pendingPreToolUse.clear();
+    for (const [, pending] of pendingToolExecutions) {
+      pending.resolve({ content: 'Aborted', isError: true });
+    }
+    pendingToolExecutions.clear();
+    prefetchCache.clear();
+
+    const active = kernel ?? await kernelPromise?.catch(() => undefined);
+    if (active) {
+      try {
+        await active.abort();
+      } catch (error) {
+        debugLog(`Abort failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  } finally {
+    resumeUI?.();
   }
 }
 
@@ -1072,7 +1409,7 @@ async function handleUpdateRuntimeConfig(msg: RuntimeConfigUpdateMessage): Promi
       customModels: msg.customModels,
     };
     const previous = await ensureModelRuntime();
-    const candidate = await createModelRuntime(candidateConfig, () => {}, previous.credentials);
+    const candidate = await createModelRuntime(candidateConfig, () => {}, previous.credentials, previous.codingCredentials);
     const model = resolveRuntimeModel(candidate, candidateConfig, msg.model);
     if (!model) throw new Error(`Could not resolve model after runtime update: ${msg.model}`);
     candidateConfig.miniModel = resolveRuntimeMiniModel(candidate, candidateConfig);
@@ -1165,6 +1502,8 @@ function handleShutdown(): Promise<void> {
 
 async function shutdown(): Promise<void> {
   debugLog('Shutdown requested');
+  nativeOwner.cancel('Pi server shutting down');
+  foregroundUI?.close();
   for (const controller of pendingCompactions.values()) controller.abort();
 
   // Release host callbacks before waiting for SDK tasks that depend on them.
@@ -1195,7 +1534,7 @@ async function shutdown(): Promise<void> {
 
   // Disconnect MCP servers
   if (mcpLoad) {
-    await closeMcpConnections(mcpLoad.connections);
+    await mcpLoad.close();
     mcpLoad = null;
   }
 
@@ -1211,8 +1550,53 @@ async function shutdown(): Promise<void> {
 
 async function processMessage(msg: InboundMessage, compactController?: AbortController): Promise<void> {
   switch (msg.type) {
+    case 'release_owner': {
+      // Revoke admission synchronously, including callbacks still reading a body.
+      foregroundActive = false;
+      foregroundEpoch++;
+      credentialGeneration++;
+      nativeOwner.cancel('Native owner released');
+      inputGeneration++;
+      const callbacksClosed = stopCallbackServer();
+      const active = kernel;
+      const loaded = mcpLoad;
+      // A target load can be nested inside the source startup promise.
+      // Capture only this owner's work before any other binding can initialize.
+      const loading = ownerLoading ?? (!active ? kernelPromise : null);
+      releaseForegroundRequests('Native owner released');
+      try {
+        workerContext.getStore()?.ui?.close();
+        await callbacksClosed;
+        if (loading) await loading.catch(() => undefined);
+        let projectionError: NativeSessionProjectionError | undefined;
+        try { await active?.close(); }
+        catch (error) {
+          // Kernel.close has completed durable cleanup before a projection error escapes.
+          if (!(error instanceof NativeSessionProjectionError)) throw error;
+          projectionError = error;
+        }
+        if (kernel === active) kernel = null;
+        if (loaded && mcpLoad === loaded) {
+          await loaded.close();
+          if (mcpLoad === loaded) mcpLoad = null;
+        }
+        send({ type: 'owner_released', id: msg.id, released: true,
+          ...(projectionError ? { error: projectionError.message } : {}) });
+      } catch (error) {
+        send({ type: 'owner_released', id: msg.id, released: false,
+          error: error instanceof Error ? error.message : String(error) });
+      }
+      break;
+    }
+    case 'extension_ui_available':
+      workerContext.getStore()?.ui?.setAvailable(msg.available === true);
+      break;
+    case 'extension_ui_response':
+      send({ type: 'extension_ui_response_result', id: msg.responseId,
+        accepted: workerContext.getStore()?.ui?.respond(msg.uiEpoch, msg) ?? false });
+      break;
     case 'stop_background_task':
-      send({ type: 'stop_background_task_result', id: msg.id, stopped: await backgroundShells.stop(msg.taskId) });
+      send({ type: 'stop_background_task_result', id: msg.id, stopped: await backgroundShells.stop(msg.taskId, currentWorkerScope()) });
       break;
     case 'init':
       await handleInit(msg);
@@ -1274,6 +1658,18 @@ async function processMessage(msg: InboundMessage, compactController?: AbortCont
       await handleSetAutoCompaction(msg);
       break;
 
+    case 'set_session_name':
+      try {
+        if (typeof msg.name !== 'string') throw new Error('Invalid native session name');
+        const active = await ensureKernel();
+        await active.setSessionName(msg.name);
+        send({ type: 'set_session_name_result', id: msg.id, success: true });
+      } catch (error) {
+        send({ type: 'set_session_name_result', id: msg.id, success: false,
+          errorMessage: error instanceof Error ? error.message : String(error) });
+      }
+      break;
+
     case 'update_runtime_config':
       await handleUpdateRuntimeConfig(msg);
       break;
@@ -1286,7 +1682,7 @@ async function processMessage(msg: InboundMessage, compactController?: AbortCont
       if (generation !== inputGeneration) break;
       if (active && active === kernel) {
         debugLog(`Steering with: "${msg.message.slice(0, 100)}"`);
-        await active.steer(msg.message);
+        await active.steer(msg.message, msg.inputId);
       } else {
         debugLog('Steer ignored — no active session');
       }
@@ -1332,8 +1728,53 @@ function main(): void {
     if (!line.trim()) return;
     try {
       const msg = JSON.parse(line) as InboundMessage;
-      if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') inputGeneration++;
+      const scope = readWorkerScope(msg);
+      if (msg.type === 'native_history_receipt') {
+        nativeHistory.receive(msg, scope);
+        return;
+      }
+      if (msg.type === 'owner_prepared' || msg.type === 'owner_activate' ||
+          msg.type === 'owner_committed' || msg.type === 'owner_abort') {
+        const accepted = nativeOwner.receive(msg, scope);
+        if (accepted && msg.type === 'owner_activate' && !isForegroundScope(scope)) {
+          void stopCallbackServer();
+          foregroundUI?.close();
+          foregroundScope = scope;
+          foregroundActive = true;
+          foregroundEpoch++;
+          foregroundUI = new ExtensionUIHost(event => sendScoped(event, scope));
+          foregroundUI.setAvailable(msg.activation.config.extensionUIAvailable === true);
+        }
+        return;
+      }
+      if (msg.type === 'init') {
+        if ((scope && scope.ownerSessionId !== msg.sessionId) ||
+            (foregroundScope && (!scope || scope.runtimeGeneration < foregroundScope.runtimeGeneration ||
+              (scope.runtimeGeneration === foregroundScope.runtimeGeneration && scope.ownerSessionId !== foregroundScope.ownerSessionId)))) {
+          debugLog('Ignoring stale or mismatched worker initialization');
+          return;
+        }
+        // Close at receipt so an old startup hook cannot block the re-init queue.
+        foregroundUI?.close();
+        void stopCallbackServer();
+        nativeOwner.cancel('Pi worker reinitialized');
+        foregroundScope = scope;
+        foregroundActive = true;
+        foregroundEpoch++;
+        foregroundUI = new ExtensionUIHost(event => sendScoped(event, scope));
+        foregroundUI.setAvailable(msg.extensionUIAvailable === true);
+      } else if (msg.type !== 'stop_background_task' && !isForegroundScope(scope)) {
+        debugLog('Ignoring message from an inactive worker binding');
+        return;
+      }
+      if (msg.type === 'abort' || msg.type === 'init' || msg.type === 'shutdown') {
+        void foregroundAuthorization?.cancelAll();
+        // Stopping execution does not revoke persistence of an already committed native tree.
+        if (msg.type !== 'abort') nativeHistory.cancel(msg.type === 'init' ? undefined : scope, `Native history ${msg.type}`);
+        inputGeneration++;
+      }
       const generation = inputGeneration;
+      const ui = foregroundUI;
       if (msg.type === 'init') {
         // Later compact requests belong to the new initialization and must remain active.
         for (const controller of pendingCompactions.values()) controller.abort();
@@ -1344,20 +1785,31 @@ function main(): void {
         compactController = new AbortController();
         pendingCompactions.set(msg.id, compactController);
       }
+      const dispatch = () => {
+        if (msg.type !== 'init' && msg.type !== 'stop_background_task' && !isForegroundScope(scope)) {
+          // Retired requests never reach handleCompact's cleanup.
+          if (msg.type === 'compact' && pendingCompactions.get(msg.id) === compactController) pendingCompactions.delete(msg.id);
+          debugLog('Ignoring queued message from an inactive worker binding');
+          return Promise.resolve();
+        }
+        const inputId = msg.type === 'prompt' || msg.type === 'steer' ? msg.inputId : undefined;
+        return workerContext.run({ scope, ui, inputId }, () => processMessage(msg, compactController));
+      };
       const operation = msg.type === 'init'
-        ? initialization.catch(() => undefined).then(() => processMessage(msg))
-        : ['tool_execute_response', 'pre_tool_use_response', 'abort', 'cancel_compact', 'shutdown'].includes(msg.type)
-          ? processMessage(msg)
+        ? initialization.catch(() => undefined).then(dispatch)
+        : ['tool_execute_response', 'pre_tool_use_response', 'extension_ui_response', 'extension_ui_available',
+            'abort', 'cancel_compact', 'stop_background_task', 'release_owner', 'shutdown'].includes(msg.type)
+          ? dispatch()
           : initialization.then(() => {
               if ((msg.type === 'prompt' || msg.type === 'steer') && generation !== inputGeneration) return;
-              return processMessage(msg, compactController);
+              return dispatch();
             });
       if (msg.type === 'init') initialization = operation;
       operation.catch((error) => {
         if (msg.type === 'compact' && pendingCompactions.get(msg.id) === compactController) pendingCompactions.delete(msg.id);
         const errorMsg = error instanceof Error ? error.message : String(error);
         debugLog(`Error processing message: ${errorMsg}`);
-        send({ type: 'error', message: errorMsg });
+        sendScoped({ type: 'error', message: errorMsg }, scope);
       });
     } catch (parseError) {
       debugLog(`Failed to parse JSONL: ${parseError}`);

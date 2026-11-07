@@ -7,9 +7,9 @@
  * identical. The durable kernel (packages/pi-agent-server) synthesizes its
  * events back into these shapes for the host's event adapter.
  */
-import type { AgentEvent, AgentMessage, ThinkingLevel } from '@earendil-works/pi-agent-core';
 import type {
   AssistantMessage,
+  AssistantMessageEvent,
   ImageContent,
   Message,
   SystemMessage,
@@ -17,7 +17,22 @@ import type {
   ToolResultMessage,
   Usage,
   UserMessage,
+  ModelThinkingLevel as ThinkingLevel,
 } from '@earendil-works/pi-ai';
+
+/** Wire-only core event shapes retained from Pi 1.1.0; no agent runtime is imported. */
+export type AgentMessage = Message;
+export type AgentEvent =
+  | { type: 'agent_start' }
+  | { type: 'agent_end'; messages: AgentMessage[] }
+  | { type: 'turn_start' }
+  | { type: 'turn_end'; message: AgentMessage; toolResults: ToolResultMessage[] }
+  | { type: 'message_start'; message: AgentMessage }
+  | { type: 'message_end'; message: AgentMessage }
+  | { type: 'message_update'; message: AgentMessage; assistantMessageEvent: AssistantMessageEvent }
+  | { type: 'tool_execution_start'; toolCallId: string; toolName: string; args: any }
+  | { type: 'tool_execution_update'; toolCallId: string; toolName: string; args: any; partialResult: any }
+  | { type: 'tool_execution_end'; toolCallId: string; toolName: string; result: any; isError: boolean; durationMs?: number };
 
 // ============================================================
 // Session entries (pi-coding-agent 1.1.0 core/session-manager.d.ts)

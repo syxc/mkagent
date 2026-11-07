@@ -1,0 +1,10 @@
+/** Runtime exports implemented by this port. This is not a full compatibility claim. */
+export { defineTool } from './upstream/core/extensions/types.js';
+export { createEventBus } from './upstream/core/event-bus.ts';
+export { execCommand } from './upstream/core/exec.ts';
+export { loadSkills, loadSkillsFromDir, formatSkillsForPrompt } from './upstream/core/skills.ts';
+export { loadPromptTemplates, expandPromptTemplate, parseCommandArgs, substituteArgs } from './upstream/core/prompt-templates.ts';
+export { parseFrontmatter, stripFrontmatter } from './upstream/utils/frontmatter.ts';
+export { buildSystemPrompt, buildSystemPromptSections, normalizeBuildSystemPromptOptions } from './upstream/core/system-prompt.ts';
+export type { BuildSystemPromptOptions } from './upstream/core/system-prompt.ts';
+export { resolvePath, normalizePath } from './upstream/utils/paths.ts';

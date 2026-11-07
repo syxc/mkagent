@@ -1,4 +1,4 @@
-import type { BackgroundTaskOutput, StopBackgroundTaskResult } from '@mkagent/shared/protocol'
+import type { BackgroundTaskOutput, StopBackgroundTaskResult, ExtensionUISnapshot } from '@mkagent/shared/protocol'
 import type {
   ActiveSessionInfo,
   AnnotationV1,
@@ -32,6 +32,12 @@ export interface ISessionManager {
 
   getSessions(workspaceId?: string): Session[]
   getSession(sessionId: string): Promise<Session | null>
+  attachExtensionUI(sessionId: string, workspaceId: string, clientId: string, subscriptionId: string): Promise<ExtensionUISnapshot>
+  detachExtensionUI(sessionId: string, clientId: string, subscriptionId: string): void
+  disconnectExtensionUI(clientId: string): void
+  onClientWorkspaceChanged(clientId: string): void
+  respondToExtensionUI(sessionId: string, workspaceId: string, clientId: string, subscriptionId: string,
+    uiEpoch: string, response: unknown): Promise<boolean>
   createSession(
     workspaceId: string,
     options?: CreateSessionOptions,

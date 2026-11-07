@@ -1,5 +1,7 @@
 # 内核切换执行规格：pi-coding-agent → pi-durable
 
+历史范围说明：本文保留第一次内核切换的设计与验收记录。后续目标见 [durable coding agent 实施计划](durable-coding-agent-plan.md)。用户于 2026-11-04 澄清，当前允许按需引用 `pi-agent-core`，禁止直接依赖完整的 `pi-coding-agent` 包；本文当时的依赖清零和宿主零改动要求不再约束本轮实现，本轮须保持 MkAgent 全部既有功能完整正常。
+
 状态：内核切换已落地，正在对照本地 `main` 复核功能兼容性（2026-11-01，分支 `dev/pi-durable`）。落地结果见 §8；与规格的差异以 §8 为准。
 范围：`packages/pi-agent-server` 子进程内核替换；宿主协议与宿主侧代码零改动。
 

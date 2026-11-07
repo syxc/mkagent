@@ -3,6 +3,15 @@ import { prEntryId } from '@mkagent/shared/pr-watch'
 import { getPrAutoFixMonitor, getPrWatchRegistry } from '../handlers/rpc/pr-watch'
 import type { BoundPr, PrMonitorState } from '@mkagent/shared/protocol'
 import { addTurnUsage } from './turn-usage'
+import { SessionExtensionUI } from './extension-ui'
+import { InputOrigins } from './input-origins'
+import { NativeSessionOwner } from './native-session-owner'
+import { closeNativeForkProof, prepareNativeForkProof, verifyNativeForkTarget, type NativeForkProof } from './native-session-fork'
+import { closeNativeSwitchProof, prepareNativeSwitchProof, verifyNativeSwitchTarget, type NativeSwitchProof } from './native-session-switch'
+import { readTrustedNativeSession } from './native-session-source'
+import { materializeNativeUserHistory } from './native-user-history'
+import { partitionNativeProductHistory } from '../../../shared/src/sessions/native-product-history'
+import type { PiNativeOwnerBackend, PiNativeOwnerRequest } from '../../../shared/src/agent/backend/pi/native-owner-protocol'
 import type { BackgroundTaskOutput, StopBackgroundTaskResult } from '@mkagent/shared/protocol'
 import { launchOutputFile, readBackgroundTaskOutput } from './background-task-output'
 import type { EventSink, RpcServer } from '@mkagent/server-core/transport'
@@ -15,6 +24,7 @@ import type {
   SendMessageOptions,
   Session,
   SessionEvent,
+  ExtensionUISnapshot,
   UnreadSummary,
 } from '@mkagent/shared/protocol'
 import type { ISessionManager, IBrowserPaneManager } from '@mkagent/server-core/handlers'
@@ -59,6 +69,7 @@ import { loadWorkspaceConfig } from '@mkagent/shared/workspaces'
 import {
   clearPendingPlanExecution as clearStoredPendingPlanExecution,
   createSession as createStoredSession,
+  createSessionHeader,
   deleteSession as deleteStoredSession,
   getPendingPlanExecution as getStoredPendingPlanExecution,
   getSessionPath as getSessionStoragePath,
@@ -70,6 +81,7 @@ import {
   serializeSession,
   copyReferencedSessionFiles,
   importSessionMessages,
+  importNativeArchivedMessages,
   restoreSessionBundleFiles,
   remapSessionFileReferences,
   setPendingPlanExecution as setStoredPendingPlanExecution,
@@ -81,6 +93,9 @@ import {
   type SessionMetadata,
   type SessionTokenUsage,
   type StoredSession,
+  type NativeSessionOwnerRecord,
+  type NativeSessionReference,
+  parseNativeSessionReference,
 } from '@mkagent/shared/sessions'
 import { readFileAttachment } from '@mkagent/shared/utils'
 import { getWorkspaceAllowedDirs, validateFilePath } from '@mkagent/server-core/handlers'
@@ -90,7 +105,8 @@ import { buildBackendRuntimeSignature, buildRestartRequiredSignature } from './r
 import { rollbackFailedBranchCreation, sanitizeForTitle } from '@mkagent/server-core/domain'
 import { validateArchiveTarget } from './archive-guards'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { isAbsolute, join, resolve } from 'node:path'
+import { isDeepStrictEqual } from 'node:util'
 import { generateConversationSummary } from '@mkagent/shared/agent/conversation-summary'
 
 let platform: PlatformServices | null = null
@@ -221,12 +237,14 @@ interface RunningBackgroundTask {
 interface ManagedSession extends SessionConfig {
   workspace: Workspace
   messages: Message[]
+  nativeArchivedMessages?: StoredSession['nativeArchivedMessages']
   tokenUsage: SessionTokenUsage
   messagesLoaded: boolean
   isProcessing: boolean
   agent: AgentBackend | null
   messageQueue: QueuedMessage[]
   stopEpoch?: number
+  nameChangeVersion?: number
   pendingToolInputs: Map<string, { toolName: string; input: Record<string, unknown> }>
   backgroundTaskOutputs: Map<string, { outputFile?: string }>
   backgroundTaskRegistry: Map<string, RunningBackgroundTask>
@@ -297,11 +315,14 @@ export function createManagedSession(
     branchFromSdkCwd: session.branchFromSdkCwd,
     branchFromSdkTurnId: session.branchFromSdkTurnId,
     parentSessionId: session.parentSessionId,
+    nativeSessionOwner: session.nativeSessionOwner,
+    nativeSessionProjection: session.nativeSessionProjection,
     preview: session.preview,
     messageCount: session.messageCount ?? session.messages?.length ?? 0,
     lastMessageRole: session.lastMessageRole,
     lastFinalMessageId: session.lastFinalMessageId,
     messages: (session.messages ?? []).map(storedToMessage),
+    nativeArchivedMessages: session.nativeArchivedMessages,
     tokenUsage: session.tokenUsage ?? { ...EMPTY_USAGE },
     messagesLoaded: options.messagesLoaded ?? Boolean(session.messages),
     isProcessing: false,
@@ -341,14 +362,110 @@ export function resolveMidStreamDeliveryOutcome(
 export class SessionManager implements ISessionManager {
   private handoffSummaryWaitMs = 30_000
   private sessions = new Map<string, ManagedSession>()
+  private readonly creatingSessions = new Set<string>()
   private configWatchers = new Map<string, ConfigWatcher>()
   private eventSink: EventSink = () => {}
+  private readonly extensionUI = new SessionExtensionUI((clientId, update) => {
+    this.eventSink(RPC_CHANNELS.sessions.EXTENSION_UI_UPDATED, { to: 'client', clientId }, update)
+  })
+  private readonly pendingUIAttachments = new Map<string, Set<{ retired: boolean }>>()
   private initPromise: Promise<void> | null = null
   private activeViewingByWorkspace = new Map<string, string>()
   private completionListeners = new Set<(event: SessionCompletionEvent) => void>()
   private browserPaneManager: IBrowserPaneManager | null = null
   private rpcServer: RpcServer | null = null
   private browserHostPins = new Map<string, string>()
+  private readonly inputClients = new InputOrigins()
+  private readonly nativeOwnerWrites = new Map<string, Promise<void>>()
+  private readonly nativeOwnerDirty = new Set<string>()
+  private readonly deletingSessions = new Set<string>()
+  private readonly turnCompletions = new Map<string, { promise: Promise<void>; resolve: () => void }>()
+  private readonly adoptedTurns = new Map<string, {
+    serial: number; stopEpoch: number; completed: boolean; error: boolean; events: Promise<void>
+  }>()
+  private readonly nativeOwners = new NativeSessionOwner({
+    source: (sessionId, backend) => {
+      const managed = this.sessions.get(sessionId)
+      if (!managed?.agent || managed.agent.nativeSessionOwner !== backend) throw new Error('Native source backend is no longer current')
+      const actualId = managed.agent.getSessionId()
+      if (actualId && managed.sdkSessionId && actualId !== managed.sdkSessionId) throw new Error('Native source metadata does not match backend')
+      const nativeSessionId = actualId ?? managed.sdkSessionId
+      if (!nativeSessionId) throw new Error('Native source identity is unavailable')
+      return { nativeSessionId, turnDone: this.turnCompletions.get(sessionId)?.promise ?? Promise.resolve() }
+    },
+    claim: (sessionId, inputId) => this.inputClients.claim(sessionId, inputId),
+    projection: (sessionId, reference, backend, hasName) => this.registerNativeProjection(sessionId, reference, backend, hasName),
+    prepareFork: (sessionId, request) => this.prepareNativeFork(sessionId, request),
+    closeFork: (sourceId, targetId, proof, reference) => this.closeNativeFork(sourceId, targetId, proof, reference),
+    bindFork: async (targetId, proof, reference) => {
+      verifyNativeForkTarget(proof, this.nativeForkIdentity(targetId, reference))
+    },
+    prepareSwitch: (sourceId, request) => this.prepareNativeSwitch(sourceId, request),
+    closeSwitch: (targetId, proof) => this.closeNativeSwitch(targetId, proof),
+    bindSwitch: async (targetId, proof, reference) => {
+      verifyNativeSwitchTarget(proof, this.nativeForkIdentity(targetId, reference))
+    },
+    prepareParent: (sourceId, request) => this.prepareNativeParent(sourceId, request),
+    bindParent: async (targetId, parent, reference) => {
+      const tree = readTrustedNativeSession(this.nativeForkIdentity(targetId, reference))
+      if (tree.header.parentSession !== parent.sessionFile || tree.reference.nativeSessionId === parent.nativeSessionId
+        || tree.entries.some(entry => entry.type === 'message')) {
+        throw new Error('Native parent target must have its own identity and empty history')
+      }
+    },
+    createTarget: async (sourceId, record) => {
+      const source = this.sessions.get(sourceId)
+      if (!source) throw new Error('Native source session was deleted')
+      const target = await this.createSession(source.workspace.id, {
+        permissionMode: source.permissionMode, workingDirectory: source.workingDirectory ?? 'none',
+        model: source.model, llmConnection: source.llmConnection, thinkingLevel: source.thinkingLevel,
+        codingMode: source.codingMode,
+        ...(record.parent ? { parentSessionId: record.parent.sessionId }
+          : record.operation === 'fork' ? { parentSessionId: sourceId } : {}),
+      }, { emitCreatedEvent: false, nativeSessionOwner: { ...record, role: 'target', unpublished: true } })
+      return target.id
+    },
+    backend: async sessionId => {
+      const managed = this.sessions.get(sessionId)
+      if (!managed) throw new Error('Native target session was deleted')
+      const backend = (await this.getOrCreateAgent(managed)).nativeSessionOwner
+      if (!backend) throw new Error('Native target backend does not support adoption')
+      return backend
+    },
+    persist: (sessionId, record) => this.persistNativeOwner(sessionId, record),
+    finalizeSource: async (sessionId, record) => {
+      const source = this.sessions.get(sessionId)
+      // A committed target owns its lifetime. Never recreate a deleted source
+      // or overwrite the authority of a later transfer from that source.
+      if (!source || this.deletingSessions.has(sessionId) || source.nativeSessionOwner?.transactionId !== record.transactionId) return
+      try { await this.persistNativeOwner(sessionId, record, record.transactionId) }
+      catch (error) {
+        if (this.sessions.get(sessionId) !== source || this.deletingSessions.has(sessionId)
+          || source.nativeSessionOwner?.transactionId !== record.transactionId) return
+        throw error
+      }
+    },
+    startTarget: sessionId => this.startAdoptedTurn(sessionId),
+    finishTarget: (sessionId, outcome) => this.finishAdoptedTurn(sessionId, outcome),
+    publish: (sourceId, targetId, transactionId, clientId) => {
+      const target = this.sessions.get(targetId)
+      if (!target?.nativeSessionOwner) throw new Error('Native target session was deleted')
+      target.nativeSessionOwner = { ...target.nativeSessionOwner, unpublished: undefined }
+      if (target.nativeSessionOwner.operation !== 'switch') this.emit(target.workspace.id, {
+        type: 'session_created', sessionId: targetId, session: structuredClone(this.toSession(target, true)),
+      })
+      if (clientId) this.eventSink(RPC_CHANNELS.sessions.EVENT, { to: 'client', clientId }, {
+        type: 'native_session_redirect', sessionId: sourceId, targetSessionId: targetId, transactionId,
+      } satisfies SessionEvent)
+    },
+    rollback: (sessionId, transactionId) => this.rollbackNativeTarget(sessionId, transactionId),
+    unlock: sessionId => this.processNextQueuedMessage(sessionId),
+    report: (sessionId, error) => {
+      log.warn('Native session replacement failed', sessionId, error)
+      const managed = this.sessions.get(sessionId)
+      if (managed) this.emit(managed.workspace.id, { type: 'error', sessionId, error: error instanceof Error ? error.message : String(error) })
+    },
+  })
   private lastTimestamp = 0
 
   waitForInit(): Promise<void> {
@@ -357,13 +474,14 @@ export class SessionManager implements ISessionManager {
 
   initialize(): Promise<void> {
     if (this.initPromise) return this.initPromise
-    this.initPromise = Promise.resolve().then(() => {
+    this.initPromise = Promise.resolve().then(async () => {
       for (const workspace of getWorkspaces()) {
         this.setupConfigWatcher(workspace.rootPath, workspace.id)
         for (const metadata of listStoredSessions(workspace.rootPath)) {
           this.sessions.set(metadata.id, createManagedSession(metadata, workspace))
         }
       }
+      await this.recoverNativeOwners()
       this.refreshBadge()
     })
     return this.initPromise
@@ -382,9 +500,47 @@ export class SessionManager implements ISessionManager {
   }
 
   onClientDisconnected(clientId: string): void {
+    this.onClientWorkspaceChanged(clientId)
+  }
+
+  onClientWorkspaceChanged(clientId: string): void {
+    this.disconnectExtensionUI(clientId)
+    this.inputClients.retireClient(clientId)
     for (const [sessionId, pinned] of this.browserHostPins) {
       if (pinned === clientId) this.browserHostPins.delete(sessionId)
     }
+  }
+
+  disconnectExtensionUI(clientId: string): void {
+    for (const admission of this.pendingUIAttachments.get(clientId) ?? []) admission.retired = true
+    this.pendingUIAttachments.delete(clientId)
+    this.extensionUI.disconnect(clientId)
+  }
+
+  async attachExtensionUI(sessionId: string, workspaceId: string, clientId: string, subscriptionId: string): Promise<ExtensionUISnapshot> {
+    const admission = { retired: false }
+    const pending = this.pendingUIAttachments.get(clientId) ?? new Set<{ retired: boolean }>()
+    this.pendingUIAttachments.set(clientId, pending)
+    pending.add(admission)
+    try {
+      await this.waitForInit()
+      if (admission.retired) throw new Error('Extension UI subscription retired')
+      if (this.sessions.get(sessionId)?.workspace.id !== workspaceId) throw new Error('Session not found in workspace')
+      return this.extensionUI.attach(sessionId, clientId, subscriptionId)
+    } finally {
+      pending.delete(admission)
+      if (!pending.size && this.pendingUIAttachments.get(clientId) === pending) this.pendingUIAttachments.delete(clientId)
+    }
+  }
+
+  detachExtensionUI(sessionId: string, clientId: string, subscriptionId: string): void {
+    this.extensionUI.detach(sessionId, clientId, subscriptionId)
+  }
+
+  async respondToExtensionUI(sessionId: string, workspaceId: string, clientId: string, subscriptionId: string,
+    uiEpoch: string, response: unknown): Promise<boolean> {
+    if (this.sessions.get(sessionId)?.workspace.id !== workspaceId) return false
+    return this.extensionUI.respond(sessionId, clientId, subscriptionId, uiEpoch, response)
   }
 
   private readonly prWatchSessionListeners = new Set<(sessionId: string | null) => void>()
@@ -401,6 +557,7 @@ export class SessionManager implements ISessionManager {
   }
 
   private emit(workspaceId: string, event: SessionEvent): void {
+    if (this.isSessionUnpublished(event.sessionId)) return
     if (['session_deleted', 'session_archived', 'session_unarchived', 'working_directory_changed', 'coding_mode_changed'].includes(event.type)) {
       for (const listener of this.prWatchSessionListeners) listener(event.sessionId)
     }
@@ -419,6 +576,7 @@ export class SessionManager implements ISessionManager {
   /** Craft-compatible event helper retained for isolated domain testing. */
   private sendEvent(event: SessionEvent, workspaceId?: string): void {
     if (!workspaceId || !this.eventSink) return
+    if (this.isSessionUnpublished(event.sessionId)) return
     this.eventSink(RPC_CHANNELS.sessions.EVENT, { to: 'workspace', workspaceId }, event)
   }
 
@@ -431,6 +589,7 @@ export class SessionManager implements ISessionManager {
     const stored = loadStoredSession(managed.workspace.rootPath, managed.id)
     if (stored) {
       managed.messages = stored.messages.map(storedToMessage)
+      managed.nativeArchivedMessages = stored.nativeArchivedMessages
       managed.tokenUsage = stored.tokenUsage
     }
     managed.messagesLoaded = true
@@ -446,20 +605,24 @@ export class SessionManager implements ISessionManager {
       preview: _preview, messageCount: _messageCount,
       lastFinalMessageId: _lastFinalMessageId, lastMessageRole: _lastMessageRole,
       pendingExternalHeader: _pendingExternalHeader,
-      activeTurnSerial: _activeTurnSerial,
+      activeTurnSerial: _activeTurnSerial, nameChangeVersion: _nameChangeVersion,
       pendingHandoffSummary: _pendingHandoffSummary, handoffSummaryExpired: _handoffSummaryExpired, cancelHandoffWait: _cancelHandoffWait,
-      messages, tokenUsage, ...config } = managed
-    return { ...config, messages: messages.map(messageToStored), tokenUsage }
+      messages, nativeArchivedMessages, tokenUsage, ...config } = managed
+    return { ...config, messages: messages.map(messageToStored), nativeArchivedMessages, tokenUsage }
   }
 
   private persistSession(managed: ManagedSession): void {
+    if (this.deletingSessions.has(managed.id)) return
+    if (this.nativeOwnerWrites.has(managed.id)) { this.nativeOwnerDirty.add(managed.id); return }
     this.ensureMessagesLoaded(managed)
     sessionPersistenceQueue.enqueue(this.toStored(managed))
   }
 
   async flushSession(sessionId: string): Promise<void> {
     const managed = this.sessions.get(sessionId)
-    if (!managed) return
+    if (!managed || this.deletingSessions.has(sessionId)) return
+    await this.waitForNativeWrites(sessionId)
+    if (this.sessions.get(sessionId) !== managed || this.deletingSessions.has(sessionId)) return
     this.ensureMessagesLoaded(managed)
     sessionPersistenceQueue.enqueue(this.toStored(managed))
     await sessionPersistenceQueue.flush(sessionId)
@@ -467,11 +630,13 @@ export class SessionManager implements ISessionManager {
 
   async flushAllSessions(): Promise<void> {
     for (const managed of this.sessions.values()) this.persistSession(managed)
+    await Promise.all([...this.nativeOwnerWrites.keys()].map(id => this.waitForNativeWrites(id)))
     await sessionPersistenceQueue.flushAll()
   }
 
   getSessions(workspaceId?: string): Session[] {
     return [...this.sessions.values()]
+      .filter(managed => !this.isSessionUnpublished(managed.id))
       .filter(managed => !workspaceId || managed.workspace.id === workspaceId)
       .map(managed => this.toSession(managed, false))
       .sort((a, b) => b.lastMessageAt - a.lastMessageAt)
@@ -479,13 +644,17 @@ export class SessionManager implements ISessionManager {
 
   async getSession(sessionId: string): Promise<Session | null> {
     const managed = this.sessions.get(sessionId)
-    if (!managed) return null
+    if (!managed || this.isSessionUnpublished(sessionId)) return null
     this.ensureMessagesLoaded(managed)
     return this.toSession(managed, true)
   }
 
+  private isSessionUnpublished(sessionId: string): boolean {
+    return this.creatingSessions.has(sessionId) || !!this.sessions.get(sessionId)?.nativeSessionOwner?.unpublished
+  }
+
   private toSession(managed: ManagedSession, includeMessages: boolean): Session {
-    const messages = includeMessages ? managed.messages : []
+    const messages = includeMessages ? managed.messages.map(({ nativeHistory: _history, ...message }) => message) : []
     return {
       id: managed.id,
       workspaceId: managed.workspace.id,
@@ -524,7 +693,7 @@ export class SessionManager implements ISessionManager {
   async createSession(
     workspaceId: string,
     options: CreateSessionOptions = {},
-    internal: { emitCreatedEvent?: boolean } = {},
+    internal: { emitCreatedEvent?: boolean; nativeSessionOwner?: NativeSessionOwnerRecord } = {},
   ): Promise<Session> {
     const workspace = getWorkspaces().find(item => item.id === workspaceId || item.slug === workspaceId)
     if (!workspace) throw new Error(`Workspace not found: ${workspaceId}`)
@@ -579,6 +748,7 @@ export class SessionManager implements ISessionManager {
       hidden: options.hidden,
       isFlagged: options.isFlagged,
       parentSessionId: options.parentSessionId,
+      nativeSessionOwner: internal.nativeSessionOwner,
     })
 
     if (branchSource && options.branchFromSessionId && options.branchFromMessageId) {
@@ -588,7 +758,9 @@ export class SessionManager implements ISessionManager {
         const branched = loadStoredSession(workspace.rootPath, stored.id)
         if (!branched) throw new Error(`Failed to load newly created session ${stored.id} for branch copy`)
 
+        // A cutoff copy excludes native branches that its source display cache may reference.
         const sourceMessages = branchSource.messages.slice(0, branchIndex + 1)
+          .map(({ nativeHistory: _history, ...message }) => message)
         copyReferencedSessionFiles(sourceMessages, sourcePath, branchPath)
         branched.messages = remapSessionFileReferences(sourceMessages, sourcePath, branchPath)
         branched.branchFromMessageId = options.branchFromMessageId
@@ -608,24 +780,44 @@ export class SessionManager implements ISessionManager {
     stored.codingMode = (branchSource ? branchSource.codingMode : options.codingMode ?? workspaceConfig?.defaults?.codingMode) || undefined
     const managed = createManagedSession(stored, workspace, { messagesLoaded: true })
     managed.thinkingLevel = normalizeThinkingLevel(options.thinkingLevel ?? workspaceConfig?.defaults?.thinkingLevel)
-    if (branchSource) {
-      try {
+    // Native initialization commits projection receipts before branch readiness returns.
+    this.creatingSessions.add(managed.id)
+    this.sessions.set(managed.id, managed)
+    try {
+      if (branchSource) {
         const agent = await this.getOrCreateAgent(managed)
         await agent.ensureBranchReady()
-      } catch (error) {
+      }
+      if (this.sessions.get(managed.id) !== managed || this.deletingSessions.has(managed.id)) {
+        throw new Error('Session creation cancelled')
+      }
+      await sessionPersistenceQueue.persist(this.toStored(managed))
+      if (this.sessions.get(managed.id) !== managed || this.deletingSessions.has(managed.id)) {
+        throw new Error('Session creation cancelled')
+      }
+    } catch (error) {
+      const alreadyDeleting = this.deletingSessions.has(managed.id)
+      this.deletingSessions.add(managed.id)
+      try {
+        await this.waitForNativeWrites(managed.id)
+        sessionPersistenceQueue.cancel(managed.id)
+        await sessionPersistenceQueue.flush(managed.id)
+        this.extensionUI.remove(managed.id)
         await rollbackFailedBranchCreation({
           managed,
           workspaceRootPath: workspace.rootPath,
-          sessionId: stored.id,
+          sessionId: managed.id,
           deleteFromRuntimeSessions: id => this.sessions.delete(id),
           deleteStoredSession,
         })
-        throw new Error(`Could not create branch: ${error instanceof Error ? error.message : String(error)}`)
+      } finally {
+        if (!alreadyDeleting) this.deletingSessions.delete(managed.id)
       }
+      if (branchSource) throw new Error(`Could not create branch: ${error instanceof Error ? error.message : String(error)}`)
+      throw error
+    } finally {
+      this.creatingSessions.delete(managed.id)
     }
-
-    this.sessions.set(managed.id, managed)
-    await this.flushSession(managed.id)
     if (internal.emitCreatedEvent !== false) this.notifySessionCreated(workspace.id, managed.id)
     return this.toSession(managed, true)
   }
@@ -641,15 +833,23 @@ export class SessionManager implements ISessionManager {
 
   async deleteSession(sessionId: string): Promise<void> {
     const managed = this.sessions.get(sessionId)
-    if (!managed) return
-    await this.cancelProcessing(sessionId, true)
-    managed.agent?.destroy()
-    unregisterSessionScopedToolCallbacks(sessionId)
-    sessionPersistenceQueue.cancel(sessionId)
-    deleteStoredSession(managed.workspace.rootPath, sessionId)
-    this.sessions.delete(sessionId)
-    this.emit(managed.workspace.id, { type: 'session_deleted', sessionId })
-    this.refreshBadge()
+    if (!managed || this.deletingSessions.has(sessionId)) return
+    this.deletingSessions.add(sessionId)
+    this.inputClients.retireSession(sessionId)
+    try {
+      await this.cancelProcessing(sessionId, true)
+      managed.agent?.destroy()
+      this.extensionUI.remove(sessionId)
+      unregisterSessionScopedToolCallbacks(sessionId)
+      sessionPersistenceQueue.cancel(sessionId)
+      await sessionPersistenceQueue.flush(sessionId)
+      deleteStoredSession(managed.workspace.rootPath, sessionId)
+      this.sessions.delete(sessionId)
+      this.emit(managed.workspace.id, { type: 'session_deleted', sessionId })
+      this.refreshBadge()
+    } finally {
+      this.deletingSessions.delete(sessionId)
+    }
   }
 
   private async updateMetadata(
@@ -680,7 +880,17 @@ export class SessionManager implements ISessionManager {
     return this.updateMetadata(sessionId, { isArchived: false, archivedAt: undefined }, { type: 'session_unarchived', sessionId })
   }
 
-  renameSession(sessionId: string, name: string): Promise<void> {
+  async renameSession(sessionId: string, name: string): Promise<void> {
+    const managed = this.sessions.get(sessionId)
+    if (managed) managed.nameChangeVersion = (managed.nameChangeVersion ?? 0) + 1
+    if (managed?.codingMode) {
+      if (this.nativeOwners.isLocked(sessionId)) throw new Error('Native session replacement is in progress')
+      const backend = (managed.agent ?? await this.getOrCreateAgent(managed)).nativeSessionOwner
+      if (this.nativeOwners.isLocked(sessionId)) throw new Error('Native session replacement is in progress')
+      if (!backend?.setSessionName) throw new Error('Native session naming is unavailable')
+      await backend.setSessionName(name.trim())
+      return
+    }
     return this.updateMetadata(sessionId, { name: name.trim() || undefined }, { type: 'name_changed', sessionId, name: name.trim() || undefined })
   }
 
@@ -693,9 +903,13 @@ export class SessionManager implements ISessionManager {
     existingMessageId?: string,
     _isRetry?: boolean,
     onAck?: (messageId: string) => void,
+    rpcContext?: { callerClientId?: string },
   ): Promise<void> {
     const managed = this.sessions.get(sessionId)
     if (!managed) throw new Error(`Session not found: ${sessionId}`)
+    if (this.creatingSessions.has(sessionId)) throw new Error('Session is initializing')
+    if (this.deletingSessions.has(sessionId)) throw new Error('Session is being deleted')
+    if (managed.nativeSessionOwner?.unpublished) throw new Error('Native target session has not committed')
     this.ensureMessagesLoaded(managed)
     let shouldGenerateTitle = false
     const now = this.nextTimestamp()
@@ -717,14 +931,17 @@ export class SessionManager implements ISessionManager {
       managed.messages.push(userMessage)
       if (!options?.hidden) managed.lastMessageRole = 'user'
     }
+    if (!existingMessageId && rpcContext?.callerClientId) {
+      this.inputClients.admit(sessionId, userMessage.id, rpcContext.callerClientId)
+    }
     managed.lastMessageAt = now
     managed.lastUsedAt = now
     managed.connectionLocked = true
 
-    if (managed.isProcessing) {
-      const redirected = managed.agent?.isCompactionInFlight?.()
+    if (managed.isProcessing || this.nativeOwners.isLocked(sessionId)) {
+      const redirected = this.nativeOwners.isLocked(sessionId) || managed.agent?.isCompactionInFlight?.()
         ? false
-        : (managed.agent?.redirect(message) ?? false)
+        : (managed.agent?.redirect(message, { messageId: userMessage.id }) ?? false)
       if (!redirected) {
         userMessage.isQueued = true
         managed.messageQueue.push({
@@ -763,7 +980,7 @@ export class SessionManager implements ISessionManager {
       })
 
       const isFirstUserMessage = managed.messages.filter(item => item.role === 'user').length === 1
-      if (isFirstUserMessage && !managed.name && !options?.hidden) {
+      if (isFirstUserMessage && managed.name === undefined && !options?.hidden) {
         let titleSource = message
         for (const badge of options?.badges ?? []) {
           if (badge.rawText && badge.label) titleSource = titleSource.replace(badge.rawText, badge.label)
@@ -778,17 +995,23 @@ export class SessionManager implements ISessionManager {
       }
     }
     if (this.sessions.get(sessionId) !== managed || (managed.stopEpoch ?? 0) !== acceptedEpoch) return
-    await this.runTurn(managed, message, attachments)
+    await this.runTurn(managed, message, attachments, userMessage.id)
     if (shouldGenerateTitle) void this.generateTitle(managed, message)
   }
 
   private async generateTitle(managed: ManagedSession, userMessage: string): Promise<void> {
     try {
+      if (managed.nativeSessionProjection && (managed.nativeSessionProjection.name !== null || managed.name === '')) return
+      const precedingName = managed.name
+      const nameVersion = managed.nameChangeVersion ?? 0
       const agent = await this.getOrCreateAgent(managed)
       const title = await agent.generateTitle(userMessage, { language: resolveTitleLanguageName() })
-      if (!title) return
-      managed.name = title
-      await this.flushSession(managed.id)
+      if (!title || managed.name !== precedingName || (managed.nameChangeVersion ?? 0) !== nameVersion) return
+      if (managed.codingMode && managed.nativeSessionProjection) await this.renameSession(managed.id, title)
+      else {
+        managed.name = title
+        await this.flushSession(managed.id)
+      }
       this.emit(managed.workspace.id, { type: 'title_generated', sessionId: managed.id, title })
     } catch { return }
   }
@@ -796,10 +1019,12 @@ export class SessionManager implements ISessionManager {
   private async runTurn(
     managed: ManagedSession,
     message: string,
-    attachments?: FileAttachment[],
+    attachments: FileAttachment[] | undefined,
+    messageId: string,
   ): Promise<void> {
     managed.isProcessing = true
     const turnSerial = managed.activeTurnSerial = (managed.activeTurnSerial ?? 0) + 1
+    const completion = this.createTurnCompletion(managed.id)
     runtimeHooks.onSessionStarted()
     const stopEpoch = managed.stopEpoch ?? 0
     let stopReason: SessionCompletionEvent['stopReason'] = 'complete'
@@ -807,7 +1032,8 @@ export class SessionManager implements ISessionManager {
       const agent = await this.getOrCreateAgent(managed)
       if (managed.pendingHandoffSummary) await this.waitForHandoffSummary(managed)
       if (this.sessions.get(managed.id) !== managed || (managed.stopEpoch ?? 0) !== stopEpoch) return
-      for await (const event of agent.chat(message, attachments)) {
+      for await (const event of agent.chat(message, attachments, { messageId })) {
+        if (this.sessions.get(managed.id) !== managed || this.deletingSessions.has(managed.id)) break
         if (this.handleAgentEvent(managed, event)) stopReason = 'error'
       }
     } catch (error) {
@@ -823,23 +1049,366 @@ export class SessionManager implements ISessionManager {
       this.emit(managed.workspace.id, { type: 'error', sessionId: managed.id, error: errorMessage, backgroundTasksAlive: [...managed.backgroundTaskRegistry.values()].some(task => task.status === 'running') })
       runtimeHooks.captureException(error, { errorSource: 'session-turn', sessionId: managed.id })
     } finally {
-      // A cancelled wait must not reset a newer turn or revive a deleted session.
-      if (this.sessions.get(managed.id) !== managed || managed.activeTurnSerial !== turnSerial) {
-        runtimeHooks.onSessionStopped()
-        return
+      try { await this.finalizeTurn(managed, turnSerial, stopEpoch, stopReason) }
+      finally {
+        completion.resolve()
+        if (this.turnCompletions.get(managed.id) === completion) this.turnCompletions.delete(managed.id)
       }
+    }
+  }
+
+  private createTurnCompletion(sessionId: string): { promise: Promise<void>; resolve: () => void } {
+    let resolve!: () => void
+    const promise = new Promise<void>(done => { resolve = done })
+    const completion = { promise, resolve }
+    this.turnCompletions.set(sessionId, completion)
+    return completion
+  }
+
+  private async finalizeTurn(managed: ManagedSession, serial: number, stopEpoch: number, stopReason: SessionCompletionEvent['stopReason']): Promise<void> {
+    try {
+      // A cancelled wait must not reset a newer turn or revive a deleted session.
+      if (this.sessions.get(managed.id) !== managed || managed.activeTurnSerial !== serial) return
       managed.isProcessing = false
       managed.currentStatus = undefined
+      this.inputClients.finishTurn(managed.id, new Set(managed.messageQueue.map(input => input.messageId)))
       if (managed.pendingExternalHeader) {
         this.applyExternalSessionMetadata(managed, managed.pendingExternalHeader)
         managed.pendingExternalHeader = undefined
       }
       await this.flushSession(managed.id)
-      runtimeHooks.onSessionStopped()
       if ((managed.stopEpoch ?? 0) !== stopEpoch) stopReason = 'cancelled'
       managed.pendingToolInputs.clear()
       for (const listener of this.completionListeners) listener({ sessionId: managed.id, stopReason })
       if (managed.messageQueue.length) this.processNextQueuedMessage(managed.id)
+    } finally {
+      runtimeHooks.onSessionStopped()
+    }
+  }
+
+  private startAdoptedTurn(sessionId: string): void {
+    const managed = this.sessions.get(sessionId)
+    if (!managed || managed.isProcessing) throw new Error('Native target is unavailable for adoption')
+    managed.isProcessing = true
+    const serial = managed.activeTurnSerial = (managed.activeTurnSerial ?? 0) + 1
+    this.createTurnCompletion(sessionId)
+    this.adoptedTurns.set(sessionId, { serial, stopEpoch: managed.stopEpoch ?? 0, completed: false, error: false, events: Promise.resolve() })
+    runtimeHooks.onSessionStarted()
+  }
+
+  private async finishAdoptedTurn(sessionId: string, outcome: SessionCompletionEvent['stopReason']): Promise<void> {
+    const managed = this.sessions.get(sessionId)
+    const adopted = this.adoptedTurns.get(sessionId)
+    if (!managed || !adopted) return
+    try { await adopted.events }
+    catch (error) {
+      if (outcome === 'complete') throw error
+      adopted.error = true
+    }
+    if (outcome === 'complete' && !adopted.completed) throw new Error('Native target finished without backend completion')
+    const completion = this.turnCompletions.get(sessionId)
+    this.adoptedTurns.delete(sessionId)
+    try { await this.finalizeTurn(managed, adopted.serial, adopted.stopEpoch, adopted.error ? 'error' : outcome) }
+    finally {
+      completion?.resolve()
+      if (this.turnCompletions.get(sessionId) === completion) this.turnCompletions.delete(sessionId)
+    }
+  }
+
+  private async waitForNativeWrites(sessionId: string): Promise<void> {
+    for (;;) {
+      const pending = this.nativeOwnerWrites.get(sessionId)
+      if (!pending) return
+      await pending.catch(() => {})
+      if (this.nativeOwnerWrites.get(sessionId) === pending) return
+    }
+  }
+
+  private persistNativeMetadata(sessionId: string,
+    prepare: (snapshot: StoredSession, managed: ManagedSession) => (() => void) | undefined): Promise<void> {
+    // Capture each snapshot after the preceding strict receipt has updated memory.
+    const preceding = this.nativeOwnerWrites.get(sessionId) ?? Promise.resolve()
+    const writing = preceding.catch(() => {}).then(async () => {
+      const managed = this.sessions.get(sessionId)
+      if (!managed || this.deletingSessions.has(sessionId)) throw new Error('Native owner session was deleted')
+      this.ensureMessagesLoaded(managed)
+      const snapshot = structuredClone(this.toStored(managed))
+      const apply = prepare(snapshot, managed)
+      if (!apply) return
+      await sessionPersistenceQueue.persist(snapshot)
+      if (this.sessions.get(sessionId) === managed && !this.deletingSessions.has(sessionId)) apply()
+    })
+    this.nativeOwnerWrites.set(sessionId, writing)
+    return writing.finally(() => {
+      if (this.nativeOwnerWrites.get(sessionId) !== writing) return
+      this.nativeOwnerWrites.delete(sessionId)
+      const managed = this.sessions.get(sessionId)
+      if (this.nativeOwnerDirty.delete(sessionId) && managed) this.persistSession(managed)
+    })
+  }
+
+  private persistNativeOwner(sessionId: string, record: NativeSessionOwnerRecord, expectedTransactionId?: string): Promise<void> {
+    const saved = { ...record }
+    return this.persistNativeMetadata(sessionId, (snapshot, managed) => {
+      if (expectedTransactionId && managed.nativeSessionOwner?.transactionId !== expectedTransactionId) return
+      if (saved.role === 'target' && saved.targetNativeSessionId) {
+        const actualId = managed.agent?.getSessionId()
+        if (actualId && actualId !== saved.targetNativeSessionId) throw new Error('Native target metadata does not match backend')
+        snapshot.sdkSessionId = saved.targetNativeSessionId
+      }
+      snapshot.nativeSessionOwner = saved
+      return () => {
+        managed.nativeSessionOwner = saved
+        if (saved.role === 'target' && saved.targetNativeSessionId) managed.sdkSessionId = saved.targetNativeSessionId
+      }
+    })
+  }
+
+  private registerNativeProjection(sessionId: string, value: unknown, backend: PiNativeOwnerBackend, hasName?: boolean): Promise<void> {
+    const reference = parseNativeSessionReference(value)
+    if (!reference) return Promise.reject(new Error('Invalid native projection reference'))
+    const current = this.sessions.get(sessionId)
+    if (current?.agent?.nativeSessionOwner === backend && (reference.name !== null || hasName === true)
+      && reference.revision >= (current.nativeSessionProjection?.revision ?? -1)) {
+      // Invalidate pending automatic titles at admission, before strict IO updates the visible name.
+      current.nameChangeVersion = (current.nameChangeVersion ?? 0) + 1
+    }
+    return this.persistNativeMetadata(sessionId, (snapshot, managed) => {
+      if (!managed.agent || managed.agent.nativeSessionOwner !== backend) throw new Error('Native projection backend is no longer current')
+      if (reference.sessionId !== sessionId || reference.nativeSessionId !== managed.agent.getSessionId()) {
+        throw new Error('Native projection identity does not match its product owner')
+      }
+      const expected = join(getSessionStoragePath(managed.workspace.rootPath, sessionId), 'native-session', 'session.jsonl')
+      if (reference.sessionFile !== expected) throw new Error('Native projection path does not match its product owner')
+      const previous = managed.nativeSessionProjection
+      if (previous?.sessionId === sessionId && previous.sessionFile === expected) {
+        if (previous.nativeSessionId !== reference.nativeSessionId) throw new Error('Native projection identity changed')
+        if (reference.revision < previous.revision) return
+        if (reference.revision === previous.revision) {
+          if (reference.manifestDigest !== previous.manifestDigest) throw new Error('Native projection changed within one revision')
+        }
+      }
+      const name = reference.name ?? (hasName === true ? '' : undefined)
+      const nameChanged = name !== undefined && managed.name !== name
+      const historyChanged = (reference.treeRevision ?? 0) > (previous?.treeRevision ?? 0)
+      let history: ReturnType<typeof partitionNativeProductHistory> | undefined
+      if (historyChanged || reference.revision >= (previous?.revision ?? -1)) {
+        const tree = readTrustedNativeSession({
+          workspaceRootPath: managed.workspace.rootPath, sessionId,
+          nativeSessionId: reference.nativeSessionId, reference,
+        })
+        history = partitionNativeProductHistory(snapshot, { ...tree, leaf: previous ? previous.leaf : reference.leaf }, {
+          sourceSessionId: sessionId, targetSessionId: sessionId, leaf: reference.leaf,
+          additionalMessages: materializeNativeUserHistory(tree, managed.workspace.rootPath, sessionId,
+            [...snapshot.messages, ...(snapshot.nativeArchivedMessages ?? [])]),
+        })
+        Object.assign(snapshot, history)
+      }
+      const rowsChanged = history && (!isDeepStrictEqual(history.messages, managed.messages.map(messageToStored))
+        || !isDeepStrictEqual(history.nativeArchivedMessages, managed.nativeArchivedMessages ?? []))
+      if (previous?.manifestDigest === reference.manifestDigest && !nameChanged && !rowsChanged) return
+      snapshot.nativeSessionProjection = reference
+      if (nameChanged) snapshot.name = name
+      return () => {
+        managed.nativeSessionProjection = reference
+        if (nameChanged) managed.name = name
+        if (history && rowsChanged) {
+          this.applyNativeProductHistory(managed, history)
+          this.emit(managed.workspace.id, {
+            type: 'native_history_changed', sessionId, session: structuredClone(this.toSession(managed, true)),
+          })
+        }
+        if (nameChanged) {
+          this.emit(managed.workspace.id, { type: 'name_changed', sessionId, name })
+        }
+      }
+    })
+  }
+
+  private nativeForkIdentity(sessionId: string, expected?: NativeSessionReference) {
+    const managed = this.sessions.get(sessionId)
+    const reference = managed?.nativeSessionProjection
+    if (!managed || this.deletingSessions.has(sessionId) || !reference
+      || (expected && !isDeepStrictEqual(reference, parseNativeSessionReference(expected)))) {
+      throw new Error('Native fork projection has no matching strict product receipt')
+    }
+    return { workspaceRootPath: managed.workspace.rootPath, sessionId,
+      nativeSessionId: reference.nativeSessionId, reference }
+  }
+
+  private async persistNativeForkHistory(sessionId: string, proof: NativeForkProof): Promise<void> {
+    await this.persistNativeMetadata(sessionId, (snapshot, managed) => {
+      const history = partitionNativeProductHistory(snapshot, { ...proof.tree, leaf: proof.tree.reference.leaf }, {
+        sourceSessionId: sessionId, targetSessionId: sessionId, leaf: proof.tree.reference.leaf,
+        sourceOnlyMessageIds: new Set(proof.record.inputId ? [proof.record.inputId] : []),
+      })
+      Object.assign(snapshot, history)
+      return () => this.applyNativeProductHistory(managed, history)
+    })
+  }
+
+  private applyNativeProductHistory(managed: ManagedSession, history: ReturnType<typeof partitionNativeProductHistory>): void {
+    // Strict metadata IO can overlap input admission and background events.
+    const active = new Set(managed.messages.map(row => row.id))
+    const rows = new Map([...(managed.nativeArchivedMessages ?? []), ...managed.messages.map(messageToStored)]
+      .map(row => [row.id, row]))
+    for (const row of [...history.messages, ...history.nativeArchivedMessages]) {
+      if (!rows.has(row.id)) rows.set(row.id, structuredClone(row))
+    }
+    const placement = new Map(history.nativeArchivedMessages.map(row => [row.id, false]))
+    for (const row of history.messages) placement.set(row.id, true)
+    const tags = new Map([...history.messages, ...history.nativeArchivedMessages].map(row => [row.id, row.nativeHistory]))
+    const next: typeof history = { messages: [], nativeArchivedMessages: [] }
+    for (const row of rows.values()) {
+      if (tags.has(row.id)) row.nativeHistory = tags.get(row.id)
+      const destination = (placement.get(row.id) ?? active.has(row.id)) ? next.messages : next.nativeArchivedMessages
+      destination.push(row)
+    }
+    const order = (a: typeof next.messages[number], b: typeof next.messages[number]) =>
+      (a.nativeHistory?.order ?? Number.MAX_SAFE_INTEGER) - (b.nativeHistory?.order ?? Number.MAX_SAFE_INTEGER)
+    managed.messages = next.messages.sort(order).map(storedToMessage)
+    managed.nativeArchivedMessages = next.nativeArchivedMessages.sort(order)
+    const { preview, messageCount, lastMessageRole, lastFinalMessageId } = createSessionHeader(this.toStored(managed))
+    Object.assign(managed, { preview, messageCount, lastMessageRole, lastFinalMessageId })
+  }
+
+  private async prepareNativeFork(sessionId: string, request: PiNativeOwnerRequest): Promise<NativeForkProof> {
+    const proof = prepareNativeForkProof(this.nativeForkIdentity(sessionId), request)
+    await this.persistNativeForkHistory(sessionId, proof)
+    return proof
+  }
+
+  private async closeNativeFork(sourceId: string, targetId: string, prepared: NativeForkProof,
+    reference: NativeSessionReference): Promise<NativeForkProof> {
+    const source = this.sessions.get(sourceId)
+    const target = this.sessions.get(targetId)
+    if (!source || !target || source.workspace.id !== target.workspace.id
+      || source.workspace.rootPath !== target.workspace.rootPath
+      || target.nativeSessionOwner?.transactionId !== source.nativeSessionOwner?.transactionId
+      || !target.nativeSessionOwner?.unpublished) throw new Error('Native fork target is outside its prepared owner')
+    const proof = closeNativeForkProof(prepared, this.nativeForkIdentity(sourceId, reference))
+    await this.persistNativeForkHistory(sourceId, proof)
+    this.ensureMessagesLoaded(source)
+    const history = partitionNativeProductHistory(this.toStored(source), { ...proof.tree, leaf: proof.tree.reference.leaf }, {
+      sourceSessionId: sourceId, targetSessionId: targetId, leaf: proof.record.nativeLeafId,
+      sourceOnlyMessageIds: new Set(proof.record.inputId ? [proof.record.inputId] : []),
+    })
+    const targetPath = getSessionStoragePath(target.workspace.rootPath, targetId)
+    copyReferencedSessionFiles([...history.messages, ...history.nativeArchivedMessages], proof.sourcePath, targetPath)
+    const copied = remapSessionFileReferences(history, proof.sourcePath, targetPath)
+    await this.persistNativeMetadata(targetId, (snapshot, managed) => {
+      if (managed !== target || snapshot.messages.length || snapshot.nativeArchivedMessages?.length) {
+        throw new Error('Native fork target already has product history')
+      }
+      Object.assign(snapshot, copied)
+      snapshot.name = proof.tree.hasName ? proof.tree.reference.name ?? '' : source.name
+      snapshot.lastMessageAt = copied.messages.at(-1)?.timestamp
+      const { preview, messageCount, lastMessageRole, lastFinalMessageId } = createSessionHeader(snapshot)
+      return () => {
+        managed.messages = copied.messages.map(storedToMessage)
+        managed.nativeArchivedMessages = copied.nativeArchivedMessages
+        managed.messagesLoaded = true
+        managed.name = snapshot.name
+        managed.lastMessageAt = snapshot.lastMessageAt
+        Object.assign(managed, { preview, messageCount, lastMessageRole, lastFinalMessageId })
+      }
+    })
+    return proof
+  }
+
+  private nativeSessionByPath(sourceId: string, path: string): ManagedSession {
+    if (!isAbsolute(path) || resolve(path) !== path) throw new Error('Native session requires a canonical registered path')
+    const source = this.sessions.get(sourceId)
+    if (!source) throw new Error('Native session source was deleted')
+    const candidates = [...this.sessions.values()].filter(session =>
+      session.workspace.id === source.workspace.id && session.workspace.rootPath === source.workspace.rootPath
+      && session.nativeSessionProjection?.sessionFile === path)
+    if (candidates.length !== 1) throw new Error('Native session path is not uniquely registered in this workspace')
+    const target = candidates[0]!
+    if (this.deletingSessions.has(target.id)) throw new Error('Native session target is being deleted')
+    const reference = target.nativeSessionProjection!
+    if ((target.sdkSessionId && target.sdkSessionId !== reference.nativeSessionId)
+      || [...this.sessions.values()].some(session => session.id !== target.id
+        && session.workspace.id === source.workspace.id
+        && session.nativeSessionProjection?.nativeSessionId === reference.nativeSessionId)) {
+      throw new Error('Native session target identity is not unique')
+    }
+    return target
+  }
+
+  private prepareNativeParent(sourceId: string, request: PiNativeOwnerRequest): NativeSessionReference {
+    if (request.operation.type !== 'new' || request.operation.parentSession === undefined) {
+      throw new Error('Native parent session path is missing')
+    }
+    const parent = this.nativeSessionByPath(sourceId, request.operation.parentSession)
+    if (parent.nativeSessionOwner?.unpublished || (parent.id !== sourceId && this.nativeOwners.isLocked(parent.id))) {
+      throw new Error('Native parent session is unavailable')
+    }
+    return readTrustedNativeSession(this.nativeForkIdentity(parent.id)).reference
+  }
+
+  private prepareNativeSwitch(sourceId: string, request: PiNativeOwnerRequest): NativeSwitchProof {
+    if (request.operation.type !== 'switch') throw new Error('Native switch operation is missing')
+    const target = this.nativeSessionByPath(sourceId, request.operation.sessionPath)
+    if (target.id === sourceId || this.nativeOwners.isLocked(target.id)
+      || target.isProcessing || this.adoptedTurns.has(target.id) || target.messageQueue.length
+      || target.nativeSessionOwner?.unpublished || target.codingMode !== true) {
+      throw new Error('Native switch target is busy or unavailable')
+    }
+    if (target.agent && !target.agent.nativeSessionOwner?.assertAvailable) {
+      throw new Error('Native switch target backend cannot validate availability')
+    }
+    target.agent?.nativeSessionOwner?.assertAvailable?.()
+    return prepareNativeSwitchProof(this.nativeForkIdentity(target.id))
+  }
+
+  private async closeNativeSwitch(targetId: string, prepared: NativeSwitchProof): Promise<NativeSwitchProof> {
+    const proof = closeNativeSwitchProof(prepared, this.nativeForkIdentity(targetId))
+    if (proof.tree.hasName) await this.persistNativeMetadata(targetId, (snapshot, managed) => {
+      snapshot.name = proof.tree.reference.name ?? ''
+      return () => { managed.name = snapshot.name }
+    })
+    return proof
+  }
+
+  private async rollbackNativeTarget(sessionId: string, transactionId: string): Promise<void> {
+    const managed = this.sessions.get(sessionId)
+    const record = managed?.nativeSessionOwner
+    if (!managed || record?.role !== 'target' || record.transactionId !== transactionId) return
+    if (record.operation === 'switch') {
+      const source = this.sessions.get(record.sourceSessionId)?.nativeSessionOwner
+      const failed = source?.transactionId === transactionId ? source : record
+      await this.persistNativeOwner(sessionId, { ...failed, role: 'target',
+        phase: failed.phase === 'aborted' ? 'aborted' : 'failed', callbacks: 'interrupted', unpublished: undefined }, transactionId)
+      return
+    }
+    if (!record.unpublished) return
+    sessionPersistenceQueue.cancel(sessionId)
+    await sessionPersistenceQueue.flush(sessionId)
+    this.extensionUI.remove(sessionId)
+    unregisterSessionScopedToolCallbacks(sessionId)
+    if (!deleteStoredSession(managed.workspace.rootPath, sessionId)) throw new Error('Could not roll back native target session')
+    this.sessions.delete(sessionId)
+    this.inputClients.retireSession(sessionId)
+  }
+
+  private async recoverNativeOwners(): Promise<void> {
+    for (const managed of [...this.sessions.values()]) {
+      const record = managed.nativeSessionOwner
+      if (record?.role !== 'target' || !record.unpublished) continue
+      const source = this.sessions.get(record.sourceSessionId)
+      const authority = source?.nativeSessionOwner
+      if (source?.workspace.id === managed.workspace.id && authority?.role === 'source'
+        && authority.transactionId === record.transactionId && authority.targetSessionId === managed.id && authority.committed) {
+        await this.persistNativeOwner(managed.id, { ...record, committed: true, unpublished: undefined, callbacks: 'interrupted' })
+      } else {
+        await this.rollbackNativeTarget(managed.id, record.transactionId)
+      }
+    }
+    for (const managed of this.sessions.values()) {
+      const record = managed.nativeSessionOwner
+      if (!record || record.callbacks === 'interrupted' || ['finished', 'failed', 'aborted'].includes(record.phase)) continue
+      await this.persistNativeOwner(managed.id, { ...record, phase: record.committed ? 'committed' : 'aborted', callbacks: 'interrupted', error: 'Native replacement interrupted by restart; callbacks were not replayed' })
     }
   }
 
@@ -1074,7 +1643,12 @@ export class SessionManager implements ISessionManager {
 
   /** Craft-compatible async entry point for events arriving outside a live turn. */
   private async processEvent(managed: ManagedSession, event: AgentEvent): Promise<void> {
-    this.handleAgentEvent(managed, event)
+    const adopted = this.adoptedTurns.get(managed.id)
+    if (event.type === 'complete' && adopted) {
+      if (adopted.completed) return
+      adopted.completed = true
+    }
+    if (this.handleAgentEvent(managed, event) && adopted) adopted.error = true
     await this.flushSession(managed.id)
   }
 
@@ -1173,6 +1747,8 @@ export class SessionManager implements ISessionManager {
       },
       coreConfig: {
         workspace: managed.workspace,
+        extensionUI: this.extensionUI.port(managed.id),
+        nativeSessionOwner: this.nativeOwners.port(managed.id, !!managed.nativeSessionOwner?.unpublished),
         session: this.toStored(managed),
         model: context.resolvedModel,
         autoCompactWindow: getAutoCompactWindow(),
@@ -1333,13 +1909,26 @@ export class SessionManager implements ISessionManager {
         return { delivery: targetBusy ? 'queued' : 'delivered', targetBusy }
       },
     })
-    agent.setBackgroundEventSink?.(event => { void this.processEvent(managed, event) })
+    this.bindBackgroundEvents(managed, agent)
     const result = await agent.postInit()
     if (result.authWarning) log.warn(result.authWarning)
     managed.agent = agent
     managed.backendRuntimeSignature = buildBackendRuntimeSignature({ connection: context.connection, provider: context.provider, authType: context.authType, resolvedModel: context.resolvedModel, autoCompactWindow: getAutoCompactWindow() })
     managed.backendRestartSignature = buildRestartRequiredSignature({ connection: context.connection, provider: context.provider, authType: context.authType, resolvedModel: context.resolvedModel, autoCompactWindow: getAutoCompactWindow() })
     return agent
+  }
+
+  private bindBackgroundEvents(managed: ManagedSession, agent: AgentBackend): void {
+    agent.setBackgroundEventSink?.(event => {
+      if (this.sessions.get(managed.id) !== managed) return
+      const adopted = this.adoptedTurns.get(managed.id)
+      const processing = this.processEvent(managed, event)
+      if (adopted) {
+        adopted.events = Promise.all([adopted.events, processing]).then(() => {})
+        void adopted.events.catch(() => {})
+      }
+      void processing.catch(error => log.warn('Failed to process background event', managed.id, error))
+    })
   }
 
   async refreshConnectionRuntime(connectionSlug: string): Promise<void> {
@@ -1361,7 +1950,7 @@ export class SessionManager implements ISessionManager {
 
   private async performRuntimeRefresh(managed: ManagedSession): Promise<void> {
     const agent = managed.agent
-    if (!agent || agent.isProcessing()) return
+    if (!agent || this.nativeOwners.isLocked(managed.id) || agent.isProcessing()) return
     const workspaceConfig = loadWorkspaceConfig(managed.workspace.rootPath)
     const context = resolveBackendContext({ sessionConnectionSlug: managed.llmConnection, workspaceDefaultConnectionSlug: workspaceConfig?.defaults?.defaultLlmConnection, managedModel: managed.model })
     const runtimeSignature = buildBackendRuntimeSignature({ connection: context.connection, provider: context.provider, authType: context.authType, resolvedModel: context.resolvedModel, autoCompactWindow: getAutoCompactWindow() })
@@ -1392,8 +1981,9 @@ export class SessionManager implements ISessionManager {
 
   private processNextQueuedMessage(sessionId: string): void {
     const managed = this.sessions.get(sessionId)
-    const queued = managed?.messageQueue.shift()
-    if (!managed || !queued) return
+    if (!managed || managed.isProcessing || this.deletingSessions.has(sessionId) || this.nativeOwners.isLocked(sessionId) || this.isSessionUnpublished(sessionId)) return
+    const queued = managed.messageQueue.shift()
+    if (!queued) return
     const existing = managed.messages.find(item => item.id === queued.messageId)
     if (existing) {
       existing.isQueued = false
@@ -1411,12 +2001,17 @@ export class SessionManager implements ISessionManager {
 
   async cancelProcessing(sessionId: string, silent = false): Promise<void> {
     const managed = this.sessions.get(sessionId)
-    if (!managed?.isProcessing) return
+    if (!managed) return
+    this.inputClients.cancelTurn(sessionId, new Set(managed.messageQueue.map(input => input.messageId)))
+    const ownerForeground = this.nativeOwners.isLocked(sessionId)
+    const ownerCancellation = this.nativeOwners.cancel(sessionId)
+    if (!managed.isProcessing) { await ownerCancellation; return }
     managed.stopEpoch = (managed.stopEpoch ?? 0) + 1
     managed.cancelHandoffWait?.()
-    if (managed.agent && !managed.agent.stopTurn?.()) managed.agent.forceAbort(AbortReason.UserStop)
+    if (!ownerForeground && managed.agent && !managed.agent.stopTurn?.()) managed.agent.forceAbort(AbortReason.UserStop)
     managed.isProcessing = false
     if (!silent) this.emit(managed.workspace.id, { type: 'interrupted', sessionId, backgroundTasksAlive: [...managed.backgroundTaskRegistry.values()].some(task => task.status === 'running') })
+    await ownerCancellation
   }
 
   async killShell(sessionId: string, shellId: string): Promise<StopBackgroundTaskResult> {
@@ -2075,11 +2670,11 @@ export class SessionManager implements ISessionManager {
   }
 
   getActiveSessionCount(workspaceId?: string): number {
-    return [...this.sessions.values()].filter(managed => managed.isProcessing && (!workspaceId || managed.workspace.id === workspaceId)).length
+    return [...this.sessions.values()].filter(managed => !this.isSessionUnpublished(managed.id) && managed.isProcessing && (!workspaceId || managed.workspace.id === workspaceId)).length
   }
 
   getActiveSessionsInfo(): ActiveSessionInfo[] {
-    return [...this.sessions.values()].filter(managed => managed.isProcessing).map(managed => ({
+    return [...this.sessions.values()].filter(managed => !this.isSessionUnpublished(managed.id) && managed.isProcessing).map(managed => ({
       sessionId: managed.id,
       workspaceId: managed.workspace.id,
       workspaceName: managed.workspace.name,
@@ -2128,6 +2723,7 @@ export class SessionManager implements ISessionManager {
       stored.transferredSessionSummaryApplied = bundle.session.header.transferredSessionSummaryApplied
       const targetPath = getSessionStoragePath(workspace.rootPath, created.id)
       stored.messages = importSessionMessages(bundle, targetPath)
+      stored.nativeArchivedMessages = importNativeArchivedMessages(bundle, targetPath)
       stored.tokenUsage = bundle.session.header.tokenUsage
       restoreSessionBundleFiles(bundle, targetPath)
       await saveStoredSession(stored)
@@ -2142,17 +2738,21 @@ export class SessionManager implements ISessionManager {
   }
 
   cleanup(): void {
+    for (const clientId of this.pendingUIAttachments.keys()) this.disconnectExtensionUI(clientId)
+    this.extensionUI.clear()
     for (const listener of this.prWatchSessionListeners) listener(null)
     this.prWatchSessionListeners.clear()
     for (const watcher of this.configWatchers.values()) watcher.stop()
     this.configWatchers.clear()
     for (const managed of this.sessions.values()) {
+      void this.nativeOwners.cancel(managed.id)?.catch(error => log.warn('Native owner cleanup failed', error))
       managed.cancelHandoffWait?.()
       managed.agent?.destroy()
       unregisterSessionScopedToolCallbacks(managed.id)
     }
     this.turnCompleteListeners.clear()
     this.sessions.clear()
+    this.inputClients.clear()
     this.browserHostPins.clear()
     this.rpcServer = null
     this.browserPaneManager = null

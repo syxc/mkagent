@@ -132,6 +132,8 @@ describe('Browser and Skill prerequisites in the Pi pre-tool pipeline', () => {
     const call = (toolName: string, input: Record<string, unknown>) => runPreToolUseChecks({ toolName, input, sessionId, permissionMode: 'allow-all', workspaceRootPath: '/tmp', workspaceId: 'ws', permissionManager, prerequisiteManager: prerequisites })
     expect(call('mcp__session__browser_tool', { command: 'snapshot' }).type).toBe('block')
     expect(call('Bash', { command: `head -n 100 ${guide}` }).type).toBe('allow')
+    expect(call('mcp__session__browser_tool', { command: 'snapshot' }).type).toBe('block')
+    prerequisites.trackSuccessfulBashRead(`head -n 100 ${guide}`)
     expect(call('mcp__session__browser_tool', { command: 'snapshot' }).type).toBe('allow')
     prerequisites.resetReadState()
     expect(call('browser_tool', { command: 'snapshot' }).type).toBe('block')

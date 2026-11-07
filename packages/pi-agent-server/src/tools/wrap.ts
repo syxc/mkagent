@@ -11,9 +11,11 @@
 import type { ToolRegistration, ToolExecutionApi, ToolExecutionResult } from '@earendil-works/pi-durable';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import { BACKGROUND_CONTEXT, type Context } from '@earendil-works/chord/context';
+import { copyJson } from '@earendil-works/chord';
 import { estimateTokens, handleLargeResponse, tokenLimitFor } from '../../../shared/src/utils/large-response.ts';
 import { getSessionPath } from '../../../shared/src/sessions/storage.ts';
 import { PI_TOOL_NAME_MAP } from '../../../shared/src/agent/backend/pi/constants.ts';
+import type { PiWorkerScope } from '../../../shared/src/agent/backend/pi/protocol.ts';
 import { allowMkAgentMetadataProperties, stripMkAgentMetadata } from '../mkagent-metadata-schema.ts';
 import type { BackgroundShells } from '../background-shell.ts';
 import { resolveReadPath, resolveToCwd } from './local/path-utils.ts';
@@ -22,6 +24,7 @@ export interface ToolWrapDeps {
   /** Main-process permission check; resolves the (possibly modified) input, throws on block. */
   requestApproval(toolName: string, input: Record<string, unknown>, toolCallId?: string): Promise<Record<string, unknown>>;
   backgroundShells: BackgroundShells;
+  ownerScope?: PiWorkerScope;
   /** Directory for background task output files (`<agentDir>/tasks`). */
   tasksDirectory: string;
   /**
@@ -96,6 +99,7 @@ export function wrapToolForKernel(tool: AnyTool, deps: ToolWrapDeps): AnyTool {
     // upstream tool implementation always receives clean executable args,
     // even if a future pre-tool-use path returns `allow` without modification.
     inputObj = stripMkAgentMetadata(inputObj);
+    await api.memo('mkagent.tool.approved-arguments', copyJson(inputObj, { omitUndefinedProperties: true }), context);
 
     if (tool.name === 'bash' && inputObj.run_in_background === true) {
       const { run_in_background: _background, ...bashArgs } = inputObj;
@@ -104,6 +108,7 @@ export function wrapToolForKernel(tool: AnyTool, deps: ToolWrapDeps): AnyTool {
       let outputBuffer = '';
       const started = deps.backgroundShells.start({
         directory: deps.tasksDirectory,
+        owner: deps.ownerScope,
         toolUseId: api.callId,
         command,
         execute: async (taskSignal, update) => {

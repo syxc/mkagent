@@ -108,6 +108,9 @@ export const HANDLED_CHANNELS = [
   RPC_CHANNELS.sessions.GET_BACKGROUND_TASK_OUTPUT,
   RPC_CHANNELS.sessions.STOP_BACKGROUND_TASK,
   RPC_CHANNELS.sessions.RESPOND_TO_PERMISSION,
+  RPC_CHANNELS.sessions.ATTACH_EXTENSION_UI,
+  RPC_CHANNELS.sessions.DETACH_EXTENSION_UI,
+  RPC_CHANNELS.sessions.RESPOND_TO_EXTENSION_UI,
   RPC_CHANNELS.sessions.COMMAND,
   RPC_CHANNELS.sessions.GET_PENDING_PLAN_EXECUTION,
   RPC_CHANNELS.sessions.GET_PERMISSION_MODE_STATE,
@@ -276,6 +279,19 @@ export function registerSessionsHandlers(server: RpcServer, deps: HandlerDeps): 
   // ==========================================================================
   // Consolidated Command Handlers
   // ==========================================================================
+
+  server.handle(RPC_CHANNELS.sessions.ATTACH_EXTENSION_UI, async (ctx, sessionId: string, subscriptionId: string) => {
+    if (!ctx.workspaceId) throw new Error('Extension UI requires a workspace')
+    return sessionManager.attachExtensionUI(sessionId, ctx.workspaceId, ctx.clientId, subscriptionId)
+  })
+  server.handle(RPC_CHANNELS.sessions.DETACH_EXTENSION_UI, (ctx, sessionId: string, subscriptionId: string) => {
+    return sessionManager.detachExtensionUI(sessionId, ctx.clientId, subscriptionId)
+  })
+  server.handle(RPC_CHANNELS.sessions.RESPOND_TO_EXTENSION_UI, async (ctx, sessionId: string, subscriptionId: string,
+    uiEpoch: string, response: unknown) => {
+    if (!ctx.workspaceId) return false
+    return sessionManager.respondToExtensionUI(sessionId, ctx.workspaceId, ctx.clientId, subscriptionId, uiEpoch, response)
+  })
 
   // Session commands - consolidated handler for session operations
   server.handle(RPC_CHANNELS.sessions.COMMAND, async (

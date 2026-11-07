@@ -10,11 +10,9 @@
 
 import { builtinProviders } from '@earendil-works/pi-ai/providers/all';
 import type { Credential as PiSdkCredential } from '@earendil-works/pi-ai';
+import type { PiWorkerCredential } from '../../shared/src/agent/backend/pi/protocol.ts';
 
-export type PiCredential =
-  | { type: 'api_key'; key: string }
-  | { type: 'oauth'; access: string; refresh: string; expires: number }
-  | { type: 'iam'; accessKeyId: string; secretAccessKey: string; region?: string; sessionToken?: string };
+export type PiCredential = PiWorkerCredential;
 
 let oauthOnlyProviderIdsCache: Set<string> | null = null;
 

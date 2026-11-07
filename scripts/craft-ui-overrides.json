@@ -1,9 +1,41 @@
 {
   "version": 2,
   "files": {
+    "apps/electron/src/renderer/actions/__tests__/dialog-shortcuts.test.ts": {
+      "sha256": "45a004ab9d8dfd92c930abdf654144c6b2f1f0904ebb7216915b02d1636a80ff",
+      "reason": "Verify that an open native dialog preserves Shift+Tab instead of changing permission mode."
+    },
+    "apps/electron/src/renderer/actions/definitions.ts": {
+      "sha256": "961add7a053c7055b9765ab92b2ec33700e2e9ea6f01890575a6701e0d079512",
+      "reason": "Keep permission mode shortcuts outside open dialogs so native controls retain keyboard navigation."
+    },
+    "apps/electron/src/renderer/components/app-shell/input/ExtensionUI.tsx": {
+      "sha256": "d4c7b17c7d05648b522efe934b8cc6a9e21b7d16ff295789267b7678af917443",
+      "reason": "Render native RPC dialogs and authorization links, mask provider secrets and focus Cancel when a confirmation has no editable control."
+    },
+    "apps/electron/src/renderer/hooks/useExtensionUI.ts": {
+      "sha256": "113b4b9c3c7f64c4996f7ff5e14df649776716b23ce0358f3f9ac02a4bc61e8f",
+      "reason": "Bind native UI subscriptions and responses to the current workspace and session IDs."
+    },
+    "apps/electron/src/renderer/lib/__tests__/drafts.test.ts": {
+      "sha256": "9e6f39ef506efc593176624da9af149e1a0767304fa17f987406f2c3a458bf98",
+      "reason": "Retain attachment conversion coverage and test draft bootstrap against native editor updates and explicit clearing."
+    },
+    "apps/electron/src/renderer/lib/__tests__/extension-ui-client.test.ts": {
+      "sha256": "75eecc3c71812dda14d6aecd833cb839bb6615df2c96c5072aedf0b9a02ab227",
+      "reason": "Test native UI client leases, reconnect, stale responses and transient effects after session removal."
+    },
+    "apps/electron/src/renderer/lib/drafts.ts": {
+      "sha256": "b178e3a95a8b7fc52b6a726d2dd110afc220393196c04142c8318fab59509228",
+      "reason": "Retain attachment conversion and merge delayed persisted drafts without losing native editor text or untouched attachments."
+    },
+    "apps/electron/src/renderer/lib/extension-ui-client.ts": {
+      "sha256": "b23c1eabcb7d91b784db66cef1a056d3a89b840a207d73af7f2f31cb358a1a5c",
+      "reason": "Route native RPC UI snapshots, transient effects and acknowledged responses through current client leases."
+    },
     "apps/electron/src/renderer/App.tsx": {
-      "sha256": "aee4835f5da7091e742ac2e0cf12ccb6390099bc10aa3ffa2700eea1045673e9",
-      "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent."
+      "sha256": "1df7bcce8fd4ffa410605777721e1dbee9a683cd27f44d17e8700a05a8130374",
+      "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent. Bind native RPC UI to workspace client leases and preserve draft text and attachments during bootstrap. Install committed native target snapshots before streaming and redirect only the initiating source panel."
     },
     "apps/electron/src/renderer/assets/mkagent_app_icon.png": {
       "sha256": "8ef2d656c2eb9bbef8d0d8abb646e1ded0e4143046434866d541aaf9e3da6dc5",
@@ -98,7 +130,7 @@
       "reason": "Craft application shell adapted only to remove excluded product surfaces"
     },
     "apps/electron/src/renderer/components/app-shell/ChatDisplay.tsx": {
-      "sha256": "d1240599d3069142250a727d9bcc9cb6e28b7ec2e62ff53307ee2cdedf8ea3d0",
+      "sha256": "ff93109aafb8411b59bd057d07eda880b8dc46b0f1e4e12aa75d363140ab77c2",
       "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent. Register loaded session metadata before navigation so the created-session push cannot race with route validation."
     },
     "apps/electron/src/renderer/components/app-shell/CompactSessionMenu.tsx": {
@@ -206,8 +238,8 @@
       "reason": "Extract generic upstream chip sizing into PR-only helpers; no removed label UI is reintroduced."
     },
     "apps/electron/src/renderer/components/app-shell/input/ChatInputZone.tsx": {
-      "sha256": "f5c24f3ba1c45cdedc704213562fa20b3dad47a8aec3d31d4f24bce6266a5ac1",
-      "reason": "Craft application shell adapted only to remove excluded product surfaces"
+      "sha256": "1ab7cce9f77321ba4b27185da6df3192f5d9b54ff7098dc439a74ad80bb2211b",
+      "reason": "Remove excluded product surfaces and render native RPC UI alongside existing host approvals, background tasks and composer drafts."
     },
     "apps/electron/src/renderer/components/app-shell/input/CodingWorkspacePanel.tsx": {
       "sha256": "26e2315127b62afecdf09d9c4a66529a7f795b27eb475448c083cd4df83a1d6a",
@@ -218,8 +250,8 @@
       "reason": "Retain Lite permission modes and precise approvals; Guarded and decision configuration deferred"
     },
     "apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx": {
-      "sha256": "8031ff1a194db0e37a0f5a87443d98ab2295054c2be1bf4542d79763914993e5",
-      "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent."
+      "sha256": "62878d191d6a107fd5d4a8c6ac4e60c40338208253021f179a639c0d88d07bd1",
+      "reason": "Retain Coding UX/state/events/settings and narrow PR header in MkAgent Lite; excluded labels/Source/project metadata stays absent. External editor replacements cancel pending draft writes, including an unchanged empty parent value."
     },
     "apps/electron/src/renderer/components/app-shell/input/StructuredInput.tsx": {
       "sha256": "33c1c4166eaa90ccd47ff2e7e40cd9233c6d43b4a4cbd2b702d76021ae87fe5c",
@@ -354,7 +386,7 @@
       "reason": "Craft renderer file adapted for retained Lite behavior, removed product branches, or MkAgent branding"
     },
     "apps/electron/src/renderer/context/AppShellContext.tsx": {
-      "sha256": "837ae24d8d864eddbb69128cff66a61d46f606e9490e6cd44ad9b914bcf35a50",
+      "sha256": "04c257cf2451b34a3c949048c6b3f82e904f49bc137b53b188ba3fca5093c230",
       "reason": "Craft renderer file adapted for retained Lite behavior, removed product branches, or MkAgent branding"
     },
     "apps/electron/src/renderer/context/SessionListContext.tsx": {
@@ -466,8 +498,8 @@
       "reason": "Retained MkAgent Lite implementation and branding; upstream full-product branches remain excluded"
     },
     "apps/electron/src/renderer/pages/ChatPage.tsx": {
-      "sha256": "0eea02afef71791dd72dfb6f4db0113d5cf4e735b74a721064e12db6c214a903",
-      "reason": "Retain v0.15.6 shared implementation and tests with namespace normalization."
+      "sha256": "2b7993d64cd64d1b4b6aec3fbbb80eef31263909c381a67ab50cc2aa54d80142",
+      "reason": "Retain v0.15.6 shared implementation with native RPC UI, display titles and draft hydration that preserves local edits."
     },
     "apps/electron/src/renderer/pages/SkillInfoPage.tsx": {
       "sha256": "f05f8b41d93399a332e785d5ed45e3e2db48fc5e4964c0805c72e24b23636eeb",

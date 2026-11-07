@@ -1,4 +1,4 @@
-import type { BackgroundTaskOutput, StopBackgroundTaskResult } from '@mkagent/shared/protocol'
+import type { BackgroundTaskOutput, StopBackgroundTaskResult, ExtensionUISnapshot, ExtensionUIResponse, ExtensionUIUpdate } from '@mkagent/shared/protocol'
 // =============================================================================
 // Protocol re-exports (channels, DTOs, events, wire types)
 // =============================================================================
@@ -225,6 +225,10 @@ export interface ElectronAPI {
   stopBackgroundTask(sessionId: string, taskId: string): Promise<StopBackgroundTaskResult>
 
   respondToPermission(sessionId: string, requestId: string, allowed: boolean, alwaysAllow: boolean, options?: PermissionResponseOptions): Promise<boolean>
+  attachExtensionUI(sessionId: string, subscriptionId: string): Promise<ExtensionUISnapshot>
+  detachExtensionUI(sessionId: string, subscriptionId: string): Promise<void>
+  respondToExtensionUI(sessionId: string, subscriptionId: string, uiEpoch: string, response: ExtensionUIResponse): Promise<boolean>
+  onExtensionUIUpdate(callback: (update: ExtensionUIUpdate) => void): () => void
 
   // Consolidated session command handler
   sessionCommand(sessionId: string, command: Extract<SessionCommand, { type: 'continueInNewSession' }>): Promise<{ sessionId: string }>

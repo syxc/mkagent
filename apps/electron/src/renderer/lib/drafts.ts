@@ -14,7 +14,22 @@
  */
 
 import type { FileAttachment } from '@mkagent/shared/protocol'
-import type { DraftAttachmentContent, DraftAttachmentRef } from '@mkagent/shared/config'
+import type { DraftAttachmentContent, DraftAttachmentRef, SessionDraft } from '@mkagent/shared/config'
+
+/** Merge a delayed bootstrap without reviving cleared text or dropping untouched attachments. */
+export function mergePersistedDrafts(
+  current: Map<string, SessionDraft>,
+  persisted: Record<string, SessionDraft>,
+  modified: { text: ReadonlySet<string>; attachments: ReadonlySet<string> },
+): void {
+  for (const [id, draft] of Object.entries(persisted)) {
+    const local = current.get(id)
+    const text = modified.text.has(id) ? local?.text ?? '' : draft.text
+    const attachments = modified.attachments.has(id) ? local?.attachments : draft.attachments
+    if (!text && !attachments?.length) current.delete(id)
+    else current.set(id, { text, ...(attachments?.length ? { attachments } : {}) })
+  }
+}
 
 /** Per-attachment cap on inlined draft content. Huge pastes are dropped from the draft
  *  (with a warn) rather than bloating drafts.json. Tuned to the same 20 MB limit the
