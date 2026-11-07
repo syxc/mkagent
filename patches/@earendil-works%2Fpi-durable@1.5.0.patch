@@ -1,4 +1,4 @@
-# Content SHA-256: e1d0090e536fc5d53153110b6d6181f2ce13906b91824fe512c3f6b29014ec9d
+# Content SHA-256: df30f6cfbdf36c30f98171c2449b68e9075c89de4d85164e806b8b353f1f87bb
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -1724,10 +1724,14 @@ index 1c5c127ea6b007eb4033486fcbde0d5e6b20cc16..802d2381bcde340b7da8f9b6a54ebe32
      schemaText(tool.parameters, parts);
      return parts.filter((part) => part.trim() !== "").join(" ");
 diff --git a/dist/tools/index.d.ts b/dist/tools/index.d.ts
-index dc06b0be86a205a7aba4ab2c06ec4e003d731165..963704a8f3e87d26716d7704b8c66c0a6c4a5d0d 100644
+index dc06b0be86a205a7aba4ab2c06ec4e003d731165..2574c4f7e4601a3e28091bfa6da260e1aefc6623 100644
 --- a/dist/tools/index.d.ts
 +++ b/dist/tools/index.d.ts
-@@ -4,6 +4,8 @@ export { createEditTool, type EditToolDetails, type EditToolInput } from "./edit
+@@ -1,9 +1,12 @@
++export { detectLineEnding, normalizeToLF, restoreLineEndings, normalizeForFuzzyMatch, applyReplacementsPreservingUnchangedLines, fuzzyFindText, applyEditsToNormalizedContent, generateUnifiedPatch, generateDiffString } from "./edit-diff.js";
+ import { type ReadToolOptions } from "./read.ts";
+ export { type BashExecution, type BashPrepare, type BashToolInput, type BashToolOptions, createBashTool, createPowerShellTool, type PowerShellToolInput, type PowerShellToolOptions, } from "./bash.ts";
+ export { createEditTool, type EditToolDetails, type EditToolInput } from "./edit.ts";
  export { DEFAULT_IMAGE_LIMITS, type ImageLimits, type ImageProcessor, type PreparedImage, } from "./image-processor.ts";
  export { createReadTool, type ReadToolDetails, type ReadToolInput, type ReadToolOptions } from "./read.ts";
  export { createWriteTool, type WriteToolInput } from "./write.ts";
@@ -1737,10 +1741,15 @@ index dc06b0be86a205a7aba4ab2c06ec4e003d731165..963704a8f3e87d26716d7704b8c66c0a
   * The `coding-tools` extension: `read`, `write`, `edit`, and `bash`; nothing installs it automatically.
   * `createPowerShellTool()` adds `powershell`. `images` prepares the images `read` returns (see `ReadToolOptions`).
 diff --git a/dist/tools/index.js b/dist/tools/index.js
-index 77187bb5df6507b0f291ab9c27c932e68b780889..7ff1182aafc1c742edac1d7157173b174ac36b14 100644
+index 77187bb5df6507b0f291ab9c27c932e68b780889..897c8dd2915c411f12be94f1c8ff3e4af134f7fd 100644
 --- a/dist/tools/index.js
 +++ b/dist/tools/index.js
-@@ -8,6 +8,8 @@ export { createEditTool } from "./edit.js";
+@@ -1,3 +1,4 @@
++export { detectLineEnding, normalizeToLF, restoreLineEndings, normalizeForFuzzyMatch, applyReplacementsPreservingUnchangedLines, fuzzyFindText, applyEditsToNormalizedContent, generateUnifiedPatch, generateDiffString } from "./edit-diff.js";
+ import { defineExtension } from "../harness/define.js";
+ import { createBashTool } from "./bash.js";
+ import { createEditTool } from "./edit.js";
+@@ -8,6 +9,8 @@ export { createEditTool } from "./edit.js";
  export { DEFAULT_IMAGE_LIMITS, } from "./image-processor.js";
  export { createReadTool } from "./read.js";
  export { createWriteTool } from "./write.js";

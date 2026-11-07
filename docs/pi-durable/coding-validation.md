@@ -20,6 +20,60 @@ blocked source checks. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Shared Native edit differences
+
+Native edit matching, replacements, line-ending conversion and diff display now
+forward through nine public durable functions. The Native module retains its
+function signatures, seven type declarations and both file-preview functions.
+The preview declarations are unchanged. Native public interfaces remain local,
+so declaration merging still reaches the function return types.
+
+All 18 shared function bodies match the original durable functions after
+TypeScript erasure and comment removal. The 19 runtime files of the two
+resolved `diff` copies match byte for byte. The patch only adds exports to
+`tools/index.js` and its declaration file; durable's edit implementation and
+types match the original cached package. The Native source falls from 556
+lines to 186 lines, including its retained types, documentation and forwarding
+functions. No dependency is added.
+
+| Check | Result and scope |
+| --- | --- |
+| Original behavior | Before production changes, Bun and Node capture the same 305 result and error digests from source `f85a9809eb44b9828236050cf38a8e45933e5cfd583a186e9a0e55a664dd3e8d`. Cases cover exact and fuzzy matching, unchanged lines, disjoint and overlapping edits, duplicate and absent text, no-change errors, CRLF, BOM, Unicode, surrogates and unusual diff context limits. |
+| Native entry points | Before and after sharing, 312 tests and 623 assertions pass in Bun. Real temporary files cover BOM/CRLF previews, unordered edits, duplicate errors and missing files. A checked permission substitute verifies `R_OK`, the requested path and the original diagnostic. Resolution errors still reject outside result conversion. Previews leave file bytes unchanged. |
+| Types and generation | Twelve explicit strict roots, 445 source files, zero diagnostics. The roots include Native interface augmentation for matching and edit results. Twenty-three declaration and import mutations are rejected. Seven Native types and both preview bodies remain intact. |
+| Scoped reproduction | `vendor-coding-runtime.ts --check --file=core/tools/edit-diff.ts` passes with one source file and `complete: false`. No full runtime traversal runs. |
+| Patch replay | The complete 30-file patch applies cleanly and matches the installed files. The other 28 file diffs remain unchanged. Patch SHA-256 is `b7d6b9840679e0dd61f492f390d3aa24b61915e81da57195090070458b01aa61`; body SHA-256 is `df30f6cfbdf36c30f98171c2449b68e9075c89de4d85164e806b8b353f1f87bb`. |
+| Fresh frozen consumer | A new consumer installs 99 original cached packages offline with `--frozen-lockfile --ignore-scripts`. All 30 patched files, 23 Native files and 68 files in the audited Bun runtime closure match. Both lockfiles remain unchanged. |
+| Consumer execution | Bun and Node each pass the same 1235 tests across shell, read paths, truncation, normalization and edit differences. Bun reports 2518 assertions. Node uses the same test bodies with the existing builtin-module and assertion adapter. |
+| Review | Main-thread review covers all changed production, generation, fixture and patch files. No review is delegated. The Bun import audit reports 68 files, down from 87 before sharing, with no nonliteral imports. |
+
+These checks exercise the pure public functions and real Native file previews.
+They do not instantiate the complete edit-tool definition, its renderers or
+the plugin loader. Full SDK, product, source and platform checks retain their
+existing restrictions. F1/F3 remain open.
+
+## Remaining truncation candidates
+
+A prototype uses public chord `boundOutput` for the Native partial tail and
+`characterEnd` for the middle prefix. It matches 875 original cases plus 240
+fractional, negative, infinite, BOM and surrogate boundary cases under both
+Bun and Node. The adapter retains Native replacement characters when a
+fractional byte limit keeps the entire encoded buffer.
+
+The prototype also adds encoding and line scans for the partial tail. Three
+fresh Node processes per case measure the first call through the actual
+production module composition, after module import. For 10 MiB inputs, the
+production and candidate medians are 7.59ms and 14.68ms for ASCII, and 32.04ms
+and 39.46ms for Unicode. Output digests match. These samples do not establish
+performance for every input or runtime.
+
+The tail implementation remains unchanged. Sharing only the two-line prefix
+scan would retain the local suffix boundary rule while adding another package
+boundary inside the same middle operation. That operation remains unchanged.
+The single-line helper already uses standard string slicing and retains the
+Native display marker. This assessment does not establish the necessity of
+the other SDK sources.
+
 ## Read path normalization compatibility
 
 Commit `86bb0a4` cached NFD for both callers. The original Native entries cache

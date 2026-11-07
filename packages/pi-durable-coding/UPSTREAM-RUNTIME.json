@@ -756,8 +756,10 @@
       "source": "packages/coding-agent/src/core/tools/edit-diff.ts",
       "target": "src/pi/core/tools/edit-diff.ts",
       "sha256": "f85a9809eb44b9828236050cf38a8e45933e5cfd583a186e9a0e55a664dd3e8d",
-      "portSha256": "f85a9809eb44b9828236050cf38a8e45933e5cfd583a186e9a0e55a664dd3e8d",
-      "changes": []
+      "portSha256": "090a3b86098849df73500f5c9a50b8d0e0127c5c7062c58e155ff03d14e5aa17",
+      "changes": [
+        "shared-durable-edit-diff"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/edit.ts",

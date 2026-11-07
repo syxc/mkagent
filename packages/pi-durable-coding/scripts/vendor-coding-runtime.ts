@@ -260,7 +260,7 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       path === 'utils/zip.ts' || path === 'utils/tools-manager.ts' || path === 'utils/exif-orientation.ts' ||
       path === 'utils/image-resize-core.ts' || path === 'utils/mime.ts' || path === 'utils/ansi.ts' ||
       path === 'utils/child-process.ts' || path === 'utils/shell.ts' || path === 'core/tools/path-utils.ts' ||
-      path === 'core/tools/truncate.ts') {
+      path === 'core/tools/truncate.ts' || path === 'core/tools/edit-diff.ts') {
     body = portSharedHelpers(path, body);
     changes.add(path === 'extensions/tool-search/tool.ts' ? 'shared-durable-tool-search-ranking'
       : path === 'extensions/codemode/execute.ts' ? 'shared-durable-codemode-executor'
@@ -272,13 +272,14 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       : path === 'utils/shell.ts' ? 'shared-durable-shell-algorithms'
       : path === 'core/tools/path-utils.ts' ? 'shared-durable-read-path-variants'
       : path === 'core/tools/truncate.ts' ? 'shared-durable-head-truncation'
+      : path === 'core/tools/edit-diff.ts' ? 'shared-durable-edit-diff'
       : path === 'utils/zip.ts' ? 'public-fflate-zip-writer'
       : path === 'utils/tools-manager.ts' ? 'public-jszip-tool-archives' : 'shared-lightweight-resource-algorithms');
     if (path === 'extensions/tool-search/tool.ts' || path === 'extensions/codemode/execute.ts' ||
         path === 'utils/exif-orientation.ts' || path === 'utils/image-resize-core.ts' ||
         path === 'utils/mime.ts' || path === 'utils/child-process.ts' ||
         path === 'utils/shell.ts' || path === 'core/tools/path-utils.ts' ||
-        path === 'core/tools/truncate.ts') dependencies.add('@earendil-works/pi-durable');
+        path === 'core/tools/truncate.ts' || path === 'core/tools/edit-diff.ts') dependencies.add('@earendil-works/pi-durable');
     if (path === 'utils/zip.ts') dependencies.add('fflate');
     if (path === 'utils/tools-manager.ts') dependencies.add('jszip');
     if (path === 'utils/ansi.ts') dependencies.add('ansi-regex');

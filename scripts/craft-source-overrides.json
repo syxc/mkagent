@@ -2485,8 +2485,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "bd23dad551ced7b83360a85a285bb0541fff3ac57599e5535b82b8fd3133ffee",
-      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize, MIME, ANSI, child wait, shell, read path and truncation boundaries."
+      "sha256": "49296dc1d563e282aa8aaf6fdc8c3bc2f48cae1871dc4ba83d7f2732016b873d",
+      "reason": "Generate guarded shared helper and Native codemode forwarding entries without duplicate executor transformations. Guard public ZIP, EXIF, image resize, MIME, ANSI, child wait, shell, read path and truncation boundaries. Route guarded Native edit differences through durable."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3945,7 +3945,7 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "ee13f36ae265d1def92c02d30c8af75561f36a153e736c88651e186cbf3fb541",
+      "sha256": "b7d6b9840679e0dd61f492f390d3aa24b61915e81da57195090070458b01aa61",
       "reason": "Keep a canonical complete Git patch for frozen Bun installs, shared algorithms and host policies; stamp the full body so old Bun cache artifacts are not reused."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
@@ -3997,7 +3997,7 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "a47a954322e29fe8ef2c2c0e7403a89fd43336baf0492cce9991f584ac847c73",
+      "sha256": "1c2141bf62e6ad590c82a2bc9df3e171208eda67a38b1acf62b08572e273f2f5",
       "reason": "Record pinned source and permitted transformation hashes; scoped checks do not establish complete runtime reproduction."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
@@ -4017,7 +4017,7 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "cbe646e13a892cbdd0821bb9a038a8e3c9e72de550d47cc67dfa06395cc82924",
+      "sha256": "8e10dce15632985134517ccd69c2b6e6421215f959d8a654035a9af388d1b04c",
       "reason": "Reproduce permitted coding transformations, shared helpers and their declared dependencies without expanding restricted source."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4485,7 +4485,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/bash.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/tools/edit-diff.ts": {
-      "sha256": "f85a9809eb44b9828236050cf38a8e45933e5cfd583a186e9a0e55a664dd3e8d",
+      "sha256": "090a3b86098849df73500f5c9a50b8d0e0127c5c7062c58e155ff03d14e5aa17",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/edit-diff.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/tools/edit.ts": {
@@ -5343,6 +5343,26 @@
     "packages/pi-durable-coding/test/read-path-normalization.test.ts": {
       "sha256": "5f83961c6af634f350feda3d38978f8d80fca2ad23d7a3d2ca6a43c78d03277b",
       "reason": "Pin Native lazy NFD reuse and durable repeated normalization, including second-call error identity and order before filesystem probes."
+    },
+    "packages/pi-durable-coding/scripts/edit-diff-port.ts": {
+      "sha256": "eda13db9613444fced74d6c2bdc0d6376a9e1b2440e959eb7c73d15ef29e31e8",
+      "reason": "Guard shared edit declarations and generate thin durable forwarding functions while preserving Native signatures, types and file previews."
+    },
+    "packages/pi-durable-coding/test/native-edit-diff.test.ts": {
+      "sha256": "23866286cc2b667777a517e35e05853ee50ed94db4689d845298dffc748d2d25",
+      "reason": "Keep original edit results and diagnostics, real read-only file previews, readability checks and path error propagation."
+    },
+    "packages/pi-durable-coding/test/fixtures/native-edit-diff-cases.ts": {
+      "sha256": "263befdc92cbe610bf430cb1f5699e2993850e9338f06073834aaa8cc2ece33d",
+      "reason": "Define original edit, fuzzy matching, preserved-line and diff boundary scenarios without embedding duplicate algorithms."
+    },
+    "packages/pi-durable-coding/test/fixtures/native-edit-diff-1.5.0.json": {
+      "sha256": "85b3232795d3bdd130158c416314619a9514e3a121e832dfd4f1e59f31847a8e",
+      "reason": "Pin result and error digests captured from unchanged Pi 1.5.0 Native edit code under both Bun and Node before sharing."
+    },
+    "packages/pi-durable-coding/test/fixtures/native-edit-diff-types.ts": {
+      "sha256": "2e7201c1feb813c6bb7e46c34cbaf687e48576877738a9c349072ee13987ce8e",
+      "reason": "Check that plugin augmentation of Native match and edit interfaces still reaches public function return types."
     }
   },
   "deleted": {

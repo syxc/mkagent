@@ -1,6 +1,7 @@
 /** Share selected coding algorithms without importing the complete SDK into light entry points. */
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
+import { portEditDiff } from './edit-diff-port.ts';
 
 export function portSharedHelpers(path: string, body: string): string {
   if (path === 'extensions/codemode/execute.ts') return portCodemodeRuntime(body);
@@ -14,6 +15,7 @@ export function portSharedHelpers(path: string, body: string): string {
   if (path === 'utils/shell.ts') return portShell(body);
   if (path === 'core/tools/path-utils.ts') return portReadPaths(body);
   if (path === 'core/tools/truncate.ts') return portTruncation(body);
+  if (path === 'core/tools/edit-diff.ts') return portEditDiff(body);
   const files: Record<string, { names: string[]; imports: string }> = {
     'core/footer-data-provider.ts': {
       names: ['GitPaths', 'findGitPaths'],
