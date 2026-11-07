@@ -79,6 +79,32 @@ Production retains the original definition and its existing shared
 algorithms. These prototype results do not establish complete plugin,
 remote filesystem or concurrent edit/write equivalence.
 
+## Clipboard public interface and retained policy
+
+The public TUI `NativeClipboard` interface provides text, image and optional
+file-path reads, plus an optional text writer. Linux writing remains a
+command policy so that a process can retain clipboard ownership. The coding
+text and image entry points already use this backend. Their remaining
+Wayland, X11, WSL, empty/unavailable, conversion and OSC 52 policies are not
+replaced by another public TUI operation. All three clipboard source files
+match their pinned upstream bytes and have no recorded transformation.
+
+A source extraction checks seven image policy cases in both Bun and Node.
+Commands, native backend, temporary files, MIME detection, Photon, WSL
+detection and process state are controlled substitutes. It covers empty
+Wayland data with a stale X11 image, available Wayland and X11 data without
+a native backend, native fallback, Windows, Termux and WSL interop.
+Using only the native image value changes four of these seven results.
+Preserving them requires the existing platform policy around the public
+backend; moving it to another wrapper would retain that maintenance work.
+
+The first Node fixture incorrectly expected a plain `Uint8Array` for command
+output. The original source returns the command's `Buffer` directly and
+creates a `Uint8Array` for WSL file output. The corrected fixtures check
+those types explicitly in both runtimes. No real clipboard, command,
+temporary file or native addon is accessed. These cases do not verify
+image conversion, OSC 52 transmission or complete platform integration.
+
 ## Agent cold recovery and public pi-ai helpers
 
 The added `agent-recovery.test.ts` kills a separate process with SIGKILL after
