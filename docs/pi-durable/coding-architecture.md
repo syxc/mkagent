@@ -61,9 +61,22 @@ Pi 1.5.0 的 `GenerationTask.request` 会继续分类响应、写 assistant、�
 | 工具控制及续轮 | `finishToolRound` 调 `afterTools`，随后同事务应用 addTools、handoff reset、turn limit、inbox 和下一 GenerationTask 或结束 run | 全部 call 要求 terminate、最后 handoff 生效这两条规则与 Native 一致，不构成保留依据。缺口是不能独立返回决定，再让 Native 的 `finishTurn`、`turn_end`、steering/follow-up 及 journal 接受该决定 |
 | 最终收尾 | `GenerationTask.finish` 承接 SDK run summary，运行 `afterRun` 和 owned task drain 后结束已回答 run | 不是 Native `finishTurn` 或 `agent_end` 的独立出口；Native session 的最终回执与输入身份仍须保持。不能靠隐藏 SDK 写入或伪造任务结果接线 |
 
-产品 [CodingHost](../../packages/pi-agent-server/src/coding-host.ts)通过 `wrapTool` 将非 builtin 工具交给 [wrapAgentTool](../../packages/pi-durable-coding/src/host-tools.ts)，实际进入已接入的公开 ToolTask 适配；生产 builtin 使用宿主提供的 durable 工厂。独立 Coding SDK 接收的普通 AgentTool 仍有 Native 执行路径，不能将产品 wrapper 的覆盖范围写成所有 SDK 消费者均已委托。
+产品 [CodingHost](../../packages/pi-agent-server/src/coding-host.ts)通过 `wrapTool` 将非 builtin 工具交给 [wrapAgentTool](../../packages/pi-durable-coding/src/host-tools.ts)；生产 builtin 使用宿主提供的 durable 工厂。现在 [DurableLoopBinding](../../packages/pi-durable-coding/src/durable-coding/engine.ts)也将公开 Agent/runToolCall 入口接收的普通 AgentTool 交给同一个 ToolTask 桥，已桥接工具直接复用。AgentTool 与 ToolDefinition 的两次转换保留桥接标记，避免 builtin 和 tool-search 重复接纳；此项本地生成转换没有增加 SDK 补丁。直接构造低层 CodingToolTask 的 fixture 仍可自供执行函数，不属于上述公开入口的自动接线范围。
 
-本批不新增轮次或收尾补丁，保留上述交付与事务适配，不变更任何任务版本或历史 checkpoint。退出条件是公开 API 能承接已接受的 assistant 和外部 owned 工具结果，并把轮次决定交还宿主，或已验证的整体接线能保留相同插件、输入及持久化保证。上游升级须重新核对工具接纳、`afterTools`、`onYield`、`afterRun` 与输入结算的先后；该版本的缺口不证明整套 Native loop 永久必要。session/summary、独立消费者的工具执行和完整 Coding 闭包继续按 F1 至 F3 核对。
+Native 先准备并验证参数，再运行权限 hook；内部 SDK effect 桥不重复校验权限改参，实际 effect 开始前再次检查取消。最终执行参数与完整结果在同一 SDK receipt 中原子保存，正常交付和恢复均读取该快照；旧 receipt 缺字段时回退 Native 已接受的参数，宿主 `finalArguments` 回调仍优先。SDK 对不确定执行使用 `<harness>` 错误诊断，unsafe 工具仍不重跑。五种 Native 任务和 HostExecutionDoc 的版本保持不变。
+
+本批不新增轮次或收尾补丁，保留上述交付与事务适配，不变更任何任务版本或历史 checkpoint。退出条件是公开 API 能承接已接受的 assistant 和外部 owned 工具结果，并把轮次决定交还宿主，或已验证的整体接线能保留相同插件、输入及持久化保证。上游升级须重新核对工具接纳、`afterTools`、`onYield`、`afterRun` 与输入结算的先后；该版本的缺口不证明整套 Native loop 永久必要。完整 Coding 闭包继续按 F1 至 F3 核对。
+
+### Summary 与 session 的 SDK 边界
+
+[Summary binding](../../packages/pi-durable-coding/src/durable-coding/summary-binding.ts)的 producer 复用现有 `StreamFn(...).result()`，本地 [summary task](../../packages/pi-durable-coding/src/durable-coding/summary-task.ts)只管理 ownership、请求 intent 和完整响应持久化，没有复制流消费算法。它承接压缩、分支总结及 bug report，动态模型、凭据和回调继续留在运行时闭包。
+
+| 范围 | 候选 API 与实际缺口 | 当前适配及退出条件 |
+|---|---|---|
+| 内部 summary 请求 | 发布 GenerationTask 会分类、写主 transcript 和创建工具；仓内 GenerationResponseTask 虽可独立返回响应，但 request/abort 及 partial writer 都操作 conversation 级 `LiveDoc.generation` | 两个 summary 可以并发且不改变主请求进度，不能直接共用该槽。保留独立 owner、requesting checkpoint、响应回执及不确定请求不重发；待 SDK 提供任务级进度隔离或无 conversation 进度写入的响应接口，再验证动态路由、usage、取消及真实崩溃后替换 |
+| Native session 生命周期 | 已复用 Harness task ownership、commit 和等待；GenerationTask 的收尾结算 SDK run，不能直接承接 Native 已接受 child、插件回调状态及产品回执 | [Session task](../../packages/pi-durable-coding/src/durable-coding/session-task.ts)同事务接纳真实 run child、journal/state 和下一 checkpoint。恢复只 join 已接受 child，不重做 prompt hooks 或不确定 post/before-settle/finalize/action。待公开生命周期接口可承接这些输入身份、回调和回执，或整体迁移通过等价恢复验证后撤除 |
+
+本批仅新增 summary 并发进度隔离回归，未更改 summary/session 运行时代码或 producer 契约。升级须重新检查 progress 的写入位置、summary 的完整响应和 usage、session 的 child 接纳及回调顺序；历史五种 Native v1 任务继续可读。这些具体缺口不关闭 F1 至 F3，也不证明完整 AgentSession 源码或全部私有方法均有必要。
 
 ## 哪些直接引用上游包
 

@@ -130,7 +130,7 @@ export function createCodingToolTask(
         const completed = await completedHostToolResult(runtime, context);
         if (completed) {
           await execute({ name: task.input.toolCall.name, label: task.input.toolCall.name,
-            description: '', parameters: {}, execute: async () => completed }, task.input, bindings, runtime, cancelling, context);
+            description: '', parameters: {}, execute: async () => completed.result }, task.input, bindings, runtime, cancelling, context);
           return;
         }
         if (tool && ((task.state.checkpoint.replay === 'safe' && tool.replay === 'safe') ||
@@ -274,8 +274,10 @@ async function execute(
       }
     };
     const { durableHostControl: control, ...result } = await run() as HostControlledToolResult;
+    const completed = await completedHostToolResult(runtime, context);
     outcome = durableOutcome({
-      toolCall: input.toolCall, result, isError: result.isError === true, durationMs, executionArguments: args,
+      toolCall: input.toolCall, result, isError: result.isError === true, durationMs,
+      executionArguments: completed?.executionArguments ?? args,
       ...(control === undefined ? {} : { control }),
     });
   } catch (error) {

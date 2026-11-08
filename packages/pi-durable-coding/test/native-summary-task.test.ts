@@ -2,6 +2,7 @@ import { afterEach, expect, spyOn, test } from 'bun:test';
 import { rmSync } from 'node:fs';
 import { BACKGROUND_CONTEXT as context } from '@earendil-works/chord/context';
 import { normalizeContext } from '@earendil-works/pi-ai';
+import { LiveDoc } from '@earendil-works/pi-durable';
 import { Agent } from '../src/agent-runtime.ts';
 import { DurableLoopBinding } from '../src/durable-coding/engine.ts';
 import { durableFixture, response } from './fixtures/durable-harness.ts';
@@ -74,6 +75,31 @@ test('native summary preserves live model routing and request options without st
   const saved = await f.root.harness.getTask(f.wait.mock.calls[0]![0], context);
   expect(saved?.input).toEqual({ bindingKey: expect.any(String), model: { provider: 'faux', modelId: 'dynamic' },
     context: f.input, options: { cacheRetention: 'none', sessionId: 'summary-routing' } });
+});
+
+test('concurrent internal summaries preserve the conversation generation progress', async () => {
+  const f = await fixture([]);
+  const entered = Promise.withResolvers<void>();
+  const release = Promise.withResolvers<void>();
+  let requests = 0;
+  f.binding.bindSummary(async () => {
+    if (++requests === 2) entered.resolve();
+    await release.promise;
+    return response('internal summary');
+  });
+  await f.root.conversation.commit(async tx => {
+    (await tx.doc(LiveDoc, f.root.conversation.id)).generation = { attempt: 7 };
+  }, context);
+  const first = await f.binding.summaryStream(f.model, f.input);
+  const second = await f.binding.summaryStream(f.model, f.input);
+  try {
+    await entered.promise;
+    expect((await f.root.harness.snapshot(LiveDoc, f.root.conversation.id, context))?.generation).toEqual({ attempt: 7 });
+  } finally { release.resolve(); }
+  expect(await first.result()).toEqual(response('internal summary'));
+  expect(await second.result()).toEqual(response('internal summary'));
+  expect(requests).toBe(2);
+  expect((await f.root.harness.snapshot(LiveDoc, f.root.conversation.id, context))?.generation).toEqual({ attempt: 7 });
 });
 
 test('native summary cancellation aborts its owned task and waits for request cancellation', async () => {

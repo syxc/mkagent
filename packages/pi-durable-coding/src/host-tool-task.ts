@@ -15,6 +15,7 @@ import { isHostUsageAccounted, markHostUsageAccounted, withoutHostUsageMarker } 
 
 type Packet = {
   result: HostControlledToolResult;
+  executionArguments?: JsonValue;
   native?: true;
   diagnostics?: readonly ToolDiagnostic[];
   usageAccounted?: true;
@@ -46,9 +47,9 @@ export async function hasHostToolExecution(runtime: CodingToolTaskRuntime, conte
 /** A completed SDK result survives a crash before the native outcome checkpoint. */
 export async function completedHostToolResult(
   runtime: CodingToolTaskRuntime, context: Context,
-): Promise<HostControlledToolResult | undefined> {
-  const packet = (await runtime.snapshot(HostExecutionDoc, runtime.taskId, context))?.execution?.result;
-  return packet && restore(packet as unknown as Packet);
+): Promise<{ result: HostControlledToolResult; executionArguments?: JsonValue } | undefined> {
+  const packet = (await runtime.snapshot(HostExecutionDoc, runtime.taskId, context))?.execution?.result as unknown as Packet | undefined;
+  return packet && { result: restore(packet), executionArguments: packet.executionArguments };
 }
 
 /** Preserve SDK failure semantics when the native owner eventually settles. */
@@ -116,7 +117,8 @@ async function runHostToolTask(
   // The nested receipt omits control and uses details for this private native envelope.
   // Its schema-less value retains the SDK's bounded host output and truncation diagnostics.
   const delegated: ToolRegistration<any> = {
-    ...tool, prepareArguments: undefined, structuredOutputSchema: undefined,
+    // Native preflight validates before permission hooks, whose argument changes are final.
+    ...tool, parameters: {}, prepareArguments: undefined, structuredOutputSchema: undefined,
     replay: scope.replay === 'safe' && tool.replay === 'safe' ? 'safe' : 'unsafe',
   };
   const sdk: Runtime = {

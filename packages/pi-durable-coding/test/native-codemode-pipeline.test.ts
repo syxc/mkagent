@@ -62,8 +62,8 @@ test('the actual Native task entry retains nested preparation, permission denial
     name: 'codemode', label: 'Code', description: 'Actual Native task entry',
     parameters: { type: 'object', properties: { code: { type: 'string' } }, required: ['code'] },
     execute: async (id, args, signal, update) => {
-      expect(currentCodingHostToolApi()).toBeUndefined();
       root = currentCodingToolInvocation().runtime.taskId;
+      expect(currentCodingHostToolApi()?.api.taskId).toBe(root);
       return executeNativeCodemode(id, args, signal, update, ctx);
     },
   };

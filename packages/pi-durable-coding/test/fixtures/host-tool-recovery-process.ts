@@ -4,7 +4,7 @@ import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { createAssistantMessageEventStream, type Model } from '@earendil-works/pi-ai';
-import { defineDoc, defineExtension, defineTask, type TaskId } from '@earendil-works/pi-durable';
+import { defineDoc, defineExtension, defineTask, ToolTask, type TaskId } from '@earendil-works/pi-durable';
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
 import { Agent, type AgentTool } from '../../src/agent-runtime.ts';
 import { currentCodingToolInvocation, DurableLoopBinding } from '../../src/durable-coding/engine.ts';
@@ -15,9 +15,11 @@ const [directory, phase, replay, boundary, nativeReplay = replay] = process.argv
 assert(directory && (phase === 'begin' || phase === 'resume'));
 assert(replay === 'safe' || replay === 'never');
 assert(nativeReplay === 'safe' || nativeReplay === 'never');
-assert(['intent', 'completed', 'removed', 'legacy-policy', 'failed', 'failed-removed'].includes(boundary!));
+assert(['intent', 'completed', 'removed', 'legacy-policy', 'failed', 'failed-removed',
+  'plain-completed', 'plain-removed', 'plain-legacy'].includes(boundary!));
+const plain = boundary!.startsWith('plain-');
 const failed = boundary === 'failed' || boundary === 'failed-removed';
-const removed = boundary === 'removed' || boundary === 'failed-removed';
+const removed = boundary === 'removed' || boundary === 'failed-removed' || boundary === 'plain-removed';
 const Child = defineTask<{}, { phase: 'sleep' }, null>({
   name: 'host-sdk-recovery-child', version: 1, initial: () => ({ phase: 'sleep' }),
   phases: { sleep: async (task, runtime, ctx) => {
@@ -30,7 +32,9 @@ const Child = defineTask<{}, { phase: 'sleep' }, null>({
 });
 const ExecutionDoc = defineDoc({
   kind: 'mkagent.coding.host-tool-execution', version: 1, scope: 'task',
-  initial: () => ({} as { execution?: { checkpoint: { phase: string; replay?: string } } }), checkpointWhen: () => false,
+  initial: () => ({} as { execution?: {
+    checkpoint: { phase: string; replay?: string }; result?: { executionArguments?: unknown };
+  } }), checkpointWhen: () => false,
 });
 const model: Model<'faux'> = {
   id: 'local', name: 'Local', api: 'faux', provider: 'faux', baseUrl: 'http://unused.invalid',
@@ -47,7 +51,9 @@ const block = async () => {
 };
 const native: AgentTool = {
   name: 'fixture', label: 'Fixture', description: 'Record attempted effects', parameters: { type: 'object' }, replay,
-  execute: async () => {
+  prepareArguments: plain ? () => ({ prepared: true }) : undefined,
+  execute: async (_id, args) => {
+    if (plain) args.changed = true;
     const { runtime } = currentCodingToolInvocation();
     writeFileSync(join(directory, 'tool-id.txt'), JSON.stringify(runtime.taskId));
     appendFileSync(join(directory, 'effects.txt'), `${phase}\n`);
@@ -74,7 +80,7 @@ const native: AgentTool = {
   },
 };
 const wrapped = hostToolToAgent(agentToolToHost(native));
-const target: AgentTool = {
+const target: AgentTool = plain ? { ...native, replay: nativeReplay } : {
   ...wrapped,
   replay: nativeReplay,
   execute: async (...args) => {
@@ -89,6 +95,10 @@ let requests = 0;
 const agent = new Agent({
   durable: new DurableLoopBinding({ storage: await openNodeJsonlStorage(directory, BACKGROUND_CONTEXT) }),
   initialState: { model, tools: phase === 'resume' && removed ? [] : [target] },
+  afterToolCall: plain ? async call => {
+    writeFileSync(join(directory, 'final-arguments.json'), JSON.stringify(call.args));
+    return undefined;
+  } : undefined,
   streamFn: () => {
     const message = response('recovered');
     if (phase === 'begin' && requests++ === 0) {
@@ -105,6 +115,21 @@ const agent = new Agent({
 const backend = await agent.durable.backend();
 backend.registry.install(defineExtension({ name: 'host-sdk-recovery', tasks: [Child] }));
 if (phase === 'begin') {
+  if (plain) {
+    const call = ToolTask.definition.phases.call;
+    ToolTask.definition.phases.call = async (...args) => {
+      await call(...args);
+      if (boundary === 'plain-legacy') {
+        // Old receipts have a completed result without the new optional argument snapshot.
+        const { runtime } = currentCodingToolInvocation();
+        await runtime.commit(async tx => {
+          delete (await tx.doc(ExecutionDoc, runtime.taskId)).execution?.result?.executionArguments;
+          return undefined;
+        }, BACKGROUND_CONTEXT);
+      }
+      await block();
+    };
+  }
   backend.harness.resume();
   await agent.prompt('run the fixture');
   throw new Error(`Expected a crash at the tool boundary: ${JSON.stringify({ messages: agent.state.messages, reports: backend.reports })}`);

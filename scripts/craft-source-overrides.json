@@ -2465,8 +2465,8 @@
       "reason": "Verify Native codemode contracts through actual durable tasks in native-codemode-forward.test.ts."
     },
     "packages/pi-durable-coding/test/native-codemode-pipeline.test.ts": {
-      "sha256": "322168c3e5af0a3943359d744883c4b368dcc7dddc3c0080957d70841ee9b2b8",
-      "reason": "Verify Native codemode contracts through actual durable tasks in native-codemode-pipeline.test.ts."
+      "sha256": "5e0840e13f27ca9e46a2c0b6f71e5ca44e4b1a0265ea7d9920d5a2cdd481bd19",
+      "reason": "Verify Native codemode permissions, results and nested official tasks while binding the entry SDK API to its real Native owner."
     },
     "packages/pi-durable-coding/test/native-codemode-sandbox.test.ts": {
       "sha256": "a8b9f5532654add58fdeeaf81c6aaf862b2ac4e49464e3ade683027d64fe2fb7",
@@ -2509,8 +2509,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "b68e630dfc8dbfcecd02c0e5de70f9b1331456200664ebfdd0e8948011fe13fa",
-      "reason": "Register shared helper paths and signature guards; replace Native edit argument repair and its private helpers with the published durable tool callback."
+      "sha256": "dc100fd8add7b104c641c4dc6e9abb28655bda61b74194e5b1daba95b2ce9b09",
+      "reason": "Register public helper replacements and boundary guards; reproduce SDK bridge-marker preservation through both AgentTool/ToolDefinition conversions."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "8e2a592d0d54bfcef94b503d3b3080904a34bfd78b5291c95f2f41b0793396fb",
@@ -2681,8 +2681,8 @@
       "reason": "Persist native summary responses and usage as durable tasks; reject uncertain requests after interrupted execution."
     },
     "packages/pi-durable-coding/test/native-summary-task.test.ts": {
-      "sha256": "951c8c433b174ec8d644c4be586b0d441fdcf60bd31a8c66bea0f8de43ac7c81",
-      "reason": "Verify native summary ownership, stored responses, usage, live routing, credential exclusion and cancellation."
+      "sha256": "abac3f6a7260c3cbd43d935eeb56099dc029d02868e9f63aa694fc1d4a97a074",
+      "reason": "Verify summary ownership, responses, usage, live routing, credential exclusion and cancellation; concurrent summaries preserve main conversation generation progress."
     },
     "packages/pi-durable-coding/test/fixtures/native-summary-worker.ts": {
       "sha256": "d783471630a93b52660b398bacaa96a9cc3e773cb09155ff1185398fb81c5d95",
@@ -4033,8 +4033,8 @@
       "reason": "Exclude declarations generated from the pinned coding runtime and durable host binding sources."
     },
     "packages/pi-durable-coding/test/agent-recovery.test.ts": {
-      "sha256": "f1dfae3e7c0b9a6f2a46378b7cd168fa6c4312a5728fe858098dae92aa80aec2",
-      "reason": "Verify real JSONL Agent SIGKILL recovery, replay policies, failed binding retries, invalid task initialization and ordinary message identity. Cover real foreign task records, session-owned coding children and completed run joins."
+      "sha256": "f2ab16477e88f6679f771503ca9ac3a91da3dc30e534b614eba82c50113a3b28",
+      "reason": "Verify real Agent SIGKILL recovery, task ownership and message identity; expect SDK uncertain-effect diagnostics while preserving exact safe/unsafe effect counts."
     },
     "packages/pi-durable-coding/test/fixtures/agent-recovery-process.ts": {
       "sha256": "29be24423ec2e8fc53805084b2a37bf56eb216b76b37a82c32e9e2295b31f198",
@@ -4045,8 +4045,8 @@
       "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "a29ced8716af9add27e1d7b241822cf3acc1f0fa6f19fc04a92f412eb66e252e",
-      "reason": "Record pinned runtime sources and assets, including the Native edit callback replacement through the published durable tools API."
+      "sha256": "8389ffc81e7211fe67de669180ea4abe3c29dafe36b034b99776b45d77b23b03",
+      "reason": "Record pinned runtime sources and assets, including public edit argument preparation and bridge-marker preservation through AgentTool/ToolDefinition conversions."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "e132e9a4414b44d25c8d7372f493394f104ce15cf4010e7596a721ed9cf7bffc",
@@ -4081,8 +4081,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse core Agent state and lifecycle through a durable execution backend while preserving Native defaults and Proxy receivers."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
-      "sha256": "41598871ceff795682046bf0a5bc19f78e9e372cbee608dfee3ba4dbe78904f2",
-      "reason": "Bind real CodingToolTask and official ToolTask APIs to native invocation scopes, preserving task ownership and transactional journal preparation across detached callbacks. Restore standalone Agent checkpoints only on recovery, validate task ownership before seeding and release failed binding callbacks."
+      "sha256": "8bd276db3bac9fabbed79840ab4f5761e040f87aab6ee9375e4dbfe0390236bb",
+      "reason": "Bind real Native and SDK tool owners, callback scopes and journal transactions; delegate plain public Agent/runToolCall effects through the existing ToolTask bridge without rewrapping bridged tools."
     },
     "packages/pi-durable-coding/src/durable-coding/index.ts": {
       "sha256": "32898b73b64f687a315137b0f0c33c25961be8b5c825f13437f08a48b7038f71",
@@ -4133,8 +4133,8 @@
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in tool-batch.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/tool-task.ts": {
-      "sha256": "2121264f8f752f7e2874edf18c6699ec70e83f606c42168e44f1ebab8ce69a6c",
-      "reason": "Keep Native hooks, events and journal ownership; constrain SDK replay by Native policy and preserve failed outcomes for official ownership cleanup."
+      "sha256": "9c76986f4b5e6f6970a609c3dcf6ec91a46f1562a8314dfc9cb78581d6635700",
+      "reason": "Preserve Native hooks, events, replay limits and failure cleanup; deliver final execution arguments from completed SDK receipts, with fallback for old receipts."
     },
     "packages/pi-durable-coding/src/durable-loop.ts": {
       "sha256": "2cd9b678430beb0e83b08e56aa36071bbfdeae1832f611bc9ce149e92c012de3",
@@ -4153,12 +4153,12 @@
       "reason": "Provide the independent native coding host adapter and public contracts in host-tool-controls.ts."
     },
     "packages/pi-durable-coding/src/host-tool-task.ts": {
-      "sha256": "0ae28f150c7418c7b8605255c2ed612385e80499383c7de4256b5a93525bcc64",
-      "reason": "Delegate execution and recovery to public ToolTask phases and abort; persist complete Native results and SDK failure, reject overlapping calls and check identity transactionally."
+      "sha256": "391cb857607e2b907249205e5e3c74b4d19e5360a40daa67143e0fcf0d90def5",
+      "reason": "Delegate execution and recovery to public ToolTask phases; atomically persist complete Native results, final arguments and SDK failure, retain identity and concurrency checks, and avoid validating accepted permission changes twice."
     },
     "packages/pi-durable-coding/src/host-tools.ts": {
-      "sha256": "88ff14d199320fee6891f36da336754e256fb8559ab379cc8a47756c20545fec",
-      "reason": "Bridge host tools to public ToolTask execution while preserving complete results, callback scope, cancellation, API lifetime and journal boundaries."
+      "sha256": "feea04716479b31296a45ba134297dbd9790160c8a2cf0ff4f78168207e0297e",
+      "reason": "Bridge complete Native results and callback scope to public ToolTask execution; check cancellation immediately before effects and include final execution arguments in durable receipts."
     },
     "packages/pi-durable-coding/src/native-operations.ts": {
       "sha256": "7380c823e485933b08fc791eaab1fc8f88e5da85face6377e7d9540c1206dfec",
@@ -4617,8 +4617,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/write.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/tools/tool-definition-wrapper.ts": {
-      "sha256": "579f5bc1c95d1eedc1ef32da6b991ff609f88217abbec65dcb950bddcc545e41",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
+      "sha256": "b5ccd26bd97c6b44884a4e1d1c135a1d5281921ac60742200b4777921b85ba87",
+      "reason": "Preserve upstream public protocol types and Native contexts while carrying the SDK execution marker through both tool conversions to prevent duplicate ToolTask admission."
     },
     "packages/pi-durable-coding/src/pi/core/tools/truncate.ts": {
       "sha256": "56d31aab381f14820ef5db0847faa32bb07d4a3c0012ee7a5b6a18c21445ac1e",
@@ -5217,12 +5217,16 @@
       "reason": "Verify native resource isolation and missing-package skips while allowing the explicitly registered host package command."
     },
     "packages/pi-durable-coding/test/fixtures/host-tool-recovery-process.ts": {
-      "sha256": "4c5b19b031726f7132d88f7789d8bbb489866e33aa78a4a83c73d6d83b837c87",
-      "reason": "Run isolated JSONL SIGKILL recovery for SDK and Native replay policy, completed receipts and failed-owner cleanup without remote providers or credentials."
+      "sha256": "9ecfdb70d950dea604553c3db5da91db36260ac67f439c25e723a2036195fc1a",
+      "reason": "Run isolated JSONL SIGKILL recovery for replay policy, failure cleanup and completed results, including final argument snapshots, removed plain tools and old receipts without snapshots."
     },
     "packages/pi-durable-coding/test/host-tool-sdk.test.ts": {
-      "sha256": "0e68f1997bd020e87995fe58d545bdee30f7d9eadd435f46fb4e420244253ab3",
-      "reason": "Verify ToolTask delegation, concurrent-call rejection, API closure, owned-task and conversation cleanup, cancellation and twelve SIGKILL recovery scenarios."
+      "sha256": "7da4af4d9d09249f0dc55c5ad4270a1ed18e3c5ef1f79430ab5786091cdbc1f1",
+      "reason": "Verify plain and bridged ToolTask execution, complete results and arguments, owner cleanup, cancellation and fifteen SIGKILL scenarios including old and new completed receipts."
+    },
+    "packages/pi-durable-coding/test/plain-tool-sdk.test.ts": {
+      "sha256": "7b21b0c157a1bab214cf19bf9cfa1335c12d8e5cf876c4fd4d5e3f7bbef982e8",
+      "reason": "Verify cancellation during SDK admission, Native validation before permission changes, bridge-marker preservation through tool conversions, and final arguments after failed effects."
     },
     "packages/pi-durable-coding/test/host-tools.test.ts": {
       "sha256": "fa4263f3b46aa05339ed34ccc532fdbbe074a438584bc2939a39a85259570f8c",

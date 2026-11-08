@@ -56,15 +56,19 @@ export function hostToolToAgent(registration: HostTool): NativeTool {
         toString: () => scope.context.toString(),
       };
       let returned: CarriedResult | undefined;
+      let executionArguments: JsonValue = args;
       let updates = Promise.resolve();
       const failures: unknown[] = [];
-      const project = (result: CarriedResult) => failures.length ? {
-        native: true as const,
-        result: { content: [{ type: 'text' as const, text: String((failures[0] as Error)?.message ?? failures[0]) }], details: {}, isError: true },
-      } : {
-        result: nativeHostResult(result),
-        ...(result[nativeResult] ? { native: true as const, diagnostics: result.diagnostics } : {}),
-      };
+      const project = (result: CarriedResult) => ({
+        executionArguments,
+        ...(failures.length ? {
+          native: true as const,
+          result: { content: [{ type: 'text' as const, text: String((failures[0] as Error)?.message ?? failures[0]) }], details: {}, isError: true },
+        } : {
+          result: nativeHostResult(result),
+          ...(result[nativeResult] ? { native: true as const, diagnostics: result.diagnostics } : {}),
+        }),
+      });
       const pending = new Set<Promise<void>>();
       function observe<T>(promise: Promise<T>): Promise<T> {
         const joined = promise.then(() => {}, error => { failures.push(error); });
@@ -118,6 +122,8 @@ export function hostToolToAgent(registration: HostTool): NativeTool {
             },
           });
           try {
+            executionArguments = prepared;
+            assertLive();
             returned = await withCodingHostToolApi(nativeApi, sdkContext,
               () => registration.execute(prepared, nativeApi, sdkContext));
           } finally {

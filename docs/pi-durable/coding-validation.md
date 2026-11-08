@@ -26,6 +26,79 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Plain AgentTool SDK delegation after 1eb4435
+
+On 2026-11-09, `DurableLoopBinding` started sending plain AgentTool effects
+from the public Agent/runToolCall entries through the existing public ToolTask
+bridge. Tools already using that bridge keep their execution path. Native still
+owns preparation, permission hooks, complete results, events and journal writes.
+Direct low-level CodingToolTask fixtures can supply their own executor; this
+change does not make that internal entry an automatic SDK bridge.
+
+Independent review found three defects in the first implementation. All three
+have targeted regression coverage after correction:
+
+- Cancellation during SDK admission could still start an effect. The shared
+  bridge now checks the signal immediately before the registered effect.
+- SDK validation ran again after Native permission hooks. The internal accepted
+  effect bridge now omits that second schema check. Public Native preparation
+  and validation still precede permission hooks, whose argument changes are final.
+- Argument mutations could be lost after the SDK result commit and before the
+  Native outcome commit. Final execution arguments now share the SDK result's
+  atomic receipt. Normal delivery and recovery use that snapshot. Old receipts
+  without the optional field fall back to accepted Native arguments; a host
+  `finalArguments` callback retains priority.
+
+The initial schema guard tests used numeric input for a string property.
+Published pi-ai validation coerces that input, so both tests incorrectly expected
+rejection. They now omit the required property and assert a validation error,
+zero additional permission calls and zero additional effects. Legal permission
+changes that add an undeclared property still reach the effect.
+
+Product checks then found two failures: AgentSession conversions dropped the
+bridge marker, so tool-search and a builtin write tried to enter ToolTask twice.
+Both AgentTool/ToolDefinition conversions now preserve the marker. The source
+transformation and provenance record reproduce those three added lines. Product
+expectations were preserved. Agent recovery tests now expect the SDK's
+`<harness>` uncertain-effect diagnostic while retaining exact effect-count and
+safe/unsafe replay assertions.
+
+Final checks for this slice:
+
+- One combined run across 17 Coding and worker test files: 172 pass, 0 fail,
+  1,305 assertions. It covers preflight, cancellation, complete results and
+  updates, Native and SDK replay policies, codemode ownership and usage,
+  journal transactions, session and summary recovery, product approvals,
+  deferred tool activation and product usage.
+- Three added real SIGKILL cases stop after the SDK result commit while the
+  Native owner still has an execute checkpoint. New receipts retain final
+  arguments with the tool present or removed. An old receipt without the field
+  falls back to accepted arguments. Each case records one effect only and
+  preserves the full result. These new cases ran under Bun.
+- Coding typecheck, Coding declaration generation, worker typecheck and worker
+  build pass. A scoped pinned-source check reproduces
+  `core/tools/tool-definition-wrapper.ts` and its provenance record. No SDK
+  patch, runtime dependency, task version or document version changed.
+- Thirteen scoped Craft source hashes and reasons match. The five documents
+  pass punctuation checks and 86 local link/anchor checks. `git diff --check`
+  passes. No full Craft audit or source regeneration ran.
+
+The summary review found no copied stream-consumption algorithm: the producer
+already uses `StreamFn(...).result()`. A new regression runs two summaries while
+preserving a main conversation generation slot with attempt 7. The current
+GenerationResponseTask and its partial writer use that same conversation slot,
+so they cannot directly replace this isolated summary path. Session admission
+also retains atomic Native child/state/journal commits and uncertain callback
+boundaries. The [architecture record](coding-architecture.md#summary-与-session-的-sdk-边界)
+lists candidate APIs, gaps, removal conditions and upgrade checks. Summary and
+session runtime code did not change.
+
+The reviewer reported an accidental nested review-skill invocation despite the
+no-subagent instruction, then verified the three findings in their own thread.
+No second independent review ran after correction. The full repository suite,
+new Node crash cases, Windows, signed packages and real services were not checked.
+F1 to F3, the complete Coding source scope and remaining patches stay open.
+
 ## Public edit argument preparation after 456241a
 
 On 2026-11-09, the Native edit factories started using the published

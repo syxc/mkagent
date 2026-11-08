@@ -2,6 +2,8 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 import { restoreHostUsageOutcome } from '../host-tool-usage.ts';
+import { wrapAgentTool } from '../host-tools.ts';
+import { hostToolExecution } from '../host-tool-task.ts';
 import { copyJson, type Context } from '@earendil-works/chord';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { InMemoryCredentialStore, type Models } from '@earendil-works/pi-ai';
@@ -584,10 +586,16 @@ export class DurableLoopBinding {
           }
           return {
             ...tool,
+            [hostToolExecution]: true,
             execute: async (callId, args, signal, update) => {
               const combined = signal && host.signal ? AbortSignal.any([signal, host.signal]) : signal ?? host.signal;
               if (input.parentTaskId) await this.batchStarts.arrive(input.parentTaskId, callId, combined);
-              return tool.execute(callId, args, combined, update);
+              if (Object.getOwnPropertyDescriptor(tool, hostToolExecution)?.value === true) {
+                return tool.execute(callId, args, combined, update);
+              }
+              const delegated = wrapAgentTool(tool, registration => registration,
+                (api, context, work) => this.withHostToolScope(api, context, work)).tool;
+              return delegated.execute(callId, args, combined, update);
             },
           };
         },

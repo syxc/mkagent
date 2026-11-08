@@ -173,7 +173,7 @@ for (const replay of ['safe', 'never'] as const) for (const currentReplay of ['s
       expect(toolResult.isError).toBe(!safe);
       expect(toolResult.content).toEqual([{
         type: 'text', text: safe ? 'safe result'
-          : 'Tool fixture was interrupted and may have partially run; it was not executed again',
+          : '<harness>\n[error] Tool fixture was interrupted and may have partially run\n</harness>',
       }]);
       expect(restored.continued.messages.map((message: { role: string }) => message.role))
         .toEqual(['system', 'user', 'assistant', 'toolResult', 'assistant', 'user', 'assistant']);

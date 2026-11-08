@@ -1,3 +1,4 @@
+import { hostToolExecution } from "../../../host-tool-task.ts";
 import type { AgentTool, AgentToolResult, AgentToolUpdateCallback } from "@earendil-works/pi-agent-core";
 import type { Static, TSchema } from "typebox";
 import type { ExtensionToolContext, ToolDefinition } from "../extensions/types.ts";
@@ -29,6 +30,7 @@ export function wrapToolDefinition<TDetails = unknown>(
 	ctxFactory?: ToolContextFactory,
 ): AgentTool<any, TDetails> & Pick<ToolDefinition<any>, "exposure" | "namespace" | "annotations" | "reachesTools" | "defaultActive" | "promptSnippet" | "promptGuidelines"> {
 	return {
+		...(Object.getOwnPropertyDescriptor(definition, hostToolExecution)?.value === true ? { [hostToolExecution]: true as const } : {}),
 		name: definition.name,
 		label: definition.label,
 		description: definition.description,
@@ -72,6 +74,7 @@ export function wrapToolDefinitions(
  */
 export function createToolDefinitionFromAgentTool(tool: AgentTool<any> & Pick<ToolDefinition<any>, "exposure" | "namespace" | "annotations" | "reachesTools" | "defaultActive" | "promptSnippet" | "promptGuidelines">): ToolDefinition<any, unknown> {
 	return {
+		...(Object.getOwnPropertyDescriptor(tool, hostToolExecution)?.value === true ? { [hostToolExecution]: true as const } : {}),
 		name: tool.name,
 		label: tool.label,
 		description: tool.description,

@@ -55,8 +55,57 @@ async function open(tools: ToolRegistration<any>[] = [], tasks: Task<any, any, a
   const execute = (tool: AgentTool, signal?: AbortSignal) => binding.runTool({
     type: 'toolCall', name: tool.name, id: 'call-1', arguments: {},
   }, { tools: [tool], assistantMessage: response('context'), context: { messages: [], tools: [tool] }, signal });
-  return { harness, conversation, execute, reports };
+  return { harness, conversation, binding, execute, reports };
 }
+
+test('delegates plain AgentTool effects and preserves prepared args, updates, and native results', async () => {
+  const phase = spyOn(ToolTask.definition.phases, 'call');
+  try {
+    const fixture = await open();
+    let preparations = 0;
+    let effects = 0;
+    let kinds: string[] = [];
+    const partial = { content: [{ type: 'text' as const, text: 'working' }], details: { step: 1 } };
+    const result = {
+      content: [{ type: 'text' as const, text: 'done' }, { type: 'image' as const, data: 'fixture', mimeType: 'image/png' }],
+      details: { complete: true }, structuredContent: { value: 7 }, usage: response('').usage, terminate: true,
+    };
+    const target: AgentTool = {
+      name: 'plain', label: 'Plain', description: 'Local plain tool',
+      parameters: { type: 'object' }, replay: 'safe',
+      prepareArguments: () => { preparations++; return { prepared: true }; },
+      execute: async (id, args, signal, update) => {
+        expect(id).toBe('plain-call');
+        expect(args).toEqual({ prepared: true });
+        expect(signal?.aborted).toBe(false);
+        effects++;
+        kinds = (await fixture.harness.inspect(context)).tasks.map(task => task.record.kind).sort();
+        args.changed = true;
+        update?.(partial);
+        return result;
+      },
+    };
+    const updates: unknown[] = [];
+    const outcome = await fixture.binding.runTool({ type: 'toolCall', id: 'plain-call', name: 'plain', arguments: {} }, {
+      tools: [target], context: { messages: [], tools: [target] }, assistantMessage: response('context'),
+      onUpdate: update => { updates.push(update); },
+      afterToolCall: async call => {
+        expect(call.args).toEqual({ prepared: true, changed: true });
+        expect(call.result).toEqual(result);
+        return { details: { finalized: true } };
+      },
+    });
+    expect(outcome.result).toEqual({ ...result, details: { finalized: true } });
+    expect(outcome.isError).toBe(false);
+    expect(updates).toEqual([partial]);
+    expect(preparations).toBe(1);
+    expect(effects).toBe(1);
+    expect(phase).toHaveBeenCalledTimes(1);
+    expect(kinds).toEqual(['pi.coding.call', 'pi.coding.tool']);
+    expect((await fixture.harness.snapshot(LiveDoc, fixture.conversation.id, context))?.nestedTools).toBeUndefined();
+    expect(fixture.reports).toEqual([]);
+  } finally { phase.mockRestore(); }
+});
 
 test('delegates execution to the public ToolTask phase and rejects conflicting host calls', async () => {
   const phase = spyOn(ToolTask.definition.phases, 'call');
@@ -370,7 +419,7 @@ for (const boundary of ['failed', 'failed-removed']) {
   }, 20_000);
 }
 
-for (const boundary of ['completed', 'removed']) {
+for (const boundary of ['completed', 'removed', 'plain-completed', 'plain-removed', 'plain-legacy']) {
   test(`cold recovery delivers the full completed SDK receipt with tool ${boundary}`, async () => {
     const directory = await mkdtemp(join(tmpdir(), 'host-sdk-receipt-'));
     try {
@@ -379,6 +428,12 @@ for (const boundary of ['completed', 'removed']) {
       expect(restored.resumed).toBe(true);
       expect(restored.checkpoint).toMatchObject({ status: 'pending', checkpoint: { phase: 'execute', replay: 'never' } });
       expect(restored.execution.execution.result.result.structuredContent).toEqual({ complete: true });
+      if (boundary.startsWith('plain-')) {
+        const legacy = boundary === 'plain-legacy';
+        expect(restored.execution.execution.result.executionArguments).toEqual(legacy ? undefined : { prepared: true, changed: true });
+        expect(JSON.parse(await readFile(join(directory, 'final-arguments.json'), 'utf8')))
+          .toEqual(legacy ? { prepared: true } : { prepared: true, changed: true });
+      }
       expect(await readFile(join(directory, 'effects.txt'), 'utf8')).toBe('begin\n');
       const result = restored.messages.find((message: { role: string }) => message.role === 'toolResult');
       expect(result.isError).toBe(false);

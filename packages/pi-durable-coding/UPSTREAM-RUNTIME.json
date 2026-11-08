@@ -905,9 +905,10 @@
       "source": "packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
       "target": "src/pi/core/tools/tool-definition-wrapper.ts",
       "sha256": "dcc1e90f646f4feff9dea53b5b22fe05f898a379b5b494b23a338a74c5247519",
-      "portSha256": "579f5bc1c95d1eedc1ef32da6b991ff609f88217abbec65dcb950bddcc545e41",
+      "portSha256": "b5ccd26bd97c6b44884a4e1d1c135a1d5281921ac60742200b4777921b85ba87",
       "changes": [
-        "explicit-durable-tool-replay-policy"
+        "explicit-durable-tool-replay-policy",
+        "preserve-host-tool-execution"
       ]
     },
     {

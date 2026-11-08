@@ -19,6 +19,17 @@ type SharedHelperPort = {
 } & (DeclarationPort | { apply(body: string): string });
 
 const sharedHelperPorts: Record<string, SharedHelperPort> = {
+  'core/tools/tool-definition-wrapper.ts': {
+    change: 'preserve-host-tool-execution',
+    apply(body) {
+      for (const source of ['definition', 'tool']) {
+        const anchor = `\treturn {\n\t\tname: ${source}.name,`;
+        if (body.split(anchor).length !== 2) throw new Error(`Tool wrapper boundary changed: ${source}`);
+        body = body.replace(anchor, `\treturn {\n\t\t...(Object.getOwnPropertyDescriptor(${source}, hostToolExecution)?.value === true ? { [hostToolExecution]: true as const } : {}),\n\t\tname: ${source}.name,`);
+      }
+      return 'import { hostToolExecution } from "../../../host-tool-task.ts";\n' + body;
+    },
+  },
   'utils/photon.ts': {
     change: 'shared-durable-photon-runtime', dependency: '@silvia-odwyer/photon', apply: portPhotonRuntime,
   },
