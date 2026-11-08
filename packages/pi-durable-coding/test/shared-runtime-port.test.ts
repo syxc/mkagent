@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import ts from 'typescript';
-import { applySharedHelperPort, excludeRunModeEntries } from '../scripts/shared-helper-port.ts';
+import { applySharedHelperPort, excludePrivateHostComponents, excludeRunModeEntries } from '../scripts/shared-helper-port.ts';
 import { portChildProcess, portReadPaths, portShell } from '../scripts/shared-runtime-port.ts';
 
 const declarationFixtures = [
@@ -197,6 +197,30 @@ test('run mode exclusion preserves plugin components and RPC while guarding both
     }
   }
   assert.equal(excludeRunModeEntries('modes/rpc/rpc-types.ts', 'protocol'), undefined);
+});
+
+test('component barrel excludes private host paths and preserves reusable plugin exports', () => {
+  const path = 'modes/interactive/components/index.ts';
+  const removed = [
+    'export {\n\tFirstTimeSetupComponent,\n\ttype FirstTimeSetupOptions,\n\ttype FirstTimeSetupResult,\n} from "./first-time-setup.ts";\n',
+    'export { type ModelsCallbacks, type ModelsConfig, ScopedModelsSelectorComponent } from "./scoped-models-selector.ts";\n',
+    'export { TrustSelectorComponent } from "./trust-selector.ts";\n',
+  ];
+  const retained = 'export { CustomEditor } from "./custom-editor.ts";\n'
+    + 'export { ModelSelectorComponent } from "./model-selector.ts";\n'
+    + 'export { DynamicBorder } from "./dynamic-border.ts";\n';
+  const source = removed.join('') + retained;
+  const body = excludePrivateHostComponents(path, source)!;
+  const parsed = ts.createSourceFile(path, body, ts.ScriptTarget.Latest, true);
+  assert.deepEqual(parsed.statements.filter(ts.isExportDeclaration)
+    .map(node => (node.moduleSpecifier as ts.StringLiteral).text),
+  ['./custom-editor.ts', './model-selector.ts', './dynamic-border.ts']);
+  assert.equal(body, retained);
+  for (const declaration of removed) {
+    assert.throws(() => excludePrivateHostComponents(path, source.replace(declaration, '')), /private host component export changed/);
+    assert.throws(() => excludePrivateHostComponents(path, source + declaration), /private host component export changed/);
+  }
+  assert.equal(excludePrivateHostComponents('index.ts', 'public'), undefined);
 });
 
 test('read path: retained normalization constant remains guarded', () => {

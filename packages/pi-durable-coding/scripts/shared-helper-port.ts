@@ -28,6 +28,20 @@ export function excludeRunModeEntries(path: string, body: string): string | unde
   return body;
 }
 
+export function excludePrivateHostComponents(path: string, body: string): string | undefined {
+  if (path !== 'modes/interactive/components/index.ts') return undefined;
+  const removed = [
+    'export {\n\tFirstTimeSetupComponent,\n\ttype FirstTimeSetupOptions,\n\ttype FirstTimeSetupResult,\n} from "./first-time-setup.ts";\n',
+    'export { type ModelsCallbacks, type ModelsConfig, ScopedModelsSelectorComponent } from "./scoped-models-selector.ts";\n',
+    'export { TrustSelectorComponent } from "./trust-selector.ts";\n',
+  ];
+  for (const before of removed) {
+    if (body.split(before).length !== 2) throw new Error('Pinned private host component export changed');
+    body = body.replace(before, '');
+  }
+  return body;
+}
+
 type DeclarationPort = {
   names: string[]; imports: string; hashes?: Record<string, string>; replacements?: Record<string, string>;
   signatures?: Record<string, string>;

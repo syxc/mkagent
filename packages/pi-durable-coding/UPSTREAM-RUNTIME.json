@@ -1095,13 +1095,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/modes/interactive/components/first-time-setup.ts",
-      "target": "src/pi/modes/interactive/components/first-time-setup.ts",
-      "sha256": "dd00a757cee6c71cd252c98acc9aa768b56aae16c99a8ee30c4001878d2d0f4c",
-      "portSha256": "dd00a757cee6c71cd252c98acc9aa768b56aae16c99a8ee30c4001878d2d0f4c",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/modes/interactive/components/footer.ts",
       "target": "src/pi/modes/interactive/components/footer.ts",
       "sha256": "494c5dca212af8d895e20810269fd9d46b3b4f8e12435c803ae93049d6eb4ad4",
@@ -1112,8 +1105,10 @@
       "source": "packages/coding-agent/src/modes/interactive/components/index.ts",
       "target": "src/pi/modes/interactive/components/index.ts",
       "sha256": "bdef9fdb464a35ef8297befb1bc2818315c728a1fc40427c6e84247c7a9b3b81",
-      "portSha256": "bdef9fdb464a35ef8297befb1bc2818315c728a1fc40427c6e84247c7a9b3b81",
-      "changes": []
+      "portSha256": "53e84d5afab56fc8fdb9f4e78617e2416aa6a01d18f14ffc36c8c0973da17d2e",
+      "changes": [
+        "exclude-private-host-components"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts",
@@ -1148,13 +1143,6 @@
       "target": "src/pi/modes/interactive/components/oauth-selector.ts",
       "sha256": "8cfc9747a3da1a07924ca952a1bdb7e4c8c8aed0964a194dc5429baa84de3006",
       "portSha256": "8cfc9747a3da1a07924ca952a1bdb7e4c8c8aed0964a194dc5429baa84de3006",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/components/scoped-models-selector.ts",
-      "target": "src/pi/modes/interactive/components/scoped-models-selector.ts",
-      "sha256": "2321702b0c016f3a4d741452029204d29e71832886c540d65d11ee0525c41c42",
-      "portSha256": "2321702b0c016f3a4d741452029204d29e71832886c540d65d11ee0525c41c42",
       "changes": []
     },
     {
@@ -1232,13 +1220,6 @@
       "target": "src/pi/modes/interactive/components/tree-selector.ts",
       "sha256": "052a2b48101f076895d192d150f9eb74cfa95f9cf9e89aee57e3e98442ed8c69",
       "portSha256": "052a2b48101f076895d192d150f9eb74cfa95f9cf9e89aee57e3e98442ed8c69",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/components/trust-selector.ts",
-      "target": "src/pi/modes/interactive/components/trust-selector.ts",
-      "sha256": "2872e04461df34437d0ea2275ec24b76c9eaf22727ce496d88b471b366e82a3a",
-      "portSha256": "2872e04461df34437d0ea2275ec24b76c9eaf22727ce496d88b471b366e82a3a",
       "changes": []
     },
     {

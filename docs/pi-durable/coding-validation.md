@@ -26,6 +26,74 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Read permission diagnosis on 2026-11-09
+
+The original reviewer requested the first 35 lines of theme-tokens.ts through
+Read. The tool returned: "File is in a directory that is denied by your
+permission settings." This confirms a historical tool rejection. It does not
+establish a user instruction against reading that source.
+
+A read-only check of the relevant permission fields now finds `Read(*token*)`
+in permissions.deny in the global `~/.claude/settings.json`. This pattern
+covers the filename theme-tokens.ts. Neither project settings.json nor project
+settings.local.json exists. Theme and system-theme callers use these tokens
+as terminal color identifiers, not authentication credentials. The check does
+not establish who added the rule, when it was added, or whether the same rule
+caused the historical rejection. It does not inspect every managed or
+session-supplied policy layer. The earlier claim that the historical rejection
+alone proved a continuing restriction was too strong.
+
+No configuration was changed, and no read of the target source was retried.
+Full theme-table necessity, source generation and Craft audit remain unverified.
+The historical checks below keep their original scope and results.
+
+## Private components after 06d1346
+
+The component barrel still brought in FirstTimeSetupComponent,
+ScopedModelsSelectorComponent and TrustSelectorComponent. The package root
+does not export these classes or their private types, and the package exports
+map does not expose their source paths. Focused checks of class names, types,
+module paths and whole-barrel imports found no retained caller. The three
+implementations and their barrel exports are removed. The generator applies
+this exclusion before it walks dependencies and rejects missing or duplicate
+upstream export blocks. This removes unused host interfaces; it is not a
+released SDK replacement or a guarantee for direct private-file consumers.
+Public ModelSelectorComponent, Theme, CustomEditor, renderers and host trust
+handling remain.
+
+The focused checks pass 87 tests with 142 expect() calls and no failures across
+four files. Coding build:types, a separate symlink declaration consumer and
+the 26 worker bundle tests pass. The new generator test checks the retained
+plugin export paths and rejects changed removal boundaries. Checks use local
+fixtures and temporary data without real provider or account requests.
+
+The source inventory has 197 TypeScript records, including 193 under src/pi,
+and six assets. All 192 allowed Coding sources pass the pinned scoped check;
+six assets match their source and output hashes, and four facade output hashes
+match. Only three source records are removed, and the component barrel's
+output hash and transformation record are updated. The Craft override check
+removes the same three records, updates four hashes and three reasons, and
+confirms that all other runtime and override records match 06d1346. Dependencies,
+lockfile and SDK patches are unchanged. This is not full source generation or
+a recomputed closure. The denied theme token source is excluded, and
+complete:false and closureRecomputed:false remain in the receipt.
+
+The complete repository test entry exits successfully in 563 seconds. Its main
+batch passes 6,874 tests, skips 11 and reports no failures across 488 files;
+all 35 isolated test files complete. The current-code validate:ci check passes
+in 128 seconds. Later documentation edits do not change runtime code.
+The independent static review relative to 06d1346 found no confirmed product,
+public plugin or document defect in this slice. It checked callers, public and
+private export boundaries, the generator exclusion, inventories and the five
+focused verification receipts. It did not rerun checks or read the denied
+source. The later repository test/CI receipts and permission diagnosis were
+outside that review. Direct private-file consumers remain outside the public
+contract, and full generation, Craft audit and frozen installation remain open.
+
+The six changed documents pass their punctuation checks; all 99 local file
+links resolve. That link check does not check anchors. Earlier results below
+apply to their stated versions.
+
 ## Private host remnants after 20cb6e8
 
 The caller and export check removes 15 TypeScript files that only served the
@@ -79,8 +147,21 @@ A network-denied frozen lockfile-only check failed while Bun tried to resolve
 registry metadata for multiple workspace dependencies. No registry request
 was allowed. A structural comparison confirms that this slice changes only
 the two grok-mermaid lock entries and that all workspace dependency declarations
-match their package.json files. This does not establish a complete frozen
-install or identify whether the metadata resolution also occurs at the baseline.
+match their package.json files. These checks alone do not establish a complete
+frozen install.
+
+A later comparison uses separate dependency-declaration fixtures for 20cb6e8
+and 06d1346, with all 12 workspace manifests, their lockfiles, both patches and
+the hoisted install setting. It copies no runtime source. With the same task
+cache, network denied and scripts disabled, both lockfile-only frozen checks
+exit 1. The baseline reports metadata failures for 96 packages and 06d1346
+reports 95; all 95 are shared, with only grok-mermaid removed from the baseline
+failures. No new metadata failure appears in 06d1346 under these conditions.
+Both fixture lockfiles and the workspace lockfile stay unchanged. This is a
+comparison of the observed failures, not a complete workspace install, and it
+does not reproduce the workspace preload. A separate
+read-only standard-cache attempt also fails because Bun cannot write to its
+temporary directory. Full frozen installation remains unverified.
 
 The [SDK maintenance register](coding-sdk-maintenance.md) records released APIs,
 the four-file core patch, the 30-file durable patch and the remaining Coding
