@@ -9,11 +9,12 @@
       "source": "packages/coding-agent/src/core/extensions/loader.ts",
       "target": "src/upstream/core/extensions/loader.js",
       "sha256": "873cbe2ae4a15e9563c5a563d447b7aa3a05cca45e145d4250d54ad601bdc85f",
-      "portSha256": "6d41512eda5df01a13dab7a63319cf1be9493d68f42cda68ed51ac3dcab38d77",
+      "portSha256": "378cbd09835b90bd815521a52d669daa495070242b8e27f830d64cbf2f285062",
       "changes": [
         "erase-types",
         "extension-module-resolution",
-        "preserve-host-stack-formatting-after-babel-bootstrap"
+        "preserve-host-stack-formatting-after-babel-bootstrap",
+        "shared-native-extension-lifecycle"
       ]
     },
     {

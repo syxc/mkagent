@@ -252,6 +252,10 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     body = 'import { preparePluginTranspiler } from "../../../plugin-transpiler.ts";\n'
       + body.replace(importing, '\tpreparePluginTranspiler(jiti);\n' + importing);
     changes.add('preserve-host-stack-formatting-after-babel-bootstrap');
+    const initialize = 'async function initializeExtension(';
+    if (body.split(initialize).length !== 2) throw new Error('Extension initialization boundary changed');
+    body = body.replace(initialize, 'export ' + initialize);
+    changes.add('shared-extension-initialization');
   }
   if (path === 'config.ts') {
     body = body.replace('export const VERSION: string = pkg.version || "0.0.0";',

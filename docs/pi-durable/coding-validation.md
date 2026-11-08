@@ -26,6 +26,78 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Shared extension lifecycle after 38306f7
+
+On 2026-11-09, the two extension loaders started using one local implementation
+of `createExtensionRuntime`, `createExtensionAPI`, `createExtension`,
+`initializeExtension` and `loadExtensionFromFactory`. The legacy generator removes
+those five declarations and imports or forwards the Native entry points. Its
+JavaScript output falls from 631 to 235 lines. Native only exports the initializer
+from its private loader module; the public Coding root does not add that export.
+
+The earlier claim that private initialization state required the whole legacy
+loader was too broad. These functions hold runtime and factory state per call.
+Each loader still owns its module table, factory cache, cwd, generation and
+path discovery policy. Native plugins retain the Coding SDK; legacy plugins
+retain compat, reject old Agent execution and reject private subpath fallback.
+This reduces a local source duplicate. It does not establish a published,
+independent Coding loader API. No dependency, SDK patch, task version or
+checkpoint changes in this slice. The inventories remain 224 TypeScript sources
+and 7 assets, plus 12 selected outputs and 28 shared forwards.
+
+The affected behavior checks used two commands:
+
+```sh
+bun --no-env-file --config=/dev/null test \
+  packages/pi-durable-coding/test/extensions.test.ts \
+  packages/pi-durable-coding/test/plugin-transpiler.test.ts
+
+bun --no-env-file --config=/dev/null test \
+  packages/pi-durable-coding/test/host-resources.test.ts \
+  packages/pi-durable-coding/test/host-package-commands.test.ts \
+  packages/pi-durable-coding/test/scoped-port-check.test.ts \
+  packages/pi-durable-coding/test/native-session-recovery.test.ts \
+  packages/pi-agent-server/src/coding-host.e2e.test.ts \
+  packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts \
+  packages/pi-agent-server/src/coding-host-prompt.e2e.test.ts
+```
+
+The first command passed 19 tests with 90 assertions. The second passed 60 tests
+with 516 assertions. Both had 0 failures. New checks cover separate module maps
+and cached factories, clearing one cache without clearing the other, committed
+inline registrations, command source identity, listener cleanup, stale APIs and
+failed-factory rollback through both entries. Existing consumers cover both Pi
+package names, Bun metadata, stack handling, resources, package commands,
+permissions, tools, host prompts and real process recovery. Data and providers
+are temporary and deterministic.
+
+Coding typecheck, declaration build, worker typecheck and worker build passed.
+The pinned Native loader scoped check passed with `sourceFiles: 1` and
+`complete: false`. A scoped harness ran the actual `port` declaration from
+`vendor-upstream.ts` against the same pinned upstream loader, without running
+the complete generator. It checked the old recorded output hash before writing.
+Two invalid source fixtures, a missing inline factory declaration and a duplicate
+initializer declaration, were rejected by the shared-function count guard. Both
+source manifests record the new transforms and output hashes.
+
+An independent read-only review against `38306f7` covered the seven runtime,
+generator, inventory and test files plus their required direct dependencies and
+exports. It found no correctness issue with a concrete trigger. The five shared
+functions matched the removed implementations after type and comment removal.
+The review confirmed separate module maps and caches, no new initialization
+cycle, and no new public Coding root export. In-memory reproduction matched
+both loader outputs and their manifest records. Twelve boundary probes rejected
+a missing or duplicate declaration for each legacy shared function and a renamed
+or duplicate Native initializer. Those probes cover these specific declaration
+boundaries; they do not establish rejection of every upstream signature, body or
+dependency change. The reviewer did not rerun behavior tests, types, builds or
+host checks, and did not review the later documentation and source overrides.
+
+No full source generation, full repository suite, Node run, Windows check,
+Craft audit, real account, paid model or product UI was run for this slice.
+The denied `theme-tokens.ts` body was not read. F1 to F3, remaining Coding
+sources, execution adapters and SDK patches remain open.
+
 ## Coding SDK scope after 461e7c9
 
 On 2026-11-09, the Coding root stopped exporting the upstream CLI launcher

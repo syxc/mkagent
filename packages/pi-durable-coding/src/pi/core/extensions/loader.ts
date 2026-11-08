@@ -616,7 +616,7 @@ function createExtension(extensionPath: string, resolvedPath: string): Extension
 	};
 }
 
-async function initializeExtension(
+export async function initializeExtension(
 	factory: ExtensionFactory,
 	extensionPath: string,
 	resolvedPath: string,

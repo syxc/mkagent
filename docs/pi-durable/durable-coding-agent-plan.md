@@ -40,6 +40,8 @@ pi-durable 已发布 codemode、tool-search、tools、images 及完整 Harness/�
 
 SDK 入口范围已继续收窄：生成器在遍历依赖前排除原版 Pi CLI 的 `main`/`MainOptions`，删除其独占的 24 份源码，共 6757 行，运行时清单由 248 份降为 224 份 TypeScript，7 项资源不变。MkAgent 仍通过 `CodingHost/createAgentSession` 装配；保留程序化 InteractiveMode、print/rpc、插件 UI 组件及 MCP/codemode/tool-search 工厂，产品迁移和 durable checkpoint 未变。两个 Pi 包名的 Native 插件消费者、资源、包命令、冷恢复和宿主定向回归已通过。该删除依据入口和调用核对，不记作 24 个文件已由官方 SDK 完整覆盖，也不关闭剩余源码必要性核查。
 
+两个扩展 loader 已共用 runtime、注册 API 与 factory 接受/回滚实现。生成器删除旧入口中的五个同源函数，旧产物由 631 行减至 235 行；各自的模块映射、缓存及目录策略保留。双入口测试覆盖成功注册、失败回滚、旧 API 失效和缓存隔离，SDK 消费者及宿主定向回归通过。这是本地移植实现去重，不是官方包新增 Coding loader；任务版本和 checkpoint 不变。具体退出条件、升级核对和验证范围见架构及验证记录。
+
 以下至“产品模式与资源策略”之前的对照是既有实现摘要，详细时点和结果见[验证记录](coding-validation.md)。其中通过补丁共享的算法不等于原包公开能力，辅助替换和第三方库结果不代替本次执行主链验收。
 
 Native 子进程等待也已共用 durable，只保留退出码和无写盘回调的薄适配。替换前后真实入口均通过 18 项、142 个断言，七文件组合通过 128 项、898 个断言；单文件来源复现和 5 个类型根检查通过。24 文件补丁在干净重放和独立缓存冻结安装后逐字节一致，Bun 与 Node 消费者各通过 21 项、155 个断言。进程启动保留既有跨平台策略，完整 SDK、真实 Windows 和产品入口仍在未验证范围内。

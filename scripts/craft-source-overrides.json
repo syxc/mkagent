@@ -3717,8 +3717,8 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "b1c5e21119fb657dbcd4da83a7cee4015f528570c47fa18422ede6a87e4c1f54",
-      "reason": "Record selected source ports, unchanged fixtures and shared native helper adapters. Record six selected helper sources, six unchanged fixtures and 28 shared entries."
+      "sha256": "289e2152274d8619d32648ac931be101b3c94ce9fe1370580ef4fa4f826c1c0d",
+      "reason": "Record six selected source outputs, six unchanged fixtures and 28 shared entries; the legacy loader delegates its lifecycle to Native."
     },
     "packages/pi-durable-coding/package.json": {
       "sha256": "0ad80224af7be0ddd5065018a84b9bdcef905456da7e5a155d101ec6a5aef85e",
@@ -3733,8 +3733,8 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "c5237685e986349fd5fd184523b0f5afbdd3fde6a318e95bacd31c69c69d62b5",
-      "reason": "Reproduce selected pinned ports and shared adapters with explicit legacy directory and prompt policies. Require clean upstream source directories without a credential-source exclusion."
+      "sha256": "a3152349684bc40fb9c3156a2ce4f9c511ca3cc4793117f16909e5c9de120239",
+      "reason": "Reproduce selected pinned ports and shared adapters; remove five duplicate loader lifecycle declarations with count guards while retaining legacy resolution and directory policies."
     },
     "packages/pi-durable-coding/src/compat.ts": {
       "sha256": "47e3f3b54cd608a6cabcd070bb29b9b7b66b6cbc1366d3cc7b4a1de554ea7b28",
@@ -3825,8 +3825,8 @@
       "reason": "Forward legacy helper imports to the canonical native Pi implementation without another source copy."
     },
     "packages/pi-durable-coding/src/upstream/core/extensions/loader.js": {
-      "sha256": "6d41512eda5df01a13dab7a63319cf1be9493d68f42cda68ed51ac3dcab38d77",
-      "reason": "Port Pi v1.5.0 packages/coding-agent/src/core/extensions/loader.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
+      "sha256": "378cbd09835b90bd815521a52d669daa495070242b8e27f830d64cbf2f285062",
+      "reason": "Port the pinned Pi loader resolution, cache and discovery policies; import Native runtime and initialization instead of copying their lifecycle implementations."
     },
     "packages/pi-durable-coding/src/upstream/core/extensions/pi-ai-extension-view.ts": {
       "sha256": "a77b9deea2655dd6385ece0a2261657be048387f8c44ab40ac11aeaa6e0a5cb7",
@@ -3953,8 +3953,8 @@
       "reason": "Compare native projections with durable context across edits, compaction and reordering."
     },
     "packages/pi-durable-coding/test/extensions.test.ts": {
-      "sha256": "51c14495fdc83f60766d974533d33392d258f4fdbb73ffb46b85b63a757437cb",
-      "reason": "Verify imports, registration, cancellation, headless operations and engine rejection."
+      "sha256": "11ad10cfe3bc68799fa70a7b81194553e304525848a0fccc3ab0bceaab080b01",
+      "reason": "Verify plugin imports and legacy rejection; exercise both loaders for registration, rollback, stale API cleanup, distinct module mappings and independent caches."
     },
     "packages/pi-durable-coding/test/fixtures/durable-harness.ts": {
       "sha256": "f096dd3d1b5289b3ca402bc506960f6aba68478c9ead5541a3e54abdf16b7145",
@@ -4045,8 +4045,8 @@
       "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "7b5a8258c04b74278c446eb5c720b80c3df64cdf7cb64e9c8b47894e41632892",
-      "reason": "Record the pinned Coding SDK scope after excluding 24 upstream CLI launcher sources; retain source hashes, transforms and assets."
+      "sha256": "0bb567b1c638649d13fa8afb8eff82bdfd85814e335d6f08478e56cc5786e70b",
+      "reason": "Record the pinned Coding SDK scope and private shared extension initializer; retain source hashes, transforms and assets."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "e132e9a4414b44d25c8d7372f493394f104ce15cf4010e7596a721ed9cf7bffc",
@@ -4065,8 +4065,8 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "e3e7a10031b80ba261a7a78e80a07a2410fe5287baed7513c7fd70e4391a19ed",
-      "reason": "Exclude the pinned CLI launcher export before traversing imports; reproduce the remaining Coding SDK sources, shared helpers and published browser assets."
+      "sha256": "c7496a143cb1a9c04b71ee3ac62d16c1b6e175daacea2883e2abaa314c0223ee",
+      "reason": "Exclude the pinned CLI launcher before traversing imports and export the private shared extension initializer; reproduce remaining Coding SDK sources, helpers and browser assets."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4321,8 +4321,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/jiti-static-loader.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/loader.ts": {
-      "sha256": "3f2960a4fd6e1dc6ebc05a723883c5b7a55aecc33ed87bbfef9697138f57699d",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/loader.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "5063dbd543f5efe2afa116e15094a5d721aeab0f2423fc37d530f2692aac4c75",
+      "reason": "Pinned Pi v1.5.0 loader shared by both entries for runtime, registration and factory lifecycle; the private initializer export is recorded in UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/pi-ai-extension-view.ts": {
       "sha256": "35769c1446400219e554e31712e5bc8da0c90bbdf1c0f41df39c151abb5bc8d4",

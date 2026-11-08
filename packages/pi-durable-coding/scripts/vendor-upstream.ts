@@ -67,14 +67,28 @@ function port(source: string, target = source, selection?: string[], imports = '
     const parsed = ts.createSourceFile(source, content, ts.ScriptTarget.Latest, true);
     const omitted = new Set(['require', 'isNodeSeaBinary', 'isTypeScriptSourceRuntime', 'usesEmbeddedModules',
       'createJitiPromise', 'virtualModulesPromise', '_aliases', 'getCreateJiti', 'getVirtualModules', 'getAliases']);
+    const shared = new Map(['createExtensionRuntime', 'createExtensionAPI', 'createExtension',
+      'initializeExtension', 'loadExtensionFromFactory'].map(name => [name, 0]));
     content = parsed.statements.filter(statement => {
       if (ts.isVariableStatement(statement)) {
         return !statement.declarationList.declarations.some(declaration =>
           ts.isIdentifier(declaration.name) && omitted.has(declaration.name.text));
       }
-      return !(ts.isFunctionDeclaration(statement) && statement.name && omitted.has(statement.name.text));
+      if (ts.isFunctionDeclaration(statement) && statement.name) {
+        const name = statement.name.text;
+        if (shared.has(name)) {
+          shared.set(name, shared.get(name)! + 1);
+          return false;
+        }
+        return !omitted.has(name);
+      }
+      return true;
     }).map(statement => statement.getFullText(parsed)).join('');
-    content = 'import { createJiti } from "jiti/static";\n'
+    for (const [name, count] of shared) if (count !== 1) throw new Error(`Expected one shared extension function: ${name}`);
+    const lifecycle = '../../../pi/core/extensions/loader.ts';
+    content = `import { createExtensionRuntime, initializeExtension } from "${lifecycle}";\n`
+      + `export { createExtensionRuntime, loadExtensionFromFactory } from "${lifecycle}";\n`
+      + 'import { createJiti } from "jiti/static";\n'
       + 'import { getExtensionModules } from "../../../extension-modules.ts";\n'
       + 'import { preparePluginTranspiler } from "../../../plugin-transpiler.ts";\n' + content;
     const originalResolution = /const resolutionOptions = usesEmbeddedModules[\s\S]*?: \{ alias: getAliases\(\) \};/;
@@ -84,7 +98,7 @@ function port(source: string, target = source, selection?: string[], imports = '
     const importing = '\tconst module = await jiti.import(extensionPath, { default: true });';
     if (!content.includes(importing)) throw new Error('Upstream extension transform boundary changed');
     content = content.replace(importing, '\tpreparePluginTranspiler(jiti);\n' + importing);
-    changes.push('preserve-host-stack-formatting-after-babel-bootstrap');
+    changes.push('preserve-host-stack-formatting-after-babel-bootstrap', 'shared-native-extension-lifecycle');
   }
   if (changes?.includes('host-project-context-trust')) {
     const signature = '\tagentDir: string;\n}';

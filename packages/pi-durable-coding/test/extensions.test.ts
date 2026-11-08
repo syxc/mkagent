@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { createExtensionRuntime, loadExtensions } from '../src/upstream/core/extensions/loader.js';
+import { loadExtensions } from '../src/upstream/core/extensions/loader.js';
+import type { ExtensionAPI } from '../src/pi/core/extensions/types.ts';
 import { ExtensionRunner } from '../src/upstream/core/extensions/runner.js';
 import { createEventBus } from '../src/upstream/core/event-bus.ts';
 import { CodingSessionView } from '../src/session-view.ts';
@@ -67,25 +68,88 @@ describe('native extension loading and dispatch', () => {
     expect(missing.errors[0].error).toContain('createAgentSession');
   });
 
-  test('rolls back failed plugin registrations and unsubscribes its event bus listeners', async () => {
-    const path = join(root, 'failed.ts');
+  test('keeps cached factories and Coding module mappings separate across loaders', async () => {
+    const legacy = await import('../src/upstream/core/extensions/loader.js');
+    const native = await import('../src/pi/core/extensions/loader.ts');
+    const path = join(root, 'cached.ts');
     writeFileSync(path, `
+      import * as coding from '@earendil-works/pi-coding-agent';
+      let calls = 0;
       export default function (pi) {
-        pi.registerFlag('test-flag', { type: 'boolean', default: true });
-        pi.registerProvider('test-provider', { models: [] });
-        pi.events.on('test-channel', () => { throw new Error('leaked listener'); });
-        throw new Error('factory failed');
+        pi.registerFlag('surface', { type: 'string', default: typeof coding.createAgentSession });
+        pi.registerFlag('calls', { type: 'string', default: String(++calls) });
       }
     `);
-    const runtime = createExtensionRuntime();
-    const events = createEventBus();
-    const loaded = await loadExtensions([path], root, events, runtime);
-    expect(loaded.extensions).toEqual([]);
-    expect(loaded.errors[0].error).toContain('factory failed');
-    expect(runtime.flagValues.size).toBe(0);
-    expect(runtime.pendingProviderRegistrations).toEqual([]);
-    expect(() => events.emit('test-channel', {})).not.toThrow();
+    const observe = async (loader: Pick<typeof native, 'loadExtensionsCached'>, surface: string, calls: number) => {
+      const loaded = await loader.loadExtensionsCached([path], root);
+      expect(loaded.errors).toEqual([]);
+      expect(loaded.extensions[0].flags.get('surface')?.default).toBe(surface);
+      expect(loaded.extensions[0].flags.get('calls')?.default).toBe(String(calls));
+    };
+    try {
+      await observe(legacy, 'undefined', 1);
+      await observe(native, 'function', 1);
+      await observe(legacy, 'undefined', 2);
+      await observe(native, 'function', 2);
+      legacy.clearExtensionCache();
+      await observe(legacy, 'undefined', 1);
+      await observe(native, 'function', 3);
+    } finally {
+      legacy.clearExtensionCache();
+      native.clearExtensionCache();
+    }
   });
+
+  test.each(['../src/upstream/core/extensions/loader.js', '../src/pi/core/extensions/loader.ts'])(
+    'commits inline registrations and invalidates captured APIs through %s', async loaderPath => {
+      const { createExtensionRuntime, loadExtensionFromFactory } = await import(loaderPath);
+      const runtime = createExtensionRuntime();
+      const events = createEventBus();
+      let captured: ExtensionAPI | undefined;
+      let calls = 0;
+      const extension = await loadExtensionFromFactory(async (pi: ExtensionAPI) => {
+        captured = pi;
+        pi.registerFlag('accepted', { type: 'boolean', default: true });
+        pi.registerProvider('test-provider', { models: [] });
+        pi.registerCommand('accepted', { handler: async () => {} });
+        pi.events.on('accepted', () => { calls++; });
+        await Promise.resolve();
+      }, root, events, runtime);
+      expect(runtime.flagValues.get('accepted')).toBe(true);
+      expect(runtime.pendingProviderRegistrations).toHaveLength(1);
+      expect(extension.commands.get('accepted')?.sourceInfo).toBe(extension.sourceInfo);
+      events.emit('accepted', {});
+      expect(calls).toBe(1);
+      runtime.invalidate();
+      events.emit('accepted', {});
+      expect(calls).toBe(1);
+      expect(() => captured!.registerFlag('stale', { type: 'boolean' })).toThrow('stale');
+      expect(() => captured!.events.on('accepted', () => {})).toThrow('stale');
+    },
+  );
+
+  test.each(['../src/upstream/core/extensions/loader.js', '../src/pi/core/extensions/loader.ts'])(
+    'rolls back failed registrations and event listeners through %s', async loaderPath => {
+      const { createExtensionRuntime, loadExtensions } = await import(loaderPath);
+      const path = join(root, 'failed.ts');
+      writeFileSync(path, `
+        export default function (pi) {
+          pi.registerFlag('test-flag', { type: 'boolean', default: true });
+          pi.registerProvider('test-provider', { models: [] });
+          pi.events.on('test-channel', () => { throw new Error('leaked listener'); });
+          throw new Error('factory failed');
+        }
+      `);
+      const runtime = createExtensionRuntime();
+      const events = createEventBus();
+      const loaded = await loadExtensions([path], root, events, runtime);
+      expect(loaded.extensions).toEqual([]);
+      expect(loaded.errors[0].error).toContain('factory failed');
+      expect(runtime.flagValues.size).toBe(0);
+      expect(runtime.pendingProviderRegistrations).toEqual([]);
+      expect(() => events.emit('test-channel', {})).not.toThrow();
+    },
+  );
 
   test('rejects unsupported legacy subpaths even when a plugin supplies an installed package', async () => {
     const directory = join(root, 'node_modules/@earendil-works/pi-coding-agent');

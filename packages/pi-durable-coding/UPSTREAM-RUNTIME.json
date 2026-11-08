@@ -339,10 +339,11 @@
       "source": "packages/coding-agent/src/core/extensions/loader.ts",
       "target": "src/pi/core/extensions/loader.ts",
       "sha256": "873cbe2ae4a15e9563c5a563d447b7aa3a05cca45e145d4250d54ad601bdc85f",
-      "portSha256": "3f2960a4fd6e1dc6ebc05a723883c5b7a55aecc33ed87bbfef9697138f57699d",
+      "portSha256": "5063dbd543f5efe2afa116e15094a5d721aeab0f2423fc37d530f2692aac4c75",
       "changes": [
         "host-independent-extension-modules",
-        "preserve-host-stack-formatting-after-babel-bootstrap"
+        "preserve-host-stack-formatting-after-babel-bootstrap",
+        "shared-extension-initialization"
       ]
     },
     {
