@@ -26,6 +26,37 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Unused terminal bug-report flow after b10b881
+
+A focused caller and export check found no remaining use of the terminal
+reportBug flow after the three mode hosts were removed. uploadBugReport was
+used only by that flow, and neither function had a public root export. The
+terminal consent, delivery UI and upload helper are removed with their two
+source records. The existing entry exclusions already prevent traversal into
+this host flow. No new generator rule or replacement implementation is added.
+
+AgentSession.summarizeForBugReport, core/bug-report.ts and the durable summary
+path remain. The existing host integration test actually calls the summary
+method, along with compaction and branch summaries. That test and the plugin
+transpiler tests pass 11 tests with 52 assertions and no failures. Both package
+aliases still exercise theme, editor and renderer behavior. Coding build:types
+also passes. The independent read-only review relative to b10b881 found no
+confirmed defect in the two deletions or their source records. It checked the
+public entry and retained summary path; behavior checks remained with the
+main thread. It did not read the denied theme token file or cover external
+consumers of private source paths. All checks use temporary data and
+deterministic local fixtures; no upload or real provider request runs.
+
+The retained inventory now has 219 TypeScript records, including 215 under
+src/pi, and seven assets. The source-record check confirms that only these two
+records are removed and all other inventory/override entries are unchanged.
+Its first run used a nonexistent summary.ts path; the check now names the
+actual summary-task.ts and summary-binding.ts files and passes. Document links,
+punctuation and git diff --check pass. The earlier 221/7 count belongs to the
+mode-host slice. This deletion does not claim SDK replacement, a recomputed
+minimal closure or complete source generation. The denied theme-token check
+remains open.
+
 ## Upstream run-mode hosts after 5662422
 
 On 2026-11-09, a focused review compared the original MkAgent integration and

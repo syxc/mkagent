@@ -4208,10 +4208,6 @@
       "sha256": "6fae3801533d64ccc018c43682bbff868619dd7cdab8f67730c731a5785d2984",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/bash-executor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/core/bug-report-upload.ts": {
-      "sha256": "3765668a4e70ff01d870ae381e74dd01819f27a0615fc58a9fd6540765afd7c9",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/bug-report-upload.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/core/bug-report.ts": {
       "sha256": "fe83a233e4f38e6d234b54cdf8e8177c6caf0bfb08846830fc7c6d319adc6b9a",
       "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
@@ -4675,10 +4671,6 @@
     "packages/pi-durable-coding/src/pi/modes/interactive/assets/clankolas.png": {
       "sha256": "169acd0dfe6fbb8d8742ed24a3fc654fd0b2e2d4223c733249c5493723f1b72d",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/assets/clankolas.png; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/bug-report.ts": {
-      "sha256": "d55147d46ed0754c759b98efe2dbd79d1f41cef7203964859862251ec47cd862",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/bug-report.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/chat-viewport.ts": {
       "sha256": "24bbdd06a5e17d6c0631f7de51329eb7bb4ecd4a460dec7b3d593ff9e6219960",

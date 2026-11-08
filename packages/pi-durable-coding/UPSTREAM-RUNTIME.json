@@ -154,13 +154,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/core/bug-report-upload.ts",
-      "target": "src/pi/core/bug-report-upload.ts",
-      "sha256": "3765668a4e70ff01d870ae381e74dd01819f27a0615fc58a9fd6540765afd7c9",
-      "portSha256": "3765668a4e70ff01d870ae381e74dd01819f27a0615fc58a9fd6540765afd7c9",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/core/bug-report.ts",
       "target": "src/pi/core/bug-report.ts",
       "sha256": "fe83a233e4f38e6d234b54cdf8e8177c6caf0bfb08846830fc7c6d319adc6b9a",
@@ -1023,13 +1016,6 @@
       "target": "src/pi/modes/interactive/assets/clankolas.png",
       "sha256": "169acd0dfe6fbb8d8742ed24a3fc654fd0b2e2d4223c733249c5493723f1b72d",
       "portSha256": "169acd0dfe6fbb8d8742ed24a3fc654fd0b2e2d4223c733249c5493723f1b72d",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/bug-report.ts",
-      "target": "src/pi/modes/interactive/bug-report.ts",
-      "sha256": "d55147d46ed0754c759b98efe2dbd79d1f41cef7203964859862251ec47cd862",
-      "portSha256": "d55147d46ed0754c759b98efe2dbd79d1f41cef7203964859862251ec47cd862",
       "changes": []
     },
     {
