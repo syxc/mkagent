@@ -26,6 +26,60 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Repository checks after 4306eeb
+
+On 2026-11-09, full repository validation used temporary child-process HOME,
+config and cache directories. Only PATH, temporary-directory, locale, timezone
+and terminal settings were inherited. No account or model credentials were
+passed to the children. The parent process HOME was not changed.
+
+`bun run validate:ci` passed in 103 seconds. It includes all workspace typechecks,
+61 shared tests, 20 document-tool tests, and i18n parity, usage and sort checks.
+
+The first `scripts/run-tests.ts` attempt reported 6852 passes, 11 skips,
+4 failures and 1 import error across 487 files. The import error came from a
+stale static dependency check in `shared-sessions-runner.test.ts`: it included the extension loader,
+which now shares the Native Coding SDK module map. The check remains in place
+for session storage and extension runners; the loader is checked by its behavior
+and plugin-consumer tests. No runtime dependency restriction was removed from
+those storage or runner entries.
+
+The other three failures came from the validation harness setting `PI_OFFLINE=1`
+for all tests. `checkForAvailableUpdates()` returns no updates in that mode,
+so the local npm/git fixtures could not exercise explicit update and shutdown.
+Removing that global setting fixed these failures. The package implementation
+and its tests were not changed. Temporary configuration and credential isolation
+remain in place.
+
+The focused rerun passed 39 tests with 253 assertions and 0 failures:
+
+```sh
+bun --no-env-file --config=/dev/null test \
+  packages/pi-durable-coding/test/shared-sessions-runner.test.ts \
+  packages/pi-durable-coding/test/host-package-commands.test.ts \
+  packages/pi-durable-coding/test/extensions.test.ts \
+  packages/pi-durable-coding/test/plugin-transpiler.test.ts
+```
+
+The complete repository rerun is in progress. The source checks below establish
+provenance and reproduction; they do not close the remaining necessity review.
+
+- Scoped generation reproduced 219 allowed Coding TypeScript outputs from fixed
+  Pi `f9a26365568127461c47a07a37dcb42c140a3ac5`. Their source and output hashes
+  matched. The result remains `complete: false`.
+- The other four generated TypeScript outputs matched their recorded source and
+  output hashes. Their generation was not rerun. All seven Pi assets matched
+  both the pinned source and local inventory without changes.
+- Complete `vendor-upstream.ts --check` verified 12 source outputs and 28 shared
+  forwards from the same pinned revision.
+- `patch-generation-response.ts --check` replayed the complete durable patch
+  against pristine 1.5.0, verified all 30 output sections and checked the four
+  generated generation/response and root-export artifacts.
+
+The denied `theme-tokens.ts` body was not read or generated. Full runtime
+regeneration remains blocked by that restriction. No Craft audit, real account,
+paid model, product UI, Windows or signed-release check was run in this batch.
+
 ## Shared extension lifecycle after 38306f7
 
 On 2026-11-09, the two extension loaders started using one local implementation

@@ -3,11 +3,11 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
-// Check runtime edges before loading either entry. Never read a blocked dependency.
+// Storage and runners stay independent of the full runtime; the loader maps the Coding SDK.
 const sourceRoot = resolve(import.meta.dir, '../src');
 const pending = [
   'upstream/core/session-manager.js', 'upstream/core/extensions/runner.js',
-  'upstream/core/extensions/loader.js', 'session-view.ts', 'durable-session-store.ts',
+  'session-view.ts', 'durable-session-store.ts',
 ].map(path => resolve(sourceRoot, path));
 const checked = new Set<string>();
 while (pending.length) {
