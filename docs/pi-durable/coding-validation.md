@@ -26,6 +26,79 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Private host remnants after 20cb6e8
+
+The caller and export check removes 15 TypeScript files that only served the
+excluded launcher and mode hosts: cli/auth-command.ts, core/radius.ts,
+core/cache-stats.ts, utils/changelog.ts, utils/version-check.ts,
+utils/clipboard-image.ts, interactive/theme/theme-controller.ts, and the
+interactive components custom-entry, earendil-announcement, easter-egg-3d.lazy,
+easter-egg-3d, mermaid, pi-logo, radius-login-selector and themed-text. The
+component barrel and root entry do not export these implementations. Focused
+repository searches found only their definitions and private references.
+The package does not expose private source subpaths. This evidence excludes
+the denied theme token body and cannot prove behavior for arbitrary consumers
+of private filesystem paths.
+
+The announcement's clankolas.png resource and the unused grok-mermaid
+dependency are removed too. The runtime generator and worker build stop
+collecting the upstream interactive assets directory. Source records remove
+exactly these 16 targets; the lockfile removes only the unused workspace
+requirement and package record. Remaining source records are unchanged.
+MkAgent's clipboard and usage functions, public renderers, Theme, CustomEditor,
+RPC client/protocol and session lifecycle remain.
+
+The focused tests pass 86 tests with 142 assertions and no failures. Coding
+build:types and a separate `./native` declaration consumer pass. The consumer
+uses a package symlink rather than a fresh install. The worker bundle tests
+pass 26 tests with 103 assertions, including moved assets and offline runtime
+behavior. These checks use temporary data and local fixtures, without real
+clipboard, authentication, upload or provider requests.
+
+The complete repository test entry exits successfully in 573 seconds. Its main
+batch passes 6,873 tests, skips 11 and reports no failures across 488 files;
+all 35 isolated test files complete. The current-code validate:ci check also
+passes in 122 seconds. Later documentation edits do not change runtime code.
+
+The independent static review relative to 20cb6e8 found no confirmed product
+or public plugin defect in the deletion slice. It checked retained exports,
+virtual module entries, focused callers, resources and source records. It did
+not rerun tests or inspect every line of the animation algorithm, and it did
+not read the denied token source. Direct external imports of private files
+remain outside the reviewed contract.
+
+The inventory now has 200 TypeScript records, including 196 under src/pi, and
+six assets. A scoped generation check passes all 195 allowed src/pi sources
+against the pinned upstream checkout. Six assets match both source and output
+hashes; the other four facade output hashes match. The check does not expand
+imports, regenerate the four facades or read the denied theme token source.
+It reports complete:false and closureRecomputed:false. Full generation and
+Craft source audit remain open.
+
+A network-denied frozen lockfile-only check failed while Bun tried to resolve
+registry metadata for multiple workspace dependencies. No registry request
+was allowed. A structural comparison confirms that this slice changes only
+the two grok-mermaid lock entries and that all workspace dependency declarations
+match their package.json files. This does not establish a complete frozen
+install or identify whether the metadata resolution also occurs at the baseline.
+
+The [SDK maintenance register](coding-sdk-maintenance.md) records released APIs,
+the four-file core patch, the 30-file durable patch and the remaining Coding
+adapters by capability. It includes API gaps, recovery boundaries, removal
+conditions and upgrade checks. The architecture, plan, correction list and
+acceptance table link to it. It does not close the denied token-source or full
+source checks. The architecture's claim that the private clipboard entry still
+calls the MIME helper was stale and is corrected. The unchanged upstream
+BashExecutionComponent comment still names the removed tui-renderer.ts host;
+that comment is not evidence of a retained caller or a required module.
+
+An independent semantic review found no confirmed issue in the maintenance
+register and the five related document changes. It checked the inventories,
+patch file groups and test/CI receipts. It did not verify API implementations,
+test counts, all source files or the full dependency closure, and it did not
+read the denied token body or rerun tests. All six documents pass punctuation
+checks and 95 local file-link checks; link anchors are not checked.
+
 ## Private terminal helpers after d913008
 
 A focused check of the remaining top-level interactive helpers found no caller

@@ -28,7 +28,7 @@ copyFileSync(durableRequire.resolve('@silvia-odwyer/photon/photon_rs_bg.wasm'), 
 rmSync(join(outdir, 'coding_photon_rs_bg.wasm'), { force: true });
 copyFileSync(join(packageDir, '..', 'pi-durable-coding', 'LICENSE.pi'), join(outdir, 'LICENSE.pi'));
 for (const [source, target] of [
-  ['modes/interactive/theme', 'theme'], ['modes/interactive/assets', 'assets'], ['core/export-html', 'export-html'],
+  ['modes/interactive/theme', 'theme'], ['core/export-html', 'export-html'],
 ]) {
   cpSync(join(packageDir, '..', 'pi-durable-coding', 'src', 'pi', source), join(outdir, 'coding-assets', target), {
     recursive: true, filter: path => !path.endsWith('.ts'),

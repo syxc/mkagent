@@ -1,0 +1,64 @@
+# Coding SDK 维护边界与升级清单
+
+更新日期：2026-11-09。本文按当前能力和调用链登记维护责任，供 F1、F3、F6 核对。原始接入参照为 `b77c4a2645d3`，SDK 候选固定 Pi 1.5.0。需求见[能力规格](coding-capabilities-spec.md)，具体实现和候选 API 对照见[架构记录](coding-architecture.md)，检查结果见[验证记录](coding-validation.md)。
+
+MkAgent 保留 Pi Coding 层和公开插件契约，执行、事务、存储和恢复优先交给 durable。评估顺序是 durable 发布能力、独立 Pi 官方 SDK、外部薄适配，最后才是有具体缺口的源码或补丁。补丁新增的导出或执行接点均属于本地修改。
+
+本表覆盖已核实的能力边界，不构成 200 份源码逐项必要性的证明。`theme-tokens.ts` 的访问限制仍有效，完整 token 表、完整来源生成和 Craft 审计未完成。不能用本表关闭这些缺口，也不能把更新版本号视为已完成升级。
+
+## 已直接使用的发布能力
+
+| 能力与调用方 | 当前接线 | 升级时验证 |
+|---|---|---|
+| 普通 profile 执行 | worker 使用发布的 GenerationTask、Harness 和 Storage | 普通 profile 的资源隔离、权限、输入、取消及恢复 |
+| Coding 工具 effect | `host-tool-task.ts` 在真实 `pi.coding.tool` owner 下委托公开 ToolTask phases/abort；`wrapAgentTool` 和普通 AgentTool 入口共用该桥 | SDK replay、嵌套任务及会话清理、进度、取消、完整结果、最终参数回执和 journal 同事务提交 |
+| 生产文件和 shell 工具 | worker `tools/builtin.ts` 使用 durable read/write/edit/bash、PowerShell 和 images 工厂 | 临时文件读写、审批拒绝零副作用、改参、取消、长输出与图片 |
+| 插件 edit 参数准备 | Native edit 工厂调用公开 `createEditTool().prepareArguments`，已删除转换副本 | 新旧参数形状、混合输入、原始参数不变及权限后的最终参数 |
+| Agent 状态和默认转换 | `durable-agent.ts` 继承 CoreAgent；状态、事件归约、取消、等待和默认消息转换来自发布实现 | Agent 事件、异步 converter、steer/follow-up、队列身份和冷恢复；执行注入仍需下节补丁 |
+| 协议及基础算法 | core 协议与 streamProxy、pi-ai 模型/请求/usage、pi-mcp 协议、pi-tui 组件与颜色、pi-codemode 沙箱、chord 上下文与输出 | 实际解析版本、类型声明、插件别名、取消及生产调用；不要误用根目录 pi-ai 1.1.0 作为 Coding 1.5.0 的对照 |
+
+ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件、完整 content/images/details/structuredContent/control、usage 及 journal 交付。发布 ToolTask 不直接承接这些 Coding 契约。退出条件是公开委托接口能保留完整结果与同事务回执；达到后替换 runtime/document 适配，不改变真实 owner 或创建第二套根工具任务。既有 safe/unsafe、SIGKILL、失败 owned cleanup 和工具移除恢复回归是迁移检查入口。
+
+## 本地 SDK 补丁
+
+根 `patchedDependencies` 登记 core 和 durable 两份补丁。物理文件数为 core 4 个、durable 30 个，JS 与声明分别计数。逻辑职责可能共用文件，不能将逻辑组重复相加。
+
+| 补丁组 | 产品或插件契约、发布 API 缺口 | 当前最小接点及退出条件 | 恢复与升级检查 |
+|---|---|---|---|
+| core：4 文件，`agent-loop` 与 `agent` 的 JS/d.ts | Coding 请求、参数准备和结果交付需要原操作；发布根未导出八个操作，Agent 也未开放 durable backend/恢复所需接点 | 导出八个既有操作，补 AgentExecution、queue snapshot 和 protected lifecycle 接点；Native 仅保留 Agent 门面及独立可变默认对象。公开 backend/恢复协议和操作出现后撤除对应补丁 | 不复制另一套 Agent 类或 loop；检查默认模型/usage/identity 的实际影响、恢复消息、队列与异步事件。默认 converter 字段已撤除 |
+| durable harness/root：6 文件 | 已准备请求须独立返回响应，再让插件 `message_end` 和 journal 接纳；发布 GenerationTask 同时分类、写 assistant、创建工具及结算 inbox。旧本地 v4 checkpoint 也不能由发布 v2 读取 | 新增 GenerationResponseTask v1，共用 SDK streamResponse/partial writer；旧 Coding hooks 和阶段仅供受支持旧入口/快照。独立响应接口可承接事件及事务后移除新扩展，旧阶段在迁移或安全结算验证后移除 | 核对 started 重入不重发、partial drain、generation 槽清理、唯一 assistant、receipt/journal/checkpoint 原子性，以及 v4、LoopInput.resume 和已接受 child |
+| durable codemode：8 文件 | Native 分支 store、工具审批、字符串调用 ID、实时行、用量及 worker 释放策略不由原公开工厂完整承接 | VM、模型执行和输出由内置实现承担；增加 store、lease、prepareCall、发现覆盖、调用观察及结果投影选项。公开等效选项可用时撤除对应补丁 | replay module 保持版本 3；验证 store 与 run.start/run.result 同事务、调用 key/owner、别名变化、取消、worker 退出后释放和 usage 去重 |
+| durable env/node：2 文件 | Native 同步 shell 选择、退出码和组停止策略不能直接由公开 exec 替代；所需三个既有 helper 未公开 | 仅导出 getBashShellConfig、killProcessTree、waitForChildProcess，算法正文不变。发布这些 API 后撤除导出补丁 | 无新增任务 schema；检查输出空闲窗口、继承管道、监听器、macOS 组停止与 Windows spawn 策略 |
+| durable images：4 文件 | Native EXIF 容错、Photon 对象、MIME 窗口及编码质量/大小策略不同，完整工厂适配仍需保留外层契约 | 共用 EXIF、像素转置、MIME 头解析和编码缩小核心，增加有限选项和导出。公开低层 API 覆盖这些策略后撤除补丁 | 无新增任务 schema；运行原版和 SDK 默认结果、图片 worker、对象释放、离线单 WASM 与搬迁资源检查 |
+| durable search/tool-search：6 文件 | Native namespace 字段和启用接口需要分数、可配置 k1/b 及 schema 元数据文本；发布工厂不能返回全部所需中间结果 | 导出原分词、元数据文本和共用 BM25 ranker；内置工具保持默认参数。公开相应核心后撤除导出/参数补丁 | 无新增任务 schema；核对默认排序、分数、namespace/deferred、目录移除及会话启用 |
+| durable tools：4 文件 | Native edit 预览和读取路径需要既有 diff 与候选算法，但发布包未公开这些 helper | tools/index、tools/path-utils 的 JS/d.ts 导出九个 edit-diff 函数及 readPathVariants，保留 Native NFD、BOM、权限和预览策略。发布相应 helper 后撤除补丁 | 无新增任务 schema；验证原版 diff、真实文件预览、截图空格/NFD/引号、探测顺序和取消 |
+
+完整 durable 补丁由 `patch-generation-response.ts` 重建并重放，`DURABLE-PATCH.json` 记录 30 个文件的原始和目标摘要。历史 `patch-durable.ts` 仅处理四个 harness 文件，不能覆盖现行完整补丁。升级须用 pristine 依赖核对完整重放，再检查独立消费者实际解析的补丁产物和声明；只测试已有修改的 node_modules 不足以验收。
+
+## Coding 层与外部适配
+
+以下按契约登记源码范围，列出的 API 缺口只支持该行职责，不为整个目录或全部私有方法提供保留依据。
+
+| 能力和实际入口 | 候选 API、缺口及当前适配 | 恢复、退出条件和升级检查 |
+|---|---|---|
+| 工具轮次与收尾：`durable-coding/run-task.ts` | GenerationTask 的接纳、tools、afterTools/finish 同时写 SDK transcript、应用 inbox 并转交后续任务；不能单独返回决定。保留 Native 插件交付、完整工具结果、顺序和 journal，effect 已交 ToolTask | 保留五种 `pi.coding.*` v1 的已接受输入和回执。公开轮次决定/外部结果接口或完整迁移能保留契约时替换；检查 length calls、terminate/handoff、turn/agent_end、steer/follow-up 和不确定交付 |
+| Session 与 journal：AgentSession、session-task、session-journal | 独立公开包未提供 Coding 会话树、插件 session 控制及可注入 durable 执行/版本化恢复的 createAgentSession；Harness ownership/commit/wait 已复用。外层提交真实 child、原生树和产品回执 | 恢复 join 已接受 child，不重做不确定 hooks。上游支持相同输入、树和回执后迁移；检查 fork/tree/switch/new、labels/name、严格存储失败和旧 snapshot |
+| Summary 与 compaction：summary-binding/task、Coding compaction 模块 | 发布 CompactionTask 不提供 Native entry usage、split-turn、retained tail、共同祖先、文件跟踪及 before hooks；GenerationResponseTask 也写 conversation 级进度。保留选取策略和独立 summary owner，producer 复用现有 StreamFn.result | requesting intent 先提交，不确定请求不重发，完整响应持久化。任务级隔离或无主进度写入的公开响应 API 可用后替换；检查压缩、分支/bug 摘要、usage、主请求并发进度和 SIGKILL |
+| 插件注册与加载：Native loader/runner、旧 loader、virtual-modules | pi-tui/pi-mcp 等公开基础接口不提供 Coding 注册事务、factory 回滚、会话 context 与双包名映射。两 loader 共用 runtime/注册/factory，仅映射、缓存和目录策略独立；Jiti 使用公开 transform 接口 | 无新增持久任务版本；公开 Coding loader 可接收模块表、缓存和目录策略后替换。检查成功注册、失败回滚、旧 API/context 失效、reload、import.meta、会话重绑和关闭 |
+| 资源、配置和模型：resource-loader、models、host-resources/settings/trust | pi-ai 提供模型/credential/provider，公开基础包不提供完整 Coding 发现、models.json 覆盖、歧义、thinking/virtual route、目录 ETag/TTL 及宿主信任策略。保留策略装配；纯函数、usage 和模型存储已共享 | 宿主凭据、信任和 profile 隔离不迁移到插件。公开策略接口覆盖后替换对应层；检查 native/host-only、显式资源、reload/reopen、撤销信任及临时凭据不落盘 |
+| 插件工具工厂：Coding core/tools | 生产已用 durable 工厂；公开插件工厂另有自定义文件操作、BOM、预览、原始字节、取消、edit/write 互锁与 renderer 契约。已共享参数准备、diff、路径、MIME、图片、截断、shell 和等待 | 不因生产工厂已复用而删除插件入口。公开工厂或薄适配能同时保留这些行为且减少维护时替换；检查真实文件、持有队列后取消、未完成写入、原始通道和权限改参 |
+| MCP/codemode/tool-search：Coding extension factories | 协议和执行来自官方包；外层保留工具 exposure/namespace、连接替换、失效隐藏、只读重试、资源保存、授权与 Native session 适配；不再保留独立 codemode loop | 上游工厂能接收所需宿主 ports 后撤除装配。检查动态目录、审批、MCP OAuth 取消与锁、store 分支、已完成结果和子任务归属 |
+| 公开 UI、Theme、editor 与 HTML：components barrel、theme、export-html | pi-tui 提供基础组件、Markdown 和颜色，缺 Coding toolCallId/partial/state/lastComponent、折叠、异常回退及会话清理装配。公开 Theme 与 CustomEditor 保留；私有模式宿主已排除 | 无新增任务 schema；公开 Coding 组件及生命周期接口完整覆盖后替换。检查双包名插件着色、输入/Escape、renderer 真实效果、reload/shutdown、HTML 两种视图和离线资源。token 表必要性仍受阻 |
+| 旧入口及共享 helper：legacy、upstream | 28 个共享入口复用 Native 实现；七份 legacy 策略保留旧目录、投影、runner 依赖及 JavaScript 宽边界。Git、上下文、去重等未由独立 SDK 完整提供；不保存第二份算法模板 | 无新增任务 schema，但会话投影影响历史。公开接口可表达旧策略后撤除对应包装；检查两个入口、结构类型、目录/信任默认、同步预览、未提交消息和旧 JSONL |
+
+原版 Pi CLI、三种 run mode 宿主及已核实无调用的私有 helper 不属于上述必要边界。当前不包含终端分享、bug report 上传、终端状态上报、品牌公告/彩蛋、私有 Mermaid 转换器及其依赖。公开插件 renderer 和实际宿主能力不能因同属 interactive 目录而删除。静态零入边检查在允许范围内已无新候选，但不识别所有计算路径，也不等于完整必要性证明。
+
+## 一次升级的完成条件
+
+1. 先核对目标版本发布的 SDK 和扩展点。可直接替代的接口先接线并删除对应源码或补丁，不先为整套来源更新哈希。
+2. 依上表按能力检查变更接口及必要适配。未变且未修改的 Coding 源码交给生成器检查；转换锚点失败时定位具体缺口，不默认逐文件手改完整闭包。
+3. 明确持久化兼容：发布 GenerationTask v2、本地旧 v4、GenerationResponseTask v1、ToolTask v3、五种 Native v1 和 codemode module v3 分别处理。不得静默丢弃已接受输入、结果或不确定 effect。
+4. 在获准读取的来源范围内更新生成、来源、依赖和许可；完整与定向检查分别记账。访问拒绝不通过索引、副本、其他工具或其他 agent 绕过。
+5. 按影响验证产品、插件、权限、取消、文件、恢复、声明、独立消费者和 worker/搬迁资源，完成项目要求的仓库检查。记录实际失败和平台缺口，再更新架构与验收状态。
+
+目前未确认新的、可由 pristine Pi 1.5.0 SDK 完整覆盖而直接删除的执行实现。这个观察不证明维护已经达到理论最小值，也不关闭受阻检查。当前改动没有改变持久任务或文档版本，没有新增完整 Native loop 补丁；剩余工作以具体缺口和证据为界。

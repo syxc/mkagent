@@ -8,7 +8,7 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 本次范围是 agent 内核切换及必要兼容接入。MkAgent 既有客户端/服务端分层、Pi backend 与子进程边界、宿主会话/权限/凭据职责、RPC/UI 契约和产品持久化行为保持。宿主侧只做经确认的内核或插件契约所需的最小适配，不重划上层职责或重做已正常工作的模块。
 
-[能力规格](coding-capabilities-spec.md)定义需求，[纠偏跟进](coding-follow-up.md)定义 F0 至 F6 顺序，[架构记录](coding-architecture.md)描述实际代码，[需求对照](coding-acceptance.md)和[验证记录](coding-validation.md)区分实现、历史证据和待验项。当前 AgentSession、自有任务种类、完整 Native SDK 闭包和原版 CLI 都是待评估的实现选择。不能从旧文档、现有测试或来源可达图反推必须保留的需求。
+[能力规格](coding-capabilities-spec.md)定义需求，[纠偏跟进](coding-follow-up.md)定义 F0 至 F6 顺序，[架构记录](coding-architecture.md)描述实际代码，[SDK 维护清单](coding-sdk-maintenance.md)登记发布能力、本地补丁和适配的缺口、恢复、退出条件及升级检查。[需求对照](coding-acceptance.md)和[验证记录](coding-validation.md)区分实现、历史证据和待验项。当前 AgentSession、自有任务种类、完整 Native SDK 闭包和原版 CLI 都是待评估的实现选择。不能从旧文档、现有测试或来源可达图反推必须保留的需求。
 
 ## 目标与名称
 
@@ -38,11 +38,13 @@ pi-durable 已发布 codemode、tool-search、tools、images 及完整 Harness/�
 
 后续请求切片已接入仓内新增的 `GenerationResponseTask` v1，直接复用 SDK 的 `streamResponse` 与 partial 写入。发布版 `GenerationTask.request` 会继续分类和写消息，不能独立返回响应；新任务提供这一明确出口，保留原 `GenerationTask` v4 和所有 `pi.coding.*` v1。Native `message_end` 完成后才决定工具 calls，SDK receipt、唯一 assistant entry 和下一 checkpoint 同事务提交。不确定 request/event 不重发，取消与恢复均清理 SDK generation 槽。新任务属于本地 SDK 修改，退出条件和升级检查见架构记录；不能记为未修改发布 API。完整 30 文件补丁已有真实重放和冻结消费者核对。工具轮次与收尾已核对：发布 SDK 阶段同时写 assistant、创建工具、应用 inbox 和转交下一请求，没有独立返回轮次决定的出口。当前保留 Native 交付与 journal 适配，未新增轮次补丁，退出条件见架构记录。另已删除插件 edit 的参数转换副本，直接使用公开 `createEditTool().prepareArguments`；文件执行和 renderer 保留。公开 Agent/runToolCall 的普通 AgentTool 现已接入同一个 ToolTask 桥，已桥接工具和 AgentSession 往返转换避免重复包装。Native 保留首次参数验证和权限改参；effect 前检查取消，最终参数与完整 SDK 回执原子保存，旧回执缺字段时回退已接受参数。summary 的并发与主 generation 进度隔离已固定，session/summary 的候选 API、具体缺口和退出条件见架构记录；未改变其运行时任务。完整 Coding 闭包及补丁收窄继续推进，F1 至 F3 保持开放。
 
-SDK 入口范围已继续收窄：此前排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源码；`5662422` 后的限定复核再确认三种模式宿主不属于原始 MkAgent 接入或必需插件契约。现排除 `InteractiveMode`、`runPrintMode`、`runRpcMode` 和前两者专用 options，删除三个实现文件。生成器在遍历根入口和 modes barrel 前应用同样排除。保留 `RpcClient`/options、协议和 JSON events、Theme、CustomEditor、renderer/UI、ExtensionMode、AgentSessionRuntime 及 MCP/codemode/tool-search 工厂；产品仍通过 `CodingHost/createAgentSession` 装配。直接使用三种模式的外部消费者须迁移到自己的宿主。当前清单为 215 份 TypeScript、7 项资源；这是保留产物计数，不是完整闭包重算。双包名真实插件、RPC client、宿主 UI、worker bundle、声明及局部来源检查的结果见验证记录。该删除不计作官方 SDK 完整覆盖，也不证明所有剩余辅助源码必要。
+SDK 入口范围已继续收窄：此前排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源码；`5662422` 后的限定复核再确认三种模式宿主不属于原始 MkAgent 接入或必需插件契约。现排除 `InteractiveMode`、`runPrintMode`、`runRpcMode` 和前两者专用 options，删除三个实现文件。生成器在遍历根入口和 modes barrel 前应用同样排除。保留 `RpcClient`/options、协议和 JSON events、Theme、CustomEditor、renderer/UI、ExtensionMode、AgentSessionRuntime 及 MCP/codemode/tool-search 工厂；产品仍通过 `CodingHost/createAgentSession` 装配。直接使用三种模式的外部消费者须迁移到自己的宿主。当前清单为 200 份 TypeScript、6 项资源；这是保留产物计数，不是完整闭包重算。双包名真实插件、RPC client、宿主 UI、worker bundle、声明及局部来源检查的结果见验证记录。该删除不计作官方 SDK 完整覆盖，也不证明所有剩余辅助源码必要。
 
 模式切片已提交于 `b10b881`。其后删除无剩余调用、未从根导出的终端 `/bug` 界面及只供该界面使用的上传 helper，同步移除两项来源记录。已有入口排除已切断这条依赖，不新增生成规则；保留 `AgentSession.summarizeForBugReport()`、核心摘要和 durable summary 任务。宿主实际摘要与插件回归 11 项及声明构建通过，不调用上传服务或真实 provider。此项删除不需要的宿主范围，不记作官方 SDK 替代。
 
 `/bug` 切片已提交于 `d913008`。后续删除无剩余调用、未从包入口导出的 `session-share.ts`、`chat-viewport.ts`、`tui-renderer.ts` 和 `program-status-reporter.ts`，分别移除终端分享和宿主装配，来源清单同步减少四项；不删除公开消息/工具 renderer。外部编辑器、模型搜索与目录刷新仍被组件使用，继续保留。插件及宿主 UI 的 29 项回归、声明构建和独立 `./native` 声明消费者通过，没有执行分享上传或账号检查；此项不计为 SDK 替代或完整闭包核验。
+
+`20cb6e8` 后又删除 15 份没有剩余调用和公开导出的启动器、终端私有源码，包含认证/版本/changelog、缓存浪费展示、剪贴板图片、主题控制器和八份私有组件；彩蛋延迟入口与实现一并删除。公告图片和 `grok-mermaid` 随之移除，生成器与 worker 不再收集交互图片目录。公开组件及 MkAgent 自有剪贴板、用量逻辑保留。86 项定向测试、声明构建、独立声明消费者和 26 项 bundle 测试通过，完整仓库结果见验证记录；不将清理未使用宿主记为 SDK 覆盖。
 
 两个扩展 loader 已共用 runtime、注册 API 与 factory 接受/回滚实现。生成器删除旧入口中的五个同源函数，旧产物由 631 行减至 235 行；各自的模块映射、缓存及目录策略保留。双入口测试覆盖成功注册、失败回滚、旧 API 失效和缓存隔离，SDK 消费者及宿主定向回归通过。这是本地移植实现去重，不是官方包新增 Coding loader；任务版本和 checkpoint 不变。具体退出条件、升级核对和验证范围见架构及验证记录。
 

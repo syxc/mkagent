@@ -4,7 +4,7 @@ MkAgent 第一次将 Pi coding agent 直接换成 pi-durable 后，发现 Coding
 
 2026-11-08 的纠偏先修正文档，再落实内核接入、Coding 兼容及相关代码和测试。此前大量复制并改造上游源码，带来 Coding 和 durable 每次更新时逐文件适配的维护风险。本次优先引用可复用 Pi 官方 SDK，减少长期维护的源码、生成转换和补丁；不能把本地算法移入 SDK 补丁就记作完成。MkAgent 既有整体架构、分层和宿主职责保持，调整限于必要内核接入。需求及 SDK 选择顺序以[能力规格](coding-capabilities-spec.md)为准，步骤见[纠偏跟进](coding-follow-up.md)。`pi-agent-core` 按需使用；完整 `pi-coding-agent` 包的现行生产依赖限制不要求复制其完整 SDK。
 
-本文记录 `cb0311f` 的实际装配和既有核查。当前 AgentSession、自有任务状态机、完整 Native SDK 闭包及补丁均属实现现状，需要按需求重新评估。下文的历史“保留”决定限定于当时选取的契约，不为整个模块提供永久保留依据。Marked 和 Highlight.js 是第三方资源包，其替换不计为 Pi 官方 SDK 复用。
+本文记录 `cb0311f` 的实际装配及后续核查。当前按能力划分的发布 API、补丁、适配、恢复边界和退出条件见[SDK 维护清单](coding-sdk-maintenance.md)。AgentSession、自有任务状态机、剩余 Native SDK 源码及补丁均属实现现状，未核实的必要性继续开放。下文的历史“保留”决定限定于当时选取的契约，不为整个模块提供永久保留依据。Marked 和 Highlight.js 是第三方资源包，其替换不计为 Pi 官方 SDK 复用。
 
 ## 目标职责与待纠正的实现选择
 
@@ -122,7 +122,7 @@ Native Photon 入口现只转发到[共享加载适配](../../packages/pi-durabl
 
 规范依赖补丁现在包含 30 个文件，首行记录后续正文按 LF 换行计算的完整 SHA-256。更新补丁时须同步摘要；回归用例检查两者一致，以免复用旧 Bun 缓存产物。[完整生成器](../../packages/pi-durable-coding/scripts/patch-generation-response.ts)只重建 generation 及根导出的四个产物，保留其余补丁段，并对 pristine 副本执行完整 `git apply --check`、实际重放及全部 30 个输出核对。`DURABLE-PATCH.json` 记录全部文件的原始和目标哈希。本轮全新消费者在禁网、禁用 lifecycle scripts 的冻结安装后逐一匹配这 30 个输出；缓存与锁文件准备过程见验证记录。
 
-Native 图像 MIME 识别通过[类型适配](../../packages/pi-durable-coding/src/compat/image-mime.ts)共用 durable 的既有头部解析算法。适配仅保留未识别时的 `null` 和文件前 4100 字节的读取窗口，完整文件读取器的 APNG 扫描范围与原生入口不同，因此继续使用内核的字节检测函数。终端和剪贴板入口继续调用原名称。
+Native 图像 MIME 识别通过[类型适配](../../packages/pi-durable-coding/src/compat/image-mime.ts)共用 durable 的既有头部解析算法。适配仅保留未识别时的 `null` 和文件前 4100 字节的读取窗口，完整文件读取器的 APNG 扫描范围与原生入口不同，因此继续使用内核的字节检测函数。私有剪贴板图片读取入口已在后续宿主残留清理中删除。
 
 Native ANSI 完整匹配通过[薄适配](../../packages/pi-durable-coding/src/compat/ansi.ts)引用 `ansi-regex@6.2.2`，仅补齐私有 CSI 前缀，并在同一次替换中处理所有匹配，避免删除后拼成新序列。原入口保留类型错误、快速路径和 256 个 UTF-16 码元的流式残片上限，两个导出函数的正文与上游相同。该公开包没有传递依赖，旧调用方继续解析到原来的 `ansi-regex@5.0.1`，具体对照和冻结安装范围见[验证记录](coding-validation.md)。
 
@@ -166,20 +166,22 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 | 本地位置 | 上游来源与移植方式 |
 |---|---|
-| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，共 211 份 TypeScript 和 7 项主题、交互及 HTML 导出资源。排除原版 CLI 和三种 run mode 宿主；保留 `AgentSession`、SDK 工厂、工具、扩展、资源、RPC client/协议和插件 UI 组件，部分文件经过适配。 |
+| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，共 196 份 TypeScript 和 6 项主题及 HTML 导出资源。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留 `AgentSession`、SDK 工厂、工具、扩展、资源、RPC client/协议和插件 UI 组件，部分文件经过适配。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 105 行 core 子类，保留 durable 队列身份、恢复和独立的可变默认对象。默认消息转换直接使用发布版 core；模型和 usage 两个默认对象仍从锁定上游提取，stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
 | `src/native-operations.ts` | 22 行门面，调用仓内 core 补丁导出的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
 | `src/upstream/**` | 6 项选取源码：旧扩展 loader、Git 路径、上下文文件、资源去重、boundary drafts 和同步 durable context；另有 28 个共享入口。旧 loader 共用 Native 的 runtime、注册 API 和 factory 生命周期；资源纯函数也由原生模块复用。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
 
-前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 215 份源码和 7 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。本批只复现两个入口，没有完整重生成或重新计算最小闭包。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 12 项来源产物及 28 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
+前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 200 份源码和 6 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。本批定向复现全部 195 份允许的 Coding 源码，核对 6 项资源的来源及产物摘要和 4 个门面的产物摘要；没有读取受拒绝的 token 文件、重新生成门面或重算完整闭包。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 12 项来源产物及 28 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
 `461e7c9` 后的入口核对确认，MkAgent 通过 `CodingHost/createAgentSession` 装配，仓内产品没有 `main`/`MainOptions` 调用。先前切片排除原版 Pi 启动器及其独占的 24 份源码，包含 CLI 认证、配置向导、自更新、旧 Pi 配置迁移和 CLI 内置扩展集合；Llama 管理扩展仅由该集合进入。`5662422` 后的限定复核另确认，原始 MkAgent 和当前宿主均自行管理会话、UI 与传输，不依赖上游终端、stdout 或 stdin/stdout RPC 模式宿主。现从根入口和 modes barrel 排除 `InteractiveMode`、`InteractiveModeOptions`、`runPrintMode`、`PrintModeOptions`、`runRpcMode`，并删除三个实现文件。生成规则在遍历任一入口的依赖前完成排除。`RpcClient` 及其 options、RPC 协议、`JsonAgentSessionEvent`、Theme、CustomEditor、renderer/UI、`ExtensionMode`、AgentSessionRuntime 和插件生命周期保留；MCP/codemode/tool-search 的公开工厂保留。直接使用被排除模式的外部消费者须迁移到自有宿主，这项导出变化不承诺任意外部消费者零影响。此处删除不需要的模式宿主，不计作官方 SDK 完整覆盖，也没有证明其余辅助闭包全部必要。
 
 模式宿主删除后，`modes/interactive/bug-report.ts` 的终端同意、上传和 ZIP 交付界面没有剩余调用，也未从根入口公开导出；`core/bug-report-upload.ts` 只供该界面使用。两份源码及来源记录已删除。生成器已在两个入口切断模式宿主依赖，不需再加替代实现或排除规则。`core/bug-report.ts` 和 `AgentSession.summarizeForBugReport()` 仍供会话摘要使用，继续保留。宿主实际调用摘要和双包名插件的 11 项回归、声明构建通过；不调用真实 provider 或上传服务。这是宿主私有界面范围删除，不是官方 SDK 替代，也不支持批量删除公开插件组件。
 
 `d913008` 后继续核对并删除四份无剩余调用、未从包入口导出的终端私有 helper：`session-share.ts`、`chat-viewport.ts`、`tui-renderer.ts`、`program-status-reporter.ts`。它们分别装配上游分享交付、viewport、终端 renderer 和状态上报，不是公开消息或工具 renderer 组件。既有模式入口排除已切断这些依赖，未新增替代实现；来源清单同步删除四项。`external-editor.ts`、`model-search.ts` 和 `model-catalog-refresh.ts` 仍被公开组件使用，继续保留。双包名插件和宿主 UI 的 29 项回归、声明构建及独立 `./native` 声明消费者通过；不调用分享服务或已登录身份。该项仍是宿主范围删除，不作为 SDK 替代或完整闭包核验。
+
+`20cb6e8` 后再删除 15 份无剩余调用、未从根入口或组件 barrel 导出的私有源码：`cli/auth-command.ts`、`core/radius.ts`、`core/cache-stats.ts`、`utils/changelog.ts`、`utils/version-check.ts`、`utils/clipboard-image.ts`、`theme/theme-controller.ts`，以及交互组件 `custom-entry`、`earendil-announcement`、`easter-egg-3d.lazy`、`easter-egg-3d`、`mermaid`、`pi-logo`、`radius-login-selector` 和 `themed-text`。此处 theme 和组件路径相对 `modes/interactive/`。公告专用 `clankolas.png` 和 `grok-mermaid` 依赖也移除；生成器和 worker 不再收集交互图片目录。公开 `Theme`、`CustomEditor`、renderer/UI、RPC、会话生命周期及 MkAgent 自有剪贴板和用量功能保留。定向行为、声明、消费者和 bundle 通过，来源记录仅删除对应项；不是 SDK 完整覆盖，也不证明所有保留源码必要。范围和未完成检查见[验证记录](coding-validation.md#private-host-remnants-after-20cb6e8)。
 
 `RpcClient` 是另一个程序化入口，不包含 agent 启动器。调用方须在 `RpcClientOptions.cliPath` 提供兼容的 Node CLI；`start()` 在缺少入口时于创建子进程前明确拒绝，不再运行工作目录下的 `dist/cli.js`。原注释声称会搜索入口，实际仅使用固定相对路径，现已修正。显式入口保留 cwd、env、provider、model、额外参数和 JSONL 请求，未恢复原版 CLI。Bun 和 Node 的本地进程夹具覆盖启动、请求、错误及停止，定向来源复现见验证记录；这不证明整个程序化运行模式闭包必要。
 
@@ -201,7 +203,7 @@ Native 实例仍满足 `instanceof Agent`，现在也满足 `instanceof CoreAgen
 
 这里的“移植”包含原样复制和可复现转换。清单记录原文件哈希、产物哈希及变更；转换覆盖 Agent 执行边界、宿主模型与凭据接口、项目信任、资源策略、工具回放、OAuth、插件解析及打包资源路径。转换规则保存在生成脚本及同目录的 `*-port.ts` 中。
 
-上游复制部分保留 [MIT 许可](../../packages/pi-durable-coding/LICENSE.pi)，MkAgent 包声明为 Apache-2.0。构建时随依赖搬运的 WASM、Marked 和 Highlight.js browser 文件另行管理，不包含在上述 7 项 Pi 资源计数中。Marked 保留包提供的版权与许可注释，Highlight.js 另附包提供的完整 BSD 3-Clause LICENSE，单文件 HTML 也携带该声明。
+上游复制部分保留 [MIT 许可](../../packages/pi-durable-coding/LICENSE.pi)，MkAgent 包声明为 Apache-2.0。构建时随依赖搬运的 WASM、Marked 和 Highlight.js browser 文件另行管理，不包含在上述 6 项 Pi 资源计数中。Marked 保留包提供的版权与许可注释，Highlight.js 另附包提供的完整 BSD 3-Clause LICENSE，单文件 HTML 也携带该声明。
 
 ## MkAgent 自有适配层与边界
 

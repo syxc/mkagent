@@ -335,7 +335,7 @@ function assets(directory: string) {
     }
   }
 }
-for (const directory of ['modes/interactive/theme', 'modes/interactive/assets', 'core/export-html']) assets(directory);
+for (const directory of ['modes/interactive/theme', 'core/export-html']) assets(directory);
 // Reuse the public core state facade and protocol with a durable execution backend.
 // The native agent-loop implementation is deliberately outside this source closure.
 for (const [path, target] of [
