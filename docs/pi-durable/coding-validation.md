@@ -90,6 +90,45 @@ This batch does not repeat the full repository, lint, Desktop or headless
 product interaction checks. Their earlier records retain their original
 scope. F1/F3 and the previously denied token-table review remain open.
 
+## Public read and write tool contract review
+
+The installed pi-durable 1.5.0 package publicly exports both tool factories.
+The reviewer called both factories and tested a working write adapter, rather
+than rejecting them because their signatures differ. The main thread reviewed
+and reran the retained fixture under Node 24.22.1 with a temporary HOME and
+network access denied by the system sandbox. All 24 checks pass. Native
+execution methods and two pure helpers are extracted from the exact current
+AST; custom file operations and image processing use controlled substitutes.
+This check does not import the complete Native UI/config graph.
+
+The write adapter retains path resolution, the Native queue shared with edit,
+custom mkdir/write operations, raw error identity and abort checks after each
+await. A pending write must settle before the Native queue is released, even
+after cancellation. The SDK queue uses separate state and can start a write
+while the Native queue is held. The tested adapter preserves these contracts
+but adds environment and result bridges to the existing 33-line execution
+method. It only delegates the success message, so it does not remove a tool
+implementation.
+
+The read adapter matches ordinary and empty text, pagination, line and byte
+limits, negative limits and fractional offsets after diagnostics and result
+fields are converted. BOM and oversized first-line output still differ.
+Custom MIME detection can disable or override Native image routing, whereas
+the SDK always inspects the header. Full compatibility also requires Native
+image processing, model/fallback resizing, non-vision notes, success/error
+status and cancellation. A memory BinaryReader plus environment, model and
+result adapters would retain the main contracts in the existing 116-line
+execution method. No implementation with a net maintenance reduction was
+confirmed.
+
+Both source-manifest records remain unchanged, with empty changes and equal
+source/output hashes. Production read/write stay intact; shared lower-level
+path, MIME, image, truncation and diff helpers remain in use. These findings
+support retaining the tested glue, not a claim that future public APIs cannot
+replace it. This read-only review does not repeat full Native imports, type
+checks or product interaction. The temporary fixture is removed with trash
+after the main-thread verification. F1/F3 remain open.
+
 ## Function signature guards after a2c5fe6
 
 This follow-up changes only generation rules, tests and source registration.
