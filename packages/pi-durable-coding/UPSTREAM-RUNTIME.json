@@ -1019,13 +1019,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/modes/interactive/chat-viewport.ts",
-      "target": "src/pi/modes/interactive/chat-viewport.ts",
-      "sha256": "24bbdd06a5e17d6c0631f7de51329eb7bb4ecd4a460dec7b3d593ff9e6219960",
-      "portSha256": "24bbdd06a5e17d6c0631f7de51329eb7bb4ecd4a460dec7b3d593ff9e6219960",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/modes/interactive/components/armin.ts",
       "target": "src/pi/modes/interactive/components/armin.ts",
       "sha256": "45d59fdf8adba4ea8a28b573a9127e628ae30a787dfa95e136ccd7bef0d1ddbe",
@@ -1376,20 +1369,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/modes/interactive/program-status-reporter.ts",
-      "target": "src/pi/modes/interactive/program-status-reporter.ts",
-      "sha256": "52bf05641fecb006f40992c9e8bf6b7efc21822401387096dcf2f698ad6d83c4",
-      "portSha256": "52bf05641fecb006f40992c9e8bf6b7efc21822401387096dcf2f698ad6d83c4",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/session-share.ts",
-      "target": "src/pi/modes/interactive/session-share.ts",
-      "sha256": "9d4aee68f970b09c764334ab878932801be93ea302cabe444f963b62dd0bb626",
-      "portSha256": "9d4aee68f970b09c764334ab878932801be93ea302cabe444f963b62dd0bb626",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/modes/interactive/theme/dark.json",
       "target": "src/pi/modes/interactive/theme/dark.json",
       "sha256": "e1f96982f8cb7d2a48eca7db03c9cb282cb1e14a243680cd855638ecd6a251b6",
@@ -1436,13 +1415,6 @@
       "target": "src/pi/modes/interactive/theme/theme.ts",
       "sha256": "d1da018dbaba222b5f477b77cb9c1c79886dbcc92856b80e1c0c7685256382cf",
       "portSha256": "d1da018dbaba222b5f477b77cb9c1c79886dbcc92856b80e1c0c7685256382cf",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/tui-renderer.ts",
-      "target": "src/pi/modes/interactive/tui-renderer.ts",
-      "sha256": "a5b0a847dbac31cceac6e3d6d68aaf46404ceca7ad11e716a2386b68f7a249aa",
-      "portSha256": "a5b0a847dbac31cceac6e3d6d68aaf46404ceca7ad11e716a2386b68f7a249aa",
       "changes": []
     },
     {

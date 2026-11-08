@@ -27,7 +27,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 | 2 | F2 | 优先复用官方内核和 SDK | 宿主工具委托公开 ToolTask phases/abort；请求与 partial 已接入仓内新增 GenerationResponseTask，直接复用 SDK streamResponse。工具轮次与收尾已记录发布接口的写入和结算耦合，保留必要交付适配；普通 AgentTool 已经同一 ToolTask 桥执行，插件 edit 参数转换已直接使用公开 SDK 并删除副本。summary/session 的具体缺口已记录；发布 API 与本地扩展分开记账 |
 | 3 | F3 | 收窄兼容代码和源码范围 | 已排除原版 CLI 的 `main`/`MainOptions`、24 份独占源码，以及三种上游 run mode 和专用 options；保留 RPC client/协议和插件组件。两个 loader 共用 runtime、注册和 factory 生命周期，保留模块映射、缓存及目录策略。剩余例外继续按具体缺口和升级检查核对，受拒绝的 token 表不绕过 |
 | 4 | F4 | 修正测试并验证实际行为 | 先区分行为契约与实现断言，再按改动验证产品、插件、文件操作、权限、取消和恢复 |
-| 5 | F5 | 同步来源、依赖和可复现产物 | 当前运行时清单为 219 份 TypeScript、7 项资源；本批只局部复现两个入口，不宣称完整重算闭包。辅助清单为 12 项来源和 28 个共享入口，数量不作为目标 |
+| 5 | F5 | 同步来源、依赖和可复现产物 | 当前运行时清单为 215 份 TypeScript、7 项资源；本批只局部复现两个入口，不宣称完整重算闭包。辅助清单为 12 项来源和 28 个共享入口，数量不作为目标 |
 | 6 | F6 | 汇总架构、升级及功能验收 | 文档、实际代码、测试和证据一致；确认的重复实现已处理，例外有具体依据，未完成项明确记录 |
 
 每项改动完成必要验证后再处理下一项。历史未验证平台不自动扩展为本批工作，也不能用于豁免已经确认缺失的必需功能。
@@ -82,6 +82,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 SDK 入口已先排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源码，后续限定复核又确认三种模式宿主不属于原始 MkAgent 接入和必需插件契约。现排除 InteractiveMode、runPrintMode、runRpcMode、专用 options，并删除三个实现文件；两个入口在依赖遍历前应用排除。保留 RPC client/协议、JSON events、Theme、CustomEditor、renderer/UI、ExtensionMode、AgentSessionRuntime 和插件生命周期。双包名插件实际着色、editor 输入与 Escape、注册 renderer，以及 RPC、宿主 UI、bundle、声明和局部来源检查通过。直接使用这些模式的外部消费者会失去相应导出，须使用自有宿主。此项删除不需要的模式实现，不计作官方 SDK 覆盖，也不授权批量删除其余辅助依赖。
 
 三种模式切片已提交于 `b10b881`。后续定向核对确认终端 `/bug` 界面没有剩余调用、没有根导出，上传 helper 只由该界面引用。现删除 `modes/interactive/bug-report.ts` 和 `core/bug-report-upload.ts` 及两项来源记录；既有入口排除已切断这些依赖，不新增替代实现。`AgentSession.summarizeForBugReport()`、核心摘要和 durable summary 任务保留，宿主实际调用及插件回归 11 项、声明构建通过。未执行上传或真实 provider 请求；这仍属于不需要的宿主范围删除。
+
+`/bug` 切片已提交于 `d913008`。其后又确认四份终端私有 helper 没有剩余调用，且未从包入口导出，现删除 `session-share.ts`、`chat-viewport.ts`、`tui-renderer.ts` 和 `program-status-reporter.ts`，同步移除四项来源记录。公开消息/工具 renderer 不受这四个宿主装配文件删除影响；外部编辑器、模型搜索和目录刷新仍有组件调用。插件及宿主 UI 的 29 项回归、声明构建与独立 `./native` 声明消费者通过；没有执行分享上传或账号检查，也未完整重算闭包。
 
 两个 loader 的 runtime、注册 API 和 factory 接受/回滚已改为同一份实现。旧生成产物移除五个函数正文，从 631 行减至 235 行；两套模块映射、缓存和目录发现继续独立。原先以私有初始化状态为由保留整份 loader 的解释已修正。此项属于本地同源去重，不计为正式 SDK 新增能力，源码文件计数不变。退出条件和升级核对见架构记录，双入口行为与定向复现见验证记录。
 

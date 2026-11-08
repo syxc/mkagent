@@ -26,6 +26,43 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Private terminal helpers after d913008
+
+A focused check of the remaining top-level interactive helpers found no caller
+or package-entry export for session-share.ts, chat-viewport.ts, tui-renderer.ts
+or program-status-reporter.ts. They compose upstream sharing, viewport,
+terminal renderer and status reporting. All four files and their source records
+are removed. Existing mode-entry exclusions already cut their dependency path;
+no replacement implementation or generator rule is added. Public message/tool
+renderers remain. The external editor, model search and catalog refresh helpers
+still have component callers and remain.
+
+The plugin transpiler and host UI tests pass 29 tests with 124 assertions and
+no failures. They exercise both package aliases, theme styling, custom editor
+input, message rendering, reload, cancellation and shutdown. Coding build:types
+and a separate `./native` declaration consumer pass. The consumer uses a package
+symlink, not a fresh frozen install. Checks use temporary data and local
+fixtures without sharing, authentication or real provider requests.
+
+The independent static check relative to d913008 found no confirmed defect in
+the deleted-helper boundary, retained entry exports or source-record changes.
+It did not rerun tests. Its initial index call returned denied theme-tokens.ts
+source despite the requested exclusion. This violated the access restriction.
+The reviewer stopped that index path and excluded the returned content from
+the conclusion. This incident is not valid evidence for the denied source
+check, which remains open. No further index call is used for this slice.
+
+The inventory has 215 TypeScript records, including 211 under src/pi, and seven
+assets. The record check confirms that both inventories remove only the four
+targets; other entries are unchanged. This is not a recomputed minimal closure
+or complete source generation. The denied theme-token check remains open.
+
+One retained BashExecutionComponent comment still attributes binary sanitizing
+to tui-renderer.ts executeBashCommand. That helper did not define the named
+method. The retained core/bash-executor.ts actually sanitizes binary data
+before its onChunk callback. The stale comment is recorded here; this slice
+does not change Bash execution or its public renderer.
+
 ## Unused terminal bug-report flow after b10b881
 
 A focused caller and export check found no remaining use of the terminal
