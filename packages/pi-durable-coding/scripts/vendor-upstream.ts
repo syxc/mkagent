@@ -12,7 +12,7 @@ const git = Bun.spawnSync(['git', '-C', upstream, 'rev-parse', 'HEAD']);
 if (git.exitCode || git.stdout.toString().trim() !== revision) {
   throw new Error(`Expected Pi v1.5.0 at ${revision}`);
 }
-const dirty = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--', 'packages/coding-agent/src', 'packages/coding-agent/examples', 'packages/coding-agent/test/suite/mcp-oauth-server.ts', 'packages/durable/src/harness/context.ts', 'LICENSE', ':(glob,icase,exclude)packages/coding-agent/src/**/runtime-credentials.ts']);
+const dirty = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--', 'packages/coding-agent/src', 'packages/coding-agent/examples', 'packages/coding-agent/test/suite/mcp-oauth-server.ts', 'packages/durable/src/harness/context.ts', 'LICENSE']);
 if (dirty.exitCode || dirty.stdout.toString().trim()) throw new Error('Upstream sources must be clean');
 const destination = resolve(import.meta.dir, '..');
 const sourceRoot = join(upstream, 'packages/coding-agent/src');

@@ -1,3 +1,5 @@
+import { colorToHex } from "@earendil-works/pi-tui";
+
 /**
  * ANSI escape code to HTML converter.
  *
@@ -12,49 +14,11 @@
  */
 
 // Standard ANSI color palette (0-15)
-const ANSI_COLORS = [
-	"#000000", // 0: black
-	"#800000", // 1: red
-	"#008000", // 2: green
-	"#808000", // 3: yellow
-	"#000080", // 4: blue
-	"#800080", // 5: magenta
-	"#008080", // 6: cyan
-	"#c0c0c0", // 7: white
-	"#808080", // 8: bright black
-	"#ff0000", // 9: bright red
-	"#00ff00", // 10: bright green
-	"#ffff00", // 11: bright yellow
-	"#0000ff", // 12: bright blue
-	"#ff00ff", // 13: bright magenta
-	"#00ffff", // 14: bright cyan
-	"#ffffff", // 15: bright white
-];
+const ANSI_COLORS = Array.from({ length: 16 }, (_, index) => color256ToHex(index));
 
-/**
- * Convert 256-color index to hex.
- */
 function color256ToHex(index: number): string {
-	// Standard colors (0-15)
-	if (index < 16) {
-		return ANSI_COLORS[index];
-	}
-
-	// Color cube (16-231): 6x6x6 = 216 colors
-	if (index < 232) {
-		const cubeIndex = index - 16;
-		const r = Math.floor(cubeIndex / 36);
-		const g = Math.floor((cubeIndex % 36) / 6);
-		const b = cubeIndex % 6;
-		const toComponent = (n: number) => (n === 0 ? 0 : 55 + n * 40);
-		const toHex = (n: number) => toComponent(n).toString(16).padStart(2, "0");
-		return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-	}
-
-	// Grayscale (232-255): 24 shades
-	const gray = 8 + (index - 232) * 10;
-	const grayHex = gray.toString(16).padStart(2, "0");
-	return `#${grayHex}${grayHex}${grayHex}`;
+	// Native SGR accepts indices above 255; the indexedColor factory rejects them.
+	return colorToHex({ kind: "indexed", index });
 }
 
 /**

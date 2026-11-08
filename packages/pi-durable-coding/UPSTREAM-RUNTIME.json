@@ -325,8 +325,10 @@
       "source": "packages/coding-agent/src/core/export-html/ansi-to-html.ts",
       "target": "src/pi/core/export-html/ansi-to-html.ts",
       "sha256": "09232a1add3bbb0cd436c881dca877b81efa754c1b6133b57e057ef212ec9926",
-      "portSha256": "09232a1add3bbb0cd436c881dca877b81efa754c1b6133b57e057ef212ec9926",
-      "changes": []
+      "portSha256": "ee49a30e7060b904777e13caa1427627063bd8d513ed57d7099d4d19a8098124",
+      "changes": [
+        "public-pi-tui-html-colors"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/export-html/index.ts",

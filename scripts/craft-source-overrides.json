@@ -2509,12 +2509,16 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "a9a278e577b08ef9a43839b258b1c9aed7cffd9a42a02f3995fd0a8a91879e4d",
-      "reason": "Register shared helper paths, transforms, provenance labels and added dependencies once. Preserve guarded declaration replacements and the existing string-only interface."
+      "sha256": "e7faa7ed23704694b0edcb705acf3428e32b9e0d938340aab8a1bfdf26fe19df",
+      "reason": "Register shared helper paths, transforms, provenance labels and added dependencies once. Guard HTML palette signatures and duplicate declarations while replacing color algorithms with public pi-tui."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "e51a4c54b9763e2588b8ca59cf7a64ffc5024606ced92a425d65401d2a87476a",
-      "reason": "Preserve Native forwarding guards separately from rule registration. Truncation checks both public signatures and retained private-helper references without binding replaced bodies."
+      "sha256": "591852657973fcdeeb74763bf677e09c6528729d860396d588c9aa181dad0de5",
+      "reason": "Guard declarations and retained policy constants when forwarding Native algorithms. Do not bind replaced child-process, shell, read-path or truncation bodies to hashes."
+    },
+    "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
+      "sha256": "93ba3bf12b3ae3c83e43f175f8ff74d8fff1f997f6aa4ded5aa5a20a115e847f",
+      "reason": "Verify that nine replaced algorithm bodies cannot change generated output, while declaration types, duplicates, missing declarations and policy constants remain guarded."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -3725,8 +3729,8 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "c98642a3b264e7123512453397177cd2c6742124f11feb1e6b0d582e0f0548f2",
-      "reason": "Reproduce selected pinned ports and shared adapters with explicit legacy directory and prompt policies. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
+      "sha256": "c5237685e986349fd5fd184523b0f5afbdd3fde6a318e95bacd31c69c69d62b5",
+      "reason": "Reproduce selected pinned ports and shared adapters with explicit legacy directory and prompt policies. Require clean upstream source directories without a credential-source exclusion."
     },
     "packages/pi-durable-coding/src/compat.ts": {
       "sha256": "47e3f3b54cd608a6cabcd070bb29b9b7b66b6cbc1366d3cc7b4a1de554ea7b28",
@@ -4037,8 +4041,8 @@
       "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "862505e08e26bfe56b0d4ad68207c796532365abbe2acea09c1b78c9a63f0aa0",
-      "reason": "Record the complete pinned runtime closure, shared Photon provenance and public dependencies, including chord, with only the eight consumed core operations."
+      "sha256": "725db947ee6272f298eb593f4c44d208861fc8ca3b4a4a55ed959a86fb0a2c2c",
+      "reason": "Record the complete pinned runtime closure, shared Photon provenance, public dependencies and HTML color forwarding, with only the eight consumed core operations."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
@@ -4297,8 +4301,12 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/experimental.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/export-html/ansi-to-html.ts": {
-      "sha256": "09232a1add3bbb0cd436c881dca877b81efa754c1b6133b57e057ef212ec9926",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/ansi-to-html.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "ee49a30e7060b904777e13caa1427627063bd8d513ed57d7099d4d19a8098124",
+      "reason": "Preserve the pinned Native SGR parser and HTML escaping while sharing the ANSI palette and indexed color conversion through public pi-tui."
+    },
+    "packages/pi-durable-coding/test/native-html-colors.test.ts": {
+      "sha256": "809c90d0d7cf052629295fab6157f24c2302e1a07c0c129c2f43d8d492824491",
+      "reason": "Pin original ANSI HTML output for 635 inputs, guard generation boundaries and verify custom tool colors in a real session HTML export."
     },
     "packages/pi-durable-coding/src/pi/core/export-html/index.ts": {
       "sha256": "6741a3b59795d3b25fea9f7385f84b7213fa869060152416cde7aa6802c44f9d",
@@ -5197,8 +5205,8 @@
       "reason": "Exercise durable native coding behavior and isolated recovery through the native-recovery-worker.ts fixture."
     },
     "packages/pi-durable-coding/test/host-model-runtime.test.ts": {
-      "sha256": "3b3c48ac10771f7657bc55e7474035f629eddde4b2ee82a7f30b03e0e1cd7bed",
-      "reason": "Exercise durable native coding behavior and isolated recovery through the host-model-runtime.test.ts fixture."
+      "sha256": "022367c204354dbe552296435ac6d5db748c9c9db85b74ed9135c1b08623f90e",
+      "reason": "Verify shared host and Native model auth, runtime-only key overlays, persistent updates, metadata, failed deletion and cancellation with synthetic credentials."
     },
     "packages/pi-durable-coding/test/host-resources.test.ts": {
       "sha256": "d637344ed8e24e8edc595e27e2ac47d39475498dfa1bcdb5d6d7def2ae066791",

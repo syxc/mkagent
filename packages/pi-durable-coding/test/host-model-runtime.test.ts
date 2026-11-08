@@ -223,6 +223,56 @@ describe('native ModelRuntime bound to host Models', () => {
     expect(await state.models.getAuth('host')).toBeUndefined();
   });
 
+  test('keeps stored mutations beneath runtime keys and exposes only credential metadata', async () => {
+    const state = fixture();
+    const stored = { type: 'oauth', access: 'synthetic-access', refresh: 'synthetic-refresh', expires: 1 } as const;
+    await state.store.modify('host', async () => stored);
+    state.credentials.setRuntimeApiKey('host', 'synthetic-runtime');
+    state.credentials.setRuntimeApiKey('runtime-only', 'synthetic-runtime-only');
+    expect(await state.credentials.list()).toEqual([
+      { providerId: 'host', type: 'api_key' },
+      { providerId: 'runtime-only', type: 'api_key' },
+    ]);
+    expect(await state.store.list()).toEqual([{ providerId: 'host', type: 'oauth' }]);
+
+    const updated = await state.credentials.modify('host', async current => {
+      expect(current).toEqual(stored);
+      return storedKey;
+    });
+    expect(updated).toEqual(storedKey);
+    expect(await state.store.read('host')).toEqual(storedKey);
+    expect(await state.credentials.read('host')).toEqual({ type: 'api_key', key: 'synthetic-runtime' });
+    state.credentials.removeRuntimeApiKey('host');
+    expect(await state.credentials.read('host')).toEqual(storedKey);
+    await state.credentials.delete('runtime-only');
+    expect(state.credentials.hasRuntimeApiKey('runtime-only')).toBe(false);
+    expect(await state.store.read('runtime-only')).toBeUndefined();
+  });
+
+  test('preserves runtime keys on failed or cancelled credential operations', async () => {
+    const state = fixture();
+    await state.store.modify('host', async () => storedKey);
+    state.credentials.setRuntimeApiKey('host', 'synthetic-runtime');
+    const failure = new Error('Synthetic storage failure');
+    const remove = state.store.delete;
+    state.store.delete = async () => { throw failure; };
+    await expect(state.credentials.delete('host')).rejects.toBe(failure);
+    state.store.delete = remove;
+    expect(state.credentials.hasRuntimeApiKey('host')).toBe(true);
+
+    const cancelled = new Error('Synthetic cancellation');
+    const options = { signal: AbortSignal.abort(cancelled) };
+    await expect(state.credentials.read('host', options)).rejects.toBe(cancelled);
+    await expect(state.credentials.list(options)).rejects.toBe(cancelled);
+    await expect(state.credentials.modify('host', async () => undefined, options)).rejects.toBe(cancelled);
+    await expect(state.credentials.delete('host', options)).rejects.toBe(cancelled);
+    expect(await state.store.read('host')).toEqual(storedKey);
+    expect(await state.credentials.read('host')).toEqual({ type: 'api_key', key: 'synthetic-runtime' });
+    await state.credentials.delete('host');
+    expect(state.credentials.hasRuntimeApiKey('host')).toBe(false);
+    expect(await state.store.read('host')).toBeUndefined();
+  });
+
   test('keeps OAuth snapshots side-effect-free and serializes refresh through the host store', async () => {
     const state = fixture();
     let refreshes = 0;

@@ -19,16 +19,253 @@ a concrete gap that those interfaces and adapters cannot meet. Upgrade review
 and adaptation effort take priority over line counts.
 The [follow-up list](coding-follow-up.md) records the revised work and the
 remaining checks. The user has since withdrawn the source-reading ban and
-authorized full checks in the normal workspace and HOME. A tool policy still
-rejects direct inspection of `runtime-credentials.ts`; this does not invalidate
-completed generation, type, build or audit checks. Normal-profile AgentSession and projection requirements
+authorized full checks in the normal workspace and HOME. The continuation on
+2026-11-08 obtained and reviewed `runtime-credentials.ts`. The earlier path
+rejection remains a historical result, not a current blocker. Normal-profile AgentSession and projection requirements
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Public HTML colors and source checks after 8b1c98f
+
+The working tree on 2026-11-08 uses the public pi-tui 1.5.0 `colorToHex`
+function for the Native HTML palette and indexed colors. No dependency or SDK
+patch was added. The Native parser, state transitions, escaping and tool
+rendering stay in place. The converter passes a structural indexed color;
+the `indexedColor()` factory rejects indices above 255, which the original
+Native parser accepts.
+
+The runtime file changes from 258 to 222 lines. The shared declaration rules
+change from 189 to 219 lines, including signature, duplicate and declaration
+kind checks. These two files together remove six lines. The gain is removal of a local palette
+and conversion algorithm, not proof that the whole SDK has minimum cost.
+The generator retains the module documentation and does not bind the replaced
+algorithm bodies to a new source hash. Signature, export, binding and duplicate
+changes fail generation.
+
+Independent review found one P2 in the first version: the variable branch
+also accepted same-name constants in three existing hash-protected rules.
+Three new negative tests first failed. The fix restricts that branch to
+tool-search and HTML colors; all three now fail generation with the expected
+missing-declaration error. The same reviewer confirmed that const/let/var
+changes are rejected and changes to the original function/class declarations
+still reach their hash checks. The narrow review found no further issue.
+
+| Check | Result and scope |
+|---|---|
+| Bun regression | The final nine-file model and shared-helper batch passes: 127 tests, 224 Bun `expect()` calls, zero failures. It includes the 37 generator cases and three new declaration-kind regressions. |
+| HTML behavior | Both Bun and Node 24.22.1 pass all 14 HTML and declaration tests. SHA-256 baselines captured before the change cover 635 inputs: all indexed colors, wide integers, Infinity, SGR styles, RGB and escaping. A real SessionManager and custom tool renderer write HTML; its payload retains call, collapsed-result and expanded-result colors. |
+| Explicit test and generator types | Eight roots, including the two existing ambient declaration files, have zero diagnostics under the Coding package compiler options after the final guard fix. An initial four-root attempt omitted the existing highlight.js declarations and reported 23 missing-declaration diagnostics; the corrected program passes without source or dependency changes. |
+| CI and declarations | After the final generator guard fix, `validate:ci` passes with Node 24 on PATH: all workspace types, SDK declarations, 61 shared tests, 20 documentation-tool smoke tests and all locale checks. The explicit eight-root type check and complete source reproduction also pass. |
+| Lint | The complete lint command passes with zero errors and 107 existing warnings, using the isolated pinned Craft checkout. |
+| Worker build | `bun --no-env-file run --cwd packages/pi-agent-server build` passes. |
+| Runtime reproduction | The complete runtime `--check` passes for 248 sources and nine assets after regeneration. Only the ANSI HTML output and its source-manifest entry change. |
+| Auxiliary source gate | `vendor-upstream.ts --check` passes for 12 sources and 28 shared forwards. The old credential-source exclusion is removed. A task-owned sparse checkout with only that source modified is rejected before generation; the pinned reference and existing manifest stay unchanged. |
+| Craft provenance | After registration of two new tests and six changed hashes, the complete audit passes for 2230 files: 1455 common paths, 874 normalized-identical files, 581 modified files, 775 project-only files and 858 reviewed upstream-only deletions. The first HTML audit correctly rejected its six missing or stale records. |
+
+Three existing converters also drop nine hashes of discarded algorithm
+bodies. Child-process forwarding keeps its AST signature and 100 ms policy
+constant checks. Shell and read-path forwarding compare readable declaration
+headers instead of whole-function hashes. Missing and duplicate declarations,
+parameter and return types, exports and retained constants remain guarded.
+The original source hashes in both provenance manifests remain unchanged.
+
+Bun and Node each pass 37 new generator cases. Nine cases change individual
+algorithm bodies and compare the complete generated output; the other cases
+reject declaration or constant changes. The complete runtime and auxiliary
+checks still pass without a generated-output change. The existing Native
+child-process, shell and read-path suites pass 18, 18 and 20 tests separately,
+including real child and descendant output, signal order and path probing.
+The nine-file batch above includes the 37 generator cases. Together with
+these 56 Native tests, 183 Bun tests pass in the affected suites. Node passes
+51 cases across the two new test files. Eight explicit TypeScript roots,
+including the existing ambient declarations, pass. The full repository run
+and independent review are recorded separately.
+
+The public model-policy review uses the Coding package's resolved pi-ai 1.5.0,
+not the root workspace's 1.1.0 installation. `ModelRuntime` already delegates
+provider storage, auth and requests to public `createModels()`. Native code
+adds models.json precedence and validation, CLI name ambiguity, thinking
+suffixes, glob scopes, virtual routing and branch state. The public collection
+exposes exact provider/id lookup and provider callbacks, not those Coding
+policies. Replacing them with those callbacks retains the same policy code.
+This review retains those adapters. The remote catalog wrapper also retains
+the four-hour interval, ETag/304, local generation time and failed-refresh
+cache policies. Public `createProvider.fetchModels` returns a model list;
+it does not replace those metadata publication rules. This is a source and
+interface review, with no live catalog request. It does not prove every
+remaining source file necessary.
+
+Independent review covers the four compaction modules, the two Native before
+hooks and the summary task. It found no new public replacement that reduces
+maintenance while keeping the Native contract. Entry-level usage invalidation,
+split turns, metadata, retained tails, branch ancestry and file tracking depend
+on the Native entry tree. Public `beforeCompact` receives an already selected
+range and returns a decline or summary; it does not carry the full Native
+retained-entry, usage/details, instruction, cancellation and target-leaf
+contract. Native summaries commit the requesting checkpoint before a model
+call and reject uncertain replay. Direct use of `CompactionTask` changes that
+replay rule. Public token totals, text/context helpers and retry remain in use.
+The review ran seven in-memory comparisons without a model request or file
+write; it did not run the full plugin or product suite.
+
+Independent review also covers Native session and extension lifecycle,
+renderer state and interactive subscriptions, MCP assembly and Llama model
+management. Core Agent, durable Registry/GenerationHooks, pi-tui components,
+public MCP clients/transports and model request APIs are already in use.
+Native retains session shutdown/rebind order, stale-context rejection,
+factory rollback, tool render state, subscription cleanup, dynamic tool
+exposure, read-only retry and model-management recovery. Replacing those
+policies with public callbacks does not remove them. Three in-memory MCP
+checks cover resource links, JSON blobs and plain text. The reviewer used
+the Coding package's resolved 1.5.0 packages, without a live service or model
+request. These comparisons cover representative contracts; they do not prove
+every CLI/TUI helper or all 248 source files minimal. F1/F3 remain open.
+
+Further source review checks six CLI/TUI helper areas: arguments, file
+arguments, keybindings, model search, session search and visual lines.
+Key matching inherits the public manager, session matching uses public
+fuzzyMatch, and visual wrapping uses public Text. Native retains application
+key migrations and conflict priority, field-specific search tiers,
+phrase/regex rules, model labels, selected visual lines and hidden counts.
+Seventeen in-memory assertions pass. Four CLI probes differ from the standard
+library parser for optional print text, a missing mode value, thinking
+warnings and file arguments after --. A thin adapter still needs those
+Native rules. File arguments already use the shared path, MIME and image
+helpers; complete text reads and file labels stay in the CLI layer. No new
+replacement with a confirmed maintenance gain was found in these areas.
+
+The final focused comparison covers ten helper files: countdown-timer,
+markdown-transform, diff, mermaid, external-editor, program-status-reporter,
+and the four theme modules. It found no new replacement with a confirmed
+maintenance gain that keeps the Native contract.
+
+- The timer already uses standard intervals. It retains the initial ceil
+  tick, rendering, disposal before expiry, and cancellation. Public
+  CancellableLoader does not provide the seconds callback and expiry hook.
+- Markdown uses the public transform hook. Native retains ordered transformers,
+  current streaming and message context, and per-transformer error isolation.
+  Diff uses public diffWords, with Native line numbers, paired inverse rules,
+  whitespace handling and deletion-before-insertion order.
+- Mermaid already uses Marked and grok-mermaid.render. Public toAnsi ends each
+  span with SGR 0. Native fg closes with 39 or 22;39, title adds bold, and a faint
+  token can contain two SGR sequences. Direct replacement resets inherited
+  background and attributes. Keeping that behavior needs SGR parsing and
+  separate closing rules, so it does not establish a smaller adapter. Native
+  also retains mode and width gates, warning fallback and CommonMark wrapping.
+- The editor uses standard spawn and fs. Public Shell.exec does not expose the
+  inherited interactive stdio used here. Native retains Windows console
+  handling, platform shell choice, failure handling, BOM removal, one trailing
+  LF removal and temporary-file cleanup. Program status already delegates OSC
+  output to Terminal.setProgramStatus; event priority, retry outcome, field
+  limits and deduplication remain Native policy.
+- Theme code already delegates color parsing, conversion, mixing, ANSI styling,
+  syntax highlighting and terminal queries to public APIs. It retains token,
+  vars and fallback rules, shared theme identity, loading and reload policy,
+  language aliases, a 100 ms grayscale wait, late replies and previous colors
+  after failed queries. System themes retain surface recipes and the WCAG
+  4.5:1 constraint. OKLab lightness does not replace WCAG relative luminance;
+  adapting the three-line hex helper does not remove a complete algorithm.
+
+The independent reviewer extracted actual declarations from the current AST
+and ran nine in-memory fixture groups with 122 passing assertions. Coverage
+includes timer order, transform chains, status priority and fields, diffWords,
+Marked and Mermaid rendering, Theme ANSI methods against toAnsi, five fully
+mocked editor scenarios, terminal query results and 24 text/background pairs.
+The lowest measured contrast ratio is 4.5044:1. The first Bun stdin command
+printed usage and ran no assertions; the corrected explicit stdin
+transpile/eval command produced these results.
+
+Two further groups use actual Theme foreground, background and bold methods,
+Native Mermaid styling, public toAnsi and the current ansiToHtml parser. Six
+assertions confirm that Native preserves the inherited #00005f background and
+italic style on following text, and that its foreground close preserves outer
+bold. The corresponding toAnsi output clears those inherited attributes.
+The total is 11 in-memory groups and 128 passing assertions. These checks used
+mocks and installed dependencies, without a real editor, terminal,
+configuration, clipboard, network or model request. They do not cover a real
+Windows console, actual theme directory watchers or complete plugin
+interaction.
+
+During this review, the current tool policy denied reading the first part of
+theme-tokens.ts. The reviewer stopped that read. Existing type, fallback
+validation and dependency evidence does not establish the minimum necessary
+token table. That table and the full source-closure necessity review remain
+unverified; F1/F3 stay open.
+
+The first full repository attempt after the HTML change failed: the 481-file
+main batch had 6762 passes, 11 skips and three failures; 35 isolated processes
+had 298 passes and two failures. It is not recorded as a successful run.
+Two permission/read failures in the main batch and both isolated worker
+failures can be reproduced with a synthetic RTK-enabled application config.
+They pass with a task-owned config and the repository config-defaults.json.
+An initial empty-config worker attempt lacked that defaults file and failed
+before a tool started; after adding the repository defaults, both profiles
+pass with 132 assertions.
+
+The remaining main failure expects two runtime refreshes. A synthetic global
+connection whose model list filters out the second model reproduces the
+single update. Adding only that model to the permitted list makes all nine
+tests pass. Independent source analysis confirms the queue waits for both
+refreshes; equal resolved signatures correctly skip the second update.
+The involved production files and tests match HEAD. These controlled results
+show configuration dependencies, not the contents of the original host
+config, which were not inspected. Production permissions, model validation
+and refresh serialization stay unchanged.
+
+A new complete run uses the same repository test selection and process
+boundaries, a task-owned CONFIG_DIR with repository defaults and a synthetic
+config, plus the existing native-agent resource isolation. The parent HOME
+stays unchanged. All 481 main files pass: 6768 tests, 11 skips, zero failures
+and 22299 Bun `expect()` calls. All 35 isolated files then pass in separate
+processes: 300 tests, zero failures and 2082 Bun `expect()` calls. The combined
+result is 7068 passes, 11 skips and zero failures. The runner exits 0 with an
+empty failure list, and its task fixture cleanup exits 0. The earlier failed
+attempt remains recorded above.
+
+The 7016-test result and Desktop/headless builds below remain evidence for
+8b1c98f. The interactive product flows and full reference-plugin comparison
+were not repeated for this private helper change.
+
+## Runtime credential review after 8b1c98f
+
+The continuation on 2026-11-08 obtained and reviewed the previously blocked
+source. `RuntimeCredentials` has 52 lines and matches the pinned Pi 1.5.0
+source and manifest SHA-256. It implements the public pi-ai `CredentialStore`
+interface. The public `InMemoryCredentialStore` has one storage layer and no
+backing-store or runtime-overlay option.
+
+The Native contract needs synchronous runtime-key changes, a memory-only
+override and the same host store for persistent writes and OAuth refresh.
+Removing an override must reveal the latest stored credential. Replacing the
+class with the public memory store still needs the override map, metadata
+merge and backing-store delegation. It adds async synchronization without
+removing these policies. The unchanged upstream adapter is retained; it does
+not copy storage or OAuth refresh algorithms.
+
+Two added host-model cases check persistent updates under an active override,
+metadata without key values, failed deletion, cancellation and successful
+cleanup. Existing cases check shared host/native auth, runtime-key removal
+and one OAuth refresh across concurrent host/native requests. All values are
+synthetic, and these tests make no external model or login requests.
+
+| Check | Result and scope |
+|---|---|
+| Credential and model regression | `bun --no-env-file test packages/pi-durable-coding/test/host-model-runtime.test.ts packages/pi-agent-server/src/model-runtime.test.ts packages/pi-agent-server/src/runtime-models.test.ts` passes: 28 tests, 136 assertions, zero failures. |
+| Coding package and test types | `bun --no-env-file node_modules/typescript/bin/tsc --noEmit -p packages/pi-durable-coding/tsconfig.json` passes for production sources. A TypeScript program with the same resolved options and `test/host-model-runtime.test.ts` as its root also passes. |
+| Runtime reproduction | `vendor-coding-runtime.ts <pinned-checkout> --check` passes for 248 source files, nine assets, dependencies and core imports. The checkout is clean at `f9a26365568127461c47a07a37dcb42c140a3ac5`. |
+| Auxiliary reproduction | `vendor-upstream.ts <pinned-checkout> --check` passes for 12 source files and 28 shared forwards. |
+
+The first package-script type check invoked Node 10.24.1 from PATH and failed
+with `SyntaxError: Unexpected token ?` before type analysis. Running the same
+installed compiler with Bun passes. No runtime, dependency, lockfile or
+permission setting was changed. The full CI, lint, product builds and 7016-test
+results below remain evidence for the unchanged production code in `8b1c98f`;
+they were not repeated for this test and documentation update.
+
 ## Latest SDK integration checks after 13b7caf
 
-This section records the current worktree. Earlier sections retain their
-original inputs, restrictions and evidence counts.
+This section records the changes committed in `8b1c98f`. Earlier sections
+retain their original inputs, restrictions and evidence counts.
 
 The shared Photon change removes the private Node loader and global file-reader
 override. Native and durable use the same public package and one packaged WASM.
@@ -82,12 +319,12 @@ only for the seven suites that establish their own HOME and native resources.
 The PR fixture retains the empty-directory fence and passes. All 35 files
 were executed, and the final runner exits 0 with an empty failure list.
 
-Generation, types, builds and the full Craft audit are no longer blocked by the
-withdrawn source-reading ban. Direct body inspection of
-`src/pi/core/runtime-credentials.ts` still receives
-`Path access control: protected credentials/secrets file`. That prevents its
-manual necessity review. F1/F3 remain open, and these checks do not prove that
-every retained SDK source file is necessary.
+At `8b1c98f`, generation, types, builds and the full Craft audit were no longer
+blocked by the withdrawn source-reading ban. That session's direct inspection
+of `src/pi/core/runtime-credentials.ts` received
+`Path access control: protected credentials/secrets file`, so its manual review
+remained open. The continuation above completes that specific review. These
+checks alone do not prove that every retained SDK source file is necessary.
 
 ## Partial SDK patch generator guard
 
@@ -2002,10 +2239,11 @@ bun run server:build --output <task-owned-output-directory> --compress
 
 The complete runtime generator check has passed for all 248 TypeScript outputs
 and nine resources. The full Craft audit uses a separate pinned checkout.
-A tool policy rejected direct reading of `runtime-credentials.ts` with
-`Path access control: protected credentials/secrets file`. Do not bypass that
-rejection through another tool or copy. Its manual necessity review remains
-open; partial hash checks alone do not establish full reproduction.
+A previous session could not inspect `runtime-credentials.ts` because its tool
+reported `Path access control: protected credentials/secrets file`. The
+continuation on 2026-11-08 obtained the source under its normal tool policy and
+completed that review. No permission settings were changed. Partial hash
+checks alone do not establish full reproduction.
 
 Set `CRAFT_AGENT_SOURCE` to the isolated pinned Craft checkout. The earlier
 helper port uses `scripts/vendor-upstream.ts` in the coding package.

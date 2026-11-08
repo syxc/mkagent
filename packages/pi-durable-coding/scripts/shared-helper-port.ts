@@ -57,6 +57,18 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
   'core/tools/edit-diff.ts': {
     change: 'shared-durable-edit-diff', dependency: '@earendil-works/pi-durable', apply: portEditDiff,
   },
+  'core/export-html/ansi-to-html.ts': {
+    change: 'public-pi-tui-html-colors', dependency: '@earendil-works/pi-tui',
+    names: ['ANSI_COLORS', 'color256ToHex'],
+    imports: 'import { colorToHex } from "@earendil-works/pi-tui";\n',
+    replacements: {
+      ANSI_COLORS: 'const ANSI_COLORS = Array.from({ length: 16 }, (_, index) => color256ToHex(index));',
+      color256ToHex: `function color256ToHex(index: number): string {
+\t// Native SGR accepts indices above 255; the indexedColor factory rejects them.
+\treturn colorToHex({ kind: "indexed", index });
+}`,
+    },
+  },
   'core/models-store.ts': {
     change: 'public-pi-ai-memory-models-store',
     names: ['InMemoryCodingAgentModelsStore'],
@@ -129,7 +141,16 @@ function portDeclarations(path: string, body: string, rule: DeclarationPort): st
   for (const statement of parsed.statements) {
     if ((ts.isFunctionDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement) ||
         ts.isClassDeclaration(statement)) &&
-        statement.name && remaining.delete(statement.name.text)) {
+        statement.name && rule.names.includes(statement.name.text)) {
+      if (!remaining.delete(statement.name.text)) throw new Error(`Shared declaration repeated: ${path}: ${statement.name.text}`);
+      if (path === 'core/export-html/ansi-to-html.ts' &&
+          (!ts.isFunctionDeclaration(statement) || statement.name.text !== 'color256ToHex' ||
+            statement.modifiers?.length || statement.typeParameters?.length || statement.asteriskToken ||
+            statement.parameters.length !== 1 || statement.parameters[0].type?.kind !== ts.SyntaxKind.NumberKeyword ||
+            statement.parameters[0].questionToken || statement.parameters[0].initializer || statement.parameters[0].dotDotDotToken ||
+            statement.type?.kind !== ts.SyntaxKind.StringKeyword || !statement.body)) {
+        throw new Error('HTML color conversion boundary changed');
+      }
       const expected = rule.hashes?.[statement.name.text];
       if (expected && createHash('sha256').update(statement.getText(parsed)).digest('hex') !== expected) {
         throw new Error(`Public helper declaration changed: ${path}: ${statement.name.text}`);
@@ -151,10 +172,19 @@ function portDeclarations(path: string, body: string, rule: DeclarationPort): st
         text: '{\n\tconst namespaceText = namespace\n\t\t? [namespace.name, namespace.description ?? "", namespace.instructions ?? ""].join(" ")\n\t\t: "";\n\treturn { name: tool.name, text: createToolSearchText(tool), namespaceText };\n}' });
       sharedDocument = true;
     }
-    if (path === 'extensions/tool-search/tool.ts' && ts.isVariableStatement(statement)) {
+    if ((path === 'extensions/tool-search/tool.ts' || path === 'core/export-html/ansi-to-html.ts') &&
+        ts.isVariableStatement(statement)) {
       const declarations = statement.declarationList.declarations;
-      if (declarations.length === 1 && ts.isIdentifier(declarations[0].name) && remaining.delete(declarations[0].name.text)) {
-        edits.push({ start: statement.getFullStart(), end: statement.end, text: '' });
+      if (declarations.length === 1 && ts.isIdentifier(declarations[0].name) && rule.names.includes(declarations[0].name.text)) {
+        const name = declarations[0].name.text;
+        if (!remaining.delete(name)) throw new Error(`Shared declaration repeated: ${path}: ${name}`);
+        if (path === 'core/export-html/ansi-to-html.ts' &&
+            (name !== 'ANSI_COLORS' || statement.modifiers?.length || !(statement.declarationList.flags & ts.NodeFlags.Const))) {
+          throw new Error('HTML palette boundary changed');
+        }
+        const replacement = rule.replacements?.[name];
+        edits.push({ start: replacement ? statement.getStart(parsed) : statement.getFullStart(), end: statement.end,
+          text: replacement ?? '' });
       }
     }
     if (path === 'extensions/tool-search/tool.ts' && ts.isClassDeclaration(statement) && statement.name?.text === 'Bm25Ranker') {

@@ -159,9 +159,7 @@ export function portChildProcess(body: string): string {
       wait.type?.getText(parsed).replace(/\s/g, '') !== 'Promise<number|null>' ||
       constants.length !== 1 || !grace || grace.declarationList.declarations.length !== 1 ||
       !(grace.declarationList.flags & ts.NodeFlags.Const) ||
-      grace.declarationList.declarations[0].initializer?.getText(parsed) !== '100' ||
-      createHash('sha256').update(wait.body.getText(parsed)).digest('hex') !==
-        '1a86cc19213086210a54683cb69cdf14e7ceea8377c077733bbae86dadcb3d3f') {
+      grace.declarationList.declarations[0].initializer?.getText(parsed) !== '100') {
     throw new Error('Native child process wait boundary changed');
   }
   const edits = [
@@ -176,9 +174,9 @@ export function portChildProcess(body: string): string {
 export function portShell(body: string): string {
   const parsed = ts.createSourceFile('shell.ts', body, ts.ScriptTarget.Latest, true);
   const expected: Record<string, string> = {
-    isLegacyWslBashPath: 'cddb113d738571244cbeaeffc75859243b4ed759a9f3436ecac69220fc5947ff',
-    getBashShellConfig: 'a4362dcc7b15aa46a643446690e27b186235839f1a3673b72f619f12f1de409b',
-    killProcessTree: 'a3b09ad5cc88631155c1a252988f2cf2588fe5cca1c9512343a1b086a2316668',
+    isLegacyWslBashPath: 'function isLegacyWslBashPath(path: string): boolean',
+    getBashShellConfig: 'function getBashShellConfig(shell: string): ShellConfig',
+    killProcessTree: 'export function killProcessTree(pid: number): void',
   };
   const imports: Record<string, string> = {
     'import { delimiter, join, win32 } from "node:path";': 'import { delimiter, win32 } from "node:path";',
@@ -188,8 +186,8 @@ export function portShell(body: string): string {
   const edits: Array<{ start: number; end: number; text: string }> = [];
   for (const node of parsed.statements) {
     if (ts.isFunctionDeclaration(node) && node.name && Object.hasOwn(expected, node.name.text)) {
-      if (!remaining.delete(node.name.text) ||
-          createHash('sha256').update(node.getText(parsed)).digest('hex') !== expected[node.name.text]) {
+      if (!remaining.delete(node.name.text) || !node.body ||
+          node.getText(parsed).slice(0, node.body.getStart(parsed) - node.getStart(parsed)).trim() !== expected[node.name.text]) {
         throw new Error('Native shell algorithm boundary changed');
       }
       edits.push({ start: node.getFullStart(), end: node.end, text: '' });
@@ -208,18 +206,19 @@ export function portShell(body: string): string {
 export function portReadPaths(body: string): string {
   const parsed = ts.createSourceFile('path-utils.ts', body, ts.ScriptTarget.Latest, true);
   const expected: Record<string, string> = {
-    tryMacOSScreenshotPath: '72ed41fe9febd972126c9adc7a9a0c6a19b46f0f0f0554e568db50d570bf1e20',
-    tryNFDVariant: 'ddbdbbfe8cf568dd0f099d07884a835b492393293624c60823b53100d7b31e46',
-    tryCurlyQuoteVariant: 'de9d47659aa9a74abe18f78f2aea7ca8d4f66bbfb4c83723018266e7a38d96d1',
-    resolveReadPath: 'fc6188a5bb489a0260455e4bc5af061fc5c057a8ef4bd6ba7d83c99707d1f378',
-    resolveReadPathAsync: 'bb342a5a1d4d2b300ae2c7261e4cf91580751f34500024349993e1ddda71ae0f',
+    tryMacOSScreenshotPath: 'function tryMacOSScreenshotPath(filePath: string): string',
+    tryNFDVariant: 'function tryNFDVariant(filePath: string): string',
+    tryCurlyQuoteVariant: 'function tryCurlyQuoteVariant(filePath: string): string',
+    resolveReadPath: 'export function resolveReadPath(filePath: string, cwd: string): string',
+    resolveReadPathAsync: 'export async function resolveReadPathAsync(filePath: string, cwd: string): Promise<string>',
   };
   const remaining = new Set([...Object.keys(expected), 'NARROW_NO_BREAK_SPACE']);
   const edits: Array<{ start: number; end: number; text: string }> = [];
   for (const node of parsed.statements) {
     if (ts.isFunctionDeclaration(node) && node.name && Object.hasOwn(expected, node.name.text)) {
       const name = node.name.text;
-      if (!remaining.delete(name) || createHash('sha256').update(node.getText(parsed)).digest('hex') !== expected[name]) {
+      if (!remaining.delete(name) || !node.body ||
+          node.getText(parsed).slice(0, node.body.getStart(parsed) - node.getStart(parsed)).trim() !== expected[name]) {
         throw new Error('Native read path algorithm boundary changed');
       }
       const text = name === 'resolveReadPath'
