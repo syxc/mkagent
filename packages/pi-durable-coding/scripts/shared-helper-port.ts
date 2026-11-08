@@ -58,6 +58,13 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
   'core/tools/edit-diff.ts': {
     change: 'shared-durable-edit-diff', dependency: '@earendil-works/pi-durable', apply: portEditDiff,
   },
+  'core/tools/edit.ts': {
+    change: 'public-durable-edit-arguments', dependency: '@earendil-works/pi-durable',
+    names: ['LegacyEditToolInput', 'SingleEditInput', 'isSingleEditInput', 'prepareEditArguments'],
+    imports: 'import { createEditTool as createDurableEditTool } from "@earendil-works/pi-durable/tools";',
+    signatures: { prepareEditArguments: 'function prepareEditArguments(input: unknown): EditToolInput' },
+    replacements: { prepareEditArguments: 'const prepareEditArguments = createDurableEditTool().prepareArguments;' },
+  },
   'core/export-html/ansi-to-html.ts': {
     change: 'public-pi-tui-html-colors', dependency: '@earendil-works/pi-tui',
     names: ['ANSI_COLORS', 'color256ToHex'],

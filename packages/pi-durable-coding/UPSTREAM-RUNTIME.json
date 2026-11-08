@@ -766,8 +766,10 @@
       "source": "packages/coding-agent/src/core/tools/edit.ts",
       "target": "src/pi/core/tools/edit.ts",
       "sha256": "d05eb64ada7755eb5269befbee09fafd2bb26e266476c020ad9d721f9f0df8d7",
-      "portSha256": "d05eb64ada7755eb5269befbee09fafd2bb26e266476c020ad9d721f9f0df8d7",
-      "changes": []
+      "portSha256": "e454600ff129191453427a3b438e121a576a8c4c8e52d3fb171d0d343558bcb2",
+      "changes": [
+        "public-durable-edit-arguments"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/file-mutation-queue.ts",

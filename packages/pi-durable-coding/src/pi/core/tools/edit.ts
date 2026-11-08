@@ -1,3 +1,4 @@
+import { createEditTool as createDurableEditTool } from "@earendil-works/pi-durable/tools";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
 import { type Static, Type } from "typebox";
@@ -48,21 +49,6 @@ export const editToolSystemPromptContribution = {
 } as const;
 
 export type EditToolInput = Static<typeof editSchema>;
-type LegacyEditToolInput = EditToolInput & {
-	oldText?: unknown;
-	newText?: unknown;
-};
-
-type SingleEditInput = { oldText: string; newText: string };
-
-function isSingleEditInput(value: unknown): value is SingleEditInput {
-	if (!value || typeof value !== "object" || Array.isArray(value)) {
-		return false;
-	}
-
-	const edit = value as Record<string, unknown>;
-	return typeof edit.oldText === "string" && typeof edit.newText === "string";
-}
 
 export interface EditToolDetails {
 	/** Display-oriented diff of the changes made */
@@ -97,38 +83,7 @@ export interface EditToolOptions {
 	operations?: EditOperations;
 }
 
-function prepareEditArguments(input: unknown): EditToolInput {
-	if (!input || typeof input !== "object") {
-		return input as EditToolInput;
-	}
-
-	const args = input as Record<string, unknown>;
-
-	// Some models (Opus 4.6, GLM-5.1) send edits as a JSON string instead of an array.
-	// Others send a single edit object instead of a one-element edits array.
-	if (typeof args.edits === "string") {
-		try {
-			const parsed = JSON.parse(args.edits);
-			if (Array.isArray(parsed)) {
-				args.edits = parsed;
-			} else if (isSingleEditInput(parsed)) {
-				args.edits = [parsed];
-			}
-		} catch {}
-	} else if (isSingleEditInput(args.edits)) {
-		args.edits = [args.edits];
-	}
-
-	const legacy = args as LegacyEditToolInput;
-	if (typeof legacy.oldText !== "string" || typeof legacy.newText !== "string") {
-		return args as EditToolInput;
-	}
-
-	const edits = Array.isArray(legacy.edits) ? [...legacy.edits] : [];
-	edits.push({ oldText: legacy.oldText, newText: legacy.newText });
-	const { oldText: _oldText, newText: _newText, ...rest } = legacy;
-	return { ...rest, edits } as EditToolInput;
-}
+const prepareEditArguments = createDurableEditTool().prepareArguments;
 
 function validateEditInput(input: EditToolInput): { path: string; edits: Edit[] } {
 	if (!Array.isArray(input.edits) || input.edits.length === 0) {

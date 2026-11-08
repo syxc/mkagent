@@ -1,6 +1,6 @@
 # Pi-durable coding agent 需求与纠偏验收对照
 
-本表对应[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)。第一次将 Pi coding agent 直接换成 durable 后，出现 Coding 能力和插件生态缺口。2026-11-08 用户补充明确：以切换前的 MkAgent 为行为和接入边界参照，保留 Pi coding agent 的 Coding 层及插件契约，尝试将其底层执行基座换成 pi-durable。MkAgent 既有整体架构、宿主职责、后续有效功能与数据保持；文档纠偏已提交于 `552b938`，当前已实施宿主工具的公开 ToolTask 执行切片，其余纠偏继续推进。
+本表对应[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)。第一次将 Pi coding agent 直接换成 durable 后，出现 Coding 能力和插件生态缺口。2026-11-08 用户补充明确：以切换前的 MkAgent 为行为和接入边界参照，保留 Pi coding agent 的 Coding 层及插件契约，尝试将其底层执行基座换成 pi-durable。MkAgent 既有整体架构、宿主职责、后续有效功能与数据保持；文档纠偏已提交于 `552b938`，当前已实施宿主工具的公开 ToolTask、请求执行的本地 SDK 扩展及插件 edit 参数的公开 SDK 复用切片，其余纠偏继续推进。
 
 执行侧优先用 durable 内置实现，其余所需能力优先引用独立 Pi 官方 SDK，再做必要薄适配及有具体缺口依据的源码处理。此前大量复制和改造上游源码造成的升级维护风险属于本次验收范围：Coding 和 durable 更新时，核对工作应主要集中在 SDK 契约和少量必要适配。正式发布接口、仓内补丁和源码生成分开记账，第三方资源去重及源码可复现不能代替这一要求。
 
@@ -24,7 +24,7 @@
 | 来源与许可 | 既有清单可复现，按改动同步 | `cb0311f` 清单为 248 份 TypeScript、7 项资源，辅助为 12 项来源和 28 个共享入口。数量、哈希、冻结安装及来源审计证明各自范围，不证明架构最小或功能完整 |
 | profile 与信任隔离 | 历史验证通过，持续保留 | 普通 profile/host-only 不自动加载环境 Pi 资源；项目执行导入前经过宿主决定，工具继续走既有审批 |
 
-既有源码对照、图像和 codemode 共享及 core 门面改动保留[架构记录](coding-architecture.md)和验证账本中的证据。宿主工具执行已委托官方 ToolTask 并删除旧嵌套副本；请求执行与 partial 已接入仓内新增 GenerationResponseTask。工具轮次、收尾、session 和 summary 仍需评估官方执行器接入，未证明整套桥永久必要。F1 至 F3 继续开放。
+既有源码对照、图像和 codemode 共享及 core 门面改动保留[架构记录](coding-architecture.md)和验证账本中的证据。宿主工具执行已委托官方 ToolTask 并删除旧嵌套副本；请求执行与 partial 已接入仓内新增 GenerationResponseTask。工具轮次与收尾的发布接口缺口已按实际写入和结算职责记录，未新增补丁；插件 edit 参数转换已直接复用公开 SDK 并删除副本。session/summary、独立消费者的工具执行和完整 Coding 闭包继续核对，未证明整套桥永久必要。F1 至 F3 继续开放。
 
 ## 能力规格逐行对照
 
@@ -75,7 +75,7 @@
 
 ## 后续验收
 
-文档校正已提交，宿主工具与请求切片已完成各自的定向验证；后续继续工具轮次与收尾接线，并核对必要 Coding 差异。每项架构改动同时迁移调用方、数据和测试，以真实行为验证，而非只检查函数转发或文件哈希。既有读取确认、PowerShell、setup 历史、分支发布和作用域修复不得因换实现回退。
+文档校正已提交，宿主工具与请求切片已完成各自的定向验证；工具轮次和收尾已记录发布接口缺口，edit 参数副本已删除并验证公开 SDK 接线。后续继续 session/summary、独立 SDK 工具路径和 Coding 闭包的必要性核对。每项架构改动同时迁移调用方、数据和测试，以真实行为验证，而非只检查函数转发或文件哈希。既有读取确认、PowerShell、setup 历史、分支发布和作用域修复不得因换实现回退。
 
 当前 `248/7` 只是源码清单。既有 SDK、插件、图像和资源对照的范围及未验项仍见验证账本；`theme-tokens.ts` 的首段读取被工具策略拒绝，完整 token 表未逐项核实，不绕过该限制。
 

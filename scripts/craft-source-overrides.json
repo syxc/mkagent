@@ -2509,8 +2509,12 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "7f9cc80e00e1b7f73abcc4512087cde934f22f99f1b448635fb4b361f361d191",
-      "reason": "Register shared helper paths, transforms, provenance and dependencies once. Guard replaced public functions by their retained signatures, preserve whole-class hashes and HTML declaration checks."
+      "sha256": "b68e630dfc8dbfcecd02c0e5de70f9b1331456200664ebfdd0e8948011fe13fa",
+      "reason": "Register shared helper paths and signature guards; replace Native edit argument repair and its private helpers with the published durable tool callback."
+    },
+    "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
+      "sha256": "8e2a592d0d54bfcef94b503d3b3080904a34bfd78b5291c95f2f41b0793396fb",
+      "reason": "Verify public SDK argument preparation through both Native edit factories, preserve recorded inputs, execute BOM/CRLF file edits, and reject invalid edits before filesystem access."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
       "sha256": "591852657973fcdeeb74763bf677e09c6528729d860396d588c9aa181dad0de5",
@@ -4041,8 +4045,8 @@
       "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "3c36f73c1a31f4ad9aa79b956fad504854e631552eee62c8ed1f32521bcdb243",
-      "reason": "Record 248 pinned runtime sources and seven assets, with published Markdown and Highlight.js browser package dependencies instead of copied parser assets."
+      "sha256": "a29ced8716af9add27e1d7b241822cf3acc1f0fa6f19fc04a92f412eb66e252e",
+      "reason": "Record pinned runtime sources and assets, including the Native edit callback replacement through the published durable tools API."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "e132e9a4414b44d25c8d7372f493394f104ce15cf4010e7596a721ed9cf7bffc",
@@ -4537,8 +4541,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/edit-diff.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/tools/edit.ts": {
-      "sha256": "d05eb64ada7755eb5269befbee09fafd2bb26e266476c020ad9d721f9f0df8d7",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/edit.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "e454600ff129191453427a3b438e121a576a8c4c8e52d3fb171d0d343558bcb2",
+      "reason": "Pinned Pi v1.5.0 Native edit tool with argument preparation delegated to the published durable factory; retain Native file operations, mutation queue, cancellation, renderers and public types."
     },
     "packages/pi-durable-coding/src/pi/core/tools/file-mutation-queue.ts": {
       "sha256": "33cb06ac9bcdf32c8b84d9d12e33be44c503a7670f668e003a3262cd34294d11",

@@ -26,6 +26,53 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public edit argument preparation after 456241a
+
+On 2026-11-09, the Native edit factories started using the published
+`@earendil-works/pi-durable/tools` callback from
+`createEditTool().prepareArguments`. The local conversion function, single-edit
+predicate and two private input types were removed. No dependency or SDK patch
+changed. Native file operations, validation, mutation queue, cancellation,
+renderers and public TypeBox types remain.
+
+The SDK repairs JSON arrays, JSON objects, single objects and legacy top-level
+fields on a copy. The original call arguments remain unchanged. Core preparation
+uses the returned value for validation; it does not require mutation of the
+recorded input. The previous full edit execution adapter assessment below is a
+historical decision about file execution, not a reason to retain this conversion.
+
+Checks completed for this slice:
+
+- `bun --no-env-file test packages/pi-durable-coding/test/native-edit-arguments.test.ts packages/pi-durable-coding/test/native-edit-diff.test.ts`:
+  324 pass, 0 fail, 649 assertions. The 12 new tests cover both Native factories,
+  seven valid input forms, unchanged recorded inputs, actual BOM/CRLF file edits,
+  result details and three invalid inputs rejected before file access.
+- Coding `typecheck` and `build:types`: passed.
+- `vendor-coding-runtime.ts <pinned-checkout> --check --file=core/tools/edit.ts`:
+  one source output and its provenance record match. This is a scoped check,
+  not a full source regeneration. The source SHA-256 remains
+  `d05eb64ada7755eb5269befbee09fafd2bb26e266476c020ad9d721f9f0df8d7`;
+  the port SHA-256 is
+  `e454600ff129191453427a3b438e121a576a8c4c8e52d3fb171d0d343558bcb2`.
+- Four scoped Craft source records match their file hashes. The five updated
+  documents pass punctuation checks and 80 local link/anchor checks.
+  `git diff --check` passes. No full Craft audit or source regeneration was run.
+
+The same review compared published `GenerationTask.tools`, `finish`,
+`startToolRound` and `finishToolRound` with Native admission, delivery and final
+settlement. Both implementations require every call to terminate and select the
+last handoff. The remaining gap is the SDK phase's combined transcript writes,
+ToolTask creation, inbox handling and next-generation handover. The
+[architecture record](coding-architecture.md#工具轮次与收尾的-sdk-边界) lists the
+retained adapter, product wrapper scope, removal conditions and upgrade checks.
+No round or final-settlement code changed, and no new round patch was added.
+
+This slice does not repeat the earlier request, cancellation or crash matrix.
+It does not establish full plugin, independent-consumer tool execution, Windows,
+full-repository or product-package acceptance. No separate reviewer was used for
+this callback replacement. Session/summary and the complete Coding source scope
+remain open.
+
 ## Prepared generation response after 62ed325
 
 The request adapter now calls a new repository SDK task,

@@ -1,6 +1,6 @@
 # Pi-durable coding agent 实施计划
 
-状态：按 2026-11-08 用户背景和原则全面纠偏。此前 F0 校正、补漏和架构范围复核分别完成于 `1314a2b`、`56d0f46` 和 `301598c`；Pi Coding 层、执行基座和升级维护条件的补充提交于 `552b938`。`62ed325` 将宿主工具执行委托公开 ToolTask 并删除旧嵌套调用副本；后续请求切片已接入仓内新增 GenerationResponseTask，复用 SDK streamResponse 与 partial 写入。F1 至 F6 按实际范围继续推进，这两项切片不代表整体 SDK 接入与源码收窄完成，证据见验证记录。运行时代码起点为 `cb0311f`；本文的 `4776fe1`、D0 至 D6 及后续批次账本保留原适用时点。
+状态：按 2026-11-08 用户背景和原则全面纠偏。此前 F0 校正、补漏和架构范围复核分别完成于 `1314a2b`、`56d0f46` 和 `301598c`；Pi Coding 层、执行基座和升级维护条件的补充提交于 `552b938`。`62ed325` 将宿主工具执行委托公开 ToolTask 并删除旧嵌套调用副本；`456241a` 将请求接入仓内新增 GenerationResponseTask，复用 SDK streamResponse 与 partial 写入。插件 edit 参数转换现直接使用已发布 SDK 并删除副本；工具轮次和收尾的具体缺口见架构记录。F1 至 F6 按实际范围继续推进，这些切片不代表整体 SDK 接入与源码收窄完成，证据见验证记录。运行时代码起点为 `cb0311f`；本文的 `4776fe1`、D0 至 D6 及后续批次账本保留原适用时点。
 
 MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，发现 Coding 能力不足且不能复用 Pi coding agent 的插件生态。当前方向是以切换前的 MkAgent 为产品行为和接入边界参照，保留 Pi coding agent 的 Coding 层与插件契约，尝试将其底层执行基座换成 pi-durable。对 MkAgent 而言，使用的仍是 Pi coding agent 的能力与接口，执行、存储和恢复由 durable 承担。
 
@@ -36,7 +36,7 @@ pi-durable 已发布 codemode、tool-search、tools、images 及完整 Harness/�
 
 `62ed325` 完成首个执行切片：宿主工具交给公开 ToolTask phases/abort，删除 `host-tool-nested.ts`。SDK checkpoint 和完整 Native 结果在原 `pi.coding.tool` owner 下持久化，旧 v1 checkpoint 保持恢复路径。专项覆盖策略限制、已完成和失败回执、工具移除、owned cleanup、并发身份及 API 关闭。Native 保留审批、hooks、事件与 journal，工具切片未新增补丁或改变任务版本。
 
-后续请求切片已接入仓内新增的 `GenerationResponseTask` v1，直接复用 SDK 的 `streamResponse` 与 partial 写入。发布版 `GenerationTask.request` 会继续分类和写消息，不能独立返回响应；新任务提供这一明确出口，保留原 `GenerationTask` v4 和所有 `pi.coding.*` v1。Native `message_end` 完成后才决定工具 calls，SDK receipt、唯一 assistant entry 和下一 checkpoint 同事务提交。不确定 request/event 不重发，取消与恢复均清理 SDK generation 槽。新任务属于本地 SDK 修改，退出条件和升级检查见架构记录；不能记为未修改发布 API。完整 30 文件补丁已有真实重放和冻结消费者核对。下一项继续核对工具轮次与收尾，再处理 session/summary 及完整 Coding 闭包，F1 至 F3 保持开放。
+后续请求切片已接入仓内新增的 `GenerationResponseTask` v1，直接复用 SDK 的 `streamResponse` 与 partial 写入。发布版 `GenerationTask.request` 会继续分类和写消息，不能独立返回响应；新任务提供这一明确出口，保留原 `GenerationTask` v4 和所有 `pi.coding.*` v1。Native `message_end` 完成后才决定工具 calls，SDK receipt、唯一 assistant entry 和下一 checkpoint 同事务提交。不确定 request/event 不重发，取消与恢复均清理 SDK generation 槽。新任务属于本地 SDK 修改，退出条件和升级检查见架构记录；不能记为未修改发布 API。完整 30 文件补丁已有真实重放和冻结消费者核对。工具轮次与收尾已核对：发布 SDK 阶段同时写 assistant、创建工具、应用 inbox 和转交下一请求，没有独立返回轮次决定的出口。当前保留 Native 交付与 journal 适配，未新增轮次补丁，退出条件见架构记录。另已删除插件 edit 的参数转换副本，直接使用公开 `createEditTool().prepareArguments`；文件执行和 renderer 保留。后续继续 session/summary、独立消费者的工具执行及完整 Coding 闭包核对，F1 至 F3 保持开放。
 
 以下至“产品模式与资源策略”之前的对照是既有实现摘要，详细时点和结果见[验证记录](coding-validation.md)。其中通过补丁共享的算法不等于原包公开能力，辅助替换和第三方库结果不代替本次执行主链验收。
 

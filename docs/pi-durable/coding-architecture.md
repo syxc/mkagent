@@ -50,6 +50,21 @@ Pi 1.5.0 的 `GenerationTask.request` 会继续分类响应、写 assistant、�
 
 升级时须重新核对 SDK `streamResponse` 的 runtime 参数、`codingStream.closed` 与 partial drain 顺序、新任务的声明及根导出。退出条件是上游提供可独立返回已准备请求结果的接口，并能保留上述事件及事务行为；达到条件后撤除新任务转换和对应补丁。工具轮次、finish、session、summary 与完整 Coding 闭包仍按 F1 至 F3 继续处理。
 
+### 工具轮次与收尾的 SDK 边界
+
+本次继续对照固定 Pi 1.5.0 的 [GenerationTask](https://github.com/earendil-works/pi/blob/f9a26365568127461c47a07a37dcb42c140a3ac5/packages/durable/src/harness/generation.ts)、[Native run](../../packages/pi-durable-coding/src/durable-coding/run-task.ts)及实际宿主接线。不能只因 checkpoint 或结果签名不同保留本地轮次；当前不能直接接入的原因是 SDK 阶段同时决定并提交以下行为。
+
+| 边界 | 发布 SDK 的实际职责 | 当前必要适配及继续收敛条件 |
+|---|---|---|
+| 接纳工具 | `startToolRound` 写 assistant、创建官方 ToolTask、更新 LiveDoc 和 SDK run turns，再等待新任务 | Native 的 assistant 已在 `message_end` 后与 journal 提交，preflight 还须交付插件拒绝、改参及 `length` 的未执行结果。不能再次写 assistant 或重复接纳 effects；需要独立接纳出口，或包含 journal 和插件契约的明确迁移方案 |
+| 等待和交付 | `GenerationTask.tools` 从 SDK assistant entry 查 pending calls，顺序创建后续 ToolTask，并进入内部 `finishToolRound` | Native 等待真实 owned 子任务，按源 call 顺序交付完整 content/images/details、插件事件和 journal。SDK 已承担宿主工具 effect、嵌套执行与 replay；剩余轮次适配不再复制这些执行算法 |
+| 工具控制及续轮 | `finishToolRound` 调 `afterTools`，随后同事务应用 addTools、handoff reset、turn limit、inbox 和下一 GenerationTask 或结束 run | 全部 call 要求 terminate、最后 handoff 生效这两条规则与 Native 一致，不构成保留依据。缺口是不能独立返回决定，再让 Native 的 `finishTurn`、`turn_end`、steering/follow-up 及 journal 接受该决定 |
+| 最终收尾 | `GenerationTask.finish` 承接 SDK run summary，运行 `afterRun` 和 owned task drain 后结束已回答 run | 不是 Native `finishTurn` 或 `agent_end` 的独立出口；Native session 的最终回执与输入身份仍须保持。不能靠隐藏 SDK 写入或伪造任务结果接线 |
+
+产品 [CodingHost](../../packages/pi-agent-server/src/coding-host.ts)通过 `wrapTool` 将非 builtin 工具交给 [wrapAgentTool](../../packages/pi-durable-coding/src/host-tools.ts)，实际进入已接入的公开 ToolTask 适配；生产 builtin 使用宿主提供的 durable 工厂。独立 Coding SDK 接收的普通 AgentTool 仍有 Native 执行路径，不能将产品 wrapper 的覆盖范围写成所有 SDK 消费者均已委托。
+
+本批不新增轮次或收尾补丁，保留上述交付与事务适配，不变更任何任务版本或历史 checkpoint。退出条件是公开 API 能承接已接受的 assistant 和外部 owned 工具结果，并把轮次决定交还宿主，或已验证的整体接线能保留相同插件、输入及持久化保证。上游升级须重新核对工具接纳、`afterTools`、`onYield`、`afterRun` 与输入结算的先后；该版本的缺口不证明整套 Native loop 永久必要。session/summary、独立消费者的工具执行和完整 Coding 闭包继续按 F1 至 F3 核对。
+
 ## 哪些直接引用上游包
 
 以下是 coding 包和 [worker 包](../../packages/pi-agent-server/package.json)声明的 Pi 系直接生产依赖，均固定为 `1.5.0`；具体归属以两个 `package.json` 为准。根项目通过 `patchedDependencies` 修改 durable 和 core；下表的包引用不等于全部能力均来自未修改发布包。新增导出和执行接点必须按本地 SDK 例外核对。
@@ -104,9 +119,11 @@ Native shell 的 Bash 传参选择和进程树清理也通过[薄适配](../../p
 
 Native 同步与异步读取路径通过[薄适配](../../packages/pi-durable-coding/src/compat/read-path.ts)共用 durable 的候选生成器。截图空格、NFD 和弯引号规则只保留一份；Native 仍按需计算候选，跳过与原路径相同的候选，并保留其他候选间的重复探测。durable 默认入口仍先生成全部候选，再用 `Set` 去重。生成器默认复用首次 NFD，durable 显式选择重新计算，保留其原来的两次调用及首次探测前的错误。两种入口继续使用各自的路径解析和存在性检查。
 
-Native 头、尾截断均使用原有公开 `chord/output`，[薄适配](../../packages/pi-durable-coding/src/compat/truncate.ts)集中保留 Native 的字节、行数、标签、getter、首行拒绝及部分尾行策略。默认上限和行计数留在外部适配层，大小显示保留 Native 的三条规则。两个 SDK 截断文件保持原始缓存内容，截断专有导出补丁已撤掉；durable 补丁仍为 28 文件，其余 26 份差异不变。生成转换只检查两个截断入口的公开签名和剩余私有 helper 引用，不再绑定头、尾的算法正文。相同 7 个类型根从 437 个文件降至 225 个，未发现诊断。中间和单行处理仍保留原文。两个运行时的原版行为、冻结消费者及首调用开销见[验证记录](coding-validation.md)。
+Native 头、尾截断均使用原有公开 `chord/output`，[薄适配](../../packages/pi-durable-coding/src/compat/truncate.ts)集中保留 Native 的字节、行数、标签、getter、首行拒绝及部分尾行策略。默认上限和行计数留在外部适配层，大小显示保留 Native 的三条规则。两个 SDK 截断文件保持原始缓存内容，截断专有导出补丁已撤掉；该批截断改动完成时 durable 补丁为 28 文件，其余 26 份差异不变；请求切片后的完整补丁为 30 文件。生成转换只检查两个截断入口的公开签名和剩余私有 helper 引用，不再绑定头、尾的算法正文。相同 7 个类型根从 437 个文件降至 225 个，未发现诊断。中间和单行处理仍保留原文。两个运行时的原版行为、冻结消费者及首调用开销见[验证记录](coding-validation.md)。
 
 Native [编辑差异入口](../../packages/pi-durable-coding/src/pi/core/tools/edit-diff.ts)通过仓内 durable 补丁导出的 9 个函数共用匹配、替换、换行和 diff 算法，18 个重复算法正文被移除。Native 保留自己的函数签名和类型声明，插件接口扩展仍作用于返回类型；文件解析、读取权限、BOM、预览和错误转换继续由原来的两个预览函数负责，正文不变。该补丁部分仅新增导出，既有算法及类型不变；两套 diff 的 19 份运行时文件一致。源码由 556 行降为 186 行，原版结果、真实文件预览及冻结消费者范围见[验证记录](coding-validation.md)。
+
+插件 [edit 工厂](../../packages/pi-durable-coding/src/pi/core/tools/edit.ts)的参数转换现直接引用公开 `@earendil-works/pi-durable/tools` 的 `createEditTool().prepareArguments`，删除本地转换函数、单个 edit 判断和两个辅助类型，无新增补丁。JSON 字符串、单个对象、旧顶层字段及混合输入由 SDK 处理，原始 call 参数保持不变；core 使用返回参数继续校验。Native 文件操作、权限、队列、取消、renderer 及公开 TypeBox 类型保留。升级只需核对该公开 callback 的返回形状与实际编辑行为，不再逐项维护转换算法。此前完整 edit 执行适配的保留评估仍限于当时范围，不能覆盖本次已删除的参数副本。
 
 版本范围需要分开看：[根包](../../package.json)和 [shared](../../packages/shared/package.json)仍声明 `pi-ai@1.1.0`，不能把 coding 运行时的 `1.5.0` 写成全仓统一版本。
 
