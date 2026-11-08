@@ -26,6 +26,59 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Upstream run-mode hosts after 5662422
+
+On 2026-11-09, a focused review compared the original MkAgent integration and
+current host wiring with the required plugin contract. MkAgent creates Coding
+sessions and owns UI and transport. InteractiveMode, runPrintMode and runRpcMode
+are upstream terminal, stdout and stdin/stdout RPC hosts. Their five value/type
+exports are excluded from both entry points, and their three implementations
+are removed. The generator applies both exclusions before dependency traversal.
+This is host-scope removal, not replacement by an official SDK.
+
+RpcClient and its options, RPC protocol types, JsonAgentSessionEvent, Theme,
+CustomEditor, renderer/UI components, ExtensionMode, AgentSessionRuntime and
+plugin lifecycle remain. Direct external users of the excluded modes lose
+those exports and must supply their own host. This change does not claim zero
+impact for arbitrary external SDK consumers or justify deleting all helpers.
+
+| Check | Result and scope |
+| --- | --- |
+| Retained behavior | Five files pass 90 tests with 142 Bun assertions and no failures. Both Pi package names load real TypeScript plugins, apply theme styling, register and render DynamicBorder, and create a CustomEditor subclass through the host editor factory. Text input and Escape behavior pass. Existing RPC client and ExtensionUIHost tests cover explicit CLI input, JSONL, mode/hasUI, reload, dialog cancellation and unsupported terminal factories. |
+| Worker | The worker bundle smoke passes 26 tests with 103 assertions and no failures. It uses temporary data and deterministic local fixtures. |
+| Declarations | Coding build:types passes. A separate directory resolves the built `./native` declarations through a package symlink. TypeScript accepts retained factories, editor inheritance, theme methods, RPC types and context mode, and checks that all five removed exports are absent. This is a declaration consumer, not a fresh frozen install. |
+| Generation | The two pinned upstream entry points reproduce their output and inventory records with scoped --check. Missing and duplicate export boundaries are rejected. No full generation or source audit runs. |
+| Source records | The inventory has 221 TypeScript records, including 217 under src/pi, and seven assets. Seven changed source/test overrides are synchronized and three deleted records are removed from both inventories. These are retained-file counts, not a recomputed minimal closure. |
+
+The first component probe incorrectly treated KeybindingsManager as a runtime
+root export; it is a type export. The final plugin uses the host editor factory.
+The declaration probe first used the legacy default entry and assumed a public
+ExtensionMode name. It now uses `./native` and the public context mode property;
+a stale root.ts file-list entry was also removed before the successful check.
+No production export was added to satisfy either probe. The native entry's
+old complete-API comment is corrected to state the run-mode exclusion.
+
+The CI command first hit an incorrectly set one-second background limit and
+was stopped by the tool. No matching CI process remained. A rerun with a
+sufficient limit passes validate:ci in 61 seconds. The independent review
+relative to 5662422 found no confirmed correctness defect in the specified
+code slice. It checked export order, remaining callers and the real component
+fixture. The main thread ran the behavior and declaration checks above; the
+review did not run them. The native entry comment was corrected separately by
+the main thread. A review skill started an extra fork despite the single-agent
+restriction. That fork ended, and its output was excluded from the conclusion.
+The denied theme token check and unverified remaining helper boundaries stay
+open under F1/F3. This slice does not repeat the complete repository test entry.
+
+## Complete repository entry at 5662422
+
+The isolated configuration ran the full repository entry at clean HEAD 5662422
+and exited 0 in 598 seconds. Its main batch passed 6872 tests, skipped 11 and
+failed none across 488 files. All 35 isolated files completed. This is one
+successful complete entry for that source version; it does not erase the
+previous watcher failure or apply automatically to the later run-mode deletion.
+No provider, real account, real HOME or product UI was used.
+
 ## Launcher-only argument helpers after df2868f
 
 On 2026-11-09, a focused caller and export check found that printHelp and

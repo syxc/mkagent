@@ -1003,17 +1003,20 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "9623d84041e8d02e0d19bcf1c88a159bb6df64c41c8b909be6bf940b3e2114b9",
+      "portSha256": "db3632c60060b6ffc97d252a68fc029aed791b9b4ce757d377d13a4886cc7546",
       "changes": [
-        "exclude-upstream-cli-launcher"
+        "exclude-upstream-cli-launcher",
+        "exclude-upstream-run-modes"
       ]
     },
     {
       "source": "packages/coding-agent/src/modes/index.ts",
       "target": "src/pi/modes/index.ts",
       "sha256": "546cf0e6fa0d645265116bec02b2e53313a2359f5b20bd23c286e6c33c0829f3",
-      "portSha256": "546cf0e6fa0d645265116bec02b2e53313a2359f5b20bd23c286e6c33c0829f3",
-      "changes": []
+      "portSha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
+      "changes": [
+        "exclude-upstream-run-modes"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/assets/clankolas.png",
@@ -1373,13 +1376,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/modes/interactive/interactive-mode.ts",
-      "target": "src/pi/modes/interactive/interactive-mode.ts",
-      "sha256": "ee4ba8aeee85b772aee57b342356da3030eed3b2c32656fa9c0927e6a81fbab0",
-      "portSha256": "ee4ba8aeee85b772aee57b342356da3030eed3b2c32656fa9c0927e6a81fbab0",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/modes/interactive/model-catalog-refresh.ts",
       "target": "src/pi/modes/interactive/model-catalog-refresh.ts",
       "sha256": "a7a10647deaba5036019737c376ab3f73eed12703dafeb8cb8920581ec8672e2",
@@ -1471,13 +1467,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/modes/print-mode.ts",
-      "target": "src/pi/modes/print-mode.ts",
-      "sha256": "8cfd22f5dd18386f3cb0dea82e232d2cd54741dd77db882ada954bde1c7097e6",
-      "portSha256": "8cfd22f5dd18386f3cb0dea82e232d2cd54741dd77db882ada954bde1c7097e6",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/modes/rpc/jsonl.ts",
       "target": "src/pi/modes/rpc/jsonl.ts",
       "sha256": "95723d349fcebad1f1da7ce103d02ba7d5e2c876b7d178d41d8b56beedbd93e0",
@@ -1492,13 +1481,6 @@
       "changes": [
         "require-explicit-rpc-cli-entry"
       ]
-    },
-    {
-      "source": "packages/coding-agent/src/modes/rpc/rpc-mode.ts",
-      "target": "src/pi/modes/rpc/rpc-mode.ts",
-      "sha256": "d534e0fa1484844a097963d5f4fb4df9397c5a1b5e29e42aed7575ab6f67989b",
-      "portSha256": "d534e0fa1484844a097963d5f4fb4df9397c5a1b5e29e42aed7575ab6f67989b",
-      "changes": []
     },
     {
       "source": "packages/coding-agent/src/modes/rpc/rpc-types.ts",

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import ts from 'typescript';
-import { applySharedHelperPort } from '../scripts/shared-helper-port.ts';
+import { applySharedHelperPort, excludeRunModeEntries } from '../scripts/shared-helper-port.ts';
 import { portChildProcess, portReadPaths, portShell } from '../scripts/shared-runtime-port.ts';
 
 const declarationFixtures = [
@@ -162,6 +162,41 @@ test('CLI helper removal retains the parser and guards missing or duplicate boun
     assert.throws(() => port(source.replace(declaration, '')), /CLI helper boundary changed/);
     assert.throws(() => port(source + '\n' + declaration), /CLI helper boundary changed/);
   }
+});
+
+test('run mode exclusion preserves plugin components and RPC while guarding both entry points', () => {
+  const fixtures = [
+    {
+      path: 'index.ts',
+      removed: ['\tInteractiveMode,\n', '\ttype InteractiveModeOptions,\n', '\ttype PrintModeOptions,\n', '\trunPrintMode,\n', '\trunRpcMode,\n'],
+      source: '// Run modes for programmatic SDK usage\nexport {\n\tInteractiveMode,\n\ttype InteractiveModeOptions,\n\ttype PrintModeOptions,\n\trunPrintMode,\n\trunRpcMode,\n\tRpcClient,\n} from "./modes/index.ts";\nexport { CustomEditor, Theme } from "./components.ts";\n',
+      targets: ['./modes/index.ts', './components.ts'],
+    },
+    {
+      path: 'modes/index.ts',
+      removed: [
+        'export { InteractiveMode, type InteractiveModeOptions } from "./interactive/interactive-mode.ts";\n',
+        'export { type PrintModeOptions, runPrintMode } from "./print-mode.ts";\n',
+        'export { runRpcMode } from "./rpc/rpc-mode.ts";\n',
+      ],
+      source: '/**\n * Run modes for the coding agent.\n */\nexport { InteractiveMode, type InteractiveModeOptions } from "./interactive/interactive-mode.ts";\nexport { type PrintModeOptions, runPrintMode } from "./print-mode.ts";\nexport { runRpcMode } from "./rpc/rpc-mode.ts";\nexport { RpcClient } from "./rpc/rpc-client.ts";\nexport type { RpcResponse } from "./rpc/rpc-types.ts";\nexport type { JsonAgentSessionEvent } from "./json-event.ts";\n',
+      targets: ['./rpc/rpc-client.ts', './rpc/rpc-types.ts', './json-event.ts'],
+    },
+  ];
+  for (const { path, source, removed, targets } of fixtures) {
+    const body = excludeRunModeEntries(path, source)!;
+    const parsed = ts.createSourceFile(path, body, ts.ScriptTarget.Latest, true);
+    const exports = parsed.statements.filter(ts.isExportDeclaration);
+    assert.deepEqual(exports.map(node => (node.moduleSpecifier as ts.StringLiteral).text), targets);
+    assert(body.includes('RpcClient'));
+    if (path === 'index.ts') assert(body.includes('CustomEditor, Theme'));
+    for (const declaration of removed) {
+      assert(!body.includes(declaration));
+      assert.throws(() => excludeRunModeEntries(path, source.replace(declaration, '')), /run mode export changed/);
+      assert.throws(() => excludeRunModeEntries(path, source + declaration), /run mode export changed/);
+    }
+  }
+  assert.equal(excludeRunModeEntries('modes/rpc/rpc-types.ts', 'protocol'), undefined);
 });
 
 test('read path: retained normalization constant remains guarded', () => {

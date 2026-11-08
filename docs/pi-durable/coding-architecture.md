@@ -166,16 +166,16 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 | 本地位置 | 上游来源与移植方式 |
 |---|---|
-| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，共 220 份 TypeScript 和 7 项主题、交互及 HTML 导出资源。根导出排除原版 CLI 的 `main`/`MainOptions` 及其独占依赖；保留 `AgentSession`、SDK 工厂、工具、扩展、资源、程序化运行模式和插件 UI 组件，部分文件经过适配。 |
+| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，共 217 份 TypeScript 和 7 项主题、交互及 HTML 导出资源。排除原版 CLI 和三种 run mode 宿主；保留 `AgentSession`、SDK 工厂、工具、扩展、资源、RPC client/协议和插件 UI 组件，部分文件经过适配。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 105 行 core 子类，保留 durable 队列身份、恢复和独立的可变默认对象。默认消息转换直接使用发布版 core；模型和 usage 两个默认对象仍从锁定上游提取，stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
 | `src/native-operations.ts` | 22 行门面，调用仓内 core 补丁导出的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
 | `src/upstream/**` | 6 项选取源码：旧扩展 loader、Git 路径、上下文文件、资源去重、boundary drafts 和同步 durable context；另有 28 个共享入口。旧 loader 共用 Native 的 runtime、注册 API 和 factory 生命周期；资源纯函数也由原生模块复用。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
 
-前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 224 份源码和 7 项资源，由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)生成。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 12 项来源产物及 28 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
+前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 221 份源码和 7 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。本批只复现两个入口，没有完整重生成或重新计算最小闭包。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 12 项来源产物及 28 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
-`461e7c9` 后的入口核对确认，MkAgent 通过 `CodingHost/createAgentSession` 装配，仓内产品没有 `main`/`MainOptions` 调用。生成器在遍历导入前排除这两个导出，删除原版 Pi 启动器独占的 24 份源码，共 6757 行，包含 CLI 认证、配置向导、自更新、旧 Pi 配置迁移和 CLI 内置扩展集合。Llama 管理扩展仅由该集合进入，没有独立根导出；MCP/codemode/tool-search 的公开工厂保留。共享的 args、auth-command、runtime、http-dispatcher 等模块以及 `InteractiveMode`、print/rpc、插件 UI 组件继续保留，MkAgent 的产品迁移和 durable checkpoint 代码未变。两个 Pi 包名的 Native 插件消费者及宿主行为回归已通过，详见验证记录；仓内调用核对不证明所有外部插件都未使用被排除的启动器。该切片收窄源码范围，不是把 24 份源码逐一替换成了官方 SDK，剩余 Coding 源码仍须核对必要性。
+`461e7c9` 后的入口核对确认，MkAgent 通过 `CodingHost/createAgentSession` 装配，仓内产品没有 `main`/`MainOptions` 调用。先前切片排除原版 Pi 启动器及其独占的 24 份源码，包含 CLI 认证、配置向导、自更新、旧 Pi 配置迁移和 CLI 内置扩展集合；Llama 管理扩展仅由该集合进入。`5662422` 后的限定复核另确认，原始 MkAgent 和当前宿主均自行管理会话、UI 与传输，不依赖上游终端、stdout 或 stdin/stdout RPC 模式宿主。现从根入口和 modes barrel 排除 `InteractiveMode`、`InteractiveModeOptions`、`runPrintMode`、`PrintModeOptions`、`runRpcMode`，并删除三个实现文件。生成规则在遍历任一入口的依赖前完成排除。`RpcClient` 及其 options、RPC 协议、`JsonAgentSessionEvent`、Theme、CustomEditor、renderer/UI、`ExtensionMode`、AgentSessionRuntime 和插件生命周期保留；MCP/codemode/tool-search 的公开工厂保留。直接使用被排除模式的外部消费者须迁移到自有宿主，这项导出变化不承诺任意外部消费者零影响。此处删除不需要的模式宿主，不计作官方 SDK 完整覆盖，也没有证明其余辅助闭包全部必要。
 
 `RpcClient` 是另一个程序化入口，不包含 agent 启动器。调用方须在 `RpcClientOptions.cliPath` 提供兼容的 Node CLI；`start()` 在缺少入口时于创建子进程前明确拒绝，不再运行工作目录下的 `dist/cli.js`。原注释声称会搜索入口，实际仅使用固定相对路径，现已修正。显式入口保留 cwd、env、provider、model、额外参数和 JSONL 请求，未恢复原版 CLI。Bun 和 Node 的本地进程夹具覆盖启动、请求、错误及停止，定向来源复现见验证记录；这不证明整个程序化运行模式闭包必要。
 
@@ -185,7 +185,7 @@ HTML 导出的 Markdown 和高亮副本已删除，分别直接依赖 `marked@18
 
 三处 pi-ai 收敛前的静态快照覆盖其中 245 份 TypeScript，按逐项核验的路径读取本地与上游源码。忽略注释和模块目标后，206 份语法相同，4 份生成的 JavaScript 相同，35 份仍有差异；3 个解析边界保持未分类。模块目标核对另确认 1014 个相对引用指向同源登记，484 个包或标准库引用不变，5 个模块增强不变。Agent 循环、AgentSession 的工具执行和插件 core 命名空间有意改接本地 durable；仅余的未登记相对类型重写是 stream 模块的公开 `StreamFn` 别名。这些分类不作为最新计数，也不证明完整行为等价或全部源码必要。
 
-三个运行模式已恢复上游的 `process.off` 写法，文件与锁定上游逐字节一致，来源记录不再包含转换。已有 `node-process.d.ts` 负责环境类型补充，生成器不再改写运行时调用，也删除了一条无效的相同字符串替换。窄范围类型、真实监听器清理及定向生成范围见[验证记录](coding-validation.md)。
+此前三个运行模式曾恢复上游 `process.off` 写法并验证监听器清理；该切片是历史证据。三个模式实现现已删除，不再以监听器转换作为保留理由。`node-process.d.ts` 仍提供环境类型补充，历史定向范围见[验证记录](coding-validation.md)。
 
 请求及工具操作不再复制函数正文。core 补丁仅修改发布的 JavaScript 和类型声明，公开八个实际使用的函数，并为流式请求补充可选默认身份参数。Native 保留原来的身份对象，其他七个函数直接转发。本轮移除 `withToolChanges` 和 `prepareToolCallArguments` 的无调用转发及新增导出，这两个 helper 继续由 core 内部调用，不扩大补丁的公开 API。独立消费者须同时应用根目录登记的 durable 与 core 补丁。原版 58 场景保留为历史对照；本轮实际 task 回归、四文件干净补丁重放和独立 frozen 消费者的 Bun、Node 运行均通过，完整 SDK 声明及全仓类型的最终结果见验证记录。
 
@@ -232,7 +232,7 @@ Pi v1.5.0 尚未将 `AgentSession` 及 Coding 专有的扩展和资源装配独�
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |
 | Agent 外观及请求操作 | core 四文件补丁公开八个实际使用的操作，并允许 Agent 注入执行后端及必要的受保护接点。105 行 Native 子类复用 core 的状态、生命周期及默认消息转换，固定注入 durable；22 行操作门面保留 Native 默认身份。必要接点限于 backend、队列快照、消息身份、恢复绑定与异步事件结算；默认对象及 stream 注册仍独立，未用反射断言证明其必要性。 | 八个操作导出、backend/queue/lifecycle 接点、可变默认对象的影响、事件等待、队列身份和任务恢复版本 |
 | Native codemode | 内置执行器、模型准备和 formatter 已复用。仓内 durable 补丁新增选项承接 store、租约、发现覆盖、调用观察和结果投影；外层保留 Native 字符串 ID、实时展示、原始分支写入及 worker 策略。隐藏转发器使动态 Native 工具走实际子任务和既有审批管道，不另建执行循环。 | 补丁新增接点及其发布 API 替代、工具及模型目录变化、Native 行与用量、取消、journal 回执及沙箱释放 |
-| Coding 会话、扩展及展示 | 独立公开包未提供 AgentSession 和 Coding loader，早期 `./native` 保留过完整 SDK 导出。现已排除原版 CLI 启动器，保留会话工厂、程序化运行模式和插件组件；剩余依赖继续按需求核对。既有核查覆盖 abort 落盘、shutdown、UI teardown、dispose/invalidate、rebind、withSession、旧 context 失效和 factory 失败回滚；后续按公开插件行为和官方 lifecycle 接口收窄适配。 | 已确认的插件导出、会话顺序、context/factory 行为、资源及宿主需求 |
+| Coding 会话、扩展及展示 | 独立公开包未提供 AgentSession 和 Coding loader，早期 `./native` 保留过完整 SDK 导出。现已排除原版 CLI 启动器及三种模式宿主，保留会话工厂、RPC client/协议和插件组件；剩余依赖继续按需求核对。既有核查覆盖 abort 落盘、shutdown、UI teardown、dispose/invalidate、rebind、withSession、旧 context 失效和 factory 失败回滚；后续按公开插件行为和官方 lifecycle 接口收窄适配。 | 已确认的插件导出、会话顺序、context/factory 行为、资源及宿主需求 |
 | Native renderer 与交互装配 | pi-tui 已承担基础组件、输入、宽度和 Markdown。Native 另维护 toolCallId、state/lastComponent、执行及参数完成状态、部分结果、折叠、自定义 shell、异常回退、按帧参数合并及图像缓存；header、footer、widget、editor 和输入订阅还需会话重绑与清理。HTML 导出保留 collapsed/expanded renderer。公开基础组件不能代替这些装配契约，保留外层实现。 | 工具行身份、部分更新、异常回退、图像缓存、组件与订阅清理、HTML 两种结果 |
 | Native CLI、搜索与视觉行 | 参数诊断、扩展 flags、完整文件内容与标签属于 Native CLI 策略。文件路径、MIME 和图像处理已共享。键匹配继承公开 `KeybindingsManager`，本地只保留应用动作和旧键名迁移、冲突顺序及配置加载；会话搜索已用公开 `fuzzyMatch`，另外处理分字段层级、phrase/regex 和排序；视觉行已用公开 `Text` 和宽度截断，另外维护起止行选取、隐藏数和缓存。四组标准库 parser 对照显示 CLI 语义不同，17 项内存断言确认所核查的策略，未找到可确认净收益的新替代。 | CLI 可选值和扩展参数、文件标签、旧键名冲突、搜索字段和层级、视觉行与缓存 |
 | Native MCP 与 Llama 管理 | MCP 已用公开 client、两种 transport 和内容转换；Native 仍需 exposure、namespace、64 字符命名、连接替换、失效工具隐藏、只读重试和关闭等待，以及资源链接、二进制保存和 20 KiB 输出策略。此前 Llama 模型管理和 UI 曾按策略差异保留；本批确认其仅由 CLI 内置集合引入，已随启动器独占源码删除，不再列作必要 SDK 例外。 | MCP 动态工具与连接、只读重试、授权保存及关闭、资源转换；升级时防止 CLI 内置集合重新扩大源码范围 |

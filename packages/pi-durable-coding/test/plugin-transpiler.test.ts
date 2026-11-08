@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import type { ExtensionUIContext } from '../src/pi/core/extensions/types.ts';
 
 const directories: string[] = [];
 afterEach(() => { for (const directory of directories.splice(0)) rmSync(directory, { recursive: true, force: true }); });
@@ -17,9 +18,25 @@ test.each(['@earendil-works/pi-coding-agent', '@mariozechner/pi-coding-agent'])(
       export default function(pi) {
         for (const name of ['createAgentSession', 'createAgentSessionRuntime', 'createEventBus',
           'createCodemodeExtension', 'createMcpExtension', 'createToolSearchExtension',
-          'InteractiveMode', 'RpcClient', 'runPrintMode', 'runRpcMode', 'CustomEditor', 'Theme']) {
+          'RpcClient', 'CustomEditor', 'Theme']) {
           if (typeof coding[name] !== 'function') throw new Error('Missing SDK export: ' + name);
         }
+        for (const name of ['InteractiveMode', 'runPrintMode', 'runRpcMode']) {
+          if (name in coding) throw new Error('Unexpected transport host: ' + name);
+        }
+        coding.initTheme('dark');
+        const theme = coding.getMarkdownTheme();
+        pi.registerFlag('sdk-theme', { type: 'string', default: theme.heading('plugin theme') });
+        pi.registerMessageRenderer('sdk-border', () => new coding.DynamicBorder(text => theme.heading(text)));
+        class PluginEditor extends coding.CustomEditor {
+          constructor(...args) {
+            super(...args);
+            this.onEscape = () => this.setText('escaped');
+          }
+        }
+        pi.registerCommand('sdk-editor', {
+          handler: async (_args, ctx) => ctx.ui.setEditorComponent((...args) => new PluginEditor(...args)),
+        });
         const session = coding.SessionManager.inMemory(import.meta.dir);
         pi.registerFlag('sdk-session', { type: 'string', default: session.getCwd() });
         pi.registerTool(coding.createReadToolDefinition(import.meta.dir));
@@ -30,6 +47,24 @@ test.each(['@earendil-works/pi-coding-agent', '@mariozechner/pi-coding-agent'])(
     expect(loaded.errors).toEqual([]);
     expect(loaded.extensions[0]?.flags.get('sdk-session')?.default).toBe(directory);
     expect(loaded.extensions[0]?.tools.get('read')?.definition.name).toBe('read');
+    const extension = loaded.extensions[0]!;
+    const styled = extension.flags.get('sdk-theme')!.default as string;
+    expect(styled).toStartWith('\u001b[');
+    expect(styled).toContain('plugin theme');
+    const border = extension.messageRenderers.get('sdk-border')!({} as any, {} as any, {} as any)!;
+    expect(border.render(12).map(line => line.replace(/\x1b\[[0-9;]*m/g, ''))).toEqual(['─'.repeat(12)]);
+    let createEditor: Parameters<ExtensionUIContext['setEditorComponent']>[0];
+    await extension.commands.get('sdk-editor')!.handler('', {
+      ui: { setEditorComponent(factory: typeof createEditor) { createEditor = factory; } },
+    } as any);
+    expect(createEditor).toBeFunction();
+    const { KeybindingsManager } = await import('../src/pi/core/keybindings.ts');
+    const editor = createEditor!({ requestRender() {} } as any, { borderColor: (text: string) => text } as any,
+      new KeybindingsManager());
+    editor.handleInput('plugin editor');
+    expect(editor.getText()).toBe('plugin editor');
+    editor.handleInput('\u001b');
+    expect(editor.getText()).toBe('escaped');
   },
 );
 

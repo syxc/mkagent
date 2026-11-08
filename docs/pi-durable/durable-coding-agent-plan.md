@@ -38,15 +38,15 @@ pi-durable 已发布 codemode、tool-search、tools、images 及完整 Harness/�
 
 后续请求切片已接入仓内新增的 `GenerationResponseTask` v1，直接复用 SDK 的 `streamResponse` 与 partial 写入。发布版 `GenerationTask.request` 会继续分类和写消息，不能独立返回响应；新任务提供这一明确出口，保留原 `GenerationTask` v4 和所有 `pi.coding.*` v1。Native `message_end` 完成后才决定工具 calls，SDK receipt、唯一 assistant entry 和下一 checkpoint 同事务提交。不确定 request/event 不重发，取消与恢复均清理 SDK generation 槽。新任务属于本地 SDK 修改，退出条件和升级检查见架构记录；不能记为未修改发布 API。完整 30 文件补丁已有真实重放和冻结消费者核对。工具轮次与收尾已核对：发布 SDK 阶段同时写 assistant、创建工具、应用 inbox 和转交下一请求，没有独立返回轮次决定的出口。当前保留 Native 交付与 journal 适配，未新增轮次补丁，退出条件见架构记录。另已删除插件 edit 的参数转换副本，直接使用公开 `createEditTool().prepareArguments`；文件执行和 renderer 保留。公开 Agent/runToolCall 的普通 AgentTool 现已接入同一个 ToolTask 桥，已桥接工具和 AgentSession 往返转换避免重复包装。Native 保留首次参数验证和权限改参；effect 前检查取消，最终参数与完整 SDK 回执原子保存，旧回执缺字段时回退已接受参数。summary 的并发与主 generation 进度隔离已固定，session/summary 的候选 API、具体缺口和退出条件见架构记录；未改变其运行时任务。完整 Coding 闭包及补丁收窄继续推进，F1 至 F3 保持开放。
 
-SDK 入口范围已继续收窄：生成器在遍历依赖前排除原版 Pi CLI 的 `main`/`MainOptions`，删除其独占的 24 份源码，共 6757 行，运行时清单由 248 份降为 224 份 TypeScript，7 项资源不变。MkAgent 仍通过 `CodingHost/createAgentSession` 装配；保留程序化 InteractiveMode、print/rpc、插件 UI 组件及 MCP/codemode/tool-search 工厂，产品迁移和 durable checkpoint 未变。两个 Pi 包名的 Native 插件消费者、资源、包命令、冷恢复和宿主定向回归已通过。该删除依据入口和调用核对，不记作 24 个文件已由官方 SDK 完整覆盖，也不关闭剩余源码必要性核查。
+SDK 入口范围已继续收窄：此前排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源码；`5662422` 后的限定复核再确认三种模式宿主不属于原始 MkAgent 接入或必需插件契约。现排除 `InteractiveMode`、`runPrintMode`、`runRpcMode` 和前两者专用 options，删除三个实现文件。生成器在遍历根入口和 modes barrel 前应用同样排除。保留 `RpcClient`/options、协议和 JSON events、Theme、CustomEditor、renderer/UI、ExtensionMode、AgentSessionRuntime 及 MCP/codemode/tool-search 工厂；产品仍通过 `CodingHost/createAgentSession` 装配。直接使用三种模式的外部消费者须迁移到自己的宿主。当前清单为 221 份 TypeScript、7 项资源；这是保留产物计数，不是完整闭包重算。双包名真实插件、RPC client、宿主 UI、worker bundle、声明及局部来源检查的结果见验证记录。该删除不计作官方 SDK 完整覆盖，也不证明所有剩余辅助源码必要。
 
 两个扩展 loader 已共用 runtime、注册 API 与 factory 接受/回滚实现。生成器删除旧入口中的五个同源函数，旧产物由 631 行减至 235 行；各自的模块映射、缓存及目录策略保留。双入口测试覆盖成功注册、失败回滚、旧 API 失效和缓存隔离，SDK 消费者及宿主定向回归通过。这是本地移植实现去重，不是官方包新增 Coding loader；任务版本和 checkpoint 不变。具体退出条件、升级核对和验证范围见架构及验证记录。
 
 Agent 默认消息转换现直接使用发布版 `CoreAgent`；Native 函数、生成器提取及 core 补丁中的默认字段已删除，门面由 115 行减至 105 行。模型和 usage 两个可变默认对象继续保留，其必要性不由反射测试推定。70 项定向回归、全仓 CI、声明构建和独立冻结消费者的 Bun/Node 各 7 项检查通过，完整入口的最终范围见验证记录。执行桥的保留条件也已收窄：Proxy、参数个数和 getter 顺序没有已确认的产品调用方；summary 进度隔离测试不证明实际并发调用；旧 runtime 只按受支持快照的识别、迁移或安全结算评估。其余 Coding 源码复核和完整来源检查仍按 F1 至 F6 推进。
 
-两项独立复核已完成，没有确认新的 pristine Pi 1.5.0 SDK 完整替代项；这不足以将所有剩余源码归入必要例外。已修正具体的 RpcClient 缺陷：本包没有 CLI 启动器，调用方须提供 cliPath，缺省时在创建子进程前拒绝；原“搜索 dist/cli.js”注释与实现不一致也已修正。显式入口及 JSONL 请求、错误、停止的本地进程夹具在 Bun/Node 各通过 4 项，声明、定向来源复现及六项生成保护用例通过。程序化运行模式与 CLI 辅助闭包继续按实际用途核对，发布 API 与仓内补丁 helper 分开记账。
+两项独立复核已完成，没有确认新的 pristine Pi 1.5.0 SDK 完整替代项；这不足以将所有剩余源码归入必要例外。已修正具体的 RpcClient 缺陷：本包没有 CLI 启动器，调用方须提供 cliPath，缺省时在创建子进程前拒绝；原“搜索 dist/cli.js”注释与实现不一致也已修正。显式入口及 JSONL 请求、错误、停止的本地进程夹具在 Bun/Node 各通过 4 项，声明、定向来源复现及六项生成保护用例通过。三种程序化模式和 CLI helper 的已确认排除项现已落实；其余辅助范围继续按实际用途核对，发布 API 与仓内补丁 helper 分开记账。
 
-args 模块的启动器残留也已收窄：删除无剩余调用、未从公开根导出的 `printHelp`、`normalizeSessionName` 及三个专用导入。`parseArgs` 和模型解析的 thinking 校验继续保留；71 项 helper、模型及插件回归、参数和后缀实际检查、声明构建与固定来源单文件复现通过，来源清单已同步。此项不计作官方 SDK 替代，完整程序化模式边界和 F1 至 F6 尚未关闭。
+args 模块的启动器残留也已收窄：删除无剩余调用、未从公开根导出的 `printHelp`、`normalizeSessionName` 及三个专用导入。`parseArgs` 和模型解析的 thinking 校验继续保留；71 项 helper、模型及插件回归、参数和后缀实际检查、声明构建与固定来源单文件复现通过，来源清单已同步。此项不计作官方 SDK 替代；三种模式的后续限定排除已实施，剩余辅助边界和 F1 至 F6 的完整验收尚未关闭。
 
 以下至“产品模式与资源策略”之前的对照是既有实现摘要，详细时点和结果见[验证记录](coding-validation.md)。其中通过补丁共享的算法不等于原包公开能力，辅助替换和第三方库结果不代替本次执行主链验收。
 

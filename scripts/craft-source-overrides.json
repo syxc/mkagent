@@ -2509,8 +2509,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "2dd0c83f52ce1e5375969a7f2a541cd0043d4d032d7d6d7f197f79bd2641d176",
-      "reason": "Register public helper replacements and SDK bridge-marker preservation. Exclude launcher-only CLI helpers while guarding each removed declaration and import."
+      "sha256": "136391fc1898c6104cee29fa5167e94748b25245b404cc18f1ee3ef4a8a822b5",
+      "reason": "Register public helper replacements and SDK bridge-marker preservation. Exclude launcher helpers and run-mode exports with missing and duplicate boundary guards."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "8e2a592d0d54bfcef94b503d3b3080904a34bfd78b5291c95f2f41b0793396fb",
@@ -2521,8 +2521,8 @@
       "reason": "Guard declarations and retained policy constants when forwarding Native algorithms. Do not bind replaced child-process, shell, read-path or truncation bodies to hashes."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "d5674ccb2e1fac499deaa7b71b33626d6e88dc1e3870a19e796e49c992b69152",
-      "reason": "Verify discarded algorithm bodies do not change generated output. Guard signatures, TypeBox branding, duplicates, policy constants and the model-store class. Check that CLI helper removal retains parsing and rejects every missing or repeated boundary."
+      "sha256": "70449173dbe13a2f798e67837299f0e0a877ea132b4252a22c22dbfd1501b3b2",
+      "reason": "Guard shared helper signatures and retained policy. Verify both run-mode entries exclude host implementations while preserving RPC and plugin exports, and reject missing or duplicate removal boundaries."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -2977,8 +2977,8 @@
       "reason": "Compose public Jiti transforms with source metadata and a versioned cache while preserving Bun host stack hooks."
     },
     "packages/pi-durable-coding/test/plugin-transpiler.test.ts": {
-      "sha256": "6b46d75f853c770dcf3c69391423d4018f6391fe4d315ec54b7fe34772a7e012",
-      "reason": "Verify both real loaders preserve metadata and stack handling, and Native plugins can import retained SDK factories, modes and components under both Pi package names."
+      "sha256": "ff36d34e697918a5c527ab525dbfffef6c4100791ca3fbda052eefa1a9cfc19f",
+      "reason": "Verify both loaders preserve metadata and stack handling. Through both Pi package names, exercise retained factories, theme styling, CustomEditor factory/input and registered renderer behavior, and reject removed transport hosts."
     },
     ".github/workflows/ci.yml": {
       "sha256": "f42a6325a26770a557971e4ce6f44fe49f5659e813666312eff06dfdb1c8edda",
@@ -4065,8 +4065,8 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "76be3d147d0a294aad52a36098aecac56eebeffb7762256cb227547d50ba453b",
-      "reason": "Exclude the pinned CLI launcher before traversing imports, require an explicit caller-provided RpcClient entry, and export the private shared extension initializer; reproduce remaining Coding SDK sources, helpers and browser assets."
+      "sha256": "971c07055ca68ab286dfcc36b2982d59a08b1f57c3356e260be5a1abc809b96a",
+      "reason": "Exclude the pinned CLI launcher and both run-mode entry points before traversing imports. Retain RPC client/protocol and reusable plugin components; require an explicit RpcClient CLI entry."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4165,8 +4165,8 @@
       "reason": "Forward the eight consumed core request and tool operations while preserving Native mutable identity defaults and durable scheduling; omit unused helper re-exports."
     },
     "packages/pi-durable-coding/src/native.ts": {
-      "sha256": "dc4426386629b9bb4bc4b54091cde5d79711d92c10c72d492e57915b6418cf47",
-      "reason": "Provide the Native SDK entry and include existing highlighter declarations for source consumers without an upstream source patch."
+      "sha256": "178fe888202a081cc5471ab6b8f00cd71611f2b4097ada4a51b7d6ccab76850f",
+      "reason": "Provide the Coding plugin and host binding entry, explicitly exclude upstream run-mode hosts, and include existing highlighter declarations for source consumers."
     },
     "packages/pi-durable-coding/src/node-process.d.ts": {
       "sha256": "959e922213bca94a52f0cef283db6ca9edd2c084f4c149854fa3499f1ea3c4c4",
@@ -4665,12 +4665,12 @@
       "reason": "Delegate tokenization, scored BM25 and schema metadata to durable compatibility exports; retain native namespace and session activation."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "9623d84041e8d02e0d19bcf1c88a159bb6df64c41c8b909be6bf940b3e2114b9",
-      "reason": "Keep Coding SDK factories, programmatic modes and plugin components while excluding upstream main/MainOptions and their private source closure."
+      "sha256": "db3632c60060b6ffc97d252a68fc029aed791b9b4ce757d377d13a4886cc7546",
+      "reason": "Retain Coding factories, RPC client/protocol and plugin components. Exclude upstream main/MainOptions, InteractiveMode and print/RPC server hosts and their dedicated option exports."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
-      "sha256": "546cf0e6fa0d645265116bec02b2e53313a2359f5b20bd23c286e6c33c0829f3",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
+      "reason": "Retain RPC client/protocol and JSON events while excluding InteractiveMode and print/RPC server hosts before dependency traversal."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/assets/clankolas.png": {
       "sha256": "169acd0dfe6fbb8d8742ed24a3fc654fd0b2e2d4223c733249c5493723f1b72d",
@@ -4876,10 +4876,6 @@
       "sha256": "6b5a394373cb1d991e9cc0b2e42c70958351261bfc8e5e2c8f6ed8039df736ad",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/external-editor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/modes/interactive/interactive-mode.ts": {
-      "sha256": "ee4ba8aeee85b772aee57b342356da3030eed3b2c32656fa9c0927e6a81fbab0",
-      "reason": "Preserve the pinned Pi v1.5.0 mode source unchanged; Node and Bun listener types use the existing ambient declaration."
-    },
     "packages/pi-durable-coding/src/pi/modes/interactive/model-catalog-refresh.ts": {
       "sha256": "a7a10647deaba5036019737c376ab3f73eed12703dafeb8cb8920581ec8672e2",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/model-catalog-refresh.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
@@ -4932,10 +4928,6 @@
       "sha256": "87f6fa86cd73b817470062f5ab0a99c790d0c0e222e25979b96bfcd157e119bf",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/json-event.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/modes/print-mode.ts": {
-      "sha256": "8cfd22f5dd18386f3cb0dea82e232d2cd54741dd77db882ada954bde1c7097e6",
-      "reason": "Preserve the pinned Pi v1.5.0 mode source unchanged; Node and Bun listener types use the existing ambient declaration."
-    },
     "packages/pi-durable-coding/src/pi/modes/rpc/jsonl.ts": {
       "sha256": "95723d349fcebad1f1da7ce103d02ba7d5e2c876b7d178d41d8b56beedbd93e0",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/jsonl.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
@@ -4947,10 +4939,6 @@
     "packages/pi-durable-coding/test/rpc-client.test.ts": {
       "sha256": "d8844d22330d6197f94bd2088b38352307567065b7629a986d88b9fb52d9da9f",
       "reason": "Verify missing-entry rejection before spawn, explicit JSONL requests and options, shutdown, startup errors and outstanding-request rejection using local child-process fixtures."
-    },
-    "packages/pi-durable-coding/src/pi/modes/rpc/rpc-mode.ts": {
-      "sha256": "d534e0fa1484844a097963d5f4fb4df9397c5a1b5e29e42aed7575ab6f67989b",
-      "reason": "Preserve the pinned Pi v1.5.0 mode source unchanged; Node and Bun listener types use the existing ambient declaration."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-types.ts": {
       "sha256": "be06a1d53916e03e9274cce9e4833692b235494e4047f1f7139d7f0147daae1a",

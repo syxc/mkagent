@@ -15,13 +15,13 @@
 | pi-durable 为执行底座 | 工具执行已委托，请求已接入本地 SDK 扩展 | 普通 profile 使用 GenerationTask；coding 主链仍由五种 `pi.coding.*` v1 调度。宿主执行使用公开 ToolTask，请求/partial 使用仓内新增 GenerationResponseTask 并复用 streamResponse。Native 保留插件交付、工具轮次和收尾，SDK receipt、journal 与下一 checkpoint 同事务提交；其余职责继续评估 |
 | 内置能力优先，再用独立 Pi 官方 SDK | 部分已实现，继续纠偏 | 生产工具工厂、images、codemode、tool-search 已用 durable；本轮另将宿主执行委托公开 ToolTask 并删除旧嵌套调用副本。SDK 根路径、插件工厂和其余任务分别核查，不能把工具切片等同于整个适配包已符合原则 |
 | 允许 pi-agent-core，禁止完整 pi-coding-agent 生产依赖 | 已有依赖符合，补丁待核对 | 独立 core 已使用；八个操作导出和 Agent 注入由四文件仓内补丁增加。durable 的 Coding hooks 和其他扩展也须作为本地修改评估，不能写成未修改发布包的能力 |
-| 保留 Pi Coding 层，仅适配执行基座及必要宿主差异 | 已收窄启动器范围，其余继续核对 | 排除原版 CLI 的 `main`/`MainOptions` 及 24 份独占源码；MkAgent 使用 `CodingHost/createAgentSession`，程序化运行模式和插件组件保留。args 中仅服务于启动器的帮助、名称归一化和专用导入已删除，公开 parser 与模型 thinking 校验保留；71 项定向回归及实际参数检查通过。RpcClient 现要求显式 cliPath，缺少入口时不创建子进程，Bun/Node 本地 JSONL 夹具通过。启动器删除不计作官方 SDK 覆盖；本次修正未恢复完整 CLI，也不证明剩余模式源码全部必要 |
+| 保留 Pi Coding 层，仅适配执行基座及必要宿主差异 | 已排除启动器及三种模式宿主，其余按具体缺口核对 | 除原版 CLI 与 24 份独占源码外，现排除 InteractiveMode、runPrintMode、runRpcMode、专用 options 和三个实现文件。两个入口在生成遍历前排除；RPC client/协议、JSON events、Theme、CustomEditor、renderer/UI 和会话/插件生命周期保留。双包名插件验证实际着色、editor 输入和 renderer；RPC、宿主 UI、声明及 bundle 通过。直接使用三种模式的外部消费者会失去这些导出，须改用自有宿主。args 的 parser/thinking 保留，RpcClient 仍需显式 cliPath。上述宿主范围删除不计作官方 SDK 覆盖 |
 | 兼容逻辑尽量薄 | 已共用 loader 生命周期及 core 默认转换，其余继续核对 | 两个 loader 的 runtime、注册 API 和 factory 接受/回滚共用本地实现，旧产物由 631 行减至 235 行；模块映射、缓存和目录策略独立。Native 默认转换及对应补丁字段已删除，105 行 Agent 门面直接使用发布版 core；两个可变默认对象保留。反射断言没有已确认的产品调用方，不能作为保留理由。其余例外继续核对 |
 | 上游升级主要核对 SDK 契约与必要适配 | 待实施和验证 | 合并检查源码副本、生成转换及依赖补丁；每项例外有具体缺口、退出条件和 Coding/durable 升级检查。不能把逐文件改造完整闭包作为常规升级方式，也不承诺当前已能只改版本号升级 |
 | MkAgent 上层与插件不回归 | 历史行为有证据，按实际改动重验 | 下列能力和产品清单继续有效；不能为减少源码削减权限、取消、错误处理、持久化、恢复或已确认公开插件行为 |
 | 存量数据及任务兼容 | 工具切片已验证，其他替换待实施 | 五种 `pi.coding.*` 仍为 v1；旧工具 checkpoint 保持原恢复路径，新 SDK 文档覆盖 safe/unsafe 策略变化、已完成结果与工具移除后的 SIGKILL 恢复。其余 generation/tool checkpoint 及 summary 的已完成响应、不确定请求和取消继续纳入后续接线验证，不自动重发不安全副作用。 |
 | 独立模块和消费者 | 历史验证通过，按接口变化重验 | coding 包不依赖 MkAgent shared/server/UI；`a41e6b5` 独立消费者覆盖六个运行时入口和 rpc-ui 类型。后续入口调整须同步声明、调用方及实际消费者 |
-| 来源与许可 | 已同步本批范围，完整重生成未重跑 | 当前清单为 224 份 TypeScript、7 项资源，`cb0311f` 的 `248/7` 保留历史时点；辅助为 12 项来源和 28 个共享入口。本批两个 loader 的固定上游定向转换通过，共享声明的缺失和重复拒绝检查通过，清单摘要已同步；数量、哈希和局部复现不证明架构最小或功能完整 |
+| 来源与许可 | 已同步本批范围，完整重生成未重跑 | 当前清单为 221 份 TypeScript、7 项资源，`cb0311f` 的 `248/7` 及启动器切片的 `224/7` 保留历史时点；辅助为 12 项来源和 28 个共享入口。本批两个入口的固定上游局部转换通过，删除边界的缺失和重复检查通过，受影响摘要已同步；数量、哈希和局部复现不证明闭包最小或功能完整 |
 | profile 与信任隔离 | 历史验证通过，持续保留 | 普通 profile/host-only 不自动加载环境 Pi 资源；项目执行导入前经过宿主决定，工具继续走既有审批 |
 
 既有源码对照、图像和 codemode 共享及 core 门面改动保留[架构记录](coding-architecture.md)和验证账本中的证据。宿主工具执行已委托官方 ToolTask 并删除旧嵌套副本；请求执行与 partial 已接入仓内新增 GenerationResponseTask。工具轮次与收尾的发布接口缺口已按实际写入和结算职责记录，未新增补丁；插件 edit 参数转换已直接复用公开 SDK 并删除副本。公开 Agent/runToolCall 的普通 AgentTool 也已委托同一个 SDK 桥，保留权限改参、取消与最终参数回执；AgentSession 转换不再丢失桥接标记。summary 并发进度隔离已有回归，session/summary 的 API 缺口及退出条件已记录，尚未替换这些任务。完整 Coding 闭包继续核对，未证明整套桥永久必要。F1 至 F3 继续开放。
@@ -77,6 +77,6 @@
 
 文档校正已提交，宿主工具与请求切片已完成各自的定向验证；工具轮次和收尾已记录发布接口缺口，edit 参数副本已删除并验证公开 SDK 接线。后续按已记录的 API 缺口继续 session/summary 替代与 Coding 闭包的必要性核对；公开 Agent/runToolCall 的普通工具已复用 SDK，低层自供执行函数的 task fixture 不属于此保证。每项架构改动同时迁移调用方、数据和测试，以真实行为验证，而非只检查函数转发或文件哈希。既有读取确认、PowerShell、setup 历史、分支发布和作用域修复不得因换实现回退。
 
-当前 `224/7` 只是源码清单。已排除 CLI 启动器，原 `248/7` 保留为历史时点。既有 SDK、插件、图像和资源对照的范围及未验项仍见验证账本；`theme-tokens.ts` 的首段读取被工具策略拒绝，完整 token 表未逐项核实，不绕过该限制。
+当前 `221/7` 只是保留源码清单。已排除 CLI 启动器及三种模式宿主，原 `248/7` 和 `224/7` 保留为历史时点。既有 SDK、插件、图像和资源对照的范围及未验项仍见验证账本；`theme-tokens.ts` 的首段读取被工具策略拒绝，完整 token 表未逐项核实，不绕过该限制。
 
 历史浏览器任务 7 和 8 已各自关闭，不构成本次新访问授权。Windows、正式签名公证、系统协议和其他 TUI 组合保留其证据缺口，不能借文档修订记为完成。文档本批的链接、一致性、标点及独立复核结果单独记录，产品和全仓旧结果不算本批重跑。

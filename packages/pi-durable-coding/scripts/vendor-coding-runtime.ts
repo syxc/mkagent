@@ -10,7 +10,7 @@ import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets, portHtmlVendorAssets, portImageAssets } from './asset-runtime-port.ts';
 import { portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
-import { applySharedHelperPort } from './shared-helper-port.ts';
+import { applySharedHelperPort, excludeRunModeEntries } from './shared-helper-port.ts';
 import { portCompatRuntime } from './compat-runtime-port.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
@@ -74,6 +74,12 @@ while (queue.length) {
     // Remove the launcher before walking imports so its private closure is not copied.
     body = body.replace(launcher, '');
     changes.add('exclude-upstream-cli-launcher');
+  }
+  const modeEntry = excludeRunModeEntries(path, body);
+  if (modeEntry !== undefined) {
+    // Exclude transport hosts before walking either entry point's dependencies.
+    body = modeEntry;
+    changes.add('exclude-upstream-run-modes');
   }
   if (path === 'modes/rpc/rpc-client.ts') {
     const edits = [

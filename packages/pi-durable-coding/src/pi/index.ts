@@ -414,13 +414,10 @@ export type { CodemodeStoreEntryData, CodemodeToolDetails } from "./extensions/c
 export type { LoadedMcpConfig, McpExposure, McpServerConfig, McpServerEntry } from "./extensions/mcp/config.ts";
 export { createMcpExtension, type McpExtensionOptions, type McpTransportFactory } from "./extensions/mcp/index.ts";
 export { createToolSearchExtension } from "./extensions/tool-search/index.ts";
-// Run modes for programmatic SDK usage
+// RPC client and protocol for programmatic SDK usage
 export {
-	InteractiveMode,
-	type InteractiveModeOptions,
 	type JsonAgentSessionEvent,
 	type ModelInfo,
-	type PrintModeOptions,
 	RpcClient,
 	type RpcClientOptions,
 	type RpcCommand,
@@ -429,8 +426,6 @@ export {
 	type RpcExtensionUIResponse,
 	type RpcResponse,
 	type RpcSessionState,
-	runPrintMode,
-	runRpcMode,
 } from "./modes/index.ts";
 // UI components for extensions
 export {
