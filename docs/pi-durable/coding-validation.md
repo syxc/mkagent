@@ -21,11 +21,69 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Documentation gap follow-up after 1314a2b
+
+This follow-up on 2026-11-08 starts at `1314a2b`. It extends the first correction
+to product and development entry points, the server-core guide, Craft sync
+guides and migration archive notices. It also resolves remaining baseline and
+SDK-source ambiguities in the core documents. Historical measurements, release
+records and product test results retain their original scope.
+
+| Gap found | Correction |
+| --- | --- |
+| Root and development entry points lack the current kernel direction | Link the capability specification and implementation plan; describe the Coding module and official Pi SDK priority |
+| Migration archives still present old MCP/image removals and full UI source rules as current guidance | Mark the complete documents as historical; retain the old bodies and direct current work to the active specifications |
+| Craft sync exclusions can include current kernel MCP/OAuth and image capabilities | Limit the exclusions to the specified Craft product features; preserve durable MCP, Coding MCP OAuth and codemode image generation |
+| The Pi 1.1.0 sync statement can be read as a current repository-wide requirement | Date that release statement; distinguish root/shared/server-core pi-ai 1.1.0 from the Coding/worker Pi 1.5.0 dependencies |
+| server-core describes sessions, handlers and domain logic as external responsibilities | Describe their existing server-core implementation and the separate Pi worker execution boundary |
+| The first durable integration commit can be treated as the full product preservation baseline | Keep `85325251a10d`/`0959d3563892` as the historical inventory comparison; preserve `cb0311f` and subsequent confirmed product behavior |
+| Codemode options, edit-diff helpers and core operation imports can appear to be unmodified published APIs | Label the options and exports as repository patch additions |
+| Current task and replay versions are not explicit | Record published generation v2 versus patched v4, tool v3, five local Coding task kinds at v1, and codemode replay-module 2 versus 3; require stored-state compatibility |
+| The execution summary omits the separate summary task | Include `pi.coding.summary` alongside the four main task kinds |
+| First-batch F0 counts can appear to cover the follow-up | Keep separate receipts and update the current acceptance and plan status |
+
+The source comparison uses the pinned, unmodified Pi 1.5.0 checkout and the
+registered repository patch. `generation.ts` defines version 2, `tool.ts`
+defines version 3, and `codemode.ts` defines module version 2. The patch raises
+generation to 4 and the codemode module to 3. A task version, replay-module
+version and document schema are separate identifiers. No runtime, dependency,
+test or stored data is changed by this documentation follow-up.
+
+The follow-up changes 20 documentation files: 19 Markdown files and the archived
+HTML project analysis. Checks against `1314a2b` report:
+
+- All 209 local Markdown links and 12 HTML local links resolve. Referenced
+  Markdown heading and HTML ID anchors are included.
+- Added and rewritten text in all 19 Markdown files and the HTML notice passes
+  the language-specific punctuation gate. All seven core documents pass the
+  whole-file gate. Eight other documents retain findings outside the changed
+  text: both root READMEs, both development guides, the migration README and
+  plan, the Markdown project analysis, and the Chinese upstream-sync guide.
+- The HTML differs only in its first historical notice. Node 24.22.1 compiles
+  its complete inline script without executing the page. The independent
+  archive review also confirms unchanged Markdown bodies below the notices.
+- Independent review of the seven core documents and targeted rechecks closed
+  three findings: patch-added API wording, missing published/patched version
+  boundaries, and the historical product baseline. A separate review covers
+  all 14 entry, development, archive, sync and server-core documents, including
+  all three English/Chinese pairs, with no remaining findings.
+- Current manifests confirm root/shared/server-core pi-ai 1.1.0 and the
+  Coding/worker Pi 1.5.0 dependencies. The registered core and durable patches
+  still change four and 28 files. `git diff --check` passes; the changed-file
+  inventory contains only these 20 documents.
+
+F0 documentation correction and this gap follow-up are complete. The first
+batch's 20-file and 191-link receipt below remains scoped to `1314a2b`; it is not
+the follow-up result. No product, CI, browser visual or historical behavior
+check was rerun for these edits. F1 to F3 and their affected runtime behavior
+checks remain open.
+
 ## Migration direction correction on 2026-11-08
 
-The user requires related documents to be corrected before further runtime
-changes. This documentation batch starts at `cb0311f`. It corrects the following
-assumptions in requirements, architecture, plans and acceptance records:
+This first batch was committed as `1314a2b`. The user requires related documents
+to be corrected before further runtime changes. The batch starts at `cb0311f`.
+It corrects the following assumptions in requirements, architecture, plans and
+acceptance records:
 
 | Previous direction or ambiguity | Corrected requirement |
 | --- | --- |

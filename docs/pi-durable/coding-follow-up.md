@@ -22,7 +22,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 | 顺序 | 编号 | 工作 | 当前状态与通过条件 |
 |---|---|---|---|
-| 0 | F0 | 全面纠正文档 | 已完成本批校正与复核：20 份文档统一方向，191 个本地链接有效，新增文字与七份核心文档的标点检查通过，独立复核发现已修正；本批未改运行时代码 |
+| 0 | F0 | 全面纠正文档 | 首批 `1314a2b` 及本次补漏校正与复核已完成，覆盖核心规格、产品/开发入口、迁移归档、上游同步及 server-core 职责；两批范围和检查分开见验证记录，均未改运行时代码 |
 | 1 | F1 | 按需求核对官方能力与实际执行链 | 主链和工具装配已有定向核查；发布 API、仓内扩展、必要 Coding 差异及旧实现细节仍须逐项区分 |
 | 2 | F2 | 优先复用官方内核和 SDK | 生产已用 durable tools、images、codemode、tool-search；下一步先核对 GenerationTask、ToolTask、hooks、事务和恢复的实际接入方案 |
 | 3 | F3 | 收窄兼容代码和源码范围 | 四类任务桥、完整 SDK 导出闭包和依赖补丁保持待纠偏；已有代表性对照不构成永久保留结论 |
@@ -48,7 +48,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 当前独立核查确认四类任务桥已使用官方 scheduler、task ownership、commit 和等待接口，同时仍有与 GenerationTask/ToolTask 同类的本地状态转换。保持现有事务和不重放契约时，尚未找到可直接替换的薄接线；这只是当前对照结果。后续须围绕必要差异设计官方执行器接入，不能据此把四个状态机整体定为永久必需。
 
-既有 `codingPrepare`、`codingStream`、`codingBoundary` 是仓内 durable 补丁接点。核查它们可说明当前能力与缺口，不能将其当作未修改发布包的能力。旧阶段与 `LoopInput.resume` 仍有恢复调用方，替换时需显式迁移。存量任务清单包括 `pi.coding.{session,run,call,tool,summary}` 五种 v1；summary 的压缩、分支总结和 bug report 已完成结果、不确定请求禁止重发及取消语义须一并纳入恢复验证。
+既有 `codingPrepare`、`codingStream`、`codingBoundary` 是仓内 durable 补丁接点。未修改 Pi 1.5.0 的 `pi.generation` 为 v2，本地补丁升为 v4；`pi.tool` 为 v3。codemode 的 replay module 另由 2 升为 3，不与任务或文档 schema 版本混写。主链替代或补丁撤除须显式处理这些状态与日志，具体对照见架构记录。核查安装包可说明当前能力与缺口，不能将其当作未修改发布包的能力。旧阶段与 `LoopInput.resume` 仍有恢复调用方，替换时需显式迁移。存量任务清单包括 `pi.coding.{session,run,call,tool,summary}` 五种 v1；summary 的压缩、分支总结和 bug report 已完成结果、不确定请求禁止重发及取消语义须一并纳入恢复验证。
 
 完成条件：形成按能力划分的可执行替代项及必要例外；未核实项保持开放。上游未单独发布 Coding SDK、源码可达或哈希一致，都不能证明完整闭包必须保留。
 

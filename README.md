@@ -101,7 +101,9 @@ More commands and environment variables are documented in the
 
 ## Architecture
 
-MkAgent is a Bun workspace with a shared runtime and renderer across its three interfaces:
+MkAgent is a Bun workspace with a shared runtime and renderer across its three interfaces.
+
+The agent kernel uses `pi-durable` in a Bun subprocess. Current migration work adds Coding capabilities and Pi plugin support while preserving MkAgent features. Use durable built-ins first, then public APIs from independent official Pi SDK packages. Compatibility code and source ports require a confirmed gap; production must not depend on or load the complete `pi-coding-agent` package. The [capability specification](./docs/pi-durable/coding-capabilities-spec.md) and [implementation plan](./docs/pi-durable/durable-coding-agent-plan.md) define this work.
 
 ```text
 apps/
@@ -114,7 +116,8 @@ packages/
   ui/                    Shared React UI and content renderers
   server-core/           RPC transport, sessions, and runtime orchestration
   server/                Headless server
-  pi-agent-server/       Pi agent subprocess
+  pi-agent-server/       Pi-durable agent subprocess
+  pi-durable-coding/     Coding capabilities and Pi plugin compatibility
   session-tools-core/    Plans, Skills, browser, and session tools
 ```
 

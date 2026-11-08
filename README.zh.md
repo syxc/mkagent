@@ -86,7 +86,9 @@ MkAgent 会在 `~/.mkagent/workspaces/default` 创建默认工作区。开发或
 
 ## 架构
 
-MkAgent 是一个 Bun workspace，三个使用界面共用同一套运行时和渲染层：
+MkAgent 是一个 Bun workspace，三个使用界面共用同一套运行时和渲染层。
+
+Agent 内核在 Bun 子进程中使用 `pi-durable`。当前迁移为其补齐 Coding 能力和 Pi 插件支持，并保留 MkAgent 功能。先用 durable 内置实现，再用独立 Pi 官方 SDK 的公开 API；只有确认缺口后才做兼容或源码移植，生产不得依赖或加载完整 `pi-coding-agent` 包。具体要求见[能力规格](./docs/pi-durable/coding-capabilities-spec.md)和[实施计划](./docs/pi-durable/durable-coding-agent-plan.md)。
 
 ```text
 apps/
@@ -99,7 +101,8 @@ packages/
   ui/                    共享 React UI 和内容渲染器
   server-core/           RPC 传输、会话和运行时编排
   server/                Headless server
-  pi-agent-server/       Pi Agent 子进程
+  pi-agent-server/       Pi-durable Agent 子进程
+  pi-durable-coding/     Coding 能力与 Pi 插件兼容
   session-tools-core/    计划、Skills、浏览器和会话工具
 ```
 

@@ -6,8 +6,12 @@ The runtime is named `pi-durable coding agent`, also called `durable coding
 agent`. It combines pi-durable execution with the coding capabilities and
 plugin ecosystem of Pi coding agent. All existing MkAgent product features
 must remain complete and work through Desktop, WebUI, CLI and headless entry
-points. The upper-layer source is the compatibility baseline.
-The baseline is MkAgent `85325251a10d`, whose tree matches `0959d3563892`.
+points. The product preservation baseline for this correction is MkAgent
+`cb0311f`, including the confirmed product behavior added after the first
+integration. Keep subsequent confirmed product changes as implementation proceeds.
+MkAgent `85325251a10d`, whose tree matches `0959d3563892`, is the historical
+first-durable-integration comparison used by the inventory's Baseline column.
+It does not limit the current feature set or authorize reverting later fixes.
 The source baseline is Pi v1.5.0, commit
 `f9a26365568127461c47a07a37dcb42c140a3ac5`. The coding package's Pi dependencies
 are pinned to 1.5.0. The existing shared transport retains pi-ai 1.1.0.
@@ -161,6 +165,11 @@ internal phase layout is permitted.
 
 The installed SDK includes repository-added `codingPrepare`, `codingStream` and
 `codingBoundary` hooks. They are not evidence of an unmodified published API.
+Published Pi 1.5.0 defines `pi.generation` v2 and `pi.tool` v3; the repository
+patch raises generation to v4. It also raises `CODEMODE_MODULE_VERSION` from 2
+to 3. That is a replay-module version, not a task or document-schema version.
+Removing a patch requires explicit handling of its stored states and logs;
+reinstalling the same package version does not provide that conversion.
 Their current behavior and the local task bridges require comparison against
 required Coding contracts. A hook gap can justify a narrow adapter or extension;
 it does not by itself justify retaining the full local execution loop.

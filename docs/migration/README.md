@@ -1,6 +1,8 @@
 # MkAgent 迁移文档总览
 
-> 归档说明：本目录记录迁移过程中的决策、计划和阶段性审计快照，不是当前实现的唯一事实来源。当前运行方式和能力以 `docs/` 顶层文档、代码与 CI 配置为准；本文中的历史数字不要直接当作今日统计。
+> 归档范围（2026-11-08 核对）：本目录记录早期 Craft Lite 产品派生、UI 对齐和审计，不是当前内核迁移的实施要求或操作授权。下文的“当前”“必须”“唯一来源”和删除清单均限于原记录时点。早期 OAuth、MCP、图片生成裁剪已被后续决定部分取代，不能据此删除现有能力。当前产品与同步基线见[文档入口](../README.md)和[上游同步](../upstream-sync.md)。
+>
+> 当前内核以 pi-durable 为底座补齐 Coding 和 Pi 插件生态，保持 MkAgent 上层功能。先用 durable 内置实现，再用独立 Pi 官方 SDK 公开 API，最后才处理确认的兼容缺口。Craft UI 的完整依赖闭包复用不要求保留完整 Pi CLI 或 Coding 源码闭包。内核需求与顺序以[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)为准。历史测试、版本、路径和数量保留原时点，不作为本次验证结果。
 
 本目录记录 MkAgent 从零起步，基于 [Craft Agents OSS](https://github.com/craft-ai-agents/craft-agents-oss) `v0.11.2` / `a60ebc1a5a7c` 派生 Lite 产品的完整迁移过程，包含产品边界、阶段计划、UI 对齐、功能裁剪、代码审计与质量验证。
 

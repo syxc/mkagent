@@ -2,6 +2,8 @@
 
 MkAgent derives its architecture, UI, and runtime from [Craft Agents OSS](https://github.com/craft-ai-agents/craft-agents-oss). This document defines the workflow for absorbing new Craft changes while staying inside the Lite boundary.
 
+Craft synchronization and the current kernel migration have separate scopes. Kernel work follows the [Coding capability specification](./pi-durable/coding-capabilities-spec.md) and [implementation plan](./pi-durable/durable-coding-agent-plan.md): use durable built-ins, then independent official Pi SDK public APIs, before necessary compatibility code. Keep MkAgent features. Craft source lineage and UI reuse do not require a complete Pi coding runtime or CLI port. The root, shared and server-core packages declare `pi-ai 1.1.0`; coding and agent-server use Pi `1.5.0`. The validation files under `sync/` preserve their original release inputs and results; they do not freeze current kernel dependencies or authorize feature removal.
+
 ## Baseline (current)
 
 | Item | Value |
@@ -26,7 +28,7 @@ The header combines branch and pinned PRs with tabs, overflow +N, arrows, urgenc
 
 Repository discovery searches four levels, stops at repositories, skips node_modules/Library/hidden/workspace data, avoids symlink loops and deduplicates bare/worktree layouts. Its two-second overall budget includes filesystem and Git descriptions; ~ paths expand. Switching an existing session's Coding mode creates the target immediately and summarizes in the background. The first message waits at most 30 seconds; ordered sends, cancellation, failure, timeout, deletion and late summaries remain isolated.
 
-Preserve MkAgent branding/config, Pi 1.1.0 and all earlier synchronized behavior, including v0.15.4/0.15.5. Claude config forwarding was reviewed by hunk: Pi already passes its whole config, uses SDK image resizing and retained compaction/context metering; add regression coverage without restoring Claude SDK. Sources/MCP OAuth relay, Pages, Projects/conductor, product Automations, public sharing, labels/custom statuses and messaging stay excluded; Decision/Guarded remain deferred. Coding PR Auto review fix is explicitly included in this sync.
+The 2026-10-26 sync preserved MkAgent branding/config, Pi 1.1.0 and all earlier synchronized behavior, including v0.15.4/0.15.5. Claude config forwarding was reviewed by hunk: Pi already passed its whole config, used SDK image resizing and retained compaction/context metering; regression coverage was added without restoring Claude SDK. Sources/MCP OAuth relay, Pages, Projects/conductor, product Automations, public sharing, labels/custom statuses and messaging remained excluded; Decision/Guarded remained deferred. Coding PR Auto review fix was explicitly included in that sync. These are release-specific facts, not a requirement to keep all current Pi dependencies at 1.1.0.
 
 ```bash
 # Fetch and check out only an independent disposable reference clone.
@@ -122,14 +124,14 @@ After any sync, both files **must** be regenerated and reviewed. The intent is t
 - Claude Agent SDK backend and the `claude-agent-sdk*` packages; keep the retained Claude OAuth flow routed through Pi
 - GitHub Copilot, generic/Sources OAuth, and their SDKs
 - External messaging gateway and workers
-- Sources, MCP server, bridge MCP server, MCP-related UI
-- Image generation models and `gen_image`
+- Craft Sources product UI, standalone MCP server and bridge server workspaces; retain the durable MCP client and required Coding project-MCP integration
+- Craft's `gen_image` tool and separate image-generation UI; retain codemode `models.generateImages()` when a compatible image model and credentials are configured
 - Public sharing, Viewer app
 - Product automations and the scheduler UI
 - Sources API/Settings UI, session labels, user-defined statuses
 - WhatsApp worker
 
-These are recorded as Lite-boundary deletions in [`comparison-with-craft.md`](./comparison-with-craft.md) and the [`migration/`](./migration/README.md) archive.
+The exclusions apply to those Craft product areas. They do not prohibit Pi plugin model-provider authorization, Coding MCP OAuth or other required kernel capabilities. Current scope is described in [the comparison](./comparison-with-craft.md) and the [Coding specification](./pi-durable/coding-capabilities-spec.md); the [migration archive](./migration/README.md) preserves earlier deletion decisions.
 
 ## Troubleshooting
 

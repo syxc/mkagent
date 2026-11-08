@@ -1,6 +1,6 @@
 # MkAgent Craft Lite 源码复用与裁剪审计报告
 
-> 历史快照说明：本文的统计与“OAuth 已删除”结论对应 2026-07-29 的 Lite 边界。2026-07-30 起，MkAgent 在保持 Pi-only 的前提下恢复 ChatGPT Plus 与 Claude Pro/Max 两种 LLM OAuth；Claude Agent SDK、GitHub Copilot 和 Sources/MCP 仍不恢复。当前状态见 [`README.md`](./README.md) 与 [`migration-features.md`](./migration-features.md)。
+> 历史快照（2026-11-08 核对）：本文统计和裁剪结论对应 2026-07-29；2026-07-30 的补记只记录当时恢复 ChatGPT Plus 与 Claude Pro/Max LLM OAuth 的边界。下文 Pi `0.80.6`、MCP/图片生成排除和源码一致性数量均为历史事实，不是当前依赖或功能要求。当前产品见[文档入口](../README.md)，当前 Craft 基线见[上游同步](../upstream-sync.md)。内核按[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)执行：先 durable 内置，再独立 Pi 官方 SDK，必要兼容最后，保持 MkAgent 功能。Craft UI 复用规则不要求移植完整 Pi Coding SDK 或 CLI；原报告和测量保留原时点。
 
 ## Project Thesis
 

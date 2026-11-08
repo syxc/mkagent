@@ -38,7 +38,8 @@ packages/
   ui/                  # React primitives、markdown/code/doc 渲染
   server-core/         # Transport、RPC、SessionManager、运行时
   server/              # headless `MKAGENT_SERVER_TOKEN` server
-  pi-agent-server/     # Pi SDK 子进程(Bun,JSONL on stdio)
+  pi-agent-server/     # Pi-durable 子进程（Bun，JSONL on stdio）
+  pi-durable-coding/   # Coding 能力与 Pi 插件兼容
   session-tools-core/  # Plan / Skill / mini LLM / browser / session info / list
 docs/                  # 英文文档
 docs/zh/               # 中文翻译
@@ -47,6 +48,8 @@ docs/migration/        # 迁移计划、audit、UI 历史
 ```
 
 `apps/online-docs` 被刻意排除在 workspace glob 之外。
+
+内核改动遵循 [Coding 能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)：先复用 durable 内置实现，再用独立 Pi 官方 SDK 的公开 API，之后才补必要兼容。根目录、shared 和 server-core 声明 `pi-ai 1.1.0`，coding 和 agent-server 使用 Pi `1.5.0`；仓内补丁与已发布 API 分开核对。Craft UI 源码复用规则不要求移植完整 Pi coding 运行时或 CLI 源码。
 
 ## 常用命令
 

@@ -10,8 +10,8 @@
 
 | 要求 | 本次纠偏状态 | 实际依据及剩余工作 |
 |---|---|---|
-| 文档先行 | 本批已完成校正与复核 | 20 份文档统一背景与 Pi 官方 SDK 顺序；191 个本地链接、新增文字标点及七份核心文档独立复核通过，HTML 内联脚本静态语法通过。产品测试未在本批重跑，F1 至 F3 继续开放 |
-| pi-durable 为执行底座 | 已有实现，职责待核对 | 普通 profile 使用 GenerationTask，coding 使用 `pi.coding.session/run/call/tool`。它们使用同一 scheduler，但本地仍有请求、工具及结束状态机；须优先核对官方执行器接入和必要差异 |
+| 文档先行 | 首批校正与补漏复核已完成 | `1314a2b` 首批覆盖 20 份文档；本次补漏从该提交起，覆盖产品/开发入口、迁移归档、上游同步、server-core 职责及核心规格。两批证据分开见验证记录；产品测试未在文档批次重跑，F1 至 F3 继续开放 |
+| pi-durable 为执行底座 | 已有实现，职责待核对 | 普通 profile 使用 GenerationTask，coding 主链使用 `pi.coding.session/run/call/tool`，摘要另用 `pi.coding.summary`。它们使用同一 scheduler，但本地仍有请求、工具及结束状态机；须优先核对官方执行器接入和必要差异 |
 | 内置能力优先，再用独立 Pi 官方 SDK | 部分已实现，继续纠偏 | 生产 read/write/edit/bash/PowerShell、images、codemode、tool-search 已用 durable。SDK 根路径、插件工厂和自有任务分别核查，不能把生产工具已复用等同于整个适配包已符合原则 |
 | 允许 pi-agent-core，禁止完整 pi-coding-agent 生产依赖 | 已有依赖符合，补丁待核对 | 独立 core 已使用；八个操作导出和 Agent 注入由四文件仓内补丁增加。durable 的 Coding hooks 和其他扩展也须作为本地修改评估，不能写成未修改发布包的能力 |
 | 仅补缺失 Coding 与插件能力 | 待核对和实施 | 从实际产品、公开插件和数据兼容需求推导必要范围；完整 SDK 闭包和原版 CLI 的可达性不证明必要，删除前也须核对调用和替代方式 |
