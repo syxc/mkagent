@@ -4065,8 +4065,8 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "c7496a143cb1a9c04b71ee3ac62d16c1b6e175daacea2883e2abaa314c0223ee",
-      "reason": "Exclude the pinned CLI launcher before traversing imports and export the private shared extension initializer; reproduce remaining Coding SDK sources, helpers and browser assets."
+      "sha256": "76be3d147d0a294aad52a36098aecac56eebeffb7762256cb227547d50ba453b",
+      "reason": "Exclude the pinned CLI launcher before traversing imports, require an explicit caller-provided RpcClient entry, and export the private shared extension initializer; reproduce remaining Coding SDK sources, helpers and browser assets."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4941,8 +4941,12 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/jsonl.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-client.ts": {
-      "sha256": "a34c9eb4937bf3b526128c9a2032cc3295504996a14bf204e4a17e5bb55dcf7f",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
+      "sha256": "78f649796ea549e8f2e619767589359f61f4b37811eeb72115630f4521173231",
+      "reason": "Retain the programmatic JSONL client with an explicit caller-provided CLI entry; fail before spawn when cliPath is absent because this package excludes the upstream launcher."
+    },
+    "packages/pi-durable-coding/test/rpc-client.test.ts": {
+      "sha256": "d8844d22330d6197f94bd2088b38352307567065b7629a986d88b9fb52d9da9f",
+      "reason": "Verify missing-entry rejection before spawn, explicit JSONL requests and options, shutdown, startup errors and outstanding-request rejection using local child-process fixtures."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-mode.ts": {
       "sha256": "d534e0fa1484844a097963d5f4fb4df9397c5a1b5e29e42aed7575ab6f67989b",

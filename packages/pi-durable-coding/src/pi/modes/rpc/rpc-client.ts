@@ -26,7 +26,7 @@ type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : n
 type RpcCommandBody = DistributiveOmit<RpcCommand, "id">;
 
 export interface RpcClientOptions {
-	/** Path to the CLI entry point (default: searches for dist/cli.js) */
+	/** Path to a caller-provided CLI entry point. Required by start(); this package has no CLI launcher. */
 	cliPath?: string;
 	/** Working directory for the agent */
 	cwd?: string;
@@ -78,7 +78,10 @@ export class RpcClient {
 
 		this.exitError = null;
 
-		const cliPath = this.options.cliPath ?? "dist/cli.js";
+		const cliPath = this.options.cliPath;
+		if (!cliPath) {
+			throw new Error("RpcClient requires options.cliPath; this package does not include a CLI launcher.");
+		}
 		const args = ["--mode", "rpc"];
 
 		if (this.options.provider) {

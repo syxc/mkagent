@@ -75,6 +75,19 @@ while (queue.length) {
     body = body.replace(launcher, '');
     changes.add('exclude-upstream-cli-launcher');
   }
+  if (path === 'modes/rpc/rpc-client.ts') {
+    const edits = [
+      ['/** Path to the CLI entry point (default: searches for dist/cli.js) */',
+        '/** Path to a caller-provided CLI entry point. Required by start(); this package has no CLI launcher. */'],
+      ['const cliPath = this.options.cliPath ?? "dist/cli.js";',
+        'const cliPath = this.options.cliPath;\n\t\tif (!cliPath) {\n\t\t\tthrow new Error("RpcClient requires options.cliPath; this package does not include a CLI launcher.");\n\t\t}'],
+    ];
+    for (const [before, after] of edits) {
+      if (body.split(before).length !== 2) throw new Error('Pinned RPC client entry contract changed');
+      body = body.replace(before, after);
+    }
+    changes.add('require-explicit-rpc-cli-entry');
+  }
   const parsed = ts.createSourceFile(path, body, ts.ScriptTarget.Latest, true);
   const replacements: Array<{ start: number; end: number; body: string }> = [];
   const inspect = (literal: ts.StringLiteralLike) => {

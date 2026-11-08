@@ -26,6 +26,39 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Explicit RpcClient entry after bbdf61e
+
+On 2026-11-09, the Coding source review's launcher finding was reproduced with
+a local fixture. With no cliPath, the previous client started `dist/cli.js` from
+the caller's working directory. Its comment claimed to search for an entry, but
+the implementation used only that fixed relative path.
+
+RpcClient now requires a caller-provided cliPath at start and rejects a missing
+entry before spawning a process. The option remains optional at construction;
+calling start without it has a clear diagnostic. Explicit Node CLI entries
+retain cwd, environment, provider, model, extra arguments and JSONL behavior.
+This change does not add an upstream launcher or change a durable task version.
+
+| Check | Result and scope |
+| --- | --- |
+| Reproduction | The four-test process fixture failed on the missing-entry check before the fix; its other three tests passed. |
+| Bun behavior | All four tests pass after the fix. They cover a cwd launcher that must never start, explicit requests and option forwarding, an RPC error response, shutdown, startup failure and failure during an outstanding request. |
+| Node consumer | The same test body, with only the test framework import changed, passes all four tests under Node 24. The consumer copies only RpcClient and its JSONL helper, matches both source hashes and uses temporary HOME/config/cache without account credentials or provider calls. |
+| Source and types | Fixed Pi 1.5.0 source reproduces the single RpcClient file and its inventory record with `--check --file=modes/rpc/rpc-client.ts`. Six scoped-check argument guards pass. Coding declarations build, including the corrected option comment. The three changed source/test override hashes match. |
+
+The runtime inventory and generator record `require-explicit-rpc-cli-entry`.
+Both independent source reviews are complete. The Coding review did not confirm
+a further complete replacement through pristine Pi 1.5.0 SDK APIs. Its checks
+do not prove all remaining sources necessary. Existing tool factories, resource
+policy, model configuration, synchronous session trees, compaction hooks and
+renderer lifecycle have specific contracts that need to be kept distinct from
+a complete CLI or programmatic-mode requirement. Shared helpers supplied by
+local patches remain separate from published SDK reuse.
+
+The complete-entry failure recorded below is unchanged. This slice does not
+repeat the full test entry, product UI or full source generation. Programmatic
+mode scope, CLI helper scope, the denied theme token check and F1/F3 remain open.
+
 ## Published core default conversion after 3525c98
 
 On 2026-11-09, the Native Agent stopped copying `defaultConvertToLlm` and
