@@ -4,7 +4,7 @@ MkAgent 是一个 Bun monorepo，三种客户端共用同一套经过鉴权的 W
 
 ## 内核迁移
 
-MkAgent 已从 `pi-coding-agent` 切换到功能已较完整的 `pi-durable`。当前工作是在 durable 之上补齐 Coding 能力和 Pi 插件生态，保持 MkAgent 全部既有功能完整正常。先采用 durable 内置能力，再用独立 Pi 官方 SDK 的公开 API；只有具体缺口得到论证后才保留薄适配或必要源码。允许按需引用 `pi-agent-core`，生产不得依赖或加载完整 `pi-coding-agent` 包。第三方资源替换、删行数和复制原版 CLI 的完整源码闭包均不是迁移目标。当前目标以[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)为准，取代旧依赖禁令、宿主零改动要求和功能缩水许可。
+MkAgent 已从 `pi-coding-agent` 切换到功能已较完整的 `pi-durable`。当前工作是在 durable 之上补齐 Coding 能力和 Pi 插件生态，保持 MkAgent 全部既有功能完整正常。先采用 durable 内置能力，再用独立 Pi 官方 SDK 的公开 API；只有具体缺口得到论证后才保留薄适配或必要源码。允许按需引用 `pi-agent-core`，生产不得依赖或加载完整 `pi-coding-agent` 包。第三方资源替换、删行数和复制原版 CLI 的完整源码闭包均不是迁移目标。当前目标以[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)为准；仅替代与之冲突的内核依赖和接入条款。MkAgent 既有分层、进程边界和宿主职责继续保留，宿主侧只做内核与插件接入所需的最小适配。
 
 当前普通 profile 使用 durable 的 `GenerationTask`。coding profile 的执行链为 `CodingHost → AgentSession → DurableLoopBinding → pi.coding.*`。这是当前实现，各个自有任务桥仍须按实际 Coding 能力和公开插件契约重新审查，不是固定的目标架构。
 

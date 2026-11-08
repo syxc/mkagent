@@ -1,6 +1,6 @@
 # 内核切换执行规格：pi-coding-agent → pi-durable
 
-历史范围说明：本文保留 2026-11-01 第一次内核切换的原始设计及 §8 所列验收记录，不代表当前架构或本轮授权。当前迁移目标与限制以[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)为准。下文的 `pi-agent-core` 依赖清零、宿主零改动等旧限制已被取代；历史版本、测试结果、失败与未验证边界保留原时点。
+历史范围说明：本文保留 2026-11-01 第一次内核切换的原始设计及 §8 所列验收记录，不代表当前架构或本轮授权。当前迁移目标与限制以[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)为准。下文的 `pi-agent-core` 依赖清零要求以现行规格为准，宿主侧允许必要接线适配，但既有分层、进程边界和职责继续保留；历史版本、测试结果、失败与未验证边界保留原时点。
 
 当前背景（2026-11-08）：MkAgent 从 `pi-coding-agent` 迁向功能已较完整的 `pi-durable`，在 durable 之上补齐 Coding 能力和 Pi 插件生态，保持 MkAgent 全部既有功能完整正常。先采用 durable 内置能力，再用独立 Pi 官方 SDK 的公开 API；只有具体缺口得到论证后才保留薄适配或必要源码。允许按需引用 `pi-agent-core`，生产不得依赖或加载完整 `pi-coding-agent` 包。第三方资源替换、删行数和复制原版 CLI 的完整源码闭包均不是迁移目标；当前自有任务桥也须按真实产品及插件契约重新审查。
 

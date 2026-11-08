@@ -1,6 +1,6 @@
 # Pi-durable coding agent 需求与纠偏验收对照
 
-本表对应[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)。2026-11-08 用户要求先全面纠正文档，再逐项落实迁移纠偏：以已有较完整的 pi-durable 为底座，补齐 Coding 能力和 Pi 插件生态，保留 MkAgent 上层功能。
+本表对应[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)。2026-11-08 用户要求先全面纠正文档，再逐项落实内核切换及必要兼容接入：以已有较完整的 pi-durable 为底座，补齐 Coding 能力和 Pi 插件生态，保留 MkAgent 原有整体架构、分层、宿主职责及上层功能。
 
 能力选择顺序为 pi-durable 内置实现、独立 Pi 官方 SDK 公开 API、必要薄适配、经具体缺口论证的源码处理。Pi 正式发布接口和仓内补丁分开验收，第三方资源去重不代替官方 SDK 复用。当前完整 Native SDK、自有状态机、原版 CLI 和旧实现测试不自动成为需求。
 

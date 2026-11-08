@@ -54,12 +54,21 @@ the Coding additions, not the full feature set of the original Pi coding agent.
 
 ## Architecture
 
+This work replaces the agent kernel within MkAgent's existing architecture.
+Keep the client/server layers, the Pi backend and subprocess boundary, host
+ownership of product sessions, permissions and credentials, RPC and UI
+contracts, and product persistence behavior. Host changes are limited to the
+integration required by a confirmed kernel or plugin contract. Existing
+architecture and safety constraints remain in force unless a specific kernel
+integration rule is explicitly replaced here.
+
 The target assembly is MkAgent product features above pi-durable, with Coding
-and plugin compatibility added at the required interfaces. Pi-durable owns
-execution scheduling, tool execution, task ownership, accepted inputs, storage,
-transactions, cancellation and recovery. Use its existing implementations and
-extension points before adding local implementations of those responsibilities.
-MkAgent owns product sessions, permissions, credentials, transports and UI.
+and plugin compatibility added at the required interfaces. Within the kernel,
+pi-durable owns execution scheduling, tool execution, task ownership, accepted
+inputs, storage, transactions, cancellation and recovery. Use its existing
+implementations and extension points before adding local implementations of
+those responsibilities. MkAgent owns product sessions, permissions,
+credentials, transports and UI.
 
 The Coding module supplies capabilities that remain missing after official SDK
 reuse. It stays independent of MkAgent shared code, Electron and product UI.

@@ -2,7 +2,7 @@
 
 MkAgent 原先以 Pi coding agent 为底座，第一次内核切换已采用 pi-durable。pi-durable 本身已有较完整的执行、工具、存储和恢复能力；本次为它补齐 Coding 能力和 Pi 插件生态，形成 `pi-durable coding agent`，同时保持 MkAgent 上层功能完整且正常。
 
-2026-11-08 用户要求全面纠正迁移中的偏差，先修正文档，再逐项落实架构、代码和测试。每项能力依次选择：pi-durable 内置实现、独立 Pi 官方 SDK 的公开 API、必要的外部薄适配、经具体缺口论证的源码移植或补丁。`pi-agent-core` 可以按需引用，生产禁止依赖完整 `pi-coding-agent` 包。
+2026-11-08 用户要求全面纠正迁移中的偏差，先修正文档，再逐项落实内核接入、Coding 兼容及相关代码和测试；MkAgent 既有整体架构、分层和宿主职责保持。每项能力依次选择：pi-durable 内置实现、独立 Pi 官方 SDK 的公开 API、必要的外部薄适配、经具体缺口论证的源码移植或补丁。`pi-agent-core` 可以按需引用，生产禁止依赖完整 `pi-coding-agent` 包。
 
 以[能力规格](coding-capabilities-spec.md)确定需求，以[实施计划](durable-coding-agent-plan.md)和[纠偏跟进](coding-follow-up.md)安排工作。当前 AgentSession、自有任务状态机和完整 SDK 源码闭包属于待审查的实现选择；已有测试、来源哈希及第三方资源去重不单独证明迁移纠偏完成。Pi 正式发布 API 与仓内补丁新增的接口分开记录。
 
@@ -20,6 +20,6 @@ MkAgent 原先以 Pi coding agent 为底座，第一次内核切换已采用 pi-
 | [Pi-durable 遗留修复与验收](kernel-legacy-fix-spec.md) | 历史交互完成、模型身份及持久化竞态修复 |
 | [功能与稳定性修复执行规格](functional-stability-remediation-spec.md) | 历史 12 项问题及修复账本，具体功能保证继续用于回归 |
 
-历史规格保留原日期和检查结果，其中的旧 `pi-agent-core` 禁令、功能差异和实现步骤不构成当前要求。架构调整仍须保留现有权限、取消、错误、持久化、恢复和公开插件行为。
+历史规格保留原日期和检查结果，仅与现行规格冲突的内核依赖或接入条款被替代，既有分层、职责和安全约束继续有效。内核接入调整须保留现有权限、取消、错误、持久化、恢复和公开插件行为。
 
 通用系统架构见[英文架构文档](../architecture.md)、[中文架构文档](../zh/architecture.md)和[架构图](../architecture.html)。产品裁剪与上游同步的历史资料位于 `docs/migration/`、`docs/sync/`，不扩大或缩减本次 Coding 迁移目标。

@@ -2,7 +2,7 @@
 
 MkAgent 原先以 Pi coding agent 为底座，第一次切换已采用 pi-durable。pi-durable 已有较完整的执行、工具、存储和恢复能力，Coding 层补足其缺失的编码能力和 Pi 插件生态；MkAgent 上层功能保持完整且正常。
 
-2026-11-08 的纠偏顺序是先全面修正文档，再逐项修改架构、代码和测试。需求以[能力规格](coding-capabilities-spec.md)为准，工作顺序见[纠偏跟进](coding-follow-up.md)。每项能力先用 pi-durable 内置实现，再用独立 Pi 官方 SDK 的公开 API，最后才对核实的缺口做薄适配或必要源码处理。`pi-agent-core` 按需使用，完整 `pi-coding-agent` 包不进入生产依赖。
+2026-11-08 的纠偏顺序是先全面修正文档，再逐项落实内核接入、Coding 兼容及相关代码和测试。调整限于内核内部和必要兼容接入，MkAgent 既有整体架构、分层和宿主职责保持。需求以[能力规格](coding-capabilities-spec.md)为准，工作顺序见[纠偏跟进](coding-follow-up.md)。每项能力先用 pi-durable 内置实现，再用独立 Pi 官方 SDK 的公开 API，最后才对核实的缺口做薄适配或必要源码处理。`pi-agent-core` 按需使用，完整 `pi-coding-agent` 包不进入生产依赖。
 
 本文记录 `cb0311f` 的实际装配和既有核查。当前 AgentSession、自有任务状态机、完整 Native SDK 闭包及补丁均属实现现状，需要按需求重新评估。下文的历史“保留”决定限定于当时选取的契约，不为整个模块提供永久保留依据。Marked 和 Highlight.js 是第三方资源包，其替换不计为 Pi 官方 SDK 复用。
 

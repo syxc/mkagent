@@ -21,6 +21,34 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Kernel migration scope confirmation after 56d0f46
+
+The 2026-11-08 scope review covers the 34 document diffs from `cb0311f` to
+`56d0f46`: seven core documents and an independent review of the other 27.
+No runtime, dependency or test changed in those two documentation commits.
+The existing MkAgent layers, shared renderer, authenticated RPC, Pi backend,
+subprocess boundary, host responsibilities and product persistence remain.
+The server-core guide describes existing responsibilities; it does not move
+them into that package.
+
+Some wording was too broad: generic architecture changes, removal of the
+absolute host-change ban, and a historical notice that also set aside technical
+boundaries. This follow-up limits changes to kernel integration and required
+Coding/plugin compatibility. Existing architecture and safety constraints stay
+in effect; host changes are limited to necessary contract adapters. Durable
+storage and execution responsibilities refer to the kernel, not all MkAgent
+product state. The official Pi SDK priority, capability requirements and stored
+data guarantees remain in force. Historical bodies and validation receipts
+retain their original scope.
+
+This clarification changes 15 Markdown files. All 116 local links resolve,
+including referenced anchors. Changed text and all seven core documents pass
+the punctuation gate; `git diff --check` passes. Static comparison confirms
+that the original topology diagrams and backend sections are unchanged from
+`cb0311f`. Six historical bodies are unchanged from `56d0f46`. Existing
+punctuation findings outside the changed text remain in four documents.
+No product, model, CI or browser check was rerun for these scope statements.
+
 ## Documentation gap follow-up after 1314a2b
 
 This follow-up on 2026-11-08 starts at `1314a2b`. It extends the first correction

@@ -4,7 +4,7 @@
 
 MkAgent 原先以 Pi coding agent 为底座，第一次切换已采用 pi-durable。pi-durable 已有较完整的执行、工具、存储和恢复能力，本次在它之上补齐 Coding 能力和 Pi 插件生态，并纠正此前迁移中的重复实现和职责偏差。MkAgent 上层功能保持完整且正常。
 
-先全面修正文档，再依照[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)逐项落实架构、代码和测试。[架构记录](coding-architecture.md)描述当前代码，[需求对照](coding-acceptance.md)区分功能证据和纠偏状态，[验证记录](coding-validation.md)保留历史检查。
+先全面修正文档，再依照[能力规格](coding-capabilities-spec.md)和[实施计划](durable-coding-agent-plan.md)逐项落实内核接入、Coding 兼容及相关代码和测试。F1 至 F6 限于这一范围，保留 MkAgent 既有整体架构；宿主侧只做必要的契约适配。[架构记录](coding-architecture.md)描述当前代码，[需求对照](coding-acceptance.md)区分功能证据和纠偏状态，[验证记录](coding-validation.md)保留历史检查。
 
 ## 目标与约束
 
