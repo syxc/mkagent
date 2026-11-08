@@ -25,6 +25,69 @@ rejection remains a historical result, not a current blocker. Normal-profile Age
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Published Highlight.js browser asset after f6c44c7
+
+HTML export now reads the official
+[`@highlightjs/cdn-assets@11.9.0`](https://registry.npmjs.org/@highlightjs%2Fcdn-assets/11.9.0)
+package instead of a copied browser library. Its `highlight.min.js` is identical
+to the pinned Native asset: 121,727 bytes, SHA-256
+`837a6fa5b0c736b52bbde2b2b6190f305da3fc9ed41681db5321507057b5c846`.
+The existing server package is Highlight.js 10.7.3, so it cannot supply the
+11.9.0 browser file. The added asset package has no runtime dependencies;
+other resolved dependency versions are unchanged. Its installed files occupy
+about 4.2 MB; the build copies only the required browser file and license.
+
+Markdown and highlighting share a 22-line external resource adapter. Source
+mode resolves the public package assets. Bundle mode reads the shipped files
+without package resolution. The Highlight.js resource includes a 1,520-byte
+prefix with the package's complete BSD 3-Clause LICENSE. The parser itself is
+unchanged. Loading the bundled resource does not add the notice again.
+Native templates, the CJK extension and renderer configuration are unchanged.
+The runtime manifest now has 248 TypeScript files and seven assets; the two
+browser packages replace 166,367 bytes of copied libraries in total.
+
+Bun passes 83 tests across the four HTML and generator test files. Node
+24.22.1 passes 34 tests across the three portable HTML files. The complete
+server build and both complete generation checks pass, including 12 auxiliary
+sources and 28 shared forwards. Nine explicit type roots have zero
+diagnostics. Local `validate:ci` passes workspace types, SDK declarations,
+61 shared tests, 20 documentation-tool smoke tests and locale checks.
+The Craft audit passes for 2231 files: 1455 common paths, 874
+normalized-identical files, 581 modified Craft-derived files, 776 project-only
+files and 858 reviewed deletions.
+
+A relocated bundle uses the real SessionManager and both HTML export
+functions. It has no local `node_modules`; a system sandbox denies network
+access and reads from workspace dependency directories. Both exports produce
+the same 287,305-byte HTML. Removing the added BSD notice produces the same
+HTML as the pinned Native highlighting asset. The scripts extracted from the
+final HTML execute CJK strong markup and TypeScript highlighting and retain
+36 common languages. The first probe assumed that the complete library
+would appear verbatim in the HTML and failed. Native template replacement
+processes dollar replacement patterns in both versions. The corrected check
+compares both exports under that same behavior and executes the final scripts;
+it does not change the Native template. The failed probe is not a pass.
+
+Independent review found no confirmed defect. The two browser test files
+pass 20 tests under Bun and 20 under Node 24. A separate fixture passes 177
+assertions across all 36 languages, 65 aliases, seven Native code renderer
+samples and two escape fallbacks. Its first version failed to parse because
+of a duplicate variable name; the corrected run executes all assertions.
+Separate Bun and Node bundles cannot resolve either package, but load both
+shipped resources, render Markdown and retain the highlighting version and
+language list. Package fallback fails when no shipped resource is supplied.
+Fixed fixtures for both actual export functions differ from the baseline only
+by the BSD notice, including custom tool renderers and session data. These
+fixtures do not repeat the complete Native session lifecycle. Review also
+confirms exact generated exporter bytes, matching dependency versions and
+unchanged manifest records outside the exporter and removed asset. The
+reviewer did not repeat the main thread's complete build, generation or CI
+checks and removed their temporary files with trash.
+
+This batch does not repeat the full repository, lint, Desktop, headless or
+browser interaction checks. Their earlier records retain their original
+scope. F1/F3 and the previously denied token-table review remain open.
+
 ## Published Markdown browser asset after ac45375
 
 HTML export now uses the browser entry declared in the public
@@ -41,7 +104,7 @@ The 15-line external adapter reads the installed browser asset in source mode
 and the shipped asset in bundle mode. The server build writes the package
 asset into `coding-assets/export-html/vendor/marked.min.js`. Generation rejects
 missing or repeated Native asset reads and excludes the old copied asset.
-The current runtime manifest has 248 TypeScript files and eight assets.
+At that stage, the runtime manifest had 248 TypeScript files and eight assets.
 Earlier nine-asset records below describe their original batches.
 
 Bun passes 73 tests across the new Markdown tests, HTML color/export tests and

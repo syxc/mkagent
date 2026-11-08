@@ -11,6 +11,7 @@
     "@earendil-works/pi-durable": "1.5.0",
     "@earendil-works/pi-mcp": "1.5.0",
     "@earendil-works/pi-tui": "1.5.0",
+    "@highlightjs/cdn-assets": "11.9.0",
     "@silvia-odwyer/photon": "0.3.3",
     "ansi-regex": "6.2.2",
     "chalk": "6.0.0",
@@ -335,9 +336,10 @@
       "source": "packages/coding-agent/src/core/export-html/index.ts",
       "target": "src/pi/core/export-html/index.ts",
       "sha256": "6741a3b59795d3b25fea9f7385f84b7213fa869060152416cde7aa6802c44f9d",
-      "portSha256": "0f9fce95457648bf5cf0a2fc0a4ec9cd841e1fbada7b398a42cf419f7a01abdf",
+      "portSha256": "e0b2f99bce25186aa50c789bc8f06a19a41e72ac6b04a4431a08612bf678c656",
       "changes": [
-        "public-marked-browser-asset"
+        "public-marked-browser-asset",
+        "public-highlight-browser-asset"
       ]
     },
     {
@@ -366,13 +368,6 @@
       "target": "src/pi/core/export-html/tool-renderer.ts",
       "sha256": "834559ea738a7ec8ccc252e31a5a0d54ec1850d27e9cbfe6da270baf9b71d449",
       "portSha256": "834559ea738a7ec8ccc252e31a5a0d54ec1850d27e9cbfe6da270baf9b71d449",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/core/export-html/vendor/highlight.min.js",
-      "target": "src/pi/core/export-html/vendor/highlight.min.js",
-      "sha256": "837a6fa5b0c736b52bbde2b2b6190f305da3fc9ed41681db5321507057b5c846",
-      "portSha256": "837a6fa5b0c736b52bbde2b2b6190f305da3fc9ed41681db5321507057b5c846",
       "changes": []
     },
     {

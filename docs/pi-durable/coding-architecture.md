@@ -99,16 +99,16 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 | 本地位置 | 上游来源与移植方式 |
 |---|---|
-| `src/pi/**` | `packages/coding-agent/src/**` 的公开导入闭包，共 244 份 TypeScript 和 8 项主题、交互及 HTML 导出资源。保留 `AgentSession`、SDK、工具、扩展、资源和会话等实现；部分文件经过适配。 |
+| `src/pi/**` | `packages/coding-agent/src/**` 的公开导入闭包，共 244 份 TypeScript 和 7 项主题、交互及 HTML 导出资源。保留 `AgentSession`、SDK、工具、扩展、资源和会话等实现；部分文件经过适配。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 115 行 core 子类，保留 durable 队列身份、恢复和独立默认值。三个默认声明仍从锁定上游提取；stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
 | `src/native-operations.ts` | 22 行门面，调用 core 包公开的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
 | `src/upstream/**` | 6 项选取源码：旧扩展 loader、Git 路径、上下文文件、资源去重、boundary drafts 和同步 durable context；另有 28 个共享入口。资源纯函数也由原生模块复用，不保留第二份算法。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
 
-前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 248 份源码和 8 项资源，由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)生成。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 12 项来源产物及 28 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
+前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 248 份源码和 7 项资源，由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)生成。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 12 项来源产物及 28 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
-HTML 导出的 `marked.min.js` 副本已删除，改为直接依赖 `marked@18.0.11`，读取公开 `package.json` 声明的 browser 入口。该版本已由 Pi TUI 安装；去掉 source map 注释后，与原副本的 44,640 字节完全相同。15 行外部适配负责开发路径和发布资源选择，生成规则拒绝缺失或重复的原资源读取语句。构建将包提供的文件写入离线资源目录，Native 模板、CJK 扩展及 renderer 配置保持原样。真实 SessionManager 导出在禁止网络及读取 workspace 依赖目录的搬迁产物中通过，具体范围见[验证记录](coding-validation.md)。
+HTML 导出的 Markdown 和高亮副本已删除，分别直接依赖 `marked@18.0.11` 与 `@highlightjs/cdn-assets@11.9.0`。Marked 读取公开 `package.json` 声明的 browser 入口，去掉 source map 注释后与原副本的 44,640 字节相同；[官方高亮包](https://registry.npmjs.org/@highlightjs%2Fcdn-assets/11.9.0)提供的 `highlight.min.js` 与原副本的 121,727 字节完全相同。两者共用 22 行[资源适配](../../packages/pi-durable-coding/src/compat/html-assets.ts)，构建继续写入离线资源目录，高亮文件额外携带完整 BSD 许可注释。Native 模板、CJK 扩展及 renderer 配置保持原样；搬迁产物在禁止网络及读取 workspace 依赖目录时完成两条真实导出路径，移除新增许可注释后与原资源基线的 HTML 相同。现有服务端 `highlight.js@10.7.3` 不能代替 11.9.0 的 browser 资源，故新增独立资源包。具体范围见[验证记录](coding-validation.md)。
 
 三处 pi-ai 收敛前的静态快照覆盖其中 245 份 TypeScript，按逐项核验的路径读取本地与上游源码。忽略注释和模块目标后，206 份语法相同，4 份生成的 JavaScript 相同，35 份仍有差异；3 个解析边界保持未分类。模块目标核对另确认 1014 个相对引用指向同源登记，484 个包或标准库引用不变，5 个模块增强不变。Agent 循环、AgentSession 的工具执行和插件 core 命名空间有意改接本地 durable；仅余的未登记相对类型重写是 stream 模块的公开 `StreamFn` 别名。这些分类不作为最新计数，也不证明完整行为等价或全部源码必要。
 
@@ -124,7 +124,7 @@ Native 实例仍满足 `instanceof Agent`，现在也满足 `instanceof CoreAgen
 
 这里的“移植”包含原样复制和可复现转换。清单记录原文件哈希、产物哈希及变更；转换覆盖 Agent 执行边界、宿主模型与凭据接口、项目信任、资源策略、工具回放、OAuth、插件解析及打包资源路径。转换规则保存在生成脚本及同目录的 `*-port.ts` 中。
 
-上游复制部分保留 [MIT 许可](../../packages/pi-durable-coding/LICENSE.pi)，MkAgent 包声明为 Apache-2.0。构建时随依赖搬运的 WASM 和 Marked browser 文件另行管理，不包含在上述 8 项 Pi 资源计数中。Marked 文件保留包提供的版权与许可注释。
+上游复制部分保留 [MIT 许可](../../packages/pi-durable-coding/LICENSE.pi)，MkAgent 包声明为 Apache-2.0。构建时随依赖搬运的 WASM、Marked 和 Highlight.js browser 文件另行管理，不包含在上述 7 项 Pi 资源计数中。Marked 保留包提供的版权与许可注释，Highlight.js 另附包提供的完整 BSD 3-Clause LICENSE，单文件 HTML 也携带该声明。
 
 ## MkAgent 自有适配层与边界
 

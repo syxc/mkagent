@@ -5,8 +5,8 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { runInNewContext } from 'node:vm';
-import { portHtmlMarked } from '../scripts/asset-runtime-port.ts';
-import { readMarkedSource } from '../src/compat/html-marked.ts';
+import { portHtmlVendorAssets } from '../scripts/asset-runtime-port.ts';
+import { readHtmlVendorSource } from '../src/compat/html-assets.ts';
 
 const require = createRequire(import.meta.url);
 const packagePath = require.resolve('marked/package.json');
@@ -15,8 +15,8 @@ const packageInfo = JSON.parse(readFileSync(packagePath, 'utf8'));
 test('HTML Markdown uses the browser entry declared by the installed package', () => {
   const browser = readFileSync(join(dirname(packagePath), packageInfo.browser), 'utf8');
   assert.equal(packageInfo.version, '18.0.11');
-  assert.equal(readMarkedSource(), browser.slice(0, browser.indexOf('//# sourceMappingURL=')));
-  assert.ok(!readMarkedSource().includes('sourceMappingURL'));
+  assert.equal(readHtmlVendorSource('marked.min.js'), browser.slice(0, browser.indexOf('//# sourceMappingURL=')));
+  assert.ok(!readHtmlVendorSource('marked.min.js').includes('sourceMappingURL'));
 });
 
 const cases = [
@@ -31,7 +31,7 @@ const cases = [
 for (const [markdown, html] of cases) {
   test(`offline browser Markdown: ${markdown}`, () => {
     const context = { input: markdown };
-    assert.equal(runInNewContext(`${readMarkedSource()}\nmarked.parse(input)`, context), html);
+    assert.equal(runInNewContext(`${readHtmlVendorSource('marked.min.js')}\nmarked.parse(input)`, context), html);
   });
 }
 
@@ -39,19 +39,26 @@ test('offline bundles use their shipped browser asset', () => {
   const directory = mkdtempSync(join(tmpdir(), 'mkagent-html-marked-'));
   try {
     mkdirSync(join(directory, 'vendor'));
-    const source = `/* packaged fixture */\n${readMarkedSource()}`;
+    const source = `/* packaged fixture */\n${readHtmlVendorSource('marked.min.js')}`;
     writeFileSync(join(directory, 'vendor', 'marked.min.js'), source);
-    assert.equal(readMarkedSource(directory), source);
-    assert.equal(runInNewContext(`${readMarkedSource(directory)}\nmarked.parse('# Offline')`), '<h1>Offline</h1>\n');
+    assert.equal(readHtmlVendorSource('marked.min.js', directory), source);
+    assert.equal(runInNewContext(`${readHtmlVendorSource('marked.min.js', directory)}\nmarked.parse('# Offline')`), '<h1>Offline</h1>\n');
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
 });
 
-test('HTML asset port rejects missing or repeated asset reads', () => {
-  const source = 'const markedJs = readFileSync(join(templateDir, "vendor", "marked.min.js"), "utf-8");';
-  const output = portHtmlMarked(source);
-  assert.match(output, /const markedJs = readMarkedSource\(templateDir\);/);
-  assert.throws(() => portHtmlMarked(''), /boundary changed/);
-  assert.throws(() => portHtmlMarked(`${source}\n${source}`), /boundary changed/);
-});
+const assetReads = [
+  'const markedJs = readFileSync(join(templateDir, "vendor", "marked.min.js"), "utf-8");',
+  'const hljsJs = readFileSync(join(templateDir, "vendor", "highlight.min.js"), "utf-8");',
+];
+for (const read of assetReads) {
+  test(`HTML vendor port rejects missing or repeated asset read: ${read}`, () => {
+    const source = assetReads.join('\n');
+    const output = portHtmlVendorAssets(source);
+    assert.match(output, /const markedJs = readHtmlVendorSource\("marked.min.js", templateDir\);/);
+    assert.match(output, /const hljsJs = readHtmlVendorSource\("highlight.min.js", templateDir\);/);
+    assert.throws(() => portHtmlVendorAssets(source.replace(read, '')), /boundary changed/);
+    assert.throws(() => portHtmlVendorAssets(`${source}\n${read}`), /boundary changed/);
+  });
+}

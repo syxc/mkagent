@@ -7,7 +7,7 @@ import ts from 'typescript';
 import { portModelRuntime, portProviderComposer } from './model-runtime-port.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
-import { portBundledAssets, portHtmlMarked, portImageAssets } from './asset-runtime-port.ts';
+import { portBundledAssets, portHtmlVendorAssets, portImageAssets } from './asset-runtime-port.ts';
 import { portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort } from './shared-helper-port.ts';
@@ -261,9 +261,11 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     changes.add('installed-native-bundle-assets');
   }
   if (path === 'core/export-html/index.ts') {
-    body = portHtmlMarked(body);
+    body = portHtmlVendorAssets(body);
     dependencies.add('marked');
+    dependencies.add('@highlightjs/cdn-assets');
     changes.add('public-marked-browser-asset');
+    changes.add('public-highlight-browser-asset');
   }
   const helper = applySharedHelperPort(path, body);
   if (helper) {
@@ -294,7 +296,8 @@ function assets(directory: string) {
   for (const entry of readdirSync(join(source, directory), { withFileTypes: true })) {
     const path = directory + '/' + entry.name;
     if (entry.isDirectory()) assets(path);
-    else if (!path.endsWith('.ts') && path !== 'core/export-html/vendor/marked.min.js') {
+    else if (!path.endsWith('.ts') && path !== 'core/export-html/vendor/marked.min.js'
+      && path !== 'core/export-html/vendor/highlight.min.js') {
       const body = readFileSync(join(source, path));
       const target = 'src/pi/' + path;
       save(target, body);
