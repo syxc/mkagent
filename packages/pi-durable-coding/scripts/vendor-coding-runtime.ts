@@ -1,4 +1,4 @@
-/** Reproduce the complete public Pi coding source closure with a replaceable execution boundary. */
+/** Reproduce Pi Coding SDK sources without the upstream CLI launcher. */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { isBuiltin } from 'node:module';
@@ -66,9 +66,17 @@ while (queue.length) {
   if (visited.has(path)) continue;
   visited.add(path);
   const original = readFileSync(join(source, path), 'utf8');
-  const parsed = ts.createSourceFile(path, original, ts.ScriptTarget.Latest, true);
-  const replacements: Array<{ start: number; end: number; body: string }> = [];
+  let body = original;
   const changes = new Set<string>();
+  if (path === 'index.ts') {
+    const launcher = '// Main entry point\nexport { type MainOptions, main } from "./main.ts";\n';
+    if (body.split(launcher).length !== 2) throw new Error('Pinned CLI launcher export changed');
+    // Remove the launcher before walking imports so its private closure is not copied.
+    body = body.replace(launcher, '');
+    changes.add('exclude-upstream-cli-launcher');
+  }
+  const parsed = ts.createSourceFile(path, body, ts.ScriptTarget.Latest, true);
+  const replacements: Array<{ start: number; end: number; body: string }> = [];
   const inspect = (literal: ts.StringLiteralLike) => {
     const specifier = literal.text;
     if (specifier === '@silvia-odwyer/photon-node') {
@@ -128,7 +136,6 @@ while (queue.length) {
     ts.forEachChild(node, visit);
   };
   visit(parsed);
-  let body = original;
   for (const edit of replacements.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.body + body.slice(edit.end);
   if (path === 'core/resource-loader.ts' || path === 'core/package-manager.ts') {
     body = portResourceLoader(path, body);
@@ -383,7 +390,7 @@ const externalDependencies = Object.fromEntries([...dependencies].sort().map(nam
 records.sort((a, b) => a.target.localeCompare(b.target));
 const manifest = {
   repository: 'https://github.com/earendil-works/pi', version: '1.5.0', revision,
-  policy: 'Complete public coding source, preserved TypeScript declarations; execution binds to the local durable Agent boundary.',
+  policy: 'Pi Coding SDK source with TypeScript declarations, excluding the upstream CLI launcher; execution binds to the local durable Agent boundary.',
   dependencies: externalDependencies, coreImports: [...coreImports].sort(), files: records,
 };
 save('UPSTREAM-RUNTIME.json', JSON.stringify(manifest, null, 2) + '\n');

@@ -38,6 +38,8 @@ pi-durable 已发布 codemode、tool-search、tools、images 及完整 Harness/�
 
 后续请求切片已接入仓内新增的 `GenerationResponseTask` v1，直接复用 SDK 的 `streamResponse` 与 partial 写入。发布版 `GenerationTask.request` 会继续分类和写消息，不能独立返回响应；新任务提供这一明确出口，保留原 `GenerationTask` v4 和所有 `pi.coding.*` v1。Native `message_end` 完成后才决定工具 calls，SDK receipt、唯一 assistant entry 和下一 checkpoint 同事务提交。不确定 request/event 不重发，取消与恢复均清理 SDK generation 槽。新任务属于本地 SDK 修改，退出条件和升级检查见架构记录；不能记为未修改发布 API。完整 30 文件补丁已有真实重放和冻结消费者核对。工具轮次与收尾已核对：发布 SDK 阶段同时写 assistant、创建工具、应用 inbox 和转交下一请求，没有独立返回轮次决定的出口。当前保留 Native 交付与 journal 适配，未新增轮次补丁，退出条件见架构记录。另已删除插件 edit 的参数转换副本，直接使用公开 `createEditTool().prepareArguments`；文件执行和 renderer 保留。公开 Agent/runToolCall 的普通 AgentTool 现已接入同一个 ToolTask 桥，已桥接工具和 AgentSession 往返转换避免重复包装。Native 保留首次参数验证和权限改参；effect 前检查取消，最终参数与完整 SDK 回执原子保存，旧回执缺字段时回退已接受参数。summary 的并发与主 generation 进度隔离已固定，session/summary 的候选 API、具体缺口和退出条件见架构记录；未改变其运行时任务。完整 Coding 闭包及补丁收窄继续推进，F1 至 F3 保持开放。
 
+SDK 入口范围已继续收窄：生成器在遍历依赖前排除原版 Pi CLI 的 `main`/`MainOptions`，删除其独占的 24 份源码，共 6757 行，运行时清单由 248 份降为 224 份 TypeScript，7 项资源不变。MkAgent 仍通过 `CodingHost/createAgentSession` 装配；保留程序化 InteractiveMode、print/rpc、插件 UI 组件及 MCP/codemode/tool-search 工厂，产品迁移和 durable checkpoint 未变。两个 Pi 包名的 Native 插件消费者、资源、包命令、冷恢复和宿主定向回归已通过。该删除依据入口和调用核对，不记作 24 个文件已由官方 SDK 完整覆盖，也不关闭剩余源码必要性核查。
+
 以下至“产品模式与资源策略”之前的对照是既有实现摘要，详细时点和结果见[验证记录](coding-validation.md)。其中通过补丁共享的算法不等于原包公开能力，辅助替换和第三方库结果不代替本次执行主链验收。
 
 Native 子进程等待也已共用 durable，只保留退出码和无写盘回调的薄适配。替换前后真实入口均通过 18 项、142 个断言，七文件组合通过 128 项、898 个断言；单文件来源复现和 5 个类型根检查通过。24 文件补丁在干净重放和独立缓存冻结安装后逐字节一致，Bun 与 Node 消费者各通过 21 项、155 个断言。进程启动保留既有跨平台策略，完整 SDK、真实 Windows 和产品入口仍在未验证范围内。

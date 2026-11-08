@@ -7,6 +7,32 @@ import { pathToFileURL } from 'node:url';
 const directories: string[] = [];
 afterEach(() => { for (const directory of directories.splice(0)) rmSync(directory, { recursive: true, force: true }); });
 
+test.each(['@earendil-works/pi-coding-agent', '@mariozechner/pi-coding-agent'])(
+  'Native plugins retain Coding SDK factories and components through %s', async packageName => {
+    const directory = realpathSync(mkdtempSync(join(tmpdir(), 'plugin-sdk-')));
+    directories.push(directory);
+    const plugin = join(directory, 'extension.ts');
+    writeFileSync(plugin, `
+      import * as coding from ${JSON.stringify(packageName)};
+      export default function(pi) {
+        for (const name of ['createAgentSession', 'createAgentSessionRuntime', 'createEventBus',
+          'createCodemodeExtension', 'createMcpExtension', 'createToolSearchExtension',
+          'InteractiveMode', 'RpcClient', 'runPrintMode', 'runRpcMode', 'CustomEditor', 'Theme']) {
+          if (typeof coding[name] !== 'function') throw new Error('Missing SDK export: ' + name);
+        }
+        const session = coding.SessionManager.inMemory(import.meta.dir);
+        pi.registerFlag('sdk-session', { type: 'string', default: session.getCwd() });
+        pi.registerTool(coding.createReadToolDefinition(import.meta.dir));
+      }
+    `);
+    const { loadExtensions } = await import('../src/pi/core/extensions/loader.ts');
+    const loaded = await loadExtensions([plugin], directory);
+    expect(loaded.errors).toEqual([]);
+    expect(loaded.extensions[0]?.flags.get('sdk-session')?.default).toBe(directory);
+    expect(loaded.extensions[0]?.tools.get('read')?.definition.name).toBe('read');
+  },
+);
+
 for (const path of ['../src/upstream/core/extensions/loader.js', '../src/pi/core/extensions/loader.ts']) {
   test(`plugin import metadata resolves per file through ${path}`, () => {
     // Bun canonicalizes native dependency imports, including macOS's /var alias.

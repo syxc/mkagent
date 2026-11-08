@@ -26,6 +26,76 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Coding SDK scope after 461e7c9
+
+On 2026-11-09, the Coding root stopped exporting the upstream CLI launcher
+`main` and its `MainOptions` type. MkAgent assembles sessions through
+`CodingHost/createAgentSession`; no repository product caller of those two
+exports was found. The package has no CLI bin. Programmatic InteractiveMode,
+print/rpc, tool and session factories, plugin UI components and the public
+MCP/codemode/tool-search factories remain available. This change does not
+establish that every external plugin is independent of the removed launcher.
+
+The generator removes the pinned launcher export before it traverses imports.
+Removing the export only from the final output would still copy the launcher's
+private dependency set. Its exact anchor must occur once or generation fails.
+The local import graph identified 24 files reachable only through that launcher,
+with 6757 lines. They include CLI authentication and configuration, package
+commands, self-update, old Pi config migrations and the CLI extension collection.
+Llama management entered through that collection and had no separate root export.
+Shared args, auth-command and runtime helpers remain. MkAgent migration and
+durable checkpoint code did not change.
+
+Before deletion, each file matched its recorded output hash. The files and their
+source records were removed. The runtime inventory now contains 224 TypeScript
+sources, including 220 under `src/pi`, and 7 assets. The previous counts of 248
+and 244 apply to earlier versions. This is source scope reduction; it does not
+mean that an official SDK now replaces each of those 24 files. Remaining Coding
+sources and patches still need their own necessity checks.
+
+The graph check treated `theme-tokens.ts` as a retained leaf without reading its
+body. It was a local graph difference check, not a full upstream generation or
+source audit. A pinned-source scoped check of `index.ts` passed with
+`sourceFiles: 1` and `complete: false`. Coding typecheck, Coding declaration
+build, worker typecheck and worker build also passed.
+
+The behavior run used:
+
+```sh
+bun --no-env-file --config=/dev/null test \
+  packages/pi-durable-coding/test/plugin-transpiler.test.ts \
+  packages/pi-durable-coding/test/extensions.test.ts \
+  packages/pi-durable-coding/test/host-resources.test.ts \
+  packages/pi-durable-coding/test/host-package-commands.test.ts \
+  packages/pi-durable-coding/test/scoped-port-check.test.ts \
+  packages/pi-durable-coding/test/native-session-recovery.test.ts \
+  packages/pi-agent-server/src/coding-host.e2e.test.ts \
+  packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts \
+  packages/pi-agent-server/src/coding-host-prompt.e2e.test.ts
+```
+
+Result: 75 tests passed, 0 failed and 569 assertions across 9 files. The new
+Native loader consumers import both `@earendil-works/pi-coding-agent` and
+`@mariozechner/pi-coding-agent`. Each creates an in-memory session, registers a
+read tool from the SDK factory and checks retained mode and UI exports. Existing
+checks cover loader metadata and stack handling, resources, package commands,
+real process recovery, tools, permissions and host prompts. Tests use temporary
+data and local deterministic providers.
+
+An independent read-only review against `461e7c9` covered the 27 runtime,
+generator and inventory changes before the later test and documentation updates.
+It found no correctness defect with a concrete caller. It checked relative
+literal references in 339 retained source files, excluding `theme-tokens.ts`,
+and found no references to the deleted files. Product session assembly, trust,
+durable recovery and session format migration still use retained implementations.
+The reviewer did not independently run behavior tests or check dynamically built
+paths and external plugins. The launcher removal is an implementation decision
+under F1/F3, not a separate user requirement to remove those export names.
+
+No full repository suite, Node run, Windows check, full source regeneration,
+Craft audit, real account, paid model or product UI was run for this change.
+Historical counts and product results below retain their original scope.
+
 ## Plain AgentTool SDK delegation after 1eb4435
 
 On 2026-11-09, `DurableLoopBinding` started sending plain AgentTool effects
