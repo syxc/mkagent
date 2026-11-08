@@ -68,7 +68,8 @@ export function createSingleToolTask(
       },
       collect: async (task, runtime, context) => {
         const [outcome] = await runtime.outcomes([task.state.checkpoint.child], context);
-        if (outcome.status !== 'completed' && outcome.status !== 'aborted') {
+        if (outcome.status !== 'completed' && outcome.status !== 'aborted' &&
+          !(outcome.status === 'failed' && outcome.result && 'hostExecutionFailed' in outcome.result && outcome.result.hostExecutionFailed === true)) {
           throw new Error('error' in outcome && outcome.error ? outcome.error.message : `Tool task ${outcome.status}`);
         }
         const result = outcome.result ?? {

@@ -12,6 +12,7 @@ import type {
 } from '../agent-runtime.ts';
 import type { HostControlledToolResult } from '../host-tool-controls.ts';
 import { isHostUsageAccounted, withoutHostUsageMarker } from '../host-tool-usage.ts';
+import { abortHostToolExecution, completedHostToolResult, failedHostToolExecution, hasHostToolExecution, hostToolExecution } from '../host-tool-task.ts';
 
 /** Arguments have already passed preparation, schema validation, and permission hooks. */
 export interface CodingToolTaskInput {
@@ -31,6 +32,8 @@ export interface CodingToolTaskResult {
   control?: ToolControl;
   /** Receipt metadata; rehydrated before the Native caller receives its result. */
   hostUsageAccounted?: true;
+  /** A delivered SDK failure still carries its native result after scheduler cleanup. */
+  hostExecutionFailed?: true;
 }
 
 /** Durable boundaries distinguish unknown effects and unknown hook/event delivery. */
@@ -49,6 +52,7 @@ export interface CodingToolInvocation {
   input: CodingToolTaskInput;
   runtime: CodingToolTaskRuntime;
   context: Context;
+  replay?: 'safe' | 'never';
 }
 
 /** Live host services are resolved for the task's conversation at each durable boundary. */
@@ -91,7 +95,14 @@ export function createCodingToolTask(
       try {
         const bindings = await resolveBindings(runtime.conversationId, task.input);
         const run = () => handler(task, runtime, bindings, context);
-        if (bindings.withInvocation) await bindings.withInvocation({ input: task.input, runtime, context }, run);
+        const state: CodingToolTaskCheckpoint = task.state.checkpoint;
+        if (bindings.withInvocation) await bindings.withInvocation({
+          input: task.input, runtime, context,
+          get replay() {
+            return bindings.getTool(task.input.toolCall.name)?.replay === 'safe' &&
+              (state.phase !== 'execute' || state.replay === 'safe') ? 'safe' : 'never';
+          },
+        }, run);
         else await run();
       } finally {
         // An abort invocation consumes its volatile handoff even if resolution or persistence fails.
@@ -116,7 +127,14 @@ export function createCodingToolTask(
       }),
       execute: scoped<'execute'>(async (task, runtime, bindings, context) => {
         const tool = bindings.getTool(task.input.toolCall.name);
-        if (task.state.checkpoint.replay === 'safe' && tool?.replay === 'safe') {
+        const completed = await completedHostToolResult(runtime, context);
+        if (completed) {
+          await execute({ name: task.input.toolCall.name, label: task.input.toolCall.name,
+            description: '', parameters: {}, execute: async () => completed }, task.input, bindings, runtime, cancelling, context);
+          return;
+        }
+        if (tool && ((task.state.checkpoint.replay === 'safe' && tool.replay === 'safe') ||
+          (Object.getOwnPropertyDescriptor(tool, hostToolExecution)?.value === true && await hasHostToolExecution(runtime, context)))) {
           await execute(tool, task.input, bindings, runtime, cancelling, context);
           return;
         }
@@ -144,7 +162,10 @@ export function createCodingToolTask(
           await failDelivery(runtime, bindings, outcome, error, context);
           return;
         }
-        await commitState(runtime, bindings, { status: 'terminal', outcome: { status: 'completed', result: outcome } }, context);
+        const hostFailure = await failedHostToolExecution(runtime, context);
+        await commitState(runtime, bindings, { status: 'terminal', outcome: hostFailure
+          ? { status: 'failed', error: hostFailure, result: { ...outcome, hostExecutionFailed: true } }
+          : { status: 'completed', result: outcome } }, context);
       }),
       emit: scoped<'emit'>(async (task, runtime, bindings, context) => {
         // An arbitrary event sink cannot be atomically committed with durable state.
@@ -153,6 +174,7 @@ export function createCodingToolTask(
       }),
     },
     abort: scoped<Phase>(async (task, runtime, bindings, context) => {
+      await abortHostToolExecution(runtime, context);
       const state = task.state.checkpoint;
       const settled = cancelling.get(task.id);
       cancelling.delete(task.id);

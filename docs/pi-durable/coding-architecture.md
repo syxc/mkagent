@@ -36,7 +36,7 @@ flowchart TD
 
 [coding 包](../../packages/pi-durable-coding/package.json)独立于 MkAgent shared、server 和 UI，主要公开 `/native`、`/agent`、`/durable` 入口；[CodingHost](../../packages/pi-agent-server/src/coding-host.ts)把它接到产品 worker 已有的 Harness、工具目录和模型接口。
 
-普通 profile 使用 `GenerationTask`；coding profile 通过 [DurableLoopBinding](../../packages/pi-durable-coding/src/durable-coding/engine.ts)运行 `pi.coding.session/run/tool` 等本地任务。两者使用同一官方 scheduler，但 coding 路径仍自行管理请求、工具和结束阶段。这些本地职责须优先与官方 `GenerationTask`、`ToolTask` 和扩展点对照。Native Agent 子类目前通过仓内 core 补丁接入 durable，不能将此现状直接认定为最终最薄架构。
+普通 profile 使用 `GenerationTask`；coding profile 通过 [DurableLoopBinding](../../packages/pi-durable-coding/src/durable-coding/engine.ts)运行 `pi.coding.session/run/tool` 等本地任务。宿主工具现通过公开 `ToolTask` phases 执行，Native 工具任务保留插件事件、完整结果与 journal 交付。请求、工具轮次及结束阶段仍由本地任务管理，须继续与官方 `GenerationTask` 和扩展点对照。Native Agent 子类目前通过仓内 core 补丁接入 durable，不能将此现状直接认定为最终最薄架构。
 
 独立 SDK 也能使用这一边界，但默认后端为 `MemoryStorage`。需要跨进程恢复时，调用方须提供持久 Storage；产品 worker 已接入持久存储。
 
@@ -157,6 +157,14 @@ Native 实例仍满足 `instanceof Agent`，现在也满足 `instanceof CoreAgen
 `src/durable-loop.ts` 和 `src/durable-coding/**` 实现执行桥接、任务状态机、输入队列和 journal。[NativeSessionJournal](../../packages/pi-durable-coding/src/durable-coding/session-journal.ts)把原生会话条目、分支、输入身份和状态与任务 checkpoint 放进 durable 事务。[原生会话投影](../../packages/pi-agent-server/src/storage/native-session-projection.ts)及产品历史据此同步；投影失败会阻止继续发布，恢复不能只依赖一份普通聊天记录。对副作用不确定的阶段按回放策略拒绝自动重做，外部副作用不具备与本地事务一起提交的原子性。
 
 同一事务内重复准备 journal 时，只应用该阶段尚未准备的操作；事务草稿 nonce 识别已准备前缀，回滚后的新事务从完整待提交操作重试。宿主工具 commit 在捕获的调用作用域执行回调，并在回调前后 flush，使回调新增原生条目与宿主文档共享回执。条目直到存储确认才进入已提交视图，回调自身的外部副作用仍由宿主管理。
+
+宿主工具的执行由 [host-tool-task.ts](../../packages/pi-durable-coding/src/host-tool-task.ts)委托原包公开的 `ToolTask.definition.phases.call/execute`，取消后的新 invocation 委托 `ToolTask.definition.abort`。SDK 负责真实 `ToolExecutionApi`、输出窗口与节流、嵌套 admission、replay 判断及嵌套工具清理；旧 `host-tool-nested.ts` 副本已删除。适配器在 `pi.coding.tool` owner 的 task-scoped 文档中保存 SDK 版本、input、checkpoint、完整 Native 结果及 SDK failure，不另建根级 `pi.tool`，也不写第二份 transcript。SDK 的嵌套子工具仍是真实 `pi.tool` 任务。
+
+外层保留 Native preflight、`afterToolCall`、`tool_execution_*` 和 journal 事务。完整 Native 文本、图片、details、structuredContent、control 与 usage 通过私有 JSON envelope 保留；普通 host 输出使用 SDK 的有界结果与诊断。Native hook 可改写 usage，因此根级用量在 hook 后由原 owner 入账，已入账的嵌套用量以收据标记恢复。旧 v1 checkpoint 没有新文档时保持原 replay 路径；新 intent 的重放同时受 Native 已记录/当前策略及 SDK 已记录/当前策略限制，任何一项不安全都由 SDK 结算而不重跑。已完成 SDK 结果可在工具移除后恢复。进行中的同 owner 调用明确拒绝，事务内再次核对调用身份；工具返回并等待已接受操作后关闭捕获的 API 和会话 handle。外部取消停止 effect，但 SDK 使用仍有效的任务上下文完成结算；scheduler abort 先 join 执行，再进入 SDK 清理和 Native 交付。
+
+SDK terminal failed 也随结果持久化。Native hooks、事件和 journal 完成后，真实 owner 以 failed 结束，由官方 scheduler 取消并等待普通 owned tasks 及 owned conversations 内的任务。仅成功交付的 SDK 失败结果带有内部收据标记，单工具和模型轮次调用方据此接收完整结果；hook 或事件交付失败继续走各自错误边界。SIGKILL 恢复覆盖该失败回执及工具移除后的清理。
+
+该接点不增加 SDK 补丁或依赖。升级时核对公开 phases/abort、`TaskRuntime.commit`、`NestedCallDoc`、`LiveDoc` 进度槽和 ToolTask 版本迁移，运行崩溃、取消、完整结果及 journal 回归。若上游提供可保留 Native 原始结果和同事务回执的直接委托接口，应以该接口替代文档与 runtime 适配。当前替换只覆盖宿主工具执行；请求和工具轮次、session、summary 及完整 Coding SDK 闭包仍在 F1 至 F3 范围内，不能据此宣布整体纠偏完成。
 
 `src/host-*.ts` 与 worker 的 `CodingHost` 接管路径、设置、模型接口、工具包装和 UI。`resourcePolicy: 'native' | 'host-only'` 控制自动资源发现，与执行模式分开；`host-only` 仍可使用显式宿主资源。项目扩展及 `.pi/mcp.json`、`.mkagent/mcp.json` 共用宿主信任决定，工具调用继续经过 MkAgent 审批。受信任 Node 插件拥有进程能力，工具审批不构成插件沙箱。
 

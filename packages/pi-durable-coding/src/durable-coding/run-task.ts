@@ -396,7 +396,8 @@ async function toolOutcome(
   id: TaskId<AgentToolCallOutcome>, call: AgentToolCall, runtime: Runtime, context: Context,
 ): Promise<AgentToolCallOutcome> {
   const [outcome] = await runtime.outcomes([id], context);
-  if (outcome.status !== 'completed' && outcome.status !== 'aborted') {
+  if (outcome.status !== 'completed' && outcome.status !== 'aborted' &&
+    !(outcome.status === 'failed' && (outcome.result as CodingToolTaskResult | undefined)?.hostExecutionFailed)) {
     throw new Error('error' in outcome && outcome.error ? outcome.error.message : `Tool task ${outcome.status}`);
   }
   if (outcome.result) return outcome.result;

@@ -26,6 +26,93 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public ToolTask host execution after 552b938
+
+The first runtime change delegates host execution to the published Pi 1.5.0
+`ToolTask.definition.phases.call`, `phases.execute` and `definition.abort`.
+It adds no dependency patch. The existing `pi.coding.tool` v1 remains the
+scheduler task and journal owner. A task document stores the SDK version,
+checkpoint and complete Native result. Official nested calls remain real
+`pi.tool` tasks. The local `host-tool-nested.ts` copy is deleted.
+
+The SDK handles effect execution, bounded host output, pacing, nested
+admission, replay checks and nested-tool cleanup. The Native layer still owns
+preflight and permission hooks, complete text and image results, usage after
+`afterToolCall`, plugin events and journal commits. A private JSON receipt
+preserves the complete Native result without changing the official nested
+result schema. Calls with another tool name or other arguments cannot reuse
+that receipt. Old v1 checkpoints without the new document keep their existing
+replay rules. An SDK result committed before the Native outcome can be restored
+even if the tool has since been removed.
+
+Two cancellation paths exposed separate requirements. An external signal must
+stop the effect while SDK settlement uses the live task context. Otherwise the
+parent can wait on a child whose cleanup has not been started. A scheduler abort
+also needs the public ToolTask abort handler after the scheduler joins execute;
+without it, finished child tasks leave progress slots behind. Both paths now
+wait for owned cleanup and remove the parent and descendant slots.
+
+Independent review confirmed three new defects: SDK safe intent could bypass
+Native never, concurrent calls could share arguments or repeat an unsafe effect,
+and a captured memo API could still write after SDK settlement. It also confirmed
+an existing failure-cleanup gap: a plain owned child could keep the Native owner
+in completing because the adapter discarded the SDK failed outcome. The initial
+84-test batch did not cover these cases.
+
+The fixes constrain replay by both recorded and current Native/SDK policies,
+reject overlapping host calls and check identity again inside the transaction.
+A local API lifetime ends after accepted operations have joined, including for
+captured conversation handles. External cancellation also rejects operations
+that try to use a still-live task context. SDK failure is stored with the complete result.
+After Native hooks and events, the real owner ends failed so the official
+scheduler cancels and joins its owned tasks and owned conversations. Callers
+accept the marked delivered tool result; event-delivery failures retain their
+existing error path. No separate ownership cleanup algorithm was added.
+
+The expanded 22-test suite includes twelve real SIGKILL/restart cases with
+temporary JSONL storage. Four check recorded/current SDK policies. Four check
+independent Native restrictions, including a legacy SDK-safe/Native-never
+receipt. Two restore complete results with the tool present or removed. Two
+restore SDK failure with both a direct owned child and a child in an owned
+conversation, again with the tool present or removed. They check effect counts,
+complete large text, images, structured results and completed cleanup. Other
+cases check phase delegation, conflicting/concurrent calls, API closure, nested
+cleanup and both cancellation paths.
+
+The fixture first failed because TaskId was written as a filesystem string and
+because reopened tasks were expected to be running rather than pending. It now
+stores the ID as JSON and checks the observed recovery state. During the review
+fixes, transaction identity initially compared a Draft with plain JSON; copying
+the Draft inside the transaction corrected that rejection. The owned-conversation
+fixture initially passed a record instead of its ID. A regression also required
+Native policy lookup to remain inside the invocation scope. These were corrected
+before the final batch below.
+
+Checks after the review fixes:
+
+- Seven files pass 96 tests: `host-tool-sdk`, `host-tools`,
+  `durable-coding-tool-task`, `native-journal-transactions`,
+  `native-codemode-usage`, `agent-recovery` and worker `coding-host.e2e`.
+- Coding typecheck, worker typecheck with Coding declaration generation, and
+  worker build pass. No remote provider or real account is used.
+- The offline worker bundle passes three cases: code mode/MCP startup, dynamic
+  tool publication and the adjacent Photon resource.
+- Node passes all twelve SIGKILL/restart scenarios. The effect counts, policy
+  restrictions, complete Native results and failed-owner cleanup match Bun.
+  This is a source-fixture check, not a new frozen-install test.
+- Nine changed source/test hashes and their reasons match the source override
+  records. The deleted adapter has no stale entry or runtime import. This scoped
+  check does not run the full Craft comparison.
+- Local links and Markdown anchors in the five updated documents, their
+  language-specific punctuation gates, and `git diff --check` pass.
+
+The independent review is complete; the fixes above have local regression
+coverage but have not had another independent review. The full repository
+checks, standalone frozen-install consumer rerun, production journal crash
+matrix, Windows and signed product packages have not been rerun for this
+change. GenerationTask integration, session/summary assessment and the full
+Coding source boundary remain open under F1 to F3.
+
 ## Pi Coding layer and execution-base clarification after 301598c
 
 The 2026-11-08 user clarification explains why the work exists: replacing Pi

@@ -236,8 +236,8 @@ describe('host tool bridge', () => {
     expect(outcome.isError).toBe(true);
     expect(outcome.result.content[0]).toEqual({ type: 'text', text: 'detached commit failed' });
     expect(() => captured.output('late')).toThrow('has settled');
-    expect(() => captured.memo('late', context)).toThrow('has settled');
-    expect(() => captured.executeTool('fixture', {}, context)).toThrow('has settled');
+    expect(() => captured.memo('late', context)).toThrow(/has settled|invocation has ended/);
+    await expect(captured.executeTool('fixture', {}, context)).rejects.toThrow(/has settled|invocation has ended/);
   });
 
   test('provides real env, commit, memo, documents, watches, child tasks, and progress fallback', async () => {
@@ -288,7 +288,7 @@ describe('host tool bridge', () => {
     });
     expect(updates.some(update => update.content[0]?.text === 'hello')).toBe(true);
     expect(updates.at(-1)?.details).toEqual({ progress: 'stored' });
-    expect(() => apiAfter.snapshot(State, context)).toThrow('has settled');
+    expect(() => apiAfter.snapshot(State, context)).toThrow(/has settled|invocation has ended/);
     expect(opened.reports).toEqual([]);
   });
 

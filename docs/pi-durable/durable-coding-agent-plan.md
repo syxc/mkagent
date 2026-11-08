@@ -1,6 +1,6 @@
 # Pi-durable coding agent 实施计划
 
-状态：按 2026-11-08 用户背景和原则全面纠偏。此前 F0 校正、补漏和架构范围复核分别完成于 `1314a2b`、`56d0f46` 和 `301598c`；本批补充 Pi Coding 层、执行基座和升级维护条件，链接、标点及独立语义复核已完成，证据见验证记录。下一步按 F1 至 F6 落实，文档完成不代表 SDK 接入可行性或运行时纠偏已验证。运行时代码起点仍为 `cb0311f`；本文的 `4776fe1`、D0 至 D6 及后续批次账本保留原适用时点。
+状态：按 2026-11-08 用户背景和原则全面纠偏。此前 F0 校正、补漏和架构范围复核分别完成于 `1314a2b`、`56d0f46` 和 `301598c`；Pi Coding 层、执行基座和升级维护条件的补充经链接、标点及独立语义复核后提交于 `552b938`。首个运行时切片已将宿主工具执行、输出、嵌套与清理委托公开 ToolTask phases/abort，并删除旧嵌套调用副本。F1 至 F6 按实际范围继续推进，工具切片不代表整体 SDK 接入与源码收窄完成，证据见验证记录。运行时代码起点为 `cb0311f`；本文的 `4776fe1`、D0 至 D6 及后续批次账本保留原适用时点。
 
 MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，发现 Coding 能力不足且不能复用 Pi coding agent 的插件生态。当前方向是以切换前的 MkAgent 为产品行为和接入边界参照，保留 Pi coding agent 的 Coding 层与插件契约，尝试将其底层执行基座换成 pi-durable。对 MkAgent 而言，使用的仍是 Pi coding agent 的能力与接口，执行、存储和恢复由 durable 承担。
 
@@ -33,6 +33,8 @@ pi-durable 已发布 codemode、tool-search、tools、images 及完整 Harness/�
 对每个确需适配的范围，记录真实契约、候选发布 API、实际缺口、最小适配、调用方和验证。原型、getter、私有阶段或完整 CLI 的旧断言须先核实需求；不能为了通过旧测试扩大兼容。确认必要的源码固定到 Pi v1.5.0 提交 `f9a26365568127461c47a07a37dcb42c140a3ac5`，保留来源、许可和生成检查。当前 root `patchedDependencies` 的 core 和 durable 修改须单独审查，补丁新增接口不计为 Pi 原包已发布能力。
 
 宿主已安装上述四类内置模块，并通过工具桥接向 coding profile 提供工具。SDK 搜索、codemode 输出及 Native codemode 执行现已共用 durable；原 Native 执行循环已删除。外层保留发现元数据、字符串调用 ID、分支 store、沙箱名额和 Native 工具管道。取消和等待 helper 引用 Pi 官方包。完整 SDK 源码闭包的必要性仍未核实，不能据此宣称整个 SDK 已去重。
+
+`552b938` 后首个执行切片把宿主工具交给公开 ToolTask phases/abort，删除 `host-tool-nested.ts`。SDK checkpoint 和完整 Native 结果在原 `pi.coding.tool` owner 下持久化，旧 v1 checkpoint 保持恢复路径。专项验证覆盖真实 SIGKILL、Native/SDK 策略共同限制、已完成及失败回执与工具移除，以及外部取消和 scheduler abort 的嵌套 cleanup。复核发现的并发身份与调用关闭问题已修正；SDK failed outcome 持久化并传给真实 owner，由官方 scheduler 取消和等待普通 owned tasks 及 owned conversations 内的任务。Native 外层保留审批、hooks、事件、完整结果与 journal；未新增补丁或改变 task kind/version。下一项是 GenerationTask 的请求、轮次和收尾接线，须处理 Native `message_end` 改写、唯一 transcript writer、ID 映射及 journal 原子回执。其余源码和补丁的必要性继续核对。
 
 以下至“产品模式与资源策略”之前的对照是既有实现摘要，详细时点和结果见[验证记录](coding-validation.md)。其中通过补丁共享的算法不等于原包公开能力，辅助替换和第三方库结果不代替本次执行主链验收。
 

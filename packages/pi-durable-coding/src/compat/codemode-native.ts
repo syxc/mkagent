@@ -66,25 +66,24 @@ export async function executeNativeCodemode(
       `Script aborted: ${signal.reason instanceof Error ? signal.reason.message : 'Execution aborted'}`), started, { calls: [] });
   }
   if (scope) return scope.runInScope(() => executeScoped(scope, callId, input, signal, onUpdate, ctx, options, started));
-  let result: Result | undefined;
   let failure: { error: unknown } | undefined;
-  const bootstrap: ToolRegistration = {
-    name: 'codemode', description: 'Native codemode execution owner',
+  const bootstrap = agentToolToHost({
+    name: 'codemode', label: 'codemode', description: 'Native codemode execution owner',
     parameters: { type: 'object', properties: { code: { type: 'string' } }, required: ['code'] },
     execute: async () => {
       const captured = currentCodingHostToolApi();
       if (!captured) throw new Error('Native codemode has no durable task owner');
       try {
-        result = await executeScoped(captured, callId, input, signal, onUpdate, ctx, options, started);
-        return { output: result.content, details: copyJson(result.details), ...(result.isError ? { isError: true } : {}) };
+        return await executeScoped(captured, callId, input, signal, onUpdate, ctx, options, started);
       } catch (error) { failure = { error }; throw error; }
     },
-  };
+  });
   const tool = hostToolToAgent(bootstrap);
   let native;
   try { native = currentCodingToolInvocation(); } catch { /* Direct SDK invocation. */ }
+  let result: AgentToolResult<unknown>;
   if (native) {
-    await tool.execute(callId, input, signal);
+    result = await tool.execute(callId, input, signal);
   } else {
     // Context carrier only: runTool schedules a tool task and does not stream this message.
     const assistant: AssistantMessage = {
@@ -93,13 +92,12 @@ export async function executeNativeCodemode(
       usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0,
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
     };
-    await runDurableToolCall({ type: 'toolCall', id: callId, name: tool.name, arguments: input }, {
+    result = (await runDurableToolCall({ type: 'toolCall', id: callId, name: tool.name, arguments: input }, {
       tools: [tool], assistantMessage: assistant, context: { messages: [], tools: [tool] },
-    });
+    })).result;
   }
   if (failure) throw failure.error;
-  if (!result) throw new Error('Native codemode task did not return a result');
-  return result;
+  return result as Result;
 }
 
 async function executeScoped(
