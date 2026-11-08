@@ -53,6 +53,14 @@ export function portPhotonRuntime(source: string): string {
     + 'export { loadPhoton, type PhotonImageType } from "../../compat/photon.ts";\n';
 }
 
+/** Read the browser entry declared by marked instead of a copied upstream asset. */
+export function portHtmlMarked(source: string): string {
+  const before = 'const markedJs = readFileSync(join(templateDir, "vendor", "marked.min.js"), "utf-8");';
+  if (source.split(before).length !== 2) throw new Error('Native HTML Markdown asset boundary changed');
+  return 'import { readMarkedSource } from "../../../compat/html-marked.ts";\n'
+    + source.replace(before, 'const markedJs = readMarkedSource(templateDir);');
+}
+
 /** Bundles carry the same non-code assets as the source package. */
 export function portBundledAssets(source: string): string {
   for (const [name, directory] of [

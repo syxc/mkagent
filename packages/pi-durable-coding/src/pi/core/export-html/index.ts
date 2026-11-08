@@ -1,3 +1,4 @@
+import { readMarkedSource } from "../../../compat/html-marked.ts";
 import type { AgentState } from "@earendil-works/pi-agent-core";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { basename, join } from "path";
@@ -145,7 +146,7 @@ function generateHtml(sessionData: SessionData, themeName?: string): string {
 	const template = readFileSync(join(templateDir, "template.html"), "utf-8");
 	const templateCss = readFileSync(join(templateDir, "template.css"), "utf-8");
 	const templateJs = readFileSync(join(templateDir, "template.js"), "utf-8");
-	const markedJs = readFileSync(join(templateDir, "vendor", "marked.min.js"), "utf-8");
+	const markedJs = readMarkedSource(templateDir);
 	const markedCjkFriendlyJs = readFileSync(join(templateDir, "vendor", "marked-cjk-friendly.min.js"), "utf-8");
 	const hljsJs = readFileSync(join(templateDir, "vendor", "highlight.min.js"), "utf-8");
 

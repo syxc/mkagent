@@ -25,6 +25,71 @@ rejection remains a historical result, not a current blocker. Normal-profile Age
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Published Markdown browser asset after ac45375
+
+HTML export now uses the browser entry declared in the public
+`marked/package.json` export. Coding declares `marked@18.0.11` directly;
+Pi TUI already installs that version. The copied `marked.min.js` is removed.
+The package browser file differs from the pinned Native copy only by its
+source map directive. Removing that directive produces the same 44,640 bytes
+and SHA-256 `438eedfcf932a414d0d0bfeea32dc365c063563b8ca713b4687fc8f8b501e5e4`.
+Native templates, CJK tokenization and renderer configuration are unchanged.
+A browser build through the public Pi TUI root failed because it imports
+`child_process`; the standalone package supplies its declared browser build.
+
+The 15-line external adapter reads the installed browser asset in source mode
+and the shipped asset in bundle mode. The server build writes the package
+asset into `coding-assets/export-html/vendor/marked.min.js`. Generation rejects
+missing or repeated Native asset reads and excludes the old copied asset.
+The current runtime manifest has 248 TypeScript files and eight assets.
+Earlier nine-asset records below describe their original batches.
+
+Bun passes 73 tests across the new Markdown tests, HTML color/export tests and
+generator guard tests. Node 24.22.1 passes 24 tests across the two HTML files.
+These checks cover package metadata, browser Markdown rendering, packaged
+resource selection, generation rejection and real custom-tool HTML export.
+The complete server build passes. Source and packaged browser assets both
+match the pinned Native bytes. Both complete generation checks pass, including
+12 auxiliary sources and 28 shared forwards. Eight explicit type roots have
+zero diagnostics. `validate:ci` passes workspace types, SDK declarations,
+61 shared tests, 20 documentation-tool smoke tests and all locale checks.
+The isolated Craft source audit passes for 2231 files: 1455 common paths,
+874 normalized-identical files, 581 modified Craft-derived files, 776
+project-only files and 858 reviewed deletions.
+
+A separate relocated bundle uses the actual SessionManager and HTML exporter.
+It has no local `node_modules`; a system sandbox denies network access and
+reads from workspace dependency directories. The bundle exports a 285,777-byte
+HTML file, includes the shipped parser and CJK extension, and renders
+`漢字**太字**です` with the expected strong element. The first probe did not
+write its bundle because it used an unsupported Bun build output option.
+After correction, an assertion that package resolution must fail also failed.
+That probe did not record the package source, so it does not establish
+isolation. The final probe instead applies the system sandbox and passes.
+Neither earlier probe is counted as a pass.
+
+Independent review found no defect requiring a fix. The reviewer verified
+byte identity, the exact generated HTML module and manifest records, and
+unchanged records outside the exporter and removed asset. The new test file
+passes ten tests under Bun and ten under Node 24. Another 27 script checks
+cover source registration, both Native HTML export functions and bundles.
+Fixed session and theme fixtures produce identical HTML before and after the
+change, including custom renderer and session payloads. These fixtures do not
+repeat the full Native session lifecycle.
+
+The reviewer also ran a minimal bundle of the actual adapter in separate Bun
+and Node 24 processes. Both fail to resolve `marked/package.json`, load the
+shipped asset, parse Markdown and reject the package fallback when no asset
+is supplied. The reviewer's first missing-package precondition failed before
+Bun automatic installation was disabled. Its package source was not recorded;
+that run is excluded. Corrected Bun commands use `--no-install`. The reviewer
+did not repeat the complete server build, generation or CI checks above.
+All reviewer temporary files were removed with trash.
+
+This batch does not repeat the full repository, lint, Desktop or headless
+product interaction checks. Their earlier records retain their original
+scope. F1/F3 and the previously denied token-table review remain open.
+
 ## Function signature guards after a2c5fe6
 
 This follow-up changes only generation rules, tests and source registration.

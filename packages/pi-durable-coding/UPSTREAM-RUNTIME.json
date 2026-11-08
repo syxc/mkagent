@@ -23,6 +23,7 @@
     "ignore": "7.0.8",
     "jiti": "2.7.0",
     "jszip": "3.10.1",
+    "marked": "18.0.11",
     "minimatch": "11.0.3",
     "proper-lockfile": "4.1.2",
     "quickjs-wasi": "3.6.2",
@@ -334,8 +335,10 @@
       "source": "packages/coding-agent/src/core/export-html/index.ts",
       "target": "src/pi/core/export-html/index.ts",
       "sha256": "6741a3b59795d3b25fea9f7385f84b7213fa869060152416cde7aa6802c44f9d",
-      "portSha256": "6741a3b59795d3b25fea9f7385f84b7213fa869060152416cde7aa6802c44f9d",
-      "changes": []
+      "portSha256": "0f9fce95457648bf5cf0a2fc0a4ec9cd841e1fbada7b398a42cf419f7a01abdf",
+      "changes": [
+        "public-marked-browser-asset"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/export-html/template.css",
@@ -377,13 +380,6 @@
       "target": "src/pi/core/export-html/vendor/marked-cjk-friendly.min.js",
       "sha256": "93d2c938754cb24eef5b9ffecc268a98ef6beeb75dad614b0e874176aeeba565",
       "portSha256": "93d2c938754cb24eef5b9ffecc268a98ef6beeb75dad614b0e874176aeeba565",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/core/export-html/vendor/marked.min.js",
-      "target": "src/pi/core/export-html/vendor/marked.min.js",
-      "sha256": "438eedfcf932a414d0d0bfeea32dc365c063563b8ca713b4687fc8f8b501e5e4",
-      "portSha256": "438eedfcf932a414d0d0bfeea32dc365c063563b8ca713b4687fc8f8b501e5e4",
       "changes": []
     },
     {

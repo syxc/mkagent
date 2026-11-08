@@ -971,8 +971,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "96e80630d7507c69a62198ac191f3a831a0b12bc9f5145ebefa6f91743d69484",
-      "reason": "Lock independent Pi packages while pi-durable owns execution. Share Photon 0.3.3 in production and retain Photon Node only as a development oracle; preserve other resolved dependency versions."
+      "sha256": "ccc09c3868f70ae25c1330b5539439a45b854553a9d9d85d16fe1bf946a51613",
+      "reason": "Lock independent Pi packages and shared Photon. Declare the existing Marked 18.0.11 as a direct coding dependency for offline HTML assets without changing other resolved versions."
     },
     "package.json": {
       "sha256": "60f6bdb53e0e226e82843e6557cc39e3107cf692fdea2666297894434aeff260",
@@ -3317,8 +3317,8 @@
       "reason": "Cross-platform bounded retry runner hardens dependency installation and Electron packaging downloads"
     },
     "packages/pi-agent-server/scripts/build.ts": {
-      "sha256": "f9d4ceac8649f7cc58733989f6fd976489ae03dca541443a2388b634ef0e9f9b",
-      "reason": "Bundle the durable coding server with one shared Photon WASM, remove its obsolete generated duplicate, and copy the license and non-code SDK assets."
+      "sha256": "6c9703b5e8dea6f084a31f33143bf3022a69a47db900a1829019dce769ab1a6e",
+      "reason": "Bundle the durable coding server with shared Photon, licenses and non-code assets; copy the browser entry declared by Marked so offline exports need no installed parser package."
     },
     "packages/pi-agent-server/src/cache-warmer.ts": {
       "sha256": "7d1ca54d32dc242776a6fe34cce44810554fe5d4243ee0d42f135619f048d8af",
@@ -3717,8 +3717,8 @@
       "reason": "Record selected source ports, unchanged fixtures and shared native helper adapters. Record six selected helper sources, six unchanged fixtures and 28 shared entries."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "b6664667a9c059f0588870bec24bf5a174dbe8b35d624fc93f1469707bda9828",
-      "reason": "Declare independent coding capabilities and existing ZIP and ANSI packages; share durable's Photon version in production and keep the original Node codec as a development oracle."
+      "sha256": "048d5d7d5e29644d141a1686250c8f982fefb84750c8fb123a28afb33bf1d660",
+      "reason": "Declare independent coding capabilities and existing ZIP, ANSI and Marked packages; use the published Marked browser entry instead of copied parser source and share durable's Photon runtime."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -4041,12 +4041,12 @@
       "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "725db947ee6272f298eb593f4c44d208861fc8ca3b4a4a55ed959a86fb0a2c2c",
-      "reason": "Record the complete pinned runtime closure, shared Photon provenance, public dependencies and HTML color forwarding, with only the eight consumed core operations."
+      "sha256": "815f054325c416acea30d35d4c67213f10e9763ef108f8c8d259ca081b6e3e8f",
+      "reason": "Record 248 pinned runtime sources and eight assets, shared Photon, public dependencies and HTML color forwarding. Replace the copied Marked asset with its public browser package entry."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
-      "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
-      "reason": "Guard the public Photon loader API without binding discarded private bodies, and reproduce installed image worker and non-code asset boundaries."
+      "sha256": "d2321735c72e6d428201526b37c391a898c8d992bd1936b65beb1f79a433ef7a",
+      "reason": "Guard the Photon loader and installed image worker boundaries. Reproduce the HTML exporter connection to the public Marked browser entry and reject missing or repeated asset reads."
     },
     "packages/pi-durable-coding/scripts/model-runtime-port.ts": {
       "sha256": "96a9eee13bdbd72a8fb7feca1b3b1af2caaba15392fb9296d58240798f6b931d",
@@ -4061,8 +4061,8 @@
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "3710b17b679c5e5498cc8607678a1dc77515c1726b187a3f6a2f13feb7283688",
-      "reason": "Reproduce complete coding transformations and shared helper provenance; retain scoped path validation, reject new unadapted Photon Node imports and forward only consumed core operations."
+      "sha256": "e86d13067882c7ab121b33d29152418c37df6489bc3ba1089e86cbaa56ccb89e",
+      "reason": "Reproduce coding transformations and shared helper provenance, including the public Marked dependency and exclusion of its copied asset. Retain scoped validation, Photon guards and consumed core operations."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4309,8 +4309,16 @@
       "reason": "Pin original ANSI HTML output for 635 inputs, guard generation boundaries and verify custom tool colors in a real session HTML export."
     },
     "packages/pi-durable-coding/src/pi/core/export-html/index.ts": {
-      "sha256": "6741a3b59795d3b25fea9f7385f84b7213fa869060152416cde7aa6802c44f9d",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
+      "sha256": "0f9fce95457648bf5cf0a2fc0a4ec9cd841e1fbada7b398a42cf419f7a01abdf",
+      "reason": "Preserve public core protocol imports and Native HTML generation; obtain the unchanged Markdown browser parser from its published package or the offline bundle asset."
+    },
+    "packages/pi-durable-coding/src/compat/html-marked.ts": {
+      "sha256": "1ed2817846898cdebda78ef2e1346571a95255a8ba04644b3d14cfa25f60b425",
+      "reason": "Read the browser entry declared by the public Marked package or its shipped offline asset, omitting the source map directive to preserve Native HTML bytes."
+    },
+    "packages/pi-durable-coding/test/native-html-marked.test.ts": {
+      "sha256": "0548a27bb814c83ed302a9007114f6d981d26e5e0ea42c174901f27e9775f138",
+      "reason": "Verify the public Marked browser asset, offline Markdown rendering, bundled resource selection and rejection of changed Native HTML asset boundaries."
     },
     "packages/pi-durable-coding/src/pi/core/export-html/template.css": {
       "sha256": "c9d26cc314336192021d604c0f1a4a63115172b24d03500571379f9172c06fc9",
@@ -4335,10 +4343,6 @@
     "packages/pi-durable-coding/src/pi/core/export-html/vendor/marked-cjk-friendly.min.js": {
       "sha256": "93d2c938754cb24eef5b9ffecc268a98ef6beeb75dad614b0e874176aeeba565",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/vendor/marked-cjk-friendly.min.js; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/export-html/vendor/marked.min.js": {
-      "sha256": "438eedfcf932a414d0d0bfeea32dc365c063563b8ca713b4687fc8f8b501e5e4",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/vendor/marked.min.js; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/index.ts": {
       "sha256": "510e8a71fe1b73d830c0184dfeb7187b8f7f0887f64c6b171a19956a43e64fea",

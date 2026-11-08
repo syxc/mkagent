@@ -1,6 +1,7 @@
-import { copyFileSync, cpSync, mkdirSync, rmSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { readMarkedSource } from '../../pi-durable-coding/src/compat/html-marked.ts';
 
 const packageDir = dirname(import.meta.dir);
 const outdir = join(packageDir, 'dist');
@@ -33,3 +34,4 @@ for (const [source, target] of [
     recursive: true, filter: path => !path.endsWith('.ts'),
   });
 }
+writeFileSync(join(outdir, 'coding-assets', 'export-html', 'vendor', 'marked.min.js'), readMarkedSource());
