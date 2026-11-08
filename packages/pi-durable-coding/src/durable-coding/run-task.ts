@@ -11,11 +11,12 @@ import type {
 } from '../agent-runtime.ts';
 import {
   createErrorToolResult, createToolResultMessage, declareToolChanges, emitToolExecutionEnd,
-  emitToolResultMessage, prepareToolCall, shouldTerminateToolBatch, streamAssistantResponse,
+  emitToolResultMessage, prepareToolCall, shouldTerminateToolBatch,
   type AgentEventSink,
 } from '../native-operations.ts';
 import type { MessageReferences } from './message-identities.ts';
 import type { CodingToolTaskResult } from './tool-task.ts';
+import { abortGenerationResponse, interruptGenerationResponse, requestGenerationResponse } from './generation-response.ts';
 
 export interface LoopInput {
   messages: AgentMessage[];
@@ -101,8 +102,10 @@ export function createCodingRunTask(
     const cached = host.live;
     const live = cached?.taskId === runtime.taskId && cached.state.revision === task.state.checkpoint.revision;
     const state = live ? cached.state : structuredClone(task.state.checkpoint);
-    if (!live && state.inFlight)
+    if (!live && state.inFlight) {
+      if (state.inFlight === 'request') await interruptGenerationResponse(runtime, context);
       throw new Error(`Native run ${state.inFlight} was interrupted; hook and event delivery is uncertain and was not repeated`);
+    }
     if (!live) host.restoreCheckpoint?.(state);
     host.live = { taskId: runtime.taskId, state };
     host.context = {
@@ -128,6 +131,10 @@ export function createCodingRunTask(
       });
     } catch (error) {
       host.live = undefined;
+      if (task.state.checkpoint.phase === 'request' && !runtime.signal.aborted) {
+        try { await interruptGenerationResponse(runtime, context); }
+        catch (cleanupError) { runtime.report(cleanupError); }
+      }
       throw error;
     }
   };
@@ -198,20 +205,19 @@ export function createCodingRunTask(
         await advance(state, 'request', host, runtime, context);
       }),
       request: execute(async (state, host, runtime, context) => {
-        const streamOptions = state.resume?.streamOptions;
-        state.message = await streamAssistantResponse(
-          host.context, host.config, signal(host, runtime), host.emit,
-          streamOptions ? (model, request, options) => host.streamFn(model, request, { ...options, ...streamOptions }) : host.streamFn,
-        );
-        state.resume = undefined;
-        state.newMessages.push(state.message);
-        state.calls = state.message.content.flatMap(part => part.type === 'toolCall' ? [{ toolCall: part }] : []);
-        state.cursor = 0;
-        state.toolResults = [];
-        state.parallel = host.config.toolExecution !== 'sequential' && !state.calls.some(call =>
-          host.context.tools?.find(tool => tool.name === call.toolCall.name)?.executionMode === 'sequential');
-        const failed = state.message.stopReason === 'error' || state.message.stopReason === 'aborted';
-        await advance(state, failed || !state.calls.length ? 'finish' : 'preflight', host, runtime, context);
+        await requestGenerationResponse(host, runtime, context, signal(host, runtime), state.resume?.streamOptions, async (message, tx) => {
+          state.message = message;
+          state.resume = undefined;
+          state.newMessages.push(message);
+          state.calls = message.content.flatMap(part => part.type === 'toolCall' ? [{ toolCall: part }] : []);
+          state.cursor = 0;
+          state.toolResults = [];
+          state.parallel = host.config.toolExecution !== 'sequential' && !state.calls.some(call =>
+            host.context.tools?.find(tool => tool.name === call.toolCall.name)?.executionMode === 'sequential');
+          const failed = message.stopReason === 'error' || message.stopReason === 'aborted';
+          await host.commit(tx);
+          return { status: 'running', checkpoint: checkpoint(state, failed || !state.calls.length ? 'finish' : 'preflight', host) };
+        });
       }),
       preflight: execute(async (state, host, runtime, context) => {
         const call = state.calls[state.cursor];
@@ -329,6 +335,7 @@ export function createCodingRunTask(
       }),
     },
     abort: async (_task, runtime, context) => {
+      await abortGenerationResponse(runtime, context);
       await runtime.commit(() => ({ status: 'terminal', outcome: { status: 'aborted' } }), context);
     },
   });

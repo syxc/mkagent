@@ -3705,8 +3705,8 @@
       "reason": "Run the standalone bundle outside the source tree with an unchanged Pi plugin and modified host approval."
     },
     "packages/pi-durable-coding/DURABLE-PATCH.json": {
-      "sha256": "2f52905175340c750c8c8b791ce71687f33ff7a0dc7bb3e39053babeccd398ab",
-      "reason": "Record pristine and patched hashes for the typed v4 generation checkpoint patch."
+      "sha256": "b19f041f5338caacd0b9b1980be2d311752b9f2f8102f4939525ce197daf08d0",
+      "reason": "Record all 30 pristine and patched SDK outputs, source transformations and task versions for prepared generation responses."
     },
     "packages/pi-durable-coding/LICENSE.pi": {
       "sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48",
@@ -3977,8 +3977,8 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "bf8ec9e12c2516923cd67c969b2350e6fc609b0f9043c81ff3f112db6b96f739",
-      "reason": "Keep the canonical frozen-install patch and full-body cache stamp. Truncation uses public Chord without SDK algorithm or export patches."
+      "sha256": "b1d0cceca3fae95064d9bfa01ce072ee5e6549d08a4469f689065535317181b3",
+      "reason": "Keep the complete 30-file SDK patch and full-body cache stamp; add a prepared-response task that reuses streamResponse without changing historical GenerationTask stages."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
       "sha256": "ee864d6fee7ac95fc1ce126e0784733ce1891e600b47481ddcb5d73bc3fa0ce4",
@@ -4097,8 +4097,8 @@
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in message-identities.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/run-task.ts": {
-      "sha256": "c69ec12cd47afc1e3f81e3e9d0a498b30162b813b81fcbf1ee04f65ff05140da",
-      "reason": "Deliver marked SDK failure results after the official scheduler joins owned cleanup; preserve errors for uncertain Native event delivery."
+      "sha256": "d6b5e9b3cfb8ee81303ad7d0f52cbebe632b3772abc4efeba3b5c47c53e7455a",
+      "reason": "Delegate request streaming to GenerationResponseTask; atomically commit the Native journal and next checkpoint, settle interrupted SDK intent and preserve uncertain-event failures and ToolTask failure delivery."
     },
     "packages/pi-durable-coding/src/durable-coding/session-binding.ts": {
       "sha256": "43ef4f7a2220593bc13c5ee08c8eacee93fa44321f286bcef264fb5e883898da",
@@ -5439,6 +5439,26 @@
     "packages/pi-durable-coding/test/native-html-highlight.test.ts": {
       "sha256": "e94c4bf38caae97f74d5d8588352048b7269327472886d345afdb09528378335",
       "reason": "Verify the official browser build, complete BSD notice, six Native highlighting outputs, common languages and aliases, and offline asset loading."
+    },
+    "packages/pi-durable-coding/scripts/generation-response-source.ts": {
+      "sha256": "8c85d7e6e98515f662452ae45efc7713dd03f904be4ff06490e1580425bce355",
+      "reason": "Add a bounded prepared-response task and generic streamResponse runtime binding without copying the streaming algorithm or changing GenerationTask v4."
+    },
+    "packages/pi-durable-coding/scripts/patch-generation-response.ts": {
+      "sha256": "af98005363f7c493bac3aafdbfe292fe5091bb0aa279a4cfa163f99023c655c1",
+      "reason": "Generate typed request and root-export outputs, retain unrelated sections, stamp full content and verify complete pristine replay before writing or checking the patch and manifest."
+    },
+    "packages/pi-durable-coding/src/durable-coding/generation-response.ts": {
+      "sha256": "3e38328e0be8825f6ca97efea5ad0906a1a85fef5ff0af81b60276ff8332f3a8",
+      "reason": "Bind SDK request and abort phases to the real Native owner; retain event backpressure, transient credentials, atomic journal receipts and interruption cleanup."
+    },
+    "packages/pi-durable-coding/test/generation-response-sdk.test.ts": {
+      "sha256": "59e1097cace160d727eb1e879f62e56e8f193bbc4c5996e309fce91ff09f72f5",
+      "reason": "Verify prepared-request delegation, final plugin calls, length handling, atomic response commits, partial drain, cancellation and three real SIGKILL boundaries."
+    },
+    "packages/pi-durable-coding/test/fixtures/generation-response-recovery-process.ts": {
+      "sha256": "3c9f4e0468f384186093977a6aa6afc02ba408ed71e96f12aa2e3e3b66127c38",
+      "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     }
   },
   "deleted": {

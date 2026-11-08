@@ -36,9 +36,19 @@ flowchart TD
 
 [coding 包](../../packages/pi-durable-coding/package.json)独立于 MkAgent shared、server 和 UI，主要公开 `/native`、`/agent`、`/durable` 入口；[CodingHost](../../packages/pi-agent-server/src/coding-host.ts)把它接到产品 worker 已有的 Harness、工具目录和模型接口。
 
-普通 profile 使用 `GenerationTask`；coding profile 通过 [DurableLoopBinding](../../packages/pi-durable-coding/src/durable-coding/engine.ts)运行 `pi.coding.session/run/tool` 等本地任务。宿主工具现通过公开 `ToolTask` phases 执行，Native 工具任务保留插件事件、完整结果与 journal 交付。请求、工具轮次及结束阶段仍由本地任务管理，须继续与官方 `GenerationTask` 和扩展点对照。Native Agent 子类目前通过仓内 core 补丁接入 durable，不能将此现状直接认定为最终最薄架构。
+普通 profile 使用 `GenerationTask`；coding profile 通过 [DurableLoopBinding](../../packages/pi-durable-coding/src/durable-coding/engine.ts)运行 `pi.coding.session/run/tool` 等本地任务。宿主工具通过公开 `ToolTask` phases 执行；请求执行和 partial 写入现委托仓内新增 `GenerationResponseTask`，复用 SDK 既有 `streamResponse`。Native 保留插件事件、完整结果、工具轮次、收尾及 journal 交付，后续继续核对这些职责与官方执行器的边界。Native Agent 子类目前通过仓内 core 补丁接入 durable，不能将此现状直接认定为最终最薄架构。
 
 独立 SDK 也能使用这一边界，但默认后端为 `MemoryStorage`。需要跨进程恢复时，调用方须提供持久 Storage；产品 worker 已接入持久存储。
+
+### 请求执行的 SDK 接点
+
+Pi 1.5.0 的 `GenerationTask.request` 会继续分类响应、写 assistant、创建工具和结算输入，没有独立返回响应的出口。Native 还须在 `message_end` 后读取插件最终改写的 calls，并为 `length` 中的每个 call 交付未执行错误。因此仓内新增 `pi.generation-response` v1，只执行已准备请求并返回消息，不分类、不写 transcript、不记 usage、不创建工具。它直接复用 SDK 的 `streamResponse` 和 partial writer，未复制另一份流算法，也未把 Native loop 移入补丁。这是本地 SDK 扩展，不是未修改发布包已有 API。
+
+[请求适配](../../packages/pi-durable-coding/src/durable-coding/generation-response.ts)在真实 `pi.coding.run` owner 上调用新任务的 request/abort。core 继续处理 context 转换、凭据和协议事件；SDK 消费流并等待最后一笔 partial 提交，再允许 Native 交付 `message_end`。SDK receipt、Native journal 的唯一 assistant entry 和下一 checkpoint 同事务提交。只持久化准备后的 messages、model identity 和 thinking level；请求凭据、headers、回调及 provider options 保留在运行时闭包。
+
+任务文档记录 SDK checkpoint 和结果，不注册第二个 scheduler。冷恢复遇到不确定 request 或事件时不重发，先由 SDK 的 started 重入路径结算 intent、清除 generation 槽，再保留 Native 的不确定交付错误。外部取消与 scheduler abort 均等待流清理，后者调用 SDK abort，不追加第二条 assistant。旧 `pi.coding.*` v1、`LoopInput.resume` 和原 `GenerationTask` v4 的阶段保持；已有恢复回归与三种新 SIGKILL 场景只证明各自覆盖范围，不代表全部历史迁移组合已验收。
+
+升级时须重新核对 SDK `streamResponse` 的 runtime 参数、`codingStream.closed` 与 partial drain 顺序、新任务的声明及根导出。退出条件是上游提供可独立返回已准备请求结果的接口，并能保留上述事件及事务行为；达到条件后撤除新任务转换和对应补丁。工具轮次、finish、session、summary 与完整 Coding 闭包仍按 F1 至 F3 继续处理。
 
 ## 哪些直接引用上游包
 
@@ -60,6 +70,7 @@ flowchart TD
 | 标识 | 未修改 Pi 1.5.0 | 当前本地安装 | 兼容核对 |
 |---|---|---|---|
 | `pi.generation` | GenerationTask v2 | 仓内补丁升为 v4，加入 Coding 阶段与 hooks | 本地 v4 checkpoint 不能直接交给未修改 v2；核对 input、checkpoint、已接受输入及结果 |
+| `pi.generation-response` | 不存在 | 仓内新增 v1，仅执行准备后的请求并返回响应 | Native owner 的 task document 保存 SDK checkpoint；started 重入只结算，不重发请求 |
 | `pi.tool` | ToolTask v3 | v3，未在本补丁中改任务版本 | 该 kind 的迁移不能自动转换 `pi.coding.*` v1 |
 | `CODEMODE_MODULE_VERSION` | 2 | 仓内补丁升为 3 | 这是 codemode replay module 版本，不是 ToolTask 或文档 schema 版本；存量日志须按实际版本处理 |
 
@@ -81,7 +92,7 @@ Native 缩放核心也转发到[缩放适配](../../packages/pi-durable-coding/s
 
 Native Photon 入口现只转发到[共享加载适配](../../packages/pi-durable-coding/src/compat/photon.ts)，通过公开 `initSync` 初始化同一包实例，不再替换全局 `fs.readFileSync`。生产清单统一为 `@silvia-odwyer/photon@0.3.3`，旧 Node 包仅用于开发测试中的原版对照。构建脚本只选择 `photon_rs_bg.wasm`，并清除旧构建留下的专用 WASM。生成器检查两个公开声明，不再绑定已删除加载器的私有正文。Node 搬迁包和 Bun 独立可执行文件已通过单资源及缺失资源检查，完整产品发布与终端注册仍未重验，具体范围见[验证记录](coding-validation.md)。
 
-规范依赖补丁现在包含 28 个文件，首行记录后续正文按 LF 换行计算的完整 SHA-256。更新补丁时须同步摘要；回归用例检查两者一致，以免复用旧 Bun 缓存产物。当前 28 个文件已在独立缓存的冻结安装中逐一核对，较早版本的既有缓存验证范围见[验证记录](coding-validation.md)。
+规范依赖补丁现在包含 30 个文件，首行记录后续正文按 LF 换行计算的完整 SHA-256。更新补丁时须同步摘要；回归用例检查两者一致，以免复用旧 Bun 缓存产物。[完整生成器](../../packages/pi-durable-coding/scripts/patch-generation-response.ts)只重建 generation 及根导出的四个产物，保留其余补丁段，并对 pristine 副本执行完整 `git apply --check`、实际重放及全部 30 个输出核对。`DURABLE-PATCH.json` 记录全部文件的原始和目标哈希。本轮全新消费者在禁网、禁用 lifecycle scripts 的冻结安装后逐一匹配这 30 个输出；缓存与锁文件准备过程见验证记录。
 
 Native 图像 MIME 识别通过[类型适配](../../packages/pi-durable-coding/src/compat/image-mime.ts)共用 durable 的既有头部解析算法。适配仅保留未识别时的 `null` 和文件前 4100 字节的读取窗口，完整文件读取器的 APNG 扫描范围与原生入口不同，因此继续使用内核的字节检测函数。终端和剪贴板入口继续调用原名称。
 
@@ -113,9 +124,9 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 `pi-durable` 通过根包的 `patchedDependencies` 应用[仓内补丁](../../patches/@earendil-works%252Fpi-durable@1.5.0.patch)，包含旧 `GenerationTask` coding 阶段、回调、类型声明及上述搜索和输出兼容接点。当前生产 `CodingHost` 通过本地任务执行；根 SDK 仍公开旧 `NativeCodingRuntime`，历史 checkpoint 也保留读取及拒绝不确定回放的迁移语义。删除旧阶段部分须先完成兼容桥接及存量恢复验证；搜索和输出接点单独保留升级核对。
 
-补丁统一由干净依赖生成标准 Git diff。Native codemode 阶段的 18 个文件通过干净缓存重放及全新消费者的离线 frozen install 字节核对；安装禁用 lifecycle scripts，系统沙箱拒绝网络，锁文件未变。该阶段消费者通过 29 项测试、150 个断言，当前补丁的 28 文件核对见验证记录。兼容接点仍属于仓内补丁，升级须同时核对补丁重放、新安装和 Native 行为，不能只核对已修改的安装副本。
+补丁统一由干净依赖生成标准 Git diff。Native codemode 阶段的 18 个文件通过干净缓存重放及全新消费者的离线 frozen install 字节核对；安装禁用 lifecycle scripts，系统沙箱拒绝网络，锁文件未变。该阶段消费者通过 29 项测试、150 个断言，后续 28 文件及本轮 30 文件核对分别见验证记录。兼容接点仍属于仓内补丁，升级须同时核对补丁重放、新安装和 Native 行为，不能只核对已修改的安装副本。
 
-历史 `scripts/patch-durable.ts` 只负责四个 harness 文件，不能重建完整补丁。默认模式只新建不存在的补丁，拒绝覆盖任何现有内容；写 SDK 产物和清单前独占创建补丁，防止预检查后出现的新文件被覆盖。`--check` 保留历史四文件范围的只读比较，拒绝缺失或无 Git 文件头的补丁。当前完整 28 文件补丁在两种模式下均于 Git 调用、类型分析及写入前被拒绝。Bun、Node 各通过 18 项回归，CLI 夹具和实际入口检查通过，完整补丁摘要不变。
+历史 `scripts/patch-durable.ts` 只负责四个 harness 文件，不能重建完整补丁。默认模式只新建不存在的补丁，拒绝覆盖任何现有内容；写 SDK 产物和清单前独占创建补丁，防止预检查后出现的新文件被覆盖。`--check` 保留历史四文件范围的只读比较，拒绝缺失或无 Git 文件头的补丁。完整补丁在两种模式下均于 Git 调用、类型分析及写入前被拒绝。Bun、Node 各通过 18 项历史回归，CLI 夹具和实际入口检查通过。新的 30 文件生成与重放由 `patch-generation-response.ts` 负责，不能用历史四文件生成器替代。
 
 ## 哪些复制或移植了上游源码
 

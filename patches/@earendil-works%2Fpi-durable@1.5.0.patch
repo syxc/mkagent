@@ -1,4 +1,4 @@
-# Content SHA-256: f56bf78541b545a5c629c1657c972390bc0085647443d24d24bc008b7b2c5245
+# Content SHA-256: ace2bed6d2b39a5798663f98363b3b9b0a98b685e2c7f98e358b456fe9badb3f
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -769,14 +769,13 @@ index 120ff2015d81eb795a090eae897910a58768373f..1bc0e58a3fe28b0722f4efd530e2f2c0
          let settled = false;
          let exited = false;
 diff --git a/dist/harness/generation.d.ts b/dist/harness/generation.d.ts
-index 6b3121b5ace947b905cbe6e8cfa8d5e19c26ed62..ebdd9639525e14fb40c7a874ce92fde3a6b41d9f 100644
 --- a/dist/harness/generation.d.ts
 +++ b/dist/harness/generation.d.ts
 @@ -1,12 +1,15 @@
  import { type Draft } from "@earendil-works/chord";
 -import type { DeferredHandle, ModelThinkingLevel } from "@earendil-works/pi-ai";
 -import type { ConversationId, EntryId, SubmissionId, Task, TaskId, Tx } from "../types.ts";
-+import type { DeferredHandle, Message, ModelThinkingLevel } from "@earendil-works/pi-ai";
++import type { AssistantMessage, DeferredHandle, Message, ModelThinkingLevel } from "@earendil-works/pi-ai";
 +import type { ConversationId, EntryId, EntryDraft, SubmissionId, Task, TaskId, Tx } from "../types.ts";
  import { type LiveState } from "./live.ts";
  import { type ToolTaskResult } from "./tool.ts";
@@ -854,7 +853,7 @@ index 6b3121b5ace947b905cbe6e8cfa8d5e19c26ed62..ebdd9639525e14fb40c7a874ce92fde3
  /**
   * Built-in generation task: prepares the positional system prompt and tool loadout, requests or polls the model,
   * retries, and classifies the response. The run's inputs live in `pi.live.run`.
-@@ -97,4 +151,12 @@ export declare function startRun(tx: Tx, conversationId: ConversationId, live: D
+@@ -97,4 +151,28 @@ export declare function startRun(tx: Tx, conversationId: ConversationId, live: D
  }): Promise<void>;
  /** Hand run control from `from` to `to`; the run's inputs move with it. */
  export declare function handOver(live: Draft<LiveState>, from: TaskId, to: TaskId): void;
@@ -868,9 +867,24 @@ index 6b3121b5ace947b905cbe6e8cfa8d5e19c26ed62..ebdd9639525e14fb40c7a874ce92fde3
 +}
 +/** Append in order, resolving every local reference before passing it to durable. */
 +export declare function appendCodingEntries(tx: Tx, conversation: ConversationId, entries: readonly CodingEntryDraft[]): Promise<EntryId[]>;
++/** A prepared request. Credentials and callbacks belong to the runtime's Models binding. */
++export type GenerationResponseInput = {
++    model: ModelRef;
++    messages: Message[];
++    thinkingLevel?: ModelThinkingLevel;
++    streamOptions?: ConversationStreamOptions;
++};
++export type GenerationResponseCheckpoint = {
++    phase: "request";
++    started?: true;
++};
++export type GenerationResponseResult = {
++    message: AssistantMessage;
++};
++/** Reuse the generation stream and progress writer without classifying or appending its response. */
++export declare const GenerationResponseTask: Task<GenerationResponseInput, GenerationResponseCheckpoint, GenerationResponseResult, GenerationHooks>;
 +export {};
 diff --git a/dist/harness/generation.js b/dist/harness/generation.js
-index ac42dfe741b20726ab8eb3d8139b1296d664210d..ea8ed27981e3688b414f613317cd23dd7e6b790b 100644
 --- a/dist/harness/generation.js
 +++ b/dist/harness/generation.js
 @@ -22,7 +22,7 @@ const DEFAULT_POLL_AFTER_MS = 5000;
@@ -954,11 +968,20 @@ index ac42dfe741b20726ab8eb3d8139b1296d664210d..ea8ed27981e3688b414f613317cd23dd
          finish: async (task, runtime, context) => {
              const { run } = task.state.checkpoint;
              if (cutOffTooOften(task, runtime))
+@@ -503,7 +542,7 @@ async function providerPayload(runtime, model, payload, context) {
+  * thinking grew by and applies the argument changes since the last one (`PartialChanges`), so its cost follows the new
+  * text, not the strings' length.
+  */
+-async function streamResponse(runtime, model, messages, options, attempt, context) {
++async function streamResponse(runtime, model, messages, options, attempt, context, observe) {
+     const interval = runtime.settings.progress.partialIntervalMs;
+     let pending;
+     let timer;
 @@ -545,9 +584,15 @@ async function streamResponse(runtime, model, messages, options, attempt, contex
                  timer = runtime.setTimer(flush, interval);
          });
      };
-+    const observeCoding = agentHooks(await runtime.agent(context), GenerationTask.definition.name)
++    const observeCoding = observe ?? agentHooks(await runtime.agent(context), GenerationTask.definition.name)
 +        .some(({ handlers }) => typeof handlers.codingStream === "function");
      try {
          const events = runtime.models.streamSimple(model, { messages: [...messages] }, options);
@@ -1100,7 +1123,7 @@ index ac42dfe741b20726ab8eb3d8139b1296d664210d..ea8ed27981e3688b414f613317cd23dd
              }
          }
          return { status: "terminal", outcome: { status: "completed", result: { entryId: assistant } } };
-@@ -944,12 +1024,213 @@ export async function startRun(tx, conversationId, live, run, options) {
+@@ -944,12 +1024,251 @@ export async function startRun(tx, conversationId, live, run, options) {
          delete live.runFailure;
  }
  /** A generation owned by its conversation. */
@@ -1318,6 +1341,44 @@ index ac42dfe741b20726ab8eb3d8139b1296d664210d..ea8ed27981e3688b414f613317cd23dd
 +    }
 +    return ids;
 +}
++/** Reuse the generation stream and progress writer without classifying or appending its response. */
++export const GenerationResponseTask = defineTask({
++    name: "pi.generation-response",
++    version: 1,
++    initial: () => ({ phase: "request" }),
++    phases: {
++        request: async (task, runtime, context) => {
++            if (task.state.checkpoint.started) {
++                return endResponse(runtime, { status: "failed", error: { message: "Prepared generation was interrupted; the request was not repeated" } }, context);
++            }
++            const model = runtime.models.getModel(task.input.model.provider, task.input.model.modelId);
++            if (!model)
++                return endResponse(runtime, { status: "failed", error: { message: "Prepared generation model is unavailable" } }, context);
++            await runtime.commit(async (tx) => {
++                (await tx.doc(LiveDoc, runtime.conversationId)).generation = { attempt: 1 };
++                return { status: "running", checkpoint: { phase: "request", started: true } };
++            }, context);
++            let message;
++            try {
++                message = await streamResponse(runtime, model, task.input.messages, {
++                    ...task.input.streamOptions, signal: runtime.signal, reasoning: task.input.thinkingLevel === "off" ? undefined : task.input.thinkingLevel,
++                }, 1, context, true);
++            }
++            catch (error) {
++                runtime.signal.throwIfAborted();
++                return endResponse(runtime, { status: "failed", error: { message: error instanceof Error ? error.message : String(error) } }, context);
++            }
++            return endResponse(runtime, { status: "completed", result: { message } }, context);
++        },
++    },
++    abort: async (_task, runtime, context) => endResponse(runtime, { status: "aborted" }, context),
++});
++async function endResponse(runtime, outcome, context) {
++    await runtime.commit(async (tx) => {
++        delete (await tx.doc(LiveDoc, runtime.conversationId)).generation;
++        return { status: "terminal", outcome };
++    }, context);
++}
 diff --git a/dist/harness/live.d.ts b/dist/harness/live.d.ts
 index a70aedb657b3f7b6e108828e77e8699b14817d44..7437b5d55497ba3ff5ae14aadc10770188a74807 100644
 --- a/dist/harness/live.d.ts
@@ -1334,14 +1395,11 @@ index a70aedb657b3f7b6e108828e77e8699b14817d44..7437b5d55497ba3ff5ae14aadc107701
      /** The task that settles the run's inputs: its generation, handed from one to the next. */
      taskId: TaskId;
      /** The run's placed inputs, settled when it ends; `[]` once it answered and runs only its `afterRun` tasks. */
-@@ -258,5 +263,4 @@ export declare function clearProgress(slot: Draft<SlotProgress>): void;
-  * uncertain storage failure poisons the Session instead and writes no outcome.
+@@ -259,4 +264,3 @@ export declare function clearProgress(slot: Draft<SlotProgress>): void;
   */
  export declare function settleSchedulerOutcome(tx: Transaction, record: TaskRecord<JsonValue, JsonValue, JsonValue>, outcome: SchedulerOutcome): Promise<void>;
--export {};
+ export {};
 -//# sourceMappingURL=live.d.ts.map
-\ No newline at end of file
-+export {};
 \ No newline at end of file
 diff --git a/dist/harness/types.d.ts b/dist/harness/types.d.ts
 index eb64e474162b158a43563e6c68d8ffea8c18b74a..caffdbee4d785abc036f1b2a377e9903bf83c979 100644
@@ -1390,14 +1448,11 @@ index eb64e474162b158a43563e6c68d8ffea8c18b74a..caffdbee4d785abc036f1b2a377e9903
      /** Before every request attempt, including recovery; the result is used for that request only. */
      beforeRequest(request: {
          readonly messages: readonly Message[];
-@@ -990,5 +1019,4 @@ export interface CompactionHooks {
-         readonly summary: string;
+@@ -991,4 +1020,3 @@ export interface CompactionHooks {
      }>;
  }
--export {};
+ export {};
 -//# sourceMappingURL=types.d.ts.map
-\ No newline at end of file
-+export {};
 \ No newline at end of file
 diff --git a/dist/images/exif.d.ts b/dist/images/exif.d.ts
 index 718b1de37aa22c129900c149517ab8e9552a0bb6..d3dbf6c212389e9b9c82ac5946014001cdf773d1 100644
@@ -1617,6 +1672,30 @@ index 10964639c9ac7e6c74b4023185a6deb9846a50b4..105d0a655ee4cc068472952eb292381e
              scaled.free();
      }
  }
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -5,7 +5,7 @@ export { ConversationBusy, ConversationIdle, ReadAfterWrite, ReadOnlySession, Se
+ export { AgentDoc, configure, DEFAULT_COMPACTION_POLICY, DEFAULT_PROGRESS_POLICY, DEFAULT_RESTART_LIMIT, DEFAULT_RETRY_POLICY, } from "./harness/agent.ts";
+ export { type CompactionCheckpoint, type CompactionInput, CompactionTask, type SummaryRequest, } from "./harness/compaction.ts";
+ export { defineExtension, defineTool, hook, runEndTask, section, wrapSection, wrapTool } from "./harness/define.ts";
+-export { type GenerationCheckpoint, type GenerationInput, type GenerationResult, GenerationTask, } from "./harness/generation.ts";
++export { type GenerationCheckpoint, type GenerationInput, type GenerationResult, GenerationTask, type GenerationResponseInput, type GenerationResponseCheckpoint, type GenerationResponseResult, GenerationResponseTask, } from "./harness/generation.ts";
+ export { DEFAULT_HARNESS_IDENTITY, Harness } from "./harness/harness.ts";
+ export { InboxDoc, type InboxItem, type InboxState } from "./harness/inbox.ts";
+ export { type CompactionFailure, type CompactionStatus, LiveDoc, type LiveRun, type LiveState, type NestedToolSlot, type NestedToolSummary, type RunFailure, type RunFailureReason, type ToolSlot, } from "./harness/live.ts";
+diff --git a/dist/index.js b/dist/index.js
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -4,7 +4,7 @@ export { ConversationBusy, ConversationIdle, ReadAfterWrite, ReadOnlySession, Se
+ export { AgentDoc, configure, DEFAULT_COMPACTION_POLICY, DEFAULT_PROGRESS_POLICY, DEFAULT_RESTART_LIMIT, DEFAULT_RETRY_POLICY, } from "./harness/agent.js";
+ export { CompactionTask, } from "./harness/compaction.js";
+ export { defineExtension, defineTool, hook, runEndTask, section, wrapSection, wrapTool } from "./harness/define.js";
+-export { GenerationTask, } from "./harness/generation.js";
++export { GenerationTask, GenerationResponseTask, } from "./harness/generation.js";
+ export { DEFAULT_HARNESS_IDENTITY, Harness } from "./harness/harness.js";
+ export { InboxDoc } from "./harness/inbox.js";
+ export { LiveDoc, } from "./harness/live.js";
 diff --git a/dist/search.d.ts b/dist/search.d.ts
 index 0cedcf1631d9b2c31824dd2bed86cc685604cecf..f13098012c7d9761613570910ead1df644accff2 100644
 --- a/dist/search.d.ts
@@ -1748,7 +1827,7 @@ index 77187bb5df6507b0f291ab9c27c932e68b780889..0264ec5f61fb2f6ada8b351ac3cd89d3
  import { defineExtension } from "../harness/define.js";
  import { createBashTool } from "./bash.js";
  import { createEditTool } from "./edit.js";
-@@ -8,6 +9,7 @@
+@@ -8,6 +9,7 @@ export { createEditTool } from "./edit.js";
  export { DEFAULT_IMAGE_LIMITS, } from "./image-processor.js";
  export { createReadTool } from "./read.js";
  export { createWriteTool } from "./write.js";

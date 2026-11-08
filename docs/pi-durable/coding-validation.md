@@ -26,6 +26,72 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Prepared generation response after 62ed325
+
+The request adapter now calls a new repository SDK task,
+`GenerationResponseTask` v1, on the real `pi.coding.run` owner. This is a local
+patch API. Published `GenerationTask.request` continues into classification,
+assistant writes and tool creation; it has no independent response return.
+The new task reuses the existing SDK `streamResponse` and partial writer.
+It does not classify, append a transcript, charge usage or create tools.
+Original GenerationTask v4 and all five Native task kinds stay at their current
+versions. This does not establish every historical migration combination.
+
+Core still converts context, binds credentials and delivers Native events.
+The SDK drains the final partial commit before `message_end`. Native tool
+admission uses the message after plugin edits. SDK receipt, the unique Native
+assistant entry and the next checkpoint commit in one transaction. Request
+credentials, headers and callbacks remain in memory. Interrupted request or
+event delivery is not repeated; SDK settlement clears the generation slot.
+External cancellation and scheduler abort join stream cleanup. Scheduler abort
+calls the SDK abort phase without a second assistant write.
+
+Checks for this slice:
+
+- Five files pass 55 tests: `generation-response-sdk`, `agent-recovery`,
+  `native-journal-transactions`, `native-session-task` and worker `coding-host.e2e`.
+  The new 13-case suite covers plugin call removal/replacement/addition, length
+  errors without effects, atomic commit and rejection, ephemeral options,
+  partial drain, both cancellation paths and three real SIGKILL boundaries.
+- Node 24.22.1 passes the same three source-fixture SIGKILL boundaries: request,
+  `message_end` and accepted response before finish. Requests are not repeated;
+  only the accepted boundary preserves an assistant. Pending work and generation
+  progress are cleared.
+- Coding typecheck, worker declaration generation/typecheck and worker build
+  pass. The rebuilt bundle passes three offline cases: code mode/MCP startup,
+  dynamic tool publication and the adjacent Photon resource.
+- After the patch fix below, the request and image-orientation suites pass
+  27 tests, including the complete-content patch digest check.
+- The new generator checks pinned source and TypeScript declarations, preserves
+  unrelated sections, applies the entire patch to a pristine copy and compares
+  all 30 outputs. Its `--check` mode passes. The manifest now records all files.
+- A new consumer installs 133 packages from the existing cache with network
+  denied and lifecycle scripts disabled. Its first unconstrained offline
+  resolution failed because cache metadata was missing. Repository resolutions
+  were then used to prepare its lock; the first frozen attempt correctly
+  rejected lock normalization. After normalization, a clean frozen install
+  passes, all 30 patched files match the manifest and both task root exports
+  resolve. This uses the existing cache, not a new empty cache.
+
+- Eight scoped source override hashes and reasons match. The five changed
+  documents pass 74 local link/anchor checks, language punctuation gates and
+  `git diff --check`. No full Craft source comparison was run.
+
+Independent review found two invalid EOF markers in preserved `live.d.ts` and
+`types.d.ts` hunks. The old string/hash-only check missed them. Both markers are
+removed; the generator now runs full `git apply --check`, applies the patch and
+compares every output before writing. Bun patch reconstruction also removed the
+required complete-content digest line; the generator restores and recalculates
+it. The earlier temporary upstream checkout had lost source files, so the final
+check uses a new sparse checkout of the pinned revision. There has been no
+second independent review after these fixes.
+
+The full repository suite, real services, Windows, signed packages and the full
+historical checkpoint migration matrix have not been checked for this slice.
+Tool rounds, finish, session/summary and the complete Coding source boundary
+remain open under F1 to F3. The local extension is removed only when an upstream
+prepared-response API can preserve the required event and transaction behavior.
+
 ## Public ToolTask host execution after 552b938
 
 The first runtime change delegates host execution to the published Pi 1.5.0

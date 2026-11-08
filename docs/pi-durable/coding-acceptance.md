@@ -12,7 +12,7 @@
 |---|---|---|
 | 文档先行 | 本批补充校正与复核已完成 | 此前三批证据限定于 `1314a2b`、`56d0f46` 和 `301598c`；本批 24 份文档增加 Pi Coding 层目标、切换前参照和升级维护条件，链接、标点及独立语义复核结果单列于验证记录。F1 至 F3 继续开放 |
 | MkAgent 继续使用 Pi Coding 层，durable 替换其执行基座 | 目标已明确，首个工具切片已接入 | `b77c4a2645d3` 的 worker 直接使用 Coding SDK，作为原始行为和接入参照；当前宿主工具使用 Pi 1.5.0 的公开 ToolTask phases/abort，其他 SDK 接线继续核对，保留后续有效功能和数据 |
-| pi-durable 为执行底座 | 工具执行已委托，其他职责待核对 | 普通 profile 使用 GenerationTask，coding 主链使用 `pi.coding.session/run/call/tool`，摘要另用 `pi.coding.summary`。ToolTask 承担宿主执行、输出、嵌套与嵌套清理；SDK failure 由真实 Native owner 传给官方 scheduler 清理其余 owned work，外层保留 hooks、事件、完整结果与 journal。本地请求、工具轮次及结束状态机继续评估 |
+| pi-durable 为执行底座 | 工具执行已委托，请求已接入本地 SDK 扩展 | 普通 profile 使用 GenerationTask；coding 主链仍由五种 `pi.coding.*` v1 调度。宿主执行使用公开 ToolTask，请求/partial 使用仓内新增 GenerationResponseTask 并复用 streamResponse。Native 保留插件交付、工具轮次和收尾，SDK receipt、journal 与下一 checkpoint 同事务提交；其余职责继续评估 |
 | 内置能力优先，再用独立 Pi 官方 SDK | 部分已实现，继续纠偏 | 生产工具工厂、images、codemode、tool-search 已用 durable；本轮另将宿主执行委托公开 ToolTask 并删除旧嵌套调用副本。SDK 根路径、插件工厂和其余任务分别核查，不能把工具切片等同于整个适配包已符合原则 |
 | 允许 pi-agent-core，禁止完整 pi-coding-agent 生产依赖 | 已有依赖符合，补丁待核对 | 独立 core 已使用；八个操作导出和 Agent 注入由四文件仓内补丁增加。durable 的 Coding hooks 和其他扩展也须作为本地修改评估，不能写成未修改发布包的能力 |
 | 保留 Pi Coding 层，仅适配执行基座及必要宿主差异 | 待核对和实施 | 从原始产品行为、公开插件和数据需求推导范围，优先复用 SDK；完整源码闭包和原版 CLI 可达性不证明必要，删除前也须核对调用和替代方式 |
@@ -24,7 +24,7 @@
 | 来源与许可 | 既有清单可复现，按改动同步 | `cb0311f` 清单为 248 份 TypeScript、7 项资源，辅助为 12 项来源和 28 个共享入口。数量、哈希、冻结安装及来源审计证明各自范围，不证明架构最小或功能完整 |
 | profile 与信任隔离 | 历史验证通过，持续保留 | 普通 profile/host-only 不自动加载环境 Pi 资源；项目执行导入前经过宿主决定，工具继续走既有审批 |
 
-既有源码对照、图像和 codemode 共享及 core 门面改动保留[架构记录](coding-architecture.md)和验证账本中的证据。宿主工具执行已委托官方 ToolTask 并删除旧嵌套副本；请求、工具轮次、session 和 summary 仍需评估官方执行器接入，未证明整套桥永久必要。F1 至 F3 继续开放。
+既有源码对照、图像和 codemode 共享及 core 门面改动保留[架构记录](coding-architecture.md)和验证账本中的证据。宿主工具执行已委托官方 ToolTask 并删除旧嵌套副本；请求执行与 partial 已接入仓内新增 GenerationResponseTask。工具轮次、收尾、session 和 summary 仍需评估官方执行器接入，未证明整套桥永久必要。F1 至 F3 继续开放。
 
 ## 能力规格逐行对照
 
@@ -75,7 +75,7 @@
 
 ## 后续验收
 
-文档校正已提交，宿主工具切片已完成定向验证；后续继续官方请求与工具轮次接线，并核对必要 Coding 差异。每项架构改动同时迁移调用方、数据和测试，以真实行为验证，而非只检查函数转发或文件哈希。既有读取确认、PowerShell、setup 历史、分支发布和作用域修复不得因换实现回退。
+文档校正已提交，宿主工具与请求切片已完成各自的定向验证；后续继续工具轮次与收尾接线，并核对必要 Coding 差异。每项架构改动同时迁移调用方、数据和测试，以真实行为验证，而非只检查函数转发或文件哈希。既有读取确认、PowerShell、setup 历史、分支发布和作用域修复不得因换实现回退。
 
 当前 `248/7` 只是源码清单。既有 SDK、插件、图像和资源对照的范围及未验项仍见验证账本；`theme-tokens.ts` 的首段读取被工具策略拒绝，完整 token 表未逐项核实，不绕过该限制。
 
