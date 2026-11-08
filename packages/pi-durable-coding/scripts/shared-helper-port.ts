@@ -19,6 +19,24 @@ type SharedHelperPort = {
 } & (DeclarationPort | { apply(body: string): string });
 
 const sharedHelperPorts: Record<string, SharedHelperPort> = {
+  'cli/args.ts': {
+    change: 'exclude-upstream-cli-helpers',
+    apply(body) {
+      const parsed = ts.createSourceFile('args.ts', body, ts.ScriptTarget.Latest, true);
+      const functions = ['printHelp', 'normalizeSessionName'];
+      const imports = ['chalk', '../config.ts', '../core/extensions/types.ts'];
+      const removed = parsed.statements.filter(node =>
+        ts.isFunctionDeclaration(node) && functions.includes(node.name?.text ?? '') ||
+        ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && imports.includes(node.moduleSpecifier.text));
+      if (functions.some(name => removed.filter(node => ts.isFunctionDeclaration(node) && node.name?.text === name).length !== 1) ||
+          imports.some(path => removed.filter(node => ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) &&
+            node.moduleSpecifier.text === path).length !== 1)) {
+        throw new Error('Pinned CLI helper boundary changed');
+      }
+      return parsed.statements.filter(node => !removed.includes(node)).map(node => node.getFullText(parsed)).join('')
+        .replace('CLI argument parsing and help display', 'CLI argument parsing').trimEnd() + '\n';
+    },
+  },
   'core/tools/tool-definition-wrapper.ts': {
     change: 'preserve-host-tool-execution',
     apply(body) {

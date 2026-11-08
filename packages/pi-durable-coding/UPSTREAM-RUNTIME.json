@@ -82,8 +82,10 @@
       "source": "packages/coding-agent/src/cli/args.ts",
       "target": "src/pi/cli/args.ts",
       "sha256": "05471cfd210c08ffad9ea58c334849c94de260137efa6b1b0eecfcd355d630e7",
-      "portSha256": "05471cfd210c08ffad9ea58c334849c94de260137efa6b1b0eecfcd355d630e7",
-      "changes": []
+      "portSha256": "56734cbd2ab07fcd5b58ad0d391692561ddb30c74f18aba26cd945ad761b9894",
+      "changes": [
+        "exclude-upstream-cli-helpers"
+      ]
     },
     {
       "source": "packages/coding-agent/src/cli/auth-command.ts",

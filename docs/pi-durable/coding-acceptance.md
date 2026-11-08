@@ -15,7 +15,7 @@
 | pi-durable 为执行底座 | 工具执行已委托，请求已接入本地 SDK 扩展 | 普通 profile 使用 GenerationTask；coding 主链仍由五种 `pi.coding.*` v1 调度。宿主执行使用公开 ToolTask，请求/partial 使用仓内新增 GenerationResponseTask 并复用 streamResponse。Native 保留插件交付、工具轮次和收尾，SDK receipt、journal 与下一 checkpoint 同事务提交；其余职责继续评估 |
 | 内置能力优先，再用独立 Pi 官方 SDK | 部分已实现，继续纠偏 | 生产工具工厂、images、codemode、tool-search 已用 durable；本轮另将宿主执行委托公开 ToolTask 并删除旧嵌套调用副本。SDK 根路径、插件工厂和其余任务分别核查，不能把工具切片等同于整个适配包已符合原则 |
 | 允许 pi-agent-core，禁止完整 pi-coding-agent 生产依赖 | 已有依赖符合，补丁待核对 | 独立 core 已使用；八个操作导出和 Agent 注入由四文件仓内补丁增加。durable 的 Coding hooks 和其他扩展也须作为本地修改评估，不能写成未修改发布包的能力 |
-| 保留 Pi Coding 层，仅适配执行基座及必要宿主差异 | 已收窄启动器范围，其余继续核对 | 排除原版 CLI 的 `main`/`MainOptions` 及 24 份独占源码；MkAgent 使用 `CodingHost/createAgentSession`，程序化运行模式和插件组件保留。RpcClient 现要求显式 cliPath，缺少入口时不创建子进程，Bun/Node 本地 JSONL 夹具通过。启动器删除不计作官方 SDK 覆盖；本次修正未恢复完整 CLI，也不证明剩余模式源码全部必要 |
+| 保留 Pi Coding 层，仅适配执行基座及必要宿主差异 | 已收窄启动器范围，其余继续核对 | 排除原版 CLI 的 `main`/`MainOptions` 及 24 份独占源码；MkAgent 使用 `CodingHost/createAgentSession`，程序化运行模式和插件组件保留。args 中仅服务于启动器的帮助、名称归一化和专用导入已删除，公开 parser 与模型 thinking 校验保留；71 项定向回归及实际参数检查通过。RpcClient 现要求显式 cliPath，缺少入口时不创建子进程，Bun/Node 本地 JSONL 夹具通过。启动器删除不计作官方 SDK 覆盖；本次修正未恢复完整 CLI，也不证明剩余模式源码全部必要 |
 | 兼容逻辑尽量薄 | 已共用 loader 生命周期及 core 默认转换，其余继续核对 | 两个 loader 的 runtime、注册 API 和 factory 接受/回滚共用本地实现，旧产物由 631 行减至 235 行；模块映射、缓存和目录策略独立。Native 默认转换及对应补丁字段已删除，105 行 Agent 门面直接使用发布版 core；两个可变默认对象保留。反射断言没有已确认的产品调用方，不能作为保留理由。其余例外继续核对 |
 | 上游升级主要核对 SDK 契约与必要适配 | 待实施和验证 | 合并检查源码副本、生成转换及依赖补丁；每项例外有具体缺口、退出条件和 Coding/durable 升级检查。不能把逐文件改造完整闭包作为常规升级方式，也不承诺当前已能只改版本号升级 |
 | MkAgent 上层与插件不回归 | 历史行为有证据，按实际改动重验 | 下列能力和产品清单继续有效；不能为减少源码削减权限、取消、错误处理、持久化、恢复或已确认公开插件行为 |

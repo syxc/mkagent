@@ -2509,8 +2509,8 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "dc100fd8add7b104c641c4dc6e9abb28655bda61b74194e5b1daba95b2ce9b09",
-      "reason": "Register public helper replacements and boundary guards; reproduce SDK bridge-marker preservation through both AgentTool/ToolDefinition conversions."
+      "sha256": "2dd0c83f52ce1e5375969a7f2a541cd0043d4d032d7d6d7f197f79bd2641d176",
+      "reason": "Register public helper replacements and SDK bridge-marker preservation. Exclude launcher-only CLI helpers while guarding each removed declaration and import."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "8e2a592d0d54bfcef94b503d3b3080904a34bfd78b5291c95f2f41b0793396fb",
@@ -2521,8 +2521,8 @@
       "reason": "Guard declarations and retained policy constants when forwarding Native algorithms. Do not bind replaced child-process, shell, read-path or truncation bodies to hashes."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "abec4d5ad213b8caff28b7e2c279dcf80b28947fc1fa60b75e047699ab710d42",
-      "reason": "Verify that eleven discarded algorithm bodies cannot change generated output. Guard function kinds, signatures, TypeBox branding, duplicates and policy constants, and retain the model-store class hash."
+      "sha256": "d5674ccb2e1fac499deaa7b71b33626d6e88dc1e3870a19e796e49c992b69152",
+      "reason": "Verify discarded algorithm bodies do not change generated output. Guard signatures, TypeBox branding, duplicates, policy constants and the model-store class. Check that CLI helper removal retains parsing and rejects every missing or repeated boundary."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",
@@ -4173,8 +4173,8 @@
       "reason": "Provide the independent native coding host adapter and public contracts in node-process.d.ts."
     },
     "packages/pi-durable-coding/src/pi/cli/args.ts": {
-      "sha256": "05471cfd210c08ffad9ea58c334849c94de260137efa6b1b0eecfcd355d630e7",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
+      "sha256": "56734cbd2ab07fcd5b58ad0d391692561ddb30c74f18aba26cd945ad761b9894",
+      "reason": "Remove launcher-only printHelp and session-name normalization with their dedicated imports. Retain public argument parsing and model thinking-level validation."
     },
     "packages/pi-durable-coding/src/pi/cli/auth-command.ts": {
       "sha256": "c313c83c6a8981cad0872be8d753a2efa049c1fbb7c216fc01f2b0f0c262b9be",

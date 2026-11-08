@@ -26,6 +26,28 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Launcher-only argument helpers after df2868f
+
+On 2026-11-09, a focused caller and export check found that printHelp and
+normalizeSessionName only served the removed launcher. Neither function has a
+remaining caller or a public root export. Both functions and the three imports
+used only by help output are removed. Args and parseArgs remain public, and
+model resolution retains isValidThinkingLevel. The argument module has 263
+lines instead of 480. This removes launcher scope; it is not an SDK replacement.
+
+| Check | Result and scope |
+| --- | --- |
+| Regression | Four helper, scoped-source, model and extension files pass 71 tests with no failures and 96 Bun assertions. The new generator check rejects every missing or duplicate removed declaration or import while retaining the parser. |
+| Retained behavior | Direct calls pass for all seven thinking levels, invalid-level warnings, RPC options, tool lists, extension flags, file arguments, the argument terminator and missing-value diagnostics. Model calls pass for valid and invalid suffixes, exact colon-containing IDs and a scoped max suffix. No provider is called. |
+| Types and source | Coding declarations build. The fixed Pi 1.5.0 source reproduces the argument module and its inventory record with `--check --file=cli/args.ts`. The inventory and three changed-file override hashes are updated. |
+
+The transform records exclude-upstream-cli-helpers and guards the removed
+boundaries without binding the discarded help text to a body hash. The source
+inventory remains 224 TypeScript files and seven assets. This slice does not
+repeat full source generation, a Craft audit, the complete test entry or product
+UI checks. The earlier complete-entry failure and denied theme check remain
+open, as do the remaining programmatic-mode boundaries under F1/F3.
+
 ## Explicit RpcClient entry after bbdf61e
 
 On 2026-11-09, the Coding source review's launcher finding was reproduced with

@@ -146,6 +146,24 @@ for (const [name, from, to] of [
   });
 }
 
+test('CLI helper removal retains the parser and guards missing or duplicate boundaries', () => {
+  const removed = [
+    'import chalk from "chalk";',
+    'import { APP_NAME } from "../config.ts";',
+    'import type { ExtensionFlag } from "../core/extensions/types.ts";',
+    'export function normalizeSessionName(value: string) { return value.trim(); }',
+    'export function printHelp() { console.log(chalk.bold(APP_NAME)); }',
+  ];
+  const retained = 'export function parseArgs(args: string[]) { return args; }\n';
+  const source = removed.join('\n') + '\n' + retained;
+  const port = (body: string) => applySharedHelperPort('cli/args.ts', body)!.body;
+  assert.equal(port(source), '\n' + retained);
+  for (const declaration of removed) {
+    assert.throws(() => port(source.replace(declaration, '')), /CLI helper boundary changed/);
+    assert.throws(() => port(source + '\n' + declaration), /CLI helper boundary changed/);
+  }
+});
+
 test('read path: retained normalization constant remains guarded', () => {
   const fixture = fixtures[2];
   const changed = fixture.source.replace('\\u202F', '\\u00A0');
