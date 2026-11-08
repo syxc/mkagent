@@ -1,7 +1,36 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import ts from 'typescript';
+import { applySharedHelperPort } from '../scripts/shared-helper-port.ts';
 import { portChildProcess, portReadPaths, portShell } from '../scripts/shared-runtime-port.ts';
+
+const declarationFixtures = [
+  {
+    name: 'context tokens',
+    port: (body: string) => applySharedHelperPort('core/compaction/compaction.ts', body)!.body,
+    source: `export function calculateContextTokens(usage: Usage): number {
+\treturn usage.totalTokens || usage.input + usage.output + usage.cacheRead + usage.cacheWrite;
+}
+`,
+  },
+  {
+    name: 'string enum',
+    port: (body: string) => applySharedHelperPort('core/extensions/pi-ai-extension-view.ts', body)!.body,
+    source: `import { type TUnsafe, Type } from "typebox";
+export function StringEnum<T extends readonly string[]>(
+\tvalues: T,
+\toptions?: { description?: string; default?: T[number] },
+): TUnsafe<T[number]> {
+\treturn Type.Unsafe<T[number]>({
+\t\ttype: "string",
+\t\tenum: values as unknown as T[number][],
+\t\t...(options?.description && { description: options.description }),
+\t\t...(options?.default && { default: options.default }),
+\t});
+}
+`,
+  },
+];
 
 const fixtures = [
   {
@@ -29,6 +58,7 @@ export function resolveReadPath(filePath: string, cwd: string): string { return 
 export async function resolveReadPathAsync(filePath: string, cwd: string): Promise<string> { return filePath; }
 `,
   },
+  ...declarationFixtures,
 ];
 
 for (const { name, source, port } of fixtures) {
@@ -39,9 +69,10 @@ for (const { name, source, port } of fixtures) {
     const bodyStart = fn.body!.getStart(parsed);
     const header = source.slice(start, bodyStart);
     test(`${name}: discarded ${fn.name!.text} body cannot change the generated module`, () => {
+      const baseline = port(source);
       const changed = source.slice(0, bodyStart) + '{ throw new Error("changed upstream algorithm"); }' + source.slice(fn.end);
       assert.notEqual(changed, source);
-      assert.equal(port(changed), port(source));
+      assert.equal(port(changed), baseline);
     });
     test(`${name}: ${fn.name!.text} parameter and return types remain guarded`, () => {
       for (const changedHeader of [header.replace(/: [^,)]+/, ': never'), header.replace(/\): [^{]+$/, '): never ')]) {
@@ -57,6 +88,47 @@ for (const { name, source, port } of fixtures) {
     assert.throws(() => port(''));
   });
 }
+
+for (const { name, source, port } of declarationFixtures) {
+  const parsed = ts.createSourceFile(`${name}.ts`, source, ts.ScriptTarget.Latest, true);
+  const fn = parsed.statements.find(ts.isFunctionDeclaration)!;
+  const header = source.slice(fn.getStart(parsed), fn.body!.getStart(parsed));
+  test(`${name}: function kind, export and calling convention remain guarded`, () => {
+    const changedDeclarations = [
+      `export const ${fn.name!.text} = () => 0;`,
+      `export class ${fn.name!.text} {}`,
+      `export type ${fn.name!.text} = number;`,
+      `export interface ${fn.name!.text} {}`,
+      header + ';',
+      fn.getText(parsed).replace('export function', 'function'),
+      fn.getText(parsed).replace('export function', 'export async function'),
+      fn.getText(parsed).replace('export function', 'export function*'),
+    ];
+    for (const changed of changedDeclarations) {
+      assert.throws(() => port(source.slice(0, fn.getStart(parsed)) + changed + source.slice(fn.end)));
+    }
+  });
+}
+
+test('string enum: generic bounds, optional options and TypeBox branding remain guarded', () => {
+  const { source, port } = declarationFixtures[1];
+  for (const [from, to] of [
+    ['T extends readonly string[]', 'T extends readonly number[]'],
+    ['options?:', 'options:'],
+    ['default?: T[number]', 'default?: string'],
+    ['TUnsafe<T[number]>', 'T[number]'],
+  ]) {
+    const changed = source.replace(from, to);
+    assert.notEqual(changed, source);
+    assert.throws(() => port(changed));
+  }
+});
+
+test('model store: retained whole-class guard still rejects changed structure', () => {
+  assert.throws(() => applySharedHelperPort('core/models-store.ts',
+    'export class InMemoryCodingAgentModelsStore { constructor(required: string) {} }'),
+  /Public helper declaration changed/);
+});
 
 const wait = fixtures[0];
 for (const [name, from, to] of [

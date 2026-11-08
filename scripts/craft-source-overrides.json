@@ -2509,16 +2509,16 @@
       "reason": "Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "e7faa7ed23704694b0edcb705acf3428e32b9e0d938340aab8a1bfdf26fe19df",
-      "reason": "Register shared helper paths, transforms, provenance labels and added dependencies once. Guard HTML palette signatures and duplicate declarations while replacing color algorithms with public pi-tui."
+      "sha256": "7f9cc80e00e1b7f73abcc4512087cde934f22f99f1b448635fb4b361f361d191",
+      "reason": "Register shared helper paths, transforms, provenance and dependencies once. Guard replaced public functions by their retained signatures, preserve whole-class hashes and HTML declaration checks."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
       "sha256": "591852657973fcdeeb74763bf677e09c6528729d860396d588c9aa181dad0de5",
       "reason": "Guard declarations and retained policy constants when forwarding Native algorithms. Do not bind replaced child-process, shell, read-path or truncation bodies to hashes."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "93ba3bf12b3ae3c83e43f175f8ff74d8fff1f997f6aa4ded5aa5a20a115e847f",
-      "reason": "Verify that nine replaced algorithm bodies cannot change generated output, while declaration types, duplicates, missing declarations and policy constants remain guarded."
+      "sha256": "abec4d5ad213b8caff28b7e2c279dcf80b28947fc1fa60b75e047699ab710d42",
+      "reason": "Verify that eleven discarded algorithm bodies cannot change generated output. Guard function kinds, signatures, TypeBox branding, duplicates and policy constants, and retain the model-store class hash."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "72e4f830fe4adc9a1d3dcd78d5b7546aa5591fdab3fb447b0b3bf2fec174ad62",

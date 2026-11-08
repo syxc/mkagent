@@ -10,6 +10,7 @@ import {
 
 type DeclarationPort = {
   names: string[]; imports: string; hashes?: Record<string, string>; replacements?: Record<string, string>;
+  signatures?: Record<string, string>;
 };
 
 type SharedHelperPort = {
@@ -80,7 +81,10 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
     change: 'public-pi-ai-typebox-string-enum',
     names: ['StringEnum'],
     imports: 'import { StringEnum as publicStringEnum } from "@earendil-works/pi-ai/compat";',
-    hashes: { StringEnum: 'a59c509757fc3a565d5f9173c92c76c04af9eeb60ff6b4b830f58724ce838afc' },
+    signatures: { StringEnum: `export function StringEnum<T extends readonly string[]>(
+\tvalues: T,
+\toptions?: { description?: string; default?: T[number] },
+): TUnsafe<T[number]>` },
     replacements: { StringEnum: `/** Keep TypeBox branding and literal inference at the Native plugin boundary. */
 export function StringEnum<T extends readonly string[]>(
 \tvalues: T,
@@ -93,7 +97,7 @@ export function StringEnum<T extends readonly string[]>(
     change: 'public-pi-ai-context-token-total',
     names: ['calculateContextTokens'],
     imports: 'import { calculateContextTokens } from "@earendil-works/pi-ai/utils/estimate";\nexport { calculateContextTokens };',
-    hashes: { calculateContextTokens: 'cc4888354594efe4b7024cf5b02b0f09bbb4e7fb21c396f725af38657f3b7c9b' },
+    signatures: { calculateContextTokens: 'export function calculateContextTokens(usage: Usage): number' },
   },
   'core/footer-data-provider.ts': {
     change: 'shared-lightweight-resource-algorithms',
@@ -150,6 +154,11 @@ function portDeclarations(path: string, body: string, rule: DeclarationPort): st
             statement.parameters[0].questionToken || statement.parameters[0].initializer || statement.parameters[0].dotDotDotToken ||
             statement.type?.kind !== ts.SyntaxKind.StringKeyword || !statement.body)) {
         throw new Error('HTML color conversion boundary changed');
+      }
+      const signature = rule.signatures?.[statement.name.text];
+      if (signature && (!ts.isFunctionDeclaration(statement) || !statement.body ||
+          statement.getText(parsed).slice(0, statement.body.getStart(parsed) - statement.getStart(parsed)).trim() !== signature)) {
+        throw new Error(`Public helper signature changed: ${path}: ${statement.name.text}`);
       }
       const expected = rule.hashes?.[statement.name.text];
       if (expected && createHash('sha256').update(statement.getText(parsed)).digest('hex') !== expected) {

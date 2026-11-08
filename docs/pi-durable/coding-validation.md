@@ -25,9 +25,55 @@ rejection remains a historical result, not a current blocker. Normal-profile Age
 were unsupported assumptions; the candidate runtime changes were withdrawn.
 The baseline product test then passed with 1 test and 43 assertions.
 
+## Function signature guards after a2c5fe6
+
+This follow-up changes only generation rules, tests and source registration.
+The discarded bodies of `StringEnum` and `calculateContextTokens` no longer
+require whole-function hashes. Exact function headers retain declaration kind,
+exports, generics, parameter and return types, optional options and TypeBox
+branding checks. Missing bodies and duplicate declarations also fail. The
+model-store class keeps its full hash because its fields and constructor
+structure are part of the retained boundary.
+
+Two positive body-change regressions first failed, with 47 tests passing and
+two failing. After the signature change, all 49 generator tests pass. These
+fixtures include the original function text and compare the complete generated
+output after each discarded body changes. Bun passes 80 tests across the five
+related files. Node 24.22.1 passes 63 tests across the two portable files. The
+first Node command also selected the existing Bun-only public-leaves suite;
+its `bun:test` import failed with `ERR_UNSUPPORTED_ESM_URL_SCHEME`. The corrected
+Node command excludes that suite, which passes in the Bun batch.
+
+Both complete source checks pass: 248 runtime sources and nine assets, plus
+12 auxiliary sources and 28 shared forwards. Production output, both source
+manifests, dependencies and SDK patches are unchanged. The updated source
+registration passes the complete 2230-file Craft audit. The eight explicit
+type roots have zero diagnostics. A new `validate:ci` run passes all workspace
+types, SDK declarations, 61 shared tests, 20 documentation-tool smoke tests
+and locale checks.
+
+Independent review of the two-file generation patch found no defect or
+required test gap. The reviewer ran three Bun files with 57 passing tests and
+the generator file under Node 24 with 49 passing tests. An extra in-memory
+matrix rejected 52 declaration changes, kept output equal for 12 valid body
+variants, preserved 12 sets of surrounding sentinel declarations and rejected
+six model-store class or kind changes. Generated variants had no syntax
+diagnostics. The reviewer's first commands failed before tests ran because of
+Bun command ordering and the default Node 10 binary. Corrected commands used
+the test subcommand first and the explicit installed Node 24 path. The review
+did not repeat the complete generation, CI or type checks reported above.
+
+The generator grows from 219 to 228 lines, and its regression file adds 72
+lines. This change removes two discarded-body hash dependencies; it does not
+remove another production algorithm. The latest full repository run and the
+lint and worker checks in the next section cover the `a2c5fe6` batch. Older
+product results retain their stated commits and scope. This generator-only
+follow-up does not repeat the full repository or product run. F1/F3 and the
+previously denied token-table review remain open.
+
 ## Public HTML colors and source checks after 8b1c98f
 
-The working tree on 2026-11-08 uses the public pi-tui 1.5.0 `colorToHex`
+The HTML batch committed as `a2c5fe6` on 2026-11-08 uses the public pi-tui 1.5.0 `colorToHex`
 function for the Native HTML palette and indexed colors. No dependency or SDK
 patch was added. The Native parser, state transitions, escaping and tool
 rendering stay in place. The converter passes a structural indexed color;
