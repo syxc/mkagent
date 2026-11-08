@@ -2,41 +2,60 @@
 
 ## Baseline and goal
 
-The runtime is named `pi-durable coding agent`, also called `durable coding
-agent`. It combines pi-durable execution with the coding capabilities and
-plugin ecosystem of Pi coding agent. All existing MkAgent product features
-must remain complete and work through Desktop, WebUI, CLI and headless entry
-points. The product preservation baseline for this correction is MkAgent
-`cb0311f`, including the confirmed product behavior added after the first
-integration. Keep subsequent confirmed product changes as implementation proceeds.
+From MkAgent's point of view, the runtime remains Pi coding agent, with its
+Coding capabilities, session contracts and Pi plugin ecosystem. This work
+attempts to replace the execution base inside that Coding layer with
+pi-durable. The local runtime is named `pi-durable coding agent`, also called
+`durable coding agent`. All existing MkAgent product features must remain
+complete through Desktop, WebUI, CLI and headless entry points.
+
+The original product and integration reference is MkAgent `b77c4a2645d3`, the
+parent of the first runtime switch in `e4b75c2`. Its worker uses the published
+Pi coding agent 1.1.0 SDK. Use that behavior and the MkAgent/Coding boundary to
+check what the replacement must preserve. Keep confirmed features and fixes
+through `cb0311f` and later changes, together with all existing data. This
+reference does not authorize a Git rollback, restoring old dependencies or
+discarding later work.
+
 MkAgent `85325251a10d`, whose tree matches `0959d3563892`, is the historical
 first-durable-integration comparison used by the inventory's Baseline column.
-It does not limit the current feature set or authorize reverting later fixes.
-The source baseline is Pi v1.5.0, commit
-`f9a26365568127461c47a07a37dcb42c140a3ac5`. The coding package's Pi dependencies
-are pinned to 1.5.0. The existing shared transport retains pi-ai 1.1.0.
+That column is not the original Coding behavior reference or the full product
+preservation scope. The source baseline for current SDK comparison is Pi
+v1.5.0, commit `f9a26365568127461c47a07a37dcb42c140a3ac5`. The coding package's
+Pi dependencies are pinned to 1.5.0. The existing shared transport retains
+pi-ai 1.1.0.
 The upstream `main` sources are review inputs:
 
 - https://github.com/earendil-works/pi/tree/main/packages/durable
 - https://github.com/earendil-works/pi/tree/main/packages/coding-agent
 - https://github.com/earendil-works/pi/tree/v1.5.0/packages/coding-agent
 
-MkAgent first used Pi coding agent as its agent runtime. The first migration
-replaced that runtime with pi-durable. Pi-durable already provides execution,
-tools, storage, recovery and other capabilities. This work adds the missing
-Coding capabilities and Pi plugin support to that existing runtime.
+MkAgent originally used Pi coding agent. The first migration replaced it
+with pi-durable directly. That change exposed insufficient Coding capability
+and prevented reuse of the Pi coding agent plugin ecosystem. The correction
+keeps the Pi Coding layer and attempts to replace its execution base with
+pi-durable, which already provides execution, tools, storage and recovery.
+
+The earlier implementation copied and adapted a large Coding source closure.
+That creates a maintenance risk: each Coding or durable release can require
+source-by-source comparison and adaptation. The correction must reduce that
+local responsibility by using reusable official Pi SDKs before source ports.
+Moving copied implementations into a repository patch does not solve it.
 
 The clarification on 2026-11-08 requires correction of the migration design,
 documents, code and tests. First correct the related documents, then implement
-the corrections in order. Use pi-durable built-ins first, then public APIs in
-independent official Pi SDK packages. Add compatibility code only when those
-APIs cannot meet a confirmed requirement. Third-party library replacement is
-separate work and does not establish compliance with the Pi SDK priority.
+the corrections in order. Use pi-durable built-ins for the execution base,
+then public APIs in independent official Pi SDK packages for the required
+Coding behavior. Keep reusable Coding implementations in those SDKs. Add
+compatibility code only for a confirmed gap. Third-party library replacement
+does not establish compliance with that priority.
 
 `pi-agent-core` is permitted where needed. Production must not depend on the
 complete `pi-coding-agent` package or load that runtime through a subpath.
-These rules replace the earlier dependency restriction in the first-switch
-specifications.
+This package constraint does not remove the Pi Coding layer or justify
+copying its full SDK. Assess reusable official SDK APIs before retaining any
+source. These rules replace the earlier dependency restriction in the
+first-switch specifications.
 
 Acceptance requires complete Coding capabilities, working Pi plugin contracts,
 and preservation of existing MkAgent product features. Check the implementation
@@ -62,19 +81,22 @@ integration required by a confirmed kernel or plugin contract. Existing
 architecture and safety constraints remain in force unless a specific kernel
 integration rule is explicitly replaced here.
 
-The target assembly is MkAgent product features above pi-durable, with Coding
-and plugin compatibility added at the required interfaces. Within the kernel,
-pi-durable owns execution scheduling, tool execution, task ownership, accepted
-inputs, storage, transactions, cancellation and recovery. Use its existing
-implementations and extension points before adding local implementations of
-those responsibilities. MkAgent owns product sessions, permissions,
-credentials, transports and UI.
+The target assembly is MkAgent above the Pi Coding layer, with pi-durable
+as that layer's execution base. Preserve Coding behavior and public plugin
+contracts while replacing the underlying execution implementation. Within
+the kernel, pi-durable owns execution scheduling, tool execution, task
+ownership, accepted inputs, storage, transactions, cancellation and recovery.
+Use its existing implementations and extension points before adding local
+implementations of those responsibilities. MkAgent owns product sessions,
+permissions, credentials, transports and UI.
 
-The Coding module supplies capabilities that remain missing after official SDK
-reuse. It stays independent of MkAgent shared code, Electron and product UI.
-The host supplies the required callbacks. Choosing AgentSession, a native
+The Coding module retains the required Pi coding agent capabilities through
+reusable official SDK implementations and the necessary execution adapter.
+It stays independent of MkAgent shared code, Electron and product UI. The
+host supplies the required callbacks. Choosing AgentSession, a native
 projection or a specific task layout is an implementation decision that must
-follow the required behavior.
+follow the required behavior. The target does not require a second locally
+maintained implementation of the Coding SDK.
 
 The current implementation uses `DurableKernel`, a ported `AgentSession`,
 `DurableLoopBinding` and the `pi.coding.*` tasks. These tasks use the official
@@ -122,6 +144,11 @@ Use this order for each required capability:
 4. Port or patch source only for a confirmed gap that the previous steps cannot
    meet. Record the required behavior, candidate API, observed gap, affected
    callers, recovery impact and upgrade work.
+
+Apply this order within the responsibilities of each layer. Durable built-ins
+must preserve the Coding and plugin contracts they serve. A smaller durable
+feature set is not permission to reduce those contracts or rebuild the Coding
+layer locally.
 
 Different signatures, a failed direct forwarding attempt or an old test failure
 are reasons to investigate. They do not establish that a whole implementation
@@ -262,8 +289,10 @@ Follow the [correction list](coding-follow-up.md) in this order:
 
 1. Correct related requirements, architecture, plans, acceptance and historical
    document notices against the 2026-11-08 clarification.
-2. Map production behavior and public plugin contracts to published Pi SDK
-   capabilities. Check execution, tools, hooks, storage and recovery first.
+2. Reconstruct the original MkAgent/Coding integration contracts at `b77c4a2645d3`
+   and include later confirmed product behavior. Map them to published Pi SDK
+   capabilities and the proposed durable execution base. Check execution,
+   tools, hooks, storage and recovery first.
 3. Implement confirmed SDK replacements and the required compatibility and
    stored-data transitions. Then reduce the remaining Coding source scope.
 4. Correct tests that enforce unsupported implementation choices. Retain and
@@ -288,6 +317,16 @@ this work does not imply a repository-wide version update. On upgrade compare
 published exports, extension actions/events, tools, resources, package resolution,
 assets and runtime effects. Review local SDK patches separately. Test unchanged
 plugin fixtures and report unsupported operations explicitly.
+
+The expected upgrade work is to update tested SDK versions, check their public
+contracts and revalidate a bounded set of adapters. For each retained source
+port or patch, record the upstream gap, affected symbols, removal condition and
+checks needed for the next Coding and durable releases. Include source,
+generators and dependency patches in that assessment. A source manifest or a
+reproducible full copy does not meet this requirement. If routine upgrades still
+require adapting the whole Coding source closure file by file, this correction
+remains incomplete. SDK compatibility and the remaining gaps require evidence;
+this document does not claim that a version-only upgrade is already possible.
 
 Resource snapshots avoid full repository scans on every tool call. Reload at
 an idle boundary replaces the snapshot and tool registration set. The host

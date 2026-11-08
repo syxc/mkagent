@@ -7,19 +7,73 @@ come from the [capability specification](coding-capabilities-spec.md); the
 [correction list](coding-follow-up.md) define current work. An older retention
 decision, source inventory or green test run does not override those documents.
 
-MkAgent moved from Pi coding agent to pi-durable in the first kernel switch.
-Pi-durable already has substantial execution, tool, storage and recovery
-capabilities. The correction adds the missing Coding and Pi plugin support
-while preserving MkAgent product features. The priority is pi-durable built-ins,
-then independent official Pi SDK public APIs. Compatibility code and source
-patches require a confirmed gap. Third-party resource replacement is recorded
-separately from official Pi SDK reuse.
+MkAgent first replaced Pi coding agent directly with pi-durable. That exposed
+insufficient Coding capability and prevented reuse of the Pi plugin ecosystem.
+The clarified target keeps the Pi Coding layer from MkAgent's point of view and
+attempts to replace its execution base with pi-durable. Preserve the original
+integration contracts, later confirmed product behavior and existing data.
+
+The earlier source-copy approach risks source-by-source adaptation on each
+Coding and durable release. Prefer durable built-ins for execution and reusable
+official Pi SDK APIs for Coding behavior, then the required thin adapter.
+Source ports and patches need a confirmed gap and bounded upgrade work.
+Third-party resource replacement and reproducible source inventories alone do
+not establish that this maintenance goal has been met.
 
 Sections below describe their own versions. Words such as "current", "retain"
 and "remaining" in older sections apply to that section's checks. They do not
 make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
+
+## Pi Coding layer and execution-base clarification after 301598c
+
+The 2026-11-08 user clarification explains why the work exists: replacing Pi
+coding agent directly with durable left Coding and Pi plugin gaps. The target
+keeps Pi coding agent's Coding layer for MkAgent and attempts to replace its
+execution base with durable. The earlier source-copy approach also requires
+correction because it increases maintenance on both upstream packages.
+
+Git history identifies `b77c4a2645d361deb5f954cf8f2e57d46d0b2b91` as the parent
+of the first runtime replacement in `e4b75c2`. That parent's worker manifest
+pins `pi-coding-agent` 1.1.0, and its entry imports `createAgentSession` and the
+Coding session interfaces. This establishes an original integration reference;
+no product behavior was rerun against it. The current SDK comparison remains
+Pi 1.5.0. Confirmed behavior through `cb0311f` and later fixes, accepted work
+and existing stored data must also remain. No rollback is requested.
+
+The revised requirements distinguish the Pi Coding layer from its execution
+base, require SDK reuse before source copying, and make remaining source,
+generators and patches part of the upgrade assessment. Each exception needs a
+confirmed gap, removal condition and checks for the next Coding/durable update.
+The existing full-package production dependency constraint does not justify
+copying the Coding SDK. No SDK injection or replacement design is declared
+feasible by this documentation change. F1 to F3 remain open.
+
+Local checks for this batch cover 24 Markdown files:
+
+- All 281 local links resolve, including the referenced heading anchor.
+- Changed text in all files and the complete seven core documents pass the
+  language-specific punctuation gate. Eleven other documents retain findings
+  outside the changed text; those passages are not rewritten in this batch.
+- All seven historical bodies below their current-direction notices are
+  unchanged from `301598c`. Existing validation receipts are also unchanged.
+- The stale current-direction phrases checked in the affected entry points
+  are absent. `git diff --check` passes. No runtime, dependency, test or stored
+  data changes are part of this batch.
+
+Independent semantic review covered all 24 diffs and the relevant surrounding
+text, including the seven core documents, language pairs and historical
+notices. It found no actionable semantic issue and separately checked links,
+the referenced anchor, preserved historical bodies and `git diff --check`.
+The reviewer accidentally invoked a skill that spawned extra execution,
+contrary to the review brief. That result was excluded; the reported conclusion
+comes from the reviewer's subsequent direct reading.
+
+This completes the documentation batch. No product, full-repository, browser
+or CI run was performed for these edits. SDK integration feasibility and
+runtime correction remain open under F1 to F3. Historical results retain
+their original scope.
 
 ## Kernel migration scope confirmation after 56d0f46
 

@@ -1,8 +1,8 @@
 # Pi-durable coding agent 架构与纠偏边界
 
-MkAgent 原先以 Pi coding agent 为底座，第一次切换已采用 pi-durable。pi-durable 已有较完整的执行、工具、存储和恢复能力，Coding 层补足其缺失的编码能力和 Pi 插件生态；MkAgent 上层功能保持完整且正常。
+MkAgent 第一次将 Pi coding agent 直接换成 pi-durable 后，发现 Coding 能力不足且无法复用原插件生态。本次以切换前 MkAgent 的行为及接入边界为参照，保留 Pi coding agent 的 Coding 层，尝试以 durable 替换其底层执行基座。目标关系是 MkAgent 使用 Pi Coding 层，Pi Coding 层通过必要适配使用 durable；产品既有功能及后续有效修复继续保留。
 
-2026-11-08 的纠偏顺序是先全面修正文档，再逐项落实内核接入、Coding 兼容及相关代码和测试。调整限于内核内部和必要兼容接入，MkAgent 既有整体架构、分层和宿主职责保持。需求以[能力规格](coding-capabilities-spec.md)为准，工作顺序见[纠偏跟进](coding-follow-up.md)。每项能力先用 pi-durable 内置实现，再用独立 Pi 官方 SDK 的公开 API，最后才对核实的缺口做薄适配或必要源码处理。`pi-agent-core` 按需使用，完整 `pi-coding-agent` 包不进入生产依赖。
+2026-11-08 的纠偏先修正文档，再落实内核接入、Coding 兼容及相关代码和测试。此前大量复制并改造上游源码，带来 Coding 和 durable 每次更新时逐文件适配的维护风险。本次优先引用可复用 Pi 官方 SDK，减少长期维护的源码、生成转换和补丁；不能把本地算法移入 SDK 补丁就记作完成。MkAgent 既有整体架构、分层和宿主职责保持，调整限于必要内核接入。需求及 SDK 选择顺序以[能力规格](coding-capabilities-spec.md)为准，步骤见[纠偏跟进](coding-follow-up.md)。`pi-agent-core` 按需使用；完整 `pi-coding-agent` 包的现行生产依赖限制不要求复制其完整 SDK。
 
 本文记录 `cb0311f` 的实际装配和既有核查。当前 AgentSession、自有任务状态机、完整 Native SDK 闭包及补丁均属实现现状，需要按需求重新评估。下文的历史“保留”决定限定于当时选取的契约，不为整个模块提供永久保留依据。Marked 和 Highlight.js 是第三方资源包，其替换不计为 Pi 官方 SDK 复用。
 
@@ -11,7 +11,7 @@ MkAgent 原先以 Pi coding agent 为底座，第一次切换已采用 pi-durabl
 | 范围 | 目标与本次核对 |
 |---|---|
 | 执行、工具、存储和恢复 | 优先由 pi-durable 已发布实现承担；使用同一 Harness 只证明 scheduler 归属，仍须核对本地请求、工具轮次及收尾状态机的重复职责 |
-| Coding 与插件 | 用官方独立 SDK 补齐缺失能力；必要适配只连接公开插件语义和宿主策略，不照搬完整旧底座 |
+| Coding 与插件 | 保留 Pi coding agent 的 Coding 层和公开插件契约，优先引用官方 SDK 实现；适配只处理接入 durable 及宿主策略的必要差异，不在 durable 上另行重建整套 Coding SDK |
 | SDK 发布与仓内补丁 | 明确区分未修改发布包和补丁新增接口；core 操作导出、Agent 注入及 durable Coding hooks 等仍属本地维护负担 |
 | 源码范围 | 从实际产品、公开插件和数据兼容需求推导；原版 Pi CLI、run modes 和插件组件分开核对，不由完整根导出反推需求 |
 | 测试与恢复 | 保留权限、取消、错误、消息/输入身份、数据和不确定副作用保证；原型布局、getter 顺序和私有阶段需有契约或调用依据 |
@@ -164,7 +164,7 @@ Native 实例仍满足 `instanceof Agent`，现在也满足 `instanceof CoreAgen
 
 插件保留 Pi 包名导入，由[原生虚拟模块表](../../packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts)映射到本地移植 API 和独立官方包，也提供旧 `@mariozechner/*` 名称映射。这不要求安装完整 coding-agent 包。MkAgent 通过 RPC 承接扩展 UI；保留 Pi TUI 源码和依赖，不代表 MkAgent CLI 已采用原生 Pi TUI。插件兼容范围以需求对照中的实际验收为准。
 
-Pi v1.5.0 尚未将 `AgentSession` 及 Coding 专有的扩展和资源装配独立发布；durable `/tools` 已提供 read/write/edit/bash/PowerShell 及 coding 工具工厂。完整 coding 包的 `createAgentSession` 固定创建上游 Agent，未公开此处所需的执行器注入及版本化 snapshot/restore。这些事实需要结合具体契约判断，不能据此保留完整公开源码闭包。F1 至 F3 优先核对官方执行主链，再逐项处理必要 Coding 差异。当前仍有源码移植、补丁和生成转换，尚未达到仅更新版本号即可升级。
+Pi v1.5.0 尚未将 `AgentSession` 及 Coding 专有的扩展和资源装配独立发布；durable `/tools` 已提供 read/write/edit/bash/PowerShell 及 coding 工具工厂。完整 coding 包的 `createAgentSession` 固定创建上游 Agent，未公开此处所需的执行器注入及版本化 snapshot/restore。这些事实需要结合具体契约判断，不能据此保留完整公开源码闭包。F1 至 F3 优先核对官方执行主链，再逐项处理必要 Coding 差异。当前仍有源码移植、补丁和生成转换，尚未达到仅更新版本号即可升级。评估接入方案时须将它们合并计算维护责任：SDK 版本更新应主要验证公开契约与必要适配，剩余源码和补丁须列出具体上游缺口、退出条件及受影响符号。若 Coding 或 durable 更新仍默认要求逐文件改造完整 Coding 闭包，本次纠偏尚未完成。
 
 ## 既有源码对照与升级核对
 

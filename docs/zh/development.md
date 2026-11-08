@@ -49,7 +49,7 @@ docs/migration/        # 迁移计划、audit、UI 历史
 
 `apps/online-docs` 被刻意排除在 workspace glob 之外。
 
-内核改动遵循 [Coding 能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)：先复用 durable 内置实现，再用独立 Pi 官方 SDK 的公开 API，之后才补必要兼容。根目录、shared 和 server-core 声明 `pi-ai 1.1.0`，coding 和 agent-server 使用 Pi `1.5.0`；仓内补丁与已发布 API 分开核对。Craft UI 源码复用规则不要求移植完整 Pi coding 运行时或 CLI 源码。
+内核改动遵循 [Coding 能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)。保留 MkAgent 所用的 Pi Coding 层，尝试将其执行基座换成 durable；优先引用可复用 SDK，减少逐文件维护源码的升级工作。先复用 durable 内置实现，再用独立 Pi 官方 SDK 的公开 API，之后才补必要兼容。根目录、shared 和 server-core 声明 `pi-ai 1.1.0`，coding 和 agent-server 使用 Pi `1.5.0`；仓内补丁与已发布 API 分开核对。Craft UI 源码复用规则不要求移植完整 Pi coding 运行时或 CLI 源码。
 
 ## 常用命令
 

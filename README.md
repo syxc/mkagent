@@ -103,7 +103,7 @@ More commands and environment variables are documented in the
 
 MkAgent is a Bun workspace with a shared runtime and renderer across its three interfaces.
 
-The agent kernel uses `pi-durable` in a Bun subprocess. Current migration work adds Coding capabilities and Pi plugin support while preserving MkAgent features. Use durable built-ins first, then public APIs from independent official Pi SDK packages. Compatibility code and source ports require a confirmed gap; production must not depend on or load the complete `pi-coding-agent` package. The [capability specification](./docs/pi-durable/coding-capabilities-spec.md) and [implementation plan](./docs/pi-durable/durable-coding-agent-plan.md) define this work.
+The current agent kernel uses `pi-durable` in a Bun subprocess. The correction keeps Pi coding agent's Coding layer and plugin contracts for MkAgent, and attempts to replace that layer's execution base with durable. Use the original MkAgent/Coding integration as the behavior reference, while preserving later confirmed features and existing data. Prefer durable built-ins and reusable official Pi SDK APIs to reduce source-by-source adaptation on future Coding and durable releases. Compatibility code and source ports require a confirmed gap; production must not depend on or load the complete `pi-coding-agent` package. The [capability specification](./docs/pi-durable/coding-capabilities-spec.md) and [implementation plan](./docs/pi-durable/durable-coding-agent-plan.md) define this work.
 
 ```text
 apps/
