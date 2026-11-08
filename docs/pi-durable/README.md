@@ -1,21 +1,25 @@
 # Pi-durable coding agent 内核文档
 
-pi-durable 内核已接入，`pi-durable coding agent` 的 Coding 能力和插件契约已有实现及历史证据，完整程度须先核实。当前重点是架构优化：优先引用独立公开包，公开接口不足时采用薄外部适配，仅保留必要源码移植，减少上游 SDK 升级时的适配工作。MkAgent 现有功能保持完整，`pi-agent-core` 可以按需引用，禁止生产直接依赖完整 `pi-coding-agent` 包。
+MkAgent 原先以 Pi coding agent 为底座，第一次内核切换已采用 pi-durable。pi-durable 本身已有较完整的执行、工具、存储和恢复能力；本次为它补齐 Coding 能力和 Pi 插件生态，形成 `pi-durable coding agent`，同时保持 MkAgent 上层功能完整且正常。
 
-先按用户要求严格修正文档并查漏补缺，再按[架构优化跟进](coding-follow-up.md)落实。实施计划和能力规格保留目标与契约，验收记录区分已实现、待修正和待验证；发现偏离时及时纠正任务、文档及实现。历史规格保留第一次内核切换时的约束及证据，不再把当时禁止 `pi-agent-core` 的要求作为当前限制。
+2026-11-08 用户要求全面纠正迁移中的偏差，先修正文档，再逐项落实架构、代码和测试。每项能力依次选择：pi-durable 内置实现、独立 Pi 官方 SDK 的公开 API、必要的外部薄适配、经具体缺口论证的源码移植或补丁。`pi-agent-core` 可以按需引用，生产禁止依赖完整 `pi-coding-agent` 包。
 
-| 文档 | 内容 |
+以[能力规格](coding-capabilities-spec.md)确定需求，以[实施计划](durable-coding-agent-plan.md)和[纠偏跟进](coding-follow-up.md)安排工作。当前 AgentSession、自有任务状态机和完整 SDK 源码闭包属于待审查的实现选择；已有测试、来源哈希及第三方资源去重不单独证明迁移纠偏完成。Pi 正式发布 API 与仓内补丁新增的接口分开记录。
+
+| 文档 | 用途与适用范围 |
 |---|---|
-| [架构优化跟进](coding-follow-up.md) | 按用户最新澄清核实包复用、薄适配、必要例外及改动影响 |
-| [需求与验收对照](coding-acceptance.md) | 已有功能和插件证据、适用版本及未验证范围 |
-| [Coding agent 精简架构](coding-architecture.md) | 执行链路、上游包依赖、源码移植清单及 MkAgent 自有适配边界 |
-| [Durable coding agent 实施计划](durable-coding-agent-plan.md) | 用户澄清后的目标、职责边界、产品保留清单、逐项修正顺序及验收条件 |
-| [Coding 能力与插件兼容规格](coding-capabilities-spec.md) | 固定上游基线、依赖规则、能力清单和宿主契约 |
-| [Coding 验证与剩余工作](coding-validation.md) | `4776fe1` 的验证证据、当前实现状态及未完成项 |
-| [内核切换执行规格](kernel-durable-switch-spec.md) | 原始设计、当前实现差异及内核升级回归清单 |
-| [内核迁移审查问题修复规格](kernel-migration-review-fix-spec.md) | R1 至 R8 修复边界与最终集成验收 |
-| [首页建议与 Web 可用性修复执行规格](starter-web-repair-spec.md) | 两个首页入口的故障确认、Web 实际验证及修复验收 |
-| [Pi-durable 遗留修复与验收](kernel-legacy-fix-spec.md) | 宿主交互完成边界、MiniMax CN 模型身份及持久化清理竞态 |
-| [功能与稳定性修复执行规格](functional-stability-remediation-spec.md) | 本轮 12 项问题、端点残留风险、原子修复分组及逐项验收账本 |
+| [Coding 能力与插件兼容规格](coding-capabilities-spec.md) | 当前需求、Pi 官方 SDK 复用顺序、能力清单及产品和插件契约 |
+| [Durable coding agent 实施计划](durable-coding-agent-plan.md) | 迁移背景、职责、文档先行的执行顺序、功能保留清单和完成条件 |
+| [迁移纠偏跟进](coding-follow-up.md) | F0 至 F6 当前任务、官方执行主链核对、必要适配和影响验证 |
+| [Coding agent 架构记录](coding-architecture.md) | 当前执行链、发布依赖、仓内补丁、源码移植及宿主边界；不将现状定为目标 |
+| [需求与验收对照](coding-acceptance.md) | 逐项功能证据和本次架构纠偏状态，注明证据版本及未验证范围 |
+| [Coding 验证与剩余工作](coding-validation.md) | 历次检查、失败修正和限制；保留当时证据，不代替当前规格 |
+| [内核切换执行规格](kernel-durable-switch-spec.md) | 第一次切换的历史设计、实现差异及回归线索，旧依赖和能力限制已被当前规格取代 |
+| [内核迁移审查问题修复规格](kernel-migration-review-fix-spec.md) | 历史 R1 至 R8 修复边界与集成验收 |
+| [首页建议与 Web 可用性修复执行规格](starter-web-repair-spec.md) | 历史首页入口、Web 故障及修复证据 |
+| [Pi-durable 遗留修复与验收](kernel-legacy-fix-spec.md) | 历史交互完成、模型身份及持久化竞态修复 |
+| [功能与稳定性修复执行规格](functional-stability-remediation-spec.md) | 历史 12 项问题及修复账本，具体功能保证继续用于回归 |
 
-通用系统架构仍见 [英文架构文档](../architecture.md)、[中文架构文档](../zh/architecture.md) 和 [架构图](../architecture.html)。产品裁剪与上游同步的历史资料分别保留在 `docs/migration/`、`docs/sync/`。
+历史规格保留原日期和检查结果，其中的旧 `pi-agent-core` 禁令、功能差异和实现步骤不构成当前要求。架构调整仍须保留现有权限、取消、错误、持久化、恢复和公开插件行为。
+
+通用系统架构见[英文架构文档](../architecture.md)、[中文架构文档](../zh/architecture.md)和[架构图](../architecture.html)。产品裁剪与上游同步的历史资料位于 `docs/migration/`、`docs/sync/`，不扩大或缩减本次 Coding 迁移目标。

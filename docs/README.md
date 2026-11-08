@@ -6,6 +6,8 @@ This directory is the English-language user documentation. A Chinese translation
 
 ## Documentation index
 
+The kernel migration moves MkAgent from `pi-coding-agent` to `pi-durable`, which already provides execution, tools, storage, and recovery. Current work adds Coding features and the Pi plugin ecosystem while keeping all existing MkAgent features. Use durable built-ins first, then public APIs from separate official Pi SDK packages. Add a thin adapter or retain source only for a demonstrated gap. `pi-agent-core` is allowed; production must not depend on or load the full `pi-coding-agent` package. Replacing third-party assets, reducing line counts, and copying all source reachable from the original CLI are not migration goals. The [capability spec](./pi-durable/coding-capabilities-spec.md) and [implementation plan](./pi-durable/durable-coding-agent-plan.md) define current work and replace earlier migration limits.
+
 | Topic | Document |
 | --- | --- |
 | Overall architecture | [architecture.md](./architecture.md) |

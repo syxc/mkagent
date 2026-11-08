@@ -17,48 +17,59 @@ The upstream `main` sources are review inputs:
 - https://github.com/earendil-works/pi/tree/main/packages/coding-agent
 - https://github.com/earendil-works/pi/tree/v1.5.0/packages/coding-agent
 
-The user requests complete coding capabilities, independent modules, official
-package reuse, real functional validation, and the best possible compatibility
-with existing Pi plugins. Compatibility must describe tested API behavior.
-Loading a plugin without exercising its operations does not establish compatibility.
+MkAgent first used Pi coding agent as its agent runtime. The first migration
+replaced that runtime with pi-durable. Pi-durable already provides execution,
+tools, storage, recovery and other capabilities. This work adds the missing
+Coding capabilities and Pi plugin support to that existing runtime.
 
-The user's clarification on 2026-11-04 permits `pi-agent-core` where needed.
-Production must not depend directly on the complete `pi-coding-agent` package.
-This clarification replaces the earlier dependency restriction in this document
-and in the historical first-switch specifications.
+The clarification on 2026-11-08 requires correction of the migration design,
+documents, code and tests. First correct the related documents, then implement
+the corrections in order. Use pi-durable built-ins first, then public APIs in
+independent official Pi SDK packages. Add compatibility code only when those
+APIs cannot meet a confirmed requirement. Third-party library replacement is
+separate work and does not establish compliance with the Pi SDK priority.
 
-On 2026-11-06, the user considers most required functionality implemented and asks for that
-assessment to be checked against code and behavior evidence. Existing code and
-historical checks establish the kernel integration. The current priority is
-architecture: prefer public package imports, use thin external adapters where
-needed, and minimize source ports and internal changes that increase upgrade
-work. Verify those facts against code and tests before changing an implementation.
-Existing functionality and plugin contracts remain the regression baseline.
+`pi-agent-core` is permitted where needed. Production must not depend on the
+complete `pi-coding-agent` package or load that runtime through a subpath.
+These rules replace the earlier dependency restriction in the first-switch
+specifications.
 
-This inventory is the acceptance target. Its baseline column describes MkAgent
-before this migration. See [validation and limits](coding-validation.md) for
-the implemented behavior and current evidence. Follow the ordered corrections
-and product acceptance gates in the
-[implementation plan](durable-coding-agent-plan.md).
+Acceptance requires complete Coding capabilities, working Pi plugin contracts,
+and preservation of existing MkAgent product features. Check the implementation
+and behavior evidence for each capability. Current source layout, internal
+state machines and old test expectations do not define new requirements.
+Loading a plugin alone does not establish compatibility.
+
+This specification defines the capability requirements. The
+[implementation plan](durable-coding-agent-plan.md) defines the order of work.
+The [architecture record](coding-architecture.md) describes the current code;
+the [validation record](coding-validation.md) preserves checks at their stated
+versions. Historical implementation choices do not override these requirements.
+The inventory's baseline column describes the first durable integration before
+the Coding additions, not the full feature set of the original Pi coding agent.
 
 ## Architecture
 
-The target assembly is MkAgent product features above durable coding agent,
-whose Coding layer uses the existing pi-durable kernel. Requiring every normal
-session to use AgentSession or a native projection is an implementation choice,
-not a separate acceptance condition.
+The target assembly is MkAgent product features above pi-durable, with Coding
+and plugin compatibility added at the required interfaces. Pi-durable owns
+execution scheduling, tool execution, task ownership, accepted inputs, storage,
+transactions, cancellation and recovery. Use its existing implementations and
+extension points before adding local implementations of those responsibilities.
+MkAgent owns product sessions, permissions, credentials, transports and UI.
 
-`@mkagent/pi-durable-coding` contains the ported resource, prompt, extension,
-session projection and presentation code. It depends on independent official
-Pi packages. It has no dependency on
-MkAgent shared code, Electron, the subprocess implementation or UI components.
-The subprocess supplies narrow callbacks for session operations and permissions.
+The Coding module supplies capabilities that remain missing after official SDK
+reuse. It stays independent of MkAgent shared code, Electron and product UI.
+The host supplies the required callbacks. Choosing AgentSession, a native
+projection or a specific task layout is an implementation decision that must
+follow the required behavior.
 
-The existing `DurableKernel` owns the Harness and production storage. The native
-`AgentSession` supplies coding behavior. A durable Agent facade and the
-`pi.coding.session`, `pi.coding.run` and owned tool tasks schedule its callbacks.
-Retries, compaction, nested execution and settlement return through those tasks.
-The old Agent loop is excluded from the source closure.
+The current implementation uses `DurableKernel`, a ported `AgentSession`,
+`DurableLoopBinding` and the `pi.coding.*` tasks. These tasks use the official
+scheduler, but they also contain local request and tool state machines. Using
+one Harness establishes scheduler ownership; it does not prove that execution
+logic has been reused sufficiently. Review these state machines against
+published `GenerationTask`, `ToolTask` and hooks before smaller helper changes.
+Any replacement must preserve accepted work and supported stored task versions.
 
 Normal and coding profiles retain their existing prompts, tool visibility,
 permissions and resource policies. Runtime selection and Pi resource loading
@@ -67,14 +78,13 @@ ambient Pi settings, extensions, skills or system-prompt files. Distinct durable
 task types are allowed when they serve different operations; acceptance checks
 execution ownership, capabilities and product behavior.
 
-Reuse the native `SessionManager.inMemory()` and projection functions for
-synchronous extension reads and previews. Production writes go through durable.
-Custom entries, messages, labels, context edits and compaction changes need
-commit barriers before the next request, settlement, fork, reload and shutdown.
-Stable native JSONL paths are rebuilt from committed journal snapshots. A
-companion manifest preserves the active leaf, entry mappings and revision.
-These files support native path APIs and import/export. They do not own
-execution or recovery, and the native JSONL writer stays disabled.
+The current journal uses `SessionManager.inMemory()` for plugin reads and
+previews. Durable transactions commit messages, custom entries, labels, context
+edits, compaction and the active branch. Stable JSONL projections and a manifest
+serve native path and import/export APIs; their writer does not own execution.
+A revised implementation must preserve these observable APIs and existing data.
+It may change the internal journal or projection arrangement when required
+behavior and recovery remain intact.
 
 The server combines builtin, extension, web, proxy and MCP tools, then applies
 the existing host permission wrapper to every tool. Native `tool_call` handlers
@@ -89,43 +99,51 @@ before cache warming so warming and generation use the same request.
 
 ## Official package decision
 
-Use durable public tools, environment, images, codemode and tool-search APIs.
-Keep the existing cancellation fixes in local grep/find/ls until an equivalent
-official implementation is verified.
+Use this order for each required capability:
 
-Do not add the complete `pi-coding-agent` package as a production dependency or
-load its runtime through a subpath. Use independent official Pi packages where
-they fit. `pi-agent-core` may supply public types or reusable operations where
-needed, but pi-durable remains responsible for execution scheduling, task
-ownership, accepted inputs, recovery and commits. Importing an official package
-must not start a second Agent loop outside that boundary.
+1. Use the existing pi-durable implementation through its published API.
+2. If a capability is missing, use a public API from an independent official Pi
+   SDK package, such as pi-ai, pi-agent-core, pi-tui, pi-mcp or pi-codemode.
+3. If the public API needs protocol conversion or host policy, add the smallest
+   external adapter. Keep execution and lifecycle work in the SDK.
+4. Port or patch source only for a confirmed gap that the previous steps cannot
+   meet. Record the required behavior, candidate API, observed gap, affected
+   callers, recovery impact and upgrade work.
 
-The current implementation uses public `pi-agent-core` protocol types and
-`streamProxy`. The local Agent facade and durable tasks own execution.
-Reassess source-port adapters when another public core API can replace them
-without changing durable execution.
+Different signatures, a failed direct forwarding attempt or an old test failure
+are reasons to investigate. They do not establish that a whole implementation
+must be retained. Check whether the difference is a product or public plugin
+contract before adding compatibility behavior. Reflection layout, private
+callback counts and getter order need a confirmed caller or contract to become
+acceptance requirements. Preserve permission, cancellation, error, data and
+recovery guarantees during this assessment.
 
-The current implementation ports the public coding dependency closure from
-the pinned TypeScript source. This is an implementation record, not a
-requirement to copy that entire closure. For each retained area, identify the
-required contract, the public interface gap and why an external adapter is
-insufficient. Preserve registration, event chaining, rollback and stale-context
-behavior when replacing or reducing a port.
+A package import that requires a repository patch is a local SDK modification.
+Label its added exports and behavior as such. Do not present those interfaces as
+APIs already published by Pi. Assess the patch and adapter together, including
+upgrade and migration cost; moving local code into an SDK patch is not sufficient
+reuse. The current core operation and Agent injection APIs, and parts of the
+durable integration, require the patches registered in the root manifest.
 
-`UPSTREAM-RUNTIME.json` records each source and output hash, asset and
-transformation in the full runtime port. `UPSTREAM.json` records the earlier
-compatibility helpers. The user has withdrawn the earlier source-read restrictions
-and authorized full generation, type checks, tests and builds in the designated
-workspace. Respect tool-enforced access rejections and record their actual scope.
-The helper generator can reproduce its explicit source list. The runtime keeps
-TypeScript declarations and binds Agent execution imports to the durable facade.
-Host consumers use `./native`, `./agent` and
-`./durable` exports.
+Production already uses durable `/tools`, `/images`, `/codemode` and
+`/tool-search`. Retain that reuse. Local grep/find/ls require their own gap and
+behavior checks because durable 1.5.0 does not publish those tool factories.
+Standalone Native tool factories exposed to plugins must be assessed separately
+from the production tool installation.
 
-Plugin SDK import identifiers resolve to the local port or independent official
-packages. Resolving a plugin's `pi-coding-agent` SDK identifier does not authorize
-loading the complete package. A compatibility export list describes implemented
-runtime exports; it is not a full compatibility claim.
+The current generator starts from the full Pi coding public entry. Its closure
+includes CLI and run modes. That is a source inventory, not an acceptance target
+or proof of necessity. Derive the required export surface from Coding behavior,
+public plugin APIs and MkAgent entry points. Assess upstream CLI/run-mode code
+separately from reusable plugin UI components. Neither wholesale retention nor
+removal follows from the current export list alone.
+
+`UPSTREAM-RUNTIME.json` and `UPSTREAM.json` record source provenance and
+transformations. Their checks establish reproducibility at the stated versions,
+not the necessity of each file. A compatibility export list describes implemented
+exports and requires corresponding behavior evidence. Resolve plugin imports
+of the coding SDK name to the supported local interface or independent official
+Pi packages without loading the prohibited complete package.
 
 ## Durable boundary requirement
 
@@ -134,13 +152,27 @@ message entry, return context edits and custom entries, and request continuation
 Durable 1.5.0's `onYield` runs before final answer persistence; `afterRun` runs
 after input settlement. Neither hook alone preserves this protocol.
 
-The coding runtime uses its own versioned durable tasks for these boundaries.
-The journal commits native drafts, accepted queue identities and the next
-checkpoint together. Request intent precedes context transforms and streaming
-callbacks. Recovery does not replay uncertain callbacks or unsafe tools.
-The legacy durable patch remains for non-coding tasks and migration.
-New checkpoint phases require task-version and recovery checks. External plugin
-effects do not have an exactly-once guarantee.
+The current coding runtime uses versioned local durable tasks and commits
+native drafts, accepted input identities and the next checkpoint together.
+It records request intent before uncertain callbacks and does not automatically
+repeat unsafe tools or uncertain plugin effects. Preserve these safety and data
+guarantees while evaluating official execution and transaction APIs. A different
+internal phase layout is permitted.
+
+The installed SDK includes repository-added `codingPrepare`, `codingStream` and
+`codingBoundary` hooks. They are not evidence of an unmodified published API.
+Their current behavior and the local task bridges require comparison against
+required Coding contracts. A hook gap can justify a narrow adapter or extension;
+it does not by itself justify retaining the full local execution loop.
+
+Keep supported stored tasks readable during any transition. The existing
+`pi.coding.{session,run,call,tool,summary}` kinds are v1. A new implementation
+must handle their input, checkpoints and results explicitly; official task
+migrations do not convert them automatically. Summary tasks serve compaction,
+branch summaries and bug reports. Preserve completed responses and report
+uncertain requests without automatically sending them again. The legacy durable
+patch remains in use by the older SDK path and migration. External plugin
+effects have no exactly-once guarantee.
 
 ## Capability inventory and acceptance
 
@@ -155,7 +187,7 @@ effects do not have an exactly-once guarantee.
 | SYSTEM/APPEND files | Absent in durable entry | Explicit composition; host safety and identity remain in effect |
 | Native skills | MkAgent skills only | Official parsing, native/explicit paths, collisions, disabled model invocation |
 | Skill activation | MkAgent mention prerequisites | Native commands, shared discovery and successful-read prerequisites |
-| Prompt templates | Absent | Official resource parsing, quoting, defaults, slices, collision and unknown commands |
+| Prompt templates | Absent | Pi resource parsing, quoting, defaults, slices, collision and unknown commands |
 | Extensions: tools | Absent | Unmodified TypeScript plugin, schema, structured output, abort, nested calls |
 | Extensions: commands/input | Absent | Native command precedence, transform/handled, reload without duplicates |
 | Extensions: events | Absent | Session/run/message/tool events and observable handler effects |
@@ -208,34 +240,36 @@ Shutdown and reload release old handlers and connections.
 
 ## Implementation sequence
 
-The first implementation followed the historical sequence below. It established
-the source port and main durable integration. The current work follows the
-[architecture follow-up](coding-follow-up.md): first correct and check the
-documents, then verify the implementation and package alternatives, implement
-the confirmed reductions, and validate their effects. Check each result against
-the user's requirements and correct unsupported assumptions as they appear.
+Follow the [correction list](coding-follow-up.md) in this order:
 
-1. Commit this versioned design and inventory.
-2. Port the native resource and extension dependency closure with provenance.
-3. Bind native resource/input/prompt behavior, tools and session projections to durable.
-4. Connect host trust, native skill discovery and plugin event/model callbacks.
-5. Verify actual file editing and shell checks through a local deterministic model,
-   including allow/modify/deny, nested calls, cancellation, restore and reload.
-6. Implement and test the durable boundary stage and remaining session/provider bindings.
-7. Build and run the bundled JSONL subprocess outside the source tree, then run
-   required repository checks. Record results and remaining compatibility limits.
+1. Correct related requirements, architecture, plans, acceptance and historical
+   document notices against the 2026-11-08 clarification.
+2. Map production behavior and public plugin contracts to published Pi SDK
+   capabilities. Check execution, tools, hooks, storage and recovery first.
+3. Implement confirmed SDK replacements and the required compatibility and
+   stored-data transitions. Then reduce the remaining Coding source scope.
+4. Correct tests that enforce unsupported implementation choices. Retain and
+   extend behavior checks for required product, plugin and recovery contracts.
+5. Verify actual file, shell and plugin workflows through deterministic local
+   providers, then run affected product, package and repository checks.
+6. Update acceptance and provenance records with the actual results and open
+   gaps. Stop at the defined delivery conditions.
 
-Commit `4776fe1` records that implementation and its source audit. Its checks
-are evidence for that commit, not proof that the clarified target is complete.
-No push, pull request, merge, paid model request or production service changes
-are authorized by this task.
+The earlier closure-first implementation and checks at `4776fe1` remain
+historical evidence. They do not establish completion of this correction.
+The full upstream CLI, a fixed source count and a particular task arrangement
+are not independent deliverables. Product and plugin capabilities remain in
+scope. Publications, remote writes, paid model requests and real account use
+require their own authorization; a design document does not grant it.
 
 ## Upgrade, performance and rollback
 
-Keep the Pi dependencies on matching exact versions. On upgrade compare public
-exports, extension actions/events, tools, resource behavior, package resolution,
-bundle assets and runtime side effects. Test unmodified plugin fixtures against
-the new version. Reject unsupported operations explicitly.
+Pin the interacting Coding SDK dependencies to tested versions. The current
+Coding packages use Pi 1.5.0 while shared transport still declares pi-ai 1.1.0;
+this work does not imply a repository-wide version update. On upgrade compare
+published exports, extension actions/events, tools, resources, package resolution,
+assets and runtime effects. Review local SDK patches separately. Test unchanged
+plugin fixtures and report unsupported operations explicitly.
 
 Resource snapshots avoid full repository scans on every tool call. Reload at
 an idle boundary replaces the snapshot and tool registration set. The host
@@ -260,3 +294,12 @@ behavior, packaged subprocess behavior and platform checks. It must list every
 inventory row that remains incomplete. Historical green runs do not establish
 that current changes pass. Evidence for unchanged areas may be reused when the
 report states its commit, coverage and reason it still applies.
+
+Tests must check required behavior through public interfaces where possible.
+Keep permission denial, cancellation, error propagation, tool results, plugin
+lifecycle, accepted input identity and crash recovery checks. A source hash,
+private phase name, prototype layout or exact helper call trace can diagnose a
+change but does not establish a user requirement. Replace such assertions when
+the public behavior remains correct; do not delete a behavior check merely to
+make an SDK replacement pass. Documentation-only corrections require link,
+consistency, punctuation and independent document checks, not a product rerun.

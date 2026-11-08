@@ -1,6 +1,6 @@
 # MkAgent vs. Craft Agents — current comparison
 
-Current sync: MkAgent 0.2.0 uses the scoped [Craft v0.15.0 baseline](upstream-sync.md). The measurements below are historical snapshots; consult the current [changed-path inventory](sync/0.15.0-inventory.json) and [validation report](sync/0.15.0-validation.md) for this release.
+Historical sync record: MkAgent 0.2.0 used the scoped Craft v0.15.0 baseline. The [changed-path inventory](sync/0.15.0-inventory.json), [validation report](sync/0.15.0-validation.md), and measurements below are historical snapshots. For the current baseline, see [upstream synchronization](upstream-sync.md) and the [documentation README](README.md).
 
 > Snapshot refreshed on **2026-09-01** against the MkAgent sync worktree based on `242306a` and the upstream tag [`craft-ai-agents/craft-agents-oss` `v0.12.1` / `d7592c481216`](https://github.com/craft-ai-agents/craft-agents-oss). Numbers are repository snapshots, not live release metrics; installer-size figures remain the last measured build artifacts.
 
@@ -45,12 +45,18 @@ Both repositories are Bun monorepos with the same workspace layout (`apps/{elect
 
 ## 3. Backend / runtime boundary
 
+The MkAgent kernel notes in this section and §4.1 reflect the code checked on 2026-11-08. Source size, audit counts, tool counts, and installer measurements retain their recorded snapshot dates and do not prove the current migration is complete.
+
+MkAgent moved from `pi-coding-agent` to `pi-durable`, which already provides execution, tools, storage, and recovery. Current work adds Coding features and the Pi plugin ecosystem while keeping all existing MkAgent features. Use durable built-ins first, then public APIs from separate official Pi SDK packages. Add a thin adapter or retain source only for a demonstrated gap. `pi-agent-core` is allowed; production must not depend on or load the full `pi-coding-agent` package. Replacing third-party assets, reducing line counts, and copying all source reachable from the original CLI are not migration goals. The [capability spec](pi-durable/coding-capabilities-spec.md) and [implementation plan](pi-durable/durable-coding-agent-plan.md) replace earlier migration limits; historical feature-removal lists do not authorize new cuts.
+
+The current normal profile uses `GenerationTask`. The coding profile follows `CodingHost → AgentSession → DurableLoopBinding → pi.coding.*`. This is the current implementation, not a fixed target. The custom task bridges still need review against actual Coding and public plugin contracts.
+
 | Concern | MkAgent | Craft Agents |
 |---|---|---|
 | Registered `AgentBackend`s | `pi` only | `pi`, `claude-agent-sdk`, plus optional **Copilot / gateway** subscriptions |
 | Auth model | API key + custom endpoints + Ollama + **ChatGPT/Claude subscription OAuth**, all through Pi | API-key + custom + **OAuth (Anthropic, OpenAI, GitHub Copilot, Google Workspace, Slack, Microsoft)** + subscription flows + gateway |
 | Subprocess model | `packages/pi-agent-server` runs as a Bun subprocess; communicates over JSONL on stdio | Pi subprocess (same) **plus** SDK subprocess (`@anthropic-ai/claude-agent-sdk-binary`, ~217 MB native `claude` binary per platform arch) **plus** bridge/session MCP servers **plus** WhatsApp worker subprocess |
-| Built-in transports | OpenAI-compatible, Anthropic-compatible, Ollama (Pi `0.81.1`) | Same, plus Anthropic SDK direct mode and Copilot SDK mode |
+| Built-in transports | OpenAI-compatible, Anthropic-compatible, Ollama. Root/shared use `pi-ai 1.1.0`; coding/server use Pi `1.5.0`. | Same, plus Anthropic SDK direct mode and Copilot SDK mode |
 | Image generation | Available through codemode when an image model is configured; image attachments are also supported | The comparison source has conflicting reports about `gen_image`; this capability has not been reverified |
 
 ## 4. Agent tools (what the model can actually call)
@@ -59,7 +65,7 @@ Both products expose built-in, web, and session-level tools to the LLM. MkAgent 
 
 ### 4.1 Pi built-in tools
 
-MkAgent uses pi-durable's coding tools for read/edit/write/bash and adapts grep/find/ls from pi-coding-agent 1.1.0. Craft uses pi-coding-agent. Both expose the tools below:
+MkAgent uses durable's tools API for read/edit/write/bash and optional PowerShell, its images API for image processing, and its codemode and tool-search extensions. Local grep/find/ls remain adapted from pi-coding-agent 1.1.0; that implementation also requires review under the migration policy above. Craft uses pi-coding-agent. The seven tools below are the shared baseline; PowerShell is optional and does not change the historical counts below:
 
 | Tool | Purpose |
 |---|---|

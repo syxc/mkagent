@@ -1,6 +1,16 @@
 # Architecture
 
-MkAgent is a Bun monorepo with three clients sharing one authenticated WebSocket RPC protocol. Only the `pi` agent backend is registered. The direct Pi integration is `@earendil-works/pi-durable`, which runs the agent kernel (coding tools, code mode, MCP) in its subprocess; `pi-ai` and `chord` are lower-level dependencies, not the application-facing session API.
+MkAgent is a Bun monorepo with three clients sharing one authenticated WebSocket RPC protocol. Only the `pi` agent backend is registered. The agent kernel runs on `@earendil-works/pi-durable` in a dedicated Bun subprocess. `pi-ai` and `chord` provide lower-level APIs.
+
+## Kernel migration
+
+MkAgent moved from `pi-coding-agent` to `pi-durable`, which already provides execution, tools, storage, and recovery. Current work adds Coding features and the Pi plugin ecosystem while keeping all existing MkAgent features. Use durable built-ins first, then public APIs from separate official Pi SDK packages. Add a thin adapter or retain source only for a demonstrated gap. `pi-agent-core` is allowed; production must not depend on or load the full `pi-coding-agent` package. Replacing third-party assets, reducing line counts, and copying all source reachable from the original CLI are not migration goals. The [capability spec](pi-durable/coding-capabilities-spec.md) and [implementation plan](pi-durable/durable-coding-agent-plan.md) define current goals. They replace earlier dependency bans, rules that forbid host changes, and permission to cut features.
+
+The current normal profile uses durable's `GenerationTask`. The coding profile follows `CodingHost → AgentSession → DurableLoopBinding → pi.coding.*`. This describes the current implementation. Each custom task bridge still needs review against actual Coding and public plugin contracts; this chain is not a fixed target architecture.
+
+Published Pi APIs and local SDK extensions must be tracked separately. `pi-agent-core` uses a four-file repository patch for eight operation exports and Agent execution injection. The durable `codingPrepare`, `codingStream`, and `codingBoundary` hooks also come from repository patches. These interfaces are not published Pi APIs. Their need and upgrade cost still require review. Independent tests can use a fixed original `pi-coding-agent` package as a behavior oracle.
+
+The root and `packages/shared` use `pi-ai 1.1.0`. The Pi dependencies in `packages/pi-durable-coding` and `packages/pi-agent-server` use `1.5.0`. These are separate dependency boundaries.
 
 ## Layered topology
 
@@ -62,7 +72,7 @@ All three clients operate the same workspace and JSONL sessions; there is no cli
 
 - `packages/server-core` owns transport, handlers, `SessionManager`, and platform-neutral services. Subpackages: `bootstrap/`, `domain/`, `handlers/`, `model-fetchers/`, `runtime/`, `services/`, `sessions/`, `transport/`, `utils/`, `webui/`.
 - `packages/shared` owns protocol DTOs (`@mkagent/shared/protocol`), config, credentials, Skills, prompts, the backend registry, workspace storage, and the Pi client.
-- `packages/pi-agent-server` runs the agent kernel on `@earendil-works/pi-durable` in a separate Bun subprocess (`packages/pi-agent-server/dist/index.js`) and communicates through JSONL. The kernel uses the official pi-mcp client (configured by `mcp.json` in the agent directory), the pi-codemode sandbox (code mode), and grep/find/ls adapted from pi-coding-agent 1.1.0. The same SDK boundary is used in development and packaged builds; `bun run server:build:subprocess` produces the bundle.
+- `packages/pi-agent-server` runs the agent kernel on `@earendil-works/pi-durable` in a separate Bun subprocess (`packages/pi-agent-server/dist/index.js`) and communicates through JSONL. Production uses durable's tools and images APIs for read/write/edit/bash and optional PowerShell, plus its codemode and tool-search extensions. The official pi-mcp client reads `mcp.json` in the agent directory; pi-codemode supplies the sandbox. Local grep/find/ls remain adapted from pi-coding-agent 1.1.0 and require review under the migration policy above. The same SDK boundary is used in development and packaged builds; `bun run server:build:subprocess` produces the bundle.
 - `packages/ui` and `packages/session-tools-core` provide shared rendering and session-level tools. They are platform-neutral: Electron, WebUI, and CLI reuse them.
 
 ## Backend registry

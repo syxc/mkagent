@@ -1,35 +1,106 @@
 # Pi-durable coding agent validation and remaining work
 
-This report keeps the implementation and checks at `4776fe1` and records later
-work separately. The target is
-`pi-durable coding agent`: pi-durable execution, Pi coding capabilities and
-plugin compatibility, with all existing MkAgent features preserved. The
-[implementation plan](durable-coding-agent-plan.md) defines the remaining
-corrections and acceptance gates after the user's clarification on 2026-11-04.
-Confirmed missing required operations and missing validation are recorded
-separately. Unverified combinations alone do not establish a functional defect
-or expand the scope of this architecture work.
+This file is an evidence record. It preserves checks at `4776fe1` and later
+versions, including failed attempts and their corrections. The requirements
+come from the [capability specification](coding-capabilities-spec.md); the
+[implementation plan](durable-coding-agent-plan.md) and
+[correction list](coding-follow-up.md) define current work. An older retention
+decision, source inventory or green test run does not override those documents.
 
-The review on 2026-11-06 uses code baseline `f4f9f26`. The pi-durable kernel is
-already integrated. Most Coding functionality has implementation and historical
-evidence; its completeness still requires verification. The current
-priority is SDK integration through public interfaces and extension points.
-External thin adapters bridge contract differences. SDK source patches require
-a concrete gap that those interfaces and adapters cannot meet. Upgrade review
-and adaptation effort take priority over line counts.
-The [follow-up list](coding-follow-up.md) records the revised work and the
-remaining checks. The user has since withdrawn the source-reading ban and
-authorized full checks in the normal workspace and HOME. The continuation on
-2026-11-08 obtained and reviewed `runtime-credentials.ts`. The earlier path
-rejection remains a historical result, not a current blocker. Normal-profile AgentSession and projection requirements
-were unsupported assumptions; the candidate runtime changes were withdrawn.
-The baseline product test then passed with 1 test and 43 assertions.
+MkAgent moved from Pi coding agent to pi-durable in the first kernel switch.
+Pi-durable already has substantial execution, tool, storage and recovery
+capabilities. The correction adds the missing Coding and Pi plugin support
+while preserving MkAgent product features. The priority is pi-durable built-ins,
+then independent official Pi SDK public APIs. Compatibility code and source
+patches require a confirmed gap. Third-party resource replacement is recorded
+separately from official Pi SDK reuse.
+
+Sections below describe their own versions. Words such as "current", "retain"
+and "remaining" in older sections apply to that section's checks. They do not
+make private implementation details, the full Native SDK or upstream CLI into
+requirements. Report confirmed missing functionality and missing evidence
+separately. Unverified combinations alone do not prove a functional defect.
+
+## Migration direction correction on 2026-11-08
+
+The user requires related documents to be corrected before further runtime
+changes. This documentation batch starts at `cb0311f`. It corrects the following
+assumptions in requirements, architecture, plans and acceptance records:
+
+| Previous direction or ambiguity | Corrected requirement |
+| --- | --- |
+| Treat durable as a scheduler under a complete old coding runtime | Use its existing execution, tools, hooks, storage and recovery before adding local implementations |
+| Prefer any independent public library | Prefer independent official Pi SDK packages after durable built-ins; third-party resource work does not satisfy that priority |
+| Treat local patched exports as published Pi APIs | Record repository-added exports, options and hooks as SDK modifications with their own gap and upgrade cost |
+| Preserve the full public source closure because the local root exports it | Derive the required surface from product behavior, public plugin contracts and data compatibility; assess CLI and plugin components separately |
+| Use old private behavior and exact source tests as acceptance requirements | Verify the required contract first; keep permission, cancellation, error, result, lifecycle and recovery checks |
+| Treat representative retention tests or one Harness as architecture completion | Check actual execution responsibilities and required compatibility boundaries; keep F1 to F3 open |
+| Iterate until a theoretical minimum maintenance cost is reached | Complete confirmed corrections and necessary validation, state remaining evidence gaps and stop at the defined delivery conditions |
+
+Source checks confirm that production already installs durable tools, images,
+codemode and tool-search. `CodingHost` receives those tools through
+`baseToolsOverride`. Its main path uses `AgentSession`, `DurableLoopBinding`
+and local `pi.coding.*` tasks. The generator still starts from the full Pi coding
+entry and includes upstream CLI and run modes. These are implementation facts,
+not proof that the current source or task layout is necessary.
+
+The root manifest registers core and durable patches. The core patch changes
+four files; the durable patch changes 28. Core operation exports and Agent
+injection, and durable `codingPrepare`/`codingStream`/`codingBoundary`, include
+repository changes. Their presence in the installed SDK is not evidence that
+Pi published those interfaces without modification.
+
+An independent review compared the four task bridges with the installed SDK.
+It reported 74 in-memory assertions, no real model or user storage access, and
+no completed replacement implementation. The review found official scheduler,
+ownership, transaction and wait API reuse, plus local request/tool state
+machines. It also found transaction, full-result and uncertain-callback gaps
+under the selected Native contracts. Those results guide the next comparison;
+they do not establish permanent necessity of the complete local state machines.
+The stored `pi.coding.{session,run,call,tool,summary}` kinds are v1 and require
+explicit compatibility handling during a replacement. The independent bridge
+review covered the first four. Source review also confirms that summary tasks
+serve compaction, branch summaries and bug reports. They commit `requesting`
+before the model request, refuse uncertain re-delivery, and retain completed
+responses. Include those states and results in migration and recovery checks.
+
+The documentation batch changes 20 files: 19 Markdown files and the HTML
+architecture diagram. It changes no runtime source, dependency, checkpoint or
+test. The final document checks report:
+
+- All 191 local Markdown links resolve, including referenced Markdown anchors.
+- Added and rewritten Markdown text passes the punctuation gate in each file's
+  language. All seven core documents also pass the whole-file gate. An initial
+  invocation selected English for seven Chinese documents and failed; the
+  corrected language selection passes. That initial failure is not a pass.
+- Six other documents retain existing punctuation findings outside the changed
+  text: `kernel-durable-switch-spec.md`,
+  `functional-stability-remediation-spec.md`, `../zh/architecture.md`, both
+  comparison documents and `../migration/migration-mvp.md`.
+- Node 24 compiles the complete HTML inline script without executing the page.
+  All bytes outside the Pi node remain unchanged. The diagram edit changes only
+  that node's summary, responsibilities and evidence references.
+- Independent review covers all seven core document diffs. Its two findings,
+  the missing summary task and an undated nine-resource count, were corrected
+  and rechecked with no remaining findings. Review of the other 13 documents
+  preserves historical bodies and measurements at their original versions.
+- `git diff --check` passes, and the changed-file inventory contains only the
+  20 documentation files. Manifest checks confirm core and durable patches of
+  four and 28 files, 248 runtime TypeScript outputs and seven assets, plus
+  12 auxiliary sources and 28 shared forwards. This batch does not regenerate
+  those outputs.
+
+F0 is complete for this batch. Earlier product, CI and source-reproduction
+results remain historical evidence and are not reruns. No browser visual check
+or product regression was run for these document edits. Runtime correction and
+its affected behavior checks remain open.
 
 ## Published Highlight.js browser asset after f6c44c7
 
-HTML export now reads the official
+HTML export now reads the published third-party
 [`@highlightjs/cdn-assets@11.9.0`](https://registry.npmjs.org/@highlightjs%2Fcdn-assets/11.9.0)
-package instead of a copied browser library. Its `highlight.min.js` is identical
+package instead of a copied browser library. This is not a Pi SDK package.
+Its `highlight.min.js` is identical
 to the pinned Native asset: 121,727 bytes, SHA-256
 `837a6fa5b0c736b52bbde2b2b6190f305da3fc9ed41681db5321507057b5c846`.
 The existing server package is Highlight.js 10.7.3, so it cannot supply the
@@ -2258,12 +2329,19 @@ plugin integration acceptance stay open.
 
 ## Implemented scope
 
+This section summarizes the earlier integrated runtime and includes changes
+from several batches. Its architecture is a record, not a required source or
+phase layout. Packaging and source counts below are updated to `cb0311f`;
+behavior evidence remains limited to each check's stated version.
+
 The coding profile uses the existing `DurableKernel` and its Harness.
-`@mkagent/pi-durable-coding` contains the complete public Pi coding source
+`@mkagent/pi-durable-coding` currently contains the public Pi coding dependency
 closure from v1.5.0, commit `f9a26365568127461c47a07a37dcb42c140a3ac5`.
-`UPSTREAM-RUNTIME.json` records 248 source files, 9 assets, source hashes and
-controlled transformations. `UPSTREAM.json` records the earlier compatibility
-helpers. The package retains the upstream MIT license.
+`UPSTREAM-RUNTIME.json` records 248 TypeScript files and 7 Pi assets, source
+hashes and controlled transformations. Earlier stages had 9 and then 8 assets;
+the published Marked and Highlight.js resources are separate dependencies.
+`UPSTREAM.json` records the earlier compatibility helpers. The package retains
+the upstream MIT license.
 
 Production constructs the native `AgentSession`, `DefaultResourceLoader`,
 `SettingsManager` and bound `ModelRuntime`. A local Agent facade delegates
@@ -2299,11 +2377,12 @@ checkpoint. The last handoff in tool-call order wins, including an empty
 summary. Accepted steering follows that summary. Recovery retains the new
 context without repeating the completed tool.
 
-Current packaging selects one shared Photon WASM, native themes, HTML export
-templates and the Pi MIT license. The full product output was not rebuilt
-after the shared Photon change. Headless archives also include the root LICENSE
-and NOTICE. Image workers resolve from the installed module; the project
-directory cannot supply an executable worker.
+Packaging at `cb0311f` selects one shared Photon WASM, native themes, HTML
+export templates, third-party browser resources and the Pi MIT license. The
+server build was rerun for the browser resource changes; the full Desktop and
+headless product flows retain their earlier evidence. Headless archives also
+include the root LICENSE and NOTICE. Image workers resolve from the installed
+module; the project directory cannot supply an executable worker.
 
 The current production dependency graph uses the public `pi-agent-core`
 protocol, proxy and patched operation APIs. The dependency policy prohibits the complete
@@ -2450,8 +2529,12 @@ bun install --frozen-lockfile --ignore-scripts
 bun run server:build --output <task-owned-output-directory> --compress
 ```
 
-The complete runtime generator check has passed for all 248 TypeScript outputs
-and nine resources. The full Craft audit uses a separate pinned checkout.
+The complete runtime generator check recorded for `cb0311f` covers 248
+TypeScript outputs and seven Pi resources. Earlier nine-resource checks belong
+to the batches before the Marked and Highlight.js replacements; see their
+sections above for the transitions. This documentation batch only checks the
+manifest facts and does not rerun generation. The full Craft audit uses a
+separate pinned checkout.
 A previous session could not inspect `runtime-credentials.ts` because its tool
 reported `Path access control: protected credentials/secrets file`. The
 continuation on 2026-11-08 obtained the source under its normal tool policy and
@@ -2471,9 +2554,11 @@ the current 28-file patch.
 The headless build replaces its output directory. Use a new directory owned
 by the validation task.
 
-On upgrade, compare the public source closure and controlled port scripts.
-Regenerate both source manifests, declaration files and the Bun patch. Run the
+On upgrade, check published Pi SDK APIs against required product and plugin
+behavior first. Then review the remaining source ports, adapters and repository
+patches. Update affected manifests, declarations, assets and patches. Run the
 oracle, subprocess, journal, queue, lifecycle and stored-task migration checks.
 The generator requires a clean pinned checkout for every consumed coding and
-Agent source, package metadata and license.
+Agent source, package metadata and license. Reproducing the current closure
+checks its provenance, not whether its entire export surface is required.
 Current checkpoint tests do not establish support for a future Pi release.

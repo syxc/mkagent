@@ -1,8 +1,10 @@
 # mkagent MVP 开发计划
 
-> 2026-07-30 边界修订：本文保留最初 MVP 决策的历史记录。当时的实现已恢复 ChatGPT Plus 与 Claude Pro/Max 两种 Craft LLM OAuth 流程，但 agent backend 仍仅注册 Pi；Claude Agent SDK、GitHub Copilot 与 Sources/MCP 继续排除。后续 durable 内核另行加入了 MCP 客户端，当前实现见 [`kernel-durable-switch-spec.md`](../pi-durable/kernel-durable-switch-spec.md)。
+> 历史范围说明（2026-11-08）：本文是早期 MVP 计划，保留当时的产品取舍、实施顺序与验收清单，不是当前实施授权。2026-07-30 已恢复 ChatGPT Plus 与 Claude Pro/Max 两种 Craft LLM OAuth 流程，后续 durable 内核又加入 MCP 客户端和 codemode 图片生成能力。下文删除 OAuth、MCP、图片生成的要求及旧 `pi-coding-agent` 接入方案均已被后续决定取代，不能作为当前功能删减或迁移验收条件。原始版本与规划记录仍保留。
+>
+> 当前内核背景：MkAgent 从 `pi-coding-agent` 迁向功能已较完整的 `pi-durable`，在 durable 之上补齐 Coding 能力和 Pi 插件生态，保持 MkAgent 全部既有功能完整正常。先采用 durable 内置能力，再用独立 Pi 官方 SDK 的公开 API；只有具体缺口得到论证后才保留薄适配或必要源码。允许按需引用 `pi-agent-core`，生产不得依赖或加载完整 `pi-coding-agent` 包。旧依赖禁令、宿主零改动要求和功能缩水许可不再约束当前迁移。第三方资源替换、删行数和复制原版 CLI 的完整源码闭包均不是目标；当前自有任务桥仍须按真实契约审查。当前目标与限制见[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)，原始内核切换记录见[历史规格](../pi-durable/kernel-durable-switch-spec.md)。
 
-> 状态：第三版，产品边界已确认，可按阶段进入实施
+> 历史状态：第三版，当时确认产品边界并计划分阶段实施
 > 上游基线：`craft-agents-oss` `v0.11.2` / `a60ebc1a5a7c`
 > 产品域名：`mkagent.app`
 
