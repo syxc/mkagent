@@ -1,8 +1,9 @@
-# Content SHA-256: f324a325093d6c4d236f2417147de2721699b885a99818d2ff19d2d9b3de809e
+# Content SHA-256: 1519c3ec6ea6b6f68226ad4731389b5e06a60dad1ae0ae9ed3a9759e3eeeace2
 diff --git a/dist/agent-loop.js b/dist/agent-loop.js
+index 48f56a2..af721a0 100644
 --- a/dist/agent-loop.js
 +++ b/dist/agent-loop.js
-@@ -221,7 +221,7 @@
+@@ -221,7 +221,7 @@ async function runLoop(initialContext, newMessages, initialConfig, signal, emit,
   * the executable set, so replay always yields exactly `context.tools`. Otherwise a new
   * system message is inserted before the first non-system pending message.
   */
@@ -11,7 +12,7 @@ diff --git a/dist/agent-loop.js b/dist/agent-loop.js
      let systemIndex = -1;
      for (let i = pendingMessages.length - 1; i >= 0; i--) {
          if (pendingMessages[i].role === "system") {
-@@ -262,7 +262,7 @@
+@@ -262,7 +262,7 @@ function withToolChanges(message, { toolsAdded, toolsRemoved }) {
   * Stream an assistant response from the LLM.
   * This is where AgentMessage[] gets transformed to Message[] for the LLM.
   */
@@ -20,7 +21,7 @@ diff --git a/dist/agent-loop.js b/dist/agent-loop.js
      // Apply context transform if configured (AgentMessage[] → AgentMessage[])
      let messages = context.messages;
      if (config.transformContext) {
-@@ -276,7 +276,7 @@
+@@ -276,7 +276,7 @@ async function streamAssistantResponse(context, config, signal, emit, streamFunc
      const response = await streamFunction(config.model, llmContext, {
          ...config,
          apiKey: resolvedApiKey,
@@ -29,7 +30,7 @@ diff --git a/dist/agent-loop.js b/dist/agent-loop.js
          signal,
      });
      // Record the requested level, whichever stream function answered.
-@@ -468,10 +468,10 @@
+@@ -468,7 +468,7 @@ async function executeToolCallsParallel(currentContext, assistantMessage, toolCa
          terminate: shouldTerminateToolBatch(orderedFinalizedCalls),
      };
  }
@@ -38,10 +39,7 @@ diff --git a/dist/agent-loop.js b/dist/agent-loop.js
      return finalizedCalls.length > 0 && finalizedCalls.every((finalized) => finalized.result.terminate === true);
  }
  function prepareToolCallArguments(tool, toolCall) {
-     if (!tool.prepareArguments) {
-         return toolCall;
-     }
-@@ -484,7 +484,7 @@
+@@ -484,7 +484,7 @@ function prepareToolCallArguments(tool, toolCall) {
          arguments: preparedArguments,
      };
  }
@@ -50,7 +48,7 @@ diff --git a/dist/agent-loop.js b/dist/agent-loop.js
      const tool = tools.find((t) => t.name === toolCall.name);
      if (!tool) {
          return {
-@@ -643,13 +643,13 @@
+@@ -643,13 +643,13 @@ async function finalizeExecutedToolCall(currentContext, assistantMessage, prepar
          durationMs: executed.durationMs,
      };
  }
@@ -66,7 +64,7 @@ diff --git a/dist/agent-loop.js b/dist/agent-loop.js
      await emit({
          type: "tool_execution_end",
          toolCallId: finalized.toolCall.id,
-@@ -659,7 +659,7 @@
+@@ -659,7 +659,7 @@ async function emitToolExecutionEnd(finalized, emit) {
          ...(finalized.durationMs === undefined ? {} : { durationMs: finalized.durationMs }),
      });
  }
@@ -75,7 +73,7 @@ diff --git a/dist/agent-loop.js b/dist/agent-loop.js
      return {
          role: "toolResult",
          toolCallId: finalized.toolCall.id,
-@@ -674,7 +674,7 @@
+@@ -674,7 +674,7 @@ function createToolResultMessage(finalized) {
          timestamp: Date.now(),
      };
  }
@@ -85,6 +83,7 @@ diff --git a/dist/agent-loop.js b/dist/agent-loop.js
      await emit({ type: "message_end", message: toolResultMessage });
  }
 diff --git a/dist/agent-loop.d.ts b/dist/agent-loop.d.ts
+index 9d3cc23..4d43f2e 100644
 --- a/dist/agent-loop.d.ts
 +++ b/dist/agent-loop.d.ts
 @@ -2,7 +2,7 @@
@@ -96,7 +95,7 @@ diff --git a/dist/agent-loop.d.ts b/dist/agent-loop.d.ts
  import type { AgentContext, AgentEvent, AgentLoopConfig, AgentMessage, AgentTool, AgentToolCall, AgentToolCallOutcome, AgentToolResult, StreamFn } from "./types.ts";
  export type AgentEventSink = (event: AgentEvent) => Promise<void> | void;
  /**
-@@ -50,5 +50,15 @@
+@@ -50,5 +50,15 @@ export interface RunToolCallOptions extends ToolCallHooks {
   * errors come back as `isError: true`.
   */
  export declare function runToolCall(toolCall: AgentToolCall, options: RunToolCallOptions): Promise<AgentToolCallOutcome>;
@@ -114,9 +113,10 @@ diff --git a/dist/agent-loop.d.ts b/dist/agent-loop.d.ts
  //# sourceMappingURL=agent-loop.d.ts.map
 \ No newline at end of file
 diff --git a/dist/agent.js b/dist/agent.js
+index e34d91a..041474c 100644
 --- a/dist/agent.js
 +++ b/dist/agent.js
-@@ -27,7 +27,7 @@
+@@ -27,7 +27,7 @@ const DEFAULT_MODEL = {
      contextWindow: 0,
      maxTokens: 0,
  };
@@ -125,7 +125,7 @@ diff --git a/dist/agent.js b/dist/agent.js
      let tools = initialState?.tools?.slice() ?? [];
      let messages = initialState?.messages?.slice() ?? [];
      const initialMessage = createInitialSystemMessage(initialState?.systemPrompt, tools.map(toToolDeclaration));
-@@ -37,7 +37,7 @@
+@@ -37,7 +37,7 @@ function createMutableAgentState(initialState) {
          get systemPrompt() {
              return getCurrentSystemPrompt(messages);
          },
@@ -134,7 +134,7 @@ diff --git a/dist/agent.js b/dist/agent.js
          thinkingLevel: initialState?.thinkingLevel ?? "off",
          get tools() {
              return tools;
-@@ -66,6 +66,7 @@
+@@ -66,6 +66,7 @@ class PendingMessageQueue {
      enqueue(message) {
          this.messages.push(message);
      }
@@ -142,7 +142,7 @@ diff --git a/dist/agent.js b/dist/agent.js
      hasItems() {
          return this.messages.length > 0;
      }
-@@ -92,6 +93,7 @@
+@@ -92,6 +93,7 @@ class PendingMessageQueue {
   */
  export class Agent {
      _state;
@@ -150,7 +150,7 @@ diff --git a/dist/agent.js b/dist/agent.js
      listeners = new Set();
      steeringQueue;
      followUpQueue;
-@@ -121,13 +123,15 @@
+@@ -121,13 +123,15 @@ export class Agent {
      toolExecution;
      /** Request identity forwarded to the stream function, over `DEFAULT_AGENT_IDENTITY`. */
      identity;
@@ -160,17 +160,16 @@ diff --git a/dist/agent.js b/dist/agent.js
          // Older compiled consumers may omit options or streamFn even though the current API requires them.
          const runtimeOptions = options ?? {};
 -        this._state = createMutableAgentState(runtimeOptions.initialState);
--        this.convertToLlm = runtimeOptions.convertToLlm ?? defaultConvertToLlm;
 +        this._state = createMutableAgentState(runtimeOptions.initialState, execution?.defaultModel);
 +        execution?.initialize?.(this, messages => { this._state.messages = messages; });
-+        this.convertToLlm = runtimeOptions.convertToLlm ?? execution?.defaultConvertToLlm ?? defaultConvertToLlm;
+         this.convertToLlm = runtimeOptions.convertToLlm ?? defaultConvertToLlm;
          this.transformContext = runtimeOptions.transformContext;
 -        this.streamFunction = runtimeOptions.streamFn ?? getDefaultStreamFn();
 +        this.streamFunction = runtimeOptions.streamFn ?? (execution?.getDefaultStreamFn ?? getDefaultStreamFn)();
          this.getApiKey = runtimeOptions.getApiKey;
          this.onPayload = runtimeOptions.onPayload;
          this.onResponse = runtimeOptions.onResponse;
-@@ -289,12 +293,12 @@
+@@ -289,12 +293,12 @@ export class Agent {
      }
      async runPromptMessages(messages, options = {}) {
          await this.runWithLifecycle(async (signal) => {
@@ -185,7 +184,7 @@ diff --git a/dist/agent.js b/dist/agent.js
          });
      }
      createContextSnapshot() {
-@@ -372,7 +376,7 @@
+@@ -372,7 +376,7 @@ export class Agent {
              api: this._state.model.api,
              provider: this._state.model.provider,
              model: this._state.model.id,
@@ -195,6 +194,7 @@ diff --git a/dist/agent.js b/dist/agent.js
              errorMessage: error instanceof Error ? error.message : String(error),
              timestamp: Date.now(),
 diff --git a/dist/agent.d.ts b/dist/agent.d.ts
+index 0147d05..fb57a96 100644
 --- a/dist/agent.d.ts
 +++ b/dist/agent.d.ts
 @@ -1,5 +1,6 @@
@@ -206,7 +206,7 @@ diff --git a/dist/agent.d.ts b/dist/agent.d.ts
  export type { QueueMode } from "./types.ts";
  /** Initial state for {@link Agent}. `systemPrompt` and `tools` become the leading system message unless `messages` already starts with one. */
  export type AgentInitialState = Partial<Omit<AgentState, "pendingToolCalls" | "isStreaming" | "streamingMessage" | "errorMessage">>;
-@@ -32,6 +33,22 @@
+@@ -32,6 +33,21 @@ export interface AgentOptions {
       */
      identity?: ClientIdentity;
  }
@@ -216,7 +216,6 @@ diff --git a/dist/agent.d.ts b/dist/agent.d.ts
 +    continue: typeof runAgentLoopContinue;
 +    defaultModel?: AgentState["model"];
 +    defaultUsage?: Usage;
-+    defaultConvertToLlm?: AgentOptions["convertToLlm"];
 +    getDefaultStreamFn?: () => StreamFn;
 +    initialize?: (agent: Agent, restoreMessages: (messages: AgentMessage[]) => void) => void;
 +}
@@ -229,7 +228,7 @@ diff --git a/dist/agent.d.ts b/dist/agent.d.ts
  /**
   * Stateful wrapper around the low-level agent loop.
   *
-@@ -39,10 +56,11 @@
+@@ -39,10 +55,11 @@ export interface AgentOptions {
   * and exposes queueing APIs for steering and follow-up messages.
   */
  export declare class Agent {
@@ -243,7 +242,7 @@ diff --git a/dist/agent.d.ts b/dist/agent.d.ts
      convertToLlm: (messages: AgentMessage[]) => Message[] | Promise<Message[]>;
      transformContext?: (messages: AgentMessage[], signal?: AbortSignal) => Promise<AgentMessage[]>;
      streamFunction: StreamFn;
-@@ -56,7 +74,7 @@
+@@ -56,7 +73,7 @@ export declare class Agent {
      prepareRequest?: PrepareRequest;
      prepareNextTurn?: (signal?: AbortSignal) => Promise<AgentLoopTurnUpdate | undefined> | AgentLoopTurnUpdate | undefined;
      prepareNextTurnWithContext?: (context: PrepareNextTurnContext, signal?: AbortSignal) => Promise<AgentLoopTurnUpdate | undefined> | AgentLoopTurnUpdate | undefined;
@@ -252,7 +251,7 @@ diff --git a/dist/agent.d.ts b/dist/agent.d.ts
      /** Session identifier forwarded to providers for cache-aware backends. */
      sessionId?: string;
      /** Optional per-level thinking token budgets forwarded to the stream function. */
-@@ -69,7 +87,7 @@
+@@ -69,7 +86,7 @@ export declare class Agent {
      toolExecution: ToolExecutionMode;
      /** Request identity forwarded to the stream function, over `DEFAULT_AGENT_IDENTITY`. */
      identity?: ClientIdentity;
@@ -261,7 +260,7 @@ diff --git a/dist/agent.d.ts b/dist/agent.d.ts
      /**
       * Subscribe to agent lifecycle events.
       *
-@@ -127,9 +145,9 @@
+@@ -127,9 +144,9 @@ export declare class Agent {
      private normalizePromptInput;
      private runPromptMessages;
      private runContinuation;
@@ -274,7 +273,7 @@ diff --git a/dist/agent.d.ts b/dist/agent.d.ts
      private handleRunFailure;
      private finishRun;
      /**
-@@ -139,6 +157,6 @@
+@@ -139,6 +156,6 @@ export declare class Agent {
       * considered idle later, after all awaited listeners for `agent_end` finish
       * and `finishRun()` clears runtime-owned state.
       */

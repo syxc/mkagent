@@ -26,6 +26,64 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Published core default conversion after 3525c98
+
+On 2026-11-09, the Native Agent stopped copying `defaultConvertToLlm` and
+now uses the published core default. The generator no longer extracts that
+function. The core patch also removes the converter-default field and its
+constructor branch. The Native facade has 105 lines; its two mutable model
+and usage defaults remain separate. Existing reflection tests do not establish
+that Proxy receivers, constructor arity or getter order are product requirements.
+
+| Check | Result and scope |
+| --- | --- |
+| Behavior | Eight explicit Agent, tool, recovery and CodingHost files pass 70 tests with 587 Bun assertions and no failures. Conversion checks cover role filtering, a new result array, original message identity and an explicit asynchronous converter. |
+| CI and declarations | A new `validate:ci` run passes in 82 seconds. Coding `build:types` also passes and produces no tracked declaration changes. |
+| Source and patch | The fixed upstream Agent revision and source hash match. The helper reproduces the 105-line facade. All four core files apply cleanly from restored pristine artifacts and match the installed output. Runtime and Craft override hashes are updated. |
+| Independent consumer | A fresh frozen install with scripts disabled passes under network denial. All four core files and 22 copied consumer files match. Bun and Node 24 each pass the same seven facade tests without provider calls. The consumer lock is unchanged. Seeds come from local installed packages with core and durable patches reversed and checked; registry tarball integrity is not rechecked. |
+
+The first consumer attempts exposed incomplete seeds in an older narrow cache:
+missing durable patch files, chord and pi-schema modules. A cache-completion
+helper also failed to stop directory lookup for Bun built-ins; it was stopped
+and corrected before the successful install. These failures did not change the
+workspace dependency manifest or lockfile.
+
+The repository entry passed its main batch: 6867 tests, 11 skips and no failures
+across 487 files. It then stopped at the native fork isolated fixture. The
+validation harness had fixed `PI_CODING_AGENT_DIR` to a different temporary
+HOME from the one created by that fixture. Removing the override lets its
+unchanged SQLite/JSONL fork, ownership and restart test pass all 381 assertions.
+
+The remaining isolated suites ran in entry order. Eighteen files passed before
+the PowerShell fixture failed. Temporary configuration lacked the repository
+`config-defaults.json`, so the first command returned a configuration error and
+never activated the tool. Supplying that file in the task-owned config lets the
+unchanged approval fixture and the final four files pass. Together, the original
+entry, fork rerun and two continuation runs cover all 35 isolated files. This is
+split-run evidence; the complete entry did not return zero in a single run.
+Runtime code and test expectations were not changed for either environment fix.
+
+A final entry run with both environment corrections returned 1 after 443 seconds:
+6866 tests passed, 11 were skipped and one failed across the same 487 files.
+The Skill URL icon fixture did not create its expected file before its deadline.
+Its unchanged four-test file then passed in isolation with the same temporary
+configuration. The failure's cause is not established. This entry did not reach
+the isolated batch; the 35-file split-run evidence above remains separate from
+a successful complete entry.
+
+Review also narrowed earlier retention claims. Summary progress isolation has a
+regression, but no product caller that starts multiple summaries concurrently
+was confirmed. Historical runtime support concerns old snapshot recognition,
+migration or safe settlement; a root export alone does not justify retaining
+its complete implementation. Both independent source reviews are complete.
+The Coding review found no further confirmed complete replacement through
+pristine Pi 1.5.0 SDK APIs. It did find that RpcClient defaults to the removed
+`dist/cli.js` launcher and incorrectly documents an entry-point search. That
+concrete entry contract needs correction. Programmatic mode scope, remaining
+source boundaries and the denied `theme-tokens.ts` check stay open. No complete
+runtime generation, Craft audit, product UI, real account, paid provider or new
+platform check runs in this slice.
+
 ## Repository checks after 4306eeb
 
 On 2026-11-09, full repository validation used temporary child-process HOME,
@@ -1712,10 +1770,12 @@ This remains partial evidence, not a full generator or Craft audit result.
 
 ## Shared core Agent facade
 
-The 662-line Native Agent implementation is now a 115-line subclass of the
-independent core Agent. Core owns state initialization, prompt normalization,
-event reduction, abort and settlement. Native supplies the durable execution
-functions and retains queue identity, recovery and separate defaults.
+The facade batch replaced the 662-line Native Agent implementation with a
+115-line subclass of the independent core Agent. The default-converter
+follow-up above reduces it to 105 lines. Core owns state initialization,
+prompt normalization, event reduction, abort and settlement. Native supplies
+the durable execution functions and retains queue identity, recovery and
+separate mutable defaults.
 The durable package's public Agent type does not provide this Native state
 and event facade. Its Harness and tasks continue to own scheduling.
 
@@ -1723,8 +1783,9 @@ The core patch now covers four files. The two added Agent files provide an
 optional execution backend, queue snapshots and the protected operations
 needed for recovery. The queue declarations expose the mode and three methods; the
 active-run declaration exposes a read-only marker. The runtime patch adds
-four net lines and does not copy the Agent implementation. Three Native
-default declarations still come directly from the pinned source.
+four net lines and does not copy the Agent implementation. That batch
+extracted three Native default declarations from pinned source. The converter
+follow-up removes the stateless function; two mutable default objects remain.
 
 Native instances now also satisfy `instanceof CoreAgent`; they continue to
 satisfy `instanceof Agent`. Both constructors retain `length === 1`.

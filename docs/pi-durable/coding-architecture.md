@@ -73,7 +73,7 @@ Native 先准备并验证参数，再运行权限 hook；内部 SDK effect 桥�
 
 | 范围 | 候选 API 与实际缺口 | 当前适配及退出条件 |
 |---|---|---|
-| 内部 summary 请求 | 发布 GenerationTask 会分类、写主 transcript 和创建工具；仓内 GenerationResponseTask 虽可独立返回响应，但 request/abort 及 partial writer 都操作 conversation 级 `LiveDoc.generation` | 两个 summary 可以并发且不改变主请求进度，不能直接共用该槽。保留独立 owner、requesting checkpoint、响应回执及不确定请求不重发；待 SDK 提供任务级进度隔离或无 conversation 进度写入的响应接口，再验证动态路由、usage、取消及真实崩溃后替换 |
+| 内部 summary 请求 | 发布 GenerationTask 会分类、写主 transcript 和创建工具；CompactionTask 还包含上下文选取和 compaction entry 策略。仓内 GenerationResponseTask 虽可独立返回响应，但 request/abort 及 partial writer 都操作 conversation 级 `LiveDoc.generation` | 已有回归覆盖 summary 不覆盖主请求进度，未确认产品并发启动多个 summary 的调用。保留独立 owner、requesting checkpoint、完整响应回执及不确定请求不重发；待 SDK 提供任务级进度隔离或无 conversation 进度写入的响应接口，再验证动态路由、usage、取消及真实崩溃后替换 |
 | Native session 生命周期 | 已复用 Harness task ownership、commit 和等待；GenerationTask 的收尾结算 SDK run，不能直接承接 Native 已接受 child、插件回调状态及产品回执 | [Session task](../../packages/pi-durable-coding/src/durable-coding/session-task.ts)同事务接纳真实 run child、journal/state 和下一 checkpoint。恢复只 join 已接受 child，不重做 prompt hooks 或不确定 post/before-settle/finalize/action。待公开生命周期接口可承接这些输入身份、回调和回执，或整体迁移通过等价恢复验证后撤除 |
 
 本批仅新增 summary 并发进度隔离回归，未更改 summary/session 运行时代码或 producer 契约。升级须重新检查 progress 的写入位置、summary 的完整响应和 usage、session 的 child 接纳及回调顺序；历史五种 Native v1 任务继续可读。这些具体缺口不关闭 F1 至 F3，也不证明完整 AgentSession 源码或全部私有方法均有必要。
@@ -167,7 +167,7 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 | 本地位置 | 上游来源与移植方式 |
 |---|---|
 | `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，共 220 份 TypeScript 和 7 项主题、交互及 HTML 导出资源。根导出排除原版 CLI 的 `main`/`MainOptions` 及其独占依赖；保留 `AgentSession`、SDK 工厂、工具、扩展、资源、程序化运行模式和插件 UI 组件，部分文件经过适配。 |
-| `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 115 行 core 子类，保留 durable 队列身份、恢复和独立默认值。三个默认声明仍从锁定上游提取；stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
+| `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 105 行 core 子类，保留 durable 队列身份、恢复和独立的可变默认对象。默认消息转换直接使用发布版 core；模型和 usage 两个默认对象仍从锁定上游提取，stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
 | `src/native-operations.ts` | 22 行门面，调用仓内 core 补丁导出的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
 | `src/upstream/**` | 6 项选取源码：旧扩展 loader、Git 路径、上下文文件、资源去重、boundary drafts 和同步 durable context；另有 28 个共享入口。旧 loader 共用 Native 的 runtime、注册 API 和 factory 生命周期；资源纯函数也由原生模块复用。 |
@@ -185,7 +185,7 @@ HTML 导出的 Markdown 和高亮副本已删除，分别直接依赖 `marked@18
 
 请求及工具操作不再复制函数正文。core 补丁仅修改发布的 JavaScript 和类型声明，公开八个实际使用的函数，并为流式请求补充可选默认身份参数。Native 保留原来的身份对象，其他七个函数直接转发。本轮移除 `withToolChanges` 和 `prepareToolCallArguments` 的无调用转发及新增导出，这两个 helper 继续由 core 内部调用，不扩大补丁的公开 API。独立消费者须同时应用根目录登记的 durable 与 core 补丁。原版 58 场景保留为历史对照；本轮实际 task 回归、四文件干净补丁重放和独立 frozen 消费者的 Bun、Node 运行均通过，完整 SDK 声明及全仓类型的最终结果见验证记录。
 
-Agent 的状态初始化、提示输入、事件归约、取消和等待也改由 core 类处理，Native 仅保留 durable 接点。core 的新增运行时正文净增加 4 行，不将原有类复制进补丁。执行后端以普通私有字段保存，保留透明 `Proxy` 的接收者行为；最初的 `#private` 原型在新增回归中失败，已修正。最终原版对照在 Bun、Node 下各通过 27 组，未调用上游 loop；冻结消费者及完整验证边界见[验证记录](coding-validation.md)。
+Agent 的状态初始化、提示输入、事件归约、取消和等待也改由 core 类处理，Native 仅保留 durable 接点。core 的新增运行时正文净增加 4 行，不将原有类复制进补丁。默认消息转换已直接使用发布版 core，并删除补丁中的 converter 默认字段。模型、usage 和请求 identity 是可变对象，本批未把它们与无状态 converter 一并删除。执行后端沿用 core 的普通字段写法；透明 `Proxy`、构造函数参数个数和 getter 顺序仅是历史测试证据，未找到依赖这些细节的产品调用方，不作为保留执行分叉的条件。原版对照及冻结消费者的时点和范围见[验证记录](coding-validation.md)。
 
 Native 实例仍满足 `instanceof Agent`，现在也满足 `instanceof CoreAgent`。两个构造函数的 `length` 均保留为 1；core 新增参数使用默认值，避免改变原有参数个数。私有字段和原型反射布局有变化，定向行为对照不代表这些内部布局完全相同。
 
@@ -226,7 +226,7 @@ Pi v1.5.0 尚未将 `AgentSession` 及 Coding 专有的扩展和资源装配独�
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |
-| Agent 外观及请求操作 | core 四文件补丁公开八个实际使用的操作，并允许 Agent 注入执行后端及必要的受保护接点。115 行 Native 子类复用 core 的状态和生命周期，固定注入 durable；22 行操作门面保留 Native 默认身份。队列只暴露所需操作，活动状态只暴露只读标记，默认对象及 stream 注册仍独立。 | 八个操作导出、core 接点、默认对象、透明 Proxy、事件等待、队列身份和任务恢复版本 |
+| Agent 外观及请求操作 | core 四文件补丁公开八个实际使用的操作，并允许 Agent 注入执行后端及必要的受保护接点。105 行 Native 子类复用 core 的状态、生命周期及默认消息转换，固定注入 durable；22 行操作门面保留 Native 默认身份。必要接点限于 backend、队列快照、消息身份、恢复绑定与异步事件结算；默认对象及 stream 注册仍独立，未用反射断言证明其必要性。 | 八个操作导出、backend/queue/lifecycle 接点、可变默认对象的影响、事件等待、队列身份和任务恢复版本 |
 | Native codemode | 内置执行器、模型准备和 formatter 已复用。仓内 durable 补丁新增选项承接 store、租约、发现覆盖、调用观察和结果投影；外层保留 Native 字符串 ID、实时展示、原始分支写入及 worker 策略。隐藏转发器使动态 Native 工具走实际子任务和既有审批管道，不另建执行循环。 | 补丁新增接点及其发布 API 替代、工具及模型目录变化、Native 行与用量、取消、journal 回执及沙箱释放 |
 | Coding 会话、扩展及展示 | 独立公开包未提供 AgentSession 和 Coding loader，早期 `./native` 保留过完整 SDK 导出。现已排除原版 CLI 启动器，保留会话工厂、程序化运行模式和插件组件；剩余依赖继续按需求核对。既有核查覆盖 abort 落盘、shutdown、UI teardown、dispose/invalidate、rebind、withSession、旧 context 失效和 factory 失败回滚；后续按公开插件行为和官方 lifecycle 接口收窄适配。 | 已确认的插件导出、会话顺序、context/factory 行为、资源及宿主需求 |
 | Native renderer 与交互装配 | pi-tui 已承担基础组件、输入、宽度和 Markdown。Native 另维护 toolCallId、state/lastComponent、执行及参数完成状态、部分结果、折叠、自定义 shell、异常回退、按帧参数合并及图像缓存；header、footer、widget、editor 和输入订阅还需会话重绑与清理。HTML 导出保留 collapsed/expanded renderer。公开基础组件不能代替这些装配契约，保留外层实现。 | 工具行身份、部分更新、异常回退、图像缓存、组件与订阅清理、HTML 两种结果 |
@@ -247,7 +247,7 @@ Pi v1.5.0 尚未将 `AgentSession` 及 Coding 专有的扩展和资源装配独�
 | 旧模型、设置、会话及 token | registry 继承共享外观，设置合并和 token 估算共用原生函数。会话存储、迁移、索引、分支及工厂共用原生类；可选投影策略保留 durable head、贡献消息与已折叠编辑，默认仍为原生规则。 | 静态及脱离类调用、实例类型、JSONL 迁移、消息身份、旧 usage 失效、声明输出 |
 | 资源与上下文选取源码 | Git、上下文文件与资源去重未由独立公开包提供，选取成轻量共享实现，原生和旧入口均调用它们。boundary drafts 使用 AgentSession 私有方法。公开 `ConversationTranscript` 同步薄适配在两个运行时各通过 18 组场景，但仍须保留未提交消息、身份映射及完整投影规则，没有减少十个上下文选取声明，因此保留现实现。异步 context 缓存方案未实施验证。 | 三份纯函数的双入口调用、信任默认值、private 方法、同步预览及消息身份 |
 | MCP OAuth、模型与打包适配 | MCP 协议和授权流程已用公开 pi-mcp；宿主持久化、跨进程刷新锁、取消及打包路径保留在外层。52 行运行时凭据覆盖层与固定上游相同，已委派公开 `CredentialStore`；公开单层内存存储不能直接保留临时覆盖与持久化修改的独立性。保留覆盖层，存储和刷新继续交给宿主。 | 主机生命周期、锁、取消、安装资源；临时 key 不落盘、覆盖下的持久化更新、元数据和失败删除 |
-| durable 补丁 | 根 SDK 的 NativeCodingRuntime 和历史 checkpoint 仍依赖旧阶段，不能仅因新 CodingHost 已换用本地任务而删除。 | 旧 SDK 兼容和存量 checkpoint 迁移 |
+| durable 补丁 | 旧 checkpoint 有恢复接点，发布版 GenerationTask v2 不识别本地 v4 的 Coding 阶段。本轮窄范围未发现产品新建 `NativeCodingRuntime.load` 的调用；root export 和测试不能证明整套旧 runtime 永久必要。保留范围限于仍受支持旧快照的识别、迁移或安全拒绝/结算。 | 旧 SDK 支持边界、task/doc 版本、已接受 child 和完成回执、不确定副作用禁止重放；迁移验证通过后撤除对应旧阶段 |
 
 此前静态源码图外的五项已补充入口核对。两个 worker 由配置路径和图片处理的 URL 加载，highlight 声明补齐 `.js` 子路径及语言通配符类型，并由 Native 门面显式引用以供共享包消费者加载。SDK 调用 `getClientIdentity(settingsManager)`；ModelRuntime 调用 `withPersonalizedCatalog` 和 `withRemoteCatalog`。`client-identity.ts` 和 `remote-catalog-provider.ts` 有实际调用，不能按此前不完整的静态图当作死代码删除。本轮没有访问真实身份或远程模型目录。公开凭据协议也不能直接替代 Native 同步及异步原始 JSON 锁回调；现实现已使用 `proper-lockfile` 和标准文件 API。2026-11-08 续接已核查凭据覆盖层，临时 key 与后端的独立性、宿主共享、OAuth 刷新及取消由模型和凭据定向测试覆盖。
 

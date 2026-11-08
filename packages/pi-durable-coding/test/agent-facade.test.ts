@@ -22,7 +22,7 @@ class FailedRunBinding extends DurableLoopBinding {
   }
 }
 
-test('Native defaults and fallback stream remain separate from public core defaults', async () => {
+test('Native model, usage and fallback stream remain separate from public core defaults', async () => {
   assert.equal(CoreAgent.length, 1);
   assert.equal(Agent.length, 1);
   const publicCore = new CoreAgent({ streamFn });
@@ -32,8 +32,6 @@ test('Native defaults and fallback stream remain separate from public core defau
   assert(first instanceof Agent);
   assert.equal(first.state.model, second.state.model);
   assert.notEqual(first.state.model, publicCore.state.model);
-  assert.equal(first.convertToLlm, second.convertToLlm);
-  assert.notEqual(first.convertToLlm, publicCore.convertToLlm);
   await first.prompt('one');
   await second.prompt('two');
   const one = first.state.messages.at(-1), two = second.state.messages.at(-1);
@@ -47,6 +45,29 @@ test('Native defaults and fallback stream remain separate from public core defau
     assert.equal(legacy.streamFunction, streamFn);
     assert.equal(getDefaultStreamFn(), streamFn);
   } finally { setDefaultStreamFn(undefined); }
+});
+
+test('default conversion keeps LLM messages and preserves their identities', async () => {
+  const input = ['custom', 'system', 'user', 'custom', 'assistant', 'toolResult', 'custom']
+    .map(role => ({ role })) as AgentMessage[];
+  const agent = new Agent({ streamFn });
+  const converted = await agent.convertToLlm(input);
+  assert.deepEqual(converted, [input[1], input[2], input[4], input[5]]);
+  assert.notEqual(converted, input);
+  assert.equal(input.length, 7);
+  for (const [index, original] of [1, 2, 4, 5].entries()) {
+    assert.equal(converted[index], input[original]);
+  }
+});
+
+test('an explicit converter receives the original context and can return asynchronously', async () => {
+  const input = [message('custom conversion')];
+  const output = [message('converted')];
+  const agent = new Agent({
+    streamFn,
+    convertToLlm: async messages => { assert.equal(messages, input); return output; },
+  });
+  assert.equal(await agent.convertToLlm(input), output);
 });
 
 test('constructor property reads retain their order across durable binding', () => {

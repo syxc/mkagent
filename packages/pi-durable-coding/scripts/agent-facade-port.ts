@@ -4,12 +4,11 @@ import ts from 'typescript';
 export function portAgentFacade(source: string): string {
   const ast = ts.createSourceFile('agent.ts', source, ts.ScriptTarget.Latest, true);
   const policies = ast.statements.filter(node =>
-    ts.isFunctionDeclaration(node) && node.name?.text === 'defaultConvertToLlm' ||
     ts.isVariableStatement(node) && node.declarationList.declarations.some(declaration =>
       ts.isIdentifier(declaration.name) && ['EMPTY_USAGE', 'DEFAULT_MODEL'].includes(declaration.name.text)));
-  if (policies.length !== 3) throw new Error('Pinned native Agent defaults changed');
+  if (policies.length !== 2) throw new Error('Pinned native Agent defaults changed');
   return `import { Agent as CoreAgent, type AgentOptions as CoreAgentOptions } from "@earendil-works/pi-agent-core";
-import type { Message, Model } from "@earendil-works/pi-ai";
+import type { Model } from "@earendil-works/pi-ai";
 import type { TaskId } from "@earendil-works/pi-durable";
 import { DurableLoopBinding } from "./durable-coding/engine.ts";
 import { runAgentLoop, runAgentLoopContinue } from "./durable-loop.ts";
@@ -18,7 +17,7 @@ import type { AgentMessage, AgentLoopConfig } from "./agent-runtime.ts";
 export type { AgentInitialState, QueueMode } from "@earendil-works/pi-agent-core";
 export interface AgentOptions extends CoreAgentOptions { durable?: DurableLoopBinding; }
 
-// Keep Native defaults separate from the mutable public core defaults.
+// Keep mutable Native model and usage defaults separate from public core defaults.
 ${policies.map(node => node.getText(ast)).join('\n\n')}
 
 export class Agent extends CoreAgent {
@@ -29,7 +28,7 @@ export class Agent extends CoreAgent {
     super(options, {
       run: runAgentLoop, continue: runAgentLoopContinue,
       defaultModel: DEFAULT_MODEL, defaultUsage: EMPTY_USAGE,
-      defaultConvertToLlm, getDefaultStreamFn,
+      getDefaultStreamFn,
       initialize(agent, restoreMessages) {
         const durable = runtimeOptions.durable ?? new DurableLoopBinding();
         Object.defineProperty(agent, "durable", {

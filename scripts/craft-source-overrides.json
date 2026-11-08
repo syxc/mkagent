@@ -4077,8 +4077,8 @@
       "reason": "Provide the independent native coding host adapter and public contracts in compaction-reserve.ts."
     },
     "packages/pi-durable-coding/src/durable-agent.ts": {
-      "sha256": "79003f50914419a8754c1db3e2fe1e196f18f370a52aa93b290377858e32f137",
-      "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse core Agent state and lifecycle through a durable execution backend while preserving Native defaults and Proxy receivers."
+      "sha256": "ee8ffa86172f5fd78edf51060e0b678bcbd08435f9908ad630d68f59ef9774d4",
+      "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse core Agent state, lifecycle and default message conversion; retain durable queue identity, recovery and two separate mutable defaults."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
       "sha256": "8bd276db3bac9fabbed79840ab4f5761e040f87aab6ee9375e4dbfe0390236bb",
@@ -5337,16 +5337,16 @@
       "reason": "Verify Native identity isolation, existing core defaults, tool preparation and hook cancellation across the public core operation boundary."
     },
     "patches/@earendil-works%2Fpi-agent-core@1.5.0.patch": {
-      "sha256": "9fcad927beb627b5793427d24908211807c63414b299b6e8efd4dbe70da7526b",
-      "reason": "Expose only the eight consumed pinned request and tool operations and declarations; accept Native default identity without changing upstream loop driver bodies. Reuse core Agent state and lifecycle through a durable execution backend while preserving Native defaults and Proxy receivers. Keep the two unused helpers private."
+      "sha256": "ca549f589924ddf537a72ba2ae8acfb31c0a90a5dc559a786d582dcc40fbffd7",
+      "reason": "Expose the eight consumed request and tool operations; retain the durable Agent backend, queue snapshots and recovery lifecycle hooks. Use published core default message conversion, keep separate mutable defaults, and leave two unused helpers private."
     },
     "packages/pi-durable-coding/scripts/agent-facade-port.ts": {
-      "reason": "Generate a thin durable Agent subclass and extract three separate Native defaults from pinned source.",
-      "sha256": "337d2f009575a9f03ae8bb3417c2cfd117b7d39ed3cb7dc0b0cc24fd09e0533f"
+      "reason": "Generate the durable Agent subclass with published core message conversion and two mutable defaults extracted from pinned source.",
+      "sha256": "7371a1201c5b39008c6213f8f7d5c6d18b1f39abf86fb1ccdbb44dff730f1417"
     },
     "packages/pi-durable-coding/test/agent-facade.test.ts": {
-      "reason": "Verify Native defaults, constructor reads, transparent proxies, queue snapshots and awaited event settlement.",
-      "sha256": "f7bab0e79ec36655bbd14c2f0a60fbe4ff721dab5e5d3f0f0b1cf141d198d2aa"
+      "reason": "Verify published default and explicit asynchronous message conversion, mutable defaults, durable queue snapshots and awaited event settlement; retain historical reflection checks without treating them as product requirements.",
+      "sha256": "e8785d1334b6fd18fe595b5310150c45076bc79ea2c976397a18e9969d3576b6"
     },
     "packages/pi-durable-coding/test/native-html-highlight.test.ts": {
       "sha256": "e94c4bf38caae97f74d5d8588352048b7269327472886d345afdb09528378335",
