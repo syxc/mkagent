@@ -338,7 +338,8 @@ describe('pi-agent-server bundle', () => {
       },
       { type: 'ensure_session_ready', id: 'open-1' },
       { type: 'ensure_session_ready', id: 'open-2' },
-    ], out => out.includes('"id":"open-1"') && out.includes('"id":"open-2"'));
+    ], out => out.includes('Created durable kernel session:')
+      && out.includes('"id":"open-1"') && out.includes('"id":"open-2"'));
     const results = output.split('\n').flatMap(line => {
       try { return [JSON.parse(line)]; } catch { return []; }
     }).filter(message => message.type === 'ensure_session_ready_result');

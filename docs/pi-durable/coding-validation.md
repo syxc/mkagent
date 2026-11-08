@@ -61,8 +61,16 @@ bun --no-env-file --config=/dev/null test \
   packages/pi-durable-coding/test/plugin-transpiler.test.ts
 ```
 
-The complete repository rerun is in progress. The source checks below establish
-provenance and reproduction; they do not close the remaining necessity review.
+The complete repository rerun passed 6864 tests with 11 skips and one failure
+across 487 files. The failure was in the bundle concurrency fixture: its two
+JSONL results arrived before the creation diagnostic on stderr. The fixture
+stopped the process before it collected that diagnostic. It now waits for both
+results and the diagnostic before asserting one kernel creation. Runtime code
+was not changed. All 26 bundle tests then passed with 103 assertions and no
+failures. The source overrides include both corrected test hashes.
+
+The source checks below establish provenance and reproduction; they do not
+close the remaining necessity review.
 
 - Scoped generation reproduced 219 allowed Coding TypeScript outputs from fixed
   Pi `f9a26365568127461c47a07a37dcb42c140a3ac5`. Their source and output hashes

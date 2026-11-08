@@ -2235,7 +2235,7 @@
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "packages/pi-agent-server/src/bundle-smoke.test.ts": {
-      "sha256": "233b33c0d8f38d3cd9abb1bb633037cfdc4638ae577d198a22c69dcec3c7aada",
+      "sha256": "3fd289d2f5bf496615fa72b2493c534f415bb2a97e63fdbe014a5c0fa97c9853",
       "reason": "Extend offline bundle tests for durable assets, codemode/MCP defaults, initialization races, tools, runtime updates, cancellation and OAuth ownership. Verify relocated Native images and HTML export with one shared Photon WASM and reject the obsolete second asset."
     },
     "packages/pi-agent-server/src/mini-model-query.test.ts": {
@@ -2569,7 +2569,7 @@
       "reason": "Verify shared implementation compatibility, structural consumer types and scoped reproduction boundaries."
     },
     "packages/pi-durable-coding/test/shared-sessions-runner.test.ts": {
-      "sha256": "67231d581b9094c2daa1ea20341dc43f6a648fa893e8dfe21c56f71457b116e2",
+      "sha256": "213656d488036037e099b2019fa71351d1f17397115a5bb5d9fd344160a76c5a",
       "reason": "Verify shared implementation compatibility, structural consumer types and scoped reproduction boundaries."
     },
     "packages/pi-durable-coding/test/shared-compat-types.test.ts": {
