@@ -35,8 +35,12 @@
       "reason": "Retain Craft and Pi license notices and identify the complete pinned Pi source port and transformation manifests."
     },
     "README.md": {
-      "sha256": "4cee9e0ac623faf263fd245fa023ea3422c47d98dd418e4ab5542ea955c8a218",
-      "reason": "Craft documentation adapted to the retained MkAgent feature set and product identifiers; distinguish initial v0.12.1 lineage from the current pinned v0.15.6 sync baseline."
+      "sha256": "730d7c44cbda8482eb4fd8d345beae33025f7b9294d6da7171e3df3d22155e8b",
+      "reason": "Describe retained MkAgent features and Craft lineage; state the retained Pi Coding layer, durable execution base and official SDK priority."
+    },
+    "packages/server-core/README.md": {
+      "sha256": "a3d0d541dc43558c6d40538f44035bba6089797225d644dd0f0bed3e69945780",
+      "reason": "Describe server-core session and domain services; distinguish the Pi worker, normal GenerationTask and CodingHost responsibilities."
     },
     "apps/cli/package.json": {
       "sha256": "c1cb4530b4aaaef3527e80fe23ed50c7ce4c494ac89f24b1693dd7fa5907f27d",
@@ -971,8 +975,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "bddca79eb42e89036d102371aaf2f70ead8de6a607f2990aeed6c7ac7e155809",
-      "reason": "Lock the official Highlight.js browser asset package at the existing Native version without changing other resolved dependency versions."
+      "sha256": "c6bc8464e1cf860aaaaac2c060fb6f564ec2dccc29720cfce03d21db02f94538",
+      "reason": "Lock the published Highlight.js browser asset and existing dependency versions; remove the unused private terminal Mermaid dependency."
     },
     "package.json": {
       "sha256": "60f6bdb53e0e226e82843e6557cc39e3107cf692fdea2666297894434aeff260",
@@ -3001,8 +3005,8 @@
       "reason": "MkAgent-specific release metadata required by the release workflow; v0.15.3 sync: MkAgent 0.2.3 release metadata and HEIC dependencies; Pi remains pinned at 1.1.0 and dynamic release audit baseline is preserved."
     },
     "README.zh.md": {
-      "sha256": "1aec6a944888f42cc6a6373ba90f83c62250f72823ae2b440c87176f37d1ef35",
-      "reason": "Simplified Chinese MkAgent project overview maintained alongside the English README, with separate initial lineage and current v0.15.6 sync baseline."
+      "sha256": "6b4a979a2476a774b860fde11088399f23e148d04332c127cf8f202e7f7a8212",
+      "reason": "Maintain the Chinese project overview with Craft lineage, the retained Pi Coding layer, durable execution base and official SDK priority."
     },
     "apps/electron/resources/generate-brand-icons.sh": {
       "sha256": "b3b1484bafbb3a6c135791b854f49c53e4ece9ab610b7edf80681ed16e305f64",
@@ -4049,8 +4053,8 @@
       "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "0bb567b1c638649d13fa8afb8eff82bdfd85814e335d6f08478e56cc5786e70b",
-      "reason": "Record the pinned Coding SDK scope and private shared extension initializer; retain source hashes, transforms and assets."
+      "sha256": "f2bc559337c0852fa30aecde19c2d0189e0f58909bcfdcd1349d92f9f2d6bbf2",
+      "reason": "Record the complete pinned Coding source closure, shared initializer and theme transforms; remove the unused renderer barrel entry."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "e132e9a4414b44d25c8d7372f493394f104ce15cf4010e7596a721ed9cf7bffc",
@@ -4068,9 +4072,17 @@
       "sha256": "3a9fba6c2390bc80ef4be2df287068e9182cacc294dd628f43caeceaa00818de",
       "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
     },
+    "packages/pi-durable-coding/scripts/theme-runtime-port.ts": {
+      "sha256": "f885d6c3e5cdb3cc13c7125ac12f2d5fe4671990bcd23e0e557a980ed30c88ee",
+      "reason": "Generate the retained system palette and complete file-theme validation without the unused terminal color-report solver."
+    },
+    "packages/pi-durable-coding/test/native-theme.test.ts": {
+      "sha256": "3031dcdbf1e82dce547643c81207abf620a739bceab9bf696fd52f3e0905e5e8",
+      "reason": "Verify all theme slots, optional fallbacks, file validation, variable errors and the pre-port system palette."
+    },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "a1ebcbfa63d6f050fd3e7a2e21e2ebee7c59e09e9d5cca13626bb56ac263db7b",
-      "reason": "Exclude the pinned CLI launcher, run-mode entry points and private host components before traversing imports. Retain RPC client/protocol and reusable plugin components; require an explicit RpcClient CLI entry."
+      "sha256": "7089fe8f3f682512dbbfb4c148a11f73887da323fd5fc2e34467a870cdba0487",
+      "reason": "Apply pinned entry and theme transforms before traversal; preserve plugin and RPC boundaries and reject source files outside the complete generated closure."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4265,8 +4277,8 @@
       "reason": "Preserve the pinned Native SGR parser and HTML escaping while sharing the ANSI palette and indexed color conversion through public pi-tui."
     },
     "packages/pi-durable-coding/test/native-html-colors.test.ts": {
-      "sha256": "809c90d0d7cf052629295fab6157f24c2302e1a07c0c129c2f43d8d492824491",
-      "reason": "Pin original ANSI HTML output for 635 inputs, guard generation boundaries and verify custom tool colors in a real session HTML export."
+      "sha256": "dc79cc16259e2f4e9f10818adb65750a4027654ae7c917fdcc8b5a82e8874c03",
+      "reason": "Pin 635 original ANSI HTML results and generation guards; verify real themes, export backgrounds and both tool-result views in session HTML."
     },
     "packages/pi-durable-coding/src/pi/core/export-html/index.ts": {
       "sha256": "e0b2f99bce25186aa50c789bc8f06a19a41e72ac6b04a4431a08612bf678c656",
@@ -4543,10 +4555,6 @@
     "packages/pi-durable-coding/src/pi/core/tools/renderers/grep.ts": {
       "sha256": "8a990da5f4305b0976ad4c245188fbf1fd5e4a3bad69b86c2ffd85bdd1115927",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/grep.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/tools/renderers/index.ts": {
-      "sha256": "27b2cff3b607f7d95392d91d9fc95fd975af2cdc4861f5e9f5646b06d41f84ae",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/renderers/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/tools/renderers/ls.ts": {
       "sha256": "69ef43c9bcc3082b4c7880b0ad2edf4c0605c84fac326a2254e55397b9c81084",
@@ -4825,20 +4833,20 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/light.json; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/theme/system-theme.ts": {
-      "sha256": "877a3dc24fd194f2dc5ee9efe8f1699acdcdac6defa197009bc7b39920bbb729",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/system-theme.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "33f35c0cbdc5e96a5e8b087c9d1d908d4ed49376af1bb2c5e9e8f8345ddcb48d",
+      "reason": "Retain the pinned indexed palette, terminal-default backgrounds and dim tokens; exclude the unused terminal color-report solver."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/theme/theme-schema.ts": {
-      "sha256": "6440ccc6aa0576f0f9447584b707b3bf09f2b77aed64687f4598db261588474b",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/theme-schema.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "0d02dbb14d89157324170492f7b747971bd9ed42f1a3f448eef88d464a3215fc",
+      "reason": "Retain the pinned theme schema and validator; document mandatory validation at every file-loading entry."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/theme/theme-tokens.ts": {
       "sha256": "6c38a169da4f85ee04bc31980a13ef6a498b6be68e63faceda4f5a1e5c632ecf",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/theme/theme-tokens.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/theme/theme.ts": {
-      "sha256": "d1da018dbaba222b5f477b77cb9c1c79886dbcc92856b80e1c0c7685256382cf",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
+      "sha256": "5ef38501af0ec46061bc01c4ecce0841080ddf37327f71f3c4a5058449907c5d",
+      "reason": "Preserve public Coding theme contracts and file validation; remove unused terminal report state while retaining COLORFGBG defaults and custom-theme colors."
     },
     "packages/pi-durable-coding/src/pi/modes/json-event.ts": {
       "sha256": "87f6fa86cd73b817470062f5ab0a99c790d0c0e222e25979b96bfcd157e119bf",

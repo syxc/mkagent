@@ -771,13 +771,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/core/tools/renderers/index.ts",
-      "target": "src/pi/core/tools/renderers/index.ts",
-      "sha256": "27b2cff3b607f7d95392d91d9fc95fd975af2cdc4861f5e9f5646b06d41f84ae",
-      "portSha256": "27b2cff3b607f7d95392d91d9fc95fd975af2cdc4861f5e9f5646b06d41f84ae",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/core/tools/renderers/ls.ts",
       "target": "src/pi/core/tools/renderers/ls.ts",
       "sha256": "69ef43c9bcc3082b4c7880b0ad2edf4c0605c84fac326a2254e55397b9c81084",
@@ -1282,15 +1275,19 @@
       "source": "packages/coding-agent/src/modes/interactive/theme/system-theme.ts",
       "target": "src/pi/modes/interactive/theme/system-theme.ts",
       "sha256": "877a3dc24fd194f2dc5ee9efe8f1699acdcdac6defa197009bc7b39920bbb729",
-      "portSha256": "877a3dc24fd194f2dc5ee9efe8f1699acdcdac6defa197009bc7b39920bbb729",
-      "changes": []
+      "portSha256": "33f35c0cbdc5e96a5e8b087c9d1d908d4ed49376af1bb2c5e9e8f8345ddcb48d",
+      "changes": [
+        "exclude-terminal-color-report-solver"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/theme/theme-schema.ts",
       "target": "src/pi/modes/interactive/theme/theme-schema.ts",
       "sha256": "6440ccc6aa0576f0f9447584b707b3bf09f2b77aed64687f4598db261588474b",
-      "portSha256": "6440ccc6aa0576f0f9447584b707b3bf09f2b77aed64687f4598db261588474b",
-      "changes": []
+      "portSha256": "0d02dbb14d89157324170492f7b747971bd9ed42f1a3f448eef88d464a3215fc",
+      "changes": [
+        "validate-themes-at-resource-boundary"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/theme/theme-tokens.ts",
@@ -1303,8 +1300,10 @@
       "source": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
       "target": "src/pi/modes/interactive/theme/theme.ts",
       "sha256": "d1da018dbaba222b5f477b77cb9c1c79886dbcc92856b80e1c0c7685256382cf",
-      "portSha256": "d1da018dbaba222b5f477b77cb9c1c79886dbcc92856b80e1c0c7685256382cf",
-      "changes": []
+      "portSha256": "5ef38501af0ec46061bc01c4ecce0841080ddf37327f71f3c4a5058449907c5d",
+      "changes": [
+        "resource-theme-validation-without-terminal-reports"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/json-event.ts",

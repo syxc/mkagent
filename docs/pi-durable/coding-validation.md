@@ -26,6 +26,128 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Theme contract and complete source after 6240ed9
+
+The user requested a permission correction before the loop resumed. A project
+allow cannot override a global deny. After an exclusive backup, the global
+settings add this exact relative-path exception immediately after the existing
+Read token rule, in the same deny array:
+
+```json
+"Read(*token*)",
+"Read(!packages/pi-durable-coding/src/pi/modes/interactive/theme/theme-tokens.ts)"
+```
+
+Normal Read calls then succeed for the local theme source and its pinned Pi
+checkout source. The remaining configuration matches the backup. A separate
+synthetic token-named write in the repository is rejected and creates no file.
+The exception matches relative to the working directory, so the same complete
+relative path in another project can also match. It does not remove the other
+token or credential rules. The first `!./packages/...` attempt remained blocked;
+this check does not establish whether syntax or configuration refresh caused
+that result. No alternative reader was used to bypass an effective denial.
+The earlier sections retain the failed project-only attempt at its own time.
+
+The complete table has 56 names: 49 foreground and seven background tokens.
+The five optional fallbacks are scrollbarTrack to muted, scrollbarThumb to
+text, searchMatchBg to selectedBg, searchMatchText to text, and thinkingMax to
+thinkingXhigh. They define the public Theme types, slot checks, schema,
+terminal-default colors and HTML output. Published pi-tui supplies color
+primitives but does not supply this Coding theme contract. The table remains.
+
+A regression first reproduces incomplete themes being accepted by the actual
+host resource loader. No retained caller installs the optional CLI validator.
+File parsing now calls the existing validateThemeJson directly, without a new
+dependency. The obsolete optional-validator API and its inaccurate main.ts
+installation comment are removed. Tests cover all slots, missing required
+colors, optional fallbacks, zero and empty-string values, variable chains and
+cycles, invalid fields and resource diagnostics.
+
+No retained caller or package-root export uses terminal color-report setters.
+Their state always had no report. The port removes that state and the unused
+adaptive solver; system-theme.ts shrinks from 655 to 123 lines. Indexed colors,
+dim tokens, terminal-default backgrounds, COLORFGBG, dark fallback and custom
+themes remain. Dark and light results match SHA-256 values captured before the
+port. Real session HTML checks theme variables, export background overrides,
+escaping and distinct collapsed/expanded tool results. This scope removal is
+not additional released SDK coverage and changes no task or document version.
+
+The first complete source check exits 1 at the inventory comparison. Complete
+write generation identifies one obsolete record: core/tools/renderers/index.ts.
+It has no retained caller or package-root export and lies outside the generated
+closure. The file and its records are removed; individual renderers remain.
+Complete check now also rejects residual TypeScript outside the generated
+closure. Scoped check keeps its previous limited semantics. Full generation
+and the final complete check pass with 196 TypeScript outputs, including 192
+under src/pi and four facades, plus six assets. The theme transforms run before
+dependency traversal and reject changed pinned declaration boundaries.
+
+The first fixed Craft audit reports five source-record problems. README.md,
+README.zh.md and the server-core README already contain committed architecture
+corrections; bun.lock already removes the unused private Mermaid dependency.
+The runtime inventory also has a stale hash. Git history was checked before
+updating those records. The theme slice adds only its own source records and
+removes the unused renderer entry. The full audit against the independent
+Craft v0.15.6 checkout at 8df01c5d0ac73c35add5954e6f190ce038d35845 then exits 0
+and covers 2,191 files. The real Craft directory is not accessed.
+
+The first three focused commands each pass 82 tests and fail one new HTML
+fixture. The fixes preserve the built-in variables, expect the existing RGB
+CSS format, and give the collapsed/expanded renderers distinct text. The last
+failure exposed the renderer's existing deduplication when both views match;
+no renderer behavior was changed for the fixture. The final focused command
+passes all 83 tests across four files. Coding build:types, the separate symlink
+declaration consumer and all 26 worker bundle tests also pass. That consumer
+is not a new frozen installation. The previous workspace frozen install and
+34 patch-output checks remain valid because their inputs have not changed.
+
+The complete repository test entry exits 0 in 546 seconds. The main batch
+passes 6,880 tests, skips 11 and reports no failures across 489 files. The
+subsequent 36 batches pass another 301 tests. validate:ci exits 0 in 107 seconds.
+A later diff check finds one extra final blank line in generated system-theme.ts.
+The generator and output are corrected together, leaving 123 lines. Focused
+checks and complete source check pass again; source hashes are updated. This
+whitespace-only correction does not require another full test or CI run.
+
+An independent static review against 6240ed9 finds no confirmed new defect or
+missing public contract in the theme slice. It checks the token slots,
+fallbacks, validation, palette/dim, renderer/HTML boundary, deleted barrel and
+four theme output hashes. It does not run tests, builds, full generation or a
+real UI. The reviewer invoked a review skill that started one child execution,
+contrary to the explicit no-delegation brief. That process deviation is retained
+here; its candidate concerned existing baseline behavior and was not reported
+as a new defect. Dynamic verification above was performed by the main thread.
+A separate final acceptance review confirms that the runtime slices can be
+accepted. It identifies two missing maintenance entries, for production
+`grep/find/ls` and explicit npm/git package operations, and stale wording that
+requires an immediate session/summary replacement without a confirmed plan.
+The main thread verifies the actual entry points and adds both entries, with
+API gaps, scope, failure and cancellation behavior, exit conditions and upgrade
+checks. Existing search, binary-cancellation and host-package-command tests are
+included in the complete test run above; no runtime changes or new tests are
+needed for these entries. Session/summary adapters remain subject to their
+recorded exit conditions. Current F0 through F6 implementation acceptance is
+complete after these corrections; historical platform limits remain. The final
+review does not re-run product tests or review every historical log line.
+
+The architecture table also corrects two stale retention claims: the private
+Mermaid renderer/dependency and terminal status reporter have already been
+removed. All six documents pass punctuation checks. The file-link check passes
+for 104 local links, and all 11 local heading anchors pass a separate check.
+The final git diff check reports no whitespace errors. Atomic commit and push
+results are reported from Git at delivery.
+
+One unrelated retained comment in components/bash-execution.ts still names
+the deleted tui-renderer.ts helper. This comment is not an execution dependency
+and is not changed by the theme port. The old theme-schema comment and the six
+current documents' permission, count and full-source claims are corrected in
+this slice; dated evidence sections retain their original facts.
+
+Receipts use the theme-* labels under the task directory
+mkagent-coding-final-EJ6XD5. Tests use task-only child HOME/configuration,
+local fixtures and no inherited provider credentials. No real WebUI, account,
+paid model or upload service is used.
+
 ## Read permission diagnosis on 2026-11-09
 
 The original reviewer requested the first 35 lines of theme-tokens.ts through

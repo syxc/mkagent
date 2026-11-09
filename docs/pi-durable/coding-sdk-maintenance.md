@@ -4,7 +4,7 @@
 
 MkAgent 保留 Pi Coding 层和公开插件契约，执行、事务、存储和恢复优先交给 durable。评估顺序是 durable 发布能力、独立 Pi 官方 SDK、外部薄适配，最后才是有具体缺口的源码或补丁。补丁新增的导出或执行接点均属于本地修改。
 
-本表覆盖已核实的能力边界，不构成 197 份源码逐项必要性的证明。2026-11-09 的只读诊断在全局配置发现 `Read(*token*)` 拒绝规则，覆盖 `theme-tokens.ts` 文件名。这不是已确认的用户源码禁令。同日按用户要求新增项目单文件 Read allow，JSON 和范围校验通过，但正常 Read 仍被拒绝；项目 allow 不能覆盖全局 deny。完整主题配色表、完整来源生成和 Craft 审计未完成，不能用本表关闭这些缺口，也不能把更新版本号视为已完成升级。
+本表按能力登记剩余维护责任，不从 196 份源码的数量或可达性反推必要性。2026-11-09 按用户要求修正全局 token 路径误拦截后，正常读取主题源码成功，完整主题契约已核实；完整运行时生成和 check、固定 Craft v0.15.6 审计均已通过。项目 allow 不能覆盖全局 deny，本次使用同一全局配置源中的精确路径例外，未解除其余 token 和凭据保护。具体权限与验证历史见验证记录。升级仍须核对下列 SDK 契约和适配边界，不能只更新版本号。
 
 ## 已直接使用的发布能力
 
@@ -48,9 +48,11 @@ ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件
 | Summary 与 compaction：summary-binding/task、Coding compaction 模块 | 发布 CompactionTask 不提供 Native entry usage、split-turn、retained tail、共同祖先、文件跟踪及 before hooks；GenerationResponseTask 也写 conversation 级进度。保留选取策略和独立 summary owner，producer 复用现有 StreamFn.result | requesting intent 先提交，不确定请求不重发，完整响应持久化。任务级隔离或无主进度写入的公开响应 API 可用后替换；检查压缩、分支/bug 摘要、usage、主请求并发进度和 SIGKILL |
 | 插件注册与加载：Native loader/runner、旧 loader、virtual-modules | pi-tui/pi-mcp 等公开基础接口不提供 Coding 注册事务、factory 回滚、会话 context 与双包名映射。两 loader 共用 runtime/注册/factory，仅映射、缓存和目录策略独立；Jiti 使用公开 transform 接口 | 无新增持久任务版本；公开 Coding loader 可接收模块表、缓存和目录策略后替换。检查成功注册、失败回滚、旧 API/context 失效、reload、import.meta、会话重绑和关闭 |
 | 资源、配置和模型：resource-loader、models、host-resources/settings/trust | pi-ai 提供模型/credential/provider，公开基础包不提供完整 Coding 发现、models.json 覆盖、歧义、thinking/virtual route、目录 ETag/TTL 及宿主信任策略。保留策略装配；纯函数、usage 和模型存储已共享 | 宿主凭据、信任和 profile 隔离不迁移到插件。公开策略接口覆盖后替换对应层；检查 native/host-only、显式资源、reload/reopen、撤销信任及临时凭据不落盘 |
-| 插件工具工厂：Coding core/tools | 生产已用 durable 工厂；公开插件工厂另有自定义文件操作、BOM、预览、原始字节、取消、edit/write 互锁与 renderer 契约。已共享参数准备、diff、路径、MIME、图片、截断、shell 和等待 | 不因生产工厂已复用而删除插件入口。公开工厂或薄适配能同时保留这些行为且减少维护时替换；检查真实文件、持有队列后取消、未完成写入、原始通道和权限改参 |
+| 生产 grep/find/ls：worker `createBuiltinTools` → `tools/local/{grep,find,ls}.ts` | 三个工具保留 Coding 1.1.0 的适配，使用 durable defineTool。固定 Pi 1.5.0 的 durable `/tools` 没有相应工厂，独立 Pi SDK 也未提供可直接替代的 Coding 搜索工厂；不能将插件工厂一行当作这条生产入口的依据。保留 Unicode、hidden/ignore、限制、错误和取消行为及 rg/fd 装配 | 无新增持久任务版本，执行仍经宿主权限及 ToolTask。发布工厂或更薄适配覆盖这些行为并减少维护后替换；升级核对 schema、参数、输出和错误，检查二进制下载及子进程取消。现有 [搜索回归](../../packages/pi-agent-server/src/tools/local/search-output.test.ts)和[二进制取消回归](../../packages/pi-agent-server/src/tools/local/tool-binaries-cancellation.isolated.ts)是验收入口；此处版本不随 Coding 1.5.0 自动对齐 |
+| 插件工具工厂：Coding core/tools | 生产文件和 shell 已用 durable 工厂；公开插件工厂另有自定义文件操作、BOM、预览、原始字节、取消、edit/write 互锁与 renderer 契约。已共享参数准备、diff、路径、MIME、图片、截断、shell 和等待 | 不因生产工厂已复用而删除插件入口。公开工厂或薄适配能同时保留这些行为且减少维护时替换；检查真实文件、持有队列后取消、未完成写入、原始通道和权限改参 |
 | MCP/codemode/tool-search：Coding extension factories | 协议和执行来自官方包；外层保留工具 exposure/namespace、连接替换、失效隐藏、只读重试、资源保存、授权与 Native session 适配；不再保留独立 codemode loop | 上游工厂能接收所需宿主 ports 后撤除装配。检查动态目录、审批、MCP OAuth 取消与锁、store 分支、已完成结果和子任务归属 |
-| 公开 UI、Theme、editor 与 HTML：components barrel、theme、export-html | pi-tui 提供基础组件、Markdown 和颜色，缺 Coding toolCallId/partial/state/lastComponent、折叠、异常回退及会话清理装配。公开 Theme 与 CustomEditor 保留；私有模式宿主已排除 | 无新增任务 schema；公开 Coding 组件及生命周期接口完整覆盖后替换。检查双包名插件着色、输入/Escape、renderer 真实效果、reload/shutdown、HTML 两种视图和离线资源。token 表必要性仍受阻 |
+| 公开 UI、Theme、editor 与 HTML：components barrel、theme、export-html | pi-tui 提供基础组件、Markdown 和颜色，缺 Coding toolCallId/partial/state/lastComponent、折叠、异常回退及会话清理装配；也不提供 56 个主题名称、49/7 前景背景分类、5 项 fallback、vars 和文件 schema。保留公开 Theme、CustomEditor 及必要渲染装配；删除终端回报求解器和未使用 renderer barrel，文件入口直接完整校验 | 无新增任务 schema；公开 Coding 主题、组件及生命周期接口完整覆盖后替换。检查全部 token/slot、0 与空串、fallback、变量错误、COLORFGBG/dim、真实 HTML 颜色与两种工具结果，以及双包名插件输入、reload/shutdown 和离线资源 |
+| 显式 npm/git 包管理：`createHostPackageExtension` → `DefaultPackageManager.installAndPersist/removeAndPersist/update` | durable 和独立 Pi SDK 没有同时承接 Coding 包安装、设置持久化及资源 reload 的工厂；完整 Coding SDK 的包管理类不能作为独立生产依赖。保留现有 Native 包管理实现和薄命令适配，明确 install/remove/update、user/project scope、项目信任、严格 settings flush、stderr 子进程输出及串行操作；资源发现不隐式安装 | 安装器没有取消契约，shutdown 等待已接受操作，禁止关闭后新操作及 reload。文件修改和设置写入非原子；失败报告文件可能已变，人工核对后重试，不自动重放或宣称回滚。公开包管理接口可表达这些契约后替换；升级核对来源/版本、作用域、信任、写入失败恢复、stdout 协议隔离和关闭等待。[现有包管理回归](../../packages/pi-durable-coding/test/host-package-commands.test.ts)覆盖成功、失败、部分失败及上述边界 |
 | 旧入口及共享 helper：legacy、upstream | 28 个共享入口复用 Native 实现；七份 legacy 策略保留旧目录、投影、runner 依赖及 JavaScript 宽边界。Git、上下文、去重等未由独立 SDK 完整提供；不保存第二份算法模板 | 无新增任务 schema，但会话投影影响历史。公开接口可表达旧策略后撤除对应包装；检查两个入口、结构类型、目录/信任默认、同步预览、未提交消息和旧 JSONL |
 
 原版 Pi CLI、三种 run mode 宿主及已核实无调用的私有 helper 不属于上述必要边界。当前不包含终端分享、bug report 上传、终端状态上报、品牌公告/彩蛋、私有 Mermaid 转换器及其依赖。公开插件 renderer 和实际宿主能力不能因同属 interactive 目录而删除。静态零入边检查在允许范围内已无新候选，但不识别所有计算路径，也不等于完整必要性证明。
@@ -63,4 +65,4 @@ ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件
 4. 在获准读取的来源范围内更新生成、来源、依赖和许可；完整与定向检查分别记账。访问拒绝不通过索引、副本、其他工具或其他 agent 绕过。
 5. 按影响验证产品、插件、权限、取消、文件、恢复、声明、独立消费者和 worker/搬迁资源，完成项目要求的仓库检查。记录实际失败和平台缺口，再更新架构与验收状态。
 
-目前未确认新的、可由 pristine Pi 1.5.0 SDK 完整覆盖而直接删除的执行实现。这个观察不证明维护已经达到理论最小值，也不关闭受阻检查。当前改动没有改变持久任务或文档版本，没有新增完整 Native loop 补丁；剩余工作以具体缺口和证据为界。
+本次独立验收确认既有复用和代码收窄可以验收，并提出生产 grep/find/ls 及显式 npm/git 包管理两项登记缺口；两项已按实际入口和现有回归补齐。剩余维护责任按上表的具体能力、API 缺口和退出条件复评，不要求继续实施尚无具体替换方案的 session/summary 迁移。这不证明维护已达到理论最小值，也不将全部源码视为永久必要。本次主题切片没有改变持久任务或文档版本，没有新增完整 Native loop 补丁。

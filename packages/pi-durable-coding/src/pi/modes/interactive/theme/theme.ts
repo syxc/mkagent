@@ -13,13 +13,10 @@ import {
 	type MarkdownTheme,
 	mixColors,
 	parseColor,
-	type RgbColor,
-	rgbColor,
 	type SelectListTheme,
 	type SettingsListTheme,
 	styleTextWithAnsi,
 	type TerminalColorMode,
-	type TerminalColors,
 	type TextAttributes,
 } from "@earendil-works/pi-tui";
 import chalk from "chalk";
@@ -28,7 +25,7 @@ import type { SourceInfo } from "../../../core/source-info.ts";
 import { closeWatcher, watchWithErrorHandler } from "../../../utils/fs-watch.ts";
 import { getHighlightLanguageCount, highlight, supportsLanguage } from "../../../utils/syntax-highlight.ts";
 import { stripBom } from "../../../utils/text.ts";
-import { generateSystemThemeColors, SYSTEM_THEME_NAME, terminalAppearance } from "./system-theme.ts";
+import { generateSystemThemeColors, SYSTEM_THEME_NAME } from "./system-theme.ts";
 import {
 	type ResolvedThemeColorValues,
 	THEME_TOKENS,
@@ -44,8 +41,7 @@ export { SYSTEM_THEME_NAME } from "./system-theme.ts";
 // Types & Schema
 // ============================================================================
 
-/** The schema that validates this shape lives in `theme-schema.ts`; importing the type is free. */
-import type { ThemeColorValue as ColorValue, ValidatedThemeJson as ThemeJson } from "./theme-schema.ts";
+import { validateThemeJson, type ThemeColorValue as ColorValue, type ValidatedThemeJson as ThemeJson } from "./theme-schema.ts";
 
 export type { ValidatedThemeJson as ThemeJson } from "./theme-schema.ts";
 export type { ThemeBg, ThemeColor, ThemeToken } from "./theme-tokens.ts";
@@ -57,19 +53,6 @@ export type { ThemeBg, ThemeColor, ThemeToken } from "./theme-tokens.ts";
 export interface ThemeStyle extends TextAttributes {
 	fg?: ThemeColor | Color;
 	bg?: ThemeBg | Color;
-}
-
-export type ThemeJsonValidator = (label: string, json: unknown) => ThemeJson;
-
-let themeJsonValidator: ThemeJsonValidator | undefined;
-
-/**
- * Install full theme validation. Without it, documents are accepted as-is, which is what built-in
- * themes already do: validating user-authored JSON needs typebox, and a presentation that only uses
- * built-in themes should not pay ~17 MB of module graph for it.
- */
-export function setThemeJsonValidator(validator: ThemeJsonValidator): void {
-	themeJsonValidator = validator;
 }
 
 // ============================================================================
@@ -128,33 +111,6 @@ function withThemeTokenFallbacks<Value>(values: ThemeColorValues<Value>): Resolv
 /** The background a theme is designed for. */
 export type ThemeAppearance = TerminalTheme;
 
-// The terminal's reported colors. Replaced (never mutated) on update, so themes can cache resolved colors
-// by identity.
-let terminalColors: TerminalColors = {};
-// While the terminal color query is in flight, the system theme renders in grayscale.
-let terminalColorsPending = false;
-// The terminal's last light/dark report (mode 2031). Only used while it has not reported a background.
-let terminalColorScheme: TerminalTheme | undefined;
-
-/**
- * Record the terminal's reported colors. Themes use the default colors for tokens set to "" (terminal
- * default); the system theme is generated from all of them. Ends the pending state.
- */
-export function setTerminalColors(colors: TerminalColors): void {
-	terminalColors = { ...colors };
-	terminalColorsPending = false;
-}
-
-/** Record the terminal's light/dark report, the fallback for terminals that do not report their background. */
-export function setTerminalColorScheme(scheme: TerminalTheme | undefined): void {
-	terminalColorScheme = scheme;
-}
-
-/** Render the system theme in grayscale until `setTerminalColors()` reports the terminal's colors. */
-export function markTerminalColorsPending(): void {
-	terminalColorsPending = true;
-}
-
 /** Assumed terminal default colors when the terminal does not report them. */
 const GUESSED_DEFAULT_COLORS: Record<ThemeAppearance, { foreground: Color; background: Color }> = {
 	dark: { foreground: parseColor("#e5e5e7"), background: parseColor("#000000") },
@@ -197,7 +153,7 @@ export class Theme {
 	// Foreground tokens rendered faint (SGR 2) on top of their color.
 	private readonly dimTokens: ReadonlySet<ThemeColor>;
 	private readonly ownAppearance: ThemeAppearance | undefined;
-	private resolvedColors: { terminal: TerminalColors; colors: Readonly<Record<ThemeToken, Color>> } | undefined;
+	private resolvedColors: Readonly<Record<ThemeToken, Color>> | undefined;
 
 	constructor(
 		fgColors: Pick<ThemeColorValues<string | number>, ThemeColor>,
@@ -251,18 +207,12 @@ export class Theme {
 	}
 
 	/**
-	 * Concrete colors for all tokens. Tokens set to "" (terminal default) use the terminal's reported
-	 * default colors, or a guess based on `appearance` when the terminal did not report them. Faint
+	 * Concrete colors for all tokens. Tokens set to "" use defaults based on `appearance`. Faint
 	 * tokens are approximated by mixing their color toward the background.
 	 */
 	get colors(): Readonly<Record<ThemeToken, Color>> {
-		const terminal = terminalColors;
-		if (this.resolvedColors?.terminal !== terminal) {
-			const guess = GUESSED_DEFAULT_COLORS[this.appearance];
-			const toColor = (rgb: RgbColor | undefined, fallback: Color) =>
-				rgb ? rgbColor(rgb.r, rgb.g, rgb.b) : fallback;
-			const foreground = toColor(terminal.foreground, guess.foreground);
-			const background = toColor(terminal.background, guess.background);
+		if (!this.resolvedColors) {
+			const { foreground, background } = GUESSED_DEFAULT_COLORS[this.appearance];
 			const colors = { ...this.concreteColors };
 			for (const token of this.defaultForegroundTokens) colors[token] = foreground;
 			for (const token of this.defaultBackgroundTokens) colors[token] = background;
@@ -270,9 +220,9 @@ export class Theme {
 				const color = colors[token];
 				if (color) colors[token] = mixColors(color, background, 0.4);
 			}
-			this.resolvedColors = { terminal, colors: Object.freeze(colors as Record<ThemeToken, Color>) };
+			this.resolvedColors = Object.freeze(colors as Record<ThemeToken, Color>);
 		}
-		return this.resolvedColors.colors;
+		return this.resolvedColors;
 	}
 
 	style(text: string, options: ThemeStyle): string {
@@ -466,14 +416,6 @@ function assertThemeNameIsValid(name: string): void {
 	}
 }
 
-function parseThemeJson(label: string, json: unknown): ThemeJson {
-	if (themeJsonValidator) return themeJsonValidator(label, json);
-	if (typeof json !== "object" || json === null || !("colors" in json)) {
-		throw new Error(`Invalid theme "${label}": expected an object with a "colors" map.`);
-	}
-	return json as ThemeJson;
-}
-
 function parseThemeJsonContent(label: string, content: string): ThemeJson {
 	let json: unknown;
 	try {
@@ -481,7 +423,7 @@ function parseThemeJsonContent(label: string, content: string): ThemeJson {
 	} catch (error) {
 		throw new Error(`Failed to parse theme ${label}: ${error}`);
 	}
-	return parseThemeJson(label, json);
+	return validateThemeJson(label, json);
 }
 
 function loadThemeJson(name: string): ThemeJson {
@@ -533,13 +475,9 @@ function createTheme(themeJson: ThemeJson, mode?: TerminalColorMode, sourcePath?
 	});
 }
 
-/** Generate the system theme from the terminal's reported colors (grayscale while they are pending). */
+/** Use the terminal palette without requesting terminal color reports. */
 function createSystemTheme(mode?: TerminalColorMode): Theme {
-	const generated = generateSystemThemeColors({
-		...terminalColors,
-		saturation: terminalColorsPending ? 0 : 1,
-		appearanceHint: getTerminalTheme(),
-	});
+	const generated = generateSystemThemeColors(getTerminalTheme());
 	const { fgColors, bgColors } = splitThemeColors(withThemeTokenFallbacks(generated.colors));
 	return new Theme(fgColors, bgColors, mode ?? getTerminalColorMode(), {
 		name: SYSTEM_THEME_NAME,
@@ -620,24 +558,9 @@ export function detectColorFgBgTheme(env: NodeJS.ProcessEnv = process.env): Term
 	return index <= 6 || index === 8 ? "dark" : "light";
 }
 
-/**
- * Whether the terminal is dark or light. The background it renders decides, classified the same way the
- * system theme does. Without a reported background: the terminal's light/dark report, then COLORFGBG,
- * then dark.
- */
-export function detectTerminalTheme(
-	colors: TerminalColors = {},
-	reportedScheme?: TerminalTheme,
-	env: NodeJS.ProcessEnv = process.env,
-): TerminalTheme {
-	const { background, foreground } = colors;
-	if (background) return terminalAppearance(background, foreground);
-	return reportedScheme ?? detectColorFgBgTheme(env) ?? "dark";
-}
-
-/** Whether the terminal is dark or light, from everything it reported so far. See `detectTerminalTheme()`. */
+/** Resolve the terminal appearance from COLORFGBG, with a dark default. */
 export function getTerminalTheme(): TerminalTheme {
-	return detectTerminalTheme(terminalColors, terminalColorScheme);
+	return detectColorFgBgTheme() ?? "dark";
 }
 
 // ============================================================================

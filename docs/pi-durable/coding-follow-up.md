@@ -23,12 +23,12 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 | 顺序 | 编号 | 工作 | 当前状态与通过条件 |
 |---|---|---|---|
 | 0 | F0 | 全面纠正文档 | 此前三批在 `1314a2b`、`56d0f46`、`301598c` 完成各自核对；本批 Pi Coding 层、切换前参照及升级维护条件补充亦已完成链接、标点和独立语义复核，结果单列于验证记录 |
-| 1 | F1 | 按需求核对官方能力与实际执行链 | 先还原原始 MkAgent/Coding 接入契约，再核对当前 SDK 如何保留 Coding 层并接入 durable；发布 API、仓内扩展与源码例外分别记录 |
-| 2 | F2 | 优先复用官方内核和 SDK | 宿主工具委托公开 ToolTask phases/abort；请求与 partial 已接入仓内新增 GenerationResponseTask，直接复用 SDK streamResponse。工具轮次与收尾已记录发布接口的写入和结算耦合，保留必要交付适配；普通 AgentTool 已经同一 ToolTask 桥执行，插件 edit 参数转换已直接使用公开 SDK 并删除副本。summary/session 的具体缺口已记录；发布 API 与本地扩展分开记账 |
-| 3 | F3 | 收窄兼容代码和源码范围 | 已排除原版 CLI 的 `main`/`MainOptions`、24 份独占源码，以及三种上游 run mode 和专用 options；保留 RPC client/协议和插件组件。两个 loader 共用 runtime、注册和 factory 生命周期，保留模块映射、缓存及目录策略。剩余例外继续按具体缺口和升级检查核对，受拒绝的 token 表不绕过 |
-| 4 | F4 | 修正测试并验证实际行为 | 先区分行为契约与实现断言，再按改动验证产品、插件、文件操作、权限、取消和恢复 |
-| 5 | F5 | 同步来源、依赖和可复现产物 | 当前运行时清单为 197 份 TypeScript、6 项资源；192 份允许的 Coding 源码通过定向复现，6 项资源和 4 个门面产物摘要一致，未完整重算闭包。全部 workspace 的隔离冻结依赖安装通过，34 份 SDK 补丁产物匹配；未包含运行时源码或安装脚本。辅助清单为 12 项来源和 28 个共享入口，数量不作为目标 |
-| 6 | F6 | 汇总架构、升级及功能验收 | 已形成[SDK 维护清单](coding-sdk-maintenance.md)，分列发布能力、core/durable 补丁和 Coding 适配的缺口、恢复、退出条件及升级检查；完整来源和 token 表仍未验收，不能整体关闭 |
+| 1 | F1 | 按需求核对官方能力与实际执行链 | 已完成。执行、会话、资源、工具、插件与 UI 的发布能力、具体缺口和升级条件已登记；最终独立复核提出的生产 grep/find/ls 和显式 npm/git 包管理两项登记已补齐，主题的 56 项契约已核实 |
+| 2 | F2 | 优先复用官方内核和 SDK | 已完成已确认的复用项。宿主工具委托公开 ToolTask phases/abort；请求与 partial 已接入仓内新增 GenerationResponseTask，直接复用 SDK streamResponse。普通 AgentTool、插件 edit 参数和 core 默认转换已复用 SDK；工具轮次、收尾及 session/summary 按具体缺口保留，按退出条件复评 |
+| 3 | F3 | 收窄兼容代码和源码范围 | 已完成。确认的 SDK 重复实现和未使用宿主源码已删除；本批保留公开主题表，删除无输入的终端颜色求解分支及孤立 renderer barrel。完整生成闭包已重算，剩余维护责任按能力、缺口和退出条件登记，不以整个闭包证明必要性 |
+| 4 | F4 | 修正测试并验证实际行为 | 已完成受影响验证。本批 83 项主题、HTML、生成与资源回归、声明构建、声明消费者及 26 项 worker bundle 测试通过；全仓测试和 CI 均退出 0，历史平台缺口保留，具体范围见验证记录 |
+| 5 | F5 | 同步来源、依赖和可复现产物 | 已完成。完整运行时生成和 check 通过：196 份 TypeScript、6 项资源，其中 src/pi 为 192 份，门面为 4 份。固定 Craft v0.15.6 的 2191 份文件审计通过；先前隔离冻结安装及 34 份补丁产物结果继续有效。辅助清单为 12 项来源和 28 个共享入口 |
+| 6 | F6 | 汇总架构、升级及功能验收 | 已完成本次实施验收。独立复核要求补齐的两项维护登记及 session/summary 收尾措辞已落实；六份文档统一当前状态，维护清单列明发布能力、本地补丁、Coding 适配、恢复、退出条件和升级检查。提交及统一推送按用户授权执行 |
 
 每项改动完成必要验证后再处理下一项。历史未验证平台不自动扩展为本批工作，也不能用于豁免已经确认缺失的必需功能。
 
@@ -46,7 +46,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 | 依赖补丁 | 区分发布 API 和新增导出；评估原包、外部适配及当前补丁，包含升级和存量数据迁移成本 |
 | 测试 | 哪些断言覆盖真实产品或插件行为，哪些只固定当前私有布局、生成目录和调用细节 |
 
-当前独立核查确认四类任务桥已使用官方 scheduler、task ownership、commit 和等待接口，同时仍有与 GenerationTask/ToolTask 同类的本地状态转换。`62ed325` 已将宿主工具执行、输出、嵌套 admission、replay 和清理交给原包公开 ToolTask phases/abort，删除旧嵌套调用副本；Native 保留完整结果、插件事件及 journal。请求切片现通过仓内新增 GenerationResponseTask 复用 SDK streamResponse 和 partial writer，保留 Native `message_end` 及唯一 transcript writer，并原子提交 SDK receipt、journal 和下一 checkpoint。它属于本地 SDK 扩展，不能记作未修改发布 API。工具轮次与收尾已核对固定发布源码及产品工具 wrapper：SDK 阶段同时写消息、接纳工具、应用 inbox 并转交下一任务，不能直接代替 Native 交付与 journal；具体边界和退出条件见[架构记录](coding-architecture.md#工具轮次与收尾的-sdk-边界)。这些职责未新增 SDK 补丁。公开 Agent/runToolCall 的普通 AgentTool 现已复用同一个 SDK 桥，AgentSession 的工具转换保留桥接标记；低层 task fixture 不自动纳入这一入口保证。session/summary 的具体保留边界见架构记录，完整 Coding 闭包继续核对，F1 至 F3 尚未完成。
+当前独立核查确认四类任务桥已使用官方 scheduler、task ownership、commit 和等待接口，同时仍有与 GenerationTask/ToolTask 同类的本地状态转换。`62ed325` 已将宿主工具执行、输出、嵌套 admission、replay 和清理交给原包公开 ToolTask phases/abort，删除旧嵌套调用副本；Native 保留完整结果、插件事件及 journal。请求切片现通过仓内新增 GenerationResponseTask 复用 SDK streamResponse 和 partial writer，保留 Native `message_end` 及唯一 transcript writer，并原子提交 SDK receipt、journal 和下一 checkpoint。它属于本地 SDK 扩展，不能记作未修改发布 API。工具轮次与收尾已核对固定发布源码及产品工具 wrapper：SDK 阶段同时写消息、接纳工具、应用 inbox 并转交下一任务，不能直接代替 Native 交付与 journal；具体边界和退出条件见[架构记录](coding-architecture.md#工具轮次与收尾的-sdk-边界)。这些职责未新增 SDK 补丁。公开 Agent/runToolCall 的普通 AgentTool 现已复用同一个 SDK 桥，AgentSession 的工具转换保留桥接标记；低层 task fixture 不自动纳入这一入口保证。session/summary 的具体保留边界见架构记录；本次 F1 至 F3 已按能力完成核对，生产搜索与显式包管理的维护登记也已补齐，未来按退出条件复评。
 
 既有 `codingPrepare`、`codingStream`、`codingBoundary` 是仓内 durable 补丁接点。未修改 Pi 1.5.0 的 `pi.generation` 为 v2，本地补丁升为 v4；`pi.tool` 为 v3。codemode 的 replay module 另由 2 升为 3，不与任务或文档 schema 版本混写。主链替代或补丁撤除须显式处理这些状态与日志，具体对照见架构记录。核查安装包可说明当前能力与缺口，不能将其当作未修改发布包的能力。旧阶段与 `LoopInput.resume` 仍有恢复调用方，替换时需显式迁移。存量任务清单包括 `pi.coding.{session,run,call,tool,summary}` 五种 v1；summary 的压缩、分支总结和 bug report 已完成结果、不确定请求禁止重发及取消语义须一并纳入恢复验证。
 
@@ -58,7 +58,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 生产 `tools/builtin.ts` 已从 durable `/tools` 创建 read/write/edit/bash 和可选 PowerShell，并使用 `/images`。`tools/codemode.ts` 和宿主入口已安装 durable codemode、tool-search。`CodingHost` 通过 `baseToolsOverride` 接收这些工具，后续工作以这条实际接线为起点。
 
-首个切片的 SDK checkpoint、完整 Native 结果和 SDK failure 由同一 `pi.coding.tool` owner 的文档保存，未改 task kind/version 或依赖补丁。真实 SIGKILL 回归覆盖 Native/SDK 已记录与当前策略的共同限制，以及 SDK 结果已持久化、Native outcome 尚未提交时的恢复；工具移除后仍交付已完成结果。独立复核发现的策略绕过、并发串参及重复执行、已结束 API 写入已修正并补回归。SDK failure 随真实 owner 的 failed outcome 交给官方 scheduler，普通 owned tasks 和 owned conversations 内的任务也取消并等待，失败回执恢复同样覆盖。外部信号和 scheduler abort 均检查嵌套 cleanup 的等待及进度槽清理。详细通过数量和范围见验证记录。请求切片已完成 Native `message_end` 改写、唯一 transcript writer 与 SDK receipt/journal/checkpoint 原子提交的接线；三种真实 SIGKILL 检查请求、事件交付及响应接受后的恢复，两种取消均清理 generation 槽。工具轮次与收尾的缺口已按实际 SDK 写入和结算职责记录。插件 edit 参数转换直接使用已发布的 `createEditTool().prepareArguments`，没有新增补丁；转换副本已删除，Native 文件执行及渲染保留。公开 Agent/runToolCall 的普通工具现已委托同一 ToolTask 桥。独立复核发现的 admission 取消窗口、权限改参后的重复校验及崩溃后的最终参数丢失均已修正；最终参数随 SDK 结果原子保存，旧回执缺字段时回退已接受参数。产品回归另发现 AgentSession 转换丢失桥接标记，现已同步转换和生成规则，避免重复接纳。summary 并发不覆盖主 generation 进度已有回归；summary/session 的具体缺口及退出条件见[架构记录](coding-architecture.md#summary-与-session-的-sdk-边界)。后续继续核对完整 Coding 闭包、导出与补丁。
+首个切片的 SDK checkpoint、完整 Native 结果和 SDK failure 由同一 `pi.coding.tool` owner 的文档保存，未改 task kind/version 或依赖补丁。真实 SIGKILL 回归覆盖 Native/SDK 已记录与当前策略的共同限制，以及 SDK 结果已持久化、Native outcome 尚未提交时的恢复；工具移除后仍交付已完成结果。独立复核发现的策略绕过、并发串参及重复执行、已结束 API 写入已修正并补回归。SDK failure 随真实 owner 的 failed outcome 交给官方 scheduler，普通 owned tasks 和 owned conversations 内的任务也取消并等待，失败回执恢复同样覆盖。外部信号和 scheduler abort 均检查嵌套 cleanup 的等待及进度槽清理。详细通过数量和范围见验证记录。请求切片已完成 Native `message_end` 改写、唯一 transcript writer 与 SDK receipt/journal/checkpoint 原子提交的接线；三种真实 SIGKILL 检查请求、事件交付及响应接受后的恢复，两种取消均清理 generation 槽。工具轮次与收尾的缺口已按实际 SDK 写入和结算职责记录。插件 edit 参数转换直接使用已发布的 `createEditTool().prepareArguments`，没有新增补丁；转换副本已删除，Native 文件执行及渲染保留。公开 Agent/runToolCall 的普通工具现已委托同一 ToolTask 桥。独立复核发现的 admission 取消窗口、权限改参后的重复校验及崩溃后的最终参数丢失均已修正；最终参数随 SDK 结果原子保存，旧回执缺字段时回退已接受参数。产品回归另发现 AgentSession 转换丢失桥接标记，现已同步转换和生成规则，避免重复接纳。summary 并发不覆盖主 generation 进度已有回归；summary/session 的具体缺口及退出条件见[架构记录](coding-architecture.md#summary-与-session-的-sdk-边界)。本次完整 Coding 范围、导出与补丁已按维护清单核对，后续升级按各项退出条件复评。
 
 pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-tui 的终端组件、pi-mcp 的协议、pi-codemode 的沙箱按实际公开接口复用。当前部分 core 操作及 Agent 注入依赖四文件补丁，durable 也有仓内补丁；两者均须保留例外说明，不记成无补丁的 SDK 能力。
 
@@ -93,13 +93,15 @@ SDK 入口已先排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源
 
 默认消息转换也已直接复用发布版 `CoreAgent`，删除 Native `defaultConvertToLlm`、生成器提取和 core 补丁中的默认字段，Agent 门面由 115 行减至 105 行。两个可变默认对象仍保留，不能仅凭对象身份断言证明其必要性。70 项 Agent、工具、恢复和宿主回归、全仓 CI、声明构建及独立 frozen 消费者的 Bun/Node 各 7 项检查通过；完整测试入口的最终结果见验证记录。Proxy、构造函数参数个数及 getter 顺序没有确认的产品调用方，不作为执行分叉的保留条件。summary 只有进度隔离回归，未确认产品并发启动多个 summary；旧 runtime 的必要范围限定为受支持快照的识别、迁移或安全结算。
 
-两项独立源码复核现已完成。执行侧确认的默认转换副本已在 `bbdf61e` 删除；Coding 侧未确认新的、可由 pristine Pi 1.5.0 独立 SDK 完整替换的实现。工具工厂、同步会话树、compaction hooks 和 renderer 生命周期的具体差异可以作为相应适配的依据，不能扩大为整份文件或完整 SDK 必须保留。资源发现、模型和 MCP 也只保留实际装配策略；经仓内补丁共享的 helper 继续与发布 API 分账。三种程序化模式及启动器 helper 已在后续切片排除；其余辅助源码的必要性仍按具体契约核对，F1/F3 不整体关闭。
+两项独立源码复核现已完成。执行侧确认的默认转换副本已在 `bbdf61e` 删除；Coding 侧未确认新的、可由 pristine Pi 1.5.0 独立 SDK 完整替换的实现。工具工厂、同步会话树、compaction hooks 和 renderer 生命周期的具体差异可以作为相应适配的依据，不能扩大为整份文件或完整 SDK 必须保留。资源发现、模型和 MCP 也只保留实际装配策略；经仓内补丁共享的 helper 继续与发布 API 分账。三种程序化模式及启动器 helper 已在后续切片排除；当时 F1/F3 未整体关闭。本次主题和完整来源核对、最终独立验收及两项维护登记已完成，当前状态以上表为准。
 
 复核发现的 `RpcClient` 启动假设已修正：调用方须显式提供 `cliPath`，缺少入口时在 spawn 前清楚拒绝；原“搜索 dist/cli.js”的错误注释已删除。显式入口、JSONL 请求、启动与请求失败及停止由本地子进程验证，Bun 和 Node 各通过 4 项；六项定向检查保护用例、声明构建和单文件来源复现通过。没有恢复完整 CLI 或新增 SDK 补丁，完整测试与其失败记录仍见验证账本。
 
 继续核对确认 args 模块中的 `printHelp`、`normalizeSessionName` 和三个专用导入仅服务于已移除的启动器，现已删除；公开 `parseArgs` 和模型解析的 thinking 校验保留。71 项 helper、模型及插件回归、参数和 thinking 的实际调用检查、声明构建及单文件来源复现通过，三个改动文件的来源摘要已同步。这是启动器残留清理，不计为官方 SDK 替换；该切片时点的清单为 `224/7`，后续三种模式排除的状态见前文。
 
-已有保留对照仍可用于定位 BOM、输出、取消、图像、压缩、模型、renderer 等行为差异。它们是指定版本和所选契约下的证据，不能直接关闭整类必要性核查。完整 token 表未核实，`theme-tokens.ts` 的工具拒绝不绕过；该限制不阻止其他范围推进。
+已有保留对照用于定位 BOM、输出、取消、图像、压缩、模型和 renderer 的具体契约。主题表已正常读取并核实：49 项前景、7 项背景和 5 项可选 fallback 仍供公开 Theme、schema 和 HTML 使用，独立 Pi SDK 没有完整替代。资源入口现直接调用既有完整 validator，修复未安装 CLI validator 时接受不完整主题的缺口。无调用的终端回报状态和求解器已删除，system-theme 从 655 行收窄至 123 行，保留 indexed 配色、dim、COLORFGBG 和自定义主题。该删除不记作 SDK 新增覆盖。
+
+完整生成另确认 `core/tools/renderers/index.ts` 不在实际闭包中，且无保留调用或根导出，现删除该孤立 barrel。生成器的完整 check 会拒绝闭包外残留 TypeScript；定向 check 仍只核对指定文件。主题静态独立复核未发现确定的新缺陷，运行结果和复核范围见验证记录。剩余适配按维护清单中的能力和具体 API 缺口判断，不从文件数量反推必要性。
 
 完成条件：已确认的重复实现和不必要内部修改已处理；每个仍需维护的例外有证据。存量会话和任务保持可读，不静默丢弃 checkpoint，也不自动重复不安全副作用。
 
@@ -123,7 +125,7 @@ SDK 入口已先排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源
 
 用户已撤销旧源码禁读，`runtime-credentials.ts` 也已完成正文核查；早期路径拒绝和局部检查保留历史时点。2026-11-09 的只读诊断在全局 `~/.claude/settings.json` 的 `permissions.deny` 中发现 `Read(*token*)`，覆盖 `theme-tokens.ts` 文件名。该文件用于主题配色；历史工具拒绝不是用户明确禁读该源码的证据。规则的设置者、设置时间及历史拒绝是否由同一规则触发尚未核实。
 
-同日按用户要求新增[项目配置](../../.claude/settings.json)，仅允许读取该主题文件。JSON 和精确范围校验通过，但正常 Read 仍返回权限拒绝。官方规则明确所有作用域的 deny 优先于 allow；项目 allow 不能取消全局 deny。全局规则未修改，不通过副本、换工具或委派绕过，完整主题表、生成和审计仍开放。
+同日先按用户要求新增[项目配置](../../.claude/settings.json)，仅允许读取该主题文件；正常 Read 仍被全局 deny 拒绝。之后按用户明确要求修正权限，在全局原 `Read(*token*)` 后加入同一配置源的精确相对路径例外，正常 Read 本地及固定上游源码均成功，其余保护保留。项目 allow 不能覆盖全局 deny；权限历史和例外匹配范围见[本轮验证记录](coding-validation.md#theme-contract-and-complete-source-after-6240ed9)。完整主题核查、来源生成和固定 Craft 审计现已完成。
 
 当前 `731728a` 的全部 workspace manifest、锁文件及两份补丁已在新目录以全新缓存完成 `bun install --frozen-lockfile --ignore-scripts`。12 份 manifest、11 个 workspace 链接和 34 个补丁产物通过核对，锁文件及原项目输入未变。该结果不包含运行时源码、安装脚本、构建或新安装中的运行时导入；旧禁网安装失败记录保留各自范围。具体命令和证据见[验证记录](coding-validation.md#project-read-rule-and-workspace-install-after-731728a)。
 

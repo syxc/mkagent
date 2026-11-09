@@ -12,6 +12,7 @@ import { portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSes
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludePrivateHostComponents, excludeRunModeEntries } from './shared-helper-port.ts';
 import { portCompatRuntime } from './compat-runtime-port.ts';
+import { portThemeRuntime } from './theme-runtime-port.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const checkout = process.argv[2];
@@ -99,6 +100,11 @@ while (queue.length) {
       body = body.replace(before, after);
     }
     changes.add('require-explicit-rpc-cli-entry');
+  }
+  const theme = portThemeRuntime(path, body);
+  if (theme) {
+    body = theme.body;
+    changes.add(theme.change);
   }
   const parsed = ts.createSourceFile(path, body, ts.ScriptTarget.Latest, true);
   const replacements: Array<{ start: number; end: number; body: string }> = [];
@@ -417,6 +423,13 @@ const externalDependencies = Object.fromEntries([...dependencies].sort().map(nam
   return [name, version ?? '<builtin or development type>'];
 }));
 records.sort((a, b) => a.target.localeCompare(b.target));
+if (checking) {
+  const outputs = new Set(records.map(record => record.target));
+  for (const path of readdirSync(join(destination, 'src/pi'), { recursive: true })) {
+    const target = 'src/pi/' + slash(path);
+    if (target.endsWith('.ts') && !outputs.has(target)) throw new Error(`Source outside generated closure: ${target}`);
+  }
+}
 const manifest = {
   repository: 'https://github.com/earendil-works/pi', version: '1.5.0', revision,
   policy: 'Pi Coding SDK source with TypeScript declarations, excluding the upstream CLI launcher; execution binds to the local durable Agent boundary.',

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -9,7 +9,7 @@ import { ansiLinesToHtml, ansiToHtml } from '../src/pi/core/export-html/ansi-to-
 import { exportSessionToHtml } from '../src/pi/core/export-html/index.ts';
 import { createToolHtmlRenderer } from '../src/pi/core/export-html/tool-renderer.ts';
 import { SessionManager } from '../src/pi/core/session-manager.ts';
-import { getThemeByName } from '../src/pi/modes/interactive/theme/theme.ts';
+import { getThemeByName, loadThemeFromPath, setRegisteredThemes } from '../src/pi/modes/interactive/theme/theme.ts';
 
 const indices = [...Array.from({ length: 256 }, (_, index) => String(index)), '256', '65535', '9'.repeat(40), '9'.repeat(400)];
 const samples = indices.flatMap(index => [38, 48].map(channel => `before\x1b[1;${channel};5;${index}m<&"'\x1b[0mafter`));
@@ -102,7 +102,48 @@ test('session HTML export preserves custom tool call and result colors', async (
       resultHtmlCollapsed: '<div class="ansi-line"><span style="color:#00ff00">result</span></div>',
       resultHtmlExpanded: '<div class="ansi-line"><span style="color:#ff0000">result</span></div>',
     });
+
+    const document = JSON.parse(readFileSync(new URL('../src/pi/modes/interactive/theme/dark.json', import.meta.url), 'utf8'));
+    document.name = 'fixture';
+    document.appearance = 'light';
+    document.vars = { ...document.vars, red: 196, alias: 'red', panel: '#123456' };
+    Object.assign(document.colors, { accent: 'alias', searchMatchBg: 'panel', toolOutput: '#abcdef', userMessageBg: '#202020' });
+    for (const explicit of [false, true]) {
+      document.export = explicit ? { pageBg: 'panel', cardBg: 0, infoBg: '' } : {};
+      const path = join(root, 'fixture.json');
+      writeFileSync(path, JSON.stringify(document));
+      const custom = loadThemeFromPath(path, 'truecolor');
+      assert.equal(custom.appearance, 'light');
+      setRegisteredThemes([custom]);
+      const renderer = createToolHtmlRenderer({
+        theme: custom, cwd: root,
+        getToolRenderers: () => ({
+          renderCall: () => ({ render: () => [custom.style('<&', { fg: 'accent', bg: 'searchMatchBg' })], invalidate() {} }),
+          renderResult: (_result, options) => ({
+            render: () => [custom.fg('toolOutput', options.expanded ? 'expanded' : 'collapsed')], invalidate() {},
+          }),
+        }),
+      });
+      const customOutput = await exportSessionToHtml(session, undefined, {
+        outputPath: join(root, `theme-${explicit}.html`), themeName: 'fixture', toolRenderer: renderer,
+      });
+      const html = readFileSync(customOutput, 'utf8');
+      assert.ok(html.includes('--accent: #ff0000;'));
+      assert.ok(html.includes('--searchMatchBg: #123456;'));
+      assert.ok(html.includes(`--exportPageBg: ${explicit ? '#123456' : 'rgb(22, 22, 22)'};`));
+      assert.ok(html.includes(`--exportCardBg: ${explicit ? '#000000' : 'rgb(27, 27, 27)'};`));
+      assert.ok(html.includes('--exportInfoBg: rgb(52, 47, 32);'));
+      const payload = html.match(/<script id="session-data" type="application\/json">([^<]+)<\/script>/)?.[1];
+      assert.ok(payload);
+      const rendered = JSON.parse(Buffer.from(payload, 'base64').toString('utf8')).renderedTools['color-call'];
+      assert.match(rendered.callHtml, /color:#ff0000/);
+      assert.match(rendered.callHtml, /background-color:rgb\(18,52,86\)/);
+      assert.match(rendered.callHtml, /&lt;&amp;/);
+      assert.match(rendered.resultHtmlCollapsed, /color:rgb\(171,205,239\)">collapsed/);
+      assert.match(rendered.resultHtmlExpanded, /color:rgb\(171,205,239\)">expanded/);
+    }
   } finally {
+    setRegisteredThemes([]);
     rmSync(root, { recursive: true, force: true });
   }
 });

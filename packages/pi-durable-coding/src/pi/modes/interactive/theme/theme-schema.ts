@@ -1,11 +1,4 @@
-/**
- * Theme JSON validation, kept out of `theme.ts` on purpose.
- *
- * Validating user-authored theme files needs typebox, which costs ~17 MB of module graph to import.
- * Palette lookup does not, so a presentation that only uses built-in themes should never pay for it.
- * `main.ts` installs this validator before runtime resource loading; other consumers can opt in with
- * `setThemeJsonValidator()`. Built-in themes do not need validation.
- */
+/** Validate user-authored themes at every file-loading entry point. */
 
 import { type Static, type TProperties, Type } from "typebox";
 import { Compile } from "typebox/compile";
