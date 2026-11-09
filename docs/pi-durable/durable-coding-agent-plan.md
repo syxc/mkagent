@@ -26,7 +26,9 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `cfefb9b` 后的插件 edit 切片删除执行、renderer、预览及路径 helper 四份生成源码、旧 diff 转换和无调用路径适配，共六文件、741 行。20 行薄适配通过公开 Coding SDK 工厂保留插件执行与展示，参数准备和公开 diff 继续优先使用 durable；没有新增 SDK 补丁。当前 runtime 为 131 份 TypeScript，其中 src/pi 为 127 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个及 72 份补丁输出不变。383 项 edit 相关测试、36 项 read/path、26 项 bundle、Coding/server 类型、完整 runtime check 通过。独立复核通过 419 项测试和 14 项补充探针，未确认运行时回归；退役类型夹具的两处 TS2339 已通过删除该 10 行夹具处理，并重验 Coding 类型。最终固定 Craft 审计覆盖 2126 文件并通过，六份文档的标点和 130 个本地链接检查通过，范围见[edit 验证](coding-validation.md#edit-sdk-boundary-after-cfefb9b)。该时点旧 durable helper 补丁、其余源码及 F0 至 F6 继续收窄和验收。
 
-`2951fe6` 后的 helper 切片撤除七个低层 diff 导出及 readPathVariants，恢复两个路径文件的发布原文，durable 补丁由 30 份降为 28 份，总输出由 72 份降为 70 份。保留两个公开 diff 函数的 216 项历史结果，删除无适配消费者的私有归一化测试。两个既有安装冻结刷新后 lock 不变，327 项工具回归、26 项 bundle、Coding/server 类型和完整补丁重放通过，共 768 个断言；来源更新四项、移除一项，固定 Craft 审计覆盖 2125 文件。独立复核及限制见[helper 验证](coding-validation.md#durable-tool-patch-cleanup-after-2951fe6)。当前仍有 127 份 src/pi 源码需要逐职责核对；F0 至 F6 未关闭。
+`2951fe6` 后的 helper 切片撤除七个低层 diff 导出及 readPathVariants，恢复两个路径文件的发布原文，durable 补丁由 30 份降为 28 份，总输出由 72 份降为 70 份。保留两个公开 diff 函数的 216 项历史结果，删除无适配消费者的私有归一化测试。两个既有安装冻结刷新后 lock 不变，327 项工具回归、26 项 bundle、Coding/server 类型和完整补丁重放通过，共 768 个断言；来源更新四项、移除一项，固定 Craft 审计覆盖 2125 文件。独立复核及限制见[helper 验证](coding-validation.md#durable-tool-patch-cleanup-after-2951fe6)。该 helper 切片时仍有 127 份 src/pi 源码需要逐职责核对；F0 至 F6 未关闭。
+
+`145dd49` 后的插件 shell 切片删除 Bash、PowerShell、输出累积器及 renderer 四份源码、874 行，公开 Coding SDK 承担执行与展示，42 行薄绑定只注入既有宿主进程策略。SDK 可选依赖保留原 options、PowerShell 延迟 operations 和默认分支；生产 shell 继续优先使用 durable。当前 runtime 为 127 份 TypeScript，其中 src/pi 为 123 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个，补丁为 core 4、Coding 42、durable 28，共 74 份。134 项测试、568 个断言、Coding/server 类型、完整补丁重放、两处冻结刷新和生成检查通过，lock 未变。独立复核发现的两个公开工厂声明 TS2742 已用公开 ReturnType 修复，根工程及 hoisted 工程实际声明生成和 server 类型重验通过。来源登记更新八项、移除四项并新增三项，固定 Craft 审计覆盖 2124 文件。SDK 内部默认会话及交互 executeBash 仍使用自身工厂，其宿主策略覆盖保留核对；验证及独立复核边界见[shell 验证](coding-validation.md#public-sdk-shell-factories-after-145dd49)。剩余源码、AuthContext 既有缺口和 F0 至 F6 继续开放。
 
 ## 目标与名称
 

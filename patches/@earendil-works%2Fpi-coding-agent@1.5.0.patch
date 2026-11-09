@@ -1,4 +1,4 @@
-# Content SHA-256: b11b3f696bf47efc2faa51a201a0de424bcc1b7667ddd2d220aa78dbc39070e3
+# Content SHA-256: 0ed55bc32ccc328b3fb15e0e87ac237491ffd37f3a77219adcc076e5a766e3db
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -49,7 +49,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,33 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,34 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -82,7 +82,227 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { KeybindingsManager } from "./core/keybindings.ts";
 +export * from "./modes/interactive/theme/theme.ts";
 +export { getThemesDir, getExportTemplateDir } from "./config.ts";
++export type { ShellDependencies } from "./core/tools/bash.ts";
  //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/core/tools/bash.js b/dist/core/tools/bash.js
+--- a/dist/core/tools/bash.js
++++ b/dist/core/tools/bash.js
+@@ -45,7 +45,7 @@ const bashOutputSchema = Type.Object({
+     wall_time_seconds: Type.Number(),
+ });
+ /** Shared process execution used by the built-in shell tools. */
+-export function createLocalShellOperations(shellName, resolveShellConfig) {
++export function createLocalShellOperations(shellName, resolveShellConfig, dependencies) {
+     return {
+         exec: async (command, cwd, { onData, signal, timeout, env }) => {
+             const timeoutMs = resolveTimeoutMs(timeout);
+@@ -63,7 +63,7 @@ export function createLocalShellOperations(shellName, resolveShellConfig) {
+             const child = spawn(shellConfig.shell, commandFromStdin ? shellConfig.args : [...shellConfig.args, command], {
+                 cwd,
+                 detached: process.platform !== "win32",
+-                env: env ?? getShellEnv(),
++                env: env ?? (dependencies?.getShellEnv ?? getShellEnv)(),
+                 stdio: [commandFromStdin ? "pipe" : "ignore", "pipe", "pipe"],
+                 windowsHide: true,
+             });
+@@ -72,12 +72,12 @@ export function createLocalShellOperations(shellName, resolveShellConfig) {
+                 child.stdin?.end(command);
+             }
+             if (child.pid)
+-                trackDetachedChildPid(child.pid);
++                (dependencies?.trackDetachedChildPid ?? trackDetachedChildPid)(child.pid);
+             let timedOut = false;
+             let timeoutHandle;
+             const onAbort = () => {
+                 if (child.pid)
+-                    killProcessTree(child.pid);
++                    (dependencies?.killProcessTree ?? killProcessTree)(child.pid);
+             };
+             try {
+                 // Set timeout if provided.
+@@ -85,7 +85,7 @@ export function createLocalShellOperations(shellName, resolveShellConfig) {
+                     timeoutHandle = setTimeout(() => {
+                         timedOut = true;
+                         if (child.pid)
+-                            killProcessTree(child.pid);
++                            (dependencies?.killProcessTree ?? killProcessTree)(child.pid);
+                     }, timeoutMs);
+                 }
+                 // Stream stdout and stderr.
+@@ -100,7 +100,7 @@ export function createLocalShellOperations(shellName, resolveShellConfig) {
+                 }
+                 // Handle shell spawn errors and wait for the process to terminate without hanging
+                 // on inherited stdio handles held by detached descendants.
+-                const exitCode = await waitForChildProcess(child);
++                const exitCode = await (dependencies?.waitForChildProcess ?? waitForChildProcess)(child);
+                 if (signal?.aborted) {
+                     throw new Error("aborted");
+                 }
+@@ -114,7 +114,7 @@ export function createLocalShellOperations(shellName, resolveShellConfig) {
+             }
+             finally {
+                 if (child.pid)
+-                    untrackDetachedChildPid(child.pid);
++                    (dependencies?.untrackDetachedChildPid ?? untrackDetachedChildPid)(child.pid);
+                 if (timeoutHandle)
+                     clearTimeout(timeoutHandle);
+                 if (signal)
+@@ -129,11 +129,11 @@ export function createLocalShellOperations(shellName, resolveShellConfig) {
+  * This is useful for extensions that intercept user_bash and still want pi's
+  * standard local shell behavior while wrapping or rewriting commands.
+  */
+-export function createLocalBashOperations(options) {
+-    return createLocalShellOperations("bash", () => getShellConfig(options?.shellPath));
++export function createLocalBashOperations(options, dependencies) {
++    return createLocalShellOperations("bash", () => (dependencies?.getShellConfig ?? getShellConfig)(options?.shellPath), dependencies);
+ }
+-function resolveSpawnContext(command, cwd, spawnHook, exposeSessionEnvironment, ctx) {
+-    const env = { ...getShellEnv() };
++function resolveSpawnContext(command, cwd, spawnHook, exposeSessionEnvironment, ctx, dependencies) {
++    const env = { ...(dependencies?.getShellEnv ?? getShellEnv)() };
+     delete env.PI_SESSION_ID;
+     delete env.PI_SESSION_FILE;
+     delete env.PI_PROVIDER;
+@@ -155,8 +155,8 @@ function resolveSpawnContext(command, cwd, spawnHook, exposeSessionEnvironment,
+     const baseContext = { command, cwd, env };
+     return spawnHook ? spawnHook(baseContext) : baseContext;
+ }
+-export function createShellToolDefinition(cwd, config, options) {
+-    const ops = options?.operations ?? createLocalBashOperations({ shellPath: options?.shellPath });
++export function createShellToolDefinition(cwd, config, options, dependencies, createOperations) {
++    const ops = options?.operations ?? (createOperations ? createOperations() : createLocalBashOperations({ shellPath: options?.shellPath }, dependencies));
+     const commandPrefix = options?.commandPrefix;
+     const exposeSessionEnvironment = options?.exposeSessionEnvironment ?? true;
+     const spawnHook = options?.spawnHook;
+@@ -171,7 +171,7 @@ export function createShellToolDefinition(cwd, config, options) {
+         constrainedSampling: { type: "json_schema", strict: "prefer" },
+         async execute(_toolCallId, { command, timeout }, signal, onUpdate, ctx) {
+             const resolvedCommand = commandPrefix ? `${commandPrefix}\n${command}` : command;
+-            const spawnContext = resolveSpawnContext(resolvedCommand, ctx?.cwd || cwd, spawnHook, exposeSessionEnvironment, ctx);
++            const spawnContext = resolveSpawnContext(resolvedCommand, ctx?.cwd || cwd, spawnHook, exposeSessionEnvironment, ctx, dependencies);
+             const output = new OutputAccumulator({ tempFilePrefix: config.tempFilePrefix });
+             let acceptingOutput = true;
+             let updateTimer;
+@@ -318,11 +318,11 @@ const bashToolConfig = {
+     promptGuidelines: bashToolSystemPromptContribution.guidelines,
+     tempFilePrefix: "pi-bash",
+ };
+-export function createBashToolDefinition(cwd, options) {
+-    return createShellToolDefinition(cwd, bashToolConfig, options);
++export function createBashToolDefinition(cwd, options, dependencies) {
++    return createShellToolDefinition(cwd, bashToolConfig, options, dependencies);
+ }
+-export function createBashTool(cwd, options) {
+-    const definition = createBashToolDefinition(cwd, options);
++export function createBashTool(cwd, options, dependencies) {
++    const definition = createBashToolDefinition(cwd, options, dependencies);
+     const tool = wrapToolDefinition(definition);
+     Object.assign(tool, {
+         promptSnippet: definition.promptSnippet,
+diff --git a/dist/core/tools/bash.d.ts b/dist/core/tools/bash.d.ts
+--- a/dist/core/tools/bash.d.ts
++++ b/dist/core/tools/bash.d.ts
+@@ -1,3 +1,5 @@
++import type * as shell from "../../utils/shell.ts";
++import type { waitForChildProcess } from "../../utils/child-process.ts";
+ import { type Static, Type } from "typebox";
+ import { type ShellConfig } from "../../utils/shell.ts";
+ import type { ToolDefinition } from "../extensions/types.ts";
+@@ -50,8 +52,18 @@ export interface BashOperations {
+         exitCode: number | null;
+     }>;
+ }
++/** Host policy bindings; omitted entries keep the SDK defaults. */
++export interface ShellDependencies {
++    getShellConfig?: typeof shell.getShellConfig;
++    getPowerShellConfig?: typeof shell.getPowerShellConfig;
++    getShellEnv?: typeof shell.getShellEnv;
++    killProcessTree?: typeof shell.killProcessTree;
++    trackDetachedChildPid?: typeof shell.trackDetachedChildPid;
++    untrackDetachedChildPid?: typeof shell.untrackDetachedChildPid;
++    waitForChildProcess?: typeof waitForChildProcess;
++}
+ /** Shared process execution used by the built-in shell tools. */
+-export declare function createLocalShellOperations(shellName: string, resolveShellConfig: () => ShellConfig): BashOperations;
++export declare function createLocalShellOperations(shellName: string, resolveShellConfig: () => ShellConfig, dependencies?: ShellDependencies): BashOperations;
+ /**
+  * Create bash operations using pi's built-in local shell execution backend.
+  *
+@@ -60,7 +72,7 @@ export declare function createLocalShellOperations(shellName: string, resolveShe
+  */
+ export declare function createLocalBashOperations(options?: {
+     shellPath?: string;
+-}): BashOperations;
++}, dependencies?: ShellDependencies): BashOperations;
+ export interface BashSpawnContext {
+     command: string;
+     cwd: string;
+@@ -93,8 +105,8 @@ export interface ShellToolConfig {
+     promptGuidelines?: readonly string[];
+     tempFilePrefix: string;
+ }
+-export declare function createShellToolDefinition(cwd: string, config: ShellToolConfig, options?: BashToolOptions): ToolDefinition<typeof bashSchema, BashToolDetails | undefined, BashRenderState>;
+-export declare function createBashToolDefinition(cwd: string, options?: BashToolOptions): ToolDefinition<typeof bashSchema, BashToolDetails | undefined, BashRenderState>;
+-export declare function createBashTool(cwd: string, options?: BashToolOptions): TypeBoxAgentTool<typeof bashSchema>;
++export declare function createShellToolDefinition(cwd: string, config: ShellToolConfig, options?: BashToolOptions, dependencies?: ShellDependencies, createOperations?: () => BashOperations): ToolDefinition<typeof bashSchema, BashToolDetails | undefined, BashRenderState>;
++export declare function createBashToolDefinition(cwd: string, options?: BashToolOptions, dependencies?: ShellDependencies): ToolDefinition<typeof bashSchema, BashToolDetails | undefined, BashRenderState>;
++export declare function createBashTool(cwd: string, options?: BashToolOptions, dependencies?: ShellDependencies): TypeBoxAgentTool<typeof bashSchema>;
+ export {};
+ //# sourceMappingURL=bash.d.ts.map
+\ No newline at end of file
+diff --git a/dist/core/tools/powershell.js b/dist/core/tools/powershell.js
+--- a/dist/core/tools/powershell.js
++++ b/dist/core/tools/powershell.js
+@@ -6,8 +6,8 @@ export const powershellToolSystemPromptContribution = {
+     snippet: "Execute PowerShell commands",
+     guidelines: ["You can inspect PI_* environment variables for current model and session details."],
+ };
+-export function createLocalPowerShellOperations() {
+-    const operations = createLocalShellOperations("PowerShell", getPowerShellConfig);
++export function createLocalPowerShellOperations(dependencies) {
++    const operations = createLocalShellOperations("PowerShell", dependencies?.getPowerShellConfig ?? getPowerShellConfig, dependencies);
+     return {
+         exec: (command, cwd, options) => operations.exec(`${UTF8_OUTPUT_PREFIX}${command}`, cwd, options),
+     };
+@@ -21,14 +21,11 @@ const powershellToolConfig = {
+     promptGuidelines: powershellToolSystemPromptContribution.guidelines,
+     tempFilePrefix: "pi-powershell",
+ };
+-export function createPowerShellToolDefinition(cwd, options) {
+-    return createShellToolDefinition(cwd, powershellToolConfig, {
+-        ...options,
+-        operations: options?.operations ?? createLocalPowerShellOperations(),
+-    });
++export function createPowerShellToolDefinition(cwd, options, dependencies) {
++    return createShellToolDefinition(cwd, powershellToolConfig, options, dependencies, () => createLocalPowerShellOperations(dependencies));
+ }
+-export function createPowerShellTool(cwd, options) {
+-    const definition = createPowerShellToolDefinition(cwd, options);
++export function createPowerShellTool(cwd, options, dependencies) {
++    const definition = createPowerShellToolDefinition(cwd, options, dependencies);
+     const tool = wrapToolDefinition(definition);
+     Object.assign(tool, {
+         promptSnippet: definition.promptSnippet,
+diff --git a/dist/core/tools/powershell.d.ts b/dist/core/tools/powershell.d.ts
+--- a/dist/core/tools/powershell.d.ts
++++ b/dist/core/tools/powershell.d.ts
+@@ -1,3 +1,4 @@
++import type { ShellDependencies } from "./bash.ts";
+ import { type BashOperations, type BashSpawnContext, type BashSpawnHook, type BashToolDetails, type BashToolInput, type BashToolOptions, type createBashTool, createShellToolDefinition } from "./bash.ts";
+ export declare const powershellToolSystemPromptContribution: {
+     readonly snippet: "Execute PowerShell commands";
+@@ -10,7 +11,7 @@ export type PowerShellToolDetails = BashToolDetails;
+ export type PowerShellToolInput = BashToolInput;
+ export interface PowerShellToolOptions extends Pick<BashToolOptions, "operations" | "exposeSessionEnvironment" | "spawnHook"> {
+ }
+-export declare function createLocalPowerShellOperations(): PowerShellOperations;
+-export declare function createPowerShellToolDefinition(cwd: string, options?: PowerShellToolOptions): ReturnType<typeof createShellToolDefinition>;
+-export declare function createPowerShellTool(cwd: string, options?: PowerShellToolOptions): ReturnType<typeof createBashTool>;
++export declare function createLocalPowerShellOperations(dependencies?: ShellDependencies): PowerShellOperations;
++export declare function createPowerShellToolDefinition(cwd: string, options?: PowerShellToolOptions, dependencies?: ShellDependencies): ReturnType<typeof createShellToolDefinition>;
++export declare function createPowerShellTool(cwd: string, options?: PowerShellToolOptions, dependencies?: ShellDependencies): ReturnType<typeof createBashTool>;
+ //# sourceMappingURL=powershell.d.ts.map
 \ No newline at end of file
 diff --git a/dist/core/settings-manager.js b/dist/core/settings-manager.js
 --- a/dist/core/settings-manager.js

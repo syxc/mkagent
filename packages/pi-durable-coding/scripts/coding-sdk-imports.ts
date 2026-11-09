@@ -37,7 +37,8 @@ export function codingHostImport(importer: string, specifier: string): string | 
     : module === 'core/agent-session.ts' ? 'native-agent-session.ts'
     : module === 'core/tools/grep.ts' || module === 'core/tools/find.ts' ? 'native-search-tools.ts'
     : module === 'core/tools/read.ts' ? 'native-read-tools.ts'
-    : module === 'core/tools/edit.ts' || module === 'core/tools/edit-diff.ts' ? 'native-edit-tools.ts' : undefined;
+    : module === 'core/tools/edit.ts' || module === 'core/tools/edit-diff.ts' ? 'native-edit-tools.ts'
+    : module === 'core/tools/bash.ts' || module === 'core/tools/powershell.ts' ? 'native-shell-tools.ts' : undefined;
   if (!host) return undefined;
   const target = posix.relative(posix.dirname('pi/' + importer), host);
   return target.startsWith('.') ? target : './' + target;

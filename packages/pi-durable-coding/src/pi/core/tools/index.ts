@@ -8,7 +8,7 @@ export {
 	createBashTool,
 	createBashToolDefinition,
 	createLocalBashOperations,
-} from "./bash.ts";
+} from "../../../native-shell-tools.ts";
 export {
 	createEditTool,
 	createEditToolDefinition,
@@ -52,7 +52,7 @@ export {
 	type PowerShellToolDetails,
 	type PowerShellToolInput,
 	type PowerShellToolOptions,
-} from "./powershell.ts";
+} from "../../../native-shell-tools.ts";
 export {
 	createReadTool,
 	createReadToolDefinition,
@@ -81,12 +81,12 @@ export {
 
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
-import { type BashToolOptions, createBashTool, createBashToolDefinition } from "./bash.ts";
+import { type BashToolOptions, createBashTool, createBashToolDefinition } from "../../../native-shell-tools.ts";
 import { createEditTool, createEditToolDefinition, type EditToolOptions } from "../../../native-edit-tools.ts";
 import { createFindTool, createFindToolDefinition, type FindToolOptions } from "../../../native-search-tools.ts";
 import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "../../../native-search-tools.ts";
 import { createLsTool, createLsToolDefinition, type LsToolOptions } from "@earendil-works/pi-coding-agent";
-import { createPowerShellTool, createPowerShellToolDefinition, type PowerShellToolOptions } from "./powershell.ts";
+import { createPowerShellTool, createPowerShellToolDefinition, type PowerShellToolOptions } from "../../../native-shell-tools.ts";
 import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "../../../native-read-tools.ts";
 import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "@earendil-works/pi-coding-agent";
 

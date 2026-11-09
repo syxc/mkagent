@@ -3,7 +3,7 @@
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "version": "1.5.0",
   "patch": "coding-sdk-host-boundaries-v1",
-  "policy": "Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, sleep listener cleanup, and installed worker theme and HTML asset lookup.",
+  "policy": "Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, and installed worker theme and HTML asset lookup.",
   "files": [
     {
       "path": "dist/index.js",
@@ -13,7 +13,27 @@
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "902d8aee8d43099f04cc7ffacdb16e2e14e6c84e145d4a6ba574d77f9aaae2ab"
+      "sha256": "10e42ac6d26262f68989769736eb21cf0607da5be6ee61f1ad4612da55616a55"
+    },
+    {
+      "path": "dist/core/tools/bash.js",
+      "originalSha256": "f32e87a42f66276b2eafaaf0848babf52523d37ab0fd448439586376747f03c4",
+      "sha256": "f4be6ac52b29b369296f8094961708a534d0e46b3ed9b38ab544e697f65aa9fa"
+    },
+    {
+      "path": "dist/core/tools/bash.d.ts",
+      "originalSha256": "78d2558fa0d81296004aed0b0c939b6c44a14a60e792eb363d08a2e4a6a5726b",
+      "sha256": "88357e0355d6256c46c9a66fd6a9c9c91b053d1e14ac56740d7665982089fc9f"
+    },
+    {
+      "path": "dist/core/tools/powershell.js",
+      "originalSha256": "329abae972d61c226cddf96c8469202168aa13449791ac4f8f1796347f8624f2",
+      "sha256": "ecb4bc2508e830437f9ddb5fb0145aedf84e9d5d5a39ea99c3bc64b6db3f84f2"
+    },
+    {
+      "path": "dist/core/tools/powershell.d.ts",
+      "originalSha256": "eb2bfa4574b0bdb02a95e4a3039ea585503d20ba608a3cdb6309bf8b63cc6a4c",
+      "sha256": "5ac2400451c020fd2da0ec6c651456f4d00c8533914b7f296fe8c040194c2cde"
     },
     {
       "path": "dist/core/settings-manager.js",

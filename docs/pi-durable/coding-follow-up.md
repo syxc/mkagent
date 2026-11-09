@@ -41,7 +41,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 | 范围 | 核对内容 |
 |---|---|
 | 执行主链 | `DurableKernel → CodingHost → AgentSession → DurableLoopBinding → pi.coding.*` 中哪些请求、工具轮次及收尾逻辑可由官方执行器承担 |
-| 工具 | 生产 read/write/edit/bash/PowerShell 已使用 durable 工厂；插件与生产 grep/find/ls 均已改用 Coding SDK，分别删除六份和三份源码；插件 write 直接使用 Coding SDK，再删除两份源码、288 行；插件 read 通过图片和文档路径薄绑定使用同一 SDK，再删除两份源码、396 行，其余插件工厂继续核对；edit 执行及 renderer 也已交给 SDK，并保留 durable 参数准备，删除四份生成源码及旧转换和无调用路径适配，共六文件、741 行 |
+| 工具 | 生产 read/write/edit/bash/PowerShell 已使用 durable 工厂；插件与生产 grep/find/ls 均已改用 Coding SDK，分别删除六份和三份源码；插件 write 直接使用 Coding SDK，再删除两份源码、288 行；插件 read 通过图片和文档路径薄绑定使用同一 SDK，再删除两份源码、396 行，其余插件工厂继续核对；edit 执行及 renderer 也已交给 SDK，并保留 durable 参数准备，删除四份生成源码及旧转换和无调用路径适配，共六文件、741 行；插件 Bash/PowerShell 工厂也已使用 SDK，再删除执行、输出累积及 renderer 四份源码、874 行 |
 | 插件与资源 | 公开注册、事件、上下文、会话、模型、资源和 UI 契约需要哪些能力；哪些仅由完整源码闭包带入 |
 | 持久化与恢复 | 必须保留哪些已接受输入、任务身份、工具结果、分支和不确定副作用边界；官方事务接口能承接哪些部分 |
 | SDK 导出与 CLI | MkAgent 产品入口、插件可复用组件和原版 Pi 启动器/运行模式分别有哪些调用；不默认全留或全删 |
@@ -85,6 +85,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 `2951fe6` 后的 helper 切片撤除七个低层 diff 导出及 readPathVariants，两个路径文件恢复发布原文，durable 补丁从 30 份降至 28 份，连同 core 4、Coding 38 共 70 份。两个公开 diff 函数保留 216 项历史摘要；无适配消费者的私有归一化测试删除。两个既有安装冻结刷新后 lock 未变，补丁重放、327 项工具测试、26 项 bundle 和 Coding/server 类型检查通过，共 768 个断言。来源登记更新四项、删除一项，固定 Craft 审计覆盖 2125 文件并通过。独立复核及范围见[helper 验证](coding-validation.md#durable-tool-patch-cleanup-after-2951fe6)；127 份 src/pi 源码、AuthContext 既有缺口及 F0 至 F6 继续开放。
 
 ## F3 薄适配与必要例外
+
+`145dd49` 后的插件 shell 切片通过公开 Coding SDK 承担 Bash、PowerShell、输出累积和 renderer，删除四份源码、874 行。42 行薄绑定只提供既有 shell 选择、宿主 PATH、durable 等待与终止及共享 detached tracker，原 options 对象直接交给 SDK；SDK 可选 ShellDependencies 保留默认路径和 PowerShell 延迟 operations。当前 runtime 为 127 份 TypeScript，其中 src/pi 为 123 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个，补丁为 core 4、Coding 42、durable 28，共 74 份。主线程 134 项测试、568 个断言及 Coding/server 类型通过，两个既有安装冻结刷新后 lock 未变，完整补丁重放和生成检查通过。独立复核发现两个 definition 工厂推导私有类型导致 TS2742，已补公开 ReturnType 并在根工程和 hoisted 工程实际生成声明通过，server 类型再次通过。来源登记更新八项、删除四项并新增三项，固定 Craft 审计覆盖 2124 文件并通过。SDK 内部默认会话工厂及交互 executeBash 的宿主策略覆盖不能由这些工厂测试证明；具体边界、复核及验证范围见[shell 验证](coding-validation.md#public-sdk-shell-factories-after-145dd49)。其余 123 份 src/pi 源码、AuthContext 既有缺口及 F0 至 F6 继续开放。
 
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 

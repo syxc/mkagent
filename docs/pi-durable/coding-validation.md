@@ -26,6 +26,72 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK shell factories after 145dd49
+
+The public Bash and PowerShell factories now use the Coding SDK. Four local
+files retire: Bash (441 lines), PowerShell (67), output accumulator (257) and
+shell renderer (109), for 874 lines. Runtime falls from 131 TypeScript files to
+127, including 123 under src/pi and four facades, with no assets. Auxiliary
+sources remain nine and shared entries 18. These counts do not establish that
+the remaining source is necessary.
+
+Production shell tools continue to use durable. Its tool factories do not
+provide the Coding plugin operations, ToolDefinition and renderer contracts.
+The 42-line native-shell-tools binding passes the original options to the SDK
+and supplies existing host policies: shell selection, managed bin PATH, durable
+waiting and process-tree termination, and the shared detached process tracker.
+These preserve WSL stdin transport, the trusted Windows taskkill path and the
+macOS stop-before-kill order. The SDK still owns spawn, timeouts, cancellation,
+UTF-8 processing, output accumulation, private spill files and rendering.
+
+The narrow SDK patch adds optional ShellDependencies. PowerShell selects default
+operations through a delayed factory, so inherited and non-enumerable options
+and getter receivers survive without an options spread. Omitted dependencies
+keep SDK defaults. Four shell JS/declaration files are added to the Coding patch,
+which rises from 38 outputs to 42. With the unchanged core four and durable 28,
+the total is 74 physical outputs. Public equivalent dependency hooks are the
+exit condition for this patch; no task, checkpoint or dependency version changes.
+
+The complete Coding patch replays against a pristine package, and all 42 original
+and target hashes match. Both existing installations pass frozen refresh with
+scripts disabled and a task HOME/cache; bun.lock is unchanged. The 42 installed
+Coding outputs match the manifest in both layouts. The fixed upstream runtime
+--check verifies 127 files, and the SDK patch --check verifies all 42 outputs.
+Only manifest policy text changes after those checks; regeneration and --check
+confirm identical patch bytes and output hashes.
+
+The parent runs 36 shell tests with 238 assertions, 72 related tests with 225
+assertions, and 26 bundle tests with 105 assertions: 134 tests and 568 assertions.
+Coverage includes options and receivers, session environment, real shell errors,
+UTF-8 spill bytes and mode 0600, cancellation and timeouts, tracking, injected
+PowerShell transport and renderer component reuse. Coding and server types pass.
+
+Independent review finds one new defect: both definition factories infer private
+SDK Bash render types. Root declaration generation reports TS2742; hoisted output
+can include an internal node_modules path. The reviewer confirms the failure
+against an in-memory HEAD baseline. The parent adds public ReturnType annotations
+and then generates declarations successfully in both actual installations. Both
+shell declaration files use only public SDK imports, and server type consumption
+passes again. The review also reports a separate existing context declaration
+TS2742; the parent's final root and hoisted commands do not reproduce that error.
+The two-line fix is verified by the parent without a second independent review.
+
+The reviewer runs 74 related tests and six local process probes under each of
+Bun and Node. These check the shared tracker, child-tree termination, continued
+descendant output, idle pipe release and policy transform guards. All pass.
+The reviewer also verifies the four deletions against fixed upstream, unchanged
+SDK accumulator and renderer bytes, all 42 hashes and the full runtime --check.
+Installation, patch replay, bundle, source registration and document updates are
+outside the independent review. Source registration updates eight entries,
+removes four and adds three; the fixed Craft v0.15.6 audit passes for 2124 files.
+
+The native/compat factories and tool collection use the host binding. AgentSession
+without baseToolsOverride and its interactive executeBash still use SDK internal
+default factories, as they did at HEAD. These factory tests do not establish host
+policy coverage for those paths. Real services, Windows and Linux devices and
+complete repository or product acceptance are not checked. Remaining source
+deletion, the earlier AuthContext gap and F0 through F6 stay open.
+
 ## Durable tool patch cleanup after 2951fe6
 
 The local read path adapter and edit preview implementation have already retired.

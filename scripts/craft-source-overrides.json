@@ -3985,8 +3985,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "07d883cbc85ff1d701a3b26b51f0b8351a470191dc0817d1a7573f99c224487b",
-      "reason": "Record the generated closure after public SDK edit replacement; remove edit execution, renderer, preview and unused path helpers."
+      "sha256": "f4e69a7b6b1d3a41ce729f05e14e1834383440fe9ecb1373aea4b7b7f4367f70",
+      "reason": "Record the reduced closure after replacing Bash and PowerShell factories, output accumulation and shell rendering with public SDK implementations."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
@@ -4137,8 +4137,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/auth-storage.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/bash-executor.ts": {
-      "sha256": "6fae3801533d64ccc018c43682bbff868619dd7cdab8f67730c731a5785d2984",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/bash-executor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "948ba40594fcd3e6d5d643a8e0cd970347609a02cfbfc815f1bc52a67e43f634",
+      "reason": "Use public Coding SDK BashOperations types through the host binding for the retained shell executor; runtime execution is unchanged here."
     },
     "packages/pi-durable-coding/src/pi/core/cache-warmer.ts": {
       "sha256": "6476803829f91e2aead921d9f27e22de45ac30797815f08a4ab1dfeefe145f4b",
@@ -4256,28 +4256,12 @@
       "sha256": "55e4d7f31bdf3727baa4e89f361a6abee9ae4a76f64a30369ea157cb37bbc2b2",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/timings.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/core/tools/bash.ts": {
-      "sha256": "80d0b38d0fda7adf0e714843a0b935c090a0c9c2460ed9d575b3b4aa0fa67d8a",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
     "packages/pi-durable-coding/src/pi/core/tools/index.ts": {
-      "sha256": "1e91c84c83886562d38647bbee50635ee30c53621a7794bc068535b0e57245c8",
-      "reason": "Use public Coding SDK plugin tool factories with required host bindings, including durable edit argument preparation."
-    },
-    "packages/pi-durable-coding/src/pi/core/tools/output-accumulator.ts": {
-      "sha256": "255c11af6596a043f2d8225d3faba1ff18e3f43fe47052b3e018f9ef9517a9d9",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/output-accumulator.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/tools/powershell.ts": {
-      "sha256": "043b2316bf8ec411ef00be564bea061531d4f1663e07a377a298f49b107a18fc",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/powershell.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "90f24a0cb7b9cb5abe698186b71f34bad3ba446556701234678929bbe9640153",
+      "reason": "Use public Coding SDK plugin tool factories with required host bindings, including Bash and PowerShell policies."
     },
     "packages/pi-durable-coding/src/pi/core/tools/render-utils.ts": {
       "sha256": "a47308a17b12059cb9e14b7ac7eb4cb2b8a0d118ce6fd8c9d00587c4e3309069",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/core/tools/renderers/bash.ts": {
-      "sha256": "14a22bd202b12d19a70ee2d1b201fa61a6434284a263952849756b956d9e70e7",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/truncate.ts": {
@@ -4901,24 +4885,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "d050be04d670048dbe0600f6caac28dff34b54d6b0f5a9413aa1bb09ed3ed8e8",
-      "reason": "Stop source traversal at public Coding SDK contracts and host bindings, including edit factories and direct durable diff exports."
+      "sha256": "be787b387a5e049691f381ae46a10158090c8dc1e80297738f3994248ad21935",
+      "reason": "Stop source traversal at public Coding SDK shell factories and preserve the host dependency binding."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "3b11859babbab2a425423d1b9e69103ba3b363f05e8b99ce2934ff2e5f7a24c6",
-      "reason": "Verify public SDK identity and generation boundaries, including the edit factories and direct durable diff exports."
+      "sha256": "b4c2a6d03a3db0d5febc4b5ed15d151d166c12ea66b258f69626dfaf27a2d352",
+      "reason": "Verify SDK identity and generation boundaries, including host shell factories without local execution or renderer copies."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "18b3dec03c84b2781460a7b6473ee2a713902b46483955d73fd8618a623dc82a",
-      "reason": "Record reproducible public Coding SDK exports and narrow host lifecycle, resource, execution, search and read image/documentation dependency hooks without copying the published algorithms."
+      "sha256": "418189d579a9b4ba8259e914df0532a6d4b2ca42a70292b34c9e90ec6c8e5bbd",
+      "reason": "Record optional host shell policy dependencies while the SDK retains process execution, output accumulation and rendering."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "5b57998f387f5ab9e2ca5a5c4906b6c0cb9a2781f73a1dd476c563bb1f298716",
-      "reason": "Generate narrow public Coding SDK host boundaries and declarations, including optional read image processing and documentation paths; retain published reading, pagination and renderer algorithms."
+      "sha256": "906d7aeddbee8220b5defe1808f1661c3298099d664ec845f5e1ee444b3ddfbf",
+      "reason": "Generate narrow SDK exports and host policies, including optional shell configuration, environment, wait, termination and tracking dependencies."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "e619209f51d2aabe528fd83f36d90d16e5ad6b4a22245efb519654ca47281763",
-      "reason": "Expose existing public Coding contracts and add required host policy, lifecycle, execution and dependency hooks, including shared read images and host documentation paths, without copying complete SDK algorithms."
+      "sha256": "49b978938907eaf2c63ccf56a02e5aafac289ff5af16fd7f26550ca0cbbfac86",
+      "reason": "Expose required Coding SDK contracts and narrow host policy hooks, including shell dependencies; retain published execution and rendering algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -5011,6 +4995,18 @@
     "packages/pi-durable-coding/test/host-edit-sdk.test.ts": {
       "sha256": "64a073f1b56f6d6d7b1bdeb4a57e29bcc09c25ceba176befd2960edb52382e70",
       "reason": "Verify SDK edit bytes, inherited operations, receivers, errors, staged cancellation and queue settlement, renderer previews and component reuse."
+    },
+    "packages/pi-durable-coding/scripts/coding-shell-policy.ts": {
+      "sha256": "c8171b57044f7d23a18cfecf2dd45184df6e686e12ee37950d05f1a9943b7bfa",
+      "reason": "Inject optional host shell policies into the SDK without copying execution, accumulation, spill or renderer algorithms; preserve original options and SDK defaults."
+    },
+    "packages/pi-durable-coding/src/native-shell-tools.ts": {
+      "sha256": "0d20397c563cc36c5bed6893d6e9e4a928aef3bcfb8979957fe0006bf2a30228",
+      "reason": "Bind public Coding SDK Bash and PowerShell factories to existing host shell and durable process policies; keep public declaration return types."
+    },
+    "packages/pi-durable-coding/test/host-shell-sdk.test.ts": {
+      "sha256": "deebc5aa59823ce646d1e61e30cdb15c38dd28349609025044aa514f4029150b",
+      "reason": "Verify public shell options and receivers, session environment, UTF-8 and private spill bytes, cancellation, timeout, process policy injection and renderer lifecycle."
     }
   },
   "deleted": {

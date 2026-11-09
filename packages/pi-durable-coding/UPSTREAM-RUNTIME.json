@@ -117,8 +117,10 @@
       "source": "packages/coding-agent/src/core/bash-executor.ts",
       "target": "src/pi/core/bash-executor.ts",
       "sha256": "6fae3801533d64ccc018c43682bbff868619dd7cdab8f67730c731a5785d2984",
-      "portSha256": "6fae3801533d64ccc018c43682bbff868619dd7cdab8f67730c731a5785d2984",
-      "changes": []
+      "portSha256": "948ba40594fcd3e6d5d643a8e0cd970347609a02cfbfc815f1bc52a67e43f634",
+      "changes": [
+        "host-extension-module-import"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/cache-warmer.ts",
@@ -344,37 +346,12 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/core/tools/bash.ts",
-      "target": "src/pi/core/tools/bash.ts",
-      "sha256": "4c1e12c7ffcafa11a180b4cb8df13549a43925c15d08a62b8794a4715c54c178",
-      "portSha256": "80d0b38d0fda7adf0e714843a0b935c090a0c9c2460ed9d575b3b4aa0fa67d8a",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/tools/index.ts",
       "target": "src/pi/core/tools/index.ts",
       "sha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
-      "portSha256": "1e91c84c83886562d38647bbee50635ee30c53621a7794bc068535b0e57245c8",
+      "portSha256": "90f24a0cb7b9cb5abe698186b71f34bad3ba446556701234678929bbe9640153",
       "changes": [
         "host-extension-module-import",
-        "public-coding-sdk"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/tools/output-accumulator.ts",
-      "target": "src/pi/core/tools/output-accumulator.ts",
-      "sha256": "255c11af6596a043f2d8225d3faba1ff18e3f43fe47052b3e018f9ef9517a9d9",
-      "portSha256": "255c11af6596a043f2d8225d3faba1ff18e3f43fe47052b3e018f9ef9517a9d9",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/core/tools/powershell.ts",
-      "target": "src/pi/core/tools/powershell.ts",
-      "sha256": "56645690718f03e6c5a19b574a74e3f28f0d0df7563fb226eeee5c88576aefad",
-      "portSha256": "043b2316bf8ec411ef00be564bea061531d4f1663e07a377a298f49b107a18fc",
-      "changes": [
         "public-coding-sdk"
       ]
     },
@@ -383,15 +360,6 @@
       "target": "src/pi/core/tools/render-utils.ts",
       "sha256": "691de101cb635dd8e899fa1f07175f7d3f0baf779022c816edd1b86b90a44cb4",
       "portSha256": "a47308a17b12059cb9e14b7ac7eb4cb2b8a0d118ce6fd8c9d00587c4e3309069",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/tools/renderers/bash.ts",
-      "target": "src/pi/core/tools/renderers/bash.ts",
-      "sha256": "ada1e7766ea385344691d944196ff2ff1af45c6f8f17604143b31fff8de55d9f",
-      "portSha256": "14a22bd202b12d19a70ee2d1b201fa61a6434284a263952849756b956d9e70e7",
       "changes": [
         "public-coding-sdk"
       ]
