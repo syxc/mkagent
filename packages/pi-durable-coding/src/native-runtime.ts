@@ -6,7 +6,7 @@ import { NativeToolExecutor } from './extension-tools.ts';
 import { expandCodingSkill, expandCodingTemplate } from './input.ts';
 import { CodingSessionView, type CodingSessionStore } from './session-view.ts';
 import type { CodingResources } from './resources.ts';
-import { createExtensionRuntime, loadExtensions } from './upstream/core/extensions/loader.js';
+import { createExtensionRuntime, loadExtensions } from './legacy/extension-loader.ts';
 import { ExtensionRunner } from './upstream/core/extensions/runner.js';
 import type { BuildSystemPromptOptions } from './upstream/core/system-prompt.ts';
 import { _buildBoundaryContext, _replaceMessageInPlace } from './upstream/core/boundary-drafts.js';

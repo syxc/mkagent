@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { loadExtensions } from '../src/upstream/core/extensions/loader.js';
+import { loadExtensions } from '../src/legacy/extension-loader.ts';
 import type { ExtensionAPI } from '../src/pi/core/extensions/types.ts';
 import { ExtensionRunner } from '../src/upstream/core/extensions/runner.js';
 import { createEventBus } from "@earendil-works/pi-coding-agent";
@@ -69,8 +69,8 @@ describe('native extension loading and dispatch', () => {
   });
 
   test('keeps cached factories and Coding module mappings separate across loaders', async () => {
-    const legacy = await import('../src/upstream/core/extensions/loader.js');
-    const native = await import('../src/pi/core/extensions/loader.ts');
+    const legacy = await import('../src/legacy/extension-loader.ts');
+    const native = await import('../src/native-extension-loader.ts');
     const path = join(root, 'cached.ts');
     writeFileSync(path, `
       import * as coding from '@earendil-works/pi-coding-agent';
@@ -100,7 +100,7 @@ describe('native extension loading and dispatch', () => {
     }
   });
 
-  test.each(['../src/upstream/core/extensions/loader.js', '../src/pi/core/extensions/loader.ts'])(
+  test.each(['../src/legacy/extension-loader.ts', '../src/native-extension-loader.ts'])(
     'commits inline registrations and invalidates captured APIs through %s', async loaderPath => {
       const { createExtensionRuntime, loadExtensionFromFactory } = await import(loaderPath);
       const runtime = createExtensionRuntime();
@@ -128,7 +128,7 @@ describe('native extension loading and dispatch', () => {
     },
   );
 
-  test.each(['../src/upstream/core/extensions/loader.js', '../src/pi/core/extensions/loader.ts'])(
+  test.each(['../src/legacy/extension-loader.ts', '../src/native-extension-loader.ts'])(
     'rolls back failed registrations and event listeners through %s', async loaderPath => {
       const { createExtensionRuntime, loadExtensions } = await import(loaderPath);
       const path = join(root, 'failed.ts');

@@ -20,7 +20,6 @@
     "diff": "8.0.4",
     "fflate": "0.8.2",
     "ignore": "7.0.8",
-    "jiti": "2.7.0",
     "jszip": "3.10.1",
     "marked": "18.0.11",
     "minimatch": "11.0.3",
@@ -108,7 +107,7 @@
       "source": "packages/coding-agent/src/core/agent-session-services.ts",
       "target": "src/pi/core/agent-session-services.ts",
       "sha256": "c69826f519aa21b2dc04768eb63b0d10e88be071195beaf43bb1292dec187d01",
-      "portSha256": "df2fe4c17f2a3d336db07ec5a1f80a2635cb2110cd8c38e630ffc531fc5d69b8",
+      "portSha256": "7b53e20bdaee5b1ef9c6a274a9b75c18825bf8106c24ed5ba7570f2c19e01021",
       "changes": [
         "public-coding-sdk",
         "shared-extension-model-initialization"
@@ -297,33 +296,9 @@
       "source": "packages/coding-agent/src/core/extensions/index.ts",
       "target": "src/pi/core/extensions/index.ts",
       "sha256": "510e8a71fe1b73d830c0184dfeb7187b8f7f0887f64c6b171a19956a43e64fea",
-      "portSha256": "510e8a71fe1b73d830c0184dfeb7187b8f7f0887f64c6b171a19956a43e64fea",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/core/extensions/jiti-loader.ts",
-      "target": "src/pi/core/extensions/jiti-loader.ts",
-      "sha256": "199594e72a9d8abe002c5e80420b94bb65ad0d7953f301249cf7a08652359042",
-      "portSha256": "199594e72a9d8abe002c5e80420b94bb65ad0d7953f301249cf7a08652359042",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/core/extensions/jiti-static-loader.ts",
-      "target": "src/pi/core/extensions/jiti-static-loader.ts",
-      "sha256": "b8507bc36a9c9bcb2f4bafbc70b103269ffc3fb7c9052d5d76bf290c4d51bc7b",
-      "portSha256": "b8507bc36a9c9bcb2f4bafbc70b103269ffc3fb7c9052d5d76bf290c4d51bc7b",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/core/extensions/loader.ts",
-      "target": "src/pi/core/extensions/loader.ts",
-      "sha256": "873cbe2ae4a15e9563c5a563d447b7aa3a05cca45e145d4250d54ad601bdc85f",
-      "portSha256": "26f08cf5685a0586ef8a29b1b9f00d4255494bbf03e70a94ae115a3fab04de80",
+      "portSha256": "73efe991cf6a98b7aeb51b04f705ae55fb54454c0d7b2ef73fa72127f9fff5f9",
       "changes": [
-        "public-coding-sdk",
-        "host-independent-extension-modules",
-        "preserve-host-stack-formatting-after-babel-bootstrap",
-        "shared-extension-initialization"
+        "host-extension-module-import"
       ]
     },
     {
@@ -444,13 +419,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/core/pi-manifest.ts",
-      "target": "src/pi/core/pi-manifest.ts",
-      "sha256": "d5506c48ced4bb2572f55ce2f7d3f4bca8d3e30eece6ceb84d63f73cd0f00cf2",
-      "portSha256": "d5506c48ced4bb2572f55ce2f7d3f4bca8d3e30eece6ceb84d63f73cd0f00cf2",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/core/prompt-templates.ts",
       "target": "src/pi/core/prompt-templates.ts",
       "sha256": "1bdaa7b3825f92bf33203fd7587014b878c55b3d812900cca5cad08fefd92171",
@@ -494,7 +462,7 @@
       "source": "packages/coding-agent/src/core/sdk.ts",
       "target": "src/pi/core/sdk.ts",
       "sha256": "f0f6f2b14a61c5c3ebb31d40c97b3f73296a2f0334d582072383302d693714c8",
-      "portSha256": "f4ec60443f3ef3e1ad30ff88577a1d2422587c73f00e3172b91aa290c64e4bec",
+      "portSha256": "a04ca176bbd768722d8e1fd25a3cad924eff6947c2340eb1b70b3953afdc0c4c",
       "changes": [
         "durable-agent-boundary",
         "public-coding-sdk",

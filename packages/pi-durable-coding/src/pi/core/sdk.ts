@@ -1,5 +1,5 @@
 import type { DurableLoopBinding } from "../../durable-coding/engine.ts";
-import { resourceExtensionLoader } from "../../resource-extension-loader.ts";
+import * as resourceExtensionLoader from "../../native-extension-loader.ts";
 import { join } from "node:path";
 import { Agent, type AgentMessage, setDefaultStreamFn, type ThinkingLevel } from "../../agent-runtime.ts";
 import type { ModelsSimpleStreamOptions } from "@earendil-works/pi-ai";

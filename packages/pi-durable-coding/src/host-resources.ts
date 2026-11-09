@@ -12,7 +12,7 @@ import {
   type DefaultResourceLoaderOptions,
   type ResourceLoaderReloadOptions,
 } from '@earendil-works/pi-coding-agent';
-import { resourceExtensionLoader } from './resource-extension-loader.ts';
+import * as resourceExtensionLoader from './native-extension-loader.ts';
 import {
   FileSettingsStorage,
   SettingsManager,

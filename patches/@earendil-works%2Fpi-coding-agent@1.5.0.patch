@@ -1,8 +1,8 @@
-# Content SHA-256: 42b49af2bde1b762b109c64e2e5eb090b23c3b40841fc22e94f2ab53a4b300cb
+# Content SHA-256: b27f5a7e442aba6969f351a98030ca427557dc06e4c84ec8eba5446539d9b1db
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,14 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,15 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -12,6 +12,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/model-registry.js";
 +export * from "./core/session-manager.js";
 +export * from "./core/resource-loader.js";
++export * from "./core/extensions/loader.js";
 +export * from "./core/mcp-servers.js";
 +export * from "./core/keybindings.js";
 +export * from "./modes/interactive/theme/theme.js";
@@ -30,7 +31,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,14 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,15 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -40,6 +41,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/model-registry.ts";
 +export * from "./core/session-manager.ts";
 +export * from "./core/resource-loader.ts";
++export * from "./core/extensions/loader.ts";
 +export * from "./core/mcp-servers.ts";
 +export * from "./core/keybindings.ts";
 +export * from "./modes/interactive/theme/theme.ts";
@@ -591,6 +593,189 @@ diff --git a/dist/core/resource-loader.js b/dist/core/resource-loader.js
 \ No newline at end of file
 +//# sourceMappingURL=resource-loader.js.map
 +export const dedupePrompts = DefaultResourceLoader.prototype.dedupePrompts;
+diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
+--- a/dist/core/extensions/loader.js
++++ b/dist/core/extensions/loader.js
+@@ -87,21 +87,30 @@ function getAliases() {
+     };
+     return _aliases;
+ }
+-let extensionCacheCwd;
+-let extensionCacheGeneration = 0;
+-const extensionCache = new Map();
+-export function clearExtensionCache() {
+-    extensionCache.clear();
+-    extensionCacheCwd = undefined;
+-    extensionCacheGeneration++;
++const extensionCaches = new WeakMap();
++function getExtensionCache(options) {
++    const importer = options?.importModule ?? getCreateJiti;
++    let cache = extensionCaches.get(importer);
++    if (!cache) {
++        cache = { factories: new Map(), generation: 0, cwd: undefined };
++        extensionCaches.set(importer, cache);
++    }
++    return cache;
++}
++export function clearExtensionCache(options) {
++    const cache = getExtensionCache(options);
++    cache.factories.clear();
++    cache.cwd = undefined;
++    cache.generation++;
+ }
+-function useExtensionCacheCwd(cwd) {
++function useExtensionCacheCwd(cwd, options) {
++    const cache = getExtensionCache(options);
+     const resolvedCwd = resolvePath(cwd);
+-    if (extensionCacheCwd !== undefined && !pathsEqual(extensionCacheCwd, resolvedCwd)) {
+-        clearExtensionCache();
++    if (cache.cwd !== undefined && !pathsEqual(cache.cwd, resolvedCwd)) {
++        clearExtensionCache(options);
+     }
+-    extensionCacheCwd = resolvedCwd;
+-    return { cwd: resolvedCwd, generation: extensionCacheGeneration };
++    cache.cwd = resolvedCwd;
++    return { cwd: resolvedCwd, generation: cache.generation, cache };
+ }
+ /**
+  * Create a runtime with throwing stubs for action methods.
+@@ -459,36 +468,41 @@ function createExtensionAPI(extension, runtime, cwd, eventBus) {
+ }
+ function isCurrentCacheToken(cacheToken) {
+     return (cacheToken !== undefined &&
+-        extensionCacheCwd === cacheToken.cwd &&
+-        extensionCacheGeneration === cacheToken.generation);
++        cacheToken.cache.cwd === cacheToken.cwd &&
++        cacheToken.cache.generation === cacheToken.generation);
+ }
+-async function loadExtensionModule(extensionPath, cacheToken) {
++async function loadExtensionModule(extensionPath, cacheToken, options) {
+     if (isCurrentCacheToken(cacheToken)) {
+-        const cachedFactory = extensionCache.get(extensionPath);
++        const cachedFactory = cacheToken.cache.factories.get(extensionPath);
+         if (cachedFactory) {
+             return cachedFactory;
+         }
+     }
+-    const createJitiImpl = await getCreateJiti();
+-    // Compiled binaries and the bundled Node distribution use embedded modules.
+-    // Source TypeScript reuses host modules and root tsconfig paths. Unbundled
+-    // Node builds use dist aliases and do not need the bundled virtual modules.
+-    const resolutionOptions = usesEmbeddedModules
+-        ? { virtualModules: await getVirtualModules(), tryNative: false }
+-        : isTypeScriptSourceRuntime
+-            ? { virtualModules: await getVirtualModules(), tsconfigPaths: true }
+-            : { alias: getAliases() };
+-    const jiti = createJitiImpl(import.meta.url, {
+-        moduleCache: false,
+-        ...resolutionOptions,
+-    });
+-    const module = await jiti.import(extensionPath, { default: true });
++    let module;
++    if (options?.importModule) {
++        module = await options.importModule(extensionPath);
++    } else {
++        const createJitiImpl = await getCreateJiti();
++        // Compiled binaries and the bundled Node distribution use embedded modules.
++        // Source TypeScript reuses host modules and root tsconfig paths. Unbundled
++        // Node builds use dist aliases and do not need the bundled virtual modules.
++        const resolutionOptions = usesEmbeddedModules
++            ? { virtualModules: await getVirtualModules(), tryNative: false }
++            : isTypeScriptSourceRuntime
++                ? { virtualModules: await getVirtualModules(), tsconfigPaths: true }
++                : { alias: getAliases() };
++        const jiti = createJitiImpl(import.meta.url, {
++            moduleCache: false,
++            ...resolutionOptions,
++        });
++        module = await jiti.import(extensionPath, { default: true });
++    }
+     const factory = module;
+     if (typeof factory !== "function") {
+         return undefined;
+     }
+     if (isCurrentCacheToken(cacheToken)) {
+-        extensionCache.set(extensionPath, factory);
++        cacheToken.cache.factories.set(extensionPath, factory);
+     }
+     return factory;
+ }
+@@ -525,10 +539,10 @@ async function initializeExtension(factory, extensionPath, resolvedPath, cwd, ev
+     time(`${extensionPath} factory`, "extensions");
+     return extension;
+ }
+-async function loadExtension(extensionPath, cwd, eventBus, runtime, cacheToken) {
++async function loadExtension(extensionPath, cwd, eventBus, runtime, cacheToken, options) {
+     const resolvedPath = resolvePath(extensionPath, cwd, { normalizeUnicodeSpaces: true });
+     try {
+-        const factory = await loadExtensionModule(resolvedPath, cacheToken);
++        const factory = await loadExtensionModule(resolvedPath, cacheToken, options);
+         time(`${extensionPath} module import`, "extensions");
+         if (!factory) {
+             return { extension: null, error: `Extension does not export a valid factory function: ${extensionPath}` };
+@@ -551,16 +565,16 @@ export async function loadExtensionFromFactory(factory, cwd, eventBus, runtime,
+ /**
+  * Load extensions from paths.
+  */
+-async function loadExtensionsInternal(paths, cwd, eventBus, runtime, useCache = false) {
++async function loadExtensionsInternal(paths, cwd, eventBus, runtime, useCache = false, options) {
+     const extensions = [];
+     const errors = [];
+     const warnings = [];
+-    const cacheToken = useCache ? useExtensionCacheCwd(cwd) : undefined;
++    const cacheToken = useCache ? useExtensionCacheCwd(cwd, options) : undefined;
+     const resolvedCwd = cacheToken?.cwd ?? resolvePath(cwd);
+     const resolvedEventBus = eventBus ?? createEventBus();
+     const resolvedRuntime = runtime ?? createExtensionRuntime();
+     for (const extPath of paths) {
+-        const { extension, error } = await loadExtension(extPath, resolvedCwd, resolvedEventBus, resolvedRuntime, cacheToken);
++        const { extension, error } = await loadExtension(extPath, resolvedCwd, resolvedEventBus, resolvedRuntime, cacheToken, options);
+         if (error) {
+             errors.push({ path: extPath, error });
+             continue;
+@@ -576,11 +590,11 @@ async function loadExtensionsInternal(paths, cwd, eventBus, runtime, useCache =
+         runtime: resolvedRuntime,
+     };
+ }
+-export async function loadExtensions(paths, cwd, eventBus, runtime) {
+-    return loadExtensionsInternal(paths, cwd, eventBus, runtime);
++export async function loadExtensions(paths, cwd, eventBus, runtime, options) {
++    return loadExtensionsInternal(paths, cwd, eventBus, runtime, false, options);
+ }
+-export async function loadExtensionsCached(paths, cwd, eventBus, runtime) {
+-    return loadExtensionsInternal(paths, cwd, eventBus, runtime, true);
++export async function loadExtensionsCached(paths, cwd, eventBus, runtime, options) {
++    return loadExtensionsInternal(paths, cwd, eventBus, runtime, true, options);
+ }
+ function isExtensionFile(name) {
+     return name.endsWith(".ts") || name.endsWith(".js");
+@@ -664,7 +678,7 @@ function discoverExtensionsInDir(dir) {
+ /**
+  * Discover and load extensions from standard locations.
+  */
+-export async function discoverAndLoadExtensions(configuredPaths, cwd, agentDir = getAgentDir(), eventBus) {
++export async function discoverAndLoadExtensions(configuredPaths, cwd, agentDir = getAgentDir(), eventBus, options) {
+     const resolvedCwd = resolvePath(cwd);
+     const resolvedAgentDir = resolvePath(agentDir);
+     const allPaths = [];
+@@ -679,7 +693,7 @@ export async function discoverAndLoadExtensions(configuredPaths, cwd, agentDir =
+         }
+     };
+     // 1. Project-local extensions: cwd/${CONFIG_DIR_NAME}/extensions/
+-    const localExtDir = path.join(resolvedCwd, CONFIG_DIR_NAME, "extensions");
++    const localExtDir = path.join(resolvedCwd, options?.projectConfigDir ?? CONFIG_DIR_NAME, "extensions");
+     addPaths(discoverExtensionsInDir(localExtDir));
+     // 2. Global extensions: agentDir/extensions/
+     const globalExtDir = path.join(resolvedAgentDir, "extensions");
+@@ -700,6 +714,6 @@ export async function discoverAndLoadExtensions(configuredPaths, cwd, agentDir =
+         }
+         addPaths([resolved]);
+     }
+-    return loadExtensions(allPaths, resolvedCwd, eventBus);
++    return loadExtensions(allPaths, resolvedCwd, eventBus, undefined, options);
+ }
+ //# sourceMappingURL=loader.js.map
+\ No newline at end of file
 diff --git a/dist/core/package-manager.d.ts b/dist/core/package-manager.d.ts
 --- a/dist/core/package-manager.d.ts
 +++ b/dist/core/package-manager.d.ts
@@ -812,6 +997,38 @@ diff --git a/dist/core/resource-loader.d.ts b/dist/core/resource-loader.d.ts
 \ No newline at end of file
 +//# sourceMappingURL=resource-loader.d.ts.map
 +export declare const dedupePrompts: (prompts: PromptTemplate[]) => { prompts: PromptTemplate[]; diagnostics: ResourceDiagnostic[] };
+diff --git a/dist/core/extensions/loader.d.ts b/dist/core/extensions/loader.d.ts
+--- a/dist/core/extensions/loader.d.ts
++++ b/dist/core/extensions/loader.d.ts
+@@ -4,7 +4,12 @@
+  */
+ import { type EventBus } from "../event-bus.ts";
+ import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "./types.ts";
+-export declare function clearExtensionCache(): void;
++export interface ExtensionLoaderOptions {
++    /** Stable importer identity isolates host factory caches. */
++    importModule?: (extensionPath: string) => Promise<unknown>;
++    projectConfigDir?: string;
++}
++export declare function clearExtensionCache(options?: ExtensionLoaderOptions): void;
+ /**
+  * Create a runtime with throwing stubs for action methods.
+  * Runner.bindCore() replaces these with real implementations.
+@@ -14,10 +19,10 @@ export declare function createExtensionRuntime(): ExtensionRuntime;
+  * Create an Extension from an inline factory function.
+  */
+ export declare function loadExtensionFromFactory(factory: ExtensionFactory, cwd: string, eventBus: EventBus, runtime: ExtensionRuntime, extensionPath?: string): Promise<Extension>;
+-export declare function loadExtensions(paths: string[], cwd: string, eventBus?: EventBus, runtime?: ExtensionRuntime): Promise<LoadExtensionsResult>;
+-export declare function loadExtensionsCached(paths: string[], cwd: string, eventBus?: EventBus, runtime?: ExtensionRuntime): Promise<LoadExtensionsResult>;
++export declare function loadExtensions(paths: string[], cwd: string, eventBus?: EventBus, runtime?: ExtensionRuntime, options?: ExtensionLoaderOptions): Promise<LoadExtensionsResult>;
++export declare function loadExtensionsCached(paths: string[], cwd: string, eventBus?: EventBus, runtime?: ExtensionRuntime, options?: ExtensionLoaderOptions): Promise<LoadExtensionsResult>;
+ /**
+  * Discover and load extensions from standard locations.
+  */
+-export declare function discoverAndLoadExtensions(configuredPaths: string[], cwd: string, agentDir?: string, eventBus?: EventBus): Promise<LoadExtensionsResult>;
++export declare function discoverAndLoadExtensions(configuredPaths: string[], cwd: string, agentDir?: string, eventBus?: EventBus, options?: ExtensionLoaderOptions): Promise<LoadExtensionsResult>;
+ //# sourceMappingURL=loader.d.ts.map
+\ No newline at end of file
 diff --git a/dist/core/model-registry.d.ts b/dist/core/model-registry.d.ts
 --- a/dist/core/model-registry.d.ts
 +++ b/dist/core/model-registry.d.ts

@@ -26,6 +26,63 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Plugin loader SDK boundary after 354f3cb
+
+Both native and legacy loaders now use the published Coding SDK for runtime
+creation, API registration transactions, factory initialization, rollback,
+factory caching, batch loading and discovery. The host only binds its two module
+tables, Jiti/static transformation and directory policy. A narrow SDK patch adds
+optional importModule and projectConfigDir options. Caches are scoped by stable
+importer identity. Existing cwd/generation invalidation and the default SDK Jiti
+branch remain in place. A late import cannot repopulate an invalid cache.
+
+Seven local files are deleted, with 1,179 lines in total: both complete loaders,
+the Jiti helpers, the unused manifest helper and forward, and the former resource
+wrapper. Source traversal stops at the loader boundary. The native virtual-module
+table remains an explicit generated entry because the host still imports it.
+Legacy loading still requires agentDir and refuses unavailable Agent execution
+and unsupported runtime subpaths. No task version, dependency or checkpoint
+format changes.
+
+The affected ten-file set passes 78 tests with 543 assertions. It covers default
+SDK loading, shared importer identity, separate host caches, clear/cwd/late-import
+invalidation, diagnostics, factory rollback, stale APIs, both Pi and TypeBox names,
+per-file import.meta, stack formatters, resource trust and reload. Coding and
+server type checks pass. Worker bundle tests pass 26 tests with 103 assertions.
+The initial incremental install again lacks the nested Coding pi-ai 1.5.0 and
+fails imports and branded types. A normal frozen install restores dependencies;
+no functional workaround is added. One new assertion incorrectly expects the
+local native root to export loadExtensionFromFactory. That root never exported
+it; the assertion is removed, while adapter-level SDK identity checks remain.
+
+Complete runtime, auxiliary and pristine patch checks pass: 169 runtime TypeScript
+files, including 165 under src/pi and four facades, four assets, nine auxiliary
+sources and 21 forwards. The Coding patch has 18 physical outputs, core four and
+durable 30, for a total of 52. A fresh hoisted frozen install covers 11 workspaces
+and 1,421 packages with task HOME/cache, the public registry and scripts disabled.
+The lockfile stays unchanged. All 52 outputs match the tested installation and
+all 18 Coding outputs match CODING-PATCH.json. Offline SDK probes pass for default
+loading, importer cache identity/isolation, host discovery, stale APIs and failed
+factory rollback. The first smoke check incorrectly expects clearExtensionCache
+to reset Bun native module state. The pristine SDK also returns the sequence
+1, 2, 3 across that clear. The corrected probe reuses the completed install.
+
+Independent review against 354f3cb confirms one source-manifest defect: all seven
+deleted files still had mkOnly records. The main thread removes them and updates
+31 added, changed or deleted source records. The complete audit against the fixed
+Craft v0.15.6 copy then passes for 2,164 files. The reviewer finds no reproducible
+plugin runtime regression. Eleven isolated probe groups pass, covering default
+and both host loaders, aliases, cache invalidation, registration transactions,
+directory guards, diagnostics and resource trust/reload. The independent pristine
+patch check also passes for all 18 Coding outputs. The review does not repeat
+full types, builds or the fresh install.
+
+Receipts are in the plugin-sdk task directory. Independent probes and results
+are in the loader-review task directory. ModelRuntime, plugin runner/types and
+the SDK AgentSession production lifecycle, atomic admission, cancellation and
+cold recovery remain open. Real services, Windows, full repository checks and
+complete product acceptance were not run for this slice.
+
 ## ResourceLoader SDK boundary after df732f7
 
 All three native resource construction paths now use the published Coding SDK

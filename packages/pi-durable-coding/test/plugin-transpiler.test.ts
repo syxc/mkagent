@@ -42,7 +42,7 @@ test.each(['@earendil-works/pi-coding-agent', '@mariozechner/pi-coding-agent'])(
         pi.registerTool(coding.createReadToolDefinition(import.meta.dir));
       }
     `);
-    const { loadExtensions } = await import('../src/pi/core/extensions/loader.ts');
+    const { loadExtensions } = await import('../src/native-extension-loader.ts');
     const loaded = await loadExtensions([plugin], directory);
     expect(loaded.errors).toEqual([]);
     expect(loaded.extensions[0]?.flags.get('sdk-session')?.default).toBe(directory);
@@ -68,7 +68,7 @@ test.each(['@earendil-works/pi-coding-agent', '@mariozechner/pi-coding-agent'])(
   },
 );
 
-for (const path of ['../src/upstream/core/extensions/loader.js', '../src/pi/core/extensions/loader.ts']) {
+for (const path of ['../src/legacy/extension-loader.ts', '../src/native-extension-loader.ts']) {
   test(`plugin import metadata resolves per file through ${path}`, () => {
     // Bun canonicalizes native dependency imports, including macOS's /var alias.
     const directory = realpathSync(mkdtempSync(join(tmpdir(), 'plugin-metadata-')));

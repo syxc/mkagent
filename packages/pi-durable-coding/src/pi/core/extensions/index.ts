@@ -9,7 +9,7 @@ export {
 	discoverAndLoadExtensions,
 	loadExtensionFromFactory,
 	loadExtensions,
-} from "./loader.ts";
+} from "../../../native-extension-loader.ts";
 export type {
 	ExtensionErrorListener,
 	ForkHandler,

@@ -64,44 +64,6 @@ function port(source: string, target = source, selection?: string[], imports = '
     if (remaining.size) throw new Error(`Missing ${source}: ${[...remaining].join(', ')}`);
     content = imports + statements.join('\n\n') + '\n';
   }
-  if (changes?.includes('extension-module-resolution')) {
-    const parsed = ts.createSourceFile(source, content, ts.ScriptTarget.Latest, true);
-    const omitted = new Set(['require', 'isNodeSeaBinary', 'isTypeScriptSourceRuntime', 'usesEmbeddedModules',
-      'createJitiPromise', 'virtualModulesPromise', '_aliases', 'getCreateJiti', 'getVirtualModules', 'getAliases']);
-    const shared = new Map(['createExtensionRuntime', 'createExtensionAPI', 'createExtension',
-      'initializeExtension', 'loadExtensionFromFactory'].map(name => [name, 0]));
-    content = parsed.statements.filter(statement => {
-      if (ts.isVariableStatement(statement)) {
-        return !statement.declarationList.declarations.some(declaration =>
-          ts.isIdentifier(declaration.name) && omitted.has(declaration.name.text));
-      }
-      if (ts.isFunctionDeclaration(statement) && statement.name) {
-        const name = statement.name.text;
-        if (shared.has(name)) {
-          shared.set(name, shared.get(name)! + 1);
-          return false;
-        }
-        return !omitted.has(name);
-      }
-      return true;
-    }).map(statement => statement.getFullText(parsed)).join('');
-    for (const [name, count] of shared) if (count !== 1) throw new Error(`Expected one shared extension function: ${name}`);
-    const lifecycle = '../../../pi/core/extensions/loader.ts';
-    content = `import { createExtensionRuntime, initializeExtension } from "${lifecycle}";\n`
-      + `export { createExtensionRuntime, loadExtensionFromFactory } from "${lifecycle}";\n`
-      + 'import { createJiti } from "jiti/static";\n'
-      + 'import { getExtensionModules } from "../../../extension-modules.ts";\n'
-      + 'import { preparePluginTranspiler } from "../../../plugin-transpiler.ts";\n' + content;
-    const originalResolution = /const resolutionOptions = usesEmbeddedModules[\s\S]*?: \{ alias: getAliases\(\) \};/;
-    if (!originalResolution.test(content)) throw new Error('Upstream extension resolution changed');
-    content = content.replace(originalResolution, 'const resolutionOptions = { virtualModules: getExtensionModules(), tryNative: false };')
-      .replace('const createJitiImpl = await getCreateJiti();', 'const createJitiImpl = createJiti;');
-    const importing = '\tconst module = await jiti.import(extensionPath, { default: true });';
-    if (!content.includes(importing)) throw new Error('Upstream extension transform boundary changed');
-    content = content.replace(importing, '\tpreparePluginTranspiler(jiti);\n' + importing);
-    changes.push('preserve-host-stack-formatting-after-babel-bootstrap', 'shared-native-extension-lifecycle');
-  }
-
   const parsed = ts.createSourceFile(target, content, ts.ScriptTarget.Latest, true);
   const replacements: Array<{ start: number; end: number; value: string }> = [];
   for (const statement of parsed.statements) {
@@ -139,7 +101,7 @@ const legacyPolicies: Record<string, string> = {
 
 // These public helpers need one implementation, including when old entry points import them.
 const forwarded = [
-  'core/source-info.ts', 'core/pi-manifest.ts',
+  'core/source-info.ts',
   'utils/text.ts', 'utils/paths.ts',
   'utils/child-process.ts',
   'core/exec.ts', 'core/timings.ts',
@@ -191,8 +153,6 @@ for (const item of forwarded) {
   }
   save(item.target, content);
 }
-
-port('core/extensions/loader.ts', 'core/extensions/loader.js', undefined, '', ['erase-types', 'extension-module-resolution']);
 
 port('core/footer-data-provider.ts', 'core/git-paths.ts', ['GitPaths', 'findGitPaths'],
   'import { existsSync, readFileSync, statSync } from "node:fs";\n'

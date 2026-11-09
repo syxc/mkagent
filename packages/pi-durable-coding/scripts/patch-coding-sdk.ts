@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path';
 import { codingPackagePolicy } from './coding-package-policy.ts';
 import { codingSessionPolicy } from './coding-session-policy.ts';
 import { codingResourcePolicy } from './coding-resource-policy.ts';
+import { codingExtensionPolicy } from './coding-extension-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -38,6 +39,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/model-registry.${extension}";`,
     `export * from "./core/session-manager.${extension}";`,
     `export * from "./core/resource-loader.${extension}";`,
+    `export * from "./core/extensions/loader.${extension}";`,
     `export * from "./core/mcp-servers.${extension}";`,
     `export * from "./core/keybindings.${extension}";`,
     `export * from "./modes/interactive/theme/theme.${extension}";`,
@@ -62,6 +64,8 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(sessionPath, codingSessionPolicy(readFileSync(join(baseline, sessionPath), 'utf8'), suffix === 'd.ts'));
   const resourcePath = `dist/core/resource-loader.${suffix}`;
   outputs.set(resourcePath, codingResourcePolicy(readFileSync(join(baseline, resourcePath), 'utf8'), suffix === 'd.ts'));
+  const extensionPath = `dist/core/extensions/loader.${suffix}`;
+  outputs.set(extensionPath, codingExtensionPolicy(readFileSync(join(baseline, extensionPath), 'utf8'), suffix === 'd.ts'));
 }
 // Registry implementations only call public runtime operations; host ownership stays structural.
 const registryPath = 'dist/core/model-registry.d.ts';
@@ -116,7 +120,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, default full theme validation and installed worker theme asset lookup.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, default full theme validation and installed worker theme asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

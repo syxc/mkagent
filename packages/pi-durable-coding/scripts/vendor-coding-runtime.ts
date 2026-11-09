@@ -5,7 +5,7 @@ import { isBuiltin } from 'node:module';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { portModelRuntime, portProviderComposer } from './model-runtime-port.ts';
-import { codingSDKImport } from './coding-sdk-imports.ts';
+import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets, portHtmlVendorAssets, portImageAssets } from './asset-runtime-port.ts';
@@ -43,7 +43,7 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
 }
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
 const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
-const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts'];
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'core/extensions/virtual-modules.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();
@@ -105,6 +105,12 @@ while (queue.length) {
   const replacements: Array<{ start: number; end: number; body: string }> = [];
   const inspect = (literal: ts.StringLiteralLike) => {
     const specifier = literal.text;
+    const host = codingHostImport(path, specifier);
+    if (host) {
+      replacements.push({ start: literal.getStart(parsed), end: literal.end, body: JSON.stringify(host) });
+      changes.add('host-extension-module-import');
+      return;
+    }
     const sdk = codingSDKImport(path, specifier);
     if (sdk) {
       replacements.push({ start: literal.getStart(parsed), end: literal.end, body: JSON.stringify(sdk) });
@@ -260,21 +266,6 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   if (path === 'core/tools/find.ts') {
     body = body.replace('path.PlatformPath', 'typeof path');
     changes.add('node-path-platform-type');
-  }
-  if (path === 'core/extensions/loader.ts') {
-    const before = 'const usesEmbeddedModules = isBunBinary || isNodeSeaBinary || isBundledNode;';
-    if (!body.includes(before)) throw new Error('Extension module resolver changed');
-    body = body.replace(before, 'const usesEmbeddedModules = true;');
-    changes.add('host-independent-extension-modules');
-    const importing = '\tconst module = await jiti.import(extensionPath, { default: true });';
-    if (!body.includes(importing)) throw new Error('Extension transform boundary changed');
-    body = 'import { preparePluginTranspiler } from "../../../plugin-transpiler.ts";\n'
-      + body.replace(importing, '\tpreparePluginTranspiler(jiti);\n' + importing);
-    changes.add('preserve-host-stack-formatting-after-babel-bootstrap');
-    const initialize = 'async function initializeExtension(';
-    if (body.split(initialize).length !== 2) throw new Error('Extension initialization boundary changed');
-    body = body.replace(initialize, 'export ' + initialize);
-    changes.add('shared-extension-initialization');
   }
   if (path === 'config.ts') {
     body = body.replace('export const VERSION: string = pkg.version || "0.0.0";',

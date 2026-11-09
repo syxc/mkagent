@@ -19,6 +19,14 @@ export const CODING_SDK_MODULES = new Set([
   'utils/frontmatter.ts',
 ]);
 
+/** Keep host module resolution in an authored adapter, outside the generated SDK closure. */
+export function codingHostImport(importer: string, specifier: string): string | undefined {
+  if (!specifier.startsWith('.')
+    || posix.normalize(posix.join(posix.dirname(importer), specifier)) !== 'core/extensions/loader.ts') return undefined;
+  const target = posix.relative(posix.dirname('pi/' + importer), 'native-extension-loader.ts');
+  return target.startsWith('.') ? target : './' + target;
+}
+
 export function codingSDKImport(importer: string, specifier: string): string | undefined {
   if (!specifier.startsWith('.')) return undefined;
   const target = posix.normalize(posix.join(posix.dirname(importer), specifier));

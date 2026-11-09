@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import * as sdk from '@earendil-works/pi-coding-agent';
 import * as native from '../src/native.ts';
 import * as compat from '../src/compat.ts';
-import { codingSDKImport } from '../scripts/coding-sdk-imports.ts';
+import { codingHostImport, codingSDKImport } from '../scripts/coding-sdk-imports.ts';
 
 describe('published Coding SDK boundary', () => {
   test('native and compatibility entry points share the published implementations', () => {
@@ -19,6 +19,7 @@ describe('published Coding SDK boundary', () => {
     expect(native.SessionManager).toBe(sdk.SessionManager);
     expect(native.DefaultResourceLoader).toBe(sdk.DefaultResourceLoader);
     expect(native.loadProjectContextFiles).toBe(sdk.loadProjectContextFiles);
+    expect(native.createExtensionRuntime).toBe(sdk.createExtensionRuntime);
     expect(native.createExtensionRuntime().mcpServers).toBeInstanceOf(sdk.McpServerRegistry);
     expect(native.parseFrontmatter('﻿---\r\nname: example\r\n---\r\nbody')).toEqual({
       frontmatter: { name: 'example' }, body: 'body',
@@ -37,6 +38,9 @@ describe('published Coding SDK boundary', () => {
     expect(codingSDKImport('core/resource-loader.ts', '../modes/interactive/theme/theme.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './session-manager.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './resource-loader.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingHostImport('core/extensions/index.ts', './loader.ts')).toBe('../../../native-extension-loader.ts');
+    expect(codingHostImport('core/sdk.ts', './extensions/loader.ts')).toBe('../../native-extension-loader.ts');
+    expect(codingHostImport('core/extensions/index.ts', './runner.ts')).toBeUndefined();
     expect(codingSDKImport('core/sdk.ts', './agent-session.ts')).toBeUndefined();
     expect(codingSDKImport('core/sdk.ts', '@earendil-works/pi-agent-core')).toBeUndefined();
   });

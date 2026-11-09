@@ -6,19 +6,6 @@
   "typescript": "5.9.3",
   "files": [
     {
-      "source": "packages/coding-agent/src/core/extensions/loader.ts",
-      "target": "src/upstream/core/extensions/loader.js",
-      "sha256": "873cbe2ae4a15e9563c5a563d447b7aa3a05cca45e145d4250d54ad601bdc85f",
-      "portSha256": "42310c80027bcd0c66eefb93e8fcc4bfd52ac365b0efaf0b89c1d7c0c1422c5c",
-      "changes": [
-        "erase-types",
-        "extension-module-resolution",
-        "preserve-host-stack-formatting-after-babel-bootstrap",
-        "shared-native-extension-lifecycle",
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/footer-data-provider.ts",
       "target": "src/upstream/core/git-paths.ts",
       "sha256": "024ae5b3f50a15db9c149f644845ffb267df838b3a555a0756db95043e05a0e2",
@@ -104,10 +91,6 @@
     {
       "target": "src/upstream/core/source-info.ts",
       "implementation": "src/pi/core/source-info.ts"
-    },
-    {
-      "target": "src/upstream/core/pi-manifest.ts",
-      "implementation": "src/pi/core/pi-manifest.ts"
     },
     {
       "target": "src/upstream/utils/text.ts",
