@@ -1,6 +1,6 @@
 /** Detached native views and the operations applied inside a journal transaction. */
 import type { ConversationId, EntryId } from '@earendil-works/pi-durable';
-import type { SessionManager, SessionEntry, SessionHeader } from '../pi/core/session-manager.ts';
+import type { SessionManager, SessionEntry, SessionHeader } from '@earendil-works/pi-coding-agent';
 import { detached, type JournalState } from './session-journal-projection.ts';
 
 export interface Snapshot {

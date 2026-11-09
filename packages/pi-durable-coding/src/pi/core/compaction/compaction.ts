@@ -34,7 +34,7 @@ import {
 	type SessionEntry,
 	type SessionProjection,
 	sessionEntryToContextMessages,
-} from "../session-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 import { combineUsage } from "../usage-totals.ts";
 import {
 	computeFileLists,

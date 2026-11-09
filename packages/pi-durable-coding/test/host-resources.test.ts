@@ -10,7 +10,7 @@ import { createHostResources, createHostSettingsManager } from '../src/host-reso
 import { AgentSession } from '../src/pi/core/agent-session.ts';
 import { ModelRuntime } from '../src/pi/core/model-runtime.ts';
 import { DefaultResourceLoader } from '../src/pi/core/resource-loader.ts';
-import { SessionManager } from '../src/pi/core/session-manager.ts';
+import { SessionManager } from '@earendil-works/pi-coding-agent';
 import { getThemesDir, SettingsManager, type SettingsScope } from "@earendil-works/pi-coding-agent";
 
 let root: string;

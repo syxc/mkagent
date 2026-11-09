@@ -4,7 +4,7 @@
 
 MkAgent 保留 Pi Coding 层和公开插件契约，执行、事务、存储和恢复优先交给 durable。评估顺序是 durable 发布能力、其他 Pi 官方 SDK 的公开 API、必要的外部适配。用户于 2026-11-09 明确允许生产使用完整 `pi-coding-agent` 包的公开 SDK，不启动原版 CLI。SDK 覆盖后必须删除对应源码和多余直接依赖，不保留并行实现，也不将完整复制实现移入补丁。补丁新增的导出或执行接点均属于本地修改。
 
-F1、F3、F6 已重新打开。此前维护登记和来源检查不能证明保留源码必要，也未达到删除大规模 Coding 源码的目标。首批公开 SDK 替换已删除四份实现和三份转发，设置切片再删除 manager、schema 和 defaults 三份实现；包管理切片删除 manager、output guard、Git helper 三份实现及两份转发。主题与快捷键切片再删除九份 TypeScript、两份主题 JSON 和旧主题转换脚本，并移除 highlight.js 直接依赖。注册表切片再删除 ModelRegistry、MCP 模块两份实现和一份转发。当前运行时清单为 175 份 TypeScript、4 项资源，其中 src/pi 为 171 份；主链替换尚未完成。下表是待复评的适配边界，不是全部源码的保留许可。此前主题、权限和固定 Craft 审计的结果保留各自时点，具体历史见验证记录。
+F1、F3、F6 已重新打开。此前维护登记和来源检查不能证明保留源码必要，也未达到删除大规模 Coding 源码的目标。首批公开 SDK 替换已删除四份实现和三份转发，设置切片再删除 manager、schema 和 defaults 三份实现；包管理切片删除 manager、output guard、Git helper 三份实现及两份转发。主题与快捷键切片再删除九份 TypeScript、两份主题 JSON 和旧主题转换脚本，并移除 highlight.js 直接依赖。注册表切片再删除 ModelRegistry、MCP 模块两份实现和一份转发。SessionManager 切片再删除 2057 行本地存储实现及旧转换分支。当前运行时清单为 174 份 TypeScript、4 项资源，其中 src/pi 为 170 份；主链替换尚未完成。下表是待复评的适配边界，不是全部源码的保留许可。此前主题、权限和固定 Craft 审计的结果保留各自时点，具体历史见验证记录。
 
 ## 已直接使用的发布能力
 
@@ -16,6 +16,7 @@ F1、F3、F6 已重新打开。此前维护登记和来源检查不能证明保�
 | Coding 包管理 | 宿主命令、资源发现及 legacy adapter 使用公开 DefaultPackageManager；本地 2,940 行 manager、两个孤立 helper 及两份转发已删除，semver、hosted-git-info 和后者类型不再是直接依赖 | SDK 类身份、无隐式安装、temporary/global npm/HOME skills 策略、`.pi`/`.tau`、scope/trust、严格 flush、stderr 及 shutdown 排空；新增策略接点见下表 |
 | Coding 主题与快捷键 | Theme、完整 schema、system 配色、高亮、HTML 颜色及 KeybindingsManager 使用公开 SDK；本地九份源码、两份 JSON、旧转换脚本和 highlight.js 直接依赖已删除 | 双包名共享类及 singleton、56 项 token/slot、fallback/ANSI、完整文件校验、90 项键配置与迁移；worker 从 SDK 复制主题 JSON，SDK 定位搬迁资源 |
 | Coding 模型与 MCP 注册表 | ModelRegistry 和完整 MCP server 模块使用发布实现，删除两份本地实现及旧 MCP 转发；legacy 只保留结构化构造薄适配 | SDK 类身份、host Models 更换、auth、provider overlay、MCP 配置校验与注销所有权；ModelRuntime 迁移仍开放 |
+| Coding 会话存储 | SessionManager、解析、迁移、树和投影使用发布实现，删除 2057 行本地实现及旧转换规则；legacy durable 投影及目录 guard 保留在外层 | SDK 类身份、历史 JSONL、子类与 detached 工厂、投影回调、双重 compaction、context edit、append 失败回滚及 journal 事务；AgentSession 主链仍开放 |
 | Coding 工具 effect | `host-tool-task.ts` 在真实 `pi.coding.tool` owner 下委托公开 ToolTask phases/abort；`wrapAgentTool` 和普通 AgentTool 入口共用该桥 | SDK replay、嵌套任务及会话清理、进度、取消、完整结果、最终参数回执和 journal 同事务提交 |
 | 生产文件和 shell 工具 | worker `tools/builtin.ts` 使用 durable read/write/edit/bash、PowerShell 和 images 工厂 | 临时文件读写、审批拒绝零副作用、改参、取消、长输出与图片 |
 | 插件 edit 参数准备 | Native edit 工厂调用公开 `createEditTool().prepareArguments`，已删除转换副本 | 新旧参数形状、混合输入、原始参数不变及权限后的最终参数 |
@@ -26,14 +27,15 @@ ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件
 
 ## 本地 SDK 补丁
 
-根 `patchedDependencies` 登记 core、Coding 和 durable 三份补丁。物理文件数为 core 4 个、Coding 12 个、durable 30 个，共 46 个，JS 与声明分别计数。逻辑职责可能共用文件，不能将逻辑组重复相加。
+根 `patchedDependencies` 登记 core、Coding 和 durable 三份补丁。物理文件数为 core 4 个、Coding 14 个、durable 30 个，共 48 个，JS 与声明分别计数。逻辑职责可能共用文件，不能将逻辑组重复相加。
 
 | 补丁组 | 产品或插件契约、发布 API 缺口 | 当前最小接点及退出条件 | 恢复与升级检查 |
 |---|---|---|---|
-| Coding settings：4 文件，根入口与 settings-manager 的 JS/d.ts | 发布根已有 SettingsManager，但未转出 storage、完整类型及 defaults；现有 deepMergeSettings 未导出 | 只转出现有契约并补声明，不改算法、锁或生命周期；删除本地 manager、schema、defaults 和旧生成转换。发布根完整提供这些契约后撤除补丁 | `patch-coding-sdk.ts` 和 `CODING-PATCH.json` 固定全部十二个物理文件的原始及目标摘要，设置组占其中四个；核对 trust、profile、strict flush、legacy merge、声明、实际安装和 worker bundle |
-| Coding package policy：与上行共用根入口，另改 package-manager 的 JS/d.ts | 发布包管理器缺少宿主禁止隐式刷新、global npm、HOME skills 的选项，以及项目目录、更新作用域、missing 回调与并发失败排空契约 | `coding-package-policy.ts` 只增加策略及生命周期接点，包解析、扫描、版本及安装算法仍用发布实现。公开等效选项可用后撤除补丁 | 两层并发均先等待已启动 installer，再报告失败；核对结构化 settings、离线回调、skip 诊断、`.pi`/`.tau`、信任、stderr 和 shutdown。包管理组占十二个物理文件中的六个，不重复计算根入口 |
-| Coding theme/keybindings：共用根入口，另改 theme 与 schema 的 JS/d.ts 及 config.js | 发布根缺少完整键配置与主题契约，宿主不启动安装 validator 的原版 CLI；发布资源定位也不含 worker 的 coding-assets/theme | 根转出现有导出，theme 默认使用 SDK 自身完整 validator，config 优先查 worker 主题目录。主题求解、schema、高亮和键配置算法不变；发布相同导出、默认校验及资源接点后撤除补丁 | 核对 KeybindingsManager 值/类型、双包名共享 singleton、56 个 token/slot、完整校验、COLORFGBG、HTML、90 项键定义和搬迁资源；Coding 共十二个文件，不将共用根入口重复计数 |
+| Coding settings：4 文件，根入口与 settings-manager 的 JS/d.ts | 发布根已有 SettingsManager，但未转出 storage、完整类型及 defaults；现有 deepMergeSettings 未导出 | 只转出现有契约并补声明，不改算法、锁或生命周期；删除本地 manager、schema、defaults 和旧生成转换。发布根完整提供这些契约后撤除补丁 | `patch-coding-sdk.ts` 和 `CODING-PATCH.json` 固定全部十四个物理文件的原始及目标摘要，设置组占其中四个；核对 trust、profile、strict flush、legacy merge、声明、实际安装和 worker bundle |
+| Coding package policy：与上行共用根入口，另改 package-manager 的 JS/d.ts | 发布包管理器缺少宿主禁止隐式刷新、global npm、HOME skills 的选项，以及项目目录、更新作用域、missing 回调与并发失败排空契约 | `coding-package-policy.ts` 只增加策略及生命周期接点，包解析、扫描、版本及安装算法仍用发布实现。公开等效选项可用后撤除补丁 | 两层并发均先等待已启动 installer，再报告失败；核对结构化 settings、离线回调、skip 诊断、`.pi`/`.tau`、信任、stderr 和 shutdown。包管理组占十四个物理文件中的六个，不重复计算根入口 |
+| Coding theme/keybindings：共用根入口，另改 theme 与 schema 的 JS/d.ts 及 config.js | 发布根缺少完整键配置与主题契约，宿主不启动安装 validator 的原版 CLI；发布资源定位也不含 worker 的 coding-assets/theme | 根转出现有导出，theme 默认使用 SDK 自身完整 validator，config 优先查 worker 主题目录。主题求解、schema、高亮和键配置算法不变；发布相同导出、默认校验及资源接点后撤除补丁 | 核对 KeybindingsManager 值/类型、双包名共享 singleton、56 个 token/slot、完整校验、COLORFGBG、HTML、90 项键定义和搬迁资源；Coding 共十四个文件，不将共用根入口重复计数 |
 | Coding model/MCP registry：共用根入口，另改 model-registry.d.ts | 发布根缺少 MCP 完整模块导出；ModelRegistry 构造参数绑定有私有字段的 SDK ModelRuntime，而执行只用公共操作 | 根转出现有模块；构造声明改为 Pick<ModelRuntime, keyof ModelRuntime>，执行 JS 不变。公开根导出及结构化构造契约提供后撤除补丁 | 核对所有导出、宿主动态模型及 auth、legacy duck runtime、MCP 所有权及配置校验；本组涉及三个文件，其中两个根入口与其他组共用 |
+| Coding session policy：共用根入口，另改 session-manager 的 JS/d.ts | 发布会话算法没有 durable 投影回调，private 构造及固定工厂/目录不保留 legacy 子类与 detached 调用契约 | coding-session-policy.ts 只增加 context 选择、逐项及最终投影回调、protected 构造和目录/app name 钩子；工厂保留接收类及 detached fallback。发布等效接点后撤除补丁，不复制解析、迁移、树或文件算法 | 完整执行及公开声明 token 对照；核对原生默认投影、legacy durable edit/compaction、JSONL 迁移、目录 guard、工厂身份和落盘失败回滚；本组涉及四文件，两个根入口与其他组共用 |
 | core：4 文件，`agent-loop` 与 `agent` 的 JS/d.ts | Coding 请求、参数准备和结果交付需要原操作；发布根未导出八个操作，Agent 也未开放 durable backend/恢复所需接点 | 导出八个既有操作，补 AgentExecution、queue snapshot 和 protected lifecycle 接点；Native 仅保留 Agent 门面及独立可变默认对象。公开 backend/恢复协议和操作出现后撤除对应补丁 | 不复制另一套 Agent 类或 loop；检查默认模型/usage/identity 的实际影响、恢复消息、队列与异步事件。默认 converter 字段已撤除 |
 | durable harness/root：6 文件 | 已准备请求须独立返回响应，再让插件 `message_end` 和 journal 接纳；发布 GenerationTask 同时分类、写 assistant、创建工具及结算 inbox。旧本地 v4 checkpoint 也不能由发布 v2 读取 | 新增 GenerationResponseTask v1，共用 SDK streamResponse/partial writer；旧 Coding hooks 和阶段仅供受支持旧入口/快照。独立响应接口可承接事件及事务后移除新扩展，旧阶段在迁移或安全结算验证后移除 | 核对 started 重入不重发、partial drain、generation 槽清理、唯一 assistant、receipt/journal/checkpoint 原子性，以及 v4、LoopInput.resume 和已接受 child |
 | durable codemode：8 文件 | Native 分支 store、工具审批、字符串调用 ID、实时行、用量及 worker 释放策略不由原公开工厂完整承接 | VM、模型执行和输出由内置实现承担；增加 store、lease、prepareCall、发现覆盖、调用观察及结果投影选项。公开等效选项可用时撤除对应补丁 | replay module 保持版本 3；验证 store 与 run.start/run.result 同事务、调用 key/owner、别名变化、取消、worker 退出后释放和 usage 去重 |
@@ -56,6 +58,8 @@ ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件
 
 注册表切片的全新 hoisted 冻结安装覆盖 11 个 workspace、1421 个包，lock 未变，46 份补丁产物与测试安装一致，Coding 十二文件符合清单。新安装中的 SDK ModelRegistry 与现有宿主 ModelRuntime 组合、动态模型替换、合成 auth 以及 MCP 配置校验和注销所有权检查通过。66 项定向测试、454 个断言、两项类型检查、26 项 bundle 测试及完整来源检查通过；固定 Craft 审计为 2167 文件，独立定向复核未发现确定缺陷，覆盖范围及检索限制见验证记录。本切片不代表 ModelRuntime、资源或会话主链已迁移。
 
+SessionManager 切片的全新 hoisted 冻结安装覆盖 11 个 workspace、1421 个包，lock 未变，48 份补丁产物与测试安装一致，Coding 十四文件符合清单。会话工厂、目录、落盘、投影回调及 append 失败回滚探针通过；112 项定向测试、680 个断言、两项类型检查、26 项 bundle 测试、完整来源及固定 Craft 的 2167 文件审计通过。独立定向复核未发现确定缺陷，确认真实 EEXIST 失败不覆盖旧文件并恢复条目和 leaf。范围与限制见验证记录；AgentSession 主链仍开放。
+
 ## Coding 层与外部适配
 
 以下按契约登记源码范围，列出的 API 缺口只支持该行职责，不为整个目录或全部私有方法提供保留依据。
@@ -63,7 +67,7 @@ ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件
 | 能力和实际入口 | 候选 API、缺口及当前适配 | 恢复、退出条件和升级检查 |
 |---|---|---|
 | 工具轮次与收尾：`durable-coding/run-task.ts` | GenerationTask 的接纳、tools、afterTools/finish 同时写 SDK transcript、应用 inbox 并转交后续任务；不能单独返回决定。保留 Native 插件交付、完整工具结果、顺序和 journal，effect 已交 ToolTask | 保留五种 `pi.coding.*` v1 的已接受输入和回执。公开轮次决定/外部结果接口或完整迁移能保留契约时替换；检查 length calls、terminate/handoff、turn/agent_end、steer/follow-up 和不确定交付 |
-| Session 与 journal：AgentSession、session-task、session-journal | 公开 AgentSession 支持外部 Agent 注入，SessionManager 提供 Coding 树与投影；此前据工厂限制保留整个会话层的理由无效。durable snapshot、输入接纳、事务及旧恢复需要具体适配，Harness ownership/commit/wait 已复用。外层提交真实 child、原生树和产品回执 | 恢复 join 已接受 child，不重做不确定 hooks。上游支持相同输入、树和回执后迁移；检查 fork/tree/switch/new、labels/name、严格存储失败和旧 snapshot |
+| Session 与 journal：AgentSession、session-task、session-journal | 公开 AgentSession 支持外部 Agent 注入，SessionManager 已接入公开 SDK 并删除本地完整实现，legacy 投影策略在外层；此前据工厂限制保留整个会话层的理由无效。durable snapshot、输入接纳、事务及旧恢复需要具体适配，Harness ownership/commit/wait 已复用。外层提交真实 child、原生树和产品回执 | 恢复 join 已接受 child，不重做不确定 hooks。上游支持相同输入、树和回执后迁移；检查 fork/tree/switch/new、labels/name、严格存储失败和旧 snapshot |
 | Summary 与 compaction：summary-binding/task、Coding compaction 模块 | 发布 CompactionTask 不提供 Native entry usage、split-turn、retained tail、共同祖先、文件跟踪及 before hooks；GenerationResponseTask 也写 conversation 级进度。保留选取策略和独立 summary owner，producer 复用现有 StreamFn.result | requesting intent 先提交，不确定请求不重发，完整响应持久化。任务级隔离或无主进度写入的公开响应 API 可用后替换；检查压缩、分支/bug 摘要、usage、主请求并发进度和 SIGKILL |
 | 插件注册与加载：Native loader/runner、旧 loader、virtual-modules | 公开 Coding SDK 已提供注册、loader、runner、会话 context 及 factory 生命周期，须优先复用。双包名映射、缓存隔离与目录策略的实际接口缺口待验证，不能据此保留整个 loader/runner；Jiti 使用公开 transform 接口 | 无新增持久任务版本；公开 Coding loader 可接收模块表、缓存和目录策略后替换。检查成功注册、失败回滚、旧 API/context 失效、reload、import.meta、会话重绑和关闭 |
 | 资源、配置和模型：resource-loader、models、host-resources/settings/trust | pi-ai 提供模型与凭据，公开 Coding SDK 已提供 ModelRuntime、DefaultResourceLoader 和 SettingsManager。当前宿主动态模型、凭据、信任及资源策略须逐项验证公开参数和组合方式，不能据“没有独立包”保留整份源码 | 宿主凭据、信任和 profile 隔离不迁移到插件。公开策略接口覆盖后替换对应层；检查 native/host-only、显式资源、reload/reopen、撤销信任及临时凭据不落盘 |

@@ -4,6 +4,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { codingPackagePolicy } from './coding-package-policy.ts';
+import { codingSessionPolicy } from './coding-session-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -34,6 +35,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";`,
     `export * from "./core/package-manager.${extension}";`,
     `export * from "./core/model-registry.${extension}";`,
+    `export * from "./core/session-manager.${extension}";`,
     `export * from "./core/mcp-servers.${extension}";`,
     `export * from "./core/keybindings.${extension}";`,
     `export * from "./modes/interactive/theme/theme.${extension}";`,
@@ -54,6 +56,8 @@ outputs.set(typesPath, replace(readFileSync(join(baseline, typesPath), 'utf8'),
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/package-manager.${suffix}`;
   outputs.set(path, codingPackagePolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
+  const sessionPath = `dist/core/session-manager.${suffix}`;
+  outputs.set(sessionPath, codingSessionPolicy(readFileSync(join(baseline, sessionPath), 'utf8'), suffix === 'd.ts'));
 }
 // Registry implementations only call public runtime operations; host ownership stays structural.
 const registryPath = 'dist/core/model-registry.d.ts';
@@ -108,7 +112,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme and registry contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, default full theme validation and installed worker theme asset lookup.',
+  policy: 'Export existing settings, package, keybinding, theme, registry and session contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, default full theme validation and installed worker theme asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

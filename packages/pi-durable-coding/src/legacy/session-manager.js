@@ -1,6 +1,6 @@
 // Shared native session storage and migrations; retain the durable context policy.
-export * from "../pi/core/session-manager.ts";
-import * as shared from "../pi/core/session-manager.ts";
+export * from "@earendil-works/pi-coding-agent";
+import * as shared from "@earendil-works/pi-coding-agent";
 
 // Legacy JavaScript consumers accept host entries and structural plugin objects.
 /** @type {any} */
@@ -9,7 +9,7 @@ import { APP_NAME, getAgentDir, getSessionsDir } from "../upstream/config.ts";
 import { buildDurableContextEntries, finalizeDurableProjection } from "../durable-projection.ts";
 
 // Host-owned entries intentionally cross the existing untyped JavaScript boundary.
-/** @type {import("./api-types.ts").LegacyConstructor<import("../pi/core/session-manager.ts").SessionManager>} */
+/** @type {import("./api-types.ts").LegacyConstructor<import("@earendil-works/pi-coding-agent").SessionManager>} */
 const NativeSessionManager = shared.SessionManager;
 
 /** @returns {any[]} */

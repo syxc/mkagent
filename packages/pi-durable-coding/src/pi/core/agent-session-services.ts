@@ -12,7 +12,7 @@ import {
 	type ResourceLoaderReloadOptions,
 } from "./resource-loader.ts";
 import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "./sdk.ts";
-import type { SessionManager } from "./session-manager.ts";
+import type { SessionManager } from "@earendil-works/pi-coding-agent";
 import { SettingsManager } from "@earendil-works/pi-coding-agent";
 
 /**

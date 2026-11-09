@@ -130,7 +130,7 @@ import {
 	type SessionEntry,
 	SessionManager,
 	type SessionProjection,
-} from "./session-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 import {
 	applyToolModifiers,
 	type CacheWarmingMode,

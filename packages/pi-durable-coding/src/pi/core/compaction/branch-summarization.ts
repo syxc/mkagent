@@ -20,7 +20,7 @@ import {
 	projectContextEntry,
 	type ReadonlySessionManager,
 	type SessionEntry,
-} from "../session-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 import { completeSummarization, estimateTokens, getSummarizationFailure } from "./compaction.ts";
 import {
 	computeFileLists,

@@ -24,7 +24,7 @@ while (pending.length) {
   }
 }
 
-const native = await import('../src/pi/core/session-manager.ts');
+const native = await import('@earendil-works/pi-coding-agent');
 const legacy = await import('../src/upstream/core/session-manager.js');
 const nativeRunner = await import('../src/pi/core/extensions/runner.ts');
 const legacyRunner = await import('../src/upstream/core/extensions/runner.js');
@@ -46,7 +46,7 @@ const user = (content: string) => ({ role: 'user' as const, content, timestamp: 
 
 describe('shared session storage with separate context policies', () => {
   test('shares migration and parsing helpers without loading the model runtime', () => {
-    expect(checked.has(resolve(sourceRoot, 'pi/core/session-manager.ts'))).toBe(true);
+    expect(checked.has(resolve(sourceRoot, 'pi/core/session-manager.ts'))).toBe(false);
     expect(checked.has(resolve(sourceRoot, 'pi/core/extensions/runner.ts'))).toBe(true);
     expect(legacy.migrateSessionEntries).toBe(native.migrateSessionEntries);
     expect(legacy.parseSessionEntries).toBe(native.parseSessionEntries);

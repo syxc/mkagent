@@ -307,7 +307,7 @@ export {
 	type SessionTreeNode,
 	sessionEntryToContextMessages,
 	type ThinkingLevelChangeEntry,
-} from "./core/session-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 export {
 	type CacheWarmingMode,
 	type CompactionModelOverride,

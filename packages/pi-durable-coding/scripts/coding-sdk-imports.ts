@@ -10,6 +10,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/mcp-servers.ts',
   'core/model-registry.ts',
   'core/package-manager.ts',
+  'core/session-manager.ts',
   'core/settings-manager.ts',
   'core/settings-defaults.ts',
   'core/tools/file-mutation-queue.ts',

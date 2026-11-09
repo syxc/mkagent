@@ -17,7 +17,7 @@ import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
 import type { KeybindingsConfig } from "@earendil-works/pi-coding-agent";
 import type { ModelRegistry } from "@earendil-works/pi-coding-agent";
 import type { ScopedModel } from "../model-resolver.ts";
-import type { SessionManager } from "../session-manager.ts";
+import type { SessionManager } from "@earendil-works/pi-coding-agent";
 import {
 	type BuildSystemPromptOptions,
 	buildSystemPrompt,

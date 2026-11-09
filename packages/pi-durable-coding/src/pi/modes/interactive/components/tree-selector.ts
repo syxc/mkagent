@@ -12,7 +12,7 @@ import {
 	visibleWidth,
 	wrapTextWithAnsi,
 } from "@earendil-works/pi-tui";
-import type { SessionTreeNode } from "../../../core/session-manager.ts";
+import type { SessionTreeNode } from "@earendil-works/pi-coding-agent";
 import { formatReadLineRange } from "../../../core/tools/render-utils.ts";
 import { shortenHomePath } from "../../../utils/paths.ts";
 import { theme } from "@earendil-works/pi-coding-agent";

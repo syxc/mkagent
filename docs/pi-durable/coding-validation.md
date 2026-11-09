@@ -26,6 +26,55 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SessionManager SDK boundary after 4cc709a
+
+Production session consumers now use the published Coding SDK SessionManager
+and session contracts. The 2,057-line local implementation and its source-port
+conversion branch are deleted. The SDK patch adds optional context selection,
+entry projection and finalization callbacks, a protected constructor, and legacy
+subclass factory, directory and app-name hooks. Parsing, migration, tree and
+persistence algorithms remain in the published package. The legacy adapter keeps
+its durable projection and explicit-directory guards outside the SDK.
+
+Before deletion, the complete patched execution matches all 9,047 tokens of the
+local implementation after module-extension normalization. Independent review
+also compares the 1,765 public declaration tokens. It confirms all 14 runtime
+and 39 declaration exports from the SDK root, without conflicts with existing
+explicit exports. The legacy root export keeps the original session contracts;
+no actual compatibility issue is found for existing consumers.
+
+The affected eleven-file set passes 112 tests with 680 assertions. It covers
+legacy and detached factories, historical JSONL, durable projections, context
+edits, session journals, transactions, resources and plugins. Coding declarations
+and server typecheck pass. The initial declaration run overlaps dependency
+installation and reports incompatible pi-ai class identities. After installation
+finishes, both type checks pass without a code change. Worker bundle tests pass
+26 tests with 103 assertions. Complete source and pristine patch rebuild checks
+pass for 174 runtime TypeScript files, including 170 under src/pi and four
+facades, four assets, 12 auxiliary sources and 22 forwards. The Coding patch has
+14 physical outputs, core four and durable 30, for a total of 48.
+
+A fresh hoisted frozen install uses task HOME/cache, the public registry and
+disabled scripts. It installs 1,421 packages for 11 workspaces, leaves the lockfile
+unchanged and matches all 48 patched outputs to the tested installation. All
+14 Coding outputs match CODING-PATCH.json. The fresh SDK reports version 1.5.0.
+Its probes cover session factories, directory hooks, file persistence, projection
+callbacks and append failure rollback. The fixed Craft v0.15.6 audit passes for
+2,167 files after 41 source records are updated, added or deleted.
+
+Independent review against 4cc709a finds no confirmed defect. Targeted probes
+cover projection defaults and fallback, double compaction, context edits and a
+real EEXIST failure on the first file write. The existing file stays intact,
+entries and leaf roll back, and a later successful append retains the parent
+chain when reopened. The review checks source traversal cutoff and targeted
+residual imports. It does not repeat the complete tests, builds, bundle or fresh
+install, and does not validate real services or cross-platform behavior.
+
+This replaces SessionManager storage and projection contracts only. The SDK
+AgentSession production lifecycle, atomic input admission, cancellation and cold
+recovery remain open, along with ModelRuntime and resource loading. Task
+receipts are in the session-sdk task directory.
+
 ## Model and MCP registry SDK boundary after 05d63dc
 
 ModelRegistry and the complete MCP server module now use the published Coding

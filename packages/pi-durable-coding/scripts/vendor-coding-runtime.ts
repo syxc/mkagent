@@ -307,7 +307,7 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     changes.add(helper.change);
     if (helper.dependency) dependencies.add(helper.dependency);
   }
-  if (path === 'core/extensions/runner.ts' || path === 'core/session-manager.ts') {
+  if (path === 'core/extensions/runner.ts') {
     body = portCompatRuntime(path, body);
     changes.add('shared-legacy-runtime-policy');
   }

@@ -2,7 +2,7 @@
 import type { AgentMessage } from '../agent-runtime.ts';
 import {
   projectContextEntry, type CustomEntry, type SessionEntry, type SessionManager,
-} from '../pi/core/session-manager.ts';
+} from '@earendil-works/pi-coding-agent';
 
 export const LEGACY_HEAD = 'mkagent.durable.head.v1';
 export const LEGACY_EDIT = 'mkagent.durable.edit.v1';

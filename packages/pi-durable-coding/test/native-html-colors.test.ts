@@ -8,7 +8,7 @@ import { applySharedHelperPort } from '../scripts/shared-helper-port.ts';
 import { ansiLinesToHtml, ansiToHtml } from '../src/pi/core/export-html/ansi-to-html.ts';
 import { exportSessionToHtml } from '../src/pi/core/export-html/index.ts';
 import { createToolHtmlRenderer } from '../src/pi/core/export-html/tool-renderer.ts';
-import { SessionManager } from '../src/pi/core/session-manager.ts';
+import { SessionManager } from '@earendil-works/pi-coding-agent';
 import { getThemeByName, getThemesDir, loadThemeFromPath, setRegisteredThemes } from '@earendil-works/pi-coding-agent';
 
 const indices = [...Array.from({ length: 256 }, (_, index) => String(index)), '256', '65535', '9'.repeat(40), '9'.repeat(400)];

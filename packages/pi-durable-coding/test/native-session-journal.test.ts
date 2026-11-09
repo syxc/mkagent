@@ -12,7 +12,7 @@ import {
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
 import { NativeSessionJournal } from '../src/durable-coding/session-journal.ts';
 import { convertToLlm } from '../src/pi/core/messages.ts';
-import { SessionManager } from '../src/pi/core/session-manager.ts';
+import { SessionManager } from '@earendil-works/pi-coding-agent';
 
 const context = BACKGROUND_CONTEXT;
 const harnesses: Harness[] = [];

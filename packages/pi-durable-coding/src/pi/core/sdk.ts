@@ -17,7 +17,7 @@ import { findInitialModel } from "./model-resolver.ts";
 import { ModelRuntime } from "./model-runtime.ts";
 import type { ResourceLoader } from "./resource-loader.ts";
 import { DefaultResourceLoader } from "./resource-loader.ts";
-import { getDefaultSessionDir, SessionManager } from "./session-manager.ts";
+import { getDefaultSessionDir, SessionManager } from "@earendil-works/pi-coding-agent";
 import {
 	applyToolModifiers,
 	DEFAULT_TOOL_NAMES,

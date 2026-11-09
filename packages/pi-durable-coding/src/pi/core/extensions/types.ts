@@ -78,7 +78,7 @@ import type {
 	ReadonlySessionManager,
 	SessionEntry,
 	SessionManager,
-} from "../session-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 import type { Settings } from "@earendil-works/pi-coding-agent";
 import type { SlashCommandInfo } from "../slash-commands.ts";
 import type { SourceInfo } from "../source-info.ts";

@@ -7,7 +7,7 @@ import { convertToLlm } from '../pi/core/messages.ts';
 import {
   SessionManager, sessionEntryToContextMessages,
   type SessionEntry, type SessionHeader, type SessionProjection,
-} from '../pi/core/session-manager.ts';
+} from '@earendil-works/pi-coding-agent';
 import { contextBoundary, installLegacyProjection, LEGACY_EDIT, LEGACY_HEAD } from './legacy-session-context.ts';
 
 export const NATIVE_ENTRY_KIND = 'mkagent.coding.entry.v1';

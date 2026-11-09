@@ -6,7 +6,7 @@ import { createHostResources } from '../../src/host-resources.ts';
 import { AgentSession } from '../../src/pi/core/agent-session.ts';
 import { emitSessionShutdownEvent } from '../../src/pi/core/extensions/runner.ts';
 import { ModelRuntime } from '../../src/pi/core/model-runtime.ts';
-import { SessionManager } from '../../src/pi/core/session-manager.ts';
+import { SessionManager } from '@earendil-works/pi-coding-agent';
 
 export async function openPackageSession(root: string, projectTrusted = true) {
   const notifications: Array<{ message: string; type: string }> = [];

@@ -11,7 +11,7 @@ import {
 import type { AgentMessage } from '../agent-runtime.ts';
 import {
   SessionManager, type SessionEntry, type SessionHeader,
-} from '../pi/core/session-manager.ts';
+} from '@earendil-works/pi-coding-agent';
 import {
   clipFork, detached, importHistory, JOURNAL_KIND, json, nativeManager, persistProjection, type JournalState,
 } from './session-journal-projection.ts';

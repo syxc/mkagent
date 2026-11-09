@@ -13,7 +13,7 @@ import {
 	visibleWidth,
 } from "@earendil-works/pi-tui";
 import { KeybindingsManager } from "@earendil-works/pi-coding-agent";
-import type { SessionInfo, SessionListProgress } from "../../../core/session-manager.ts";
+import type { SessionInfo, SessionListProgress } from "@earendil-works/pi-coding-agent";
 import { canonicalizePath, getPathComparisonKey, shortenHomePath } from "../../../utils/paths.ts";
 import { theme } from "@earendil-works/pi-coding-agent";
 import { DynamicBorder } from "./dynamic-border.ts";
