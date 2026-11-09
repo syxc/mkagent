@@ -2,7 +2,7 @@
 
 MkAgent 第一次将 Pi coding agent 直接换成 pi-durable 后，发现 Coding 能力不足且无法复用原插件生态。当前方向是以切换前的 MkAgent 为行为和接入边界参照，保留 Pi coding agent 的 Coding 层与插件契约，尝试将其底层执行基座换成 pi-durable。对 MkAgent 而言，使用的仍是 Pi coding agent 的能力与接口；本地名称为 `pi-durable coding agent`。后续有效功能、修复和已有数据继续保留。
 
-2026-11-08 用户补充明确，本次返工须纠正此前大量复制和改造 Pi 源码、未优先引用可复用 SDK 的做法，减少 Coding 和 durable 每次更新时逐文件维护的风险。先修正关键文档，再落实必要内核适配。执行侧先用 durable 内置实现，其余所需能力优先引用独立 Pi 官方 SDK，再补薄适配，最后才处理有具体缺口依据的源码或补丁。MkAgent 整体架构和宿主职责保持；完整 `pi-coding-agent` 包的现行生产依赖限制不构成复制整套 Coding SDK 的理由。
+2026-11-08 用户补充明确，本次返工须纠正此前大量复制和改造 Pi 源码、未优先引用可复用 SDK 的做法，减少 Coding 和 durable 每次更新时逐文件维护的风险。先修正关键文档，再落实必要内核适配。执行侧先用 durable 内置实现，其余所需能力优先引用独立 Pi 官方 SDK，再补薄适配，最后才处理有具体缺口依据的源码或补丁。MkAgent 整体架构和宿主职责保持；用户已允许生产使用 `pi-coding-agent` 的公开 SDK，不启动原版 CLI。SDK 覆盖后删除对应源码和多余直接依赖，只保留有具体缺口依据的适配。
 
 以[能力规格](coding-capabilities-spec.md)确定需求，以[实施计划](durable-coding-agent-plan.md)和[纠偏跟进](coding-follow-up.md)安排工作。当前 AgentSession、自有任务状态机和完整 SDK 源码闭包属于待审查的实现选择；已有测试、来源哈希及第三方资源去重不单独证明迁移纠偏完成。Pi 正式发布 API 与仓内补丁新增的接口分开记录。
 

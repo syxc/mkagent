@@ -17,7 +17,7 @@ export {
 	type EditToolInput,
 	type EditToolOptions,
 } from "./edit.ts";
-export { withFileMutationQueue } from "./file-mutation-queue.ts";
+export { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
 export {
 	createFindTool,
 	createFindToolDefinition,

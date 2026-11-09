@@ -5,6 +5,7 @@ import { isBuiltin } from 'node:module';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { portModelRuntime, portProviderComposer } from './model-runtime-port.ts';
+import { codingSDKImport } from './coding-sdk-imports.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets, portHtmlVendorAssets, portImageAssets } from './asset-runtime-port.ts';
@@ -110,6 +111,13 @@ while (queue.length) {
   const replacements: Array<{ start: number; end: number; body: string }> = [];
   const inspect = (literal: ts.StringLiteralLike) => {
     const specifier = literal.text;
+    const sdk = codingSDKImport(path, specifier);
+    if (sdk) {
+      replacements.push({ start: literal.getStart(parsed), end: literal.end, body: JSON.stringify(sdk) });
+      dependencies.add(sdk);
+      changes.add('public-coding-sdk');
+      return;
+    }
     if (specifier === '@silvia-odwyer/photon-node') {
       if (path !== 'utils/photon.ts' && path !== 'utils/exif-orientation.ts') {
         throw new Error('Native Photon import needs an explicit shared adapter: ' + path);

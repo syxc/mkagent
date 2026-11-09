@@ -2,19 +2,20 @@
   "repository": "https://github.com/earendil-works/pi",
   "version": "1.5.0",
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
-  "policy": "Selected source ports and forwards to shared implementations. No full pi-coding-agent package dependency. Reproduced by scripts/vendor-upstream.ts.",
+  "policy": "Selected source adapters and forwards. Complete published Coding SDK contracts use @earendil-works/pi-coding-agent instead of local source. Reproduced by scripts/vendor-upstream.ts.",
   "typescript": "5.9.3",
   "files": [
     {
       "source": "packages/coding-agent/src/core/extensions/loader.ts",
       "target": "src/upstream/core/extensions/loader.js",
       "sha256": "873cbe2ae4a15e9563c5a563d447b7aa3a05cca45e145d4250d54ad601bdc85f",
-      "portSha256": "378cbd09835b90bd815521a52d669daa495070242b8e27f830d64cbf2f285062",
+      "portSha256": "42310c80027bcd0c66eefb93e8fcc4bfd52ac365b0efaf0b89c1d7c0c1422c5c",
       "changes": [
         "erase-types",
         "extension-module-resolution",
         "preserve-host-stack-formatting-after-babel-bootstrap",
-        "shared-native-extension-lifecycle"
+        "shared-native-extension-lifecycle",
+        "public-coding-sdk"
       ]
     },
     {
@@ -45,9 +46,12 @@
       "source": "packages/coding-agent/src/core/resource-loader.ts",
       "target": "src/upstream/core/resource-collisions.ts",
       "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
-      "portSha256": "a4a5baee89c3d6009a3defdf75b4a8c4023b7c5a15b556451eee4206afd3883b",
+      "portSha256": "8052b6ae5a3640dc1324871ee59fe62fcf93600e82657c7d6b981f10728733db",
       "selection": [
         "DefaultResourceLoader.dedupePrompts"
+      ],
+      "changes": [
+        "public-coding-sdk"
       ]
     },
     {
@@ -128,20 +132,8 @@
       "implementation": "src/pi/core/source-info.ts"
     },
     {
-      "target": "src/upstream/core/diagnostics.ts",
-      "implementation": "src/pi/core/diagnostics.ts"
-    },
-    {
-      "target": "src/upstream/core/event-bus.ts",
-      "implementation": "src/pi/core/event-bus.ts"
-    },
-    {
       "target": "src/upstream/core/pi-manifest.ts",
       "implementation": "src/pi/core/pi-manifest.ts"
-    },
-    {
-      "target": "src/upstream/utils/frontmatter.ts",
-      "implementation": "src/pi/utils/frontmatter.ts"
     },
     {
       "target": "src/upstream/utils/text.ts",

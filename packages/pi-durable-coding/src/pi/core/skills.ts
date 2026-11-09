@@ -2,9 +2,9 @@ import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import ignore from "ignore";
 import { basename, dirname, join, relative, resolve, sep } from "path";
 import { CONFIG_DIR_NAME, getAgentDir } from "../config.ts";
-import { parseFrontmatter } from "../utils/frontmatter.ts";
+import { parseFrontmatter } from "@earendil-works/pi-coding-agent";
 import { isPathWithin, resolvePath } from "../utils/paths.ts";
-import type { ResourceDiagnostic } from "./diagnostics.ts";
+import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
 import { createSyntheticSourceInfo, getResourcePathKey, type SourceInfo } from "./source-info.ts";
 
 /** Max name length per spec */

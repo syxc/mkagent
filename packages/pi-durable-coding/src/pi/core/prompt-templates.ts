@@ -1,9 +1,9 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { basename, dirname, join, resolve, sep } from "path";
 import { CONFIG_DIR_NAME } from "../config.ts";
-import { parseFrontmatter } from "../utils/frontmatter.ts";
+import { parseFrontmatter } from "@earendil-works/pi-coding-agent";
 import { resolvePath } from "../utils/paths.ts";
-import type { ResourceDiagnostic } from "./diagnostics.ts";
+import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
 import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.ts";
 
 /**

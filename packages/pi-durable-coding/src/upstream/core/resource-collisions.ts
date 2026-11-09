@@ -1,6 +1,6 @@
 // Ported from Pi v1.5.0 (f9a26365568127461c47a07a37dcb42c140a3ac5); MIT. See UPSTREAM.json and LICENSE.pi.
 import type { PromptTemplate } from "./prompt-templates.ts";
-import type { ResourceDiagnostic } from "./diagnostics.ts";
+import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
 
 export function dedupePrompts(prompts: PromptTemplate[]): {
     prompts: PromptTemplate[];

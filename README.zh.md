@@ -88,7 +88,7 @@ MkAgent 会在 `~/.mkagent/workspaces/default` 创建默认工作区。开发或
 
 MkAgent 是一个 Bun workspace，三个使用界面共用同一套运行时和渲染层。
 
-当前 agent 内核在 Bun 子进程中使用 `pi-durable`。本次纠偏保留 MkAgent 所用 Pi coding agent 的 Coding 层与插件契约，尝试将该层底下的执行基座换成 durable。以原始 MkAgent/Coding 接入为行为参照，保留后续有效功能及已有数据。优先用 durable 内置实现和可复用 Pi 官方 SDK，减少后续 Coding 与 durable 更新时逐文件适配源码的维护责任。只有确认缺口后才做兼容或源码移植，生产不得依赖或加载完整 `pi-coding-agent` 包。具体要求见[能力规格](./docs/pi-durable/coding-capabilities-spec.md)和[实施计划](./docs/pi-durable/durable-coding-agent-plan.md)。
+当前 agent 内核在 Bun 子进程中使用 `pi-durable`。本次纠偏保留 MkAgent 所用 Pi coding agent 的 Coding 层与插件契约，尝试将该层底下的执行基座换成 durable。以原始 MkAgent/Coding 接入为行为参照，保留后续有效功能及已有数据。优先用 durable 内置实现和可复用 Pi 官方 SDK，减少后续 Coding 与 durable 更新时逐文件适配源码的维护责任。生产可使用 `pi-coding-agent` 的公开 SDK，不启动其 CLI；SDK 覆盖后删除对应源码和多余直接依赖，只保留有具体缺口依据的适配。具体要求见[能力规格](./docs/pi-durable/coding-capabilities-spec.md)和[实施计划](./docs/pi-durable/durable-coding-agent-plan.md)。
 
 ```text
 apps/

@@ -13,7 +13,7 @@ import {
 import type { KeyId } from "@earendil-works/pi-tui";
 import { type Theme, theme } from "../../modes/interactive/theme/theme.ts";
 import type { CacheWarmingAction } from "../cache-warmer.ts";
-import type { ResourceDiagnostic } from "../diagnostics.ts";
+import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
 import type { KeybindingsConfig } from "../keybindings.ts";
 import type { ModelRegistry } from "../model-registry.ts";
 import type { ScopedModel } from "../model-resolver.ts";

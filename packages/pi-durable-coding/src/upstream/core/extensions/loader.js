@@ -12,7 +12,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { CONFIG_DIR_NAME, getAgentDir } from "../../config.ts";
 import { pathsEqual, resolvePath } from "../../utils/paths.ts";
-import { createEventBus } from "../event-bus.ts";
+import { createEventBus } from "@earendil-works/pi-coding-agent";
 import { readPiManifest } from "../pi-manifest.ts";
 import { time } from "../timings.ts";
 let extensionCacheCwd;

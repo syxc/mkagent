@@ -44,18 +44,19 @@ Moving copied implementations into a repository patch does not solve it.
 
 The clarification on 2026-11-08 requires correction of the migration design,
 documents, code and tests. First correct the related documents, then implement
-the corrections in order. Use pi-durable built-ins for the execution base,
-then public APIs in independent official Pi SDK packages for the required
-Coding behavior. Keep reusable Coding implementations in those SDKs. Add
-compatibility code only for a confirmed gap. Third-party library replacement
-does not establish compliance with that priority.
+the corrections in order. Use pi-durable built-ins first, then public APIs
+in official Pi SDK packages for behavior that durable does not supply.
+Keep reusable implementations in those SDKs. Add compatibility code only for
+a confirmed gap. Third-party library replacement does not establish
+compliance with that priority.
 
-`pi-agent-core` is permitted where needed. Production must not depend on the
-complete `pi-coding-agent` package or load that runtime through a subpath.
-This package constraint does not remove the Pi Coding layer or justify
-copying its full SDK. Assess reusable official SDK APIs before retaining any
-source. These rules replace the earlier dependency restriction in the
-first-switch specifications.
+On 2026-11-09, the user authorized the public `pi-coding-agent` SDK as a
+production dependency. This replaces the earlier restriction on that package.
+Use its public SDK without starting its CLI, and keep durable as the execution
+base. `pi-agent-core` is also permitted where needed. Delete the local source
+and redundant direct dependencies that the selected SDK replaces. Do not keep
+a copied implementation beside its SDK replacement or move a full copied
+implementation into a dependency patch.
 
 Acceptance requires complete Coding capabilities, working Pi plugin contracts,
 and preservation of existing MkAgent product features. Check the implementation

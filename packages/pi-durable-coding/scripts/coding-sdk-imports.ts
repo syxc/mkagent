@@ -1,0 +1,17 @@
+/** Stop source traversal where the published Coding SDK supplies the complete contract. */
+import { posix } from 'node:path';
+
+export const CODING_SDK_PACKAGE = '@earendil-works/pi-coding-agent';
+
+export const CODING_SDK_MODULES = new Set([
+  'core/diagnostics.ts',
+  'core/event-bus.ts',
+  'core/tools/file-mutation-queue.ts',
+  'utils/frontmatter.ts',
+]);
+
+export function codingSDKImport(importer: string, specifier: string): string | undefined {
+  if (!specifier.startsWith('.')) return undefined;
+  const target = posix.normalize(posix.join(posix.dirname(importer), specifier));
+  return CODING_SDK_MODULES.has(target) ? CODING_SDK_PACKAGE : undefined;
+}

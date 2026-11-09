@@ -13,7 +13,7 @@ import type { KeyId } from "@earendil-works/pi-tui";
 import type { createJiti } from "jiti";
 import { CONFIG_DIR_NAME, getAgentDir, isBunBinary, isBundledNode } from "../../config.ts";
 import { pathsEqual, resolvePath } from "../../utils/paths.ts";
-import { createEventBus, type EventBus } from "../event-bus.ts";
+import { createEventBus, type EventBus } from "@earendil-works/pi-coding-agent";
 import type { ExecOptions } from "../exec.ts";
 import { execCommand } from "../exec.ts";
 import { type McpServerConfig, McpServerRegistry, mcpNamespace, validateMcpServerConfig } from "../mcp-servers.ts";

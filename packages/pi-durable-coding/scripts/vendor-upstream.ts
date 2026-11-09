@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
+import { codingSDKImport } from './coding-sdk-imports.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const checkout = process.argv[2];
@@ -108,6 +109,18 @@ function port(source: string, target = source, selection?: string[], imports = '
     if (!content.includes(anchor)) throw new Error('Project context trust boundary changed');
     content = content.replace(anchor, '\tif (options.projectTrusted === false) return contextFiles;\n\n' + anchor);
   }
+  const parsed = ts.createSourceFile(target, content, ts.ScriptTarget.Latest, true);
+  const replacements: Array<{ start: number; end: number; value: string }> = [];
+  for (const statement of parsed.statements) {
+    if ((!ts.isImportDeclaration(statement) && !ts.isExportDeclaration(statement))
+      || !statement.moduleSpecifier || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
+    const sdk = codingSDKImport(target, statement.moduleSpecifier.text);
+    if (sdk) replacements.push({ start: statement.moduleSpecifier.getStart(parsed), end: statement.moduleSpecifier.end, value: JSON.stringify(sdk) });
+  }
+  for (const replacement of replacements.reverse()) {
+    content = content.slice(0, replacement.start) + replacement.value + content.slice(replacement.end);
+  }
+  if (replacements.length) changes = [...(changes ?? []), 'public-coding-sdk'];
   if (target.endsWith('.js')) {
     content = ts.transpileModule(content, { compilerOptions: {
       target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext,
@@ -133,8 +146,8 @@ const legacyPolicies: Record<string, string> = {
 
 // These public helpers need one implementation, including when old entry points import them.
 const forwarded = [
-  'core/source-info.ts', 'core/diagnostics.ts', 'core/event-bus.ts', 'core/pi-manifest.ts',
-  'utils/frontmatter.ts', 'utils/text.ts', 'utils/paths.ts',
+  'core/source-info.ts', 'core/pi-manifest.ts',
+  'utils/text.ts', 'utils/paths.ts',
   'utils/child-process.ts', 'utils/git.ts', 'core/output-guard.ts',
   'core/exec.ts', 'core/timings.ts', 'core/mcp-servers.ts',
   'core/skills.ts', 'core/prompt-templates.ts', 'core/system-prompt.ts',
@@ -237,7 +250,7 @@ save('LICENSE.pi', readFileSync(join(upstream, 'LICENSE'), 'utf8'));
 save('UPSTREAM.json', JSON.stringify({
   repository: 'https://github.com/earendil-works/pi',
   version: '1.5.0', revision,
-  policy: 'Selected source ports and forwards to shared implementations. No full pi-coding-agent package dependency. Reproduced by scripts/vendor-upstream.ts.',
+  policy: 'Selected source adapters and forwards. Complete published Coding SDK contracts use @earendil-works/pi-coding-agent instead of local source. Reproduced by scripts/vendor-upstream.ts.',
   typescript: ts.version,
   files: manifest,
   forwarded,

@@ -49,7 +49,7 @@ export {
 	serializeConversation,
 	shouldCompact,
 } from "./core/compaction/index.ts";
-export { createEventBus, type EventBus, type EventBusController } from "./core/event-bus.ts";
+export { createEventBus, type EventBus, type EventBusController } from "@earendil-works/pi-coding-agent";
 // Extension system
 export type {
 	AfterProviderResponseEvent,
@@ -484,7 +484,7 @@ export {
 } from "./modes/interactive/theme/theme.ts";
 // Clipboard utilities
 export { copyToClipboard } from "./utils/clipboard.ts";
-export { parseFrontmatter, stripFrontmatter } from "./utils/frontmatter.ts";
+export { parseFrontmatter, stripFrontmatter } from "@earendil-works/pi-coding-agent";
 export { convertToPng } from "./utils/image-convert.ts";
 export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
 export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";

@@ -1,10 +1,10 @@
 # Pi-durable coding agent 实施计划
 
-状态：按 2026-11-08 用户背景和原则全面纠偏。此前 F0 校正、补漏和架构范围复核分别完成于 `1314a2b`、`56d0f46` 和 `301598c`；Pi Coding 层、执行基座和升级维护条件的补充提交于 `552b938`。`62ed325` 将宿主工具执行委托公开 ToolTask 并删除旧嵌套调用副本；`456241a` 将请求接入仓内新增 GenerationResponseTask，复用 SDK streamResponse 与 partial 写入。插件 edit 参数转换现直接使用已发布 SDK 并删除副本；工具轮次和收尾的具体缺口见架构记录。F0 至 F6 的本次实施验收已完成：已确认的 SDK 复用、源码收窄、受影响验证和来源检查均有结果；最终独立复核要求补齐的生产搜索、显式包管理维护登记及收尾措辞已落实。剩余适配按维护清单的具体缺口和退出条件复评，历史平台缺口保留；证据见验证记录。运行时代码起点为 `cb0311f`；本文的 `4776fe1`、D0 至 D6 及后续批次账本保留原适用时点。
+状态：2026-11-09 按用户纠正重新打开 F0 至 F6 整体验收。此前 SDK 替换、工具和请求切片、主题及宿主清理的验证保留各自证据，但未达到删除大规模 Coding 源码的原始目标。用户现已明确允许生产使用 `pi-coding-agent` 的公开 SDK；以公开 AgentSession 构造函数可注入外部 Agent 的实际结果为起点推进替换，durable 执行和恢复仍待新路径验证。当前进度见[纠偏跟进](coding-follow-up.md)，未完成前不统一推送。运行时代码起点为 `cb0311f`；本文的既有提交、D0 至 D6 及后续批次账本保留原适用时点。
 
 MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，发现 Coding 能力不足且不能复用 Pi coding agent 的插件生态。当前方向是以切换前的 MkAgent 为产品行为和接入边界参照，保留 Pi coding agent 的 Coding 层与插件契约，尝试将其底层执行基座换成 pi-durable。对 MkAgent 而言，使用的仍是 Pi coding agent 的能力与接口，执行、存储和恢复由 durable 承担。
 
-此前实现大量复制和改造 Pi 源码，未先充分复用可用的官方 SDK，导致上游 Coding 和 durable 更新时可能需要逐文件对照适配。本次返工须减少这部分长期维护责任：执行侧先用 durable 已发布内置实现，其余所需能力优先引用独立 Pi 官方 SDK 的公开 API，再补必要薄适配，最后才处理具有具体缺口依据的源码或补丁。`pi-agent-core` 可以按需引用；当前完整 `pi-coding-agent` 包不进入生产依赖的约束，不构成复制整套 Coding SDK 的理由。第三方资源去重和局部删行不能代替此目标。
+此前实现大量复制和改造 Pi 源码，未先充分复用可用的官方 SDK，导致上游 Coding 和 durable 更新时可能需要逐文件对照适配。本次返工须减少这部分长期维护责任：durable 已有能力优先使用 durable，其余使用 Pi 官方 SDK 的公开 API，本地只留必要适配。用户于 2026-11-09 解除完整 `pi-coding-agent` 生产依赖禁令，允许使用其公开 SDK，不启动原版 CLI。SDK 覆盖后实际删除对应源码和多余直接依赖，不保留并行实现，不把整块复制实现移入补丁。
 
 本次范围是 agent 内核切换及必要兼容接入。MkAgent 既有客户端/服务端分层、Pi backend 与子进程边界、宿主会话/权限/凭据职责、RPC/UI 契约和产品持久化行为保持。宿主侧只做经确认的内核或插件契约所需的最小适配，不重划上层职责或重做已正常工作的模块。
 
@@ -25,7 +25,7 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 | pi-durable | 优先使用已发布的执行、工具、输入、任务所有权、事务、存储、取消及恢复实现；自定义任务仍需核对是否重复这些职责。 |
 | Coding 层及执行适配 | 保留 Pi coding agent 的 Coding 能力与公开插件契约，优先引用官方 SDK；仅对接入 durable 仍缺失的行为做必要适配。 |
 | pi-agent-core 等独立 Pi 官方 SDK | 按需引用公开类型、协议和可复用实现。引用后执行仍由 durable 管理；仓内补丁新增的 API 单独作为例外。 |
-| 完整 pi-coding-agent 包 | 禁止作为生产直接依赖，也不能通过私有路径加载整包运行时。插件对 SDK 名称的导入由本地兼容实现解析。 |
+| pi-coding-agent 公开 SDK | 用户已允许作为生产直接依赖，复用其公开 Coding API，不启动原版 CLI；以必要适配接入 durable 并删除被替代的源码。 |
 | MkAgent 宿主 | 继续负责产品会话、权限、模型凭据、工具目录、MCP、浏览器、传输和界面。 |
 
 pi-durable 已发布 codemode、tool-search、tools、images 及完整 Harness/任务/存储接口，应先核对其已有实现和扩展点，再选择其他 Pi 官方 SDK。当前 `pi.coding.*` 虽由官方 scheduler 执行，仍含本地请求与工具状态机，属于首批纠偏重点。
@@ -36,9 +36,9 @@ pi-durable 已发布 codemode、tool-search、tools、images 及完整 Harness/�
 
 `62ed325` 完成首个执行切片：宿主工具交给公开 ToolTask phases/abort，删除 `host-tool-nested.ts`。SDK checkpoint 和完整 Native 结果在原 `pi.coding.tool` owner 下持久化，旧 v1 checkpoint 保持恢复路径。专项覆盖策略限制、已完成和失败回执、工具移除、owned cleanup、并发身份及 API 关闭。Native 保留审批、hooks、事件与 journal，工具切片未新增补丁或改变任务版本。
 
-后续请求切片已接入仓内新增的 `GenerationResponseTask` v1，直接复用 SDK 的 `streamResponse` 与 partial 写入。发布版 `GenerationTask.request` 会继续分类和写消息，不能独立返回响应；新任务提供这一明确出口，保留原 `GenerationTask` v4 和所有 `pi.coding.*` v1。Native `message_end` 完成后才决定工具 calls，SDK receipt、唯一 assistant entry 和下一 checkpoint 同事务提交。不确定 request/event 不重发，取消与恢复均清理 SDK generation 槽。新任务属于本地 SDK 修改，退出条件和升级检查见架构记录；不能记为未修改发布 API。完整 30 文件补丁已有真实重放和冻结消费者核对。工具轮次与收尾已核对：发布 SDK 阶段同时写 assistant、创建工具、应用 inbox 和转交下一请求，没有独立返回轮次决定的出口。当前保留 Native 交付与 journal 适配，未新增轮次补丁，退出条件见架构记录。另已删除插件 edit 的参数转换副本，直接使用公开 `createEditTool().prepareArguments`；文件执行和 renderer 保留。公开 Agent/runToolCall 的普通 AgentTool 现已接入同一个 ToolTask 桥，已桥接工具和 AgentSession 往返转换避免重复包装。Native 保留首次参数验证和权限改参；effect 前检查取消，最终参数与完整 SDK 回执原子保存，旧回执缺字段时回退已接受参数。summary 的并发与主 generation 进度隔离已固定，session/summary 的候选 API、具体缺口和退出条件见架构记录；未改变其运行时任务。完整 Coding 范围及补丁已按能力完成核对，F1 至 F3 的本次实施验收已完成；保留适配按维护清单的退出条件复评。
+后续请求切片已接入仓内新增的 `GenerationResponseTask` v1，直接复用 SDK 的 `streamResponse` 与 partial 写入。发布版 `GenerationTask.request` 会继续分类和写消息，不能独立返回响应；新任务提供这一明确出口，保留原 `GenerationTask` v4 和所有 `pi.coding.*` v1。Native `message_end` 完成后才决定工具 calls，SDK receipt、唯一 assistant entry 和下一 checkpoint 同事务提交。不确定 request/event 不重发，取消与恢复均清理 SDK generation 槽。新任务属于本地 SDK 修改，退出条件和升级检查见架构记录；不能记为未修改发布 API。完整 30 文件补丁已有真实重放和冻结消费者核对。工具轮次与收尾已核对：发布 SDK 阶段同时写 assistant、创建工具、应用 inbox 和转交下一请求，没有独立返回轮次决定的出口。当前保留 Native 交付与 journal 适配，未新增轮次补丁，退出条件见架构记录。另已删除插件 edit 的参数转换副本，直接使用公开 `createEditTool().prepareArguments`；文件执行和 renderer 保留。公开 Agent/runToolCall 的普通 AgentTool 现已接入同一个 ToolTask 桥，已桥接工具和 AgentSession 往返转换避免重复包装。Native 保留首次参数验证和权限改参；effect 前检查取消，最终参数与完整 SDK 回执原子保存，旧回执缺字段时回退已接受参数。summary 的并发与主 generation 进度隔离已固定，session/summary 的候选 API、具体缺口和退出条件见架构记录；未改变其运行时任务。此前核对未充分评估完整 Coding 包的公开 SDK，不能据此关闭 F1 至 F3。现按已授权的公开 SDK 重新接线，并以实际删除源码和行为验证验收。
 
-SDK 入口范围已继续收窄：此前排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源码；`5662422` 后的限定复核再确认三种模式宿主不属于原始 MkAgent 接入或必需插件契约。现排除 `InteractiveMode`、`runPrintMode`、`runRpcMode` 和前两者专用 options，删除三个实现文件。生成器在遍历根入口和 modes barrel 前应用同样排除。保留 `RpcClient`/options、协议和 JSON events、Theme、CustomEditor、renderer/UI、ExtensionMode、AgentSessionRuntime 及 MCP/codemode/tool-search 工厂；产品仍通过 `CodingHost/createAgentSession` 装配。直接使用三种模式的外部消费者须迁移到自己的宿主。当前完整生成清单为 196 份 TypeScript、6 项资源，闭包已重算；数量本身不证明保留范围最小。`06d1346` 后又从内部组件 barrel 排除没有包根导出和保留调用的首次设置、终端模型筛选及信任选择三个组件并删除实现；生成器在依赖遍历前应用同样排除，公开模型选择器和宿主信任处理保留。双包名真实插件、RPC client、宿主 UI、worker bundle、声明及局部来源检查的结果见验证记录。该删除不计作官方 SDK 完整覆盖，也不证明所有剩余辅助源码必要。
+SDK 入口范围已继续收窄：此前排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源码；`5662422` 后的限定复核再确认三种模式宿主不属于原始 MkAgent 接入或必需插件契约。现排除 `InteractiveMode`、`runPrintMode`、`runRpcMode` 和前两者专用 options，删除三个实现文件。生成器在遍历根入口和 modes barrel 前应用同样排除。保留 `RpcClient`/options、协议和 JSON events、Theme、CustomEditor、renderer/UI、ExtensionMode、AgentSessionRuntime 及 MCP/codemode/tool-search 工厂；产品仍通过 `CodingHost/createAgentSession` 装配。直接使用三种模式的外部消费者须迁移到自己的宿主。该切片时完整生成清单为 196 份 TypeScript、6 项资源；最新范围见架构记录，数量本身不证明保留范围最小。`06d1346` 后又从内部组件 barrel 排除没有包根导出和保留调用的首次设置、终端模型筛选及信任选择三个组件并删除实现；生成器在依赖遍历前应用同样排除，公开模型选择器和宿主信任处理保留。双包名真实插件、RPC client、宿主 UI、worker bundle、声明及局部来源检查的结果见验证记录。该删除不计作官方 SDK 完整覆盖，也不证明所有剩余辅助源码必要。
 
 模式切片已提交于 `b10b881`。其后删除无剩余调用、未从根导出的终端 `/bug` 界面及只供该界面使用的上传 helper，同步移除两项来源记录。已有入口排除已切断这条依赖，不新增生成规则；保留 `AgentSession.summarizeForBugReport()`、核心摘要和 durable summary 任务。宿主实际摘要与插件回归 11 项及声明构建通过，不调用上传服务或真实 provider。此项删除不需要的宿主范围，不记作官方 SDK 替代。
 
@@ -72,7 +72,7 @@ store 适配的 journal 前置已完成：重复 flush 按事务草稿中的 non
 
 ANSI 标准匹配现已引用无传递依赖的 `ansi-regex@6.2.2`，仅补齐私有 CSI，原生流式策略保留原文。独立冻结消费者保留新旧两版依赖，Bun 和 Node 各通过 30 项、183 个断言，最新 ANSI 与图像组合通过 107 项、743 个断言。完整终端入口未运行，具体证据见验证记录。
 
-当前已引用 core 的公开协议类型和 `streamProxy`，移除对应生成副本；消息声明合并保留在公开 core 模块上。宿主压缩窗口通过公开设置方法的外部包装实现，原生 `SettingsManager` 不再带宿主阈值补丁。包管理、消息、模型、设置、会话、runner、token 及资源算法已共用实现，七份旧接口策略单独维护，生成器只生成转发。可选目录、投影和 runner 依赖参数保留原生默认值；结构类型与旧 JavaScript 宽边界由严格消费者回归覆盖。28 份文件直接使用公开 core 类型，内部执行导入改写由 31 份收敛为 3 份。上游没有独立 coding SDK，也未公开可注入的执行器和版本化恢复接口；这些限制仍不能证明整个 SDK 闭包都必须移植。F1/F3 的本次能力核对和维护登记已完成，升级按具体缺口和退出条件复评；F4/F5 的早期完整生成、来源审计、CI、产品构建及分批回归已在 `8b1c98f` 完成。下列及此前各批次的未验证范围保留为当时记录，最新数量、收益和证据见验证记录。
+当前已引用 core 的公开协议类型和 `streamProxy`，移除对应生成副本；消息声明合并保留在公开 core 模块上。宿主压缩窗口通过公开设置方法的外部包装实现，原生 `SettingsManager` 不再带宿主阈值补丁。包管理、消息、模型、设置、会话、runner、token 及资源算法已共用实现，七份旧接口策略单独维护，生成器只生成转发。可选目录、投影和 runner 依赖参数保留原生默认值；结构类型与旧 JavaScript 宽边界由严格消费者回归覆盖。28 份文件直接使用公开 core 类型，内部执行导入改写由 31 份收敛为 3 份。公开 `AgentSessionConfig.agent` 已支持外部 Agent 注入，原先将工厂限制推广为整个 SDK 限制的判断有误。用户已允许完整 Coding 包的公开 SDK 生产依赖，F1/F3 按真实删除与接线重新验收，durable 恢复仍待验证。F4/F5 的早期完整生成、来源审计、CI、产品构建及分批回归已在 `8b1c98f` 完成，不替代新接线验证。下列及此前各批次的未验证范围保留为当时记录，最新数量、收益和证据见验证记录。
 
 现有包名 `@mkagent/pi-durable-coding`、插件导入标识和持久化任务身份用于兼容现有调用与数据。不得仅为命名而改写；实现替换确需改变任务时，提供明确版本和迁移路径，不能静默丢弃旧 checkpoint。
 
@@ -142,7 +142,7 @@ ANSI 标准匹配现已引用无传递依赖的 `ansi-regex@6.2.2`，仅补齐�
 | D3 | 插件会话与交互 | 补齐由产品会话所有者执行的原生会话操作和插件交互适配；每个 API 组用未修改插件驱动实际效果，检查 reload、取消和恢复。 | 已有主要实现及证据；架构改动影响按 F4 验证 |
 | D4 | 原生资源与授权 | 补齐项目资源的信任入口、MCP 交互授权和显式包管理路径；继续保持禁止隐式安装及未授权项目执行。 | 主要路径已有证据；架构改动影响按 F4 验证 |
 | D5 | 打包与产品验收 | 检查独立包消费者、来源、许可、资源和产物搬迁，在隔离环境运行实际产品入口；区分构建通过、功能通过和平台受阻。 | macOS 构建、协议、选定 WebUI 与 Desktop、未签名 .app/ZIP 和隔离 ad-hoc 原生副本完成；正式签名公证安装、系统协议和其他平台待验收 |
-| D6 | 最终需求对照 | 将本文、能力总表、实现、测试与未解决项逐条对应；全部必需项有结果后才声明完成，记录最终本地提交。 | 本次 F0 至 F6 的实施验收已完成；受影响检查、独立复核及维护登记补全见验证记录，历史平台边界保留。原子提交及统一推送按用户授权执行 |
+| D6 | 最终需求对照 | 将本文、能力总表、实现、测试与未解决项逐条对应；全部必需项有结果后才声明完成，记录最终本地提交。 | 2026-11-09 已重新打开 F0 至 F6。完成 SDK 主链替换、源码删除、必要验证及独立复核后再验收；原子提交及统一推送按用户授权执行 |
 
 D1 的已知风险是把原生会话开关直接设为始终启用：它会连带加载普通会话以前隔离的 Pi 资源。现有 `kernel.e2e.test.ts` 的默认 profile 隔离用例是保留契约，不能通过改掉该预期来消除失败。
 

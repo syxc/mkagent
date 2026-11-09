@@ -7,13 +7,13 @@ import { detectCapabilities, getTerminalColorMode, type TerminalColorMode } from
 import chalk from "chalk";
 import { APP_NAME, CONFIG_DIR_NAME } from "../config.ts";
 import { loadThemeFromPath, type Theme } from "../modes/interactive/theme/theme.ts";
-import type { ResourceDiagnostic } from "./diagnostics.ts";
+import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
 
-export type { ResourceCollision, ResourceDiagnostic } from "./diagnostics.ts";
+export type { ResourceCollision, ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
 
 import { canonicalizePath, isLocalPath, isPathWithin, pathsEqual, resolvePath } from "../utils/paths.ts";
 import { stripBom } from "../utils/text.ts";
-import { createEventBus, type EventBus } from "./event-bus.ts";
+import { createEventBus, type EventBus } from "@earendil-works/pi-coding-agent";
 import {
 	clearExtensionCache,
 	createExtensionRuntime,

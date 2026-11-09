@@ -9,11 +9,11 @@ import { createSourceInfo, type SourceInfo } from './upstream/core/source-info.t
 import { dedupePrompts } from './upstream/core/resource-collisions.ts';
 import { canonicalizePath, isPathWithin, pathsEqual } from './upstream/utils/paths.ts';
 import { stripBom } from './upstream/utils/text.ts';
-import type { ResourceDiagnostic } from './upstream/core/diagnostics.ts';
+import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
 import type { ResolvedResource } from './upstream/core/package-manager.ts';
 
 export { loadProjectContextFiles, formatSkillsForPrompt };
-export { parseFrontmatter, stripFrontmatter } from './upstream/utils/frontmatter.ts';
+export { parseFrontmatter, stripFrontmatter } from "@earendil-works/pi-coding-agent";
 export type { PromptTemplate, ResourceDiagnostic };
 export type CodingSkill = Skill;
 export type CodingResourceOptions = CodingPackageOptions;

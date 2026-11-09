@@ -2,7 +2,7 @@
 
 MkAgent 第一次将 Pi coding agent 直接换成 pi-durable 后，发现 Coding 能力不足且无法复用原插件生态。本次以切换前 MkAgent 的行为及接入边界为参照，保留 Pi coding agent 的 Coding 层，尝试以 durable 替换其底层执行基座。目标关系是 MkAgent 使用 Pi Coding 层，Pi Coding 层通过必要适配使用 durable；产品既有功能及后续有效修复继续保留。
 
-2026-11-08 的纠偏先修正文档，再落实内核接入、Coding 兼容及相关代码和测试。此前大量复制并改造上游源码，带来 Coding 和 durable 每次更新时逐文件适配的维护风险。本次优先引用可复用 Pi 官方 SDK，减少长期维护的源码、生成转换和补丁；不能把本地算法移入 SDK 补丁就记作完成。MkAgent 既有整体架构、分层和宿主职责保持，调整限于必要内核接入。需求及 SDK 选择顺序以[能力规格](coding-capabilities-spec.md)为准，步骤见[纠偏跟进](coding-follow-up.md)。`pi-agent-core` 按需使用；完整 `pi-coding-agent` 包的现行生产依赖限制不要求复制其完整 SDK。
+2026-11-08 的纠偏先修正文档，再落实内核接入、Coding 兼容及相关代码和测试。此前大量复制并改造上游源码，带来 Coding 和 durable 每次更新时逐文件适配的维护风险。本次优先引用可复用 Pi 官方 SDK，减少长期维护的源码、生成转换和补丁；不能把本地算法移入 SDK 补丁就记作完成。MkAgent 既有整体架构、分层和宿主职责保持，调整限于必要内核接入。需求及 SDK 选择顺序以[能力规格](coding-capabilities-spec.md)为准，步骤见[纠偏跟进](coding-follow-up.md)。`pi-agent-core` 按需使用；用户已允许生产使用 `pi-coding-agent` 的公开 SDK，不启动原版 CLI。SDK 覆盖后删除对应源码和多余直接依赖，只保留有具体缺口依据的适配。
 
 本文记录 `cb0311f` 的实际装配及后续核查。当前按能力划分的发布 API、补丁、适配、恢复边界和退出条件见[SDK 维护清单](coding-sdk-maintenance.md)。AgentSession、自有任务状态机、剩余 Native SDK 源码及补丁均属实现现状，未核实的必要性继续开放。下文的历史“保留”决定限定于当时选取的契约，不为整个模块提供永久保留依据。Marked 和 Highlight.js 是第三方资源包，其替换不计为 Pi 官方 SDK 复用。
 
@@ -166,14 +166,14 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 | 本地位置 | 上游来源与移植方式 |
 |---|---|
-| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，共 192 份 TypeScript 和 6 项主题及 HTML 导出资源。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留 `AgentSession`、SDK 工厂、工具、扩展、资源、RPC client/协议和插件 UI 组件，部分文件经过适配。 |
+| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，首批公开 SDK 替换后为 188 份 TypeScript 和 6 项主题及 HTML 导出资源，主链替换尚未完成。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留 `AgentSession`、SDK 工厂、工具、扩展、资源、RPC client/协议和插件 UI 组件，部分文件经过适配。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 105 行 core 子类，保留 durable 队列身份、恢复和独立的可变默认对象。默认消息转换直接使用发布版 core；模型和 usage 两个默认对象仍从锁定上游提取，stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
 | `src/native-operations.ts` | 22 行门面，调用仓内 core 补丁导出的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
-| `src/upstream/**` | 6 项选取源码：旧扩展 loader、Git 路径、上下文文件、资源去重、boundary drafts 和同步 durable context；另有 28 个共享入口。旧 loader 共用 Native 的 runtime、注册 API 和 factory 生命周期；资源纯函数也由原生模块复用。 |
+| `src/upstream/**` | 6 项选取源码：旧扩展 loader、Git 路径、上下文文件、资源去重、boundary drafts 和同步 durable context；另有 25 个共享入口。旧 loader 共用 Native 的 runtime、注册 API 和 factory 生命周期；资源纯函数也由原生模块复用。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
 
-前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 196 份源码和 6 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 12 项来源产物及 28 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
+前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 192 份 TypeScript 和 6 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 12 项来源产物及 25 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
 `461e7c9` 后的入口核对确认，MkAgent 通过 `CodingHost/createAgentSession` 装配，仓内产品没有 `main`/`MainOptions` 调用。先前切片排除原版 Pi 启动器及其独占的 24 份源码，包含 CLI 认证、配置向导、自更新、旧 Pi 配置迁移和 CLI 内置扩展集合；Llama 管理扩展仅由该集合进入。`5662422` 后的限定复核另确认，原始 MkAgent 和当前宿主均自行管理会话、UI 与传输，不依赖上游终端、stdout 或 stdin/stdout RPC 模式宿主。现从根入口和 modes barrel 排除 `InteractiveMode`、`InteractiveModeOptions`、`runPrintMode`、`PrintModeOptions`、`runRpcMode`，并删除三个实现文件。生成规则在遍历任一入口的依赖前完成排除。`RpcClient` 及其 options、RPC 协议、`JsonAgentSessionEvent`、Theme、CustomEditor、renderer/UI、`ExtensionMode`、AgentSessionRuntime 和插件生命周期保留；MCP/codemode/tool-search 的公开工厂保留。直接使用被排除模式的外部消费者须迁移到自有宿主，这项导出变化不承诺任意外部消费者零影响。此处删除不需要的模式宿主，不计作官方 SDK 完整覆盖，也没有证明其余辅助闭包全部必要。
 
@@ -225,11 +225,11 @@ SDK terminal failed 也随结果持久化。Native hooks、事件和 journal 完
 
 宿主压缩窗口由 `host-settings.ts` 包装公开 `SettingsManager` 接口，在内存中合成实际模型的 reserve tokens；原生设置实现不再带宿主策略补丁，reload 和 flush 不把该策略写入 Pi 配置。插件转译通过 Jiti 公开 transform 与 Babel 插件接口修正 Bun 的 `import.meta.dir/path/file`，按源文件提供元数据并隔离旧转译缓存；两个加载入口共用适配，保留宿主及插件的堆栈格式化。
 
-插件保留 Pi 包名导入，由[原生虚拟模块表](../../packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts)映射到本地移植 API 和独立官方包，也提供旧 `@mariozechner/*` 名称映射。这不要求安装完整 coding-agent 包。MkAgent 通过 RPC 承接扩展 UI；保留 Pi TUI 源码和依赖，不代表 MkAgent CLI 已采用原生 Pi TUI。插件兼容范围以需求对照中的实际验收为准。
+插件保留 Pi 包名导入，由[原生虚拟模块表](../../packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts)映射到宿主适配及 Pi 官方包，也提供旧 `@mariozechner/*` 名称映射。当前已生产依赖公开 Coding SDK 1.5.0，模块表须随替换同步，未替换实现仍待删除。MkAgent 通过 RPC 承接扩展 UI；使用 Pi 的 UI 组件不代表 MkAgent CLI 已采用原版 Pi TUI。插件兼容范围以需求对照中的实际验收为准。
 
-两个 loader 现共用 `createExtensionRuntime`、`createExtensionAPI`、`createExtension`、`initializeExtension` 和 `loadExtensionFromFactory`。旧入口的生成器删除这五个函数正文，转而引用 Native loader；仅在私有模块导出 initializer，没有增加公共 SDK 根导出。原先将初始化状态视为无法共用的依据过宽，实际状态由每次调用持有，不依赖模块映射或缓存。Native 继续提供 Coding SDK，旧入口仍映射到 compat 并拒绝旧 Agent 执行与私有子路径回退。两者的模块缓存、cwd 和 generation 继续独立，目录策略保持原值。独立公开 API 尚未提供这一 Coding loader，本批只去掉本地重复实现，没有增加依赖、SDK 补丁或改变持久化任务。上游更新须核对五个声明、注册事务、失效 API、模块映射及缓存隔离；当公开 API 能接纳两套模块表、缓存和目录策略时，再撤除剩余加载适配。
+两个 loader 现共用 `createExtensionRuntime`、`createExtensionAPI`、`createExtension`、`initializeExtension` 和 `loadExtensionFromFactory`。旧入口的生成器删除这五个函数正文，转而引用 Native loader；仅在私有模块导出 initializer，没有增加公共 SDK 根导出。原先将初始化状态视为无法共用的依据过宽，实际状态由每次调用持有，不依赖模块映射或缓存。Native 继续提供 Coding SDK，旧入口仍映射到 compat 并拒绝旧 Agent 执行与私有子路径回退。两者的模块缓存、cwd 和 generation 继续独立，目录策略保持原值。该批仅减少本地重复实现，未增加依赖、SDK 补丁或改变持久化任务。公开 Coding SDK 实际已提供 loader；模块表、缓存隔离和目录策略仍须按具体参数验证后替换，不能继续以没有独立包为理由保留其完整源码。上游更新须核对五个声明、注册事务、失效 API、模块映射及缓存隔离；当公开 API 能接纳两套模块表、缓存和目录策略时，再撤除剩余加载适配。
 
-Pi v1.5.0 尚未将 `AgentSession` 及 Coding 专有的扩展和资源装配独立发布；durable `/tools` 已提供 read/write/edit/bash/PowerShell 及 coding 工具工厂。完整 coding 包的 `createAgentSession` 固定创建上游 Agent，未公开此处所需的执行器注入及版本化 snapshot/restore。这些事实需要结合具体契约判断，不能据此保留完整公开源码闭包。本次 F1 至 F3 已先核对官方执行主链，再按能力处理 Coding 差异，最终独立验收要求补齐的生产搜索和显式包管理维护责任也已登记。当前仍有源码移植、补丁和生成转换，尚未达到仅更新版本号即可升级。评估接入方案时须将它们合并计算维护责任：SDK 版本更新应主要验证公开契约与必要适配，剩余源码和补丁须列出具体上游缺口、退出条件及受影响符号。若 Coding 或 durable 更新仍默认要求逐文件改造完整 Coding 闭包，本次纠偏尚未完成。
+Pi v1.5.0 的公开 `AgentSessionConfig` 接受外部 `agent`，构造函数直接使用该实例。`createAgentSession` 工厂固定创建 Agent，并不意味着整个 SDK 缺少注入入口。隔离验证已通过外部 Agent 身份、插件命令和 input hook；随后公开 AgentSession 与现有 durable Agent 的单次确定性执行也已通过。该内存验证未覆盖工具副作用、生产持久化、原子输入接纳或冷恢复。用户于 2026-11-09 明确允许生产使用完整 `pi-coding-agent` 包的公开 SDK，不启动原版 CLI，执行仍交给 durable。当前已新增固定 1.5.0 依赖并开始删除 SDK 覆盖的源码，剩余主链适配尚未完成。durable `/tools` 已提供 read/write/edit/bash/PowerShell 及 coding 工具工厂，应优先使用。SDK、源码、生成转换与补丁须合并评估；不能把必要接口缺口扩大为保留整个 Coding 闭包的理由，也不能把完整复制实现搬入补丁。F1 至 F6 的整体验收已重新打开，当前状态见纠偏跟进。
 
 ## 既有源码对照与升级核对
 
@@ -275,7 +275,7 @@ Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只�
 
 ## 复现与升级
 
-已确认可共享的包管理、消息、模型、设置、会话、runner、token 及资源算法均已收敛。兼容策略维护在普通源码中；生成接点检查锚点和出现次数，上游结构变化时直接失败。共用类型从原生公开方法派生旧 JavaScript 输入边界，保留数组、基本类型和异步返回推断，不复制方法声明清单。严格消费者回归覆盖宿主消息字段、开放设置、结构化包设置及会话声明。本次 F1/F3 的能力核对和维护登记已完成；未修改的上游源码由生成器核查，后续升级按具体 API、契约和退出条件复评，不将完整闭包整体归入永久必要例外。
+已确认可共享的包管理、消息、模型、设置、会话、runner、token 及资源算法均已收敛。兼容策略维护在普通源码中；生成接点检查锚点和出现次数，上游结构变化时直接失败。共用类型从原生公开方法派生旧 JavaScript 输入边界，保留数组、基本类型和异步返回推断，不复制方法声明清单。严格消费者回归覆盖宿主消息字段、开放设置、结构化包设置及会话声明。此前 F1/F3 的维护登记未达到删除大规模源码的目标，整体验收现已重新打开。未修改源码的生成检查不证明其必要性；按公开 SDK 的真实覆盖继续替换并删除。
 
 共享替换的适用路径、转换、来源标签及新增依赖统一登记在[共享规则](../../packages/pi-durable-coding/scripts/shared-helper-port.ts)。运行时生成器直接消费规则结果，新增共享替换不再同步维护筛选条件、标签选择和依赖条件。整模块转发的结构防护位于[转发转换](../../packages/pi-durable-coding/scripts/shared-runtime-port.ts)，声明替换按规则检查签名或原摘要；原有字符串接口继续可用。前次登记归一没有改变运行时产物或来源清单。本次 HTML 颜色替换同步更新两者，只检查仍保留的声明边界，不为已替换的算法正文增加摘要约束。子进程等待、shell 和读取路径的九个已替换正文也不再绑定哈希；等待保留 AST 签名及 100 ms 常量校验，其余八项用可读声明头保留参数、返回类型、导出及重复检查。Bun、Node 各通过 37 项生成检查，两套完整复现确认未改变这些生产产物，56 项现有 Native 行为测试通过。辅助生成器也已删除旧凭据路径排除，受控脏源码检查和两套完整复现均通过。
 

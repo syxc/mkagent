@@ -1,7 +1,7 @@
 /** The native template implementation is shared by every input entry point. */
 import { readFileSync } from 'node:fs';
 import type { CodingResources } from './resources.ts';
-import { stripFrontmatter } from './upstream/utils/frontmatter.ts';
+import { stripFrontmatter } from "@earendil-works/pi-coding-agent";
 
 export { parseCommandArgs, substituteArgs, expandPromptTemplate as expandCodingTemplate } from './upstream/core/prompt-templates.ts';
 

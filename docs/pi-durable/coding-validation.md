@@ -26,6 +26,70 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public Coding SDK boundary after e2213c8
+
+On 2026-11-09, the user approved the public pi-coding-agent SDK as a production
+dependency, while durable remains the execution base and the original CLI is
+not started. This replaces the earlier whole-package dependency restriction.
+The earlier F0 through F6 acceptance was too broad: source inventories and
+maintenance entries did not meet the goal of removing unnecessary Coding
+source copies. The current follow-up list reopens those tasks.
+
+The first replacement pins @earendil-works/pi-coding-agent to 1.5.0. Event bus,
+diagnostic types, frontmatter and the file mutation queue now use its public
+root exports. Four implementation files and three legacy forwards are deleted.
+Both generators stop at these SDK contracts. The package no longer has a direct
+YAML dependency; the SDK still has a transitive YAML dependency. No Coding SDK
+patch or private subpath import is added. The runtime inventory now records
+192 TypeScript files, including 188 under src/pi and four facades, plus six
+assets. This is a first slice, not completion of the source-removal goal.
+
+The focused run passes 90 tests across six files with no failures. It covers
+published implementation identity, generation boundaries, extensions, host
+resources, plugin transformation and scoped source checks. Coding build:types
+and all 26 worker bundle tests pass. Complete runtime source check passes.
+The fixed independent Craft v0.15.6 audit passes for 2,186 audited files after
+source records are updated. These results do not validate a new production
+AgentSession path.
+
+A separate deterministic probe combines the public AgentSession constructor
+with the existing durable Agent. A plugin command and handled input cause no
+model request. A transformed input produces one local response; the SDK
+session and Harness both contain system, user and assistant messages, and no
+tasks or reports remain. The session uses the exact supplied Agent instance.
+This proves that the public constructor can run that combination. It does not
+validate cold recovery, tool effects, atomic journal delivery or accepted-input
+persistence. The probe uses task-only data and no real provider.
+
+A fresh HOME and dependency cache install all 11 workspaces from the public
+registry with frozen lockfile and scripts disabled. Bun reports 2,826 packages
+installed, and the lockfile remains unchanged. The first verification script
+then fails because it imports the SDK from the temporary project root, which
+does not declare that dependency. Verification resumes from the actual Coding
+workspace without reinstalling packages. Public SDK version, event bus and
+frontmatter checks pass; all 34 core/durable patch outputs match the tested
+installation. This install does not build the product or exercise recovery.
+
+An independent review of this slice finds no confirmed defect. It checks the
+public exports, both generators, all changed imports, seven deleted files and
+dependency records. An in-memory check confirms that SDK queue calls and the
+remaining local edit/write tools serialize together and release after failure.
+All 210 records across the two source manifests match disk hashes. The reviewer
+also runs the two boundary tests successfully, but does not repeat the focused,
+types, bundle or complete source checks. This review does not accept the full
+source-removal goal.
+
+The current dependency and acceptance statements are corrected in 22 Markdown
+files. All 287 relative link targets exist. Punctuation checks pass for the seven
+current Coding documents in full and for the changed text in the other files.
+Full checks on those older documents report existing punctuation issues outside
+this slice; those results are not recorded as full-document passes. The fixed
+Craft audit passes again after both root README source records are updated.
+
+Receipts use the sdk-elimination task directory, with focused, types, bundle,
+source and frozen-result records. The production Coding session, resource,
+model and UI implementations still require replacement and verification.
+
 ## Theme contract and complete source after 6240ed9
 
 The user requested a permission correction before the loop resumed. A project

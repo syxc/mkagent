@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path';
 import { loadExtensions } from '../src/upstream/core/extensions/loader.js';
 import type { ExtensionAPI } from '../src/pi/core/extensions/types.ts';
 import { ExtensionRunner } from '../src/upstream/core/extensions/runner.js';
-import { createEventBus } from '../src/upstream/core/event-bus.ts';
+import { createEventBus } from "@earendil-works/pi-coding-agent";
 import { CodingSessionView } from '../src/session-view.ts';
 
 let root: string;
