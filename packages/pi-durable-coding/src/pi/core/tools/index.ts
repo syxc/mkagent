@@ -60,7 +60,7 @@ export {
 	type ReadToolDetails,
 	type ReadToolInput,
 	type ReadToolOptions,
-} from "./read.ts";
+} from "../../../native-read-tools.ts";
 export {
 	DEFAULT_MAX_BYTES,
 	DEFAULT_MAX_LINES,
@@ -87,7 +87,7 @@ import { createFindTool, createFindToolDefinition, type FindToolOptions } from "
 import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "../../../native-search-tools.ts";
 import { createLsTool, createLsToolDefinition, type LsToolOptions } from "@earendil-works/pi-coding-agent";
 import { createPowerShellTool, createPowerShellToolDefinition, type PowerShellToolOptions } from "./powershell.ts";
-import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "./read.ts";
+import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "../../../native-read-tools.ts";
 import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "@earendil-works/pi-coding-agent";
 
 export type Tool = AgentTool<any>;

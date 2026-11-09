@@ -41,7 +41,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 | 范围 | 核对内容 |
 |---|---|
 | 执行主链 | `DurableKernel → CodingHost → AgentSession → DurableLoopBinding → pi.coding.*` 中哪些请求、工具轮次及收尾逻辑可由官方执行器承担 |
-| 工具 | 生产 read/write/edit/bash/PowerShell 已使用 durable 工厂；插件与生产 grep/find/ls 均已改用 Coding SDK，分别删除六份和三份源码；插件 write 直接使用 Coding SDK，再删除两份源码、288 行，其余插件工厂继续核对 |
+| 工具 | 生产 read/write/edit/bash/PowerShell 已使用 durable 工厂；插件与生产 grep/find/ls 均已改用 Coding SDK，分别删除六份和三份源码；插件 write 直接使用 Coding SDK，再删除两份源码、288 行；插件 read 通过图片和文档路径薄绑定使用同一 SDK，再删除两份源码、396 行，其余插件工厂继续核对 |
 | 插件与资源 | 公开注册、事件、上下文、会话、模型、资源和 UI 契约需要哪些能力；哪些仅由完整源码闭包带入 |
 | 持久化与恢复 | 必须保留哪些已接受输入、任务身份、工具结果、分支和不确定副作用边界；官方事务接口能承接哪些部分 |
 | SDK 导出与 CLI | MkAgent 产品入口、插件可复用组件和原版 Pi 启动器/运行模式分别有哪些调用；不默认全留或全删 |
@@ -74,9 +74,11 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `a567bf4` 后的搜索切片将插件 grep/find/ls 的执行和 renderer 交给公开 Coding SDK，删除六份源码、1044 行。durable 1.5.0 没有这三种工厂；grep/find 的四个薄工厂仅绑定宿主二进制目录、离线策略与安全安装器，ls 直接用 SDK。SDK 补丁只增加可选二进制解析接点、两处 grep 异步等待后的取消检查和现有导出。该搜索切片时 runtime 为 139 份 TypeScript，其中 src/pi 为 135 份、门面为 4 份，资源为 0；辅助来源为 9 项、共享入口为 18 个，补丁输出为 core 4、Coding 34、durable 30，共 68 份。独立复核发现 options 展开丢失继承及不可枚举 operations，主线程以新增测试复现后改为直接读取，21 项搜索测试、54 个断言及公开消费端类型通过；相关 46 项回归、两项类型检查、26 项 bundle、完整来源与补丁检查、冻结安装和固定 Craft 审计的版本与范围见[搜索验证](coding-validation.md#search-sdk-boundary-after-a567bf4)。`c032e05` 后的生产搜索切片也已删除 `tools/local/{grep,find,ls}.ts` 三份实现、545 行，以 27 行装配复用同一 SDK 和既有 durable 工具桥。保留产品解析策略、每调用取消信号和 CR 换行语义，grep 使用 SDK 的 --no-config。搜索与管理器 33 项、下载及并发取消 22 项、桥接与元数据 20 项、worker bundle 26 项和 Coding/server 类型检查通过；首次两处 null 转换类型失败及修正保留[生产搜索验证](coding-validation.md#production-search-sdk-boundary-after-c032e05)。runtime 和补丁清单未变，剩余源码、AuthContext 既有缺口及 F0 至 F6 继续开放。
 
-`1765fd7` 后的插件 write 切片直接引用公开 Coding SDK 的两个 write 工厂、options 和类型，删除本地 write 与 renderer 两份源码、288 行。SDK 已有共享队列、原始错误、取消和展示契约，无需新增包装或补丁；生产 write 继续用 durable。当前 runtime 为 137 份 TypeScript，其中 src/pi 为 133 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个和 68 份补丁输出不变。349 项相关测试、827 个断言、26 项 bundle、103 个断言、Coding/server 类型和完整 runtime check 通过；来源、文档及独立复核的实际状态见[write 验证](coding-validation.md#write-sdk-boundary-after-1765fd7)。其余源码、AuthContext 既有缺口及 F0 至 F6 继续开放。
+`1765fd7` 后的插件 write 切片直接引用公开 Coding SDK 的两个 write 工厂、options 和类型，删除本地 write 与 renderer 两份源码、288 行。SDK 已有共享队列、原始错误、取消和展示契约，无需新增包装或补丁；生产 write 继续用 durable。该 write 切片时 runtime 为 137 份 TypeScript，其中 src/pi 为 133 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个和 68 份补丁输出不变。349 项相关测试、827 个断言、26 项 bundle、103 个断言、Coding/server 类型和完整 runtime check 通过；来源、文档及独立复核的实际状态见[write 验证](coding-validation.md#write-sdk-boundary-after-1765fd7)。其余源码、AuthContext 既有缺口及 F0 至 F6 继续开放。
 
 完成条件：确认可由官方实现承担的职责已经交还 SDK；调用方和功能验证同步迁移，没有为了引用包而在补丁里复制另一套实现。
+
+`7596356` 后的插件 read 切片通过公开 Coding SDK 承担读取、分页、取消、结构化输出和 renderer，删除本地工厂与 renderer 两份源码、396 行。宿主薄工厂只绑定共享图片处理、durable MIME 和文档路径；SDK 的可选 processImage 与 getReadmePath 接点保留既有 Photon 和宿主 README 折叠分类，未复制算法。当前 runtime 为 135 份 TypeScript，其中 src/pi 为 131 份、门面为 4 份，资源为 0；辅助来源 9 项、共享入口 18 个，补丁为 core 4、Coding 38、durable 30，共 72 份。954 项 read 相关测试、20 项独立路径组合、26 项 bundle、Coding/server 类型、完整 runtime 及最终补丁 check 通过；两处夹具失败、已复现并修正的文档分类回归、两个既有安装的冻结刷新、来源与独立复核状态见[read 验证](coding-validation.md#read-sdk-boundary-after-7596356)。其余源码和 F0 至 F6 继续开放。
 
 ## F3 薄适配与必要例外
 

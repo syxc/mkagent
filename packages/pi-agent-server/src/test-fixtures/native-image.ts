@@ -1,8 +1,8 @@
 /** Exercise native prompt image processing with a local provider, in source and relocated bundles. */
 import { join } from 'node:path';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createAssistantMessageEventStream, createModels, createProvider, InMemoryCredentialStore, type Model } from '@earendil-works/pi-ai';
-import { createAgentSession, createHostResources, ModelRuntime, SessionManager } from '@mkagent/pi-durable-coding/native';
+import { createAgentSession, createHostResources, createReadTool, ModelRuntime, SessionManager } from '@mkagent/pi-durable-coding/native';
 import { response } from '../../../pi-durable-coding/test/fixtures/durable-harness.ts';
 
 const cwd = process.cwd();
@@ -46,9 +46,13 @@ try {
     type: 'image', mimeType: 'image/png',
     data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
   }] });
+  const imagePath = join(cwd, 'read-image.png');
+  writeFileSync(imagePath, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64'));
+  const read = await createReadTool(cwd).execute('read-image', { path: imagePath });
+  const readImages = read.content.filter(part => part.type === 'image').length;
   const exported = process.argv.includes('--export')
     ? await session.exportToHtml(join(cwd, 'session.html')) : undefined;
-  process.stdout.write(JSON.stringify({ images, exported: exported ? readFileSync(exported, 'utf8').includes('<!DOCTYPE html>') : undefined }));
+  process.stdout.write(JSON.stringify({ images, readImages, exported: exported ? readFileSync(exported, 'utf8').includes('<!DOCTYPE html>') : undefined }));
 } finally {
   session.dispose();
   await session.agent.durable.close();

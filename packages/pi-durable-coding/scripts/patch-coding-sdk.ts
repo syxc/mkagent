@@ -117,6 +117,30 @@ for (const name of ['grep', 'find']) {
     `export interface ${type} {`, `export interface ${type} {\n    /** Resolve binaries with the host's installation and offline policy. */\n    ensureTool?: typeof ensureTool;`);
   outputs.set(declarationPath, 'import type { ensureTool } from "../../utils/tools-manager.ts";\n' + declaration);
 }
+const readPath = 'dist/core/tools/read.js';
+let read = replace(readFileSync(join(baseline, readPath), 'utf8'),
+  'await processImage(buffer, mimeType, {', 'await (options?.processImage ?? processImage)(buffer, mimeType, {');
+read = replace(read, 'import { readRenderers }', 'import { createReadRenderers, readRenderers }');
+read = replace(read, '    const ops = options?.operations ?? defaultReadOperations;',
+  '    const ops = options?.operations ?? defaultReadOperations;\n    const getReadmePath = options?.getReadmePath;');
+outputs.set(readPath, replace(read, '        ...readRenderers,',
+  '        ...(getReadmePath ? createReadRenderers(getReadmePath) : readRenderers),'));
+const readTypesPath = 'dist/core/tools/read.d.ts';
+outputs.set(readTypesPath, 'import type { processImage } from "../../utils/image-process.ts";\n' + replace(
+  readFileSync(join(baseline, readTypesPath), 'utf8'), 'export interface ReadToolOptions {',
+  'export interface ReadToolOptions {\n    /** Process images with the host shared image runtime. */\n    processImage?: typeof processImage;\n    /** Locate host documentation for compact read presentation. */\n    getReadmePath?: () => string;'));
+const readRendererPath = 'dist/core/tools/renderers/read.js';
+let readRenderer = replace(readFileSync(join(baseline, readRendererPath), 'utf8'),
+  'import { getReadmePath }', 'import { getReadmePath as defaultGetReadmePath }');
+readRenderer = replace(readRenderer, 'function getPiDocsClassification(absolutePath) {',
+  'export function createReadRenderers(getReadmePath = defaultGetReadmePath) {\nfunction getPiDocsClassification(absolutePath) {');
+readRenderer = replace(readRenderer, 'export const readRenderers = {', 'return {');
+outputs.set(readRendererPath, replace(readRenderer, '};\n//# sourceMappingURL=',
+  '};\n}\nexport const readRenderers = createReadRenderers();\n//# sourceMappingURL='));
+const readRendererTypesPath = 'dist/core/tools/renderers/read.d.ts';
+outputs.set(readRendererTypesPath, replace(readFileSync(join(baseline, readRendererTypesPath), 'utf8'),
+  'export declare const readRenderers:',
+  'export declare function createReadRenderers(getReadmePath?: () => string): typeof readRenderers;\nexport declare const readRenderers:'));
 const extensionTypesPath = 'dist/core/extensions/types.d.ts';
 outputs.set(extensionTypesPath, replace(readFileSync(join(baseline, extensionTypesPath), 'utf8'),
   'export interface ToolDefinition<TParams extends TSchema = TSchema, TDetails = unknown, TState = any> {',
@@ -198,7 +222,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt image processing bindings, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, sleep listener cleanup, and installed worker theme and HTML asset lookup.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, sleep listener cleanup, and installed worker theme and HTML asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

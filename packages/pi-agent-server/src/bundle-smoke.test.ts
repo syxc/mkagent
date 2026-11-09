@@ -146,6 +146,7 @@ describe('pi-agent-server bundle', () => {
     });
     expect(proc.status).toBe(0);
     expect(proc.stdout).toContain('"images":1');
+    expect(proc.stdout).toContain('"readImages":1');
     expect(existsSync(canary)).toBe(false);
   });
 
@@ -179,6 +180,7 @@ describe('pi-agent-server bundle', () => {
     });
     expect(proc.status).toBe(0);
     expect(proc.stdout).toContain('"images":1');
+    expect(proc.stdout).toContain('"readImages":1');
   });
 
   it('ships the Photon image module next to the bundle', () => {

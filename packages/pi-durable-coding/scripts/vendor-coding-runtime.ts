@@ -41,7 +41,8 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
 }
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
 const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
-const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'core/system-prompt.ts', 'utils/tools-manager.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'core/extensions/virtual-modules.ts'];
+// Authored session and read adapters also consume the shared image-processing helper.
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'core/system-prompt.ts', 'utils/tools-manager.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'utils/image-process.ts', 'core/extensions/virtual-modules.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();

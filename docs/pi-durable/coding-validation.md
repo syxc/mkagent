@@ -26,6 +26,84 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Read SDK boundary after 7596356
+
+Production read continues to use durable. The plugin factories now call the
+public Coding SDK, which supplies reading, paths, pagination, cancellation,
+structured output and rendering. Durable's public read factory accepts an image
+processor, but its execution environment, results and diagnostics do not supply
+the Coding plugin operations and renderer contract. The host adapter binds the
+existing shared image processor, durable MIME detection and documentation path;
+it does not retain the read or renderer algorithms.
+
+Two optional ReadToolOptions hooks are local SDK changes. processImage binds the
+existing durable/Photon path, which the AgentSession prompt-image hook does not
+cover. getReadmePath keeps host README, docs and examples classification in the
+SDK renderer. The renderer factory closes over that callback without rewriting
+its algorithm. Without the callback, the SDK retains its default renderer
+singleton. No private SDK subpath import is added.
+
+The generated boundary stops at core/tools/read.ts. The local read factory,
+223 lines, and renderer, 173 lines, are deleted, totaling 396 lines. Full runtime
+--check passes for 135 TypeScript files: 131 under src/pi and four facades, with
+no assets. The shared image processor remains an explicit generator root because
+authored session and read adapters use it outside the generated import graph.
+The first closure omitted that root; it was corrected before deletion, and only
+the two read files were removed. Auxiliary sources remain nine and shared
+entries remain 18. The final pristine SDK patch --check passes for 38 Coding
+outputs, with core four and durable 30 giving 72 physical outputs. Dependencies,
+lockfile, task and checkpoint versions do not change.
+
+The first baseline cancellation fixture waits in the wrong order and reaches the
+120-second runner limit. A normal rejection handler fixes the fixture; the local
+baseline then passes 17 tests with 42 assertions. The first replacement run has
+935 passes, one failure and one error because a new test context has a missing
+closing brace. Correcting that fixture gives 954 passes with 2112 assertions.
+A later renderer check exposes a real regression: the SDK package root no longer
+classifies the host README as "read docs". That run has 18 passes and one failure.
+The optional documentation path hook fixes it, and the regression remains in the
+final tests. These fixture failures do not require changes to product cancellation.
+
+The final six-file read group passes 954 tests with 2112 assertions. The separate
+path group passes 20 tests with 74 assertions, and the worker bundle group passes
+26 tests with 105 assertions. These are related existing and new tests, not 1000
+new read tests or complete repository acceptance. They cover raw bytes, BOM,
+Unicode, CR/CRLF, file URLs and path fallbacks, inherited options and custom
+operations, ctx.cwd, original errors, cancellation, line and byte truncation,
+structured text and images, model resize overrides, resource/docs classification
+and renderer component reuse. Relocated bundles produce a read image with only
+the existing shared Photon WASM while build-time Photon reads are blocked; the
+project-relative image-worker canary remains untouched. Coding declarations and
+server type checks pass. Configuration and files remain isolated to the task.
+
+The existing root and isolated hoisted installations are refreshed with frozen
+lockfiles and scripts disabled. Both preserve the lockfile hash, and all 38
+installed Coding outputs match the final manifest. These are installation
+refreshes, not new empty-directory installations. Source registration updates ten
+hashes, removes two retired entries and adds the adapter and contract test. The
+fixed Craft v0.15.6 audit passes for 2131 files. The six-document punctuation
+checks and 127 local links and anchors pass.
+
+Independent read review against 7596356 confirms no actionable defect. It reruns
+the six-file 954-test group and the separate 20-test path group, then passes 22
+contract probes with 843 assertions, including 624 baseline text and truncation
+comparisons. The probes cover public and aggregate factories, both plugin module
+names, inherited options, operations receivers, paths, original errors, staged
+cancellation, PNG/BMP images, renderer classification and component reuse. Coding
+tsc --noEmit, patch --check, 38 patch hashes across pristine and both installed
+copies, 135 generated output hashes, 131 src/pi paths and 344 static relative
+imports also pass. The removed runtime bodies match pristine SDK tokens after
+type and import differences are removed. Initial probe failures come from
+hoisted/ESM resolution and four incorrect assumptions about AgentTool renderer
+properties; corrected probes pass. The reviewer does not rerun worker bundle,
+server types or the full runtime generator, and does not approve the final docs
+or source-registration bookkeeping. These remain the parent checks above.
+
+Real services, Windows and Linux devices, crash recovery during a read and
+complete repository or product acceptance are not checked in this slice. The
+remaining source replacement, the earlier AuthContext gap and F0 through F6
+stay open.
+
 ## Write SDK boundary after 1765fd7
 
 Production write continues to use durable. The plugin write factory and tool

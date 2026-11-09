@@ -375,7 +375,7 @@
       "source": "packages/coding-agent/src/core/tools/index.ts",
       "target": "src/pi/core/tools/index.ts",
       "sha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
-      "portSha256": "6f4067cb16d2c59d0fedc787778a6bf95375e01cb5839afb9b6990ca40ceb727",
+      "portSha256": "e9b90a01b5826526abcb95022a87e9ae50c4081a8d2a3c53b165fbafafd03ddd",
       "changes": [
         "public-coding-sdk",
         "host-extension-module-import"
@@ -407,15 +407,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/tools/read.ts",
-      "target": "src/pi/core/tools/read.ts",
-      "sha256": "27ada138021cfa2884af5ab276e9c7e685de65fa7bfa1d27c64d905e75845a58",
-      "portSha256": "a6a31630b4999bd8b83a15322a0427c8ee04fe4b9ceff66fb927ab02b9675852",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/tools/render-utils.ts",
       "target": "src/pi/core/tools/render-utils.ts",
       "sha256": "691de101cb635dd8e899fa1f07175f7d3f0baf779022c816edd1b86b90a44cb4",
@@ -438,15 +429,6 @@
       "target": "src/pi/core/tools/renderers/edit.ts",
       "sha256": "9f3f6d87ed42ab9a587e751c1299a42af12e6c76848110e8fa7dcbf6852367a8",
       "portSha256": "e8a01fc2be3384e9d0e5b60411c099dae6acc268ebd334311e52be6ba100e112",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/tools/renderers/read.ts",
-      "target": "src/pi/core/tools/renderers/read.ts",
-      "sha256": "34ce43fcfb7fff6d2b230c4d8c2034ec00f91bcf06dcb2a157a4679c350a236e",
-      "portSha256": "ffefb439138834e7f40e354b2f00e9483fadaa0cdb1fa1a5974569d76bba2422",
       "changes": [
         "public-coding-sdk"
       ]

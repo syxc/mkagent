@@ -20,7 +20,9 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `a567bf4` 后的搜索切片使用公开 Coding SDK 的 grep/find/ls 工厂和 renderer，删除六份本地源码、1044 行。durable 1.5.0 未提供这三种工厂；宿主只为 grep/find 绑定现有二进制解析与离线安装策略，ls 直接使用 SDK。该搜索切片时 runtime 为 139 份 TypeScript，其中 src/pi 为 135 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个，core/Coding/durable 补丁共 68 份，Coding 占 34 份。独立复核确认 options 展开丢失自定义 operations；主线程先复现再修复，最终搜索 21 项、54 个断言及公开类型通过。其他回归、冻结安装、来源审计和失败修正见[搜索验证](coding-validation.md#search-sdk-boundary-after-a567bf4)。`c032e05` 后的生产搜索切片进一步删除三份工具实现、545 行，由 27 行装配通过既有 agentToolToHost 连接同一 SDK，保留产品二进制策略、每调用取消信号和 CR 换行语义。搜索与管理器 33 项、取消 22 项、桥接与元数据 20 项、bundle 26 项及 Coding/server 类型检查通过；两处多余 null 转换引起的类型失败已修正，详细时点见[生产搜索验证](coding-validation.md#production-search-sdk-boundary-after-c032e05)。其余源码收敛和 F0 至 F6 继续开放。
 
-`1765fd7` 后的插件 write 切片直接引用公开 Coding SDK 工厂、options 和类型，删除 write 与 renderer 两份源码、288 行，没有新增运行时包装或 SDK 补丁。生产 write 继续使用 durable；插件入口保留自定义 operations、ctx.cwd、原始字节、错误、在途取消及与 edit 共用队列。当前 runtime 为 137 份 TypeScript，其中 src/pi 为 133 份、门面为 4 份，资源为 0；辅助来源、共享入口和 68 份补丁输出不变。349 项相关测试、827 个断言、26 项 bundle、103 个断言、Coding/server 类型和完整 runtime check 通过。来源、文档及独立复核的实际状态见[write 验证](coding-validation.md#write-sdk-boundary-after-1765fd7)，其余源码和 F0 至 F6 继续开放。
+`1765fd7` 后的插件 write 切片直接引用公开 Coding SDK 工厂、options 和类型，删除 write 与 renderer 两份源码、288 行，没有新增运行时包装或 SDK 补丁。生产 write 继续使用 durable；插件入口保留自定义 operations、ctx.cwd、原始字节、错误、在途取消及与 edit 共用队列。该 write 切片时 runtime 为 137 份 TypeScript，其中 src/pi 为 133 份、门面为 4 份，资源为 0；辅助来源、共享入口和 68 份补丁输出不变。349 项相关测试、827 个断言、26 项 bundle、103 个断言、Coding/server 类型和完整 runtime check 通过。来源、文档及独立复核的实际状态见[write 验证](coding-validation.md#write-sdk-boundary-after-1765fd7)，其余源码和 F0 至 F6 继续开放。
+
+`7596356` 后的插件 read 切片再删除工厂和 renderer 两份源码、396 行，读取、分页、取消、结构化输出与展示由公开 Coding SDK 承担。薄工厂只绑定共享图片处理、durable MIME 和宿主文档路径，SDK 仅增加可选依赖接点；生产 read 继续使用 durable。当前 runtime 为 135 份 TypeScript，其中 src/pi 为 131 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个，补丁输出为 core 4、Coding 38、durable 30，共 72 份。954 项 read 相关测试、20 项路径组合、26 项 bundle、Coding/server 类型、完整 runtime 与最终补丁 check 通过。失败修正、冻结刷新、来源和独立复核范围见[read 验证](coding-validation.md#read-sdk-boundary-after-7596356)，其余源码及 F0 至 F6 继续开放。
 
 ## 目标与名称
 

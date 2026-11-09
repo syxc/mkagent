@@ -2239,8 +2239,8 @@
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "packages/pi-agent-server/src/bundle-smoke.test.ts": {
-      "sha256": "6e26304b0262dd5e4fc0f83d35eb92165d050102745bb22fe9875f3b10389438",
-      "reason": "Extend offline bundle tests for durable assets, codemode/MCP defaults, initialization races, tools, runtime updates, cancellation and OAuth ownership. Verify relocated Native images and HTML export with one shared Photon WASM and reject the obsolete second asset. Hide build-time Photon WASM reads in the relocated native prompt fixture so source dependencies cannot mask incompatible release image bindings."
+      "sha256": "180b3440779e6fedbdb078d3bde3ef199a9a7d2ff65a98a84abb46b5c80e6fd7",
+      "reason": "Verify relocated prompt and read images with one shared Photon WASM while hiding build-time dependencies and rejecting project-relative image workers; retain durable assets, MCP, OAuth, cancellation and HTML checks."
     },
     "packages/pi-agent-server/src/mini-model-query.test.ts": {
       "sha256": "949aca864489239e0e589e1feb080a22b438934d0dff3c5915b75bb1802388b2",
@@ -3961,8 +3961,8 @@
       "reason": "Implement atomic legacy checkpoint adoption and original submission recovery in coding-recovery.ts."
     },
     "packages/pi-agent-server/src/test-fixtures/native-image.ts": {
-      "sha256": "06f69e156884d3a1c01697b38f96a121e40c7c8532b7ca1d7a1ab50b65b9727f",
-      "reason": "Exercise native prompt image processing and HTML export with a deterministic local provider from source and relocated bundles."
+      "sha256": "f8a7b1451de2de05cf8ee7cd557afa5633271928eae841713a2c6f404408b2c5",
+      "reason": "Exercise native prompt and plugin read image processing and HTML export with a deterministic local provider from source and relocated bundles."
     },
     "packages/pi-agent-server/test/fixtures/coding-crash-worker.ts": {
       "sha256": "aa7ba553a711b8cb8f720eb15832a80932929211a2b6f9c62ef1d3855322c519",
@@ -3985,8 +3985,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "fcf1ef04eeca247abd7d6792e8dbba32f61aa811c22ca4611dc0304cebd47035",
-      "reason": "Record the generated closure after replacing published Coding SDK implementations, including the complete write factory and renderer."
+      "sha256": "b1b1e71548a1a35003d6d8afaa1e63fbd7098c1a64664aeda5e418d3bd82b5c7",
+      "reason": "Record the generated closure after replacing public Coding SDK implementations, including the complete read and write factories and renderers; retain the shared host image processor as an explicit root."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
@@ -4005,8 +4005,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "8d3f5e57c9d123eb691389a1168178ac324bbb71f6ee7efff89b5732d7925cc5",
-      "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
+      "sha256": "62daea5f79b4335ea91935826dfa3759249bb7961ae5fbfe084f729224989efa",
+      "reason": "Generate only the remaining pinned Coding source closure; replace covered SDK implementations and retain explicit helper roots consumed by authored host adapters."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4269,8 +4269,8 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/index.ts": {
-      "sha256": "6f4067cb16d2c59d0fedc787778a6bf95375e01cb5839afb9b6990ca40ceb727",
-      "reason": "Use public Coding SDK write and search factories while preserving the remaining plugin factories and durable tool ownership."
+      "sha256": "e9b90a01b5826526abcb95022a87e9ae50c4081a8d2a3c53b165fbafafd03ddd",
+      "reason": "Use public Coding SDK search, write and read factories with required host dependency bindings while preserving the remaining plugin factories and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/output-accumulator.ts": {
       "sha256": "255c11af6596a043f2d8225d3faba1ff18e3f43fe47052b3e018f9ef9517a9d9",
@@ -4284,10 +4284,6 @@
       "sha256": "043b2316bf8ec411ef00be564bea061531d4f1663e07a377a298f49b107a18fc",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/powershell.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/core/tools/read.ts": {
-      "sha256": "a6a31630b4999bd8b83a15322a0427c8ee04fe4b9ceff66fb927ab02b9675852",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
     "packages/pi-durable-coding/src/pi/core/tools/render-utils.ts": {
       "sha256": "a47308a17b12059cb9e14b7ac7eb4cb2b8a0d118ce6fd8c9d00587c4e3309069",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
@@ -4298,10 +4294,6 @@
     },
     "packages/pi-durable-coding/src/pi/core/tools/renderers/edit.ts": {
       "sha256": "e8a01fc2be3384e9d0e5b60411c099dae6acc268ebd334311e52be6ba100e112",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/core/tools/renderers/read.ts": {
-      "sha256": "ffefb439138834e7f40e354b2f00e9483fadaa0cdb1fa1a5974569d76bba2422",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/truncate.ts": {
@@ -4941,24 +4933,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "1122f54306dd4b6948d17cf7f1dbeca1ca22502f1468daeb1c1b49942a918904",
-      "reason": "Stop source traversal at complete published Coding SDK contracts, including the write factory, without duplicating execution or presentation algorithms."
+      "sha256": "628221cf22d5b65a47cc7401ce7dcdeb6bb444a5db8e1f5c6f85aedf053cc339",
+      "reason": "Stop source traversal at public Coding SDK contracts and required host dependency bindings, including read and write, without duplicating execution or presentation algorithms."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "4bbcf6802e1292a70a6319fe18588a07d6dfc357be689bcb830e87098323742e",
-      "reason": "Verify public SDK implementation identity and generation boundaries, including the write factory and shared file mutation queue."
+      "sha256": "5148d0d91c3071d9077e03b746ae96f6480478853d7e08c6b45fc49fb7222da3",
+      "reason": "Verify public SDK implementation identity and generation boundaries, including read host bindings, direct SDK write and the shared file mutation queue."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "afcbdf77947068423396d75214190a66193714f0f2a704865aec6b2f578793b8",
-      "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
+      "sha256": "18b3dec03c84b2781460a7b6473ee2a713902b46483955d73fd8618a623dc82a",
+      "reason": "Record reproducible public Coding SDK exports and narrow host lifecycle, resource, execution, search and read image/documentation dependency hooks without copying the published algorithms."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "0522cffb40d053ac47647c94c10eb5617cc49c30beef3f0748413fc10270ada4",
-      "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
+      "sha256": "5b57998f387f5ab9e2ca5a5c4906b6c0cb9a2781f73a1dd476c563bb1f298716",
+      "reason": "Generate narrow public Coding SDK host boundaries and declarations, including optional read image processing and documentation paths; retain published reading, pagination and renderer algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "fbdb2019ba309790e2a6720c34139dea13fa63f117fbc8bdade72b04d6f77810",
-      "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
+      "sha256": "e619209f51d2aabe528fd83f36d90d16e5ad6b4a22245efb519654ca47281763",
+      "reason": "Expose existing public Coding contracts and add required host policy, lifecycle, execution and dependency hooks, including shared read images and host documentation paths, without copying complete SDK algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -5035,6 +5027,14 @@
     "packages/pi-durable-coding/test/host-write-sdk.test.ts": {
       "sha256": "f900246aec2f0f66ca8be4d0edc66d66267b7b4dfc649fe0686c8db61699fe55",
       "reason": "Verify public write contracts for bytes, paths, custom operations, raw errors, in-flight cancellation, shared edit queues and renderer component reuse."
+    },
+    "packages/pi-durable-coding/src/native-read-tools.ts": {
+      "sha256": "7a71ddc52b3efb6468d10672afb7404dcb0baa8a9c7eae8b0d1853932316073c",
+      "reason": "Bind public Coding read factories to existing host image processing, durable MIME detection and documentation paths; reading, cancellation, pagination and rendering stay in the SDK."
+    },
+    "packages/pi-durable-coding/test/host-read-sdk.test.ts": {
+      "sha256": "fdad5cddf8e0f873a9f137bd914af78f309c1445cca551837bb023421269c411",
+      "reason": "Verify plugin read bytes, inherited operations, paths, errors, cancellation, pagination, structured images, model resize profiles, documentation classification and renderer component reuse across SDK replacement."
     }
   },
   "deleted": {
