@@ -13,7 +13,7 @@ import { DurableLoopBinding } from '../../src/durable-coding/engine.ts';
 import { NativeSessionJournal } from '../../src/durable-coding/session-journal.ts';
 import { BlockedSessionActions } from '../../src/durable-coding/session-task.ts';
 import { createHostResources } from '../../src/host-resources.ts';
-import { ModelRuntime } from '../../src/pi/core/model-runtime.ts';
+import { ModelRuntime } from '@earendil-works/pi-coding-agent';
 import { createAgentSession } from '../../src/pi/core/sdk.ts';
 
 const [mode, directory, replay, crash] = process.argv.slice(2);

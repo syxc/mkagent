@@ -4,7 +4,7 @@ import * as core from "../../src/agent-runtime.ts";
 import * as ai from "@earendil-works/pi-ai/compat";
 import * as auth from "../../src/pi/core/auth-storage.ts";
 import * as loader from "../../src/native-extension-loader.ts";
-import * as stores from "../../src/pi/core/models-store.ts";
+import * as stores from "@earendil-works/pi-coding-agent";
 import * as schema from "@earendil-works/pi-schema";
 import { readRequest, runScenario } from "./scenario-worker.mjs";
 import { NativeSessionJournal } from "../../src/durable-coding/session-journal.ts";

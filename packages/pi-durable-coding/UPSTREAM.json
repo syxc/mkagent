@@ -143,10 +143,6 @@
       "implementation": "src/pi/core/extensions/pi-ai-extension-view.ts"
     },
     {
-      "target": "src/upstream/core/provider-composer.js",
-      "implementation": "src/pi/core/provider-composer.ts"
-    },
-    {
       "target": "src/upstream/core/resolve-config-value.ts",
       "implementation": "src/pi/core/resolve-config-value.ts"
     },

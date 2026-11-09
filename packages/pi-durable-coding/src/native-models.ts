@@ -1,7 +1,7 @@
 /** Expose the upstream registry facade over the host's existing pi-ai collection. */
 import type { Api, AuthCheck, Model, Models, MutableModels, Provider } from '@earendil-works/pi-ai';
 import { ModelRegistry } from './upstream/core/model-registry.js';
-import { composeModelProvider, resolveCompatibilityRequestConfig, validateExtensionProvider } from './upstream/core/provider-composer.js';
+import { composeModelProvider, resolveCompatibilityRequestConfig, validateExtensionProvider } from '@earendil-works/pi-coding-agent';
 
 export class NativeModelRegistry {
   readonly registry: ModelRegistry;

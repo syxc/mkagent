@@ -235,7 +235,7 @@ export {
 	type CredentialSynchronizationOperation,
 	ModelRuntime,
 	type ModelRuntimeAuthOverrides,
-} from "./core/model-runtime.ts";
+} from "@earendil-works/pi-coding-agent";
 export type {
 	PackageInstallFailure,
 	PackageManager,
@@ -407,7 +407,7 @@ export {
 	VIRTUAL_MODEL_STATE_ENTRY,
 	type VirtualModelDefinition,
 	type VirtualModelStateData,
-} from "./core/virtual-models.ts";
+} from "@earendil-works/pi-coding-agent";
 // Built-in extensions. The CLI loads them; SDK sessions add them to their extension factories.
 export { type CodemodeExtensionOptions, createCodemodeExtension } from "./extensions/codemode/index.ts";
 export type { CodemodeStoreEntryData, CodemodeToolDetails } from "./extensions/codemode/tool.ts";

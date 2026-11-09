@@ -26,6 +26,73 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## ModelRuntime SDK boundary after 2ac3808
+
+Production now uses the published Coding ModelRuntime class, model configuration,
+provider composition, virtual routing, credentials and model stores. Nine local
+runtime files, the obsolete conversion script and one composer forward are
+deleted, with 2,986 lines in total. Source traversal stops at these SDK modules.
+The legacy NativeModelRegistry still provides its structural host adapter.
+
+The SDK patch adds createCredentials and bind entry points. A bound runtime reads
+the current host Models and tracks provider replacement, keeps extension overlays
+in its own memory collection, invalidates checks for a replaced host, and sends
+host catalog refreshes through their original collection and store. Shared
+runtime keys stay in memory. Composition, registration, virtual routing,
+credential serialization and request algorithms remain in the SDK. The default
+create path remains available. The composer runtime JS is unchanged; its
+parameter declaration requires only getProvider. No task or checkpoint changes.
+
+The affected 13-file set passes 142 tests with 548 assertions. Coding and server
+type checks pass. Tests cover collection and provider replacement, native and
+virtual overlays, current-model routing, shared keys, stored credential changes,
+failed and cancelled operations, OAuth, stale checks and refresh ownership.
+The first attempts fail because the incremental patch installation lacks the
+Coding SDK's nested pi-ai 1.5.0. The manifest and lock already require that version.
+A normal frozen install restores it without deleting node_modules, using force,
+or changing the manifest or lock. Types and affected tests then pass.
+
+The complete worker bundle run passes 25 tests; the native image test exceeds
+its default 5-second limit. That test passes alone with a 15-second budget and
+three assertions. The repository timeout is unchanged. All 26 scenarios have
+passing records, but this is not one complete green run.
+
+Complete runtime, auxiliary and pristine patch checks pass: 160 runtime TypeScript
+files, including 156 under src/pi and four facades, four assets, nine auxiliary
+sources and 20 forwards. Coding has 21 physical patch outputs, core four and
+durable 30, for a total of 55. The source manifest updates 43 changed or deleted
+paths, removes all 11 deleted records and adds the new policy. The fixed Craft
+v0.15.6 audit passes for 2,154 files.
+
+A fresh hoisted frozen install covers 11 workspaces with a separate HOME and
+cache, the public registry and scripts disabled. The lockfile stays unchanged.
+All 55 outputs match the tested installation, and all 21 Coding outputs match
+CODING-PATCH.json. The consumer runs the same host model test file offline with
+no command lookup: 12 tests and 108 assertions pass.
+
+Independent review finds no confirmed regression relative to 2ac3808. Its four
+focused files pass 24 tests. Additional deterministic probes cover replacement
+without an intermediate read, late credential checks, host catalog publication,
+extension store isolation and default SDK configuration. The review compares
+85 class members, checks the removed implementations against the pristine SDK,
+rebuilds the patch and verifies all 21 installed outputs. The public consumer
+type probe passes with the project setting skipLibCheck: true. No complete SDK
+algorithm was moved into the patch.
+
+The review reproduces an existing binding gap: the internal collection does not
+inherit a custom host AuthContext. If a provider requires values from that
+context and the shared store is empty, the host can authenticate while the bound
+runtime cannot. The implementation before this replacement has the same gap.
+No current production caller supplies that custom context. This slice records
+the gap and does not fix it; it does not establish support for that combination.
+
+Receipts are in the model-runtime-sdk task directory; fresh installation and
+consumer logs are in the model-runtime-hoisted directory. The independent review
+does not cover the six documentation updates or source registration. Plugin
+runner/types and the SDK AgentSession production lifecycle, atomic admission,
+cancellation and cold recovery remain open. Real services, Windows, full
+repository checks and complete product acceptance were not run for this slice.
+
 ## Plugin loader SDK boundary after 354f3cb
 
 Both native and legacy loaders now use the published Coding SDK for runtime

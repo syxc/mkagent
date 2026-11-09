@@ -2517,8 +2517,8 @@
       "reason": "Use the published SessionManager with context projection callbacks and legacy factory/directory hooks, stop source traversal and remove the complete local session implementation and conversion rule."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "de6bd89744bfba517d584f19bd1184a23cc750fb496c55c7b48e2738b18bab7e",
-      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
+      "sha256": "8a9020d5ae6b8ab1fe5219fb3396c1f9445ba6f6b6b0093b17aa04df327a438e",
+      "reason": "Use the published Coding ModelRuntime and composer with host model and shared credential binding; remove covered implementations and obsolete conversion rules."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "8e2a592d0d54bfcef94b503d3b3080904a34bfd78b5291c95f2f41b0793396fb",
@@ -2529,8 +2529,8 @@
       "reason": "Guard declarations and retained policy constants when forwarding Native algorithms. Do not bind replaced child-process, shell, read-path or truncation bodies to hashes."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "7b8ad1c480c8e23286f2eb2308d0a9e8a5e6aadf452fbba4e952b4493430a480",
-      "reason": "Guard shared helper signatures and retained policy. Verify host entry exclusions preserve RPC and public plugin exports, and reject missing or duplicate removal boundaries."
+      "sha256": "401c439b5c31ef50092c36d8019f9a1f1ab340663e276674035a2dcd57348b17",
+      "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "2a5f3e6c3407cab0eaf5c0058358b84ff0df2a1777b9f13d21039d938b2fd1bd",
@@ -3725,8 +3725,8 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "a4f17705114827c5a7d8263eac5ea42a69319af600539d50a8c9e028d2b5bd71",
-      "reason": "Record the generated closure after removing local extension loaders, unused Jiti and manifest helpers and obsolete forwards."
+      "sha256": "4cd79140b2ed821d8882adf18fbe0271975135566fd14b440f9adeab9c6549cf",
+      "reason": "Record the generated closure after replacing model runtime, composition, virtual routing, credentials and model storage with the published Coding SDK."
     },
     "packages/pi-durable-coding/package.json": {
       "sha256": "87be15851e183a78fab993ecf5fcb5478df74c45e832fecfb063776302a4409d",
@@ -3741,8 +3741,8 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "e95df34155e5b576e8c46d02afc3c7a2bebdb567cf3b2d021736456bc85dbd2c",
-      "reason": "Use SDK extension lifecycle and discovery with narrow importer, cache isolation and host directory hooks; remove covered loader source and conversion rules."
+      "sha256": "80756fef6c1c45386442d2b0a99c93eb71ea23203af5eb21c8fe1fd2d1461e87",
+      "reason": "Use the published Coding ModelRuntime and composer with host model and shared credential binding; remove covered implementations and obsolete conversion rules."
     },
     "packages/pi-durable-coding/src/compat.ts": {
       "sha256": "71c5b55bb77036e8a7e0bd08cb553cfec6d19b6584115d96f42ac77945ae5cbe",
@@ -3781,8 +3781,8 @@
       "reason": "Use the public Coding SDK for event bus, diagnostics, file mutation queue and frontmatter instead of local copies."
     },
     "packages/pi-durable-coding/src/native-models.ts": {
-      "sha256": "f85c1e836beeabd99b5f0abb5ed4fb7ae07b2b4a6b863cca421b21e18a109dca",
-      "reason": "Adapt the upstream registry to replaceable host model collections."
+      "sha256": "4eb3614c94688071aeeef8038bc6a465ebb97fd4b5784bebdc866a616fcf68df",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/native-runtime.ts": {
       "sha256": "4794d520ef76eae31da10e5ff5656f110f62b79302cb79bf0f6543d6391d1dda",
@@ -3851,10 +3851,6 @@
     "packages/pi-durable-coding/src/upstream/core/prompt-templates.ts": {
       "sha256": "e709b153af914e4ec1badf8a55180f6ce1ae2ad0b513d503df068916cc6d1042",
       "reason": "Forward legacy helper imports to the canonical native Pi implementation without another source copy."
-    },
-    "packages/pi-durable-coding/src/upstream/core/provider-composer.js": {
-      "sha256": "093f7a0fb50bf27f6ebb3425d0e68b54bc9812f8ce86b946da6fa29fd1ce19e8",
-      "reason": "Port Pi v1.5.0 packages/coding-agent/src/core/provider-composer.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
     },
     "packages/pi-durable-coding/src/upstream/core/resolve-config-value.ts": {
       "sha256": "ddfa00cd4eb6c7100312c923417908fc435db6641242e206d137f79f3826401d",
@@ -4009,20 +4005,16 @@
       "reason": "Run each side of the isolated Agent JSONL crash and reopen contract in a separate process."
     },
     "packages/pi-durable-coding/test/shared-public-leaves.test.ts": {
-      "sha256": "ef115bda1e3fa0fdcfe37c4c8592ea344a71376ac12eab0cb94b1c5109139e5d",
-      "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
+      "sha256": "f51f8fd4a0b3595edc1e3b83742c4e5721a4a4fd3c8cb1f253ae0f2206445f10",
+      "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "0006e9414d7a7b25cc5fe90b7b104eeac49896aa2e1b02d3af92821391e8581f",
-      "reason": "Record the generated closure after removing local extension loaders, unused Jiti and manifest helpers and obsolete forwards."
+      "sha256": "aceec1fd191c0281ef039cf6c8281d2267c039f042a0d27b2d25590eade0ad89",
+      "reason": "Record the generated closure after replacing model runtime, composition, virtual routing, credentials and model storage with the published Coding SDK."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "e132e9a4414b44d25c8d7372f493394f104ce15cf4010e7596a721ed9cf7bffc",
       "reason": "Preserve Photon and image worker boundaries; connect both HTML browser assets to published packages and reject missing or repeated asset reads."
-    },
-    "packages/pi-durable-coding/scripts/model-runtime-port.ts": {
-      "sha256": "96a9eee13bdbd72a8fb7feca1b3b1af2caaba15392fb9296d58240798f6b931d",
-      "reason": "Reproduce host model ownership and the structural provider lookup parameter without changing provider JavaScript."
     },
     "packages/pi-durable-coding/scripts/resource-loader-port.ts": {
       "sha256": "2eb19fecb916ecaa161b0eaff747fdb51a8c45ed3b5b7c9da935d22b9ba5a5b2",
@@ -4037,8 +4029,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "3bb0555b9ac6038a00694161de84a5fa6f59d243a8081648b5c34aaa27005901",
-      "reason": "Use SDK extension lifecycle and discovery with narrow importer, cache isolation and host directory hooks; remove covered loader source and conversion rules."
+      "sha256": "e532e88cb36dfc6393a24c68f74c9bf9ae43a3fb2cfa5d0bb5c4bb9799456cf9",
+      "reason": "Use the published Coding ModelRuntime and composer with host model and shared credential binding; remove covered implementations and obsolete conversion rules."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4137,8 +4129,8 @@
       "reason": "Forward the eight consumed core request and tool operations while preserving Native mutable identity defaults and durable scheduling; omit unused helper re-exports."
     },
     "packages/pi-durable-coding/src/native.ts": {
-      "sha256": "f4475f30a5d92aba5ff84ac67cf0ffecdf04467de5f586971898f303c36746b6",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
+      "sha256": "da086fe429c75c2bbdce849e61b9152a29545a7ab7c748969378345cc3b3bb3c",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/node-process.d.ts": {
       "sha256": "959e922213bca94a52f0cef283db6ca9edd2c084f4c149854fa3499f1ea3c4c4",
@@ -4157,12 +4149,12 @@
       "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
     },
     "packages/pi-durable-coding/src/pi/core/agent-session-services.ts": {
-      "sha256": "7b53e20bdaee5b1ef9c6a274a9b75c18825bf8106c24ed5ba7570f2c19e01021",
-      "reason": "Bind native and legacy module tables, Jiti transformation and directory policy to the published Coding SDK extension loader."
+      "sha256": "008523f4e44ab8416d17b2a0fd9a22c7acdebcf6f2778c45abcbc2e3a97cd9c1",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/core/agent-session.ts": {
-      "sha256": "fece675771806679165efe43794bd977f3235988da1da47b93ad554c95097e79",
-      "reason": "Use the published Coding SDK resource loader and context/prompt contracts while retaining outer host trust and extension module policies."
+      "sha256": "d6e2a318632db8ae8adc2d1adbbb789e51c624c71bf81dfe56fb71861cde113a",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/core/auth-guidance.ts": {
       "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
@@ -4177,12 +4169,12 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/bash-executor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/bug-report.ts": {
-      "sha256": "ca8e6990a3abdfa91d6afa908c25af2201d482b1969ffcfe3c7e60050c11f8d0",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
+      "sha256": "3bb01d37113fe1654347f82bc2b278eb5d718c5464e61c584a681320abc9f24d",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/core/cache-warmer.ts": {
-      "sha256": "541b0806b31b0103179c483f4143a4637a9c138338aaa195f0250e61d6db1846",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
+      "sha256": "6476803829f91e2aead921d9f27e22de45ac30797815f08a4ab1dfeefe145f4b",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/core/client-identity.ts": {
       "sha256": "3828abe7869edfba4e82602b591efe05a85b304acea6e44e6e1aa58f9669f400",
@@ -4225,8 +4217,8 @@
       "reason": "Preserve the pinned Native SGR parser and HTML escaping while sharing the ANSI palette and indexed color conversion through public pi-tui."
     },
     "packages/pi-durable-coding/test/native-html-colors.test.ts": {
-      "sha256": "faf744cbef3f00787e303fc4c69a44b85416d433ec6bd192e81f1a9a2f84b550",
-      "reason": "Verify published SessionManager identity, legacy factories, durable projections and journal behavior without the local session implementation."
+      "sha256": "bd95b1051fae217f01c33f79bbd85c54d691d9f9f17408fb3cbdfa0459b04cd2",
+      "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/src/pi/core/export-html/index.ts": {
       "sha256": "c085a89fdb8040e7c32137793894b7d6370bf0cedede12465d1ebadf0bd9d232",
@@ -4269,12 +4261,12 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse the public enum builder while retaining Native TypeBox branding and literal inference."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/runner.ts": {
-      "sha256": "7a81f85cacd21c33ab1fb59ed933c224bbda650f4a0b94ee9840b5742d52f32c",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
+      "sha256": "f4b3fb18cf29e7c4931ba87184b86f6ff32967a7fde5747f8e4ff5132d4e6716",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/types.ts": {
-      "sha256": "4566ffc889975297e0da447e8f4115cda9e98d8972be87eb537085e4c92ea686",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
+      "sha256": "8360cb3f9e05e9cf04c712b73678a7b717d74fa3b67db8e1632f63c4f92bb689",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts": {
       "sha256": "ef6d49a54f2ed2b0f3486bfc3bf8aec7086c735304317bc86477c041c529ee2f",
@@ -4296,53 +4288,25 @@
       "sha256": "17d6969f59d76174ae084232124d81bb18f38d7a7997f78812c7de757c8568e9",
       "reason": "Preserve public pi-agent-core type imports; share message conversion with a default-compatible host metadata and object identity policy."
     },
-    "packages/pi-durable-coding/src/pi/core/model-config.ts": {
-      "sha256": "792fe48456eae6175f121a4ef8bc15ebabccfd7f09691850eff2764f79f3a122",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/model-config.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/core/model-resolver.ts": {
-      "sha256": "aa4ac64cae58ba346f53a44f131ee26f35385eb36c43456bb51e92b471ce609f",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
-    },
-    "packages/pi-durable-coding/src/pi/core/model-runtime.ts": {
-      "sha256": "fc5628c39763843261932ad0d698aab5e33c2bea9e57ee76a603282840d2f684",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/model-runtime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/models-store.ts": {
-      "sha256": "3fc330245d487383d34f4115f61dbbf24f905a4b48669a872f529d21f4c8685c",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/models-store.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse the public in-memory model store through a Native subclass."
+      "sha256": "ee80193f720d742d5ebcb7d2d2e67e7e7200b3d2df3876ed650f335c41341388",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/core/nested-tool-calls.ts": {
       "sha256": "15b0d9d5b24df2add64e7347b4f904c1948f97a0dd6512eb4f7de7884a9286b7",
       "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
     },
-    "packages/pi-durable-coding/src/pi/core/pi-ai-schemas.ts": {
-      "sha256": "ba5a59729646209cbfa870d8a9b3def24d51c2eb21b1ea6a6a331690c35cddd8",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/pi-ai-schemas.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/core/prompt-templates.ts": {
       "sha256": "80694047c429ea6e3274d2b076a24717decabc03aa0fab9a8903dd21bc163f28",
       "reason": "Use the public Coding SDK for event bus, diagnostics, file mutation queue and frontmatter instead of local copies."
-    },
-    "packages/pi-durable-coding/src/pi/core/provider-composer.ts": {
-      "sha256": "b99da0687b1b993483253a96b47e991e0a723ac4322a66011f7e8479884474ab",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/provider-composer.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/remote-catalog-provider.ts": {
-      "sha256": "27788bc35663378ba33329c298128baaa9c5913cd7c0d4ff88af8d440b611c92",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/remote-catalog-provider.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/resolve-config-value.ts": {
       "sha256": "0f53dad47fe5d5d8837c022b7951ccd3bd5a9b577bd662f0986272110e83bcc7",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/resolve-config-value.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/core/runtime-credentials.ts": {
-      "sha256": "ddbedbe209da4314a873c9e435c2a80404a25bcf63406351888bd613068b7036",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/runtime-credentials.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/core/sdk.ts": {
-      "sha256": "a04ca176bbd768722d8e1fd25a3cad924eff6947c2340eb1b70b3953afdc0c4c",
-      "reason": "Bind native and legacy module tables, Jiti transformation and directory policy to the published Coding SDK extension loader."
+      "sha256": "f18fdd7dd856fc292ed32b802b2ab0f006dcb0e58bac5c24e832e11a9a070251",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/core/session-cwd.ts": {
       "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
@@ -4472,10 +4436,6 @@
       "sha256": "2eca640b1fa887ffe091a1fcef163b961596f1f28cb6954ec573f216a1a0de06",
       "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
     },
-    "packages/pi-durable-coding/src/pi/core/virtual-models.ts": {
-      "sha256": "89016de8d877d41244ec73d2ac358ee62bdf71d8e619986697062cef423f5c48",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
-    },
     "packages/pi-durable-coding/src/pi/extensions/codemode/execute.lazy.ts": {
       "sha256": "484dafb4ba45f57542ec391d667c6e3cfe424385564498d9974abf1e1745c02f",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/execute.lazy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
@@ -4545,8 +4505,8 @@
       "reason": "Delegate tokenization, scored BM25 and schema metadata to durable compatibility exports; retain native namespace and session activation."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "a5f83791fe21e5f240b7d1cc01edbee8a668e3201f07e76741264c679e7c05b7",
-      "reason": "Use the published Coding SDK resource loader and context/prompt contracts while retaining outer host trust and extension module policies."
+      "sha256": "dbbcc765ce7ebcd6b039957204a3776b820791951e24d6fe45a879bf27ce4aa6",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4633,8 +4593,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/markdown-transform.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/components/model-selector.ts": {
-      "sha256": "104851ebb61221493757697c8584393e984fc672b7db76920be4c247e9a2d7a0",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
+      "sha256": "8649b68850082a05ddcd5b42795f3dcd39a13876f5a3e05b769a792ffea6fe36",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/components/oauth-selector.ts": {
       "sha256": "ac8c7a4ec29a6158a9d2e534e3c605924c147c254cb129f79e3d14a0b86cab87",
@@ -4701,8 +4661,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/external-editor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/model-catalog-refresh.ts": {
-      "sha256": "a7a10647deaba5036019737c376ab3f73eed12703dafeb8cb8920581ec8672e2",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/model-catalog-refresh.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "a284a0fe3b3560ce4f402fce10226d80618c5cfa14241571163543b9e10c15c9",
+      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/model-search.ts": {
       "sha256": "390f4025d29e7c566dc8b28c8276adc3bd5e5b4a860111158f3e20293f8ffbc6",
@@ -4775,10 +4735,6 @@
     "packages/pi-durable-coding/src/pi/utils/image-resize.ts": {
       "sha256": "d777752e62499e71df217394652ff6285e1ba8ea34d6d258443f28774e76a97f",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-resize.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/json.ts": {
-      "sha256": "7ee95ee422abcc3610033e27d1e1da08ebadac0502b6326a1540b64843a084dd",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/json.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/management-http.ts": {
       "sha256": "2195b345fdd5c607f87a55b93e7d00c6d70d7dcfe2989b08bbd9f39b529a756a",
@@ -4853,16 +4809,16 @@
       "reason": "Exercise durable native coding behavior and isolated recovery through the durable-coding-tool-task.test.ts fixture."
     },
     "packages/pi-durable-coding/test/fixtures/native-recovery-worker.ts": {
-      "sha256": "fe4d26a33b2e5ed3996c1d28a0befb7195111d54ee230ef1d8de97e789b177bc",
-      "reason": "Exercise durable native coding behavior and isolated recovery through the native-recovery-worker.ts fixture."
+      "sha256": "d426fbb8a05b6c6d8e3fccc732cb930e15d9f44bf53df0510f0a3ac4d1c4ab02",
+      "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/test/host-model-runtime.test.ts": {
-      "sha256": "7a976780bb0b929b45c749950021dcf81877336e39a0d210d2c00a413d971219",
-      "reason": "Verify SDK registry identity, host runtime binding and legacy structural runtime behavior after removing local registry implementations."
+      "sha256": "2077798d9c59261ecd28ab06e2e3092ef70190298583cda5aca40f3055526f44",
+      "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/test/host-resources.test.ts": {
-      "sha256": "104e5d4f17ce1a0a3e94f3cd37ca43005b3ecc0a740f04f0ca7f8d3583be8073",
-      "reason": "Verify SDK resource identity and existing discovery, trust, package and plugin contracts after removing local implementations."
+      "sha256": "6e9ff48909ecadbf1f5920325a44b543d7b845ee6eccd6baf790a2eb034ba9f0",
+      "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/test/fixtures/host-tool-recovery-process.ts": {
       "sha256": "9ecfdb70d950dea604553c3db5da91db36260ac67f439c25e723a2036195fc1a",
@@ -4897,8 +4853,8 @@
       "reason": "Exercise durable native coding behavior and isolated recovery through the native-session-task.test.ts fixture."
     },
     "packages/pi-durable-coding/test/reference/durable-worker.mjs": {
-      "sha256": "d2f52075a0ceb9ad398e89a341e98ecc91631f548004fa4154faafb3f12c6208",
-      "reason": "Verify SDK lifecycle identity, importer cache isolation, stale imports, registration rollback and host plugin loading contracts."
+      "sha256": "161c81e94b60594745b45b7bd3979214425ff8618526d82ef2e81e7b2f2dec6a",
+      "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/test/reference/harness.ts": {
       "sha256": "8eeaf42a97a0a0194ff5bc330c0a32eada40208998c6d021f9609c0a111b0bbf",
@@ -4985,8 +4941,8 @@
       "reason": "Use the public Coding SDK package manager while preserving the required host and legacy policy adapters."
     },
     "packages/pi-durable-coding/test/fixtures/host-package-runner.ts": {
-      "sha256": "6b96e02cde8fb6907762da0d37c3b48687c21fb86cd26237cfe405ef1c1642db",
-      "reason": "Verify published SessionManager identity, legacy factories, durable projections and journal behavior without the local session implementation."
+      "sha256": "46032ccc6a32796a35380603c6f1140363f542a1c08653ac0c82640ddb24f325",
+      "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/test/host-package-commands.test.ts": {
       "sha256": "a36088312c2202c8efb143721d40792c210a777f4f054dbc4716f0f61d4655c4",
@@ -5117,24 +5073,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "abed47315b21d6167d15eab1d6822a1b36e82196c9fdf547d6b9b2488cd991c4",
-      "reason": "Use SDK extension lifecycle and discovery with narrow importer, cache isolation and host directory hooks; remove covered loader source and conversion rules."
+      "sha256": "696b7ee2a189a57c1d68db94e2dbd3cb9476be86185995ddcad355532ed6464e",
+      "reason": "Use the published Coding ModelRuntime and composer with host model and shared credential binding; remove covered implementations and obsolete conversion rules."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "f6a6b41cb64968a45b68e819ee2da92e1350b0436fe16ce5c11b7e801c6be9f5",
-      "reason": "Verify SDK lifecycle identity, importer cache isolation, stale imports, registration rollback and host plugin loading contracts."
+      "sha256": "04a4a4265da0b36afe929b4823d915daee165de5e379e57ea5cd7c63d784df40",
+      "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "3cf012ec1610703291b8346cd14ad2703654f61f721fde9f3fe834af6fd350cc",
-      "reason": "Use SDK extension lifecycle and discovery with narrow importer, cache isolation and host directory hooks; remove covered loader source and conversion rules."
+      "sha256": "aeebb985b326abc9d27dfe92a7d565ed20857e8bc3065670d2abbc975782f83b",
+      "reason": "Use the published Coding ModelRuntime and composer with host model and shared credential binding; remove covered implementations and obsolete conversion rules."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "409a40e980220fdd8d346d59c0a70d75b0aa9ec536425e114e933bd0a5aa53d5",
-      "reason": "Use SDK extension lifecycle and discovery with narrow importer, cache isolation and host directory hooks; remove covered loader source and conversion rules."
+      "sha256": "56ae0458f120f8dc8ae564e03e9a625e3444e007f4b5ef3878bee8043632c127",
+      "reason": "Use the published Coding ModelRuntime and composer with host model and shared credential binding; remove covered implementations and obsolete conversion rules."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "6913b76206056c9184694aafacde30788b0994dcc12f053528765fc06ee053b6",
-      "reason": "Use SDK extension lifecycle and discovery with narrow importer, cache isolation and host directory hooks; remove covered loader source and conversion rules."
+      "sha256": "489444a1aebc9b35c87830eb4610bd3a59d8e2c18fb1764731c72ef762a99366",
+      "reason": "Use the published Coding ModelRuntime and composer with host model and shared credential binding; remove covered implementations and obsolete conversion rules."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -5167,6 +5123,10 @@
     "packages/pi-durable-coding/test/extension-sdk.test.ts": {
       "sha256": "d557ab9e10cb13bad716e30ef93ddb9ca1c8a862fc42c432fab58faac9ad224a",
       "reason": "Verify SDK lifecycle identity, importer cache isolation, stale imports, registration rollback and host plugin loading contracts."
+    },
+    "packages/pi-durable-coding/scripts/coding-model-runtime-policy.ts": {
+      "sha256": "e6d92e9dc66ab1afa532c489ac0691a31eddcc0fdff979f7d5b4bc9b4d45dc65",
+      "reason": "Use the published Coding ModelRuntime and composer with host model and shared credential binding; remove covered implementations and obsolete conversion rules."
     }
   },
   "deleted": {

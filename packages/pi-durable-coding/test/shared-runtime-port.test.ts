@@ -124,12 +124,6 @@ test('string enum: generic bounds, optional options and TypeBox branding remain 
   }
 });
 
-test('model store: retained whole-class guard still rejects changed structure', () => {
-  assert.throws(() => applySharedHelperPort('core/models-store.ts',
-    'export class InMemoryCodingAgentModelsStore { constructor(required: string) {} }'),
-  /Public helper declaration changed/);
-});
-
 const wait = fixtures[0];
 for (const [name, from, to] of [
   ['optional argument', 'child: ChildProcess', 'child?: ChildProcess'],

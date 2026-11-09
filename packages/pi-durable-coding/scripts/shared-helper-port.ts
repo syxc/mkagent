@@ -140,13 +140,6 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
 }`,
     },
   },
-  'core/models-store.ts': {
-    change: 'public-pi-ai-memory-models-store',
-    names: ['InMemoryCodingAgentModelsStore'],
-    imports: 'import { InMemoryModelsStore } from "@earendil-works/pi-ai";',
-    hashes: { InMemoryCodingAgentModelsStore: '93c704e7001cb783e30cf6e696fa6203fea7a9cb6e75648f48988c75a6dfdc67' },
-    replacements: { InMemoryCodingAgentModelsStore: 'export class InMemoryCodingAgentModelsStore extends InMemoryModelsStore {}' },
-  },
   'core/extensions/pi-ai-extension-view.ts': {
     change: 'public-pi-ai-typebox-string-enum',
     names: ['StringEnum'],

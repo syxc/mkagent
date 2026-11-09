@@ -107,7 +107,7 @@ const forwarded = [
   'core/exec.ts', 'core/timings.ts',
   'core/skills.ts', 'core/prompt-templates.ts', 'core/system-prompt.ts',
   'core/extensions/types.js', 'core/extensions/pi-ai-extension-view.ts',
-  'core/provider-composer.js', 'core/resolve-config-value.ts', 'utils/shell.ts',
+  'core/resolve-config-value.ts', 'utils/shell.ts',
   'core/package-manager.ts', 'core/messages.js', 'core/model-registry.js', 'core/settings-merge.js',
   'core/context-tokens.js', 'core/extensions/runner.js', 'core/session-manager.js',
 ].map(file => ({

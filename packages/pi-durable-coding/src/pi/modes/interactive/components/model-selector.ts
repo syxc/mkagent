@@ -10,7 +10,7 @@ import {
 	Text,
 	type TUI,
 } from "@earendil-works/pi-tui";
-import type { ModelRuntime } from "../../../core/model-runtime.ts";
+import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { refreshModelCatalogs } from "../model-catalog-refresh.ts";
 import { getDistinctModelName, getModelSelectorSearchText } from "../model-search.ts";
 import { theme } from "@earendil-works/pi-coding-agent";

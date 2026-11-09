@@ -14,8 +14,7 @@ import {
   type ProviderAuth,
   type SimpleStreamOptions,
 } from '@earendil-works/pi-ai';
-import { ModelRegistry } from '@earendil-works/pi-coding-agent';
-import { ModelRuntime } from '../src/pi/core/model-runtime.ts';
+import { ModelRegistry, ModelRuntime } from '@earendil-works/pi-coding-agent';
 
 const authContext = { env: async () => undefined, fileExists: async () => false };
 const storedKey = { type: 'api_key', key: 'synthetic-stored' } as const;
@@ -66,6 +65,21 @@ function fixture() {
 }
 
 describe('native ModelRuntime bound to host Models', () => {
+  test('keeps the SDK default creation path and rejects a recursive host source', async () => {
+    const ordinary = await ModelRuntime.create({
+      credentials: new InMemoryCredentialStore(), modelsPath: null, refreshOnCreate: false,
+    });
+    expect(ordinary.getProviders().some(value => value.id === 'anthropic')).toBe(true);
+    expect(ordinary.getModels().length).toBeGreaterThan(0);
+    const state = fixture();
+    let source: Models = state.models;
+    const bound = await ModelRuntime.bind({
+      models: () => source, credentials: state.credentials, refreshOnCreate: false,
+    });
+    source = bound;
+    expect(() => bound.getProviders()).toThrow('Host models source must not return its bound runtime.');
+  });
+
   test('refreshes availability automatically when the host collection or provider changes', async () => {
     const state = fixture();
     await state.store.modify('host', async () => storedKey);

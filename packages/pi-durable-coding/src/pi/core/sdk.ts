@@ -15,7 +15,7 @@ import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefi
 import { createToolNameMatcher } from "@earendil-works/pi-coding-agent";
 import { convertToLlm } from "./messages.ts";
 import { findInitialModel } from "./model-resolver.ts";
-import { ModelRuntime } from "./model-runtime.ts";
+import { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import type { ResourceLoader } from "@earendil-works/pi-coding-agent";
 import { DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
 import { getDefaultSessionDir, SessionManager } from "@earendil-works/pi-coding-agent";
@@ -40,7 +40,7 @@ import {
 	createWriteTool,
 	withFileMutationQueue,
 } from "./tools/index.ts";
-import { getBranchSelection } from "./virtual-models.ts";
+import { getBranchSelection } from "@earendil-works/pi-coding-agent";
 
 // Preserve the pre-0.81 fallback for extensions that construct Agent instances
 // or invoke low-level agent loops without supplying streamFn. Agent core remains

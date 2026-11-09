@@ -8,7 +8,7 @@ import { createModels, InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import { Agent } from '../src/agent-runtime.ts';
 import { createHostResources, createHostSettingsManager } from '../src/host-resources.ts';
 import { AgentSession } from '../src/pi/core/agent-session.ts';
-import { ModelRuntime } from '../src/pi/core/model-runtime.ts';
+import { ModelRuntime } from '@earendil-works/pi-coding-agent';
 import { DefaultResourceLoader } from '@earendil-works/pi-coding-agent';
 import { SessionManager } from '@earendil-works/pi-coding-agent';
 import { getThemesDir, SettingsManager, type SettingsScope } from "@earendil-works/pi-coding-agent";

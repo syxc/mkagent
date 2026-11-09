@@ -1,9 +1,9 @@
 /** Small public implementations retain the Native contracts at their existing paths. */
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
-import { InMemoryModelsStore, type Model } from '@earendil-works/pi-ai';
+import { type Model } from '@earendil-works/pi-ai';
+import { InMemoryCodingAgentModelsStore } from '@earendil-works/pi-coding-agent';
 import type { Static, TUnsafe } from 'typebox';
-import { InMemoryCodingAgentModelsStore } from '../src/pi/core/models-store.ts';
 import { StringEnum, Type } from '../src/pi/core/extensions/pi-ai-extension-view.ts';
 import { calculateContextTokens } from '../src/pi/core/compaction/compaction.ts';
 
@@ -29,7 +29,6 @@ test('Native model stores isolate providers and clone nested data on both bounda
   assert.equal(await new InMemoryCodingAgentModelsStore().read('a'), undefined);
   assert.equal(store.constructor.name, 'InMemoryCodingAgentModelsStore');
   assert.equal(InMemoryCodingAgentModelsStore.length, 0);
-  assert(store instanceof InMemoryModelsStore);
 });
 
 test('Native model stores reject cancellation and clone failures before changing data', async () => {

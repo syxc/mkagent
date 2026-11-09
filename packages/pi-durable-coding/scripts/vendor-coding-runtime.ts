@@ -4,7 +4,6 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { isBuiltin } from 'node:module';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
-import { portModelRuntime, portProviderComposer } from './model-runtime-port.ts';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
@@ -179,14 +178,6 @@ while (queue.length) {
   if (path === 'core/skills.ts' || path === 'core/prompt-templates.ts') {
     body = portResourceLoader(path, body);
     changes.add('explicit-host-project-resource-directory');
-  }
-  if (path === 'core/model-runtime.ts') {
-    body = portModelRuntime(body);
-    changes.add('host-owned-models-and-credentials');
-  }
-  if (path === 'core/provider-composer.ts') {
-    body = portProviderComposer(body);
-    changes.add('structural-provider-config-interface');
   }
   if (path === 'core/agent-session.ts') {
     body = portAgentSession(body);

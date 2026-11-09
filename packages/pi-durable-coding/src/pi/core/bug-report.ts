@@ -10,7 +10,7 @@ import { serializeConversation } from "./compaction/utils.ts";
 import type { CrashRecord } from "./crash-log.ts";
 import type { Extension } from "./extensions/types.ts";
 import { convertToLlm } from "./messages.ts";
-import type { ModelRuntime } from "./model-runtime.ts";
+import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import type { ReadonlySessionManager } from "@earendil-works/pi-coding-agent";
 import type { Settings } from "@earendil-works/pi-coding-agent";
 

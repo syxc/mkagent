@@ -1,8 +1,8 @@
-# Content SHA-256: b27f5a7e442aba6969f351a98030ca427557dc06e4c84ec8eba5446539d9b1db
+# Content SHA-256: ef39105d38c64242281b3282db591821e75a8c230959e548a2df5c45b3ef83e4
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,15 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,19 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -10,6 +10,10 @@ diff --git a/dist/index.js b/dist/index.js
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.js";
 +export * from "./core/package-manager.js";
 +export * from "./core/model-registry.js";
++export * from "./core/model-runtime.js";
++export * from "./core/models-store.js";
++export { composeModelProvider, resolveCompatibilityRequestConfig, validateExtensionProvider } from "./core/provider-composer.js";
++export * from "./core/virtual-models.js";
 +export * from "./core/session-manager.js";
 +export * from "./core/resource-loader.js";
 +export * from "./core/extensions/loader.js";
@@ -31,7 +35,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,15 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,19 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -39,6 +43,10 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.ts";
 +export * from "./core/package-manager.ts";
 +export * from "./core/model-registry.ts";
++export * from "./core/model-runtime.ts";
++export * from "./core/models-store.ts";
++export { composeModelProvider, resolveCompatibilityRequestConfig, validateExtensionProvider } from "./core/provider-composer.ts";
++export * from "./core/virtual-models.ts";
 +export * from "./core/session-manager.ts";
 +export * from "./core/resource-loader.ts";
 +export * from "./core/extensions/loader.ts";
@@ -776,6 +784,226 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
  }
  //# sourceMappingURL=loader.js.map
 \ No newline at end of file
+diff --git a/dist/core/model-runtime.js b/dist/core/model-runtime.js
+--- a/dist/core/model-runtime.js
++++ b/dist/core/model-runtime.js
+@@ -41,7 +41,44 @@ function mergeHeaders(base, override) {
+ }
+ /** Configured pi-ai Models collection used by coding-agent and SDK consumers. */
+ export class ModelRuntime {
+-    models;
++    ownedModels;
++    hostSource;
++    hostModels;
++    hostProviders = new Map();
++    synchronizingHost = false;
++    get models() {
++        this.synchronizeHostModels();
++        return this.ownedModels;
++    }
++    synchronizeHostModels() {
++        if (!this.hostSource || this.synchronizingHost) return;
++        const host = this.hostSource();
++        if (host === this) throw new Error("Host models source must not return its bound runtime.");
++        const providers = host.getProviders();
++        if (host === this.hostModels && providers.length === this.hostProviders.size &&
++            providers.every(provider => this.hostProviders.get(provider.id) === provider)) return;
++        const replacingHost = this.hostModels !== undefined;
++        this.synchronizingHost = true;
++        try {
++            this.hostModels = host;
++            this.hostProviders.clear();
++            this.builtins.clear();
++            for (const provider of providers) {
++                this.hostProviders.set(provider.id, provider);
++                this.builtins.set(provider.id, provider);
++            }
++            // Checks for a replaced host must not restore its old availability or auth.
++            ++this.availabilityRefreshSeq;
++            ++this.availabilityErrorSeq;
++            for (const [id, seq] of this.providerAvailabilitySeq) this.providerAvailabilitySeq.set(id, seq + 1);
++            this.snapshot = { ...this.snapshot, all: [], available: [], configuredProviders: new Set(), auth: new Map() };
++            this.availabilityError = undefined;
++            this.rebuildProviders();
++        } finally {
++            this.synchronizingHost = false;
++        }
++        if (replacingHost) void this.queueAvailabilityRefresh().catch(() => {});
++    }
+     credentials;
+     defaultBuiltins;
+     builtins = new Map();
+@@ -65,7 +102,8 @@ export class ModelRuntime {
+     providerAvailabilitySeq = new Map();
+     availabilityError;
+     credentialOperations = new Map();
+-    constructor(credentials, config, modelsPath, modelsStore, providers, modelNetworkEnabled) {
++    constructor(credentials, config, modelsPath, modelsStore, providers, modelNetworkEnabled, hostSource) {
++        this.hostSource = hostSource;
+         this.credentials = credentials;
+         this.config = config;
+         this.modelsPath = modelsPath;
+@@ -73,9 +111,22 @@ export class ModelRuntime {
+         this.defaultBuiltins = new Map(providers.map((provider) => [provider.id, provider]));
+         for (const [providerId, provider] of this.defaultBuiltins)
+             this.builtins.set(providerId, provider);
+-        this.models = createModels({ credentials, modelsStore });
++        this.ownedModels = createModels({ credentials, modelsStore });
+         this.rebuildProviders();
+     }
++    static createCredentials(store) {
++        return new RuntimeCredentials(store);
++    }
++    static async bind(options) {
++        const runtime = new ModelRuntime(
++            options.credentials, await ModelConfig.load(undefined), undefined,
++            new InMemoryCodingAgentModelsStore(), [], options.allowModelNetwork === true, options.models,
++        );
++        if (options.refreshOnCreate !== false) {
++            await runtime.refresh({ allowNetwork: false, signal: options.signal });
++        }
++        return runtime;
++    }
+     static async create(options = {}) {
+         const credentials = new RuntimeCredentials(options.credentials ?? DefaultAuthStorage.create(options.authPath));
+         const modelsPath = options.modelsPath === null ? undefined : (options.modelsPath ?? join(getAgentDir(), "models.json"));
+@@ -118,7 +169,7 @@ export class ModelRuntime {
+     }
+     configureRadiusProviders() {
+         this.builtins.clear();
+-        for (const [providerId, provider] of this.defaultBuiltins)
++        for (const [providerId, provider] of this.hostSource ? this.hostProviders : this.defaultBuiltins)
+             this.builtins.set(providerId, provider);
+         for (const providerId of this.config.getProviderIds()) {
+             const config = this.config.getProvider(providerId);
+@@ -142,6 +193,7 @@ export class ModelRuntime {
+     }
+     /** Returns the provider without virtual models, or undefined when only virtual models define it. */
+     recomposeProvider(providerId) {
++        this.synchronizeHostModels();
+         const provider = this.composeProvider(providerId);
+         const virtualModels = [...(this.virtualModels.get(providerId)?.values() ?? [])].map((entry) => entry.model);
+         if (virtualModels.length > 0)
+@@ -196,6 +248,7 @@ export class ModelRuntime {
+             ])),
+             this.credentials.list({ signal }),
+         ]);
++        this.synchronizeHostModels();
+         if (seq !== this.availabilityRefreshSeq)
+             return;
+         const auth = new Map(checks);
+@@ -213,6 +266,7 @@ export class ModelRuntime {
+             this.availabilityError = undefined;
+     }
+     queueAvailabilityRefresh(signal) {
++        this.synchronizeHostModels();
+         const seq = ++this.availabilityRefreshSeq;
+         for (const [providerId, providerSeq] of this.providerAvailabilitySeq) {
+             this.providerAvailabilitySeq.set(providerId, providerSeq + 1);
+@@ -227,6 +281,7 @@ export class ModelRuntime {
+         });
+     }
+     async refreshProviderAvailability(providerId, signal) {
++        this.synchronizeHostModels();
+         // Invalidate any full availability pass that started before this credential change.
+         ++this.availabilityRefreshSeq;
+         const providerSeq = (this.providerAvailabilitySeq.get(providerId) ?? 0) + 1;
+@@ -239,6 +294,7 @@ export class ModelRuntime {
+                 this.credentials.read(providerId, { signal }),
+             ]);
+             signal.throwIfAborted();
++            this.synchronizeHostModels();
+             if (this.providerAvailabilitySeq.get(providerId) !== providerSeq)
+                 return;
+             const configuredProviders = new Set(this.snapshot.configuredProviders);
+@@ -330,9 +386,11 @@ export class ModelRuntime {
+         return this.snapshot.available;
+     }
+     getAvailableSnapshot() {
++        this.synchronizeHostModels();
+         return this.snapshot.available;
+     }
+     getError() {
++        this.synchronizeHostModels();
+         const errors = [];
+         const configError = this.config.getError();
+         if (configError)
+@@ -358,12 +416,14 @@ export class ModelRuntime {
+         return resolveCompatibilityRequestConfig(model, this.config.getProvider(model.provider), this.extensionProviders.get(model.provider));
+     }
+     isUsingOAuth(providerId) {
++        this.synchronizeHostModels();
+         return this.snapshot.auth.get(providerId)?.type === "oauth";
+     }
+     isUsingSubscription(providerId) {
+         return this.isUsingOAuth(providerId) && this.models.getProvider(providerId)?.auth.oauth?.isSubscription === true;
+     }
+     hasConfiguredAuth(providerId) {
++        this.synchronizeHostModels();
+         return this.snapshot.configuredProviders.has(providerId);
+     }
+     async getAuth(providerOrModel, overrides = {}) {
+@@ -408,7 +468,7 @@ export class ModelRuntime {
+             const compositionError = this.compositionErrors.get(providerId);
+             if (compositionError)
+                 throw new Error(compositionError);
+-            const result = await this.models.refresh({ allowNetwork: false, providers: [providerId], signal });
++            const result = await this.refreshModels({ allowNetwork: false, providers: [providerId], signal });
+             if (result.aborted)
+                 signal.throwIfAborted();
+             const refreshError = result.errors.get(providerId);
+@@ -439,6 +499,7 @@ export class ModelRuntime {
+         return this.credentials.list(options);
+     }
+     getProviderAuthStatus(providerId) {
++        this.synchronizeHostModels();
+         if (this.credentials.hasRuntimeApiKey(providerId))
+             return { configured: true, source: "runtime" };
+         if (this.snapshot.storedProviders.has(providerId))
+@@ -587,7 +648,26 @@ export class ModelRuntime {
+             await this.synchronizeCredentialState(providerId, "logout", undefined, signal);
+         });
+     }
++    async refreshModels(options) {
++        const models = this.models;
++        const host = this.hostModels;
++        if (!host) return models.refresh(options);
++        const ids = options.providers ?? models.getProviders().map(provider => provider.id);
++        const hostIds = ids.filter(id => this.hostProviders.has(id) &&
++            !this.extensionProviders.has(id) && !this.nativeExtensionProviders.has(id));
++        const ownedIds = ids.filter(id => !hostIds.includes(id));
++        // Host catalogs keep their original store. Extension overlays use the memory-only collection.
++        const results = await Promise.all([
++            hostIds.length ? host.refresh({ ...options, providers: hostIds }) : undefined,
++            ownedIds.length ? models.refresh({ ...options, providers: ownedIds }) : undefined,
++        ]);
++        return {
++            aborted: results.some(result => result?.aborted) || (options.signal?.aborted ?? false),
++            errors: new Map(results.flatMap(result => [...(result?.errors ?? [])])),
++        };
++    }
+     async refresh(options = {}) {
++        this.synchronizeHostModels();
+         this.config = await ModelConfig.load(this.modelsPath);
+         this.configureRadiusProviders();
+         if (options.providers) {
+@@ -604,7 +684,7 @@ export class ModelRuntime {
+         };
+         // Published pi-ai builds before ModelsStore returned void and accepted a provider ID.
+         // The fallback keeps source-mode CLI tests working without rebuilding workspace dependencies.
+-        const result = (await this.models.refresh(refreshOptions)) ?? {
++        const result = (await this.refreshModels(refreshOptions)) ?? {
+             aborted: refreshOptions.signal?.aborted ?? false,
+             errors: new Map(),
+         };
+@@ -663,6 +743,7 @@ export class ModelRuntime {
+         };
+     }
+     registerProvider(providerId, config) {
++        this.synchronizeHostModels();
+         // Validate the incoming registration on its own, like the legacy registry:
+         // a broken re-registration must throw without touching the stored config.
+         validateExtensionProvider(providerId, this.builtins.get(providerId), this.config.getProvider(providerId), config);
 diff --git a/dist/core/package-manager.d.ts b/dist/core/package-manager.d.ts
 --- a/dist/core/package-manager.d.ts
 +++ b/dist/core/package-manager.d.ts
@@ -1029,6 +1257,67 @@ diff --git a/dist/core/extensions/loader.d.ts b/dist/core/extensions/loader.d.ts
 +export declare function discoverAndLoadExtensions(configuredPaths: string[], cwd: string, agentDir?: string, eventBus?: EventBus, options?: ExtensionLoaderOptions): Promise<LoadExtensionsResult>;
  //# sourceMappingURL=loader.d.ts.map
 \ No newline at end of file
+diff --git a/dist/core/model-runtime.d.ts b/dist/core/model-runtime.d.ts
+--- a/dist/core/model-runtime.d.ts
++++ b/dist/core/model-runtime.d.ts
+@@ -18,6 +18,20 @@ export interface CreateModelRuntimeOptions {
+     /** Skip initial catalog and availability refresh. Static models remain available. */
+     refreshOnCreate?: boolean;
+ }
++/** Shared memory-only key overlay over the host credential store. */
++export interface ModelRuntimeCredentials extends CredentialStore {
++    setRuntimeApiKey(providerId: string, apiKey: string): void;
++    removeRuntimeApiKey(providerId: string): void;
++    hasRuntimeApiKey(providerId: string): boolean;
++}
++export interface BindModelRuntimeOptions {
++    /** The host can replace its collection or providers while the runtime is open. */
++    models: () => Models;
++    credentials: ModelRuntimeCredentials;
++    allowModelNetwork?: boolean;
++    signal?: AbortSignal;
++    refreshOnCreate?: boolean;
++}
+ export interface ModelRuntimeAuthOverrides extends AuthOperationOptions {
+     apiKey?: string;
+     env?: Record<string, string>;
+@@ -34,7 +48,13 @@ export declare class CredentialSynchronizationError extends Error {
+ }
+ /** Configured pi-ai Models collection used by coding-agent and SDK consumers. */
+ export declare class ModelRuntime implements Models {
+-    private readonly models;
++    private readonly ownedModels;
++    private readonly hostSource;
++    private hostModels;
++    private readonly hostProviders;
++    private synchronizingHost;
++    private get models();
++    private synchronizeHostModels;
+     private readonly credentials;
+     private readonly defaultBuiltins;
+     private readonly builtins;
+@@ -53,6 +73,9 @@ export declare class ModelRuntime implements Models {
+     private availabilityError;
+     private readonly credentialOperations;
+     private constructor();
++    static createCredentials(store: CredentialStore): ModelRuntimeCredentials;
++    static bind(options: BindModelRuntimeOptions): Promise<ModelRuntime>;
++    private refreshModels;
+     static create(options?: CreateModelRuntimeOptions): Promise<ModelRuntime>;
+     private configureRadiusProviders;
+     private providerIds;
+diff --git a/dist/core/provider-composer.d.ts b/dist/core/provider-composer.d.ts
+--- a/dist/core/provider-composer.d.ts
++++ b/dist/core/provider-composer.d.ts
+@@ -69,7 +69,7 @@ export type AuthStatus = {
+ export declare const clearApiKeyCache: typeof clearConfigValueCache;
+ export declare function validateExtensionProvider(providerId: string, base: Provider | undefined, modelsConfig: ModelsJsonProvider | undefined, extension: ProviderConfigInput): void;
+ /** Compose built-in, models.json, and extension layers without reading credentials. */
+-export declare function composeModelProvider(providerId: string, base: Provider | undefined, modelConfig: ModelConfig, extension: ProviderConfigInput | undefined): Provider;
++export declare function composeModelProvider(providerId: string, base: Provider | undefined, modelConfig: Pick<ModelConfig, "getProvider">, extension: ProviderConfigInput | undefined): Provider;
+ export declare function resolveConfiguredModelHeaders(model: AnyModel, config: ModelsJsonProvider | undefined, extension: ProviderConfigInput | undefined, env?: Record<string, string>): Record<string, string> | undefined;
+ export interface CompatibilityRequestConfig {
+     headers?: ProviderHeaders;
 diff --git a/dist/core/model-registry.d.ts b/dist/core/model-registry.d.ts
 --- a/dist/core/model-registry.d.ts
 +++ b/dist/core/model-registry.d.ts

@@ -9,7 +9,7 @@ import {
 	type Usage,
 } from "@earendil-works/pi-ai";
 import { getProviderEnvValue } from "@earendil-works/pi-ai/utils/provider-env";
-import type { ModelRuntime } from "./model-runtime.ts";
+import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import type { SessionEntry, SessionManager, UsageEntry } from "@earendil-works/pi-coding-agent";
 import type { CacheWarmingMode } from "@earendil-works/pi-coding-agent";
 

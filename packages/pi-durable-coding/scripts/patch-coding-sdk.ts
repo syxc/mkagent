@@ -7,6 +7,7 @@ import { codingPackagePolicy } from './coding-package-policy.ts';
 import { codingSessionPolicy } from './coding-session-policy.ts';
 import { codingResourcePolicy } from './coding-resource-policy.ts';
 import { codingExtensionPolicy } from './coding-extension-policy.ts';
+import { codingModelRuntimePolicy } from './coding-model-runtime-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -37,6 +38,10 @@ for (const suffix of ['js', 'd.ts']) {
     `export { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";`,
     `export * from "./core/package-manager.${extension}";`,
     `export * from "./core/model-registry.${extension}";`,
+    `export * from "./core/model-runtime.${extension}";`,
+    `export * from "./core/models-store.${extension}";`,
+    `export { composeModelProvider, resolveCompatibilityRequestConfig, validateExtensionProvider } from "./core/provider-composer.${extension}";`,
+    `export * from "./core/virtual-models.${extension}";`,
     `export * from "./core/session-manager.${extension}";`,
     `export * from "./core/resource-loader.${extension}";`,
     `export * from "./core/extensions/loader.${extension}";`,
@@ -66,7 +71,12 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(resourcePath, codingResourcePolicy(readFileSync(join(baseline, resourcePath), 'utf8'), suffix === 'd.ts'));
   const extensionPath = `dist/core/extensions/loader.${suffix}`;
   outputs.set(extensionPath, codingExtensionPolicy(readFileSync(join(baseline, extensionPath), 'utf8'), suffix === 'd.ts'));
+  const runtimePath = `dist/core/model-runtime.${suffix}`;
+  outputs.set(runtimePath, codingModelRuntimePolicy(readFileSync(join(baseline, runtimePath), 'utf8'), suffix === 'd.ts'));
 }
+const composerPath = 'dist/core/provider-composer.d.ts';
+outputs.set(composerPath, replace(readFileSync(join(baseline, composerPath), 'utf8'),
+  'modelConfig: ModelConfig,', 'modelConfig: Pick<ModelConfig, "getProvider">,'));
 // Registry implementations only call public runtime operations; host ownership stays structural.
 const registryPath = 'dist/core/model-registry.d.ts';
 outputs.set(registryPath, replace(readFileSync(join(baseline, registryPath), 'utf8'),
@@ -120,7 +130,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, default full theme validation and installed worker theme asset lookup.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, default full theme validation and installed worker theme asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

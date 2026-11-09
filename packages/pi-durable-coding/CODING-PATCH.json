@@ -3,17 +3,17 @@
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "version": "1.5.0",
   "patch": "coding-sdk-host-boundaries-v1",
-  "policy": "Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, default full theme validation and installed worker theme asset lookup.",
+  "policy": "Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, default full theme validation and installed worker theme asset lookup.",
   "files": [
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "e347d76585db6e050b920a99ae15e2c681e371b7e88c77cfa58519994f4f10d2"
+      "sha256": "619e4169398ce8de8ef87585769443e31b24035eb514c9ae518e1d07943c5a7f"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "579396c73095dcbc41e0fd39629cc69e4acc621371ed6cd985d5aab05f0f97ee"
+      "sha256": "35c34729959af66e35f43d7fe2763a015608036903dfc63d36152e49a90394f0"
     },
     {
       "path": "dist/core/settings-manager.js",
@@ -46,6 +46,11 @@
       "sha256": "92918204d402ae8e281d71298a959e8dcc0aaa2be027fa830bb2ed3d719fabd0"
     },
     {
+      "path": "dist/core/model-runtime.js",
+      "originalSha256": "44d8017928eff6721d5a56b4e71f98bcafb124f5aa6e7d3f016491e11fcf6461",
+      "sha256": "c40df92bf2e667392bd124ddd3128ec95062600e2103bcb5b36bd03ff4a297eb"
+    },
+    {
       "path": "dist/core/package-manager.d.ts",
       "originalSha256": "ffc17233a0a119c344aa3f438afd9af45e450b3983647e84446e6ebb73110631",
       "sha256": "dd09ce4b684dba4c5ddc764339a0935c670305dfdf1e3566ab5041e1ea5a1634"
@@ -64,6 +69,16 @@
       "path": "dist/core/extensions/loader.d.ts",
       "originalSha256": "85ebf448c25774878ab3c1e8bdd5ee9b3a47431e7ae9054c7d4174c0939622b4",
       "sha256": "0e6c2eb76d4df1d806b544a50f0342faa3a2fa905011d160dafbe8c4e050b17f"
+    },
+    {
+      "path": "dist/core/model-runtime.d.ts",
+      "originalSha256": "5a7aac47a83c20316f593c74798f60ec4e521a0fddff03a0608dbc5514012bf5",
+      "sha256": "567c9cb7f36b00b3c78bf5cee0cd26c869d2a995fc0976b78a1f7ecf2dfb29e4"
+    },
+    {
+      "path": "dist/core/provider-composer.d.ts",
+      "originalSha256": "8b6c292d4e346cb2a45186f2b3784102aa9fa5b5bd2096ef6ec4bbb235ddb504",
+      "sha256": "1a98eacc7197dca40003948c50ea468e89aac46625314860c75d37c724033cf0"
     },
     {
       "path": "dist/core/model-registry.d.ts",

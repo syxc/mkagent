@@ -24,7 +24,7 @@ import {
 	type NormalizedBuildSystemPromptOptions,
 	normalizeBuildSystemPromptOptions,
 } from "../system-prompt.ts";
-import type { VirtualModelDefinition } from "../virtual-models.ts";
+import type { VirtualModelDefinition } from "@earendil-works/pi-coding-agent";
 import type {
 	AgentBeforeSettleEvent,
 	BeforeAgentStartCustomEvent,

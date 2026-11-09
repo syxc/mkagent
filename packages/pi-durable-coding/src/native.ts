@@ -2,7 +2,7 @@
 export * from './pi/index.ts';
 export { initializeExtensionModels } from './pi/core/agent-session-services.ts';
 export { compactionReserveFor } from './compaction-reserve.ts';
-export type { BindModelRuntimeOptions, ModelRuntimeCredentials } from './pi/core/model-runtime.ts';
+export type { BindModelRuntimeOptions, ModelRuntimeCredentials } from '@earendil-works/pi-coding-agent';
 export { createHostResources, createHostSettingsManager } from './host-resources.ts';
 export type { HostResourceOptions } from './host-resources.ts';
 export { prepareHostResources } from './host-project-resources.ts';

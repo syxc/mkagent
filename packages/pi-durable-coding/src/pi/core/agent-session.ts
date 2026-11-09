@@ -117,7 +117,7 @@ import { type BeforeAgentStartTrigger, emitSessionShutdownEvent } from "./extens
 import { createToolNameMatcher, isMcpToolName } from "@earendil-works/pi-coding-agent";
 import { type BashExecutionMessage, type CustomMessage, convertToLlm } from "./messages.ts";
 import { ModelRegistry } from "@earendil-works/pi-coding-agent";
-import type { ModelRuntime } from "./model-runtime.ts";
+import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { NestedToolCallRunner } from "./nested-tool-calls.ts";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.ts";
 import type { ResourceExtensionPaths, ResourceLoader } from "@earendil-works/pi-coding-agent";
@@ -157,7 +157,7 @@ import {
 	isVirtualModel,
 	VIRTUAL_MODEL_STATE_ENTRY,
 	type VirtualModelStateData,
-} from "./virtual-models.ts";
+} from "@earendil-works/pi-coding-agent";
 
 /**
  * Stream functions that resolve auth through a given ModelRuntime themselves, such as the one

@@ -57,7 +57,6 @@ for (const [name, changed] of [
 
 for (const [path, changed] of [
   ['core/compaction/compaction.ts', 'export const calculateContextTokens = (usage: never): number => 0;'],
-  ['core/models-store.ts', 'export const InMemoryCodingAgentModelsStore = class { constructor(required: string) {} };'],
   ['core/extensions/pi-ai-extension-view.ts', 'import { type TUnsafe, Type } from "typebox";\nexport const StringEnum = (values: number): number => values;'],
 ] as const) {
   test(`declaration generation rejects variable replacements of guarded helpers in ${path}`, () => {
