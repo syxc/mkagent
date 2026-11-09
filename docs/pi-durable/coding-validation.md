@@ -26,6 +26,66 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## ResourceLoader SDK boundary after df732f7
+
+All three native resource construction paths now use the published Coding SDK
+DefaultResourceLoader. The host injects four existing extension-loader functions
+so module resolution and plugin transformation keep their existing contracts.
+The SDK defaults to its own extension loader. Resource discovery, package
+resolution, trust stages, reload, metadata and collisions remain SDK algorithms.
+A narrow patch adds missing-package and package-policy options, extra package
+sources, prompt paths resolved after trust, and a project-context trust guard.
+It also exports the existing prompt-deduplication method without copying it.
+
+The 1,226-line resource loader, 104-line context helper and 31-line prompt
+collision helper are deleted, together with their obsolete source-port rules.
+Before deletion, all 13 declarations and 7,354 execution tokens match after
+normalizing injected extension bindings and the existing local deduplication
+delegate. The remaining plugin loader is still local and needs SDK replacement;
+this comparison does not establish that its complete implementation is required.
+
+The affected nine-file set passes 70 tests with 423 assertions. It covers
+host-only isolation, project trust, SYSTEM/APPEND selection, installed and missing
+packages, resource metadata, plugins, module aliases, transformation and reload.
+Coding declarations and server typecheck pass. The first incremental dependency
+install removes the nested Coding pi-ai 1.5.0 installation. This causes missing
+compat-schema imports and incompatible branded types. A normal frozen install
+restores six dependencies; both type checks and the affected tests pass without
+a functional code change. Worker bundle tests pass 26 tests with 103 assertions.
+The first source-generation chain was killed by a one-second task deadline;
+the complete chain then passes with a corrected deadline.
+
+Complete source and pristine patch checks pass for 173 runtime TypeScript files,
+including 169 under src/pi and four facades, four assets, 10 auxiliary sources
+and 22 forwards. The Coding patch has 16 physical outputs, core four and durable
+30, for a total of 50. A fresh hoisted frozen install uses task HOME/cache,
+the public registry and disabled scripts. It covers 11 workspaces, leaves the
+lockfile unchanged and matches all 50 outputs to the tested installation. All
+16 Coding outputs match CODING-PATCH.json. Fresh SDK probes pass for trust
+acceptance and revocation, prompt paths, missing-source skips, a single inline
+factory per reload, context isolation, prompt collisions and injected extension
+bindings. The fixed Craft v0.15.6 audit passes for 2,166 files after 25 source
+records are updated, added or deleted.
+
+Independent review against df732f7 found no confirmed new correctness or
+compatibility defect. Its source audit confirms all 13 resource declarations;
+separate probes cover the SDK default and all three host creation paths, trust
+acceptance and revocation, one inline factory per reload, prompt/context fallback,
+skips without network or subprocesses, reload, stale APIs, factory rollback and
+both Pi and TypeBox package names. All probes exit zero. The reviewer did not
+repeat full tests, builds or the fresh install.
+
+The review also confirms that 10 declarations in the local plugin loader match
+the pristine SDK, including runtime creation, registration, factory initialization
+and caching. Its host differences concern module resolution and transformation.
+A narrow module-import hook is the next reuse candidate; retaining the complete
+plugin loader is not justified by those differences. The SDK AgentSession
+production lifecycle, atomic input admission, cancellation and cold recovery
+remain open, along with ModelRuntime and plugin loading. Task receipts are in
+the resources-sdk task directory; independent probes are in the resource-review
+task directory. These checks do not cover real services, Windows or complete
+product acceptance.
+
 ## SessionManager SDK boundary after 4cc709a
 
 Production session consumers now use the published Coding SDK SessionManager

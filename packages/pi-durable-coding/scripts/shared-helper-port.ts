@@ -174,12 +174,6 @@ export function StringEnum<T extends readonly string[]>(
     names: ['GitPaths', 'findGitPaths'],
     imports: 'import { findGitPaths, type GitPaths } from "../../upstream/core/git-paths.ts";\nexport { findGitPaths, type GitPaths };',
   },
-  'core/resource-loader.ts': {
-    change: 'shared-lightweight-resource-algorithms',
-    names: ['loadContextFileFromDir', 'findShadowedContextFile', 'loadProjectContextFiles'],
-    imports: 'import { loadContextFileFromDir, findShadowedContextFile, loadProjectContextFiles } from "../../upstream/core/context-files.ts";\n'
-      + 'export { loadProjectContextFiles };\nimport { dedupePrompts } from "../../upstream/core/resource-collisions.ts";',
-  },
   'extensions/tool-search/tool.ts': {
     change: 'shared-durable-tool-search-ranking', dependency: '@earendil-works/pi-durable',
     names: ['TOOL_SEARCH_TOOL_NAME', 'DEFAULT_TOOL_SEARCH_LIMIT', 'TOOL_SEARCH_DESCRIPTION',
@@ -278,13 +272,7 @@ function portDeclarations(path: string, body: string, rule: DeclarationPort): st
         text: '{\n\t\treturn rankToolSearchDocuments(query, documents, limit, { k1: this.k1, b: this.b });\n\t}' });
       sharedRanker = true;
     }
-    if (path === 'core/resource-loader.ts' && ts.isClassDeclaration(statement) &&
-        statement.name?.text === 'DefaultResourceLoader') {
-      const method = statement.members.find(member => ts.isMethodDeclaration(member) &&
-        ts.isIdentifier(member.name) && member.name.text === 'dedupePrompts');
-      if (!method || !ts.isMethodDeclaration(method) || !method.body) throw new Error('Prompt deduplication boundary changed');
-      edits.push({ start: method.body.getStart(parsed), end: method.body.end, text: '{\n\t\treturn dedupePrompts(prompts);\n\t}' });
-    }
+
   }
   if (path === 'extensions/tool-search/tool.ts' && (!sharedRanker || !sharedDocument)) throw new Error('Tool search public boundary changed');
   if (remaining.size) throw new Error(`Shared declarations changed: ${path}: ${[...remaining].join(', ')}`);
@@ -293,6 +281,5 @@ function portDeclarations(path: string, body: string, rule: DeclarationPort): st
     const original = 'import { type TUnsafe, Type } from "typebox";';
     if (body.split(original).length !== 2) throw new Error('Native TypeBox import changed');
   }
-  if (path === 'core/resource-loader.ts') body = body.replace('import { findGitPaths } from "./footer-data-provider.ts";\n', '');
   return rule.imports + '\n' + body;
 }

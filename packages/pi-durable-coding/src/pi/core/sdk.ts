@@ -1,4 +1,5 @@
 import type { DurableLoopBinding } from "../../durable-coding/engine.ts";
+import { resourceExtensionLoader } from "../../resource-extension-loader.ts";
 import { join } from "node:path";
 import { Agent, type AgentMessage, setDefaultStreamFn, type ThinkingLevel } from "../../agent-runtime.ts";
 import type { ModelsSimpleStreamOptions } from "@earendil-works/pi-ai";
@@ -15,8 +16,8 @@ import { createToolNameMatcher } from "@earendil-works/pi-coding-agent";
 import { convertToLlm } from "./messages.ts";
 import { findInitialModel } from "./model-resolver.ts";
 import { ModelRuntime } from "./model-runtime.ts";
-import type { ResourceLoader } from "./resource-loader.ts";
-import { DefaultResourceLoader } from "./resource-loader.ts";
+import type { ResourceLoader } from "@earendil-works/pi-coding-agent";
+import { DefaultResourceLoader } from "@earendil-works/pi-coding-agent";
 import { getDefaultSessionDir, SessionManager } from "@earendil-works/pi-coding-agent";
 import {
 	applyToolModifiers,
@@ -212,7 +213,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	const sessionManager = options.sessionManager ?? SessionManager.create(cwd, getDefaultSessionDir(cwd, agentDir));
 
 	if (!resourceLoader) {
-		resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
+		resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager, extensionLoader: resourceExtensionLoader });
 		await resourceLoader.reload();
 		time("resourceLoader.reload");
 	}

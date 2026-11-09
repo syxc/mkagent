@@ -291,7 +291,10 @@ export function portNativeMessages(source: string): string {
 }
 
 export function portSDK(source: string): string {
-  let body = 'import type { DurableLoopBinding } from "../../durable-coding/engine.ts";\n' + source;
+  let body = 'import type { DurableLoopBinding } from "../../durable-coding/engine.ts";\n'
+    + 'import { resourceExtensionLoader } from "../../resource-extension-loader.ts";\n' + source;
+  body = edit(body, "new DefaultResourceLoader({ cwd, agentDir, settingsManager })",
+    "new DefaultResourceLoader({ cwd, agentDir, settingsManager, extensionLoader: resourceExtensionLoader })");
   body = edit(body, 'import { AgentSession, markRuntimeStreamFunction }',
     'import { AgentSession, markRuntimeStreamFunction, type AgentSessionConfig }');
   body = edit(body, 'export interface CreateAgentSessionOptions {',
@@ -361,6 +364,9 @@ export function portCacheWarmer(source: string): string {
 
 /** Share the pinned startup registration order with hosts that supply their own resource loader. */
 export function portSessionServices(source: string): string {
+  source = 'import { resourceExtensionLoader } from "../../resource-extension-loader.ts";\n' + source;
+  source = edit(source, "const resourceLoader = new DefaultResourceLoader({",
+    "const resourceLoader = new DefaultResourceLoader({\n\t\textensionLoader: resourceExtensionLoader,");
   const start = source.indexOf('\tconst diagnostics: AgentSessionRuntimeDiagnostic[] = [];\n\tconst extensionsResult = resourceLoader.getExtensions();\n\tfor (const { name, config, extensionPath }');
   const endMarker = '\tawait modelRuntime.refresh({ allowNetwork: false });';
   const end = source.indexOf(endMarker, start);

@@ -101,14 +101,7 @@ function port(source: string, target = source, selection?: string[], imports = '
     content = content.replace(importing, '\tpreparePluginTranspiler(jiti);\n' + importing);
     changes.push('preserve-host-stack-formatting-after-babel-bootstrap', 'shared-native-extension-lifecycle');
   }
-  if (changes?.includes('host-project-context-trust')) {
-    const signature = '\tagentDir: string;\n}';
-    if (!content.includes(signature)) throw new Error('Project context signature changed');
-    content = content.replace(signature, '\tagentDir: string;\n\tprojectTrusted?: boolean;\n}');
-    const anchor = '\tconst ancestorContextFiles: Array<{ path: string; content: string }> = [];';
-    if (!content.includes(anchor)) throw new Error('Project context trust boundary changed');
-    content = content.replace(anchor, '\tif (options.projectTrusted === false) return contextFiles;\n\n' + anchor);
-  }
+
   const parsed = ts.createSourceFile(target, content, ts.ScriptTarget.Latest, true);
   const replacements: Array<{ start: number; end: number; value: string }> = [];
   for (const statement of parsed.statements) {
@@ -204,18 +197,6 @@ port('core/extensions/loader.ts', 'core/extensions/loader.js', undefined, '', ['
 port('core/footer-data-provider.ts', 'core/git-paths.ts', ['GitPaths', 'findGitPaths'],
   'import { existsSync, readFileSync, statSync } from "node:fs";\n'
   + 'import { dirname, join, resolve } from "node:path";\n\n');
-port('core/resource-loader.ts', 'core/context-files.ts',
-  ['loadContextFileFromDir', 'findShadowedContextFile', 'loadProjectContextFiles'],
-  'import { existsSync, readFileSync, statSync } from "node:fs";\n'
-  + 'import { basename, dirname, join } from "node:path";\n'
-  + 'import chalk from "chalk";\n'
-  + 'import { canonicalizePath, isPathWithin, pathsEqual, resolvePath } from "../utils/paths.ts";\n'
-  + 'import { stripBom } from "../utils/text.ts";\n'
-  + 'import { findGitPaths } from "./git-paths.ts";\n\n'
-  + 'export { loadContextFileFromDir, findShadowedContextFile };\n\n', ['host-project-context-trust']);
-port('core/resource-loader.ts', 'core/resource-collisions.ts', ['DefaultResourceLoader.dedupePrompts'],
-  'import type { PromptTemplate } from "./prompt-templates.ts";\n'
-  + 'import type { ResourceDiagnostic } from "./diagnostics.ts";\n\n');
 port('core/agent-session.ts', 'core/boundary-drafts.js', [
   'AgentSession._applyBoundaryDrafts', 'AgentSession._buildBoundaryContext', 'AgentSession._replaceMessageInPlace',
 ], 'import { estimateProjectedContextTokens } from "./context-tokens.js";\n'

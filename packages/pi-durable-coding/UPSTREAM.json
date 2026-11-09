@@ -29,32 +29,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/resource-loader.ts",
-      "target": "src/upstream/core/context-files.ts",
-      "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
-      "portSha256": "c10627dd252a97a451f13b8cd69bffc6abf1c39eb35101647d9b645950cd8073",
-      "selection": [
-        "loadContextFileFromDir",
-        "findShadowedContextFile",
-        "loadProjectContextFiles"
-      ],
-      "changes": [
-        "host-project-context-trust"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/resource-loader.ts",
-      "target": "src/upstream/core/resource-collisions.ts",
-      "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
-      "portSha256": "8052b6ae5a3640dc1324871ee59fe62fcf93600e82657c7d6b981f10728733db",
-      "selection": [
-        "DefaultResourceLoader.dedupePrompts"
-      ],
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/agent-session.ts",
       "target": "src/upstream/core/boundary-drafts.js",
       "sha256": "b7c24bf1c1366e931083100d921a80d390d66bacde4acf7472a7b57af1bb69aa",

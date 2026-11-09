@@ -11,6 +11,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/model-registry.ts',
   'core/package-manager.ts',
   'core/session-manager.ts',
+  'core/resource-loader.ts',
   'core/settings-manager.ts',
   'core/settings-defaults.ts',
   'core/tools/file-mutation-queue.ts',

@@ -170,10 +170,6 @@ while (queue.length) {
   };
   visit(parsed);
   for (const edit of replacements.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.body + body.slice(edit.end);
-  if (path === 'core/resource-loader.ts') {
-    body = portResourceLoader(path, body);
-    changes.add('host-resource-trust-and-installed-package-policy');
-  }
   if (path === 'core/skills.ts' || path === 'core/prompt-templates.ts') {
     body = portResourceLoader(path, body);
     changes.add('explicit-host-project-resource-directory');

@@ -2517,8 +2517,8 @@
       "reason": "Use the published SessionManager with context projection callbacks and legacy factory/directory hooks, stop source traversal and remove the complete local session implementation and conversion rule."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "c196d8fb6daa1d7dc0f9ee49da22e68ca51943bba996f37767b2b9b6f5a1102f",
-      "reason": "Register public helper replacements and SDK bridge-marker preservation. Exclude launcher helpers, run-mode exports and private host components with missing and duplicate boundary guards."
+      "sha256": "de6bd89744bfba517d584f19bd1184a23cc750fb496c55c7b48e2738b18bab7e",
+      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "8e2a592d0d54bfcef94b503d3b3080904a34bfd78b5291c95f2f41b0793396fb",
@@ -2573,8 +2573,8 @@
       "reason": "Verify SDK registry identity, host runtime binding and legacy structural runtime behavior after removing local registry implementations."
     },
     "packages/pi-durable-coding/test/shared-packages.test.ts": {
-      "sha256": "2bac6e8aedd00406075edf904c070e81ddb1df7cc33243147f42a5666516931a",
-      "reason": "Verify published package-manager identity and preserve host discovery, trust, native and legacy directory and offline contracts."
+      "sha256": "4d3565234f3795ed1beeb3861c945a2932b224c870ef081678d45f4c22f66b57",
+      "reason": "Verify SDK resource identity and existing discovery, trust, package and plugin contracts after removing local implementations."
     },
     "packages/pi-durable-coding/test/shared-sessions-runner.test.ts": {
       "sha256": "bceb237b45c0c20743088522b1ba08ac97c1e0a24a9cf61e7226acdb660176ae",
@@ -3725,8 +3725,8 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "43c6f424340c9bf0b6afa72b22ee770a67dbd509a020aaed82aa74ae2d5c4f03",
-      "reason": "Stop source traversal at published model and MCP registry modules and remove their local implementations and obsolete MCP forward."
+      "sha256": "92c896ec22651baddc3ad0b15892daa9fa3902152b50ad25eb8b786c3437f2f1",
+      "reason": "Record SDK resource consumers after deleting the local resource loader and two auxiliary implementations."
     },
     "packages/pi-durable-coding/package.json": {
       "sha256": "87be15851e183a78fab993ecf5fcb5478df74c45e832fecfb063776302a4409d",
@@ -3741,8 +3741,8 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "35c821255ad9619206cc8d2913400b4491b3d20cdd25ca8c758786aa2d8e2a21",
-      "reason": "Stop source traversal at published model and MCP registry modules and remove their local implementations and obsolete MCP forward."
+      "sha256": "4d96a501e0206ba91a970add8da52aa0fa780ca0ed6b762772e6a356737e4b6a",
+      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/src/compat.ts": {
       "sha256": "71c5b55bb77036e8a7e0bd08cb553cfec6d19b6584115d96f42ac77945ae5cbe",
@@ -3797,8 +3797,8 @@
       "reason": "Verify native resources and require an explicit host directory before skill discovery."
     },
     "packages/pi-durable-coding/src/resources.ts": {
-      "sha256": "e4e945d99a73dcb67421337247a261dd61948a6513bc2d906b97d63010e0e321",
-      "reason": "Use the public Coding SDK for event bus, diagnostics, file mutation queue and frontmatter instead of local copies."
+      "sha256": "09115395153ce55621a5513d9604d342a40102c316e1ae56e26cc509b5b4f8de",
+      "reason": "Use the published Coding SDK resource loader and context/prompt contracts while retaining outer host trust and extension module policies."
     },
     "packages/pi-durable-coding/src/session-view.ts": {
       "sha256": "f975b8a58655badf561eb24a76035a354213e5c27112cd904f9f608d03550b83",
@@ -3811,10 +3811,6 @@
     "packages/pi-durable-coding/src/upstream/core/boundary-drafts.js": {
       "sha256": "e47c7898af101e0434694dcd1fc14123059b26d504ecb698cdcd9572c4096694",
       "reason": "Port Pi v1.5.0 packages/coding-agent/src/core/agent-session.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
-    },
-    "packages/pi-durable-coding/src/upstream/core/context-files.ts": {
-      "sha256": "c10627dd252a97a451f13b8cd69bffc6abf1c39eb35101647d9b645950cd8073",
-      "reason": "Port Pi v1.5.0 packages/coding-agent/src/core/resource-loader.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution. Share the canonical implementation or host policy rather than port another complete copy."
     },
     "packages/pi-durable-coding/src/upstream/core/context-tokens.js": {
       "sha256": "849b0b3f91caa22247216b030390f23772408e7eb6afaffba96533d362c5070c",
@@ -3871,10 +3867,6 @@
     "packages/pi-durable-coding/src/upstream/core/resolve-config-value.ts": {
       "sha256": "ddfa00cd4eb6c7100312c923417908fc435db6641242e206d137f79f3826401d",
       "reason": "Port Pi v1.5.0 packages/coding-agent/src/core/resolve-config-value.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
-    },
-    "packages/pi-durable-coding/src/upstream/core/resource-collisions.ts": {
-      "sha256": "8052b6ae5a3640dc1324871ee59fe62fcf93600e82657c7d6b981f10728733db",
-      "reason": "Use the public Coding SDK for event bus, diagnostics, file mutation queue and frontmatter instead of local copies."
     },
     "packages/pi-durable-coding/src/upstream/core/session-manager.js": {
       "sha256": "a74ab51189cd7d9826c97f523dc18a0ecb86a0f12ec04e3ef406e57c8f531e21",
@@ -4029,8 +4021,8 @@
       "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "5505d94b423854df7cb0b15e023e7f76817780a063ac5327d14df02c7eecfa2a",
-      "reason": "Record SDK session consumers after deleting the complete local SessionManager implementation."
+      "sha256": "69e1b6ae436c9a87ce89c0ef55cd2bfa154fb9ae3998668fc91312724f9909ac",
+      "reason": "Record SDK resource consumers after deleting the local resource loader and two auxiliary implementations."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "e132e9a4414b44d25c8d7372f493394f104ce15cf4010e7596a721ed9cf7bffc",
@@ -4041,20 +4033,20 @@
       "reason": "Reproduce host model ownership and the structural provider lookup parameter without changing provider JavaScript."
     },
     "packages/pi-durable-coding/scripts/resource-loader-port.ts": {
-      "sha256": "266ab7e243541bb257ed8434c7d26d98dd13a0583e2b822fcb758091f06c4c79",
-      "reason": "Stop generation at the public package-manager SDK and remove unused helper source and forward records."
+      "sha256": "2eb19fecb916ecaa161b0eaff747fdb51a8c45ed3b5b7c9da935d22b9ba5a5b2",
+      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/scripts/session-runtime-port.ts": {
-      "sha256": "3a9fba6c2390bc80ef4be2df287068e9182cacc294dd628f43caeceaa00818de",
-      "reason": "Reproduce pinned native session transformations with host commit, cancellation, event boundaries and current host prompts before agent-start hooks. Reproduce shared coding implementations and explicit compatibility seams without a second policy template."
+      "sha256": "73c69ca6680609f3a03b3b14b21dc3759d8523d155ddc6b3c7e3d2c2c880dd25",
+      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/test/native-theme.test.ts": {
       "sha256": "87d1b7c2b1eef13404fc67085c20bd32d55b821aba7ab56a6de594a973530239",
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "e720a39deb5b185eb9855c0f390da0d879ca689b2906388f238f49544269b32d",
-      "reason": "Use the published SessionManager with context projection callbacks and legacy factory/directory hooks, stop source traversal and remove the complete local session implementation and conversion rule."
+      "sha256": "1134dccdd911f9efc3617a25c3998b4ed6ccfff8bec1869f139540f307a24613",
+      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4129,8 +4121,8 @@
       "reason": "Provide the independent native coding host adapter and public contracts in durable-loop.ts."
     },
     "packages/pi-durable-coding/src/host-resources.ts": {
-      "sha256": "13b202ce67c7add5e0f7512f2acd92baeef5c09a15dd05171d1a2ce581d241c8",
-      "reason": "Use the published Coding SDK settings implementation while preserving existing host policy adapters."
+      "sha256": "804d839558021413a30669f5d0711c7f8d1c0cba10a2da1292f9fc51ef3977dd",
+      "reason": "Use the published Coding SDK resource loader and context/prompt contracts while retaining outer host trust and extension module policies."
     },
     "packages/pi-durable-coding/src/host-settings.ts": {
       "sha256": "1877562419f2354bf30cde3aff0ba819ca48a2a8d7b7347d23877b2a1e8f8e8c",
@@ -4173,12 +4165,12 @@
       "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
     },
     "packages/pi-durable-coding/src/pi/core/agent-session-services.ts": {
-      "sha256": "35f9088fd4a34b8e966acedba04a795b9abe428e05efb76791c7229209c765d2",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
+      "sha256": "df2fe4c17f2a3d336db07ec5a1f80a2635cb2110cd8c38e630ffc531fc5d69b8",
+      "reason": "Use the published Coding SDK resource loader and context/prompt contracts while retaining outer host trust and extension module policies."
     },
     "packages/pi-durable-coding/src/pi/core/agent-session.ts": {
-      "sha256": "b33ecd75322279cdd2d6750e9de090aa289450af79c1dc6e2fc4cdb6625e0609",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
+      "sha256": "fece675771806679165efe43794bd977f3235988da1da47b93ad554c95097e79",
+      "reason": "Use the published Coding SDK resource loader and context/prompt contracts while retaining outer host trust and extension module policies."
     },
     "packages/pi-durable-coding/src/pi/core/auth-guidance.ts": {
       "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
@@ -4368,17 +4360,13 @@
       "sha256": "0f53dad47fe5d5d8837c022b7951ccd3bd5a9b577bd662f0986272110e83bcc7",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/resolve-config-value.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/core/resource-loader.ts": {
-      "sha256": "4745400e27e364d4d1e00274ca919f55c33557839a898f563852de083616fbc5",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
     "packages/pi-durable-coding/src/pi/core/runtime-credentials.ts": {
       "sha256": "ddbedbe209da4314a873c9e435c2a80404a25bcf63406351888bd613068b7036",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/runtime-credentials.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/sdk.ts": {
-      "sha256": "f0294fd0ee030012ae2ef932bb8d8d013f3708323cc6addf812e16f1915f4455",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
+      "sha256": "f4ec60443f3ef3e1ad30ff88577a1d2422587c73f00e3172b91aa290c64e4bec",
+      "reason": "Use the published Coding SDK resource loader and context/prompt contracts while retaining outer host trust and extension module policies."
     },
     "packages/pi-durable-coding/src/pi/core/session-cwd.ts": {
       "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
@@ -4581,8 +4569,8 @@
       "reason": "Delegate tokenization, scored BM25 and schema metadata to durable compatibility exports; retain native namespace and session activation."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "0e8a10064be613ad1705e0b3d692263a312602211f194c0fa00802acc43622f1",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
+      "sha256": "a5f83791fe21e5f240b7d1cc01edbee8a668e3201f07e76741264c679e7c05b7",
+      "reason": "Use the published Coding SDK resource loader and context/prompt contracts while retaining outer host trust and extension module policies."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4897,8 +4885,8 @@
       "reason": "Verify SDK registry identity, host runtime binding and legacy structural runtime behavior after removing local registry implementations."
     },
     "packages/pi-durable-coding/test/host-resources.test.ts": {
-      "sha256": "943d00a132af61ba0f59382acb4ad3b871ea8d5e4feb5a76640001e8c6d8ac06",
-      "reason": "Verify published SessionManager identity, legacy factories, durable projections and journal behavior without the local session implementation."
+      "sha256": "104e5d4f17ce1a0a3e94f3cd37ca43005b3ecc0a740f04f0ca7f8d3583be8073",
+      "reason": "Verify SDK resource identity and existing discovery, trust, package and plugin contracts after removing local implementations."
     },
     "packages/pi-durable-coding/test/fixtures/host-tool-recovery-process.ts": {
       "sha256": "9ecfdb70d950dea604553c3db5da91db36260ac67f439c25e723a2036195fc1a",
@@ -5153,24 +5141,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "2895029ac232df38d08cbd19c02bc175be4832cb4eead82146dae585004e17f3",
-      "reason": "Use the published SessionManager with context projection callbacks and legacy factory/directory hooks, stop source traversal and remove the complete local session implementation and conversion rule."
+      "sha256": "4e1fd859ca2ae22dff5de9ba57e4abe9b198322e027d6b696868d62245d178cd",
+      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "e3b330c11716b5cd63f11201c94cc3bd49065bdf1cd12f3d7e4f4672d24beb7e",
-      "reason": "Verify published SessionManager identity, legacy factories, durable projections and journal behavior without the local session implementation."
+      "sha256": "39d421d0f8fa505916583e51752900e712cd724b448e20986c19f06e2246bdf5",
+      "reason": "Verify SDK resource identity and existing discovery, trust, package and plugin contracts after removing local implementations."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "bf34afe6ff6dbad0c3c4ca06db8a882f263a7e47a31374a8e2c396473451e6f1",
-      "reason": "Use the published SessionManager with context projection callbacks and legacy factory/directory hooks, stop source traversal and remove the complete local session implementation and conversion rule."
+      "sha256": "9137d036c6871295bdc30dce3b6f28acee5237ad458bcc873ddce52877a09a86",
+      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "c31e14dfacfeba0f70c7c8f5568960e62f426441f39f6c84e4180b1e688e4973",
-      "reason": "Use the published SessionManager with context projection callbacks and legacy factory/directory hooks, stop source traversal and remove the complete local session implementation and conversion rule."
+      "sha256": "a24fdb0d0bce95e647fa8b003bfdcc549e50f6b1008cd2e644c0548ad93ca789",
+      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "104744cadd7d712c5bb2a1145a48bca10fcf175e51504017ea2237b1b66427eb",
-      "reason": "Use the published SessionManager with context projection callbacks and legacy factory/directory hooks, stop source traversal and remove the complete local session implementation and conversion rule."
+      "sha256": "1a6593fdd155e8de6e039e9113ad1f2d1c4907afa0a97b572fd938c1e28dc8dc",
+      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -5179,6 +5167,14 @@
     "packages/pi-durable-coding/scripts/coding-session-policy.ts": {
       "sha256": "9e0680bbe7da03405f2ce821a391230aaae594270f093900ec8b367f15c9487e",
       "reason": "Use the published SessionManager with context projection callbacks and legacy factory/directory hooks, stop source traversal and remove the complete local session implementation and conversion rule."
+    },
+    "packages/pi-durable-coding/scripts/coding-resource-policy.ts": {
+      "sha256": "3f317d62224fd0c71330723618c3083f8acd93f9cca7c9f6e351edfd43690fcc",
+      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
+    },
+    "packages/pi-durable-coding/src/resource-extension-loader.ts": {
+      "sha256": "2e828ffe9913c25cc207ca579b8a5ec9e8ecfc3ebc42692e9245066fbeeb2b5e",
+      "reason": "Inject existing host extension bindings into the published resource loader to preserve module resolution while the SDK owns resource discovery and lifecycle."
     }
   },
   "deleted": {

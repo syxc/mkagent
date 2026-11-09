@@ -2,11 +2,10 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolveCodingPackages, type CodingPackageOptions } from './packages.ts';
-import { loadProjectContextFiles } from './upstream/core/context-files.ts';
+import { loadProjectContextFiles, dedupePrompts } from '@earendil-works/pi-coding-agent';
 import { loadSkills, formatSkillsForPrompt, type Skill } from './upstream/core/skills.ts';
 import { loadPromptTemplates, type PromptTemplate } from './upstream/core/prompt-templates.ts';
 import { createSourceInfo, type SourceInfo } from './upstream/core/source-info.ts';
-import { dedupePrompts } from './upstream/core/resource-collisions.ts';
 import { canonicalizePath, isPathWithin, pathsEqual } from './upstream/utils/paths.ts';
 import { stripBom } from './upstream/utils/text.ts';
 import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";

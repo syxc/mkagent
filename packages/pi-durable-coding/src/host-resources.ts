@@ -11,7 +11,8 @@ import {
   loadProjectContextFiles,
   type DefaultResourceLoaderOptions,
   type ResourceLoaderReloadOptions,
-} from './pi/core/resource-loader.ts';
+} from '@earendil-works/pi-coding-agent';
+import { resourceExtensionLoader } from './resource-extension-loader.ts';
 import {
   FileSettingsStorage,
   SettingsManager,
@@ -107,6 +108,7 @@ export function createHostResources(options: HostResourceOptions): {
   };
   const resourceLoader = new HostResourceLoader({
     cwd, agentDir, settingsManager,
+    extensionLoader: resourceExtensionLoader,
     eventBus: options.eventBus,
     extensionFactories: [
       ...(options.extensionFactories ?? []),

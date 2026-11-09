@@ -246,8 +246,8 @@ export type {
 	ResolvedResource,
 } from "@earendil-works/pi-coding-agent";
 export { DefaultPackageManager } from "@earendil-works/pi-coding-agent";
-export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "./core/resource-loader.ts";
-export { DefaultResourceLoader, loadProjectContextFiles } from "./core/resource-loader.ts";
+export type { ResourceCollision, ResourceDiagnostic, ResourceLoader } from "@earendil-works/pi-coding-agent";
+export { DefaultResourceLoader, loadProjectContextFiles } from "@earendil-works/pi-coding-agent";
 // SDK for programmatic usage
 export {
 	AgentSessionRuntime,

@@ -1,3 +1,4 @@
+import { resourceExtensionLoader } from "../../resource-extension-loader.ts";
 import { join } from "node:path";
 import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 import type { Model } from "@earendil-works/pi-ai";
@@ -10,7 +11,7 @@ import {
 	type DefaultResourceLoaderOptions,
 	type ResourceLoader,
 	type ResourceLoaderReloadOptions,
-} from "./resource-loader.ts";
+} from "@earendil-works/pi-coding-agent";
 import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "./sdk.ts";
 import type { SessionManager } from "@earendil-works/pi-coding-agent";
 import { SettingsManager } from "@earendil-works/pi-coding-agent";
@@ -146,6 +147,7 @@ export async function createAgentSessionServices(
 		}));
 	const settingsManager = options.settingsManager ?? SettingsManager.create(cwd, agentDir);
 	const resourceLoader = new DefaultResourceLoader({
+		extensionLoader: resourceExtensionLoader,
 		...(options.resourceLoaderOptions ?? {}),
 		cwd,
 		agentDir,

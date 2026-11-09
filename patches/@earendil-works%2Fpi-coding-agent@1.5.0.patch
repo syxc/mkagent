@@ -1,8 +1,8 @@
-# Content SHA-256: 4a9aea54672cc8f1bf3bae99c07a8b6fcf2df6a83f7134e8140fa0b327b9ad55
+# Content SHA-256: 42b49af2bde1b762b109c64e2e5eb090b23c3b40841fc22e94f2ab53a4b300cb
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,13 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,14 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -11,6 +11,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/package-manager.js";
 +export * from "./core/model-registry.js";
 +export * from "./core/session-manager.js";
++export * from "./core/resource-loader.js";
 +export * from "./core/mcp-servers.js";
 +export * from "./core/keybindings.js";
 +export * from "./modes/interactive/theme/theme.js";
@@ -29,7 +30,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,13 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,14 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -38,6 +39,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/package-manager.ts";
 +export * from "./core/model-registry.ts";
 +export * from "./core/session-manager.ts";
++export * from "./core/resource-loader.ts";
 +export * from "./core/mcp-servers.ts";
 +export * from "./core/keybindings.ts";
 +export * from "./modes/interactive/theme/theme.ts";
@@ -437,6 +439,158 @@ diff --git a/dist/core/session-manager.js b/dist/core/session-manager.js
          try {
              if (!existsSync(sessionsDir))
                  return [];
+diff --git a/dist/core/resource-loader.js b/dist/core/resource-loader.js
+--- a/dist/core/resource-loader.js
++++ b/dist/core/resource-loader.js
+@@ -54,8 +54,9 @@ function collectExtensionPackageWarnings(extensionPaths, metadataByPath) {
+     }
+     return warnings;
+ }
+-/** Describe a package that was skipped because it could not be installed, including how to drop it. */
++/** Describe a host-policy skip or installation failure, with recovery guidance when applicable. */
+ function describePackageInstallFailure(failure) {
++    if (failure.skipped) return failure.message;
+     const hint = failure.scope === "temporary"
+         ? "Check the source and try again."
+         : `Run "${APP_NAME} remove ${failure.source}${failure.scope === "project" ? " --local" : ""}" to remove it from settings.json.`;
+@@ -186,6 +187,7 @@ export function loadProjectContextFiles(options) {
+         contextFiles.push(globalContext);
+         seenPaths.add(globalContext.path);
+     }
++    if (options.projectTrusted === false) return contextFiles;
+     const ancestorContextFiles = [];
+     const shadowedContextFile = findShadowedContextFile(resolvedCwd);
+     let currentDir = resolvedCwd;
+@@ -214,6 +216,10 @@ export class DefaultResourceLoader {
+     settingsManager;
+     eventBus;
+     packageManager;
++    extensionLoader;
++    onMissingPackage;
++    additionalPackageSources;
++    promptSources;
+     additionalExtensionPaths;
+     additionalSkillPaths;
+     additionalPromptTemplatePaths;
+@@ -263,11 +269,16 @@ export class DefaultResourceLoader {
+         const factories = options.extensionFactories ?? [];
+         this.extensionFactories = factories.filter((input) => !isBuiltinExtension(input));
+         this.builtinExtensions = new Map(factories.filter(isBuiltinExtension).map((input) => [input.name, input]));
++        this.extensionLoader = options.extensionLoader ?? { clearExtensionCache, createExtensionRuntime, loadExtensionFromFactory, loadExtensionsCached };
++        this.onMissingPackage = options.onMissingPackage;
++        this.additionalPackageSources = options.additionalPackageSources ?? [];
++        this.promptSources = options.promptSources;
+         this.packageManager = new DefaultPackageManager({
+             cwd: this.cwd,
+             agentDir: this.agentDir,
+             settingsManager: this.settingsManager,
+             builtinExtensions: [...this.builtinExtensions.keys()],
++            resolutionPolicy: options.packageResolutionPolicy,
+         });
+         this.additionalExtensionPaths = options.additionalExtensionPaths ?? [];
+         this.additionalSkillPaths = options.additionalSkillPaths ?? [];
+@@ -288,7 +299,7 @@ export class DefaultResourceLoader {
+         this.agentsFilesOverride = options.agentsFilesOverride;
+         this.systemPromptOverride = options.systemPromptOverride;
+         this.appendSystemPromptOverride = options.appendSystemPromptOverride;
+-        this.extensionsResult = { extensions: [], errors: [], runtime: createExtensionRuntime() };
++        this.extensionsResult = { extensions: [], errors: [], runtime: this.extensionLoader.createExtensionRuntime() };
+         this.skills = [];
+         this.skillDiagnostics = [];
+         this.prompts = [];
+@@ -370,7 +381,7 @@ export class DefaultResourceLoader {
+     async reload(options) {
+         resetTimings("extensions");
+         if (this.loaded) {
+-            clearExtensionCache();
++            this.extensionLoader.clearExtensionCache();
+         }
+         let preTrustExtensions;
+         if (options?.resolveProjectTrust) {
+@@ -380,9 +391,10 @@ export class DefaultResourceLoader {
+         }
+         // reload() preserves SettingsManager.projectTrusted and reloads settings for that trust state.
+         await this.settingsManager.reload();
+-        const resolvedPaths = await this.packageManager.resolve();
++        const resolvedPaths = await this.packageManager.resolve(this.onMissingPackage, this.additionalPackageSources);
+         const cliExtensionPaths = await this.packageManager.resolveExtensionSources(this.additionalExtensionPaths, {
+             temporary: true,
++            onMissing: this.onMissingPackage,
+         });
+         const installWarnings = collectPackageInstallWarnings(resolvedPaths.installFailures, cliExtensionPaths.installFailures);
+         // Kept on the instance so post-reload passes (extendResources) can still resolve package metadata.
+@@ -487,12 +499,13 @@ export class DefaultResourceLoader {
+         };
+         const resolvedAgentsFiles = this.agentsFilesOverride ? this.agentsFilesOverride(agentsFiles) : agentsFiles;
+         this.agentsFiles = resolvedAgentsFiles.agentsFiles;
+-        const systemPromptSource = this.systemPromptSource ?? this.discoverSystemPromptFile();
++        const promptSources = this.promptSources?.();
++        const systemPromptSource = promptSources?.systemPrompt ?? this.systemPromptSource ?? this.discoverSystemPromptFile();
+         const baseSystemPrompt = resolvePromptInput(systemPromptSource, "system prompt");
+         this.systemPrompt = this.systemPromptOverride ? this.systemPromptOverride(baseSystemPrompt) : baseSystemPrompt;
+         this.systemPromptSourcePath =
+             systemPromptSource && existsSync(systemPromptSource) ? resolvePath(systemPromptSource) : undefined;
+-        let appendSources = this.appendSystemPromptSource;
++        let appendSources = promptSources?.appendSystemPrompt ?? this.appendSystemPromptSource;
+         if (!appendSources) {
+             const discoveredAppendSystemPromptFile = this.discoverAppendSystemPromptFile();
+             appendSources = discoveredAppendSystemPromptFile ? [discoveredAppendSystemPromptFile] : [];
+@@ -509,9 +522,10 @@ export class DefaultResourceLoader {
+         this.loaded = true;
+     }
+     async loadCurrentExtensionSet(options) {
+-        const resolvedPaths = await this.packageManager.resolve();
++        const resolvedPaths = await this.packageManager.resolve(this.onMissingPackage, this.additionalPackageSources);
+         const cliExtensionPaths = await this.packageManager.resolveExtensionSources(this.additionalExtensionPaths, {
+             temporary: true,
++            onMissing: this.onMissingPackage,
+         });
+         const enabledExtensions = resolvedPaths.extensions.filter((r) => r.enabled).map((r) => r.path);
+         const cliEnabledExtensions = cliExtensionPaths.extensions.filter((r) => r.enabled).map((r) => r.path);
+@@ -524,7 +538,7 @@ export class DefaultResourceLoader {
+         ]));
+         const packageWarnings = collectExtensionPackageWarnings(extensionPaths, metadataByPath);
+         const installWarnings = collectPackageInstallWarnings(resolvedPaths.installFailures, cliExtensionPaths.installFailures);
+-        const extensionsResult = await loadExtensionsCached(extensionPaths, this.cwd, this.eventBus);
++        const extensionsResult = await this.extensionLoader.loadExtensionsCached(extensionPaths, this.cwd, this.eventBus);
+         mergeExtensionWarnings(extensionsResult, [...installWarnings, ...packageWarnings]);
+         if (!options.includeInlineFactories) {
+             return extensionsResult;
+@@ -546,7 +560,7 @@ export class DefaultResourceLoader {
+     /** Load extension paths: files from disk and `builtin:<name>` paths from the built-in extensions. */
+     async loadExtensionPaths(paths, runtime) {
+         const isBuiltinPath = (path) => path.startsWith(BUILTIN_PATH_PREFIX);
+-        const result = await loadExtensionsCached(paths.filter((path) => !isBuiltinPath(path)), this.cwd, this.eventBus, runtime);
++        const result = await this.extensionLoader.loadExtensionsCached(paths.filter((path) => !isBuiltinPath(path)), this.cwd, this.eventBus, runtime);
+         for (const path of paths.filter(isBuiltinPath)) {
+             const builtin = this.builtinExtensions.get(path.slice(BUILTIN_PATH_PREFIX.length));
+             if (!builtin) {
+@@ -554,7 +568,7 @@ export class DefaultResourceLoader {
+                 continue;
+             }
+             try {
+-                const extension = await loadExtensionFromFactory(builtin.factory, this.cwd, this.eventBus, result.runtime, path);
++                const extension = await this.extensionLoader.loadExtensionFromFactory(builtin.factory, this.cwd, this.eventBus, result.runtime, path);
+                 extension.hidden = true;
+                 extension.replaceable = builtin.replaceable === true;
+                 result.extensions.push(extension);
+@@ -895,7 +909,7 @@ export class DefaultResourceLoader {
+             const factory = isNamed ? input.factory : input;
+             const extensionPath = `<inline:${isNamed ? input.name : index + 1}>`;
+             try {
+-                const extension = await loadExtensionFromFactory(factory, this.cwd, this.eventBus, runtime, extensionPath);
++                const extension = await this.extensionLoader.loadExtensionFromFactory(factory, this.cwd, this.eventBus, runtime, extensionPath);
+                 extension.hidden = isNamed && input.hidden;
+                 extension.replaceable = isNamed && input.replaceable === true;
+                 extensions.push(extension);
+@@ -1022,4 +1036,5 @@ export class DefaultResourceLoader {
+         return conflicts;
+     }
+ }
+-//# sourceMappingURL=resource-loader.js.map
+\ No newline at end of file
++//# sourceMappingURL=resource-loader.js.map
++export const dedupePrompts = DefaultResourceLoader.prototype.dedupePrompts;
 diff --git a/dist/core/package-manager.d.ts b/dist/core/package-manager.d.ts
 --- a/dist/core/package-manager.d.ts
 +++ b/dist/core/package-manager.d.ts
@@ -608,6 +762,56 @@ diff --git a/dist/core/session-manager.d.ts b/dist/core/session-manager.d.ts
      getSessionId(): string;
      getSessionFile(): string | undefined;
      /**
+diff --git a/dist/core/resource-loader.d.ts b/dist/core/resource-loader.d.ts
+--- a/dist/core/resource-loader.d.ts
++++ b/dist/core/resource-loader.d.ts
+@@ -1,3 +1,5 @@
++import type { MissingSourceAction, PackageResolutionPolicy } from "./package-manager.js";
++import type { PackageSource } from "./settings-manager.js";
+ import { type Theme } from "../modes/interactive/theme/theme.ts";
+ import type { ResourceDiagnostic } from "./diagnostics.ts";
+ export type { ResourceCollision, ResourceDiagnostic } from "./diagnostics.ts";
+@@ -65,11 +67,21 @@ export interface ResourceLoader {
+ export declare function loadProjectContextFiles(options: {
+     cwd: string;
+     agentDir: string;
++    projectTrusted?: boolean;
+ }): Array<{
+     path: string;
+     content: string;
+ }>;
++export type ResourceExtensionLoader = Pick<typeof import("./extensions/loader.js"),
++    "clearExtensionCache" | "createExtensionRuntime" | "loadExtensionFromFactory" | "loadExtensionsCached">;
+ export interface DefaultResourceLoaderOptions {
++    /** Host extension bindings; defaults to the published loader. */
++    extensionLoader?: ResourceExtensionLoader;
++    onMissingPackage?: (source: string) => Promise<MissingSourceAction>;
++    packageResolutionPolicy?: PackageResolutionPolicy;
++    additionalPackageSources?: PackageSource[];
++    /** Resolve authorized prompt paths after project trust is known. */
++    promptSources?: () => { systemPrompt: string; appendSystemPrompt: string[] };
+     cwd: string;
+     agentDir: string;
+     settingsManager?: SettingsManager;
+@@ -130,6 +142,10 @@ export declare class DefaultResourceLoader implements ResourceLoader {
+     private settingsManager;
+     private eventBus;
+     private packageManager;
++    private extensionLoader;
++    private onMissingPackage;
++    private additionalPackageSources;
++    private promptSources;
+     private additionalExtensionPaths;
+     private additionalSkillPaths;
+     private additionalPromptTemplatePaths;
+@@ -230,4 +246,5 @@ export declare class DefaultResourceLoader implements ResourceLoader {
+     private isUnderPath;
+     private detectExtensionConflicts;
+ }
+-//# sourceMappingURL=resource-loader.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=resource-loader.d.ts.map
++export declare const dedupePrompts: (prompts: PromptTemplate[]) => { prompts: PromptTemplate[]; diagnostics: ResourceDiagnostic[] };
 diff --git a/dist/core/model-registry.d.ts b/dist/core/model-registry.d.ts
 --- a/dist/core/model-registry.d.ts
 +++ b/dist/core/model-registry.d.ts

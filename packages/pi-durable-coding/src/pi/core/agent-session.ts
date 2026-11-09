@@ -120,7 +120,7 @@ import { ModelRegistry } from "@earendil-works/pi-coding-agent";
 import type { ModelRuntime } from "./model-runtime.ts";
 import { NestedToolCallRunner } from "./nested-tool-calls.ts";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.ts";
-import type { ResourceExtensionPaths, ResourceLoader } from "./resource-loader.ts";
+import type { ResourceExtensionPaths, ResourceLoader } from "@earendil-works/pi-coding-agent";
 import { exportSessionToJsonl } from "./session-export.ts";
 import {
 	type BranchSummaryEntry,
