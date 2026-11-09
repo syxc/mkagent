@@ -1,6 +1,6 @@
 import { type ClientIdentity, PI_ATTRIBUTION } from "@earendil-works/pi-ai";
 import { VERSION } from "../config.ts";
-import type { SettingsManager } from "./settings-manager.ts";
+import type { SettingsManager } from "@earendil-works/pi-coding-agent";
 import { isInstallTelemetryEnabled } from "./telemetry.ts";
 
 /**

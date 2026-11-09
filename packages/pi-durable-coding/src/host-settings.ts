@@ -1,7 +1,7 @@
 /** Apply product compaction policy through the native settings public API. */
 import type { Model } from '@earendil-works/pi-ai';
 import { compactionReserveFor } from './compaction-reserve.ts';
-import type { SettingsManager } from './pi/core/settings-manager.ts';
+import type { SettingsManager } from "@earendil-works/pi-coding-agent";
 
 type CompactionModel = Pick<Model<string>, 'provider' | 'id'> & { contextWindow?: number };
 

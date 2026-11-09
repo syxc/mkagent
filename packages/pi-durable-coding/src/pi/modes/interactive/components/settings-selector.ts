@@ -13,7 +13,7 @@ import {
 	type WheelScrollLines,
 } from "@earendil-works/pi-tui";
 import { formatHttpIdleTimeoutMs, HTTP_IDLE_TIMEOUT_CHOICES } from "../../../core/http-dispatcher.ts";
-import { SETTINGS_DEFAULTS } from "../../../core/settings-defaults.ts";
+import { SETTINGS_DEFAULTS } from "@earendil-works/pi-coding-agent";
 import {
 	CACHE_WARMING_MODES,
 	type CacheWarmingMode,
@@ -24,7 +24,7 @@ import {
 	type SessionShareDestination,
 	type TuiMode,
 	type WarningSettings,
-} from "../../../core/settings-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 import {
 	getSettingsListTheme,
 	parseAutoThemeSetting,

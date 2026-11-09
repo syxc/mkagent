@@ -321,7 +321,7 @@ export {
 	SettingsManager,
 	type SettingsManagerCreateOptions,
 	type TuiMode,
-} from "./core/settings-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 // Skills
 export {
 	formatSkillsForPrompt,

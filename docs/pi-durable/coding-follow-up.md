@@ -64,7 +64,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-tui 的终端组件、pi-mcp 的协议、pi-codemode 的沙箱按实际公开接口复用。当前部分 core 操作及 Agent 注入依赖四文件补丁，durable 也有仓内补丁；两者均须保留例外说明，不记成无补丁的 SDK 能力。
 
-历史辅助函数、图像和 codemode 的共享结果见[验证记录](coding-validation.md)。Marked 与 Highlight.js 的 browser 资源替换是第三方资源去重，不属于 Pi 官方 SDK 复用的验收证据，也不作为下一批主线。
+历史辅助函数、图像和 codemode 的共享结果见[验证记录](coding-validation.md)。`137d6de` 后的设置切片改用 Coding SDK 的 SettingsManager、storage、schema、defaults 和 merge，实现正文由发布包提供；四文件补丁只补根导出和声明。三份本地实现及旧深合并导出转换已删除，宿主信任、profile 覆盖和压缩策略仍由外层适配。当前 runtime 为 189 份 TypeScript、6 项资源，其中 src/pi 为 185 份，主链删除继续开放。Marked 与 Highlight.js 的 browser 资源替换是第三方资源去重，不属于 Pi 官方 SDK 复用的验收证据，也不作为下一批主线。
 
 完成条件：确认可由官方实现承担的职责已经交还 SDK；调用方和功能验证同步迁移，没有为了引用包而在补丁里复制另一套实现。
 
@@ -129,7 +129,7 @@ SDK 入口已先排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源
 
 同日先按用户要求新增[项目配置](../../.claude/settings.json)，仅允许读取该主题文件；正常 Read 仍被全局 deny 拒绝。之后按用户明确要求修正权限，在全局原 `Read(*token*)` 后加入同一配置源的精确相对路径例外，正常 Read 本地及固定上游源码均成功，其余保护保留。项目 allow 不能覆盖全局 deny；权限历史和例外匹配范围见[本轮验证记录](coding-validation.md#theme-contract-and-complete-source-after-6240ed9)。完整主题核查、来源生成和固定 Craft 审计现已完成。
 
-当前 `731728a` 的全部 workspace manifest、锁文件及两份补丁已在新目录以全新缓存完成 `bun install --frozen-lockfile --ignore-scripts`。12 份 manifest、11 个 workspace 链接和 34 个补丁产物通过核对，锁文件及原项目输入未变。该结果不包含运行时源码、安装脚本、构建或新安装中的运行时导入；旧禁网安装失败记录保留各自范围。具体命令和证据见[验证记录](coding-validation.md#project-read-rule-and-workspace-install-after-731728a)。
+历史 `731728a` 的全部 workspace manifest、锁文件及两份补丁已在新目录以全新缓存完成 `bun install --frozen-lockfile --ignore-scripts`。12 份 manifest、11 个 workspace 链接和 34 个补丁产物通过核对，锁文件及原项目输入未变。该结果不包含运行时源码、安装脚本、构建或新安装中的运行时导入；旧禁网安装失败记录保留各自范围。具体命令和证据见[验证记录](coding-validation.md#project-read-rule-and-workspace-install-after-731728a)。
 
 Craft 审计使用独立固定 `v0.15.6` 副本，不访问真实 Craft 目录。验证使用任务临时数据、本地确定性模型和随机端口，不访问真实 WebUI `127.0.0.1:9100`、账户或凭据。
 

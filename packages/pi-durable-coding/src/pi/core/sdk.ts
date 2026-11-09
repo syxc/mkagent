@@ -24,7 +24,7 @@ import {
 	getToolListError,
 	isToolModifier,
 	SettingsManager,
-} from "./settings-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 import { time } from "./timings.ts";
 import {
 	createBashTool,

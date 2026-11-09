@@ -1,0 +1,29 @@
+{
+  "repository": "https://github.com/earendil-works/pi",
+  "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
+  "version": "1.5.0",
+  "patch": "settings-exports-v1",
+  "policy": "Export existing settings storage, types, defaults and merge contracts from the public root. No settings algorithm or lifecycle changes.",
+  "files": [
+    {
+      "path": "dist/index.js",
+      "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
+      "sha256": "28eb1a539788d38b387f7aac5dab92b8789d67af2215f80f954d70a902827c90"
+    },
+    {
+      "path": "dist/index.d.ts",
+      "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
+      "sha256": "e63e101c69074e38c922eb59b0af47eecf8cd48abd1d21caf865466b6debe1a7"
+    },
+    {
+      "path": "dist/core/settings-manager.js",
+      "originalSha256": "66edb495ff9767e7f2ce0d2f4e2d102532e4b396ad7bc7c3c648c7c12c0fe71d",
+      "sha256": "fd07a37e32695480120576300a0c364a751d7dd03760842ab2ec88b36ad706ed"
+    },
+    {
+      "path": "dist/core/settings-manager.d.ts",
+      "originalSha256": "27729cf94f5d3df2310aebda997e4ac668d2a0b5031af194f3e49e19b9a45ccd",
+      "sha256": "2a3394e4ed8a916a0a1847b1a2e6bc5aeaad5ba54d8e8844f3ff86e228cfa2da"
+    }
+  ]
+}

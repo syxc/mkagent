@@ -18,7 +18,7 @@ import {
   type Settings,
   type SettingsScope,
   type SettingsStorage,
-} from './pi/core/settings-manager.ts';
+} from "@earendil-works/pi-coding-agent";
 
 export interface HostResourceOptions extends Omit<CodingResourceOptions, 'globalSettings' | 'projectSettings'> {
   /** Host-only disables ambient Pi discovery; explicit host paths and factories remain available. */

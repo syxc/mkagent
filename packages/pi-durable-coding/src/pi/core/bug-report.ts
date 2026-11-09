@@ -12,7 +12,7 @@ import type { Extension } from "./extensions/types.ts";
 import { convertToLlm } from "./messages.ts";
 import type { ModelRuntime } from "./model-runtime.ts";
 import type { ReadonlySessionManager } from "./session-manager.ts";
-import type { Settings } from "./settings-manager.ts";
+import type { Settings } from "@earendil-works/pi-coding-agent";
 
 export const BUG_REPORT_CUSTOM_ENTRY_TYPE = "pi.bug-report";
 const BUG_REPORT_SCHEMA_VERSION = 1;

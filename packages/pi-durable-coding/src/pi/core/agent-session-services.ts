@@ -13,7 +13,7 @@ import {
 } from "./resource-loader.ts";
 import { type CreateAgentSessionOptions, type CreateAgentSessionResult, createAgentSession } from "./sdk.ts";
 import type { SessionManager } from "./session-manager.ts";
-import { SettingsManager } from "./settings-manager.ts";
+import { SettingsManager } from "@earendil-works/pi-coding-agent";
 
 /**
  * Non-fatal issues collected while creating services or sessions.

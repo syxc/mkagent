@@ -53,7 +53,7 @@ import {
 import { stripBom } from "../utils/text.ts";
 import { isStdoutTakenOver } from "./output-guard.ts";
 import { type PiManifest, readPiManifest } from "./pi-manifest.ts";
-import type { PackageSource, SettingsManager } from "./settings-manager.ts";
+import type { PackageSource, SettingsManager } from "@earendil-works/pi-coding-agent";
 import { BUILTIN_PATH_PREFIX, getResourcePathKey } from "./source-info.ts";
 
 const NETWORK_TIMEOUT_MS = 10000;

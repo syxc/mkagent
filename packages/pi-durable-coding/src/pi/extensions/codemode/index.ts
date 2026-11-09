@@ -7,8 +7,8 @@
  */
 
 import type { ExtensionAPI, ExtensionFactory } from "../../core/extensions/types.ts";
-import { SETTINGS_DEFAULTS } from "../../core/settings-defaults.ts";
-import type { CodemodeMode } from "../../core/settings-manager.ts";
+import { SETTINGS_DEFAULTS } from "@earendil-works/pi-coding-agent";
+import type { CodemodeMode } from "@earendil-works/pi-coding-agent";
 import { createCodemodeToolDefinition } from "./tool.ts";
 
 export interface CodemodeExtensionOptions {

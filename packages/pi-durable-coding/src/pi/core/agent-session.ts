@@ -136,7 +136,7 @@ import {
 	type CacheWarmingMode,
 	DEFAULT_TOOL_NAMES,
 	type SettingsManager,
-} from "./settings-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 import type { SlashCommandInfo } from "./slash-commands.ts";
 import { BUILTIN_PATH_PREFIX, createSyntheticSourceInfo, isSyntheticPath, type SourceInfo } from "./source-info.ts";
 import {

@@ -37,7 +37,7 @@ import {
 } from "./package-manager.ts";
 import type { PromptTemplate } from "./prompt-templates.ts";
 import { loadPromptTemplates } from "./prompt-templates.ts";
-import { type PackageSource, SettingsManager } from "./settings-manager.ts";
+import { type PackageSource, SettingsManager } from "@earendil-works/pi-coding-agent";
 import type { Skill } from "./skills.ts";
 import { loadSkills } from "./skills.ts";
 import {

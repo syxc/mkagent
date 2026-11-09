@@ -79,7 +79,7 @@ import type {
 	SessionEntry,
 	SessionManager,
 } from "../session-manager.ts";
-import type { Settings } from "../settings-manager.ts";
+import type { Settings } from "@earendil-works/pi-coding-agent";
 import type { SlashCommandInfo } from "../slash-commands.ts";
 import type { SourceInfo } from "../source-info.ts";
 import type { BuildSystemPromptOptions, NormalizedBuildSystemPromptOptions } from "../system-prompt.ts";

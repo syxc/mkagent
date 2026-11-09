@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import type { Api, Model } from '@earendil-works/pi-ai';
 import * as native from '../src/pi/core/messages.ts';
 import * as legacy from '../src/upstream/core/messages.js';
-import { deepMergeSettings, isToolModifier } from '../src/pi/core/settings-manager.ts';
+import { deepMergeSettings, isToolModifier } from "@earendil-works/pi-coding-agent";
 import { mergeCodingSettings, isToolModifier as legacyToolModifier } from '../src/upstream/core/settings-merge.js';
 
 const fixtureModel: Model<Api> = {

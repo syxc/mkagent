@@ -4,7 +4,7 @@
 
 MkAgent 保留 Pi Coding 层和公开插件契约，执行、事务、存储和恢复优先交给 durable。评估顺序是 durable 发布能力、其他 Pi 官方 SDK 的公开 API、必要的外部适配。用户于 2026-11-09 明确允许生产使用完整 `pi-coding-agent` 包的公开 SDK，不启动原版 CLI。SDK 覆盖后必须删除对应源码和多余直接依赖，不保留并行实现，也不将完整复制实现移入补丁。补丁新增的导出或执行接点均属于本地修改。
 
-F1、F3、F6 已重新打开。此前维护登记和来源检查不能证明保留源码必要，也未达到删除大规模 Coding 源码的目标。首批公开 SDK 替换已删除四份实现和三份转发，当前运行时清单为 192 份 TypeScript、6 项资源；主链替换尚未完成。下表是待复评的适配边界，不是全部源码的保留许可。此前主题、权限和固定 Craft 审计的结果保留各自时点，具体历史见验证记录。
+F1、F3、F6 已重新打开。此前维护登记和来源检查不能证明保留源码必要，也未达到删除大规模 Coding 源码的目标。首批公开 SDK 替换已删除四份实现和三份转发，设置切片再删除 manager、schema 和 defaults 三份实现。当前运行时清单为 189 份 TypeScript、6 项资源，其中 src/pi 为 185 份；主链替换尚未完成。下表是待复评的适配边界，不是全部源码的保留许可。此前主题、权限和固定 Craft 审计的结果保留各自时点，具体历史见验证记录。
 
 ## 已直接使用的发布能力
 
@@ -12,6 +12,7 @@ F1、F3、F6 已重新打开。此前维护登记和来源检查不能证明保�
 |---|---|---|
 | 普通 profile 执行 | worker 使用发布的 GenerationTask、Harness 和 Storage | 普通 profile 的资源隔离、权限、输入、取消及恢复 |
 | Coding 基础契约 | event bus、diagnostics、frontmatter 和 file mutation queue 使用公开 Coding SDK 根导出，已删除四份实现和三份转发 | SDK 实现身份、CRLF/BOM、插件事件及 edit/write 共用队列；生成器不得重新复制已替代模块 |
+| Coding 设置 | SettingsManager、storage、类型、schema、defaults 和 merge 复用发布实现；四文件仅导出补丁补齐根入口，三份本地实现已删除 | SDK 类身份、host-only/未信任隔离、profile、自定义 storage、reload/flush、工具修饰符及 legacy 开放类型 |
 | Coding 工具 effect | `host-tool-task.ts` 在真实 `pi.coding.tool` owner 下委托公开 ToolTask phases/abort；`wrapAgentTool` 和普通 AgentTool 入口共用该桥 | SDK replay、嵌套任务及会话清理、进度、取消、完整结果、最终参数回执和 journal 同事务提交 |
 | 生产文件和 shell 工具 | worker `tools/builtin.ts` 使用 durable read/write/edit/bash、PowerShell 和 images 工厂 | 临时文件读写、审批拒绝零副作用、改参、取消、长输出与图片 |
 | 插件 edit 参数准备 | Native edit 工厂调用公开 `createEditTool().prepareArguments`，已删除转换副本 | 新旧参数形状、混合输入、原始参数不变及权限后的最终参数 |
@@ -22,10 +23,11 @@ ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件
 
 ## 本地 SDK 补丁
 
-根 `patchedDependencies` 登记 core 和 durable 两份补丁。物理文件数为 core 4 个、durable 30 个，JS 与声明分别计数。逻辑职责可能共用文件，不能将逻辑组重复相加。
+根 `patchedDependencies` 登记 core、Coding 和 durable 三份补丁。物理文件数为 core 4 个、Coding 4 个、durable 30 个，共 38 个，JS 与声明分别计数。逻辑职责可能共用文件，不能将逻辑组重复相加。
 
 | 补丁组 | 产品或插件契约、发布 API 缺口 | 当前最小接点及退出条件 | 恢复与升级检查 |
 |---|---|---|---|
+| Coding settings：4 文件，根入口与 settings-manager 的 JS/d.ts | 发布根已有 SettingsManager，但未转出 storage、完整类型及 defaults；现有 deepMergeSettings 未导出 | 只转出现有契约并补声明，不改算法、锁或生命周期；删除本地 manager、schema、defaults 和旧生成转换。发布根完整提供这些契约后撤除补丁 | `patch-coding-sdk.ts` 和 `CODING-PATCH.json` 固定四个原始及目标摘要；核对 trust、profile、strict flush、legacy merge、声明、实际安装和 worker bundle |
 | core：4 文件，`agent-loop` 与 `agent` 的 JS/d.ts | Coding 请求、参数准备和结果交付需要原操作；发布根未导出八个操作，Agent 也未开放 durable backend/恢复所需接点 | 导出八个既有操作，补 AgentExecution、queue snapshot 和 protected lifecycle 接点；Native 仅保留 Agent 门面及独立可变默认对象。公开 backend/恢复协议和操作出现后撤除对应补丁 | 不复制另一套 Agent 类或 loop；检查默认模型/usage/identity 的实际影响、恢复消息、队列与异步事件。默认 converter 字段已撤除 |
 | durable harness/root：6 文件 | 已准备请求须独立返回响应，再让插件 `message_end` 和 journal 接纳；发布 GenerationTask 同时分类、写 assistant、创建工具及结算 inbox。旧本地 v4 checkpoint 也不能由发布 v2 读取 | 新增 GenerationResponseTask v1，共用 SDK streamResponse/partial writer；旧 Coding hooks 和阶段仅供受支持旧入口/快照。独立响应接口可承接事件及事务后移除新扩展，旧阶段在迁移或安全结算验证后移除 | 核对 started 重入不重发、partial drain、generation 槽清理、唯一 assistant、receipt/journal/checkpoint 原子性，以及 v4、LoopInput.resume 和已接受 child |
 | durable codemode：8 文件 | Native 分支 store、工具审批、字符串调用 ID、实时行、用量及 worker 释放策略不由原公开工厂完整承接 | VM、模型执行和输出由内置实现承担；增加 store、lease、prepareCall、发现覆盖、调用观察及结果投影选项。公开等效选项可用时撤除对应补丁 | replay module 保持版本 3；验证 store 与 run.start/run.result 同事务、调用 key/owner、别名变化、取消、worker 退出后释放和 usage 去重 |
@@ -38,7 +40,9 @@ ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件
 
 `731728a` 的全部 workspace 冻结依赖安装已在全新缓存和公开 registry 下通过。新安装中 durable 的 30 个输出符合清单，core 的 4 个输出与已测试安装一致；Coding 和 worker 的三个核心 Pi 包均解析到 1.5.0，根 pi-ai 仍为 1.1.0。安装禁用 scripts，未复制运行时源码或验证新安装中的导入及产品构建，不能据此关闭完整来源检查。
 
-新增 Coding SDK 依赖后的冻结安装也已通过：全新 HOME/cache、公开 registry、禁用 scripts，11 个 workspace 共安装 2,826 个包，lock 未变。从实际 Coding workspace 导入的 SDK 版本为 1.5.0，event bus 和 frontmatter 检查通过，34 个 core/durable 补丁产物与已测试安装一致。首次检查脚本从项目根目录导入而失败，修正消费位置后复用安装完成检查；没有重装或改写 lock。该结果不代表新生产会话、恢复或产品构建已验证。
+新增 Coding SDK 依赖后的冻结安装也已通过：全新 HOME/cache、公开 registry、禁用 scripts，11 个 workspace 共安装 2,826 个包，lock 未变。从实际 Coding workspace 导入的 SDK 版本为 1.5.0，event bus 和 frontmatter 检查通过，34 个 core/durable 补丁产物与已测试安装一致。首次检查脚本从项目根目录导入而失败，修正消费位置后复用安装完成检查；没有重装或改写 lock。该结果不代表新生产会话、恢复或产品构建已验证。该检查未带入 bunfig.toml，未验证项目使用的 hoisted 布局。
+
+设置切片另用 hoisted linker、全新 HOME/cache、公开 registry 和禁用 scripts 完成冻结安装：11 个 workspace 安装 1,422 个包，lock 未变，SDK 设置导出、merge 和 trust 检查通过，38 个补丁产物与已测试安装一致，Coding 的四个产物也符合清单。既有安装起初缺少 Coding SDK 的嵌套 pi-ai 1.5.0，普通冻结检查补装六个依赖后通过 focused 34 项、两项类型检查和 worker bundle 26 项；没有使用 force 或删除安装目录。设置替换仍不代表生产会话及恢复已完成。
 
 ## Coding 层与外部适配
 

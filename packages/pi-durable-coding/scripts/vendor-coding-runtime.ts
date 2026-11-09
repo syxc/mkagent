@@ -196,12 +196,6 @@ while (queue.length) {
     body = portProviderComposer(body);
     changes.add('structural-provider-config-interface');
   }
-  if (path === 'core/settings-manager.ts') {
-    const declaration = 'function deepMergeSettings(';
-    if (!body.includes(declaration)) throw new Error('Shared settings merge changed');
-    body = body.replace(declaration, 'export ' + declaration);
-    changes.add('shared-settings-merge');
-  }
   if (path === 'core/agent-session.ts') {
     body = portAgentSession(body);
     changes.add('durable-recovery-and-host-tool-policy');

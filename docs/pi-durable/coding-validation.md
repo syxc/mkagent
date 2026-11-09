@@ -26,6 +26,64 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Settings SDK boundary after 137d6de
+
+The settings slice uses the published SettingsManager, storage classes, types,
+defaults and merge implementation. The public root does not expose all existing
+settings contracts, and deepMergeSettings is not exported. A four-file Coding
+SDK patch adds these exports and declarations. It changes no settings algorithm,
+lock or lifecycle. The rebuild script and CODING-PATCH.json record the original
+and output hashes. Rebuild check and all four installed output hashes pass.
+
+Before deletion, a comparison confirms matching runtime tokens for the local
+manager, schema and defaults and the patched published modules. All 22 relative
+consumer imports move to the public root. The generators stop at the settings
+boundary and remove the old local merge-export conversion. Three local files,
+2,017 lines in total, are deleted. Complete checks for both generators pass:
+189 runtime TypeScript files, including 185 under src/pi and four facades, six
+assets, 12 auxiliary source files and 25 shared forwards. This does not close the
+remaining source-removal work.
+
+The final focused run passes 34 tests across five files with 245 assertions and
+no failures. It covers published SettingsManager identity, host-only and
+untrusted-project isolation, profile settings, custom storage, reload/flush,
+compaction policy, legacy merge and types, and explicit package commands.
+Coding build:types and the server typecheck pass. All 26 worker bundle tests
+pass with 103 assertions. Checks use task-only HOME and configuration data.
+
+The initial focused and bundle runs fail because the existing hoisted Coding
+SDK resolves pi-ai 1.1.0 and cannot load its required schema exports. A fresh
+hoisted frozen install resolves its declared pi-ai 1.5.0 correctly. A normal
+frozen install check adds six missing dependencies to the existing layout,
+without force, removal or lockfile changes; focused and bundle checks then
+pass. The fresh-install probe first fails an incorrect assertion that merge
+resolves `+bash` immediately. The implementation preserves that modifier for
+the tool-selection step. Correcting the probe to the existing contract passes
+without reinstalling dependencies or changing production code.
+
+The new frozen install uses the project's hoisted linker, fresh HOME/cache,
+the public registry and disabled scripts. It installs 1,422 packages for 11
+workspaces and leaves the lockfile unchanged. Actual Coding workspace imports
+verify settings exports, merge and trust. All 38 patched physical outputs,
+core four, Coding four and durable 30, match the tested installation. The four
+Coding outputs also match their manifest. The earlier 2,826-package check
+omitted bunfig.toml and did not verify the project's hoisted layout; its older
+scope remains recorded below.
+
+The fixed Craft v0.15.6 audit passes for 2,186 files after the source records are
+updated. All six changed current documents pass punctuation checks, and all
+105 relative link targets exist. Diff checks pass. Independent review finds one
+maintenance-script defect: Git diff.context changes generated patch hunks.
+The script now sets --unified=3; checks pass with default Git configuration and
+with diff.context=0. The review finds no confirmed runtime regression and checks
+profile isolation, trust changes during queued writes, custom-storage merge,
+flush/drainErrors delivery, legacy merge, declarations and generator boundaries.
+The reviewer reports one automatic skill fork despite the no-subagent brief;
+that run has ended, and the reviewer directly verifies the reported evidence.
+The review does not repeat focused/types/bundle, fresh installation or platform
+checks. Receipts are in the settings-sdk task directory. Production session
+replacement, atomic input persistence and cold recovery remain open.
+
 ## Public Coding SDK boundary after e2213c8
 
 On 2026-11-09, the user approved the public pi-coding-agent SDK as a production

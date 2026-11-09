@@ -1,0 +1,46 @@
+# Content SHA-256: e2418ac06ca9c295090e65a719d543610a07e388c24c83dcff9ba1d94f9344b1
+diff --git a/dist/index.js b/dist/index.js
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -51,4 +51,6 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+ export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
+ // Shell utilities
+ export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
++export * from "./core/settings-manager.js";
++export { SETTINGS_DEFAULTS } from "./core/settings-defaults.js";
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -42,4 +42,6 @@ export { convertToPng } from "./utils/image-convert.ts";
+ export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
+ export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
+ export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
++export * from "./core/settings-manager.ts";
++export { SETTINGS_DEFAULTS } from "./core/settings-defaults.ts";
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/core/settings-manager.js b/dist/core/settings-manager.js
+--- a/dist/core/settings-manager.js
++++ b/dist/core/settings-manager.js
+@@ -92,7 +92,7 @@ function resolveDefaultTools(entries) {
+     return applyToolModifiers(plain.length > 0 || entries.length === 0 ? plain : DEFAULT_TOOL_NAMES, entries);
+ }
+ /** Deep merge settings: project/overrides take precedence, nested objects merge recursively */
+-function deepMergeSettings(base, overrides) {
++export function deepMergeSettings(base, overrides) {
+     const merged = deepMergeObjects(base, overrides);
+     const defaultTools = mergeDefaultTools(base.defaultTools, overrides.defaultTools);
+     return defaultTools === undefined ? merged : { ...merged, defaultTools };
+diff --git a/dist/core/settings-manager.d.ts b/dist/core/settings-manager.d.ts
+--- a/dist/core/settings-manager.d.ts
++++ b/dist/core/settings-manager.d.ts
+@@ -20,6 +20,7 @@ export declare function getToolListError(entries: readonly string[]): string | u
+  * `-name` removes one. Other entries are ignored.
+  */
+ export declare function applyToolModifiers(base: readonly string[], entries: readonly string[]): string[];
++export declare function deepMergeSettings(base: Settings, overrides: Settings): Settings;
+ export type SettingsScope = "global" | "project";
+ export interface SettingsManagerCreateOptions {
+     projectTrusted?: boolean;

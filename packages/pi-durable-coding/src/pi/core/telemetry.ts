@@ -1,4 +1,4 @@
-import type { SettingsManager } from "./settings-manager.ts";
+import type { SettingsManager } from "@earendil-works/pi-coding-agent";
 
 function isTruthyEnvFlag(value: string | undefined): boolean {
 	if (!value) return false;

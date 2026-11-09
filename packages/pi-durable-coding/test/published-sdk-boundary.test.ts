@@ -11,6 +11,7 @@ describe('published Coding SDK boundary', () => {
     expect(native.parseFrontmatter).toBe(sdk.parseFrontmatter);
     expect(compat.stripFrontmatter).toBe(sdk.stripFrontmatter);
     expect(native.withFileMutationQueue).toBe(sdk.withFileMutationQueue);
+    expect(native.SettingsManager).toBe(sdk.SettingsManager);
     expect(native.parseFrontmatter('﻿---\r\nname: example\r\n---\r\nbody')).toEqual({
       frontmatter: { name: 'example' }, body: 'body',
     });
@@ -19,6 +20,8 @@ describe('published Coding SDK boundary', () => {
   test('source generation stops at the SDK boundary without redirecting session adapters', () => {
     expect(codingSDKImport('core/extensions/loader.ts', '../event-bus.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/skills.ts', '../utils/frontmatter.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('core/sdk.ts', './settings-manager.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('extensions/codemode/index.ts', '../../core/settings-defaults.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './agent-session.ts')).toBeUndefined();
     expect(codingSDKImport('core/sdk.ts', '@earendil-works/pi-agent-core')).toBeUndefined();
   });

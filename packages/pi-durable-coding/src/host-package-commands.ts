@@ -2,7 +2,7 @@
 import type { ExtensionFactory } from './pi/core/extensions/types.ts';
 import { DefaultPackageManager } from './pi/core/package-manager.ts';
 import { parseCommandArgs } from './pi/core/prompt-templates.ts';
-import type { SettingsManager } from './pi/core/settings-manager.ts';
+import type { SettingsManager } from "@earendil-works/pi-coding-agent";
 
 const usage = '/packages list|install|remove|update [--local] [source]';
 

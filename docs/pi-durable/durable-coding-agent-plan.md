@@ -30,7 +30,7 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 pi-durable 已发布 codemode、tool-search、tools、images 及完整 Harness/任务/存储接口，应先核对其已有实现和扩展点，再选择其他 Pi 官方 SDK。当前 `pi.coding.*` 虽由官方 scheduler 执行，仍含本地请求与工具状态机，属于首批纠偏重点。
 
-对每个确需适配的范围，记录真实契约、候选发布 API、实际缺口、最小适配、调用方和验证。原型、getter、私有阶段或完整 CLI 的旧断言须先核实需求；不能为了通过旧测试扩大兼容。确认必要的源码固定到 Pi v1.5.0 提交 `f9a26365568127461c47a07a37dcb42c140a3ac5`，保留来源、许可和生成检查。当前 root `patchedDependencies` 的 core 和 durable 修改须单独审查，补丁新增接口不计为 Pi 原包已发布能力。
+对每个确需适配的范围，记录真实契约、候选发布 API、实际缺口、最小适配、调用方和验证。原型、getter、私有阶段或完整 CLI 的旧断言须先核实需求；不能为了通过旧测试扩大兼容。确认必要的源码固定到 Pi v1.5.0 提交 `f9a26365568127461c47a07a37dcb42c140a3ac5`，保留来源、许可和生成检查。当前 root `patchedDependencies` 的 core、Coding 和 durable 修改须单独审查，补丁新增接口不计为 Pi 原包已发布能力。
 
 宿主已安装上述四类内置模块，并通过工具桥接向 coding profile 提供工具。SDK 搜索、codemode 输出及 Native codemode 执行现已共用 durable；原 Native 执行循环已删除。外层保留发现元数据、字符串调用 ID、分支 store、沙箱名额和 Native 工具管道。取消和等待 helper 引用 Pi 官方包。完整 SDK 源码闭包的必要性仍未核实，不能据此宣称整个 SDK 已去重。
 

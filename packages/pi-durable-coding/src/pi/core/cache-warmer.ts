@@ -11,7 +11,7 @@ import {
 import { getProviderEnvValue } from "@earendil-works/pi-ai/utils/provider-env";
 import type { ModelRuntime } from "./model-runtime.ts";
 import type { SessionEntry, SessionManager, UsageEntry } from "./session-manager.ts";
-import type { CacheWarmingMode } from "./settings-manager.ts";
+import type { CacheWarmingMode } from "@earendil-works/pi-coding-agent";
 
 /** Streaming warming never continues past this long after the real request that started it. */
 const MAX_WARMING_AGE_MS = 60 * 60_000;

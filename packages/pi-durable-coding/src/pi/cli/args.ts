@@ -3,7 +3,7 @@
  */
 
 import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
-import { getToolListError, type TuiMode } from "../core/settings-manager.ts";
+import { getToolListError, type TuiMode } from "@earendil-works/pi-coding-agent";
 
 export type Mode = "text" | "json" | "rpc";
 
