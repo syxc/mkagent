@@ -5,7 +5,7 @@ import type { CodingResourceOptions } from './resources.ts';
 import { createHostPackageExtension } from './host-package-commands.ts';
 import { withHostCompactionPolicy, type HostSettingsManager } from './host-settings.ts';
 import type { EventBus } from "@earendil-works/pi-coding-agent";
-import type { InlineExtension } from './pi/core/extensions/types.ts';
+import type { InlineExtension } from '@earendil-works/pi-coding-agent';
 import {
   DefaultResourceLoader,
   loadProjectContextFiles,

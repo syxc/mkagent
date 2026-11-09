@@ -58,11 +58,14 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
     apply(body) {
       const parsed = ts.createSourceFile('args.ts', body, ts.ScriptTarget.Latest, true);
       const functions = ['printHelp', 'normalizeSessionName'];
-      const imports = ['chalk', '../config.ts', '../core/extensions/types.ts'];
+      const imports = ['chalk', '../config.ts'];
+      const flagImport = 'import type { ExtensionFlag } from "@earendil-works/pi-coding-agent";';
       const removed = parsed.statements.filter(node =>
         ts.isFunctionDeclaration(node) && functions.includes(node.name?.text ?? '') ||
-        ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && imports.includes(node.moduleSpecifier.text));
-      if (functions.some(name => removed.filter(node => ts.isFunctionDeclaration(node) && node.name?.text === name).length !== 1) ||
+        ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) &&
+          (imports.includes(node.moduleSpecifier.text) || node.getText(parsed) === flagImport));
+      if (removed.filter(node => node.getText(parsed) === flagImport).length !== 1 ||
+          functions.some(name => removed.filter(node => ts.isFunctionDeclaration(node) && node.name?.text === name).length !== 1) ||
           imports.some(path => removed.filter(node => ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) &&
             node.moduleSpecifier.text === path).length !== 1)) {
         throw new Error('Pinned CLI helper boundary changed');

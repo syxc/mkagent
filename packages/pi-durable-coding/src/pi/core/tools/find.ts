@@ -3,7 +3,7 @@ import { spawn } from "child_process";
 import path from "path";
 import { type Static, Type } from "typebox";
 import { ensureTool } from "../../utils/tools-manager.ts";
-import type { ExtensionContext, ToolDefinition } from "../extensions/types.ts";
+import type { ExtensionContext, ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { pathExists, resolveToCwd } from "./path-utils.ts";
 import { findRenderers } from "./renderers/find.ts";
 import { type TypeBoxAgentTool, wrapToolDefinition } from "./tool-definition-wrapper.ts";

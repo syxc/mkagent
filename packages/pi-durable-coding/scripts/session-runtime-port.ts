@@ -36,6 +36,8 @@ export function portAgentSession(source: string): string {
     '\t\tthis._baseToolsOverride = config.baseToolsOverride;\n\t\tthis._wrapTool = config.wrapTool;\n\t\tthis._onAction = config.onAction;\n\t\tthis._onToolsChanged = config.onToolsChanged;');
   body = edit(body, '\t\tconst selectedToolsBefore = this._baseSystemPromptOptions.selectedTools;',
     '\t\tthis._rebuildSystemPrompt(this.getActiveToolNames());\n\n\t\tconst selectedToolsBefore = this._baseSystemPromptOptions.selectedTools;');
+  body = edit(body, '\t\t\tnew ModelRegistry(this._modelRuntime),\n\t\t);',
+    '\t\t\tnew ModelRegistry(this._modelRuntime),\n\t\t\t{ buildSystemPrompt },\n\t\t);');
   body = edit(body, '\t\tthis._installAgentRequestProjection();',
     `\t\tthis.agent.durable.bindSessionState(() => this.exportDurableState(), state =>
 \t\t\tthis.restoreDurableState(state as ReturnType<AgentSession["exportDurableState"]>));
@@ -384,9 +386,7 @@ ${implementation}
 }
 
 export function portToolDefinition(path: string, source: string): string {
-  if (path === 'core/extensions/types.ts') return edit(source,
-    'export interface ToolDefinition<TParams extends TSchema = TSchema, TDetails = unknown, TState = any> {',
-    'export interface ToolDefinition<TParams extends TSchema = TSchema, TDetails = unknown, TState = any> {\n\t/** Only tools explicitly safe to repeat may resume an uncertain durable execution. */\n\treplay?: "safe" | "never";');
+  if (path !== 'core/tools/tool-definition-wrapper.ts') throw new Error('Unexpected tool wrapper boundary: ' + path);
   let body = edit(source, '\t\texecutionMode: definition.executionMode,',
     '\t\texecutionMode: definition.executionMode,\n\t\treplay: definition.replay,');
   body = edit(body, '\t\texecutionMode: tool.executionMode,',

@@ -5,7 +5,7 @@ import type { Theme } from "@earendil-works/pi-coding-agent";
 import { stripAnsi } from "../../utils/ansi.ts";
 import { resolvePath, shortenHomePath } from "../../utils/paths.ts";
 import { sanitizeBinaryOutput } from "../../utils/shell.ts";
-import type { ToolRenderContext } from "../extensions/types.ts";
+import type { ToolRenderContext } from "@earendil-works/pi-coding-agent";
 
 export function shortenPath(path: unknown): string {
 	if (typeof path !== "string") return "";

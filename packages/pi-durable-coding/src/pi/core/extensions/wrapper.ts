@@ -7,8 +7,8 @@
 
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { wrapToolDefinition } from "../tools/tool-definition-wrapper.ts";
-import type { ExtensionRunner } from "./runner.ts";
-import type { RegisteredTool } from "./types.ts";
+import type { ExtensionRunner } from "@earendil-works/pi-coding-agent";
+import type { RegisteredTool } from "@earendil-works/pi-coding-agent";
 
 /**
  * Wrap a RegisteredTool into an AgentTool.

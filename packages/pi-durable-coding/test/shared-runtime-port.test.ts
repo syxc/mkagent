@@ -144,7 +144,7 @@ test('CLI helper removal retains the parser and guards missing or duplicate boun
   const removed = [
     'import chalk from "chalk";',
     'import { APP_NAME } from "../config.ts";',
-    'import type { ExtensionFlag } from "../core/extensions/types.ts";',
+    'import type { ExtensionFlag } from "@earendil-works/pi-coding-agent";',
     'export function normalizeSessionName(value: string) { return value.trim(); }',
     'export function printHelp() { console.log(chalk.bold(APP_NAME)); }',
   ];

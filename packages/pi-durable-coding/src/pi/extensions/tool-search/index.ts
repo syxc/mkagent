@@ -6,7 +6,7 @@
  * `setActiveTools()`.
  */
 
-import type { ExtensionFactory } from "../../core/extensions/types.ts";
+import type { ExtensionFactory } from "@earendil-works/pi-coding-agent";
 import { createToolSearchToolDefinition } from "./tool.ts";
 
 export function createToolSearchExtension(): ExtensionFactory {

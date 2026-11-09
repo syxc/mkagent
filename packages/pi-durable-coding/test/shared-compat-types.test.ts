@@ -27,6 +27,14 @@ import { mergeCodingSettings } from "${coding}/src/upstream/core/settings-merge.
 import { convertToLlm } from "${coding}/src/upstream/core/messages.js";
 import { SessionManager, buildSessionProjection } from "${coding}/src/upstream/core/session-manager.js";
 import { estimateTokens, calculateContextTokens } from "${coding}/src/upstream/core/context-tokens.js";
+import type { ToolDefinition } from "${repo}/node_modules/@earendil-works/pi-coding-agent";
+import type { BeforeAgentStartTrigger, NewSessionHandler } from "${coding}/src/legacy/extension-runner.js";
+const safeReplay: ToolDefinition["replay"] = "safe";
+const neverReplay: ToolDefinition["replay"] = "never";
+// @ts-expect-error Unsupported replay policies must not compile.
+const invalidReplay: ToolDefinition["replay"] = "unsafe";
+const trigger: BeforeAgentStartTrigger = { messageType: "user", prompt: "fixture" };
+const newSession: NewSessionHandler = async () => ({ cancelled: false });
 const session = SessionManager.inMemory("/tmp/fixture", undefined, []);
 session.appendMessage({ role: "user", content: "fixture", timestamp: 1, hostMessageId: "fixture" });
 const projection = buildSessionProjection(session.getEntries());

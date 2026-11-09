@@ -15,7 +15,7 @@ import {
   createCodemodeExtension, type CodemodeToolOptions,
 } from '@earendil-works/pi-durable/codemode';
 import type { AgentTool } from '../src/agent-runtime.ts';
-import type { ExtensionToolContext } from '../src/pi/core/extensions/types.ts';
+import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 import { executeCodemode } from '../src/pi/extensions/codemode/execute.ts';
 import type { CodemodeStoreEntryData } from '../src/pi/extensions/codemode/tool.ts';
 import { createNativeCodemodeDiscovery } from '../src/compat/codemode-discovery.ts';

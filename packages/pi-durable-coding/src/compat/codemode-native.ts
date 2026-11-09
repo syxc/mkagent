@@ -11,7 +11,7 @@ import {
 } from '../durable-coding/engine.ts';
 import { NATIVE_CODEMODE_FORWARD } from '../durable-coding/codemode-forward.ts';
 import { agentToolToHost, hostToolToAgent, markHostUsageAccounted } from '../host-tools.ts';
-import type { ExtensionToolContext } from '../pi/core/extensions/types.ts';
+import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 import type { SessionEntry } from '@earendil-works/pi-coding-agent';
 import { formatSize } from '../pi/core/tools/truncate.ts';
 import {

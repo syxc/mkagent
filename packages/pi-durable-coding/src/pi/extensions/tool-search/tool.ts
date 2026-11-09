@@ -18,7 +18,7 @@ import type {
 	ToolExposure,
 	ToolInfo,
 	ToolNamespace,
-} from "../../core/extensions/types.ts";
+} from "@earendil-works/pi-coding-agent";
 
 /** A tool as the ranker sees it: its name and the texts built by {@link createToolSearchDocument}. */
 export interface ToolSearchDocument {

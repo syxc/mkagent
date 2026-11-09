@@ -2,8 +2,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHostResources, type HostResourceOptions } from './host-resources.ts';
-import { emitProjectTrustEvent } from './pi/core/extensions/runner.ts';
-import type { LoadExtensionsResult, ProjectTrustContext } from './pi/core/extensions/types.ts';
+import { emitProjectTrustEvent } from '@earendil-works/pi-coding-agent';
+import type { LoadExtensionsResult, ProjectTrustContext } from '@earendil-works/pi-coding-agent';
 import {
   getProjectTrustOptions, hasTrustRequiringProjectResources, ProjectTrustStore,
 } from './pi/core/trust-manager.ts';

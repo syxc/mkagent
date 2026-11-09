@@ -9,7 +9,7 @@ import type { ImageContent, TextContent } from "@earendil-works/pi-ai";
 import type { Component } from "@earendil-works/pi-tui";
 import { keyHint, keyText } from "../../modes/interactive/components/keybinding-hints.ts";
 import type { Theme } from "@earendil-works/pi-coding-agent";
-import type { ToolRenderContext, ToolRenderers } from "../extensions/types.ts";
+import type { ToolRenderContext, ToolRenderers } from "@earendil-works/pi-coding-agent";
 import { ansiLinesToHtml } from "./ansi-to-html.ts";
 
 export interface ToolHtmlRendererDeps {

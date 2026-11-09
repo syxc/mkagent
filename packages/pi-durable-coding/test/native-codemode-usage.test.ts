@@ -7,7 +7,7 @@ import { executeNativeCodemode } from '../src/compat/codemode-native.ts';
 import { DurableLoopBinding, currentCodingHostToolApi, currentCodingToolInvocation } from '../src/durable-coding/engine.ts';
 import { NATIVE_CODEMODE_FORWARD } from '../src/durable-coding/codemode-forward.ts';
 import { agentToolToHost, hostToolToAgent } from '../src/host-tools.ts';
-import type { ExtensionToolContext } from '../src/pi/core/extensions/types.ts';
+import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 
 const context = BACKGROUND_CONTEXT;
 const usage = (total: number) => ({

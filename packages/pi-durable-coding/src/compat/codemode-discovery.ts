@@ -2,7 +2,7 @@ import type { AgentTool } from "@earendil-works/pi-agent-core";
 import type { CodemodeTool } from "@earendil-works/pi-codemode";
 import { renderToolSample, toCodemodeIdentifier } from "@earendil-works/pi-codemode/declarations";
 import type { CodemodeGlobal } from "@earendil-works/pi-durable/codemode";
-import type { ToolNamespace } from "../pi/core/extensions/types.ts";
+import type { ToolNamespace } from "@earendil-works/pi-coding-agent";
 import { Bm25Ranker, createToolSearchDocument, DEFAULT_TOOL_SEARCH_LIMIT } from "../pi/extensions/tool-search/tool.ts";
 import { toCodemodeDeclaration, type CodemodeToolOptions } from "../pi/extensions/codemode/tool.ts";
 

@@ -22,6 +22,8 @@ describe('published Coding SDK boundary', () => {
     expect(native.DefaultResourceLoader).toBe(sdk.DefaultResourceLoader);
     expect(native.loadProjectContextFiles).toBe(sdk.loadProjectContextFiles);
     expect(native.createExtensionRuntime).toBe(sdk.createExtensionRuntime);
+    expect(native.ExtensionRunner).toBe(sdk.ExtensionRunner);
+    expect(native.defineTool).toBe(sdk.defineTool);
     expect(native.createExtensionRuntime().mcpServers).toBeInstanceOf(sdk.McpServerRegistry);
     expect(native.parseFrontmatter('﻿---\r\nname: example\r\n---\r\nbody')).toEqual({
       frontmatter: { name: 'example' }, body: 'body',
@@ -45,6 +47,8 @@ describe('published Coding SDK boundary', () => {
     expect(codingSDKImport('core/model-runtime.ts', './provider-composer.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingHostImport('core/extensions/index.ts', './loader.ts')).toBe('../../../native-extension-loader.ts');
     expect(codingHostImport('core/sdk.ts', './extensions/loader.ts')).toBe('../../native-extension-loader.ts');
+    expect(codingSDKImport('core/sdk.ts', './extensions/runner.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('core/extensions/index.ts', './types.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingHostImport('core/extensions/index.ts', './runner.ts')).toBeUndefined();
     expect(codingSDKImport('core/sdk.ts', './agent-session.ts')).toBeUndefined();
     expect(codingSDKImport('core/sdk.ts', '@earendil-works/pi-agent-core')).toBeUndefined();

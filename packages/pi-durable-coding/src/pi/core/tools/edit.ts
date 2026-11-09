@@ -3,7 +3,7 @@ import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import { splitBom } from "../../utils/text.ts";
-import type { ExtensionContext, ToolDefinition } from "../extensions/types.ts";
+import type { ExtensionContext, ToolDefinition } from "@earendil-works/pi-coding-agent";
 import {
 	applyEditsToNormalizedContent,
 	detectLineEnding,

@@ -7,7 +7,7 @@ import { executeNativeCodemode } from '../src/compat/codemode-native.ts';
 import {
   currentCodingHostToolApi, currentCodingToolInvocation, DurableLoopBinding, runDurableToolCall,
 } from '../src/durable-coding/engine.ts';
-import type { ExtensionToolContext } from '../src/pi/core/extensions/types.ts';
+import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 
 test('the actual Native task entry retains nested preparation, permission denial and result hooks', async () => {
   const context = BACKGROUND_CONTEXT;

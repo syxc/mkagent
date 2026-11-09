@@ -8,6 +8,7 @@ import { codingSessionPolicy } from './coding-session-policy.ts';
 import { codingResourcePolicy } from './coding-resource-policy.ts';
 import { codingExtensionPolicy } from './coding-extension-policy.ts';
 import { codingModelRuntimePolicy } from './coding-model-runtime-policy.ts';
+import { codingRunnerPolicy } from './coding-runner-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -45,8 +46,12 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/session-manager.${extension}";`,
     `export * from "./core/resource-loader.${extension}";`,
     `export * from "./core/extensions/loader.${extension}";`,
+    `export * from "./core/extensions/runner.${extension}";`,
+    `export * from "./core/extensions/types.${extension}";`,
+    `export * from "./core/exec.${extension}";`,
     `export * from "./core/mcp-servers.${extension}";`,
     `export * from "./core/keybindings.${extension}";`,
+    `export { KeybindingsManager } from "./core/keybindings.${extension}";`,
     `export * from "./modes/interactive/theme/theme.${extension}";`,
     `export { getThemesDir } from "./config.${extension}";`,
   ].join('\n') + '\n';
@@ -73,7 +78,13 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(extensionPath, codingExtensionPolicy(readFileSync(join(baseline, extensionPath), 'utf8'), suffix === 'd.ts'));
   const runtimePath = `dist/core/model-runtime.${suffix}`;
   outputs.set(runtimePath, codingModelRuntimePolicy(readFileSync(join(baseline, runtimePath), 'utf8'), suffix === 'd.ts'));
+  const runnerPath = `dist/core/extensions/runner.${suffix}`;
+  outputs.set(runnerPath, codingRunnerPolicy(readFileSync(join(baseline, runnerPath), 'utf8'), suffix === 'd.ts'));
 }
+const extensionTypesPath = 'dist/core/extensions/types.d.ts';
+outputs.set(extensionTypesPath, replace(readFileSync(join(baseline, extensionTypesPath), 'utf8'),
+  'export interface ToolDefinition<TParams extends TSchema = TSchema, TDetails = unknown, TState = any> {',
+  'export interface ToolDefinition<TParams extends TSchema = TSchema, TDetails = unknown, TState = any> {\n    /** Only tools explicitly safe to repeat may resume an uncertain durable execution. */\n    replay?: "safe" | "never";'));
 const composerPath = 'dist/core/provider-composer.d.ts';
 outputs.set(composerPath, replace(readFileSync(join(baseline, composerPath), 'utf8'),
   'modelConfig: ModelConfig,', 'modelConfig: Pick<ModelConfig, "getProvider">,'));
@@ -130,7 +141,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, default full theme validation and installed worker theme asset lookup.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, optional durable tool replay typing, default full theme validation and installed worker theme asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

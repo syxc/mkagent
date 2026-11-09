@@ -8,7 +8,7 @@
  */
 
 import { Container, Spacer, Text } from "@earendil-works/pi-tui";
-import type { ToolDefinition } from "../../core/extensions/types.ts";
+import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { getTextOutput, replaceTabs, startToolTimer, str, toolTimerText } from "../../core/tools/render-utils.ts";
 import { keyHint } from "../../modes/interactive/components/keybinding-hints.ts";
 import { VisualLinePreview } from "../../modes/interactive/components/visual-truncate.ts";

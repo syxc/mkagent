@@ -14,7 +14,7 @@ import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import type { AgentToolResult, StreamFn } from '../src/agent-runtime.ts';
 import { currentCodingHostToolApi, DurableLoopBinding } from '../src/durable-coding/engine.ts';
 import { executeNativeCodemode } from '../src/compat/codemode-native.ts';
-import type { ExtensionToolContext } from '../src/pi/core/extensions/types.ts';
+import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 import { NativeSessionJournal } from '../src/durable-coding/session-journal.ts';
 import { hostToolToAgent } from '../src/host-tools.ts';
 import { readCodemodeStore } from '../src/pi/extensions/codemode/execute.ts';

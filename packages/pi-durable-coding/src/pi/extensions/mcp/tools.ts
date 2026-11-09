@@ -28,7 +28,7 @@ import type {
 	ToolExposure,
 	ToolNamespace,
 	ToolRenderers,
-} from "../../core/extensions/types.ts";
+} from "@earendil-works/pi-coding-agent";
 import { READ_MCP_RESOURCE_TOOL } from "@earendil-works/pi-coding-agent";
 import { formatToolCallWithArgs, getTextOutput, replaceTabs } from "../../core/tools/render-utils.ts";
 import { formatSize, truncateMiddle } from "../../core/tools/truncate.ts";

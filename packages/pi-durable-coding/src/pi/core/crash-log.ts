@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { getAgentDir, VERSION } from "../config.ts";
-import type { Extension } from "./extensions/types.ts";
+import type { Extension } from "@earendil-works/pi-coding-agent";
 import { isSyntheticPath } from "./source-info.ts";
 
 export interface CrashRecord {

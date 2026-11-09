@@ -26,6 +26,88 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Extension runner, plugin types and exec SDK boundary after 0c69e9f
+
+Production uses the published ExtensionRunner, plugin types, defineTool and
+execCommand. Three local implementations, two forwards and the old runner
+conversion script are deleted: six files and 4,101 lines. Generated source
+traversal stops at the SDK modules. The tool wrapper retains replay and host
+execution metadata; this slice does not replace that wrapper.
+
+The runner patch adds optional theme and prompt dependencies per instance. The
+SDK keeps its event dispatch, error handling and lifecycle algorithms. The
+legacy wrapper supplies the headless theme and host documentation prompt; Native
+AgentSession supplies its existing prompt builder. The default SDK constructor
+keeps its original theme and documentation paths. Only the plugin type
+declaration gains optional replay: safe or never. The root exports existing
+runner, types and exec modules, with an explicit KeybindingsManager value export.
+Plugin types and exec runtime JS are unchanged. No task or checkpoint version
+changes.
+
+The affected 16-file set passes 161 tests with 831 assertions. Coding and server
+type checks pass. Coverage includes public SDK identity, legacy type consumers,
+replay type rejection, instance theme and UI reset, prompt mutation and forced
+prompts, handler errors, default SDK paths, plugin loading, resource trust,
+codemode and command execution. The SDK-only command tests cover UTF-8 stdout
+and stderr, byte caps and cancellation through local child processes.
+
+The first runtime generation stops at the CLI helper guard. Its ExtensionFlag
+import has moved to the SDK root, which also supplies imports that must remain.
+The guard now removes only that type import and keeps its uniqueness checks.
+The initial incremental patch install lacks nested pi-ai 1.5.0 and causes import
+and type failures. A normal frozen install restores the declared dependency;
+there is no force, node_modules deletion, manifest change or lock change.
+The new root type exports also hide the KeybindingsManager value behind a type
+export. An explicit value export fixes that conflict in JS and declarations.
+
+One focused test then detects that the Native session uses SDK documentation
+paths instead of its existing local paths. The production constructor and test
+fixture now inject the existing Native prompt builder. A later temporary type
+consumer pulls the complete Native root into declaration output and fails on
+an unrelated inferred bug-report type. That consumer now imports ToolDefinition
+from the public SDK package root, which is the intended type boundary. Production
+type checks and the separate fresh public consumer both pass.
+
+The complete worker bundle run passes 25 tests; the native image test takes
+5,764.31 ms and exceeds its default 5-second limit. That test passes alone with
+a 15-second budget, three assertions and a duration of 4.95 seconds. Repository
+timeouts are unchanged. This is not one complete green 26-test run.
+
+Complete runtime, auxiliary and pristine patch checks pass: 157 runtime TypeScript
+files, including 153 under src/pi and four facades, four assets, nine auxiliary
+sources and 18 forwards. Coding has 24 physical patch outputs, core four and
+durable 30, for a total of 58. Source registration updates or deletes 80 slice
+paths, removes six deleted records and adds the policy and SDK-only test. The
+fixed Craft v0.15.6 audit passes for 2,150 files.
+
+A fresh hoisted frozen install covers 11 workspaces with a separate HOME and
+cache, the public registry and scripts disabled. The lockfile stays unchanged.
+All 58 outputs match the tested installation; all 24 Coding outputs also match
+CODING-PATCH.json. The unchanged SDK-only runner test file passes offline with
+no command lookup: three tests and 24 assertions. A strict public TypeScript
+consumer verifies runner dependencies, the KeybindingsManager value, trigger
+types and both accepted replay values, and rejects an unsupported replay value.
+
+The first independent review ends with a connection timeout and no final
+conclusion. A new read-only review finds no confirmed new defect relative to
+0c69e9f. It passes 105 tests, 424 assertions, source type checking and public
+package declaration checks. It checks instance theme/UI/prompt isolation,
+UI event ownership, continued dispatch after errors, subscription cleanup,
+stale contexts, initial and reloaded Native prompts, replay through the tool
+wrappers and host bridge, durable permissions and cancellation, and exec error
+and output limits. Normalized pristine runner, types, exec and child-process
+algorithms match the pinned upstream. All 24 installed Coding output hashes
+match. Runtime/helper generation checks pass, 403 source/script/test paths have
+no import to the six deleted files, and 74 existing changed files have valid
+source records. The six deleted files have no remaining source record. The
+review does not repeat document checks, frozen installation, worker/image tests,
+full regression or Windows checks. Receipts are in the extension-runner-sdk,
+extension-runner-hoisted and sdk-runner-review task directories. AgentSession
+production lifecycle, atomic input admission, cancellation and cold recovery
+remain open, as do the remaining source replacements. The earlier AuthContext
+gap remains recorded in the ModelRuntime section. Real services, Windows, full
+repository checks and complete product acceptance were not run for this slice.
+
 ## ModelRuntime SDK boundary after 2ac3808
 
 Production now uses the published Coding ModelRuntime class, model configuration,

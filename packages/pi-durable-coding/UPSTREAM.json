@@ -105,10 +105,6 @@
       "implementation": "src/pi/utils/child-process.ts"
     },
     {
-      "target": "src/upstream/core/exec.ts",
-      "implementation": "src/pi/core/exec.ts"
-    },
-    {
       "target": "src/upstream/core/timings.ts",
       "implementation": "src/pi/core/timings.ts"
     },
@@ -133,10 +129,6 @@
       "changes": [
         "host-documentation-paths"
       ]
-    },
-    {
-      "target": "src/upstream/core/extensions/types.js",
-      "implementation": "src/pi/core/extensions/types.ts"
     },
     {
       "target": "src/upstream/core/extensions/pi-ai-extension-view.ts",

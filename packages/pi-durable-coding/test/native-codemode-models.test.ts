@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createModels, fauxProvider, type ClassifierModel, type ImageModel, type Models } from '@earendil-works/pi-ai';
-import type { ExtensionToolContext } from '../src/pi/core/extensions/types.ts';
+import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 import {
   CODEMODE_DOCS_PATH, createCodemodeToolDefinition, type CodemodeToolDetails,
 } from '../src/pi/extensions/codemode/tool.ts';

@@ -1,8 +1,8 @@
-# Content SHA-256: ef39105d38c64242281b3282db591821e75a8c230959e548a2df5c45b3ef83e4
+# Content SHA-256: f2e1ee0eeb3065471f8236832ebc13f6d41b31f15eb60cffc2b67822eca81f9e
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,19 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,23 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -17,8 +17,12 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/session-manager.js";
 +export * from "./core/resource-loader.js";
 +export * from "./core/extensions/loader.js";
++export * from "./core/extensions/runner.js";
++export * from "./core/extensions/types.js";
++export * from "./core/exec.js";
 +export * from "./core/mcp-servers.js";
 +export * from "./core/keybindings.js";
++export { KeybindingsManager } from "./core/keybindings.js";
 +export * from "./modes/interactive/theme/theme.js";
 +export { getThemesDir } from "./config.js";
  //# sourceMappingURL=index.js.map
@@ -35,7 +39,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,19 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,23 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -50,8 +54,12 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/session-manager.ts";
 +export * from "./core/resource-loader.ts";
 +export * from "./core/extensions/loader.ts";
++export * from "./core/extensions/runner.ts";
++export * from "./core/extensions/types.ts";
++export * from "./core/exec.ts";
 +export * from "./core/mcp-servers.ts";
 +export * from "./core/keybindings.ts";
++export { KeybindingsManager } from "./core/keybindings.ts";
 +export * from "./modes/interactive/theme/theme.ts";
 +export { getThemesDir } from "./config.ts";
  //# sourceMappingURL=index.d.ts.map
@@ -1004,6 +1012,63 @@ diff --git a/dist/core/model-runtime.js b/dist/core/model-runtime.js
          // Validate the incoming registration on its own, like the legacy registry:
          // a broken re-registration must throw without touching the stored config.
          validateExtensionProvider(providerId, this.builtins.get(providerId), this.config.getProvider(providerId), config);
+diff --git a/dist/core/extensions/runner.js b/dist/core/extensions/runner.js
+--- a/dist/core/extensions/runner.js
++++ b/dist/core/extensions/runner.js
+@@ -165,6 +165,8 @@ export class ExtensionRunner {
+     extensions;
+     runtime;
+     uiContext;
++    noOpUIContext;
++    renderSystemPrompt;
+     mode = "print";
+     cwd;
+     sessionManager;
+@@ -197,10 +199,15 @@ export class ExtensionRunner {
+     staleMessage;
+     uiPromptDepth = 0;
+     activeUIPrompt;
+-    constructor(extensions, runtime, cwd, sessionManager, modelRegistry) {
++    constructor(extensions, runtime, cwd, sessionManager, modelRegistry, dependencies = {}) {
+         this.extensions = extensions;
+         this.runtime = runtime;
+-        this.uiContext = noOpUIContext;
++        const getTheme = dependencies.getTheme;
++        this.noOpUIContext = getTheme
++            ? { ...noOpUIContext, get theme() { return getTheme(); } }
++            : noOpUIContext;
++        this.uiContext = this.noOpUIContext;
++        this.renderSystemPrompt = dependencies.buildSystemPrompt ?? buildSystemPrompt;
+         this.cwd = cwd;
+         this.sessionManager = sessionManager;
+         this.modelRegistry = modelRegistry;
+@@ -353,7 +360,7 @@ export class ExtensionRunner {
+         this.reloadHandler = async () => { };
+     }
+     setUIContext(uiContext, mode = "print") {
+-        this.uiContext = uiContext ? this.wrapUIPromptContext(uiContext) : noOpUIContext;
++        this.uiContext = uiContext ? this.wrapUIPromptContext(uiContext) : this.noOpUIContext;
+         this.mode = mode;
+     }
+     wrapUIPromptContext(ui) {
+@@ -402,7 +409,7 @@ export class ExtensionRunner {
+         return this.uiContext;
+     }
+     hasUI() {
+-        return this.uiContext !== noOpUIContext;
++        return this.uiContext !== this.noOpUIContext;
+     }
+     getExtensionPaths() {
+         return this.extensions.map((e) => e.path);
+@@ -1120,7 +1127,7 @@ export class ExtensionRunner {
+     }
+     async emitBeforeAgentStart(trigger, systemPromptOptions) {
+         const currentOptions = normalizeBuildSystemPromptOptions(systemPromptOptions);
+-        const renderCurrentSystemPrompt = () => buildSystemPrompt(currentOptions);
++        const renderCurrentSystemPrompt = () => this.renderSystemPrompt(currentOptions);
+         const ctx = Object.defineProperties({}, Object.getOwnPropertyDescriptors(this.createContext()));
+         ctx.getSystemPrompt = () => {
+             this.assertActive();
 diff --git a/dist/core/package-manager.d.ts b/dist/core/package-manager.d.ts
 --- a/dist/core/package-manager.d.ts
 +++ b/dist/core/package-manager.d.ts
@@ -1306,6 +1371,47 @@ diff --git a/dist/core/model-runtime.d.ts b/dist/core/model-runtime.d.ts
      static create(options?: CreateModelRuntimeOptions): Promise<ModelRuntime>;
      private configureRadiusProviders;
      private providerIds;
+diff --git a/dist/core/extensions/runner.d.ts b/dist/core/extensions/runner.d.ts
+--- a/dist/core/extensions/runner.d.ts
++++ b/dist/core/extensions/runner.d.ts
+@@ -1,3 +1,4 @@
++import type { Theme } from "../../modes/interactive/theme/theme.ts";
+ /**
+  * Extension runner - executes extensions and manages their lifecycle.
+  */
+@@ -82,6 +83,8 @@ export declare class ExtensionRunner {
+     private extensions;
+     private runtime;
+     private uiContext;
++    private readonly noOpUIContext;
++    private readonly renderSystemPrompt;
+     private mode;
+     private cwd;
+     private sessionManager;
+@@ -114,7 +117,10 @@ export declare class ExtensionRunner {
+     private staleMessage;
+     private uiPromptDepth;
+     private activeUIPrompt;
+-    constructor(extensions: Extension[], runtime: ExtensionRuntime, cwd: string, sessionManager: SessionManager, modelRegistry: ModelRegistry);
++    constructor(extensions: Extension[], runtime: ExtensionRuntime, cwd: string, sessionManager: SessionManager, modelRegistry: ModelRegistry, dependencies?: {
++        getTheme?: () => Theme;
++        buildSystemPrompt?: (options: BuildSystemPromptOptions) => string;
++    });
+     bindCore(actions: ExtensionActions, contextActions: ExtensionContextActions, providerActions?: {
+         registerProvider?: (name: string, config: ProviderConfig) => void;
+         registerNativeProvider?: (provider: Provider) => void;
+diff --git a/dist/core/extensions/types.d.ts b/dist/core/extensions/types.d.ts
+--- a/dist/core/extensions/types.d.ts
++++ b/dist/core/extensions/types.d.ts
+@@ -470,6 +470,8 @@ export interface ToolLoadoutChanges {
+  * Tool definition for registerTool().
+  */
+ export interface ToolDefinition<TParams extends TSchema = TSchema, TDetails = unknown, TState = any> {
++    /** Only tools explicitly safe to repeat may resume an uncertain durable execution. */
++    replay?: "safe" | "never";
+     /** Tool name (used in LLM tool calls) */
+     name: string;
+     /** Human-readable label for UI */
 diff --git a/dist/core/provider-composer.d.ts b/dist/core/provider-composer.d.ts
 --- a/dist/core/provider-composer.d.ts
 +++ b/dist/core/provider-composer.d.ts

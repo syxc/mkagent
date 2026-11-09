@@ -17,8 +17,8 @@ export type {
 	NewSessionHandler,
 	ShutdownHandler,
 	SwitchSessionHandler,
-} from "./runner.ts";
-export { ExtensionRunner } from "./runner.ts";
+} from "@earendil-works/pi-coding-agent";
+export { ExtensionRunner } from "@earendil-works/pi-coding-agent";
 export type {
 	AfterProviderResponseEvent,
 	AgentActivityOutcome,
@@ -209,7 +209,7 @@ export type {
 	WorkingIndicatorOptions,
 	WriteToolCallEvent,
 	WriteToolResultEvent,
-} from "./types.ts";
+} from "@earendil-works/pi-coding-agent";
 // Type guards
 export {
 	defineTool,
@@ -222,5 +222,5 @@ export {
 	isReadToolResult,
 	isToolCallEventType,
 	isWriteToolResult,
-} from "./types.ts";
+} from "@earendil-works/pi-coding-agent";
 export { wrapRegisteredTool, wrapRegisteredTools } from "./wrapper.ts";

@@ -4,7 +4,7 @@ import { createModels, InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import { Agent } from '../../src/agent-runtime.ts';
 import { createHostResources } from '../../src/host-resources.ts';
 import { AgentSession } from '../../src/pi/core/agent-session.ts';
-import { emitSessionShutdownEvent } from '../../src/pi/core/extensions/runner.ts';
+import { emitSessionShutdownEvent } from '@earendil-works/pi-coding-agent';
 import { ModelRuntime } from '@earendil-works/pi-coding-agent';
 import { SessionManager } from '@earendil-works/pi-coding-agent';
 

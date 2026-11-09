@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { createModels, fauxProvider, type ClassifierModel } from '@earendil-works/pi-ai';
 import type { AgentTool } from '@earendil-works/pi-agent-core';
-import type { ExtensionToolContext } from '../src/pi/core/extensions/types.ts';
+import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 import { executeNativeCodemode } from '../src/compat/codemode-native.ts';
 import type { CodemodeStoreEntryData } from '../src/pi/extensions/codemode/tool.ts';
 import { currentCodingHostToolApi } from '../src/durable-coding/engine.ts';

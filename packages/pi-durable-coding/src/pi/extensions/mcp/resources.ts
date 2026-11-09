@@ -21,7 +21,7 @@ import type {
 	ResourceTemplate,
 } from "@earendil-works/pi-mcp";
 import type { TSchema } from "typebox";
-import type { ToolAnnotations, ToolDefinition } from "../../core/extensions/types.ts";
+import type { ToolAnnotations, ToolDefinition } from "@earendil-works/pi-coding-agent";
 import {
 	LIST_MCP_RESOURCE_TEMPLATES_TOOL,
 	LIST_MCP_RESOURCES_TOOL,

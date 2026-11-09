@@ -26,7 +26,7 @@ while (pending.length) {
 
 const native = await import('@earendil-works/pi-coding-agent');
 const legacy = await import('../src/upstream/core/session-manager.js');
-const nativeRunner = await import('../src/pi/core/extensions/runner.ts');
+const nativeRunner = await import('@earendil-works/pi-coding-agent');
 const legacyRunner = await import('../src/upstream/core/extensions/runner.js');
 const { createExtensionRuntime } = await import('../src/legacy/extension-loader.ts');
 const nativePrompt = await import('../src/pi/core/system-prompt.ts');
@@ -47,7 +47,7 @@ const user = (content: string) => ({ role: 'user' as const, content, timestamp: 
 describe('shared session storage with separate context policies', () => {
   test('shares migration and parsing helpers without loading the model runtime', () => {
     expect(checked.has(resolve(sourceRoot, 'pi/core/session-manager.ts'))).toBe(false);
-    expect(checked.has(resolve(sourceRoot, 'pi/core/extensions/runner.ts'))).toBe(true);
+    expect(checked.has(resolve(sourceRoot, 'pi/core/extensions/runner.ts'))).toBe(false);
     expect(legacy.migrateSessionEntries).toBe(native.migrateSessionEntries);
     expect(legacy.parseSessionEntries).toBe(native.parseSessionEntries);
     expect(legacy.loadEntriesFromFile).toBe(native.loadEntriesFromFile);
@@ -208,7 +208,7 @@ describe('shared extension runner with host dependencies', () => {
   function runnerFor(Runner = Reflect.get(legacyRunner, 'ExtensionRunner'), handlers = new Map()) {
     const runtime = createExtensionRuntime();
     const runner = new Runner([{ path: 'fixture', handlers }], runtime, '/isolated',
-      legacy.SessionManager.inMemory('/isolated'), {});
+      legacy.SessionManager.inMemory('/isolated'), {}, { buildSystemPrompt: nativePrompt.buildSystemPrompt });
     return { runner, runtime };
   }
 

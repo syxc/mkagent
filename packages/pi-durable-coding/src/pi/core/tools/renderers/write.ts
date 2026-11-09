@@ -14,7 +14,7 @@ import {
 	highlightCode,
 	type Theme,
 } from "@earendil-works/pi-coding-agent";
-import type { ToolDefinition, ToolRenderResultOptions } from "../../extensions/types.ts";
+import type { ToolDefinition, ToolRenderResultOptions } from "@earendil-works/pi-coding-agent";
 import { normalizeDisplayText, renderToolPath, replaceTabs, str } from "../render-utils.ts";
 
 type WriteHighlightCache = {

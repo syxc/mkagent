@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadExtensions } from '../src/legacy/extension-loader.ts';
-import type { ExtensionAPI } from '../src/pi/core/extensions/types.ts';
+import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 import { ExtensionRunner } from '../src/upstream/core/extensions/runner.js';
 import { createEventBus } from "@earendil-works/pi-coding-agent";
 import { CodingSessionView } from '../src/session-view.ts';

@@ -11,7 +11,6 @@ import { portBundledAssets, portHtmlVendorAssets, portImageAssets } from './asse
 import { portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludePrivateHostComponents, excludeRunModeEntries } from './shared-helper-port.ts';
-import { portCompatRuntime } from './compat-runtime-port.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const checkout = process.argv[2];
@@ -250,7 +249,7 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
 `;
     changes.add('public-pi-ai-sleep-helper');
   }
-  if (path === 'core/extensions/types.ts' || path === 'core/tools/tool-definition-wrapper.ts') {
+  if (path === 'core/tools/tool-definition-wrapper.ts') {
     body = portToolDefinition(path, body);
     changes.add('explicit-durable-tool-replay-policy');
   }
@@ -284,10 +283,6 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     body = helper.body;
     changes.add(helper.change);
     if (helper.dependency) dependencies.add(helper.dependency);
-  }
-  if (path === 'core/extensions/runner.ts') {
-    body = portCompatRuntime(path, body);
-    changes.add('shared-legacy-runtime-policy');
   }
   const target = 'src/pi/' + path;
   save(target, body);

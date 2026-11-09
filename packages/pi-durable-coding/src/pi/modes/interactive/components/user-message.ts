@@ -1,5 +1,5 @@
 import { Container, Markdown, type MarkdownTheme } from "@earendil-works/pi-tui";
-import type { MarkdownTransformer } from "../../../core/extensions/types.ts";
+import type { MarkdownTransformer } from "@earendil-works/pi-coding-agent";
 import { getMarkdownTheme, theme } from "@earendil-works/pi-coding-agent";
 import { createMarkdownTransform } from "./markdown-transform.ts";
 

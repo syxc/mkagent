@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { prepareHostResources } from '../src/host-project-resources.ts';
 import { ProjectTrustStore } from '../src/pi/core/trust-manager.ts';
-import type { ProjectTrustContext } from '../src/pi/core/extensions/types.ts';
+import type { ProjectTrustContext } from '@earendil-works/pi-coding-agent';
 
 let root: string;
 let cwd: string;

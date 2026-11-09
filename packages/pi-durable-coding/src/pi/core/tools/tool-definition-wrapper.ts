@@ -1,7 +1,7 @@
 import { hostToolExecution } from "../../../host-tool-task.ts";
 import type { AgentTool, AgentToolResult, AgentToolUpdateCallback } from "@earendil-works/pi-agent-core";
 import type { Static, TSchema } from "typebox";
-import type { ExtensionToolContext, ToolDefinition } from "../extensions/types.ts";
+import type { ExtensionToolContext, ToolDefinition } from "@earendil-works/pi-coding-agent";
 
 /**
  * An `AgentTool` with a TypeBox parameter schema whose `execute` and `prepareArguments` are typed by TypeBox's

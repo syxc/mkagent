@@ -1,4 +1,4 @@
-import type { MarkdownTransformContext, MarkdownTransformer } from "../../../core/extensions/types.ts";
+import type { MarkdownTransformContext, MarkdownTransformer } from "@earendil-works/pi-coding-agent";
 
 /** Applies extension Markdown transformers. `isStreaming` is read per transform, so a reused component sees a stream end. */
 export function createMarkdownTransform(

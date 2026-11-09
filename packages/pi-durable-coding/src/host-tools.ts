@@ -4,7 +4,7 @@ import {
   defineDoc, type JsonObject, type ToolExecutionApi, type ToolExecutionResult, type ToolRegistration,
 } from '@earendil-works/pi-durable';
 import type { AgentTool } from './agent-runtime.ts';
-import type { ToolDefinition } from './pi/core/extensions/types.ts';
+import type { ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { currentCodingToolInvocation, withCodingHostToolApi } from './durable-coding/engine.ts';
 import { executeHostToolTask, hostToolExecution } from './host-tool-task.ts';
 import type { HostControlledToolResult } from './host-tool-controls.ts';

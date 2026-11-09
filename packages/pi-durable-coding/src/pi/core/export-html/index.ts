@@ -5,7 +5,7 @@ import { basename, join } from "path";
 import { APP_NAME, getExportTemplateDir } from "../../config.ts";
 import { getResolvedThemeColors, getThemeExportColors } from "@earendil-works/pi-coding-agent";
 import { normalizePath, resolvePath } from "../../utils/paths.ts";
-import type { ToolDefinition } from "../extensions/types.ts";
+import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import type { SessionEntry } from "@earendil-works/pi-coding-agent";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
 

@@ -36,7 +36,7 @@ import type {
 	ExtensionContext,
 	ExtensionFactory,
 	ToolDefinition,
-} from "../../core/extensions/types.ts";
+} from "@earendil-works/pi-coding-agent";
 import { mcpNamespace } from "@earendil-works/pi-coding-agent";
 import type { ModelRegistry } from "@earendil-works/pi-coding-agent";
 import { openBrowser } from "../../utils/open-browser.ts";
