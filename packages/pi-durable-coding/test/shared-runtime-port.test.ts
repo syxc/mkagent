@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import ts from 'typescript';
 import { applySharedHelperPort, excludePrivateHostComponents, excludeRunModeEntries } from '../scripts/shared-helper-port.ts';
-import { portChildProcess, portReadPaths, portShell } from '../scripts/shared-runtime-port.ts';
+import { portChildProcess, portShell } from '../scripts/shared-runtime-port.ts';
 
 const declarationFixtures = [
   {
@@ -46,16 +46,6 @@ import { spawn, spawnSync } from "child_process";
 function isLegacyWslBashPath(path: string): boolean { return false; }
 function getBashShellConfig(shell: string): ShellConfig { throw new Error("unused shell body"); }
 export function killProcessTree(pid: number): void { throw new Error("unused cleanup body"); }
-`,
-  },
-  {
-    name: 'read path', port: portReadPaths,
-    source: `const NARROW_NO_BREAK_SPACE = "\\u202F";
-function tryMacOSScreenshotPath(filePath: string): string { return filePath; }
-function tryNFDVariant(filePath: string): string { return filePath; }
-function tryCurlyQuoteVariant(filePath: string): string { return filePath; }
-export function resolveReadPath(filePath: string, cwd: string): string { return filePath; }
-export async function resolveReadPathAsync(filePath: string, cwd: string): Promise<string> { return filePath; }
 `,
   },
   ...declarationFixtures,
@@ -215,11 +205,4 @@ test('component barrel excludes private host paths and preserves reusable plugin
     assert.throws(() => excludePrivateHostComponents(path, source + declaration), /private host component export changed/);
   }
   assert.equal(excludePrivateHostComponents('index.ts', 'public'), undefined);
-});
-
-test('read path: retained normalization constant remains guarded', () => {
-  const fixture = fixtures[2];
-  const changed = fixture.source.replace('\\u202F', '\\u00A0');
-  assert.notEqual(changed, fixture.source);
-  assert.throws(() => fixture.port(changed));
 });

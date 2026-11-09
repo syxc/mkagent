@@ -2513,20 +2513,20 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "a368fc3f8226a11b5f77235e193c7ef20a757b64dedd3b8a7d30dbc2a0f3e752",
-      "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
+      "sha256": "1cafc34d51f783b26328594dd8af484eb36241d1f5fd5383d2817d9cbaa5cded",
+      "reason": "Retain required shared helper rules and remove obsolete edit argument, diff and read path transformations after SDK replacement."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
-      "sha256": "8e2a592d0d54bfcef94b503d3b3080904a34bfd78b5291c95f2f41b0793396fb",
-      "reason": "Verify public SDK argument preparation through both Native edit factories, preserve recorded inputs, execute BOM/CRLF file edits, and reject invalid edits before filesystem access."
+      "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
+      "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "2f13e454077c361d1011337e10baa93dc3664bd5550f4f37003ee4f2a56922b2",
-      "reason": "Guard declarations and retained policy constants when forwarding Native algorithms. Do not bind replaced child-process, shell, read-path or truncation bodies to hashes."
+      "sha256": "acbd3797958c14de7f1f1d6b70f28a5ac3873f037d21d05250f963f2132c10e7",
+      "reason": "Generate required shared runtime boundaries without the retired read path adapter transformation."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "3436cce7500a0dfcb5369ecb9ed1771c9e3c7dab9555559fdce32fd740629e7d",
-      "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
+      "sha256": "1330d2ddfe70f82f5768fa2d1645aabd5d3d1e63075cd4096134212072f7b1af",
+      "reason": "Verify retained helper generation contracts and remove checks for the retired read path transformation."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "2a5f3e6c3407cab0eaf5c0058358b84ff0df2a1777b9f13d21039d938b2fd1bd",
@@ -3985,8 +3985,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "b1b1e71548a1a35003d6d8afaa1e63fbd7098c1a64664aeda5e418d3bd82b5c7",
-      "reason": "Record the generated closure after replacing public Coding SDK implementations, including the complete read and write factories and renderers; retain the shared host image processor as an explicit root."
+      "sha256": "07d883cbc85ff1d701a3b26b51f0b8351a470191dc0817d1a7573f99c224487b",
+      "reason": "Record the generated closure after public SDK edit replacement; remove edit execution, renderer, preview and unused path helpers."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
@@ -4260,25 +4260,13 @@
       "sha256": "80d0b38d0fda7adf0e714843a0b935c090a0c9c2460ed9d575b3b4aa0fa67d8a",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
-    "packages/pi-durable-coding/src/pi/core/tools/edit-diff.ts": {
-      "sha256": "090a3b86098849df73500f5c9a50b8d0e0127c5c7062c58e155ff03d14e5aa17",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/edit-diff.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/tools/edit.ts": {
-      "sha256": "1bd97be22dd5c52f926e7b82614ed71fed12abf07cb1a64e40cd3b0a3308ee11",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
     "packages/pi-durable-coding/src/pi/core/tools/index.ts": {
-      "sha256": "e9b90a01b5826526abcb95022a87e9ae50c4081a8d2a3c53b165fbafafd03ddd",
-      "reason": "Use public Coding SDK search, write and read factories with required host dependency bindings while preserving the remaining plugin factories and durable tool ownership."
+      "sha256": "1e91c84c83886562d38647bbee50635ee30c53621a7794bc068535b0e57245c8",
+      "reason": "Use public Coding SDK plugin tool factories with required host bindings, including durable edit argument preparation."
     },
     "packages/pi-durable-coding/src/pi/core/tools/output-accumulator.ts": {
       "sha256": "255c11af6596a043f2d8225d3faba1ff18e3f43fe47052b3e018f9ef9517a9d9",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/output-accumulator.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/tools/path-utils.ts": {
-      "sha256": "7975826d5034b8f7f93c152ea181fb53145fdc42e8fa0e7209c7fae974c12ce6",
-      "reason": "Pinned Pi v1.5.0 read path port; share durable candidates and retain Native resolution, order and repeated probes."
     },
     "packages/pi-durable-coding/src/pi/core/tools/powershell.ts": {
       "sha256": "043b2316bf8ec411ef00be564bea061531d4f1663e07a377a298f49b107a18fc",
@@ -4290,10 +4278,6 @@
     },
     "packages/pi-durable-coding/src/pi/core/tools/renderers/bash.ts": {
       "sha256": "14a22bd202b12d19a70ee2d1b201fa61a6434284a263952849756b956d9e70e7",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/core/tools/renderers/edit.ts": {
-      "sha256": "e8a01fc2be3384e9d0e5b60411c099dae6acc268ebd334311e52be6ba100e112",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/truncate.ts": {
@@ -4377,8 +4361,8 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "cc35ad9e7963950a22aa558d92357e662f61fe4e9523afca6195b97f363b8c13",
-      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
+      "sha256": "93ddd167c7062074e793896d084b59b060018425508aa49ac3d6c32254cf26e3",
+      "reason": "Preserve public edit diff contracts through the host SDK boundary and direct durable exports."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4844,13 +4828,9 @@
       "sha256": "cd8a059edc8457c0088f85e5532ed9f232cd2a2bccc3f9a0b8bafdae0d5162db",
       "reason": "Verify public host policies, issued-call observation, result projection and cancellation during VM work and asynchronous formatting through real durable tasks."
     },
-    "packages/pi-durable-coding/src/compat/read-path.ts": {
-      "sha256": "3e06c640e7ef716be078f7edcdff987b4eecdcc5b9820d460daa03900d978d84",
-      "reason": "Share durable read path variants while retaining Native lazy evaluation and duplicate probe policy."
-    },
     "packages/pi-durable-coding/test/native-read-path.test.ts": {
-      "sha256": "86a89e41317f879ea8b799d2b33c4623313b1f2aef7a28eb7c407ad26acd8b14",
-      "reason": "Pin actual Native sync and async read path order, repeated probes, unchanged candidates and invalid URL errors."
+      "sha256": "fc5e6081f66b911ab9a211c81599904e8730a10bd120c358fca634a3a416ba37",
+      "reason": "Verify both public read factories open real path variants and retain missing file and malformed URL errors without private helper mocks."
     },
     "packages/pi-durable-coding/src/compat/truncate.ts": {
       "sha256": "3a2111fdf76baa68f482a6fee3c0ac82d7d3ecbaef45d730d9205d8366bc55b3",
@@ -4869,28 +4849,20 @@
       "reason": "875 result digests captured from original Pi v1.5.0 Native code, retaining 38 existing Node versus Bun surrogate differences."
     },
     "packages/pi-durable-coding/test/read-path-normalization.test.ts": {
-      "sha256": "5f83961c6af634f350feda3d38978f8d80fca2ad23d7a3d2ca6a43c78d03277b",
-      "reason": "Pin Native lazy NFD reuse and durable repeated normalization, including second-call error identity and order before filesystem probes."
-    },
-    "packages/pi-durable-coding/scripts/edit-diff-port.ts": {
-      "sha256": "eda13db9613444fced74d6c2bdc0d6376a9e1b2440e959eb7c73d15ef29e31e8",
-      "reason": "Guard shared edit declarations and generate thin durable forwarding functions while preserving Native signatures, types and file previews."
+      "sha256": "6275156eae879fe9409020dc84d5ea11ec4a58339e19136b7d466bf6e8c70a3c",
+      "reason": "Retain durable path normalization checks and remove tests of the unused local read path adapter."
     },
     "packages/pi-durable-coding/test/native-edit-diff.test.ts": {
-      "sha256": "23866286cc2b667777a517e35e05853ee50ed94db4689d845298dffc748d2d25",
-      "reason": "Keep original edit results and diagnostics, real read-only file previews, readability checks and path error propagation."
+      "sha256": "54077eefac11afb6a7119768cba9ca3db4698d8c8d3fb702ea3dd8928dcfb4a4",
+      "reason": "Verify public diff export identity and historical result digests against durable without preserving unused local preview functions."
     },
     "packages/pi-durable-coding/test/fixtures/native-edit-diff-cases.ts": {
-      "sha256": "263befdc92cbe610bf430cb1f5699e2993850e9338f06073834aaa8cc2ece33d",
-      "reason": "Define original edit, fuzzy matching, preserved-line and diff boundary scenarios without embedding duplicate algorithms."
+      "sha256": "17f3391b5273bc3f1fcfdf1f80a8e146792d8b8dae1deb25dd9026add06ed552",
+      "reason": "Evaluate historical edit diff cases against public durable helpers after removing the local diff implementation."
     },
     "packages/pi-durable-coding/test/fixtures/native-edit-diff-1.5.0.json": {
       "sha256": "85b3232795d3bdd130158c416314619a9514e3a121e832dfd4f1e59f31847a8e",
       "reason": "Pin result and error digests captured from unchanged Pi 1.5.0 Native edit code under both Bun and Node before sharing."
-    },
-    "packages/pi-durable-coding/test/fixtures/native-edit-diff-types.ts": {
-      "sha256": "2e7201c1feb813c6bb7e46c34cbaf687e48576877738a9c349072ee13987ce8e",
-      "reason": "Check that plugin augmentation of Native match and edit interfaces still reaches public function return types."
     },
     "packages/pi-durable-coding/test/native-operations.test.ts": {
       "sha256": "2a30dce32d769725425a15d915d7c94dbcdaa51735b8651dec42a2d199f0704b",
@@ -4933,12 +4905,12 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "628221cf22d5b65a47cc7401ce7dcdeb6bb444a5db8e1f5c6f85aedf053cc339",
-      "reason": "Stop source traversal at public Coding SDK contracts and required host dependency bindings, including read and write, without duplicating execution or presentation algorithms."
+      "sha256": "d050be04d670048dbe0600f6caac28dff34b54d6b0f5a9413aa1bb09ed3ed8e8",
+      "reason": "Stop source traversal at public Coding SDK contracts and host bindings, including edit factories and direct durable diff exports."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "5148d0d91c3071d9077e03b746ae96f6480478853d7e08c6b45fc49fb7222da3",
-      "reason": "Verify public SDK implementation identity and generation boundaries, including read host bindings, direct SDK write and the shared file mutation queue."
+      "sha256": "3b11859babbab2a425423d1b9e69103ba3b363f05e8b99ce2934ff2e5f7a24c6",
+      "reason": "Verify public SDK identity and generation boundaries, including the edit factories and direct durable diff exports."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
       "sha256": "18b3dec03c84b2781460a7b6473ee2a713902b46483955d73fd8618a623dc82a",
@@ -5035,6 +5007,14 @@
     "packages/pi-durable-coding/test/host-read-sdk.test.ts": {
       "sha256": "fdad5cddf8e0f873a9f137bd914af78f309c1445cca551837bb023421269c411",
       "reason": "Verify plugin read bytes, inherited operations, paths, errors, cancellation, pagination, structured images, model resize profiles, documentation classification and renderer component reuse across SDK replacement."
+    },
+    "packages/pi-durable-coding/src/native-edit-tools.ts": {
+      "sha256": "12b5b302e3e03560044bb65ea99bca1181f3bfe77f078005d2f1d310fdb261cf",
+      "reason": "Bind public Coding edit factories to durable argument preparation and export durable diff helpers directly; execution and rendering stay in the SDK."
+    },
+    "packages/pi-durable-coding/test/host-edit-sdk.test.ts": {
+      "sha256": "64a073f1b56f6d6d7b1bdeb4a57e29bcc09c25ceba176befd2960edb52382e70",
+      "reason": "Verify SDK edit bytes, inherited operations, receivers, errors, staged cancellation and queue settlement, renderer previews and component reuse."
     }
   },
   "deleted": {

@@ -1,11 +1,10 @@
 /** Share selected coding algorithms without importing the complete SDK into light entry points. */
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
-import { portEditDiff } from './edit-diff-port.ts';
 import { portPhotonRuntime } from './asset-runtime-port.ts';
 import {
   portCodemodeRuntime, portToolArchives, portImageOrientation, portImageResize, portImageMime,
-  portAnsi, portChildProcess, portShell, portReadPaths, portTruncation,
+  portAnsi, portChildProcess, portShell, portTruncation,
 } from './shared-runtime-port.ts';
 
 export function excludeRunModeEntries(path: string, body: string): string | undefined {
@@ -101,21 +100,8 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
   'utils/shell.ts': {
     change: 'shared-durable-shell-algorithms', dependency: '@earendil-works/pi-durable', apply: portShell,
   },
-  'core/tools/path-utils.ts': {
-    change: 'shared-durable-read-path-variants', dependency: '@earendil-works/pi-durable', apply: portReadPaths,
-  },
   'core/tools/truncate.ts': {
     change: 'public-chord-output-truncation', dependency: '@earendil-works/chord', apply: portTruncation,
-  },
-  'core/tools/edit-diff.ts': {
-    change: 'shared-durable-edit-diff', dependency: '@earendil-works/pi-durable', apply: portEditDiff,
-  },
-  'core/tools/edit.ts': {
-    change: 'public-durable-edit-arguments', dependency: '@earendil-works/pi-durable',
-    names: ['LegacyEditToolInput', 'SingleEditInput', 'isSingleEditInput', 'prepareEditArguments'],
-    imports: 'import { createEditTool as createDurableEditTool } from "@earendil-works/pi-durable/tools";',
-    signatures: { prepareEditArguments: 'function prepareEditArguments(input: unknown): EditToolInput' },
-    replacements: { prepareEditArguments: 'const prepareEditArguments = createDurableEditTool().prepareArguments;' },
   },
   'core/extensions/pi-ai-extension-view.ts': {
     change: 'public-pi-ai-typebox-string-enum',

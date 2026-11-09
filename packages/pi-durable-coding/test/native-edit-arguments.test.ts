@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createEditTool as createDurableEditTool } from '@earendil-works/pi-durable/tools';
-import { createEditTool, createEditToolDefinition } from '../src/pi/core/tools/edit.ts';
+import { createEditTool, createEditToolDefinition } from '../src/native.ts';
 
 const first = { oldText: 'a', newText: 'A' };
 const second = { oldText: 'b', newText: 'B' };

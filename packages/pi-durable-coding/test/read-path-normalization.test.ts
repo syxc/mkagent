@@ -1,6 +1,5 @@
 import { expect, test } from 'bun:test';
 import { readPathVariants } from '@earendil-works/pi-durable/tools';
-import { findReadPath, findReadPathAsync } from '../src/compat/read-path.ts';
 
 const { resolveReadToolPath } = await import(
   new URL('./path-utils.js', import.meta.resolve('@earendil-works/pi-durable/tools')).href);
@@ -21,19 +20,6 @@ test('Shared read candidates keep Native lazy normalization and reuse', () => {
     expect(calls).toBe(1);
   } finally { String.prototype.normalize = originalNormalize; }
 });
-
-for (const mode of ['sync', 'async'] as const) {
-  test(`Native ${mode} read candidates normalize once on a missing path`, async () => {
-    let calls = 0;
-    String.prototype.normalize = function (form) { calls++; return originalNormalize.call(this, form); };
-    try {
-      const result = mode === 'sync' ? findReadPath(input, () => false)
-        : await findReadPathAsync(input, async () => false);
-      expect(result).toBe(input);
-      expect(calls).toBe(1);
-    } finally { String.prototype.normalize = originalNormalize; }
-  });
-}
 
 test('Durable normalizes both variants before the first existence probe', async () => {
   const calls: string[] = [];

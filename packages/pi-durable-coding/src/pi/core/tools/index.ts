@@ -16,7 +16,7 @@ export {
 	type EditToolDetails,
 	type EditToolInput,
 	type EditToolOptions,
-} from "./edit.ts";
+} from "../../../native-edit-tools.ts";
 export { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
 export {
 	createFindTool,
@@ -82,7 +82,7 @@ export {
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { type BashToolOptions, createBashTool, createBashToolDefinition } from "./bash.ts";
-import { createEditTool, createEditToolDefinition, type EditToolOptions } from "./edit.ts";
+import { createEditTool, createEditToolDefinition, type EditToolOptions } from "../../../native-edit-tools.ts";
 import { createFindTool, createFindToolDefinition, type FindToolOptions } from "../../../native-search-tools.ts";
 import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "../../../native-search-tools.ts";
 import { createLsTool, createLsToolDefinition, type LsToolOptions } from "@earendil-works/pi-coding-agent";

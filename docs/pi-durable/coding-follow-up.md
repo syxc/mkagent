@@ -41,7 +41,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 | 范围 | 核对内容 |
 |---|---|
 | 执行主链 | `DurableKernel → CodingHost → AgentSession → DurableLoopBinding → pi.coding.*` 中哪些请求、工具轮次及收尾逻辑可由官方执行器承担 |
-| 工具 | 生产 read/write/edit/bash/PowerShell 已使用 durable 工厂；插件与生产 grep/find/ls 均已改用 Coding SDK，分别删除六份和三份源码；插件 write 直接使用 Coding SDK，再删除两份源码、288 行；插件 read 通过图片和文档路径薄绑定使用同一 SDK，再删除两份源码、396 行，其余插件工厂继续核对 |
+| 工具 | 生产 read/write/edit/bash/PowerShell 已使用 durable 工厂；插件与生产 grep/find/ls 均已改用 Coding SDK，分别删除六份和三份源码；插件 write 直接使用 Coding SDK，再删除两份源码、288 行；插件 read 通过图片和文档路径薄绑定使用同一 SDK，再删除两份源码、396 行，其余插件工厂继续核对；edit 执行及 renderer 也已交给 SDK，并保留 durable 参数准备，删除四份生成源码及旧转换和无调用路径适配，共六文件、741 行 |
 | 插件与资源 | 公开注册、事件、上下文、会话、模型、资源和 UI 契约需要哪些能力；哪些仅由完整源码闭包带入 |
 | 持久化与恢复 | 必须保留哪些已接受输入、任务身份、工具结果、分支和不确定副作用边界；官方事务接口能承接哪些部分 |
 | SDK 导出与 CLI | MkAgent 产品入口、插件可复用组件和原版 Pi 启动器/运行模式分别有哪些调用；不默认全留或全删 |
@@ -60,7 +60,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 生产 `tools/builtin.ts` 已从 durable `/tools` 创建 read/write/edit/bash 和可选 PowerShell，并使用 `/images`。`tools/codemode.ts` 和宿主入口已安装 durable codemode、tool-search。`CodingHost` 通过 `baseToolsOverride` 接收这些工具，后续工作以这条实际接线为起点。
 
-首个切片的 SDK checkpoint、完整 Native 结果和 SDK failure 由同一 `pi.coding.tool` owner 的文档保存，未改 task kind/version 或依赖补丁。真实 SIGKILL 回归覆盖 Native/SDK 已记录与当前策略的共同限制，以及 SDK 结果已持久化、Native outcome 尚未提交时的恢复；工具移除后仍交付已完成结果。独立复核发现的策略绕过、并发串参及重复执行、已结束 API 写入已修正并补回归。SDK failure 随真实 owner 的 failed outcome 交给官方 scheduler，普通 owned tasks 和 owned conversations 内的任务也取消并等待，失败回执恢复同样覆盖。外部信号和 scheduler abort 均检查嵌套 cleanup 的等待及进度槽清理。详细通过数量和范围见验证记录。请求切片已完成 Native `message_end` 改写、唯一 transcript writer 与 SDK receipt/journal/checkpoint 原子提交的接线；三种真实 SIGKILL 检查请求、事件交付及响应接受后的恢复，两种取消均清理 generation 槽。工具轮次与收尾的缺口已按实际 SDK 写入和结算职责记录。插件 edit 参数转换直接使用已发布的 `createEditTool().prepareArguments`，没有新增补丁；转换副本已删除，Native 文件执行及渲染保留。公开 Agent/runToolCall 的普通工具现已委托同一 ToolTask 桥。独立复核发现的 admission 取消窗口、权限改参后的重复校验及崩溃后的最终参数丢失均已修正；最终参数随 SDK 结果原子保存，旧回执缺字段时回退已接受参数。产品回归另发现 AgentSession 转换丢失桥接标记，现已同步转换和生成规则，避免重复接纳。summary 并发不覆盖主 generation 进度已有回归；summary/session 的具体缺口及退出条件见[架构记录](coding-architecture.md#summary-与-session-的-sdk-边界)。此前完整 Coding 范围、导出与补丁的维护登记不构成整体完成；新接线须优先使用公开 SDK，并实际删除被覆盖源码。
+首个切片的 SDK checkpoint、完整 Native 结果和 SDK failure 由同一 `pi.coding.tool` owner 的文档保存，未改 task kind/version 或依赖补丁。真实 SIGKILL 回归覆盖 Native/SDK 已记录与当前策略的共同限制，以及 SDK 结果已持久化、Native outcome 尚未提交时的恢复；工具移除后仍交付已完成结果。独立复核发现的策略绕过、并发串参及重复执行、已结束 API 写入已修正并补回归。SDK failure 随真实 owner 的 failed outcome 交给官方 scheduler，普通 owned tasks 和 owned conversations 内的任务也取消并等待，失败回执恢复同样覆盖。外部信号和 scheduler abort 均检查嵌套 cleanup 的等待及进度槽清理。详细通过数量和范围见验证记录。请求切片已完成 Native `message_end` 改写、唯一 transcript writer 与 SDK receipt/journal/checkpoint 原子提交的接线；三种真实 SIGKILL 检查请求、事件交付及响应接受后的恢复，两种取消均清理 generation 槽。工具轮次与收尾的缺口已按实际 SDK 写入和结算职责记录。插件 edit 参数转换直接使用已发布的 `createEditTool().prepareArguments`，没有新增补丁；转换副本已删除，后续 edit 切片也已将文件执行、预览和渲染交给公开 Coding SDK。公开 Agent/runToolCall 的普通工具现已委托同一 ToolTask 桥。独立复核发现的 admission 取消窗口、权限改参后的重复校验及崩溃后的最终参数丢失均已修正；最终参数随 SDK 结果原子保存，旧回执缺字段时回退已接受参数。产品回归另发现 AgentSession 转换丢失桥接标记，现已同步转换和生成规则，避免重复接纳。summary 并发不覆盖主 generation 进度已有回归；summary/session 的具体缺口及退出条件见[架构记录](coding-architecture.md#summary-与-session-的-sdk-边界)。此前完整 Coding 范围、导出与补丁的维护登记不构成整体完成；新接线须优先使用公开 SDK，并实际删除被覆盖源码。
 
 pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-tui 的终端组件、pi-mcp 的协议、pi-codemode 的沙箱按实际公开接口复用。当前部分 core 操作及 Agent 注入依赖四文件补丁，durable 也有仓内补丁；两者均须保留例外说明，不记成无补丁的 SDK 能力。
 
@@ -78,7 +78,9 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 完成条件：确认可由官方实现承担的职责已经交还 SDK；调用方和功能验证同步迁移，没有为了引用包而在补丁里复制另一套实现。
 
-`7596356` 后的插件 read 切片通过公开 Coding SDK 承担读取、分页、取消、结构化输出和 renderer，删除本地工厂与 renderer 两份源码、396 行。宿主薄工厂只绑定共享图片处理、durable MIME 和文档路径；SDK 的可选 processImage 与 getReadmePath 接点保留既有 Photon 和宿主 README 折叠分类，未复制算法。当前 runtime 为 135 份 TypeScript，其中 src/pi 为 131 份、门面为 4 份，资源为 0；辅助来源 9 项、共享入口 18 个，补丁为 core 4、Coding 38、durable 30，共 72 份。954 项 read 相关测试、20 项独立路径组合、26 项 bundle、Coding/server 类型、完整 runtime 及最终补丁 check 通过；两处夹具失败、已复现并修正的文档分类回归、两个既有安装的冻结刷新、来源与独立复核状态见[read 验证](coding-validation.md#read-sdk-boundary-after-7596356)。其余源码和 F0 至 F6 继续开放。
+`7596356` 后的插件 read 切片通过公开 Coding SDK 承担读取、分页、取消、结构化输出和 renderer，删除本地工厂与 renderer 两份源码、396 行。宿主薄工厂只绑定共享图片处理、durable MIME 和文档路径；SDK 的可选 processImage 与 getReadmePath 接点保留既有 Photon 和宿主 README 折叠分类，未复制算法。该 read 切片时 runtime 为 135 份 TypeScript，其中 src/pi 为 131 份、门面为 4 份，资源为 0；辅助来源 9 项、共享入口 18 个，补丁为 core 4、Coding 38、durable 30，共 72 份。954 项 read 相关测试、20 项独立路径组合、26 项 bundle、Coding/server 类型、完整 runtime 及最终补丁 check 通过；两处夹具失败、已复现并修正的文档分类回归、两个既有安装的冻结刷新、来源与独立复核状态见[read 验证](coding-validation.md#read-sdk-boundary-after-7596356)。其余源码和 F0 至 F6 继续开放。
+
+`cfefb9b` 后的插件 edit 切片将执行、共享文件队列和 renderer 交给公开 Coding SDK，20 行薄适配只绑定 durable 参数准备并直接转出 durable diff。原始 options 直接传递，保留继承属性、getter 和 operations 接收者；durable 参数准备继续保持冻结输入和已记录参数不变。edit、renderer、预览和路径 helper 四份生成源码共 652 行、旧转换脚本及无调用路径适配均已删除，共六文件、741 行；对应转换与私有测试同步退役，路径行为改由公开工厂验证。当前 runtime 为 131 份 TypeScript，其中 src/pi 为 127 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个及 72 份补丁输出不变。383 项 edit 相关测试、36 项 read/path、26 项 bundle、Coding/server 类型、完整 runtime check 通过。独立复核通过 419 项测试和 14 项补充探针，未确认运行时回归；退役类型夹具的两处 TS2339 已通过删除该 10 行夹具处理，并重验 Coding 类型。最终固定 Craft 审计覆盖 2126 文件并通过，来源登记更新十三项、移除七项并新增两项。六份文档的标点和 130 个本地链接检查通过，范围见[edit 验证](coding-validation.md#edit-sdk-boundary-after-cfefb9b)。旧 durable diff/path helper 补丁的无调用导出须继续收窄；其余源码及 F0 至 F6 保持开放。
 
 ## F3 薄适配与必要例外
 

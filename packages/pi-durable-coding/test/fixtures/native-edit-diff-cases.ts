@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-type API = typeof import('../../src/pi/core/tools/edit-diff.ts');
+type API = typeof import('@earendil-works/pi-durable/tools');
 export type EditDiffCase = { name: string; run: (api: API) => unknown };
 export const editDiffCases: EditDiffCase[] = [];
 const texts = ['', '\n', 'a\r\nb\r\n', 'a\rb\n', '\ufeffa\n',

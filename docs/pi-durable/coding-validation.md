@@ -26,6 +26,78 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Edit SDK boundary after cfefb9b
+
+Production edit continues to use durable. Both plugin edit factories delegate
+execution and rendering to the public Coding SDK. Its operations contract,
+context directory, shared file mutation queue and renderer match the required
+plugin behavior. Durable's public edit registration instead uses its execution
+environment and schema and does not provide the Coding operations or renderer.
+The 20-line host adapter only binds durable prepareArguments and exports
+public diff functions directly from durable. Durable preparation preserves
+frozen inputs and recorded arguments; the SDK's default preparation can mutate
+the edits array. Options pass directly to the SDK without object spreading.
+There is no new SDK patch, dependency, lockfile or task/checkpoint version.
+
+Four generated files are removed: edit.ts, renderers/edit.ts, edit-diff.ts and
+path-utils.ts, totaling 652 lines. The unused edit-diff conversion script and
+compat/read-path.ts are also removed, giving six retired files and 741 lines.
+The generator stops at the edit and diff boundaries. The first deletion guard
+expects only three generated files and rejects the extra retired path-utils.ts
+before deleting anything. Call-site checks establish that only the retiring edit
+files consume it. The unused path conversion and adapter are then removed.
+Full runtime --check passes with 131 TypeScript files: 127 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and shared entries 18.
+Core four, Coding 38 and durable 30 patch outputs remain unchanged at 72.
+The earlier durable helper export and path-generator patches remain a separate
+cleanup item; tests alone do not establish a production need for those exports.
+
+The isolated prototype passes 12 tests with 26 assertions. Nineteen new behavior
+tests pass against the old implementation before replacement, with 51 assertions.
+The final six-file edit group passes 383 tests with 766 assertions. The three-file
+read/path group passes 36 tests with 83 assertions, including 14 actual public
+factory path checks. The bundle group passes 26 tests with 105 assertions.
+Together these are 445 related tests and 954 assertions, not all new tests or
+complete repository acceptance. Coding tsc --noEmit, declaration emission and
+server types pass. Tests cover BOM/CRLF, fuzzy matching without changes to other
+bytes, file URLs, inherited options, operations receivers, ctx.cwd, original
+errors, pre-cancellation, in-flight cancellation at all three file stages, queue
+settlement, preview errors and component reuse. Historical pure diff digests now
+run against durable. Private preview and path-helper tests are replaced by public
+renderer and real-file factory checks; obsolete generation fixtures are removed.
+
+Source registration initially updates 14 hashes, removes six retired entries and
+adds the adapter and contract test. The first fixed Craft v0.15.6 audit passes for
+2127 files. The existing isolated installation receives source updates only.
+Dependencies, lockfiles and SDK patches do not change, so installation and the
+unchanged pristine patch checks are not repeated.
+
+Independent review against cfefb9b finds one type fixture defect and no confirmed
+runtime regression. Moving module augmentation to the durable tools entry does
+not extend the internal return interfaces. The isolated fixture produces two
+TS2339 diagnostics; the exact baseline has none under the same compiler options.
+The retired local interface no longer needs this augmentation fixture. The parent
+removes the unused 10-line fixture and its source entry, syncs the isolated copy
+and reruns Coding types successfully. Final registration updates 13 hashes,
+removes seven files and adds two. The final fixed Craft audit passes for 2126
+files. The six runtime and conversion retirements remain 741 lines; the fixture
+adds 10 lines. Runtime and SDK patch outputs do not change.
+
+The reviewer independently passes 419 tests with 849 assertions across nine
+files, plus 14 contract probes with 755 assertions. These include all 305 golden
+diff cases against SDK internals, aggregate and plugin exports, frozen input,
+operations, failure atomicity, cancellation, queue settlement and renderer
+lifecycle. Coding types and the complete 131-output runtime check also pass;
+22 relevant isolated files match the workspace. The reviewer does not rerun
+server types, worker bundle, the whole repository, Windows or remote operations.
+The parent removes the obsolete fixture after review; no second independent
+review is requested for that deletion. Punctuation and all 130 local links pass
+across six documents.
+
+Real services, Windows and Linux devices, crash recovery during edit and complete
+repository or product acceptance are not checked here. Remaining source and patch
+cleanup, the earlier AuthContext gap and F0 through F6 stay open.
+
 ## Read SDK boundary after 7596356
 
 Production read continues to use durable. The plugin factories now call the

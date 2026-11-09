@@ -203,40 +203,6 @@ export function portShell(body: string): string {
     + 'export { killProcessTree };\n' + body;
 }
 
-export function portReadPaths(body: string): string {
-  const parsed = ts.createSourceFile('path-utils.ts', body, ts.ScriptTarget.Latest, true);
-  const expected: Record<string, string> = {
-    tryMacOSScreenshotPath: 'function tryMacOSScreenshotPath(filePath: string): string',
-    tryNFDVariant: 'function tryNFDVariant(filePath: string): string',
-    tryCurlyQuoteVariant: 'function tryCurlyQuoteVariant(filePath: string): string',
-    resolveReadPath: 'export function resolveReadPath(filePath: string, cwd: string): string',
-    resolveReadPathAsync: 'export async function resolveReadPathAsync(filePath: string, cwd: string): Promise<string>',
-  };
-  const remaining = new Set([...Object.keys(expected), 'NARROW_NO_BREAK_SPACE']);
-  const edits: Array<{ start: number; end: number; text: string }> = [];
-  for (const node of parsed.statements) {
-    if (ts.isFunctionDeclaration(node) && node.name && Object.hasOwn(expected, node.name.text)) {
-      const name = node.name.text;
-      if (!remaining.delete(name) || !node.body ||
-          node.getText(parsed).slice(0, node.body.getStart(parsed) - node.getStart(parsed)).trim() !== expected[name]) {
-        throw new Error('Native read path algorithm boundary changed');
-      }
-      const text = name === 'resolveReadPath'
-        ? 'export function resolveReadPath(filePath: string, cwd: string): string {\n\treturn findReadPath(resolveToCwd(filePath, cwd), fileExists);\n}'
-        : name === 'resolveReadPathAsync'
-          ? 'export async function resolveReadPathAsync(filePath: string, cwd: string): Promise<string> {\n\treturn findReadPathAsync(resolveToCwd(filePath, cwd), pathExists);\n}'
-          : '';
-      edits.push({ start: text ? node.getStart(parsed) : node.getFullStart(), end: node.end, text });
-    } else if (ts.isVariableStatement(node) && node.getText(parsed) === 'const NARROW_NO_BREAK_SPACE = "\\u202F";') {
-      if (!remaining.delete('NARROW_NO_BREAK_SPACE')) throw new Error('Duplicate Native read path constant');
-      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
-    }
-  }
-  if (remaining.size) throw new Error('Native read path declarations changed');
-  for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
-  return 'import { findReadPath, findReadPathAsync } from "../../../compat/read-path.ts";\n' + body;
-}
-
 export function portTruncation(body: string): string {
   const parsed = ts.createSourceFile('truncate.ts', body, ts.ScriptTarget.Latest, true);
   const expected: Record<string, string> = {

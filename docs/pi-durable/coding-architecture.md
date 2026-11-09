@@ -131,13 +131,13 @@ Native 子进程等待通过[薄适配](../../packages/pi-durable-coding/src/com
 
 Native shell 的 Bash 传参选择和进程树清理也通过[薄适配](../../packages/pi-durable-coding/src/compat/shell.ts)共用 durable 的既有函数。Native 保留同步查找、错误、PowerShell、环境和 detached 子进程集合；macOS 的组 `SIGSTOP` 策略在适配中保留，后续清理由内核执行。`env/node.js` 相对原包仅增加三个函数的公开导出，全部算法正文不变。局部生成检查和冻结消费证据见[验证记录](coding-validation.md)。
 
-Native 同步与异步读取路径通过[薄适配](../../packages/pi-durable-coding/src/compat/read-path.ts)共用 durable 的候选生成器。截图空格、NFD 和弯引号规则只保留一份；Native 仍按需计算候选，跳过与原路径相同的候选，并保留其他候选间的重复探测。durable 默认入口仍先生成全部候选，再用 `Set` 去重。生成器默认复用首次 NFD，durable 显式选择重新计算，保留其原来的两次调用及首次探测前的错误。两种入口继续使用各自的路径解析和存在性检查。
+早期 Native 同步与异步读取路径曾通过薄适配共用 durable 候选生成器。read 和 edit 工厂改用公开 Coding SDK 后，该路径 helper 和适配已无运行时调用，现已删除，对应生成转换也已移除。两种公开 read 工厂通过真实文件验证截图空格、NFD 和弯引号回退、缺失文件及错误 URL。durable 既有候选导出与生成器补丁尚待按实际消费者收窄，历史探测顺序测试不构成保留无调用代码的理由。
 
 Native 头、尾截断均使用原有公开 `chord/output`，[薄适配](../../packages/pi-durable-coding/src/compat/truncate.ts)集中保留 Native 的字节、行数、标签、getter、首行拒绝及部分尾行策略。默认上限和行计数留在外部适配层，大小显示保留 Native 的三条规则。两个 SDK 截断文件保持原始缓存内容，截断专有导出补丁已撤掉；该批截断改动完成时 durable 补丁为 28 文件，其余 26 份差异不变；请求切片后的完整补丁为 30 文件。生成转换只检查两个截断入口的公开签名和剩余私有 helper 引用，不再绑定头、尾的算法正文。相同 7 个类型根从 437 个文件降至 225 个，未发现诊断。中间和单行处理仍保留原文。两个运行时的原版行为、冻结消费者及首调用开销见[验证记录](coding-validation.md)。
 
-Native [编辑差异入口](../../packages/pi-durable-coding/src/pi/core/tools/edit-diff.ts)通过仓内 durable 补丁导出的 9 个函数共用匹配、替换、换行和 diff 算法，18 个重复算法正文被移除。Native 保留自己的函数签名和类型声明，插件接口扩展仍作用于返回类型；文件解析、读取权限、BOM、预览和错误转换继续由原来的两个预览函数负责，正文不变。该补丁部分仅新增导出，既有算法及类型不变；两套 diff 的 19 份运行时文件一致。源码由 556 行降为 186 行，原版结果、真实文件预览及冻结消费者范围见[验证记录](coding-validation.md)。
+早期 Native 编辑差异入口曾通过 durable 补丁导出的九个函数共用算法，仍保留两个文件预览函数。插件 edit 工厂现已改用公开 Coding SDK，完整执行、预览和 renderer 由 SDK 提供，本地 edit-diff.ts 及旧转换脚本已删除。公开 generateDiffString 和 generateUnifiedPatch 从[薄绑定](../../packages/pi-durable-coding/src/native-edit-tools.ts)直接转出 durable 实现，类型来自 Coding SDK，不再维护第二份函数签名和类型正文。历史 diff 摘要继续对 durable 公开函数执行；其余无生产调用的低层导出继续列入补丁收窄。
 
-插件 [edit 工厂](../../packages/pi-durable-coding/src/pi/core/tools/edit.ts)的参数转换现直接引用公开 `@earendil-works/pi-durable/tools` 的 `createEditTool().prepareArguments`，删除本地转换函数、单个 edit 判断和两个辅助类型，无新增补丁。JSON 字符串、单个对象、旧顶层字段及混合输入由 SDK 处理，原始 call 参数保持不变；core 使用返回参数继续校验。Native 文件操作、权限、队列、取消、renderer 及公开 TypeBox 类型保留。升级只需核对该公开 callback 的返回形状与实际编辑行为，不再逐项维护转换算法。此前完整 edit 执行适配的保留评估仍限于当时范围，不能覆盖本次已删除的参数副本。
+插件 edit 的两个工厂只绑定公开 durable createEditTool().prepareArguments，SDK 承担自定义 operations、ctx.cwd、BOM/CRLF、模糊匹配、队列、取消和展示。durable 参数准备保持冻结输入和原始 call 不变，原始 options 直接交给 SDK，保留继承属性和 getter。durable edit 注册的环境、schema 和结果契约不直接提供 Coding 插件 operations 与 renderer，因此生产 edit 继续用 durable，插件使用 Coding SDK。升级核对参数形状、真实文件、原始错误、在途取消结算、预览和组件复用；不新增 SDK 补丁。
 
 版本范围需要分开看：[根包](../../package.json)和 [shared](../../packages/shared/package.json)仍声明 `pi-ai@1.1.0`，不能把 coding 运行时的 `1.5.0` 写成全仓统一版本。
 
@@ -167,14 +167,14 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 | 本地位置 | 上游来源与移植方式 |
 |---|---|
-| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，插件 read SDK 替换后为 131 份 TypeScript、0 项资源，剩余源码继续按职责核对。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留 SDK 工厂适配、工具、扩展、RPC client/协议和插件 UI 组件，AgentSession 使用公开 SDK 和自有 durable 子类，部分文件经过适配。 |
+| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，插件 edit SDK 替换后为 127 份 TypeScript、0 项资源，剩余源码继续按职责核对。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留 SDK 工厂适配、工具、扩展、RPC client/协议和插件 UI 组件，AgentSession 使用公开 SDK 和自有 durable 子类，部分文件经过适配。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 105 行 core 子类，保留 durable 队列身份、恢复和独立的可变默认对象。默认消息转换直接使用发布版 core；模型和 usage 两个默认对象仍从锁定上游提取，stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
 | `src/native-operations.ts` | 22 行门面，调用仓内 core 补丁导出的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
 | `src/upstream/**` | 3 项选取源码：Git 路径、boundary drafts 和同步 durable context；另有 18 个共享入口。旧完整 loader 和 manifest 转发已删除；插件 runtime、注册、factory、缓存及发现现由公开 SDK 承担，context 与 prompt 去重也已删除本地副本。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
 
-前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 135 份 TypeScript 和 0 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 9 项来源产物及 18 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
+前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 131 份 TypeScript 和 0 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 9 项来源产物及 18 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
 `461e7c9` 后的入口核对确认，MkAgent 通过 `CodingHost/createAgentSession` 装配，仓内产品没有 `main`/`MainOptions` 调用。先前切片排除原版 Pi 启动器及其独占的 24 份源码，包含 CLI 认证、配置向导、自更新、旧 Pi 配置迁移和 CLI 内置扩展集合；Llama 管理扩展仅由该集合进入。`5662422` 后的限定复核另确认，原始 MkAgent 和当前宿主均自行管理会话、UI 与传输，不依赖上游终端、stdout 或 stdin/stdout RPC 模式宿主。现从根入口和 modes barrel 排除 `InteractiveMode`、`InteractiveModeOptions`、`runPrintMode`、`PrintModeOptions`、`runRpcMode`，并删除三个实现文件。生成规则在遍历任一入口的依赖前完成排除。`RpcClient` 及其 options、RPC 协议、`JsonAgentSessionEvent`、Theme、CustomEditor、renderer/UI、`ExtensionMode`、AgentSessionRuntime 和插件生命周期保留；MCP/codemode/tool-search 的公开工厂保留。直接使用被排除模式的外部消费者须迁移到自有宿主，这项导出变化不承诺任意外部消费者零影响。此处删除不需要的模式宿主，不计作官方 SDK 完整覆盖，也没有证明其余辅助闭包全部必要。
 
@@ -248,7 +248,9 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `7596356` 后，插件 read 的读取、路径、分页、取消、结构化输出和 renderer 改用公开 Coding SDK，223 行工厂与 173 行 renderer 已删除。durable 公开 read 工厂可注入 images，但其执行环境、结果诊断及 options 不直接提供 Coding 插件的 operations 与 renderer；生产入口继续用 durable。`native-read-tools.ts` 只绑定既有共享图片处理、durable MIME 和宿主 getReadmePath，并显式读取原有 options。SDK ReadToolOptions 的可选 processImage 避免第二份 Photon 路径，可选 getReadmePath 使 renderer 仍按宿主包根识别 README、docs 和 examples；不提供接点时保留 SDK 默认处理器及 renderer 单例。renderer 仅增加依赖闭包，没有复制展示算法；新测试先复现宿主 README 分类差异，再验证修复。
 
-生成遍历在 read 边界停止，image-process.ts 因 authored session/read 适配仍有调用而作为显式来源根保留。当前 runtime 为 135 份 TypeScript（131 份 src/pi、4 份门面）、0 项资源，辅助来源 9 项、共享入口 18 个；补丁为 core 4、Coding 38、durable 30，共 72 份物理输出。依赖、lock 及任务和 checkpoint 版本不变。上游提供相同图片处理与文档路径接点后撤除相应补丁；升级检查自定义 operations、ctx.cwd、原始错误、取消、截断、结构化图片、模型 resize、文档分类和组件复用，并验证屏蔽构建依赖的单 WASM 搬迁产物。实际验证及独立复核状态见[read 验证](coding-validation.md#read-sdk-boundary-after-7596356)。
+生成遍历在 read 边界停止，image-process.ts 因 authored session/read 适配仍有调用而作为显式来源根保留。该 read 切片时 runtime 为 135 份 TypeScript（131 份 src/pi、4 份门面）、0 项资源，辅助来源 9 项、共享入口 18 个；补丁为 core 4、Coding 38、durable 30，共 72 份物理输出。依赖、lock 及任务和 checkpoint 版本不变。上游提供相同图片处理与文档路径接点后撤除相应补丁；升级检查自定义 operations、ctx.cwd、原始错误、取消、截断、结构化图片、模型 resize、文档分类和组件复用，并验证屏蔽构建依赖的单 WASM 搬迁产物。实际验证及独立复核状态见[read 验证](coding-validation.md#read-sdk-boundary-after-7596356)。
+
+`cfefb9b` 后，插件 edit 工厂将文件执行、共享队列、异步预览和 renderer 交给公开 Coding SDK。20 行 `native-edit-tools.ts` 只绑定 durable 参数准备并直接转出两个 durable diff 函数；原 options 对象直接传给 SDK，保留继承属性、getter 和 operations 接收者。四份生成源码、旧转换脚本和无调用路径适配共六文件、741 行已删除。当前 runtime 为 131 份 TypeScript（127 份 src/pi、4 份门面）、0 项资源，辅助来源 9 项、共享入口 18 个，72 份补丁输出不变。edit、read/path 和 bundle 共 445 项相关测试、954 个断言，以及 Coding/server 类型、完整 runtime 和固定 Craft 审计通过。独立复核通过 419 项测试及 14 项补充探针，未确认运行时回归，另发现退役类型夹具的两处 TS2339；主线程删除该 10 行夹具及登记并重验 Coding 类型，最终 Craft 审计覆盖 2126 文件并通过。六份文档的标点和 130 个本地链接检查通过，复核范围见[edit 验证](coding-validation.md#edit-sdk-boundary-after-cfefb9b)。旧 durable helper 导出和路径生成器补丁仍须按实际消费者收窄，F0 至 F6 继续开放。
 
 ## 既有源码对照与升级核对
 
