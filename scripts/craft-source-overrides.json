@@ -2328,6 +2328,10 @@
     }
   },
   "mkOnly": {
+    ".claude/settings.json": {
+      "sha256": "cd37d93ad05fa4a35ddc647091062e57834a44a9fc375b7f2ce7a26af232931a",
+      "reason": "Allow Read for the specific theme color source in project settings; higher-priority deny rules remain effective."
+    },
     "packages/pi-durable-coding/src/compat/photon.ts": {
       "sha256": "c67028622c6735c78fc9f4dcc3b39c4b44168a6de0df7bc077096f16cff67e44",
       "reason": "Initialize the shared public Photon module from installed or adjacent assets without replacing global file reads or searching the project directory."

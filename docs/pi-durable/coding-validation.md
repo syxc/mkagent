@@ -47,6 +47,76 @@ No configuration was changed, and no read of the target source was retried.
 Full theme-table necessity, source generation and Craft audit remain unverified.
 The historical checks below keep their original scope and results.
 
+## Project read rule and workspace install after 731728a
+
+The user requested a project Read allow rule for the theme color source.
+The new project `.claude/settings.json` contains only:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Read(/packages/pi-durable-coding/src/pi/modes/interactive/theme/theme-tokens.ts)"
+    ]
+  }
+}
+```
+
+The JSON and exact-rule assertions pass. The single leading slash anchors the
+path at the project root in this project settings file. No wildcard, write
+permission or broader tool permission was added. A normal Read of the first
+35 lines still returns: "File is in a directory that is denied by your
+permission settings." The rule is present; effective read access is blocked.
+The global `Read(*token*)` deny remains unchanged. The [official permission
+rules](https://code.claude.com/docs/en/permissions) state that deny takes
+precedence over allow across settings sources. Project allow and negation
+rules cannot cancel a user-level deny. No alternate reader, copy or delegate
+was used to obtain the source. The diagnosis above describes the state before
+this project file was created and the Read retry was made.
+
+The project file is absent from the independent Craft v0.15.6 reference at
+8df01c5d0ac73c35add5954e6f190ce038d35845. Its MkAgent-only source record has
+SHA-256 cd37d93ad05fa4a35ddc647091062e57834a44a9fc375b7f2ce7a26af232931a.
+This targeted registration does not constitute a full Craft audit.
+
+The dependency install uses the current 731728a lockfile, all 12 workspace
+manifests including the root, and both dependency patches. It runs in a new
+fixture directory with a new empty cache, a task-only child HOME and the
+public npm registry. No provider credentials or real application configuration
+are inherited. The root project node_modules and input files are not changed.
+The install command is:
+
+```sh
+bun --no-env-file install --frozen-lockfile --ignore-scripts \
+  --cache-dir <new-task-cache> --registry https://registry.npmjs.org
+```
+
+Bun 1.3.14 exits 0 in 46 seconds and reports 1,420 packages installed. All
+11 non-root workspace links resolve to the copied manifests. Both lockfile
+copies and all original manifests and patches retain their input hashes.
+The install runs with lifecycle scripts disabled and no runtime sources in
+the fixture. This result resolves the dependency-install check for this
+version; the older offline failures below retain their original scope.
+
+The new installation passes a separate artifact check. Coding and worker each
+resolve pi-ai, pi-agent-core and pi-durable 1.5.0 inside the fixture; root
+pi-ai remains 1.1.0. All 30 durable patch outputs match DURABLE-PATCH.json, and
+the four core patch outputs match the current tested installation. Receipts
+are workspace-install-result.json and workspace-install-artifacts-result.json
+under the task directory mkagent-coding-final-EJ6XD5. Runtime imports, install
+scripts and a full product build were not checked in this fixture.
+
+This slice adds configuration, its source record and documentation only.
+The previous slice's runtime tests and CI were not rerun. Full theme-table
+necessity, complete source generation and closure recomputation, and full
+Craft audit remain open. Project permission changes do not remove these gaps.
+The exact configuration and source-record assertions, six document punctuation
+checks and 102 local file-link checks pass. The link check does not validate
+all anchors; the new evidence heading is checked separately. An independent
+static review of this eight-file slice found no confirmed defect. It checked
+the scripts, receipts, install log, source entry and document changes without
+rerunning product checks or reading the denied source or global settings.
+
 ## Private components after 06d1346
 
 The component barrel still brought in FirstTimeSetupComponent,

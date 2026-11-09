@@ -4,7 +4,7 @@
 
 MkAgent 保留 Pi Coding 层和公开插件契约，执行、事务、存储和恢复优先交给 durable。评估顺序是 durable 发布能力、独立 Pi 官方 SDK、外部薄适配，最后才是有具体缺口的源码或补丁。补丁新增的导出或执行接点均属于本地修改。
 
-本表覆盖已核实的能力边界，不构成 197 份源码逐项必要性的证明。2026-11-09 的只读诊断在全局配置发现 `Read(*token*)` 拒绝规则，覆盖 `theme-tokens.ts` 文件名；未重试该文件，也未修改权限。这不是已确认的用户源码禁令。完整主题配色表、完整来源生成和 Craft 审计未完成，不能用本表关闭这些缺口，也不能把更新版本号视为已完成升级。
+本表覆盖已核实的能力边界，不构成 197 份源码逐项必要性的证明。2026-11-09 的只读诊断在全局配置发现 `Read(*token*)` 拒绝规则，覆盖 `theme-tokens.ts` 文件名。这不是已确认的用户源码禁令。同日按用户要求新增项目单文件 Read allow，JSON 和范围校验通过，但正常 Read 仍被拒绝；项目 allow 不能覆盖全局 deny。完整主题配色表、完整来源生成和 Craft 审计未完成，不能用本表关闭这些缺口，也不能把更新版本号视为已完成升级。
 
 ## 已直接使用的发布能力
 
@@ -34,6 +34,8 @@ ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件
 | durable tools：4 文件 | Native edit 预览和读取路径需要既有 diff 与候选算法，但发布包未公开这些 helper | tools/index、tools/path-utils 的 JS/d.ts 导出九个 edit-diff 函数及 readPathVariants，保留 Native NFD、BOM、权限和预览策略。发布相应 helper 后撤除补丁 | 无新增任务 schema；验证原版 diff、真实文件预览、截图空格/NFD/引号、探测顺序和取消 |
 
 完整 durable 补丁由 `patch-generation-response.ts` 重建并重放，`DURABLE-PATCH.json` 记录 30 个文件的原始和目标摘要。历史 `patch-durable.ts` 仅处理四个 harness 文件，不能覆盖现行完整补丁。升级须用 pristine 依赖核对完整重放，再检查独立消费者实际解析的补丁产物和声明；只测试已有修改的 node_modules 不足以验收。
+
+`731728a` 的全部 workspace 冻结依赖安装已在全新缓存和公开 registry 下通过。新安装中 durable 的 30 个输出符合清单，core 的 4 个输出与已测试安装一致；Coding 和 worker 的三个核心 Pi 包均解析到 1.5.0，根 pi-ai 仍为 1.1.0。安装禁用 scripts，未复制运行时源码或验证新安装中的导入及产品构建，不能据此关闭完整来源检查。
 
 ## Coding 层与外部适配
 
