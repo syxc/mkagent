@@ -53,6 +53,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/extensions/types.${extension}";`,
     `export * from "./core/exec.${extension}";`,
     `export * from "./core/tools/tool-definition-wrapper.${extension}";`,
+    ...['grep', 'find', 'ls'].map(name => `export * from "./core/tools/${name}.${extension}";`),
     `export * from "./core/export-html/index.${extension}";`,
     `export * from "./core/export-html/ansi-to-html.${extension}";`,
     `export * from "./core/export-html/tool-renderer.${extension}";`,
@@ -93,6 +94,28 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(runnerPath, codingRunnerPolicy(readFileSync(join(baseline, runnerPath), 'utf8'), suffix === 'd.ts'));
   const toolPath = `dist/core/tools/tool-definition-wrapper.${suffix}`;
   outputs.set(toolPath, codingToolPolicy(readFileSync(join(baseline, toolPath), 'utf8'), suffix === 'd.ts'));
+}
+for (const name of ['grep', 'find']) {
+  const tool = name === 'grep' ? 'rg' : 'fd';
+  const type = name === 'grep' ? 'GrepToolOptions' : 'FindToolOptions';
+  const jsPath = `dist/core/tools/${name}.js`;
+  let implementation = replace(readFileSync(join(baseline, jsPath), 'utf8'),
+    `await ensureTool("${tool}")`, `await (options?.ensureTool ?? ensureTool)("${tool}")`);
+  if (name === 'grep') {
+    const abort = `                        if (signal?.aborted) {
+                            settle(() => reject(new Error("Operation aborted")));
+                            return;
+                        }
+`;
+    // An asynchronous host resolver or directory operation can outlive cancellation.
+    implementation = replace(implementation, '                        if (!rgPath) {', abort + '                        if (!rgPath) {');
+    implementation = replace(implementation, '                        const contextValue =', abort + '                        const contextValue =');
+  }
+  outputs.set(jsPath, implementation);
+  const declarationPath = `dist/core/tools/${name}.d.ts`;
+  const declaration = replace(readFileSync(join(baseline, declarationPath), 'utf8'),
+    `export interface ${type} {`, `export interface ${type} {\n    /** Resolve binaries with the host's installation and offline policy. */\n    ensureTool?: typeof ensureTool;`);
+  outputs.set(declarationPath, 'import type { ensureTool } from "../../utils/tools-manager.ts";\n' + declaration);
 }
 const extensionTypesPath = 'dist/core/extensions/types.d.ts';
 outputs.set(extensionTypesPath, replace(readFileSync(join(baseline, extensionTypesPath), 'utf8'),
@@ -175,7 +198,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt image processing bindings, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, sleep listener cleanup, and installed worker theme and HTML asset lookup.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt image processing bindings, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, sleep listener cleanup, and installed worker theme and HTML asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

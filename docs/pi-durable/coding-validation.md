@@ -26,6 +26,73 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Search SDK boundary after a567bf4
+
+Durable 1.5.0 does not provide grep, find or ls factories. The public Coding SDK
+provides them. Search execution and rendering now use that SDK. Six local files
+are deleted: three tools and their three renderers, 1,044 lines in total. The
+runtime inventory has 139 TypeScript files: 135 under src/pi and four facades,
+with no assets. The auxiliary inventory has nine sources and 18 forwards.
+
+The SDK patch adds optional ensureTool configuration to grep and find and exports
+existing prompt contributions and the path helper from the root. Four local
+factories pass operations and bind the existing host resolver. That resolver
+keeps the managed binary directory, PI_OFFLINE, platform checks and safe ZIP
+installation. Without configuration the SDK still uses its own resolver. The ls
+factory uses the SDK directly. The SDK retains search, path, limit and renderer
+algorithms. Generation stops at those module boundaries and keeps tools-manager
+as an explicit source root. No dependency, lockfile or persisted version changes.
+
+The first six-test run passes five tests and fails one because the ls assertion
+omits the SDK's existing Use limit=4 for more hint. Only the assertion changes.
+Additional cancellation tests then pass seven and fail two. Grep can continue
+after cancellation during binary resolution or a custom directory check. Two
+checks after those asynchronous operations fix the failures. The nine-test set
+then passes with 24 assertions. The related six-file set passes 46 tests with
+269 assertions. Coding declaration generation, server type checking and all
+26 worker bundle tests with 103 assertions pass. These checks precede the later
+four-factory fix described below.
+
+A fresh HOME/cache, hoisted, frozen install with scripts disabled verifies all
+68 physical patch outputs against the tested installation: core four, Coding 34
+and durable 30. All 34 Coding outputs also match their manifest. Strict public
+consumer types and the nine search tests pass. The lockfile stays unchanged.
+The first installation script has an extra closing parenthesis and stops during
+parsing; it does not start an installation. The corrected script completes the
+fresh installation and checks.
+
+Independent review confirms one new adapter defect. Spreading options drops
+inherited or non-enumerable operations and can replace a remote search with local
+binary resolution or process execution. The reviewer reproduces the difference
+against the previous local factories, verifies the installed output hashes and
+compares 12 output-limit cases. No other new defect is confirmed in that review.
+The review does not cover the six documents or complete repository acceptance.
+
+The main thread adds 12 cases for four factories and three property forms:
+inherited, non-enumerable and enumerable getters. Before the fix, 13 tests pass
+and eight fail. The adapter now reads operations directly and no longer spreads
+options. All 21 tests pass with 54 assertions, including one getter read per
+factory. Coding declaration generation passes again. The two changed sources
+are copied to the existing fresh consumer after old-hash checks. Its 21 search
+tests and strict public types pass without another installation. The earlier
+bundle and server checks are not repeated for this property-copy fix. There is
+no second independent review of the four changed lines.
+
+Full runtime, auxiliary and pristine SDK patch checks pass. Source registration
+covers 16 code and artifact paths, removes six old records and adds three new
+files. Two source hashes are updated after the options fix. The fixed Craft
+v0.15.6 audit then passes for 2,134 files. Document links, punctuation and final
+diff checks are recorded with the local commit. Task receipts are in the
+mkagent-search-sdk and mkagent-search-hoisted directories.
+
+The separate production tools/local/grep.ts, find.ts and ls.ts still use their
+product resolver and durable ToolRegistration contracts. This slice does not
+replace those implementations. Remaining source replacements, the earlier
+AuthContext gap and F0 through F6 stay open. Real services, a Windows device and
+complete repository/product acceptance are not checked here. The managed binary
+fixture needs POSIX and is skipped on Windows; the other operation, cancellation
+and Windows path-helper cases do not use that fixture.
+
 ## AgentSession SDK boundary after 5a72c8a
 
 The public Coding SDK now owns the session lifecycle, tool registry, plugin input,
@@ -123,8 +190,8 @@ The reviewer reruns the relocated image test: one pass, zero failures and three
 assertions. Eleven related files match the frozen copy, and all 30 installed
 Coding outputs match the manifest hashes. This review covers the image fix; it
 does not repeat the full slice review, document checks or complete regression
-suite. The AgentSession slice is ready for a local commit after final document
-checks. F0 through F6 and the remaining source replacements stay open. Real services, Windows and complete
+suite. The AgentSession slice is committed locally as a567bf4. F0 through F6
+and the remaining source replacements stay open. Real services, Windows and complete
 repository/product acceptance are not checked by this slice. The earlier custom
 AuthContext gap remains in the ModelRuntime record. Receipts are in the
 agent-session-sdk, agent-session-hoisted and agent-session-final-hoisted task

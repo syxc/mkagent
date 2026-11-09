@@ -1,8 +1,8 @@
-# Content SHA-256: 1e1f10515bb0298cc391ac516effe0534915d49baaea76d1b3f72e83bc95b7d5
+# Content SHA-256: b34e6e7b18c362e724ee77ebb99f1f9e4df975b752f92724adcb63d3ce968603
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,30 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,33 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -22,6 +22,9 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/extensions/types.js";
 +export * from "./core/exec.js";
 +export * from "./core/tools/tool-definition-wrapper.js";
++export * from "./core/tools/grep.js";
++export * from "./core/tools/find.js";
++export * from "./core/tools/ls.js";
 +export * from "./core/export-html/index.js";
 +export * from "./core/export-html/ansi-to-html.js";
 +export * from "./core/export-html/tool-renderer.js";
@@ -46,7 +49,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,30 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,33 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -66,6 +69,9 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/extensions/types.ts";
 +export * from "./core/exec.ts";
 +export * from "./core/tools/tool-definition-wrapper.ts";
++export * from "./core/tools/grep.ts";
++export * from "./core/tools/find.ts";
++export * from "./core/tools/ls.ts";
 +export * from "./core/export-html/index.ts";
 +export * from "./core/export-html/ansi-to-html.ts";
 +export * from "./core/export-html/tool-renderer.ts";
@@ -2119,6 +2125,79 @@ diff --git a/dist/core/tools/tool-definition-wrapper.d.ts b/dist/core/tools/tool
 +export declare function createToolDefinitionFromAgentTool(tool: AgentTool<any> & Pick<ToolDefinition<any>, "exposure" | "namespace" | "annotations" | "reachesTools" | "defaultActive" | "promptSnippet" | "promptGuidelines">): ToolDefinition<any, unknown>;
  //# sourceMappingURL=tool-definition-wrapper.d.ts.map
 \ No newline at end of file
+diff --git a/dist/core/tools/grep.js b/dist/core/tools/grep.js
+--- a/dist/core/tools/grep.js
++++ b/dist/core/tools/grep.js
+@@ -49,7 +49,11 @@ export function createGrepToolDefinition(cwd, options) {
+                 };
+                 (async () => {
+                     try {
+-                        const rgPath = await ensureTool("rg");
++                        const rgPath = await (options?.ensureTool ?? ensureTool)("rg");
++                        if (signal?.aborted) {
++                            settle(() => reject(new Error("Operation aborted")));
++                            return;
++                        }
+                         if (!rgPath) {
+                             settle(() => reject(new Error("ripgrep (rg) is not available and could not be downloaded")));
+                             return;
+@@ -64,6 +68,10 @@ export function createGrepToolDefinition(cwd, options) {
+                             settle(() => reject(new Error(`Path not found: ${searchPath}`)));
+                             return;
+                         }
++                        if (signal?.aborted) {
++                            settle(() => reject(new Error("Operation aborted")));
++                            return;
++                        }
+                         const contextValue = context && context > 0 ? context : 0;
+                         const effectiveLimit = Math.max(1, limit ?? DEFAULT_LIMIT);
+                         const formatPath = (filePath) => {
+diff --git a/dist/core/tools/grep.d.ts b/dist/core/tools/grep.d.ts
+--- a/dist/core/tools/grep.d.ts
++++ b/dist/core/tools/grep.d.ts
+@@ -1,3 +1,4 @@
++import type { ensureTool } from "../../utils/tools-manager.ts";
+ import { type Static, Type } from "typebox";
+ import type { ToolDefinition } from "../extensions/types.ts";
+ import { type TypeBoxAgentTool } from "./tool-definition-wrapper.ts";
+@@ -32,6 +33,8 @@ export interface GrepOperations {
+     readFile: (absolutePath: string) => Promise<string> | string;
+ }
+ export interface GrepToolOptions {
++    /** Resolve binaries with the host's installation and offline policy. */
++    ensureTool?: typeof ensureTool;
+     /** Custom operations for grep. Default: local filesystem plus ripgrep */
+     operations?: GrepOperations;
+ }
+diff --git a/dist/core/tools/find.js b/dist/core/tools/find.js
+--- a/dist/core/tools/find.js
++++ b/dist/core/tools/find.js
+@@ -116,7 +116,7 @@ export function createFindToolDefinition(cwd, options) {
+                             return;
+                         }
+                         // Default implementation uses fd.
+-                        const fdPath = await ensureTool("fd");
++                        const fdPath = await (options?.ensureTool ?? ensureTool)("fd");
+                         if (signal?.aborted) {
+                             settle(() => reject(new Error("Operation aborted")));
+                             return;
+diff --git a/dist/core/tools/find.d.ts b/dist/core/tools/find.d.ts
+--- a/dist/core/tools/find.d.ts
++++ b/dist/core/tools/find.d.ts
+@@ -1,3 +1,4 @@
++import type { ensureTool } from "../../utils/tools-manager.ts";
+ import path from "path";
+ import { type Static, Type } from "typebox";
+ import type { ToolDefinition } from "../extensions/types.ts";
+@@ -33,6 +34,8 @@ export interface FindOperations {
+     }) => Promise<string[]> | string[];
+ }
+ export interface FindToolOptions {
++    /** Resolve binaries with the host's installation and offline policy. */
++    ensureTool?: typeof ensureTool;
+     /** Custom operations for find. Default: local filesystem plus fd */
+     operations?: FindOperations;
+ }
 diff --git a/dist/core/extensions/types.d.ts b/dist/core/extensions/types.d.ts
 --- a/dist/core/extensions/types.d.ts
 +++ b/dist/core/extensions/types.d.ts

@@ -25,7 +25,7 @@ export {
 	type FindToolDetails,
 	type FindToolInput,
 	type FindToolOptions,
-} from "./find.ts";
+} from "../../../native-search-tools.ts";
 export {
 	createGrepTool,
 	createGrepToolDefinition,
@@ -33,7 +33,7 @@ export {
 	type GrepToolDetails,
 	type GrepToolInput,
 	type GrepToolOptions,
-} from "./grep.ts";
+} from "../../../native-search-tools.ts";
 export {
 	createLsTool,
 	createLsToolDefinition,
@@ -41,7 +41,7 @@ export {
 	type LsToolDetails,
 	type LsToolInput,
 	type LsToolOptions,
-} from "./ls.ts";
+} from "@earendil-works/pi-coding-agent";
 export {
 	createLocalPowerShellOperations,
 	createPowerShellTool,
@@ -83,9 +83,9 @@ import type { AgentTool } from "@earendil-works/pi-agent-core";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
 import { type BashToolOptions, createBashTool, createBashToolDefinition } from "./bash.ts";
 import { createEditTool, createEditToolDefinition, type EditToolOptions } from "./edit.ts";
-import { createFindTool, createFindToolDefinition, type FindToolOptions } from "./find.ts";
-import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "./grep.ts";
-import { createLsTool, createLsToolDefinition, type LsToolOptions } from "./ls.ts";
+import { createFindTool, createFindToolDefinition, type FindToolOptions } from "../../../native-search-tools.ts";
+import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "../../../native-search-tools.ts";
+import { createLsTool, createLsToolDefinition, type LsToolOptions } from "@earendil-works/pi-coding-agent";
 import { createPowerShellTool, createPowerShellToolDefinition, type PowerShellToolOptions } from "./powershell.ts";
 import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "./read.ts";
 import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "./write.ts";
