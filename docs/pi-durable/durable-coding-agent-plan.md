@@ -24,7 +24,9 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `7596356` 后的插件 read 切片再删除工厂和 renderer 两份源码、396 行，读取、分页、取消、结构化输出与展示由公开 Coding SDK 承担。薄工厂只绑定共享图片处理、durable MIME 和宿主文档路径，SDK 仅增加可选依赖接点；生产 read 继续使用 durable。该 read 切片时 runtime 为 135 份 TypeScript，其中 src/pi 为 131 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个，补丁输出为 core 4、Coding 38、durable 30，共 72 份。954 项 read 相关测试、20 项路径组合、26 项 bundle、Coding/server 类型、完整 runtime 与最终补丁 check 通过。失败修正、冻结刷新、来源和独立复核范围见[read 验证](coding-validation.md#read-sdk-boundary-after-7596356)，其余源码及 F0 至 F6 继续开放。
 
-`cfefb9b` 后的插件 edit 切片删除执行、renderer、预览及路径 helper 四份生成源码、旧 diff 转换和无调用路径适配，共六文件、741 行。20 行薄适配通过公开 Coding SDK 工厂保留插件执行与展示，参数准备和公开 diff 继续优先使用 durable；没有新增 SDK 补丁。当前 runtime 为 131 份 TypeScript，其中 src/pi 为 127 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个及 72 份补丁输出不变。383 项 edit 相关测试、36 项 read/path、26 项 bundle、Coding/server 类型、完整 runtime check 通过。独立复核通过 419 项测试和 14 项补充探针，未确认运行时回归；退役类型夹具的两处 TS2339 已通过删除该 10 行夹具处理，并重验 Coding 类型。最终固定 Craft 审计覆盖 2126 文件并通过，六份文档的标点和 130 个本地链接检查通过，范围见[edit 验证](coding-validation.md#edit-sdk-boundary-after-cfefb9b)。旧 durable helper 补丁、其余源码及 F0 至 F6 继续收窄和验收。
+`cfefb9b` 后的插件 edit 切片删除执行、renderer、预览及路径 helper 四份生成源码、旧 diff 转换和无调用路径适配，共六文件、741 行。20 行薄适配通过公开 Coding SDK 工厂保留插件执行与展示，参数准备和公开 diff 继续优先使用 durable；没有新增 SDK 补丁。当前 runtime 为 131 份 TypeScript，其中 src/pi 为 127 份、门面为 4 份，无资源；辅助来源 9 项、共享入口 18 个及 72 份补丁输出不变。383 项 edit 相关测试、36 项 read/path、26 项 bundle、Coding/server 类型、完整 runtime check 通过。独立复核通过 419 项测试和 14 项补充探针，未确认运行时回归；退役类型夹具的两处 TS2339 已通过删除该 10 行夹具处理，并重验 Coding 类型。最终固定 Craft 审计覆盖 2126 文件并通过，六份文档的标点和 130 个本地链接检查通过，范围见[edit 验证](coding-validation.md#edit-sdk-boundary-after-cfefb9b)。该时点旧 durable helper 补丁、其余源码及 F0 至 F6 继续收窄和验收。
+
+`2951fe6` 后的 helper 切片撤除七个低层 diff 导出及 readPathVariants，恢复两个路径文件的发布原文，durable 补丁由 30 份降为 28 份，总输出由 72 份降为 70 份。保留两个公开 diff 函数的 216 项历史结果，删除无适配消费者的私有归一化测试。两个既有安装冻结刷新后 lock 不变，327 项工具回归、26 项 bundle、Coding/server 类型和完整补丁重放通过，共 768 个断言；来源更新四项、移除一项，固定 Craft 审计覆盖 2125 文件。独立复核及限制见[helper 验证](coding-validation.md#durable-tool-patch-cleanup-after-2951fe6)。当前仍有 127 份 src/pi 源码需要逐职责核对；F0 至 F6 未关闭。
 
 ## 目标与名称
 

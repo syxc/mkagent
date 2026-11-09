@@ -3701,8 +3701,8 @@
       "reason": "Run the standalone bundle outside the source tree with an unchanged Pi plugin and modified host approval."
     },
     "packages/pi-durable-coding/DURABLE-PATCH.json": {
-      "sha256": "b19f041f5338caacd0b9b1980be2d311752b9f2f8102f4939525ce197daf08d0",
-      "reason": "Record all 30 pristine and patched SDK outputs, source transformations and task versions for prepared generation responses."
+      "sha256": "d39c1fa86e75642c74eea90870fee105d9be3e9c861c4f12eda784dd77fc6997",
+      "reason": "Record all 28 pristine and patched durable outputs after removing obsolete path generator changes and unused low-level tool exports."
     },
     "packages/pi-durable-coding/LICENSE.pi": {
       "sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48",
@@ -3921,8 +3921,8 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "b1d0cceca3fae95064d9bfa01ce072ee5e6549d08a4469f689065535317181b3",
-      "reason": "Keep the complete 30-file SDK patch and full-body cache stamp; add a prepared-response task that reuses streamResponse without changing historical GenerationTask stages."
+      "sha256": "8a2fc89af5a392b934fcc4c2e50270139e463a4c3fe3ac2fae635e1bc4a42f69",
+      "reason": "Keep the complete 28-file durable patch and body digest; expose only the two required diff functions and restore original path handling after local adapters retire."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
       "sha256": "ee864d6fee7ac95fc1ce126e0784733ce1891e600b47481ddcb5d73bc3fa0ce4",
@@ -4848,17 +4848,13 @@
       "sha256": "426b5cf4e2b82ca0d56b44effdeabdcc155d41d2a800b37024da6b0e66c0619d",
       "reason": "875 result digests captured from original Pi v1.5.0 Native code, retaining 38 existing Node versus Bun surrogate differences."
     },
-    "packages/pi-durable-coding/test/read-path-normalization.test.ts": {
-      "sha256": "6275156eae879fe9409020dc84d5ea11ec4a58339e19136b7d466bf6e8c70a3c",
-      "reason": "Retain durable path normalization checks and remove tests of the unused local read path adapter."
-    },
     "packages/pi-durable-coding/test/native-edit-diff.test.ts": {
-      "sha256": "54077eefac11afb6a7119768cba9ca3db4698d8c8d3fb702ea3dd8928dcfb4a4",
-      "reason": "Verify public diff export identity and historical result digests against durable without preserving unused local preview functions."
+      "sha256": "d4db327bc35591a869b022a9009a9b4b7ce2946f748fb42beca63a2de3ff559f",
+      "reason": "Verify public diff identity and 216 result digests selected by name from the unchanged 305-case original baseline."
     },
     "packages/pi-durable-coding/test/fixtures/native-edit-diff-cases.ts": {
-      "sha256": "17f3391b5273bc3f1fcfdf1f80a8e146792d8b8dae1deb25dd9026add06ed552",
-      "reason": "Evaluate historical edit diff cases against public durable helpers after removing the local diff implementation."
+      "sha256": "b24bd91ebab4eed6cfde84a67d04d685d3d5654a2fe8b68aa123c5905a52379c",
+      "reason": "Evaluate 216 historical cases for the two supported public durable diff functions without retaining exports used only by retired helper tests."
     },
     "packages/pi-durable-coding/test/fixtures/native-edit-diff-1.5.0.json": {
       "sha256": "85b3232795d3bdd130158c416314619a9514e3a121e832dfd4f1e59f31847a8e",

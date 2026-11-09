@@ -121,7 +121,7 @@ Native 缩放核心也转发到[缩放适配](../../packages/pi-durable-coding/s
 
 Native Photon 入口现只转发到[共享加载适配](../../packages/pi-durable-coding/src/compat/photon.ts)，通过公开 `initSync` 初始化同一包实例，不再替换全局 `fs.readFileSync`。生产清单统一为 `@silvia-odwyer/photon@0.3.3`，旧 Node 包仅用于开发测试中的原版对照。构建脚本只选择 `photon_rs_bg.wasm`，并清除旧构建留下的专用 WASM。生成器检查两个公开声明，不再绑定已删除加载器的私有正文。Node 搬迁包和 Bun 独立可执行文件已通过单资源及缺失资源检查，完整产品发布与终端注册仍未重验，具体范围见[验证记录](coding-validation.md)。
 
-规范依赖补丁现在包含 30 个文件，首行记录后续正文按 LF 换行计算的完整 SHA-256。更新补丁时须同步摘要；回归用例检查两者一致，以免复用旧 Bun 缓存产物。[完整生成器](../../packages/pi-durable-coding/scripts/patch-generation-response.ts)只重建 generation 及根导出的四个产物，保留其余补丁段，并对 pristine 副本执行完整 `git apply --check`、实际重放及全部 30 个输出核对。`DURABLE-PATCH.json` 记录全部文件的原始和目标哈希。本轮全新消费者在禁网、禁用 lifecycle scripts 的冻结安装后逐一匹配这 30 个输出；缓存与锁文件准备过程见验证记录。
+规范 durable 补丁现在包含 28 个文件，首行记录后续正文按 LF 换行计算的完整 SHA-256。更新补丁时须同步摘要；回归用例检查两者一致，以免复用旧 Bun 缓存产物。[完整生成器](../../packages/pi-durable-coding/scripts/patch-generation-response.ts)只重建 generation 及根导出的四个产物，保留其余补丁段，并对 pristine 副本执行完整 `git apply --check`、实际重放及全部 28 个输出核对。`DURABLE-PATCH.json` 记录全部文件的原始和目标哈希。helper 收窄后的两个既有安装经冻结刷新，28 份 durable 和 38 份 Coding 产物符合清单，4 份 core 产物在两处一致，lock 未变；此前 30 份输出的全新消费者证据保留原时点，见验证记录。
 
 Native 图像 MIME 识别通过[类型适配](../../packages/pi-durable-coding/src/compat/image-mime.ts)共用 durable 的既有头部解析算法。适配仅保留未识别时的 `null` 和文件前 4100 字节的读取窗口，完整文件读取器的 APNG 扫描范围与原生入口不同，因此继续使用内核的字节检测函数。私有剪贴板图片读取入口已在后续宿主残留清理中删除。
 
@@ -131,11 +131,11 @@ Native 子进程等待通过[薄适配](../../packages/pi-durable-coding/src/com
 
 Native shell 的 Bash 传参选择和进程树清理也通过[薄适配](../../packages/pi-durable-coding/src/compat/shell.ts)共用 durable 的既有函数。Native 保留同步查找、错误、PowerShell、环境和 detached 子进程集合；macOS 的组 `SIGSTOP` 策略在适配中保留，后续清理由内核执行。`env/node.js` 相对原包仅增加三个函数的公开导出，全部算法正文不变。局部生成检查和冻结消费证据见[验证记录](coding-validation.md)。
 
-早期 Native 同步与异步读取路径曾通过薄适配共用 durable 候选生成器。read 和 edit 工厂改用公开 Coding SDK 后，该路径 helper 和适配已无运行时调用，现已删除，对应生成转换也已移除。两种公开 read 工厂通过真实文件验证截图空格、NFD 和弯引号回退、缺失文件及错误 URL。durable 既有候选导出与生成器补丁尚待按实际消费者收窄，历史探测顺序测试不构成保留无调用代码的理由。
+早期 Native 同步与异步读取路径曾通过薄适配共用 durable 候选生成器。read 和 edit 工厂改用公开 Coding SDK 后，该路径 helper 和适配已无运行时调用，现已删除，对应生成转换也已移除。两种公开 read 工厂通过真实文件验证截图空格、NFD 和弯引号回退、缺失文件及错误 URL。后续 helper 收窄已撤回 durable 的 readPathVariants 导出和两个路径补丁文件，恢复发布包的原始候选处理；只服务于已退役适配的三个私有归一化测试一并删除。
 
 Native 头、尾截断均使用原有公开 `chord/output`，[薄适配](../../packages/pi-durable-coding/src/compat/truncate.ts)集中保留 Native 的字节、行数、标签、getter、首行拒绝及部分尾行策略。默认上限和行计数留在外部适配层，大小显示保留 Native 的三条规则。两个 SDK 截断文件保持原始缓存内容，截断专有导出补丁已撤掉；该批截断改动完成时 durable 补丁为 28 文件，其余 26 份差异不变；请求切片后的完整补丁为 30 文件。生成转换只检查两个截断入口的公开签名和剩余私有 helper 引用，不再绑定头、尾的算法正文。相同 7 个类型根从 437 个文件降至 225 个，未发现诊断。中间和单行处理仍保留原文。两个运行时的原版行为、冻结消费者及首调用开销见[验证记录](coding-validation.md)。
 
-早期 Native 编辑差异入口曾通过 durable 补丁导出的九个函数共用算法，仍保留两个文件预览函数。插件 edit 工厂现已改用公开 Coding SDK，完整执行、预览和 renderer 由 SDK 提供，本地 edit-diff.ts 及旧转换脚本已删除。公开 generateDiffString 和 generateUnifiedPatch 从[薄绑定](../../packages/pi-durable-coding/src/native-edit-tools.ts)直接转出 durable 实现，类型来自 Coding SDK，不再维护第二份函数签名和类型正文。历史 diff 摘要继续对 durable 公开函数执行；其余无生产调用的低层导出继续列入补丁收窄。
+早期 Native 编辑差异入口曾通过 durable 补丁导出的九个函数共用算法，仍保留两个文件预览函数。插件 edit 工厂现已改用公开 Coding SDK，完整执行、预览和 renderer 由 SDK 提供，本地 edit-diff.ts 及旧转换脚本已删除。公开 generateDiffString 和 generateUnifiedPatch 从[薄绑定](../../packages/pi-durable-coding/src/native-edit-tools.ts)直接转出 durable 实现，类型来自 Coding SDK，不再维护第二份函数签名和类型正文。后续补丁收窄撤除其余七个无生产调用的低层导出；测试按名称从未改动的 305 项历史基线选择两个公开函数的 216 项结果摘要。
 
 插件 edit 的两个工厂只绑定公开 durable createEditTool().prepareArguments，SDK 承担自定义 operations、ctx.cwd、BOM/CRLF、模糊匹配、队列、取消和展示。durable 参数准备保持冻结输入和原始 call 不变，原始 options 直接交给 SDK，保留继承属性和 getter。durable edit 注册的环境、schema 和结果契约不直接提供 Coding 插件 operations 与 renderer，因此生产 edit 继续用 durable，插件使用 Coding SDK。升级核对参数形状、真实文件、原始错误、在途取消结算、预览和组件复用；不新增 SDK 补丁。
 

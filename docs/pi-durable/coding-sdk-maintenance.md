@@ -36,7 +36,7 @@ ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件
 
 ## 本地 SDK 补丁
 
-根 `patchedDependencies` 登记 core、Coding 和 durable 三份补丁。物理文件数为 core 4 个、Coding 38 个、durable 30 个，共 72 个，JS 与声明分别计数。逻辑职责可能共用文件，不能将逻辑组重复相加。
+根 `patchedDependencies` 登记 core、Coding 和 durable 三份补丁。物理文件数为 core 4 个、Coding 38 个、durable 28 个，共 70 个，JS 与声明分别计数。逻辑职责可能共用文件，不能将逻辑组重复相加。
 
 | 补丁组 | 产品或插件契约、发布 API 缺口 | 当前最小接点及退出条件 | 恢复与升级检查 |
 |---|---|---|---|
@@ -59,9 +59,9 @@ ToolTask 桥保留 Native 首次准备和权限、`afterToolCall`、插件事件
 | durable env/node：2 文件 | Native 同步 shell 选择、退出码和组停止策略不能直接由公开 exec 替代；所需三个既有 helper 未公开 | 仅导出 getBashShellConfig、killProcessTree、waitForChildProcess，算法正文不变。发布这些 API 后撤除导出补丁 | 无新增任务 schema；检查输出空闲窗口、继承管道、监听器、macOS 组停止与 Windows spawn 策略 |
 | durable images：4 文件 | Native EXIF 容错、Photon 对象、MIME 窗口及编码质量/大小策略不同，完整工厂适配仍需保留外层契约 | 共用 EXIF、像素转置、MIME 头解析和编码缩小核心，增加有限选项和导出。公开低层 API 覆盖这些策略后撤除补丁 | 无新增任务 schema；运行原版和 SDK 默认结果、图片 worker、对象释放、离线单 WASM 与搬迁资源检查 |
 | durable search/tool-search：6 文件 | Native namespace 字段和启用接口需要分数、可配置 k1/b 及 schema 元数据文本；发布工厂不能返回全部所需中间结果 | 导出原分词、元数据文本和共用 BM25 ranker；内置工具保持默认参数。公开相应核心后撤除导出/参数补丁 | 无新增任务 schema；核对默认排序、分数、namespace/deferred、目录移除及会话启用 |
-| durable tools：4 文件 | 早期 Native diff 与路径适配需要低层 helper 导出；现在本地预览和路径适配已删除，生产只从此边界直接转出 generateDiffString 与 generateUnifiedPatch | 现有补丁仍导出九个 diff 函数及 readPathVariants，并保留候选生成器修改；无调用的导出和转换须按消费者继续收窄，测试可调用不构成保留依据 | 无新增任务 schema；收窄时保留公开 diff 结果及 durable 原始路径行为，迁移退役 helper 的私有断言，核对公开工厂的真实文件、预览和取消 |
+| durable tools：2 文件 | 项目公开 diff 入口需要 generateDiffString 与 generateUnifiedPatch，发布 tools 根未导出；本地预览和路径适配已删除 | tools 根的 JS/d.ts 只转出这两个已有函数；七个低层 diff 导出及 readPathVariants 已撤除，两个路径文件恢复发布原文。发布根提供两个 diff 函数后撤除导出补丁 | 无新增任务 schema；核对 216 项公开 diff 历史结果、公开 read/edit 工厂的真实文件、预览和取消；不再为已退役适配保留私有 helper 断言 |
 
-完整 durable 补丁由 `patch-generation-response.ts` 重建并重放，`DURABLE-PATCH.json` 记录 30 个文件的原始和目标摘要。历史 `patch-durable.ts` 仅处理四个 harness 文件，不能覆盖现行完整补丁。升级须用 pristine 依赖核对完整重放，再检查独立消费者实际解析的补丁产物和声明；只测试已有修改的 node_modules 不足以验收。
+完整 durable 补丁由 `patch-generation-response.ts` 重建并重放，`DURABLE-PATCH.json` 记录 28 个文件的原始和目标摘要。历史 `patch-durable.ts` 仅处理四个 harness 文件，不能覆盖现行完整补丁。升级须用 pristine 依赖核对完整重放，再检查独立消费者实际解析的补丁产物和声明；只测试已有修改的 node_modules 不足以验收。
 
 `731728a` 的全部 workspace 冻结依赖安装已在全新缓存和公开 registry 下通过。新安装中 durable 的 30 个输出符合清单，core 的 4 个输出与已测试安装一致；Coding 和 worker 的三个核心 Pi 包均解析到 1.5.0，根 pi-ai 仍为 1.1.0。安装禁用 scripts，未复制运行时源码或验证新安装中的导入及产品构建，不能据此关闭完整来源检查。
 
@@ -95,7 +95,9 @@ ResourceLoader 切片的全新 hoisted 冻结安装覆盖 11 个 workspace，loc
 
 `7596356` 后的插件 read 切片删除 223 行工厂与 173 行 renderer，读取、分页、取消、结构化输出和展示交给公开 Coding SDK。薄适配只绑定共享图片处理、durable MIME 和文档路径，SDK 四文件窄补丁保留宿主图片与文档分类。该 read 切片时 runtime 为 135 份 TypeScript（src/pi 131、门面 4）、0 项资源，辅助来源 9 项、共享入口 18 个。954 项 read 相关测试、20 项路径组合、26 项 bundle、Coding/server 类型、完整 runtime 与最终补丁 check 通过；两个既有安装冻结刷新后 lock 不变，38 份 Coding 产物摘要一致。来源登记更新十项、删除两项并新增两项，固定 Craft 审计覆盖 2131 文件并通过。夹具失败、文档展示回归的修复及独立复核状态见[read 验证](coding-validation.md#read-sdk-boundary-after-7596356)。
 
-`cfefb9b` 后的插件 edit 切片删除执行、renderer、预览与路径 helper 四份生成源码，以及旧转换和无调用适配，共六文件、741 行。公开 Coding SDK 承担 operations、ctx.cwd、共享队列、取消结算与完整展示；20 行薄适配只绑定 durable 参数准备并直接转出公开 diff，options 原样传递。当前 runtime 为 131 份 TypeScript（src/pi 127、门面 4）、0 项资源，辅助来源 9 项、共享入口 18 个；72 份补丁、依赖和 lock 不变。edit 383 项、read/path 36 项、bundle 26 项及 Coding/server 类型、完整 runtime check 通过。独立复核通过 419 项测试和 14 项补充探针，未确认运行时回归；发现的退役类型夹具错误已通过删除该 10 行夹具处理，Coding 类型重验通过。最终来源登记更新十三项、移除七项并新增两项，固定 Craft 审计覆盖 2126 文件并通过。六份文档的标点和 130 个本地链接检查通过，复核范围见[edit 验证](coding-validation.md#edit-sdk-boundary-after-cfefb9b)。旧 durable 低层 helper 导出及路径生成器补丁继续作为待收窄项，不能因历史测试引用而认定必要。
+`cfefb9b` 后的插件 edit 切片删除执行、renderer、预览与路径 helper 四份生成源码，以及旧转换和无调用适配，共六文件、741 行。公开 Coding SDK 承担 operations、ctx.cwd、共享队列、取消结算与完整展示；20 行薄适配只绑定 durable 参数准备并直接转出公开 diff，options 原样传递。当前 runtime 为 131 份 TypeScript（src/pi 127、门面 4）、0 项资源，辅助来源 9 项、共享入口 18 个；72 份补丁、依赖和 lock 不变。edit 383 项、read/path 36 项、bundle 26 项及 Coding/server 类型、完整 runtime check 通过。独立复核通过 419 项测试和 14 项补充探针，未确认运行时回归；发现的退役类型夹具错误已通过删除该 10 行夹具处理，Coding 类型重验通过。最终来源登记更新十三项、移除七项并新增两项，固定 Craft 审计覆盖 2126 文件并通过。六份文档的标点和 130 个本地链接检查通过，复核范围见[edit 验证](coding-validation.md#edit-sdk-boundary-after-cfefb9b)。该时点旧 durable 低层 helper 导出及路径生成器补丁仍待收窄，不能因历史测试引用而认定必要。
+
+`2951fe6` 后的 helper 切片撤除上述八个多余导出和两个路径补丁文件，tools 只保留两个公开 diff 函数，durable 28 份及 core/Coding 共 70 份输出在两个冻结刷新安装中核对通过，lock 未变。327 项工具回归、26 项 bundle、Coding/server 类型及完整补丁重放通过，共 768 个断言；固定 Craft 审计覆盖 2125 文件。来源更新四项、删除一项，历史 305 项基线未改，当前公开 diff 取其中 216 项。独立复核与验证边界见[helper 验证](coding-validation.md#durable-tool-patch-cleanup-after-2951fe6)；其余源码和 F0 至 F6 继续开放。
 
 ## Coding 层与外部适配
 

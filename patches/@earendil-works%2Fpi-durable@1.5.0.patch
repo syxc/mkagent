@@ -1,4 +1,4 @@
-# Content SHA-256: ace2bed6d2b39a5798663f98363b3b9b0a98b685e2c7f98e358b456fe9badb3f
+# Content SHA-256: 3f96b7bdda486145bc011c49bc374394f2304b83c891d25b0f5ad767d3724872
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -1803,80 +1803,18 @@ index 1c5c127ea6b007eb4033486fcbde0d5e6b20cc16..802d2381bcde340b7da8f9b6a54ebe32
      schemaText(tool.parameters, parts);
      return parts.filter((part) => part.trim() !== "").join(" ");
 diff --git a/dist/tools/index.d.ts b/dist/tools/index.d.ts
-index dc06b0be86a205a7aba4ab2c06ec4e003d731165..918e1d065cceb158401dc90f4e4b070ba6ce844b 100644
 --- a/dist/tools/index.d.ts
 +++ b/dist/tools/index.d.ts
-@@ -1,9 +1,11 @@
-+export { detectLineEnding, normalizeToLF, restoreLineEndings, normalizeForFuzzyMatch, applyReplacementsPreservingUnchangedLines, fuzzyFindText, applyEditsToNormalizedContent, generateUnifiedPatch, generateDiffString } from "./edit-diff.js";
+@@ -1,3 +1,4 @@
++export { generateUnifiedPatch, generateDiffString } from "./edit-diff.js";
  import { type ReadToolOptions } from "./read.ts";
  export { type BashExecution, type BashPrepare, type BashToolInput, type BashToolOptions, createBashTool, createPowerShellTool, type PowerShellToolInput, type PowerShellToolOptions, } from "./bash.ts";
  export { createEditTool, type EditToolDetails, type EditToolInput } from "./edit.ts";
- export { DEFAULT_IMAGE_LIMITS, type ImageLimits, type ImageProcessor, type PreparedImage, } from "./image-processor.ts";
- export { createReadTool, type ReadToolDetails, type ReadToolInput, type ReadToolOptions } from "./read.ts";
- export { createWriteTool, type WriteToolInput } from "./write.ts";
-+export { readPathVariants } from "./path-utils.ts";
- /**
-  * The `coding-tools` extension: `read`, `write`, `edit`, and `bash`; nothing installs it automatically.
-  * `createPowerShellTool()` adds `powershell`. `images` prepares the images `read` returns (see `ReadToolOptions`).
 diff --git a/dist/tools/index.js b/dist/tools/index.js
-index 77187bb5df6507b0f291ab9c27c932e68b780889..0264ec5f61fb2f6ada8b351ac3cd89d3f2ec3538 100644
 --- a/dist/tools/index.js
 +++ b/dist/tools/index.js
 @@ -1,3 +1,4 @@
-+export { detectLineEnding, normalizeToLF, restoreLineEndings, normalizeForFuzzyMatch, applyReplacementsPreservingUnchangedLines, fuzzyFindText, applyEditsToNormalizedContent, generateUnifiedPatch, generateDiffString } from "./edit-diff.js";
++export { generateUnifiedPatch, generateDiffString } from "./edit-diff.js";
  import { defineExtension } from "../harness/define.js";
  import { createBashTool } from "./bash.js";
  import { createEditTool } from "./edit.js";
-@@ -8,6 +9,7 @@ export { createEditTool } from "./edit.js";
- export { DEFAULT_IMAGE_LIMITS, } from "./image-processor.js";
- export { createReadTool } from "./read.js";
- export { createWriteTool } from "./write.js";
-+export { readPathVariants } from "./path-utils.js";
- /**
-  * The `coding-tools` extension: `read`, `write`, `edit`, and `bash`; nothing installs it automatically.
-  * `createPowerShellTool()` adds `powershell`. `images` prepares the images `read` returns (see `ReadToolOptions`).
-diff --git a/dist/tools/path-utils.d.ts b/dist/tools/path-utils.d.ts
-index f7a7eedccff9b58fafe57ba9b5c9c12738ed0602..0f1f61bfb9ade55d66f6b466d797fae771339ab4 100644
---- a/dist/tools/path-utils.d.ts
-+++ b/dist/tools/path-utils.d.ts
-@@ -2,4 +2,6 @@ import type { Context } from "@earendil-works/chord";
- import { type ExecutionEnv } from "../env/index.ts";
- export declare function resolveToolPath(env: ExecutionEnv, path: string, context: Context): Promise<string>;
- export declare function resolveReadToolPath(env: ExecutionEnv, path: string, context: Context): Promise<string>;
-+/** Yield read-path spellings; Native reuses NFD while durable recomputes it. */
-+export declare function readPathVariants(resolved: string, reuseNfd?: boolean): IterableIterator<string>;
- //# sourceMappingURL=path-utils.d.ts.map
-\ No newline at end of file
-diff --git a/dist/tools/path-utils.js b/dist/tools/path-utils.js
-index 547e6a35c473f5c6af5e7455500e51a535edf05b..7867e6eb7b56c56f5a040af572e170206a254e8f 100644
---- a/dist/tools/path-utils.js
-+++ b/dist/tools/path-utils.js
-@@ -10,17 +10,19 @@ export async function resolveToolPath(env, path, context) {
- }
- export async function resolveReadToolPath(env, path, context) {
-     const resolved = await resolveToolPath(env, path, context);
--    const variants = [
--        resolved,
--        resolved.replace(/ (AM|PM)\./gi, `${NARROW_NO_BREAK_SPACE}$1.`),
--        resolved.normalize("NFD"),
--        resolved.replace(/'/g, "\u2019"),
--        resolved.normalize("NFD").replace(/'/g, "\u2019"),
--    ];
--    for (const variant of new Set(variants)) {
-+    for (const variant of new Set(readPathVariants(resolved, false))) {
-         if (getOrThrow(await env.exists(variant, context)))
-             return variant;
-     }
-     return resolved;
- }
-+/** Yield read-path spellings; Native reuses NFD while durable recomputes it. */
-+export function* readPathVariants(resolved, reuseNfd = true) {
-+    yield resolved;
-+    yield resolved.replace(/ (AM|PM)\./gi, `${NARROW_NO_BREAK_SPACE}$1.`);
-+    const nfd = resolved.normalize("NFD");
-+    yield nfd;
-+    yield resolved.replace(/'/g, "\u2019");
-+    yield (reuseNfd ? nfd : resolved.normalize("NFD")).replace(/'/g, "\u2019");
-+}
- //# sourceMappingURL=path-utils.js.map
-\ No newline at end of file

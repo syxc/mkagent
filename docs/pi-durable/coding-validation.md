@@ -26,6 +26,65 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Durable tool patch cleanup after 2951fe6
+
+The local read path adapter and edit preview implementation have already retired.
+Seven low-level diff exports and readPathVariants have only historical test
+consumers. The durable tools entry now adds only generateDiffString and
+generateUnifiedPatch. Both path-utils files return to their published bytes;
+no path or diff algorithm moves into local source. The durable patch shrinks
+from 30 files to 28. Its other 26 outputs are unchanged. Core four and Coding 38
+remain unchanged, giving 70 physical patch outputs.
+
+The fixture retains 216 cases for the two supported diff functions, selected by
+name from the unchanged 305-case original baseline. Cases still cover context
+limits, BOM/CRLF, Unicode and unpaired surrogates. The 89 cases for retired
+low-level helpers and metadata are no longer an export requirement. Three private
+path normalization tests and their unused 55-line file are removed. Public read
+factories still verify real path candidates, missing files and malformed URLs;
+public edit tests still verify preparation, operations, cancellation and previews.
+
+Initial preparation stops before writes because the isolated installation is
+hoisted and the older frozen durable copy is already patched. The corrected
+preparation copies that package, checks all 30 patched hashes, reverses the full
+old patch in the task copy and checks all 30 original hashes. It then checks both
+installed packages before making the four intended tool-file changes. The full
+patch generator replays the new patch against this verified original package and
+its --check passes.
+
+Both existing installations pass frozen refresh with scripts disabled and a task
+HOME/cache. The lockfile is unchanged. All 28 durable and 38 Coding outputs match
+their manifests; the four unchanged core outputs match across installations.
+The restored path files match the original package in both installations. This
+refresh does not replace the earlier evidence for a completely new installation.
+
+Eight public tool and generation-boundary test files pass 327 tests with 663
+assertions. Worker bundle tests pass 26 tests with 105 assertions. The total is
+353 tests and 768 assertions. Coding types, declaration emission and server types
+pass. Source registration updates four entries and removes one; the fixed Craft
+v0.15.6 audit passes for 2125 files. Runtime remains 131 TypeScript files,
+including 127 under src/pi, with no assets; auxiliary sources remain nine and
+shared entries 18. The unchanged runtime generator is not rerun for this cleanup.
+
+Independent review against 2951fe6 finds no verified defect. The reviewer checks
+2204 tracked and unignored files for consumers, replays both complete patches,
+checks all original and target hashes and verifies both installations. Five
+related test files pass 282 tests with 592 assertions; Coding and server types
+pass. Bun and Node each pass all 305 historical internal diff cases, four durable
+path checks, five actual read cases and four actual edit cases. Retained case
+names and historical names are unique. The first cancellation probe expects
+Coding error text; after correcting it to durable's existing FileError with
+code aborted, both runtimes pass. Duplicate and overlapping edits and early
+cancellation leave file contents unchanged. The five reviewed paths and bun.lock
+remain unchanged throughout review.
+
+The reviewer does not rerun frozen installation, bundle, the complete generator
+--check or the whole repository, and excludes the source register and six parallel
+document updates. The parent checks punctuation and all 135 local links in those
+six documents. This section does not establish complete repository or product
+acceptance. Real services, Windows and Linux devices, remaining source deletion,
+the earlier AuthContext gap and F0 through F6 remain open.
+
 ## Edit SDK boundary after cfefb9b
 
 Production edit continues to use durable. Both plugin edit factories delegate
