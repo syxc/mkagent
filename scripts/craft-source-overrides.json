@@ -2965,8 +2965,8 @@
       "reason": "Verify complete UTF-8 shell output spills and remains readable through the native coding host after durable reopen."
     },
     "packages/pi-agent-server/src/tools/local/search-output.test.ts": {
-      "sha256": "518f7efae09ca1fcce5137cedf9c107e457e8e637c4516902d868e363a147f1a",
-      "reason": "Exercise actual local rg, fd and directory tools for Unicode, ignore rules, output limits, empty results and path failures."
+      "sha256": "6b0d28959ff48dbbf3cecb7165c25284665b7accd8258088cd799eb2c39b5059",
+      "reason": "Exercise SDK searches through the production builtin entry for Unicode, ignore rules, limits, path failures, CR and CRLF context, path globs, nested repositories, cancellation and ambient ripgrep configuration."
     },
     "packages/pi-durable-coding/src/plugin-import-meta.ts": {
       "sha256": "c4f530feaad20df464f568c6099f53441373e0c9ef2faf92edab62cc7703abae",
@@ -3465,24 +3465,16 @@
       "reason": "Retire inherited tasks, submissions and runtime documents atomically through Storage before opening a copied branch; preserve committed history and usage without scheduling inherited work."
     },
     "packages/pi-agent-server/src/tools/builtin.ts": {
-      "sha256": "b8445c7a2f96c34bdff2748a2ddbc886620207894e2e145646f15fb852f754a9",
-      "reason": "Combine durable coding tools, Photon and adapted search tools; offer PowerShell as a deferred coding-profile tool routed through host approval."
+      "sha256": "6d46977ccbcc37fc253cab672b12c3b7e81b6b636e1ba1dbb02a7a13992173c5",
+      "reason": "Combine durable coding tools and Photon with public Coding SDK search registrations; offer PowerShell as a deferred coding-profile tool routed through host approval."
     },
     "packages/pi-agent-server/src/tools/codemode.ts": {
       "sha256": "a6066d75853ab6887e7380e245b359585e87567502a23870b6664275bb1721d1",
       "reason": "Bind pi-durable codemode to the installed pi-codemode sandbox, packaged worker and WASM assets, with host approval for model calls."
     },
-    "packages/pi-agent-server/src/tools/local/find.ts": {
-      "sha256": "af35fc5469442720737c543dc7878fa13fff5a0b59bfe7667d20d8f16170c213",
-      "reason": "Adapt pi-coding-agent 1.1.0 core/tools/find.js to durable registration and the local fd manager while retaining path and truncation behavior."
-    },
-    "packages/pi-agent-server/src/tools/local/grep.ts": {
-      "sha256": "7b353fa5ff2011afb22eaeba8f049c087da6fc73ee7cb50cd91e692668b7324c",
-      "reason": "Adapt pi-coding-agent 1.1.0 core/tools/grep.js search behavior to durable registration and local ripgrep resolution."
-    },
-    "packages/pi-agent-server/src/tools/local/ls.ts": {
-      "sha256": "ee0272a6406a543130f004671a574a32a35cf536f7e8d993923b480feed5ea1a",
-      "reason": "Adapt pi-coding-agent 1.1.0 core/tools/ls.js listing and truncation behavior to durable registration without TUI renderers."
+    "packages/pi-agent-server/src/tools/search.ts": {
+      "sha256": "bbce9815d492ad8dded29bd1ce90519ef91ad57e8de5196367feff6626594626",
+      "reason": "Bridge public Coding SDK search factories to durable registrations, bind the product binary resolver and abort signal per call, and retain CR-only context line splitting without copying search algorithms."
     },
     "packages/pi-agent-server/src/tools/local/path-utils.ts": {
       "sha256": "6a876a57bccd018d276857f6dded4a786ca32b8af45221fdf931719e0d7be9a2",
@@ -3493,8 +3485,8 @@
       "reason": "Adapt pi-coding-agent 1.1.0 utils/tools-manager.js fd and ripgrep resolution and downloads, adding bundled ripgrep lookup and isolated temporary downloads. Propagate cancellation through version and archive requests, bound body reads, and prevent publication after cancellation."
     },
     "packages/pi-agent-server/src/tools/local/tool-binaries-cancellation.isolated.ts": {
-      "sha256": "e416ad902969b9f90f1c91b3faa4a197903e82c6fe49621e51391dc578042815",
-      "reason": "Verify find and grep binary acquisition cancellation across requests, streaming bodies and archive publication with isolated module spies and fake downloads."
+      "sha256": "2a432715797594a37f1d58c8d3804025e0ddd00f169c840509dd8f3ce3d4f5a9",
+      "reason": "Verify per-call resolver signals and SDK find and grep acquisition cancellation across requests, streaming bodies and archive publication with isolated module spies and fake downloads."
     },
     "packages/pi-agent-server/src/tools/local/truncate.ts": {
       "sha256": "b2645d95d4c3c78069ebb0609c3edb7263a3020d51a697a1a7982f8f318cb505",

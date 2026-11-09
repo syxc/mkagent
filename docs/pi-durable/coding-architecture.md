@@ -61,7 +61,7 @@ Pi 1.5.0 的 `GenerationTask.request` 会继续分类响应、写 assistant、�
 | 工具控制及续轮 | `finishToolRound` 调 `afterTools`，随后同事务应用 addTools、handoff reset、turn limit、inbox 和下一 GenerationTask 或结束 run | 全部 call 要求 terminate、最后 handoff 生效这两条规则与 Native 一致，不构成保留依据。缺口是不能独立返回决定，再让 Native 的 `finishTurn`、`turn_end`、steering/follow-up 及 journal 接受该决定 |
 | 最终收尾 | `GenerationTask.finish` 承接 SDK run summary，运行 `afterRun` 和 owned task drain 后结束已回答 run | 不是 Native `finishTurn` 或 `agent_end` 的独立出口；Native session 的最终回执与输入身份仍须保持。不能靠隐藏 SDK 写入或伪造任务结果接线 |
 
-产品 [CodingHost](../../packages/pi-agent-server/src/coding-host.ts)通过 `wrapTool` 将非 builtin 工具交给 [wrapAgentTool](../../packages/pi-durable-coding/src/host-tools.ts)；生产 builtin 使用宿主提供的 durable 工厂。现在 [DurableLoopBinding](../../packages/pi-durable-coding/src/durable-coding/engine.ts)也将公开 Agent/runToolCall 入口接收的普通 AgentTool 交给同一个 ToolTask 桥，已桥接工具直接复用。AgentTool 与 ToolDefinition 的两次转换保留桥接标记，避免 builtin 和 tool-search 重复接纳；此项本地生成转换没有增加 SDK 补丁。直接构造低层 CodingToolTask 的 fixture 仍可自供执行函数，不属于上述公开入口的自动接线范围。
+产品 [CodingHost](../../packages/pi-agent-server/src/coding-host.ts)通过 `wrapTool` 将非 builtin 工具交给 [wrapAgentTool](../../packages/pi-durable-coding/src/host-tools.ts)；生产 builtin 使用 durable 工厂及经既有桥接转换的 Coding SDK 搜索工厂。现在 [DurableLoopBinding](../../packages/pi-durable-coding/src/durable-coding/engine.ts)也将公开 Agent/runToolCall 入口接收的普通 AgentTool 交给同一个 ToolTask 桥，已桥接工具直接复用。AgentTool 与 ToolDefinition 的两次转换保留桥接标记，避免 builtin 和 tool-search 重复接纳；此项本地生成转换没有增加 SDK 补丁。直接构造低层 CodingToolTask 的 fixture 仍可自供执行函数，不属于上述公开入口的自动接线范围。
 
 Native 先准备并验证参数，再运行权限 hook；内部 SDK effect 桥不重复校验权限改参，实际 effect 开始前再次检查取消。最终执行参数与完整结果在同一 SDK receipt 中原子保存，正常交付和恢复均读取该快照；旧 receipt 缺字段时回退 Native 已接受的参数，宿主 `finalArguments` 回调仍优先。SDK 对不确定执行使用 `<harness>` 错误诊断，unsafe 工具仍不重跑。五种 Native 任务和 HostExecutionDoc 的版本保持不变。
 
@@ -242,7 +242,7 @@ SDK 可选 protected 接点将 durable 结算、队列持久化、journal 身份
 
 `a567bf4` 后，插件 grep/find/ls 的执行与 renderer 改用公开 Coding SDK，删除三份工具和三份 renderer，共 1044 行。固定 durable `/tools` 没有这三种工厂，SDK 根原已公开工厂与 options 类型；本轮补丁转出现有 prompt contribution 和路径 helper，并为 grep/find 增加可选 ensureTool。`native-search-tools.ts` 的四个工厂仅传递 operations 并绑定既有宿主解析器，继续保留管理目录、PI_OFFLINE、平台识别和安全 ZIP 安装。ls 直接使用 SDK；SDK 保留搜索、截断、错误和 renderer 算法。生成遍历在这三个模块边界停止，tools-manager 作为宿主适配的显式来源根保留。
 
-SDK grep 在二进制解析及目录检查后原来没有复查取消，两项测试先失败，补丁增加检查后通过。独立复核另确认适配层展开 options 会丢失继承或不可枚举 operations；主线程改成显式读取，并验证三种属性形态和 getter 单次读取。最终 21 项搜索测试、54 个断言和公开消费端类型通过；当前清单为 139 份 TypeScript（135 份 src/pi、4 份门面）、0 项资源，Coding 补丁为 34 份，连同 core/durable 共 68 份。其余回归、冻结安装与来源证据见[搜索验证](coding-validation.md#search-sdk-boundary-after-a567bf4)。生产侧 `tools/local/{grep,find,ls}.ts` 使用 durable ToolRegistration 签名和产品二进制解析器，尚未迁移，后续按参数、结果、权限与取消契约核对。公开 SDK 提供等效宿主解析接点、导出及取消修复后撤除相应补丁，不能将搜索工厂替换视为全部源码必要性已证明。
+SDK grep 在二进制解析及目录检查后原来没有复查取消，两项测试先失败，补丁增加检查后通过。独立复核另确认适配层展开 options 会丢失继承或不可枚举 operations；主线程改成显式读取，并验证三种属性形态和 getter 单次读取。最终 21 项搜索测试、54 个断言和公开消费端类型通过；当前清单为 139 份 TypeScript（135 份 src/pi、4 份门面）、0 项资源，Coding 补丁为 34 份，连同 core/durable 共 68 份。其余回归、冻结安装与来源证据见[搜索验证](coding-validation.md#search-sdk-boundary-after-a567bf4)。`c032e05` 后，生产侧三份工具实现也已删除，共 545 行。`tools/builtin.ts` 通过 27 行 `tools/search.ts` 装配相同 SDK 工厂和既有 agentToolToHost，执行仍经过宿主权限和 durable ToolTask。每次 execute 独立绑定产品 rg/fd 解析器与 AbortSignal，保留 bundled ripgrep、fdfind、离线下载和安全解包；grep operations 只增加旧产品的 CR 换行归一化。搜索、子进程、截断和结果算法继续由 SDK 提供，未新增依赖、补丁或持久化版本。grep 采用 SDK 的 --no-config，避免环境配置改变工具参数。行为、类型及失败修正见[生产搜索验证](coding-validation.md#production-search-sdk-boundary-after-c032e05)。公开 SDK 提供等效宿主解析接点、导出及取消修复后撤除相应补丁，不能将搜索工厂替换视为全部源码必要性已证明。
 
 ## 既有源码对照与升级核对
 

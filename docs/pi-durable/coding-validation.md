@@ -26,6 +26,68 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Production search SDK boundary after c032e05
+
+The production builtin entry now uses the same public Coding SDK grep, find and
+ls factories through the existing agentToolToHost bridge. Three local tool
+implementations, 545 lines, are deleted. A 27-line search.ts binds the product
+binary resolvers and each call's abort signal. Its grep read operation preserves
+the product's CR-only and CRLF context splitting. The SDK owns search, process
+handling, limits, truncation and results.
+
+The product resolver retains managed binaries, PATH, bundled ripgrep, Debian
+fdfind, PI_OFFLINE and cancellation during safe downloads and extraction. Each
+execution creates a factory bound to its own signal, so concurrent calls cannot
+share resolver signals. Grep now uses the SDK's existing --no-config option.
+An isolated subprocess test verifies that RIPGREP_CONFIG_PATH cannot change the
+requested regular expression into a fixed-string search.
+
+The original search and binary cancellation tests pass before replacement.
+After replacement, search and binary policy tests pass 33 tests with 109
+assertions. Isolated cancellation tests pass 22 tests with 120 assertions,
+including two new concurrent-call cases. The existing bridge and metadata tests
+pass 20 tests with 135 assertions. All 26 worker bundle tests pass with 103
+assertions. Search tests now call createBuiltinTools, the production entry, and
+cover Unicode, hidden and ignored paths, limits, errors, CR and CRLF, path globs,
+nested repositories, file URLs and cancellation before execution.
+
+The first server type check fails at two resolver callbacks: an unnecessary
+conversion returns null, but the SDK expects string or undefined. Both callbacks
+now return the product resolver promise directly. Coding declaration generation
+and server type checking then pass. Search and cancellation tests pass again
+after this correction. The bridge and bundle checks precede this two-line type
+correction and are not repeated. The initial type error log is preserved.
+
+No dependency, lockfile, SDK patch, task or checkpoint version changes. The
+runtime inventory remains 139 TypeScript files, including 135 under src/pi,
+and the physical patch outputs remain core four, Coding 34 and durable 30.
+Source registration removes the three deleted tool entries, updates the builtin
+and two test hashes, and adds the small search adapter. The fixed Craft v0.15.6
+audit passes for 2,132 files. Task logs and receipts are in the
+mkagent-production-search-sdk-VSZdT6 directory.
+
+Independent review against c032e05 confirms no new correctness or compatibility
+defect. The reviewer independently passes the 33 search and binary policy tests
+and 22 cancellation tests. Another 33 baseline comparison cases match. Actual
+search tools pass three permission-change cases, three permission-denial cases
+and three invalid-argument cases through durable ToolTask, including approved
+argument memos, execution records and persisted results. Running grep and find
+processes exit on cancellation while concurrent calls on the same registration
+still succeed. Early probe attempts fail because of temporary script paths and
+assertions; the corrected final probes pass. The reviewer does not change the
+shared source or test installation. Existing bridge, type and bundle logs are
+read-only evidence, not independent reruns.
+
+The review confirms that the new adapter copies no search algorithm. It also
+identifies unused baseline exports truncateHead, truncateLine and
+GREP_MAX_LINE_LENGTH in the product's local/truncate.ts. The file still supplies
+formatSize and truncateMiddle to MCP; this remaining cleanup is not a new runtime
+defect. Six document punctuation checks and 115 local links and anchors pass.
+
+Remaining source replacement, the earlier AuthContext gap and F0 through F6 stay
+open. Real services, Windows and Linux devices, search crash recovery and complete
+repository or product acceptance are not checked in this slice.
+
 ## Search SDK boundary after a567bf4
 
 Durable 1.5.0 does not provide grep, find or ls factories. The public Coding SDK
@@ -85,9 +147,10 @@ v0.15.6 audit then passes for 2,134 files. Document links, punctuation and final
 diff checks are recorded with the local commit. Task receipts are in the
 mkagent-search-sdk and mkagent-search-hoisted directories.
 
-The separate production tools/local/grep.ts, find.ts and ls.ts still use their
-product resolver and durable ToolRegistration contracts. This slice does not
-replace those implementations. Remaining source replacements, the earlier
+At that slice, the separate production tools/local/grep.ts, find.ts and ls.ts
+still use their product resolver and durable ToolRegistration contracts. That
+slice does not replace them; the production replacement is recorded above.
+Remaining source replacements, the earlier
 AuthContext gap and F0 through F6 stay open. Real services, a Windows device and
 complete repository/product acceptance are not checked here. The managed binary
 fixture needs POSIX and is skipped on Windows; the other operation, cancellation
