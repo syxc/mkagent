@@ -3985,8 +3985,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "b739213c817fdb126a9287168c2f314fb2d73984e970da3e7460aaa05099aa29",
-      "reason": "Record the generated closure after replacing extension runner, plugin types and command execution with the published Coding SDK."
+      "sha256": "fcf1ef04eeca247abd7d6792e8dbba32f61aa811c22ca4611dc0304cebd47035",
+      "reason": "Record the generated closure after replacing published Coding SDK implementations, including the complete write factory and renderer."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
@@ -4269,8 +4269,8 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/index.ts": {
-      "sha256": "25190ad1bf64886306129942325e6bb856f64bb63e5fff8b803f0daaf4fbd8ca",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
+      "sha256": "6f4067cb16d2c59d0fedc787778a6bf95375e01cb5839afb9b6990ca40ceb727",
+      "reason": "Use public Coding SDK write and search factories while preserving the remaining plugin factories and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/output-accumulator.ts": {
       "sha256": "255c11af6596a043f2d8225d3faba1ff18e3f43fe47052b3e018f9ef9517a9d9",
@@ -4304,17 +4304,9 @@
       "sha256": "ffefb439138834e7f40e354b2f00e9483fadaa0cdb1fa1a5974569d76bba2422",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
-    "packages/pi-durable-coding/src/pi/core/tools/renderers/write.ts": {
-      "sha256": "be89e898a3da950635188fc787ccb9fd8314a31c3594c6498e2b81d4c5e893be",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
     "packages/pi-durable-coding/src/pi/core/tools/truncate.ts": {
       "sha256": "56d31aab381f14820ef5db0847faa32bb07d4a3c0012ee7a5b6a18c21445ac1e",
       "reason": "Pinned Pi v1.5.0 facade; head and tail share public Chord through external policy. Retain Native size formatting, middle and single-line code."
-    },
-    "packages/pi-durable-coding/src/pi/core/tools/write.ts": {
-      "sha256": "f1cc9ca48c4d8563bc10e8ddc654e90ad7c4a3adcd7a1f921216f36f85b41d2e",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/trust-manager.ts": {
       "sha256": "ce480f9a1689e2da996609e9708443c391f9ab0cab5bcc047aebc1613b17e2f9",
@@ -4949,12 +4941,12 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "bccf15ae25a14e636bfe44ebada82e0da33d9fc518310f8e03b4a9544a75c307",
-      "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
+      "sha256": "1122f54306dd4b6948d17cf7f1dbeca1ca22502f1468daeb1c1b49942a918904",
+      "reason": "Stop source traversal at complete published Coding SDK contracts, including the write factory, without duplicating execution or presentation algorithms."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "80ef05156b298d002510b1c89d1cdaa27cd9e807c3eedccf8d6995f568da0409",
-      "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
+      "sha256": "4bbcf6802e1292a70a6319fe18588a07d6dfc357be689bcb830e87098323742e",
+      "reason": "Verify public SDK implementation identity and generation boundaries, including the write factory and shared file mutation queue."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
       "sha256": "afcbdf77947068423396d75214190a66193714f0f2a704865aec6b2f578793b8",
@@ -5039,6 +5031,10 @@
     "packages/pi-durable-coding/test/host-search-sdk.test.ts": {
       "sha256": "5a42dee32586dc49eb17737efc8347e7e0d04100e6fda545bd27c05e0adfc5ba",
       "reason": "Verify public SDK search factory bindings, custom operations, context directories, cancellation, limits, Windows path normalization and existing renderers."
+    },
+    "packages/pi-durable-coding/test/host-write-sdk.test.ts": {
+      "sha256": "f900246aec2f0f66ca8be4d0edc66d66267b7b4dfc649fe0686c8db61699fe55",
+      "reason": "Verify public write contracts for bytes, paths, custom operations, raw errors, in-flight cancellation, shared edit queues and renderer component reuse."
     }
   },
   "deleted": {

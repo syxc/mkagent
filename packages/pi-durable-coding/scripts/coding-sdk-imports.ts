@@ -24,6 +24,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/tools/file-mutation-queue.ts',
   'core/tools/ls.ts',
   'core/tools/tool-definition-wrapper.ts',
+  'core/tools/write.ts',
   'modes/interactive/theme/theme.ts',
   'utils/frontmatter.ts',
 ]);

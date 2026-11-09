@@ -375,7 +375,7 @@
       "source": "packages/coding-agent/src/core/tools/index.ts",
       "target": "src/pi/core/tools/index.ts",
       "sha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
-      "portSha256": "25190ad1bf64886306129942325e6bb856f64bb63e5fff8b803f0daaf4fbd8ca",
+      "portSha256": "6f4067cb16d2c59d0fedc787778a6bf95375e01cb5839afb9b6990ca40ceb727",
       "changes": [
         "public-coding-sdk",
         "host-extension-module-import"
@@ -452,30 +452,12 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/tools/renderers/write.ts",
-      "target": "src/pi/core/tools/renderers/write.ts",
-      "sha256": "59723b9e77710ef6bef218728bbc585debf53d2320955e7697cbc3e4d1c3bd20",
-      "portSha256": "be89e898a3da950635188fc787ccb9fd8314a31c3594c6498e2b81d4c5e893be",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/tools/truncate.ts",
       "target": "src/pi/core/tools/truncate.ts",
       "sha256": "8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762",
       "portSha256": "56d31aab381f14820ef5db0847faa32bb07d4a3c0012ee7a5b6a18c21445ac1e",
       "changes": [
         "public-chord-output-truncation"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/tools/write.ts",
-      "target": "src/pi/core/tools/write.ts",
-      "sha256": "b93b6a83eaee6959ae713934bbcdba834a39b023694a3ca986c73b331f771a3d",
-      "portSha256": "f1cc9ca48c4d8563bc10e8ddc654e90ad7c4a3adcd7a1f921216f36f85b41d2e",
-      "changes": [
-        "public-coding-sdk"
       ]
     },
     {

@@ -77,7 +77,7 @@ export {
 	type WriteOperations,
 	type WriteToolInput,
 	type WriteToolOptions,
-} from "./write.ts";
+} from "@earendil-works/pi-coding-agent";
 
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
@@ -88,7 +88,7 @@ import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "
 import { createLsTool, createLsToolDefinition, type LsToolOptions } from "@earendil-works/pi-coding-agent";
 import { createPowerShellTool, createPowerShellToolDefinition, type PowerShellToolOptions } from "./powershell.ts";
 import { createReadTool, createReadToolDefinition, type ReadToolOptions } from "./read.ts";
-import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "./write.ts";
+import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } from "@earendil-works/pi-coding-agent";
 
 export type Tool = AgentTool<any>;
 export type ToolDef = ToolDefinition<any, any>;

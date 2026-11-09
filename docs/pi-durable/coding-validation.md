@@ -26,6 +26,57 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Write SDK boundary after 1765fd7
+
+Production write continues to use durable. The plugin write factory and tool
+renderer now come directly from the public Coding SDK. Its existing options,
+custom operations, context directory and shared file mutation queue preserve
+the plugin contract. The durable write factory requires its execution environment
+and does not expose these Coding plugin options. The earlier durable adapter
+prototype retained the file execution body and added environment and result
+bridges. The Coding SDK supplies that complete implementation without a new
+runtime wrapper or SDK patch.
+
+The generated source boundary now stops at core/tools/write.ts. The local write
+factory, 96 lines, and renderer, 192 lines, are deleted. The full runtime source
+check passes with 137 TypeScript files: 133 under src/pi and four facades, with
+no assets. Auxiliary sources remain nine and shared entries remain 18. Physical
+patch outputs remain core four, Coding 34 and durable 30. Dependencies, lockfile,
+SDK patches, tasks and checkpoint versions do not change.
+
+Before replacement, the new write contract tests initially pass seven tests and
+fail two because of fixture setup. Direct edit execution requires a prepared
+edits array, and the renderer requires theme initialization. The fixtures are
+corrected without a product change; the baseline then passes nine tests with
+24 assertions. After replacement, five related test files pass 349 tests with
+827 assertions. These include bytes, Unicode, BOM and CR/CRLF, parent creation,
+file URLs, overwrite, inherited operations read once, ctx.cwd, original errors,
+cancellation during mkdir and write, shared edit queues and streaming renderer
+component reuse. Coding declaration generation and server type checks pass.
+All 26 worker bundle tests pass with 103 assertions. These checks use isolated
+task configuration and files. They do not access real accounts or services.
+
+Source registration removes the two deleted entries, updates four hashes and
+adds the write contract test. The fixed Craft v0.15.6 audit passes for 2131 files.
+The six-document punctuation checks and 121 local links and anchors pass.
+Independent review against 1765fd7 confirms no new correctness or compatibility
+defect. The reviewer independently passes 11 tests with 68 assertions and seven
+additional compatibility and HEAD comparison groups. These cover both plugin
+module names, inherited operations, getter access, bytes, original errors,
+pre-cancellation, queue release, symlink-alias write/edit ordering and renderer
+states and component reuse. The deleted write and renderer execution statements
+match the SDK after transpilation with imports, types and comments excluded.
+All 137 runtime file hashes are checked. The reviewer changes neither shared
+source nor the test installation, and confirms the durable factory boundary.
+Complete type checks, worker bundle and full generator --check use the parent
+results and source review; they are not independent reruns. Windows and real
+remote operations are not checked.
+
+The remaining source replacement, the earlier AuthContext gap and F0 through F6
+stay open. Real services, Windows and Linux devices, crash recovery during a
+write and complete repository or product acceptance are not checked in this
+slice.
+
 ## Production search SDK boundary after c032e05
 
 The production builtin entry now uses the same public Coding SDK grep, find and
