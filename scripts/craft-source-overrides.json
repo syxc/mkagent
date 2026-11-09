@@ -2541,8 +2541,8 @@
       "reason": "Preserve legacy host and plugin contracts through thin policies over shared coding implementations."
     },
     "packages/pi-durable-coding/src/legacy/model-registry.js": {
-      "sha256": "cbad3061051908ec1a173f1363ac039e716ab896ec3d19609d12ccc8624d511c",
-      "reason": "Preserve legacy host and plugin contracts through thin policies over shared coding implementations."
+      "sha256": "fe5c336576143c1fc13bda86a8367c624beec9245c0f334f8f98e3462b89dc74",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/legacy/settings-merge.js": {
       "sha256": "8ae72350f3ddee838b86d3fb9568dd072934d7e605e7fd85c0ee0df77d097a02",
@@ -2569,8 +2569,8 @@
       "reason": "Verify shared implementation compatibility, structural consumer types and scoped reproduction boundaries."
     },
     "packages/pi-durable-coding/test/shared-models-messages.test.ts": {
-      "sha256": "2cda3d47fa639a68d2a54c0f0ccfed0869bc60f542e6a515a449f11372c2ccb3",
-      "reason": "Verify published settings identity and preserve host trust, profile, merge and declaration contracts."
+      "sha256": "b90307608c45cfb203cfdca861598f31dcf761e117ac43fb02d9dbe760e538e2",
+      "reason": "Verify SDK registry identity, host runtime binding and legacy structural runtime behavior after removing local registry implementations."
     },
     "packages/pi-durable-coding/test/shared-packages.test.ts": {
       "sha256": "2bac6e8aedd00406075edf904c070e81ddb1df7cc33243147f42a5666516931a",
@@ -3725,8 +3725,8 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "b9c4c12acfe0da4821ef5be511c3e7de603dc00cc274e4ad2c0b88f8955ac6c2",
-      "reason": "Stop generation at the public package-manager SDK and remove unused helper source and forward records."
+      "sha256": "43c6f424340c9bf0b6afa72b22ee770a67dbd509a020aaed82aa74ae2d5c4f03",
+      "reason": "Stop source traversal at published model and MCP registry modules and remove their local implementations and obsolete MCP forward."
     },
     "packages/pi-durable-coding/package.json": {
       "sha256": "87be15851e183a78fab993ecf5fcb5478df74c45e832fecfb063776302a4409d",
@@ -3741,8 +3741,8 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "22c410941c34f8eee5af3ecf91b4f6adec93bd5bec0a0b72362e4c050696f527",
-      "reason": "Stop generation at the public package-manager SDK and remove unused helper source and forward records."
+      "sha256": "35c821255ad9619206cc8d2913400b4491b3d20cdd25ca8c758786aa2d8e2a21",
+      "reason": "Stop source traversal at published model and MCP registry modules and remove their local implementations and obsolete MCP forward."
     },
     "packages/pi-durable-coding/src/compat.ts": {
       "sha256": "71c5b55bb77036e8a7e0bd08cb553cfec6d19b6584115d96f42ac77945ae5cbe",
@@ -3843,10 +3843,6 @@
     "packages/pi-durable-coding/src/upstream/core/git-paths.ts": {
       "sha256": "75b5ff0072877dc915d4c646174620891349924f5aa2a15e81632610df8c917c",
       "reason": "Port Pi v1.5.0 packages/coding-agent/src/core/footer-data-provider.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
-    },
-    "packages/pi-durable-coding/src/upstream/core/mcp-servers.ts": {
-      "sha256": "44332b01d00decb7301dbe3159c72e51209b541b9b48c5552827d36aac26f59e",
-      "reason": "Forward legacy helper imports to the canonical native Pi implementation without another source copy."
     },
     "packages/pi-durable-coding/src/upstream/core/messages.js": {
       "sha256": "28f06aa87c1eeb5c702680802a29047aa60f6739e40f46ff8415533daf4468e0",
@@ -4033,8 +4029,8 @@
       "reason": "Verify public model storage behavior, Native TypeBox enum branding and inference, and shared usage totals."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "a0396efb11511aedcaf8c0e64d7302456e41a660a8f86cbf6256ba26b9a79310",
-      "reason": "Stop source traversal at public Coding SDK theme and keybinding modules and remove obsolete theme conversion and asset records."
+      "sha256": "05fe4903929fe5215030d149a2786fd50766bb1d2448003d036de59cb05a1ab1",
+      "reason": "Stop source traversal at published model and MCP registry modules and remove their local implementations and obsolete MCP forward."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "e132e9a4414b44d25c8d7372f493394f104ce15cf4010e7596a721ed9cf7bffc",
@@ -4181,8 +4177,8 @@
       "reason": "Use the published Coding SDK settings implementation while preserving existing host policy adapters."
     },
     "packages/pi-durable-coding/src/pi/core/agent-session.ts": {
-      "sha256": "72751f6a671fe6bc517a425a7e659c87a91bb880c98de167e85f78bcecdb7271",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
+      "sha256": "4e4a187188af1489b0ecf28a9058d466e6d22e2e86270013c9a1875ea8ac9c88",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/core/auth-guidance.ts": {
       "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
@@ -4293,20 +4289,20 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/jiti-static-loader.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/loader.ts": {
-      "sha256": "683bd56b29b30920b831d5ae14c536f441f010c89cb439cc92b8d7aae4fc49bc",
-      "reason": "Use the public Coding SDK for event bus, diagnostics, file mutation queue and frontmatter instead of local copies."
+      "sha256": "26f08cf5685a0586ef8a29b1b9f00d4255494bbf03e70a94ae115a3fab04de80",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/pi-ai-extension-view.ts": {
       "sha256": "35769c1446400219e554e31712e5bc8da0c90bbdf1c0f41df39c151abb5bc8d4",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse the public enum builder while retaining Native TypeBox branding and literal inference."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/runner.ts": {
-      "sha256": "247621f57939eb9c37a3ca929f54af737e967ed68d76f5c4be95d93ed7b6b27a",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
+      "sha256": "da53898b260d90d541d8b673935c760a1dc2dd6f6618216ae72bb0081702a233",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/types.ts": {
-      "sha256": "ffb050b6f9a5b42066c3acc36b27cd38d269f005b4e67337e9610937967c80b2",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
+      "sha256": "da6648a3f6e4122cc8552a00ec8a9d966775fd16362e6f91d45f8f53bb9287d6",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts": {
       "sha256": "ef6d49a54f2ed2b0f3486bfc3bf8aec7086c735304317bc86477c041c529ee2f",
@@ -4324,10 +4320,6 @@
       "sha256": "d64922c476d11b90555b8f23cab92ce1f4f83174cb750c125a96d8d4374744e2",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/http-dispatcher.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/core/mcp-servers.ts": {
-      "sha256": "148855a4417dd0133b9499407fb2d1621d72702a263fa00fbfcd2b83769bf05f",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/mcp-servers.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/core/messages.ts": {
       "sha256": "17d6969f59d76174ae084232124d81bb18f38d7a7997f78812c7de757c8568e9",
       "reason": "Preserve public pi-agent-core type imports; share message conversion with a default-compatible host metadata and object identity policy."
@@ -4335,10 +4327,6 @@
     "packages/pi-durable-coding/src/pi/core/model-config.ts": {
       "sha256": "792fe48456eae6175f121a4ef8bc15ebabccfd7f09691850eff2764f79f3a122",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/model-config.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/model-registry.ts": {
-      "sha256": "f4ced2d92df9097647aba7da3ae0bb273fa8089e966be15dba880db51d5dee0b",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/model-registry.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/model-resolver.ts": {
       "sha256": "aa4ac64cae58ba346f53a44f131ee26f35385eb36c43456bb51e92b471ce609f",
@@ -4389,8 +4377,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/runtime-credentials.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/sdk.ts": {
-      "sha256": "e72e412ff2a98f2577e72f737f17bbd330dc0c1ef50455028e8da22c8599c21d",
-      "reason": "Use the published Coding SDK settings implementation while preserving existing host policy adapters."
+      "sha256": "a150fbf0106fbe419825436a1f9a967d43f6c687ac714199c2f4f13f298c2b6d",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/core/session-cwd.ts": {
       "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
@@ -4545,32 +4533,32 @@
       "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/tool.ts": {
-      "sha256": "44115ec1a23ab3cc16dfd78b310b22fef140f94e81878ec2813f7d7f3993ba97",
-      "reason": "Use the published Coding SDK settings implementation while preserving existing host policy adapters."
+      "sha256": "ee5f494c4597b0d16eaa71104217e433d142eba1c9e56016c5efdfd6d66c23a8",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/worker.ts": {
       "sha256": "eff1f57d225d054ec40aa6753631426a426528f2ef769c4e82020757cb055911",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/worker.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/config.ts": {
-      "sha256": "950e308e9f507080eb2c25b1dd69e7917a573bd9f72911444f53f4e3cfd6a140",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/config.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "5b66196e62c4e1bbac93177d260b1601785b8edc5e14ae2e0113944834e8079d",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/index.ts": {
-      "sha256": "65f505cdebdb959b5315fabad611ea34995346bcc3f6228d17b0e1ef749c60db",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "7c19aa573dd606359c7ceb984d1c7f2a28c889be5e42956fb699243c464baba5",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/log.ts": {
       "sha256": "6e4d70a321a4dce8946b208276cee50bb8b3d9908894dc12af833754dde0e407",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/log.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/oauth.ts": {
-      "sha256": "bb656ec459dea727ba54b31809fbb5e07beaac10ac890a524b2b1ab871de5948",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/oauth.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "44bb6ec4a1a78205546ea63c1aa15e182a2f821d1dea2f867f81d47554879bff",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/resources.ts": {
-      "sha256": "0ac0b965b123d22ceeadd64b62b53d9cf81e072898d21ea81888e840b51e02b5",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/resources.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "6dc994a09d5b2a6d2520bc5e95aa89ea72afcde269b8e78ac10d59fd059df286",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/runtime.lazy.ts": {
       "sha256": "ff26d6c1aefacd0e3434f82a988b5d02bd7994163316c05c84671adda0467473",
@@ -4581,8 +4569,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/runtime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/tools.ts": {
-      "sha256": "cd3245946deb3cb3df2e7b521a07837525f886d281c5e4600527eb2aed95e2ac",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
+      "sha256": "6b0ea00b7edc32014b5565e8f7723d0f47b920dfaff56de972634b2e2b2309f3",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/ui.ts": {
       "sha256": "b40e5a64608d0f0ee09981a1460f174200e7a57a53a6a78e0955b8d0825108f6",
@@ -4597,8 +4585,8 @@
       "reason": "Delegate tokenization, scored BM25 and schema metadata to durable compatibility exports; retain native namespace and session activation."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "eace70e5bb36aff3811014b8fd22f92101328f84665f0007ecaeb5602663590c",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
+      "sha256": "b15345d8f164cf3c2d97540728a58d279ce417779e4deb6d58ed4cfec82706b2",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4909,8 +4897,8 @@
       "reason": "Exercise durable native coding behavior and isolated recovery through the native-recovery-worker.ts fixture."
     },
     "packages/pi-durable-coding/test/host-model-runtime.test.ts": {
-      "sha256": "022367c204354dbe552296435ac6d5db748c9c9db85b74ed9135c1b08623f90e",
-      "reason": "Verify shared host and Native model auth, runtime-only key overlays, persistent updates, metadata, failed deletion and cancellation with synthetic credentials."
+      "sha256": "7a976780bb0b929b45c749950021dcf81877336e39a0d210d2c00a413d971219",
+      "reason": "Verify SDK registry identity, host runtime binding and legacy structural runtime behavior after removing local registry implementations."
     },
     "packages/pi-durable-coding/test/host-resources.test.ts": {
       "sha256": "2dcaa2a9be1fdb328a3947191cb24c8a9343a4d354c6cd0f85b2ee48137a5d57",
@@ -4997,8 +4985,8 @@
       "reason": "Verify pinned OAuth flow, redirect validation, cancellation and rotation, while keeping explicit headers and provider credentials outside the OAuth store."
     },
     "packages/pi-durable-coding/src/mcp-oauth.ts": {
-      "sha256": "bf89991376f48ba3c14613eb648b37688356f0468d1baca8a312375eb5016eed",
-      "reason": "Expose pinned standalone MCP OAuth, storage backends and matching error identity without the upstream CLI or execution loop."
+      "sha256": "2f38647585a7c3d2c6dfed8ecfe07b45a8d090a935dd944f7fe78dbf46d1f9c2",
+      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts": {
       "sha256": "c92e904082949668fcc63de3ecec5a0a82499cff35e4e27514a68015d5596bed",
@@ -5169,24 +5157,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "87fe1f7ca0a93f368b5ef60b0cffa4cbe14ba9ae7569e4e119836e30bb9db964",
-      "reason": "Stop source traversal at public Coding SDK theme and keybinding modules and remove obsolete theme conversion and asset records."
+      "sha256": "fdaa130570b3341d304fa275d9eb69a94156edcfc85cc939745f347fbeca63bc",
+      "reason": "Stop source traversal at published model and MCP registry modules and remove their local implementations and obsolete MCP forward."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "ad3c21fe2b80a6382dfc61596b98f5a3c01e34b2b043802c1caff34c9e1b5541",
-      "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
+      "sha256": "839031082c3b97d6e072414c9d58c0217792000c8d1211a6117a72d47d7cae51",
+      "reason": "Verify SDK registry identity, host runtime binding and legacy structural runtime behavior after removing local registry implementations."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "b9608566a2ee5c47eaecb4b027f6fbde97fbc3502dca3af79086b5504d896fb2",
-      "reason": "Export existing theme and keybinding contracts, enable the existing full theme validator by default and locate host worker theme assets without copying SDK algorithms."
+      "sha256": "58942d3a93f360cc38825ee494bf95217dd8c82de8c968b66f23ed84c7f24f2e",
+      "reason": "Export the existing ModelRegistry and MCP module from the SDK root and make the registry constructor accept its public runtime contract without changing execution algorithms."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "7a1e9fae7c2491bc6d6395a6b33cb341ee533da53d3c548504c64ccd3296dfe4",
-      "reason": "Export existing theme and keybinding contracts, enable the existing full theme validator by default and locate host worker theme assets without copying SDK algorithms."
+      "sha256": "3846af0e6215be2065837f1d47e33a5682b99211f1a30b9301b18a5a9277e78f",
+      "reason": "Export the existing ModelRegistry and MCP module from the SDK root and make the registry constructor accept its public runtime contract without changing execution algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "f2551be3dfad683fd2b85c43d4bb1b7cbc6635d819ea9e089ea3dbcdf3900e0b",
-      "reason": "Export existing theme and keybinding contracts, enable the existing full theme validator by default and locate host worker theme assets without copying SDK algorithms."
+      "sha256": "716e0f4bd2b305b7a580c0ba21f7dcefc0e46fbec463b1b00a31ef28868ef206",
+      "reason": "Export the existing ModelRegistry and MCP module from the SDK root and make the registry constructor accept its public runtime contract without changing execution algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",

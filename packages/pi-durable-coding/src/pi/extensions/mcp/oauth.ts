@@ -35,7 +35,7 @@ import {
 import lockfile from "proper-lockfile";
 import { APP_NAME, getAgentDir } from "../../config.ts";
 import { type AuthStorageBackend, FileAuthStorageBackend } from "../../core/auth-storage.ts";
-import { isClientMetadataDocumentCallback, mcpNamespace } from "../../core/mcp-servers.ts";
+import { isClientMetadataDocumentCallback, mcpNamespace } from "@earendil-works/pi-coding-agent";
 
 const CALLBACK_HOST = "127.0.0.1";
 const CALLBACK_PATH = "/callback";

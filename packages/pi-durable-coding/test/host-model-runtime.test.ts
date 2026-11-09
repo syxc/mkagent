@@ -14,7 +14,7 @@ import {
   type ProviderAuth,
   type SimpleStreamOptions,
 } from '@earendil-works/pi-ai';
-import { ModelRegistry } from '../src/pi/core/model-registry.ts';
+import { ModelRegistry } from '@earendil-works/pi-coding-agent';
 import { ModelRuntime } from '../src/pi/core/model-runtime.ts';
 
 const authContext = { env: async () => undefined, fileExists: async () => false };

@@ -2,18 +2,18 @@
   "repository": "https://github.com/earendil-works/pi",
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "version": "1.5.0",
-  "patch": "settings-package-and-presentation-policy-v1",
-  "policy": "Export existing settings, package, keybinding and theme contracts. Preserve published algorithms; add host package policies, default full theme validation and installed worker theme asset lookup.",
+  "patch": "coding-sdk-host-boundaries-v1",
+  "policy": "Export existing settings, package, keybinding, theme and registry contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, default full theme validation and installed worker theme asset lookup.",
   "files": [
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "f0217d7f209402b7d6507c5d23dd8f001f3b9730d8fdd6296d3020ad4e86f2cb"
+      "sha256": "e2dba19ef9d03428ea70e731ede5f1b6582e0307c4894c4a09887ee0591f68f0"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "a4c9c4d663651992f1c4b886fb7b7fd23c5b59b161079a44d72df7f5f3280bd9"
+      "sha256": "81a12d965d4c2537fc1176ca3113b03b416e4e734099acd5defc6730f4fd8d3e"
     },
     {
       "path": "dist/core/settings-manager.js",
@@ -34,6 +34,11 @@
       "path": "dist/core/package-manager.d.ts",
       "originalSha256": "ffc17233a0a119c344aa3f438afd9af45e450b3983647e84446e6ebb73110631",
       "sha256": "dd09ce4b684dba4c5ddc764339a0935c670305dfdf1e3566ab5041e1ea5a1634"
+    },
+    {
+      "path": "dist/core/model-registry.d.ts",
+      "originalSha256": "ef3a3fb74b9b15bd7ca58c187367382116db6f24ea7fbda2b56898c849ef9aad",
+      "sha256": "0188e293faf2c8d5facf0908a0b4393d0b57f1f6d9658668d7b8b2f2f8cad8fe"
     },
     {
       "path": "dist/modes/interactive/theme/theme.js",

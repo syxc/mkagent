@@ -114,9 +114,9 @@ import {
 	wrapRegisteredTools,
 } from "./extensions/index.ts";
 import { type BeforeAgentStartTrigger, emitSessionShutdownEvent } from "./extensions/runner.ts";
-import { createToolNameMatcher, isMcpToolName } from "./mcp-servers.ts";
+import { createToolNameMatcher, isMcpToolName } from "@earendil-works/pi-coding-agent";
 import { type BashExecutionMessage, type CustomMessage, convertToLlm } from "./messages.ts";
-import { ModelRegistry } from "./model-registry.ts";
+import { ModelRegistry } from "@earendil-works/pi-coding-agent";
 import type { ModelRuntime } from "./model-runtime.ts";
 import { NestedToolCallRunner } from "./nested-tool-calls.ts";
 import { expandPromptTemplate, type PromptTemplate } from "./prompt-templates.ts";

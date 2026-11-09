@@ -26,6 +26,58 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Model and MCP registry SDK boundary after 05d63dc
+
+ModelRegistry and the complete MCP server module now use the published Coding
+SDK. The root patch exports both existing modules. A declaration-only change
+accepts Pick<ModelRuntime, keyof ModelRuntime> in the registry constructor, which
+uses public runtime operations. The registry JavaScript is unchanged. Before
+deletion, full execution-token comparisons match all 809 tokens of ModelRegistry
+and 1,675 tokens of the MCP module after normalization of module extensions.
+
+The two local implementations, 244 and 358 lines, and the unused two-line MCP
+forward are deleted. The legacy facade keeps its structural constructor and
+extends the SDK class. It does not copy registry methods. Production consumers,
+OAuth types and source traversal now use the SDK boundary. This replaces the
+facades only; the host-bound ModelRuntime, resource loader and session migration
+remain open.
+
+The affected ten-file regression set passes 66 tests with 454 assertions.
+Coding declarations, server typecheck and 26 worker bundle tests with 103
+assertions pass. Complete source checks cover 175 runtime TypeScript files,
+including 171 under src/pi and four facades, four assets, 12 auxiliary sources
+and 22 forwards. An initial generator command uses unsupported --write and
+fails before generation; the default write mode then succeeds. Pristine Coding
+patch rebuild check also passes. The Coding patch has 12 physical outputs; the
+only added file is the registry constructor declaration. Core remains four and
+durable remains 30, for a total of 46.
+
+A fresh hoisted frozen install uses task HOME/cache, the public registry and
+disabled scripts. It installs 1,421 packages for 11 workspaces and leaves the
+lockfile unchanged. All 46 patched outputs match the tested installation and
+the 12 Coding outputs match CODING-PATCH.json. From the fresh Coding workspace,
+the SDK reports version 1.5.0. Its ModelRegistry consumes the existing host-bound
+ModelRuntime, follows host replacement and resolves synthetic anonymous auth.
+MCP probes check config validation, alias normalization, namespace, replacement,
+owner-only unregister and cloned list configuration. No model request, MCP
+process or external connection is started.
+
+The fixed Craft v0.15.6 source audit passes for 2,167 files after 27 source
+records are updated or deleted, including the three removed files. Independent
+review against 05d63dc finds no confirmed correctness or compatibility defect.
+It checks 21 type and runtime exports, including 13 identical runtime bindings,
+positive and negative constructor type probes, legacy declarations, MCP owner
+and namespace protection, config copies and notifications. It also checks the
+source traversal cutoff, deleted files and absence of copied implementations in
+the patch. The review uses the existing full execution-token comparison record.
+
+The review does not repeat the complete tests, builds or patch rebuild checks.
+An additional repository-wide residual search times out and is stopped; the
+review conclusion covers the listed targeted checks. These checks do not
+validate the future production SDK session's persistence, atomic input
+admission, cancellation or cold recovery. Task receipts are in the registry-sdk
+task directory.
+
 ## Theme and keybinding SDK boundary after e20bb1a
 
 Theme and KeybindingsManager now use the public Coding SDK. The patch exports

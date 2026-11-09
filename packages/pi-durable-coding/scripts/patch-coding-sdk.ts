@@ -33,6 +33,8 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/settings-manager.${extension}";`,
     `export { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";`,
     `export * from "./core/package-manager.${extension}";`,
+    `export * from "./core/model-registry.${extension}";`,
+    `export * from "./core/mcp-servers.${extension}";`,
     `export * from "./core/keybindings.${extension}";`,
     `export * from "./modes/interactive/theme/theme.${extension}";`,
     `export { getThemesDir } from "./config.${extension}";`,
@@ -53,6 +55,10 @@ for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/package-manager.${suffix}`;
   outputs.set(path, codingPackagePolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
 }
+// Registry implementations only call public runtime operations; host ownership stays structural.
+const registryPath = 'dist/core/model-registry.d.ts';
+outputs.set(registryPath, replace(readFileSync(join(baseline, registryPath), 'utf8'),
+  'constructor(runtime: ModelRuntime);', 'constructor(runtime: Pick<ModelRuntime, keyof ModelRuntime>);'));
 const themeValidationComment = ` * Install full theme validation. Without it, documents are accepted as-is, which is what built-in
  * themes already do: validating user-authored JSON needs typebox, and a presentation that only uses
  * built-in themes should not pay ~17 MB of module graph for it.`;
@@ -101,8 +107,8 @@ const manifest = JSON.stringify({
   repository: 'https://github.com/earendil-works/pi',
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
-  patch: 'settings-package-and-presentation-policy-v1',
-  policy: 'Export existing settings, package, keybinding and theme contracts. Preserve published algorithms; add host package policies, default full theme validation and installed worker theme asset lookup.',
+  patch: 'coding-sdk-host-boundaries-v1',
+  policy: 'Export existing settings, package, keybinding, theme and registry contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, default full theme validation and installed worker theme asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

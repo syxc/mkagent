@@ -37,7 +37,7 @@ import {
 	type McpServerConfig,
 	mcpNamespace,
 	validateMcpServerConfig,
-} from "../../core/mcp-servers.ts";
+} from "@earendil-works/pi-coding-agent";
 import { stripBom } from "../../utils/text.ts";
 
 export type {
@@ -46,8 +46,8 @@ export type {
 	McpOAuthConfig,
 	McpServerConfig,
 	McpStdioServerConfig,
-} from "../../core/mcp-servers.ts";
-export { getMcpToolExposure } from "../../core/mcp-servers.ts";
+} from "@earendil-works/pi-coding-agent";
+export { getMcpToolExposure } from "@earendil-works/pi-coding-agent";
 
 export interface McpServerEntry {
 	name: string;

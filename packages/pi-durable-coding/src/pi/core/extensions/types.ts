@@ -65,9 +65,9 @@ import type { EventBus } from "@earendil-works/pi-coding-agent";
 import type { ExecOptions, ExecResult } from "../exec.ts";
 import type { ReadonlyFooterDataProvider } from "../footer-data-provider.ts";
 import type { KeybindingsManager } from "@earendil-works/pi-coding-agent";
-import type { McpServerConfig, McpServerRegistry, RegisteredMcpServer } from "../mcp-servers.ts";
+import type { McpServerConfig, McpServerRegistry, RegisteredMcpServer } from "@earendil-works/pi-coding-agent";
 import type { CustomMessage } from "../messages.ts";
-import type { ModelRegistry } from "../model-registry.ts";
+import type { ModelRegistry } from "@earendil-works/pi-coding-agent";
 import type { ScopedModel } from "../model-resolver.ts";
 import type {
 	BranchSummaryEntry,

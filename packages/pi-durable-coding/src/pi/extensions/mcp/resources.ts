@@ -26,7 +26,7 @@ import {
 	LIST_MCP_RESOURCE_TEMPLATES_TOOL,
 	LIST_MCP_RESOURCES_TOOL,
 	READ_MCP_RESOURCE_TOOL,
-} from "../../core/mcp-servers.ts";
+} from "@earendil-works/pi-coding-agent";
 import type { McpExposure } from "./config.ts";
 import { limitMcpContent, type McpToolDetails, toModelContent, toToolExposure } from "./tools.ts";
 

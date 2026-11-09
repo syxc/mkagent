@@ -15,7 +15,7 @@ import { type Theme, theme } from "@earendil-works/pi-coding-agent";
 import type { CacheWarmingAction } from "../cache-warmer.ts";
 import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
 import type { KeybindingsConfig } from "@earendil-works/pi-coding-agent";
-import type { ModelRegistry } from "../model-registry.ts";
+import type { ModelRegistry } from "@earendil-works/pi-coding-agent";
 import type { ScopedModel } from "../model-resolver.ts";
 import type { SessionManager } from "../session-manager.ts";
 import {

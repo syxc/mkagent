@@ -1,14 +1,16 @@
-# Content SHA-256: f158243b726cca51e779045dc03271b036a1cc830bb72ee61e25001f61cf1360
+# Content SHA-256: bfad59070421bf44e0282b8623af535dda54ab7589633695378b6a6a15dd4acf
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,10 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,12 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
 +export * from "./core/settings-manager.js";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.js";
 +export * from "./core/package-manager.js";
++export * from "./core/model-registry.js";
++export * from "./core/mcp-servers.js";
 +export * from "./core/keybindings.js";
 +export * from "./modes/interactive/theme/theme.js";
 +export { getThemesDir } from "./config.js";
@@ -26,13 +28,15 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,10 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,12 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
 +export * from "./core/settings-manager.ts";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.ts";
 +export * from "./core/package-manager.ts";
++export * from "./core/model-registry.ts";
++export * from "./core/mcp-servers.ts";
 +export * from "./core/keybindings.ts";
 +export * from "./modes/interactive/theme/theme.ts";
 +export { getThemesDir } from "./config.ts";
@@ -376,6 +380,18 @@ diff --git a/dist/core/package-manager.d.ts b/dist/core/package-manager.d.ts
      private runWithConcurrency;
      /**
       * Get a unique identity for a package, ignoring version/ref.
+diff --git a/dist/core/model-registry.d.ts b/dist/core/model-registry.d.ts
+--- a/dist/core/model-registry.d.ts
++++ b/dist/core/model-registry.d.ts
+@@ -20,7 +20,7 @@ export { clearApiKeyCache } from "./provider-composer.ts";
+  */
+ export declare class ModelRegistry {
+     private readonly runtime;
+-    constructor(runtime: ModelRuntime);
++    constructor(runtime: Pick<ModelRuntime, keyof ModelRuntime>);
+     /** Reload models.json asynchronously. Await before making synchronous registry reads. */
+     refresh(options?: ModelsRefreshOptions): Promise<ModelsRefreshResult>;
+     getError(): string | undefined;
 diff --git a/dist/modes/interactive/theme/theme.js b/dist/modes/interactive/theme/theme.js
 --- a/dist/modes/interactive/theme/theme.js
 +++ b/dist/modes/interactive/theme/theme.js

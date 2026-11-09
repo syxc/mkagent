@@ -7,6 +7,8 @@ export const CODING_SDK_MODULES = new Set([
   'core/diagnostics.ts',
   'core/event-bus.ts',
   'core/keybindings.ts',
+  'core/mcp-servers.ts',
+  'core/model-registry.ts',
   'core/package-manager.ts',
   'core/settings-manager.ts',
   'core/settings-defaults.ts',

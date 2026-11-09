@@ -156,10 +156,6 @@
       "implementation": "src/pi/core/timings.ts"
     },
     {
-      "target": "src/upstream/core/mcp-servers.ts",
-      "implementation": "src/pi/core/mcp-servers.ts"
-    },
-    {
       "target": "src/upstream/core/skills.ts",
       "implementation": "src/pi/core/skills.ts",
       "changes": [

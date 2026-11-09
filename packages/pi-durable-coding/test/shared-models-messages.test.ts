@@ -1,5 +1,4 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import type { Api, Model } from '@earendil-works/pi-ai';
 import * as native from '../src/pi/core/messages.ts';
 import * as legacy from '../src/upstream/core/messages.js';
@@ -105,14 +104,8 @@ describe('shared message conversion', () => {
 });
 
 describe('shared ModelRegistry facade', () => {
-  test('keeps the runtime entry independent of ModelRuntime before importing it', async () => {
-    const source = readFileSync(new URL('../src/pi/core/model-registry.ts', import.meta.url), 'utf8');
-    // Transpile one source file: type-only imports must never become runtime dependencies.
-    const transpiler = new Bun.Transpiler({ loader: 'ts' });
-    const javascript = transpiler.transformSync(source);
-    expect(new Bun.Transpiler({ loader: 'js' }).scanImports(javascript).map(item => item.path))
-      .toEqual(['./provider-composer.ts']);
-    const { ModelRegistry: NativeRegistry } = await import('../src/pi/core/model-registry.ts');
+  test('uses the published facade with the legacy structural runtime', async () => {
+    const { ModelRegistry: NativeRegistry } = await import('@earendil-works/pi-coding-agent');
     const { ModelRegistry: LegacyRegistry } = await import('../src/upstream/core/model-registry.js');
     const model = fixtureModel;
     const models = [model];
