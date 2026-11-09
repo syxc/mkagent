@@ -13,7 +13,6 @@ import { portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSes
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludePrivateHostComponents, excludeRunModeEntries } from './shared-helper-port.ts';
 import { portCompatRuntime } from './compat-runtime-port.ts';
-import { portThemeRuntime } from './theme-runtime-port.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const checkout = process.argv[2];
@@ -44,7 +43,7 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
 }
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
 const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
-const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'utils/highlight-js.d.ts'];
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();
@@ -101,11 +100,6 @@ while (queue.length) {
       body = body.replace(before, after);
     }
     changes.add('require-explicit-rpc-cli-entry');
-  }
-  const theme = portThemeRuntime(path, body);
-  if (theme) {
-    body = theme.body;
-    changes.add(theme.change);
   }
   const parsed = ts.createSourceFile(path, body, ts.ScriptTarget.Latest, true);
   const replacements: Array<{ start: number; end: number; body: string }> = [];
@@ -345,7 +339,7 @@ function assets(directory: string) {
     }
   }
 }
-for (const directory of ['modes/interactive/theme', 'core/export-html']) assets(directory);
+assets('core/export-html');
 // Reuse the public core state facade and protocol with a durable execution backend.
 // The native agent-loop implementation is deliberately outside this source closure.
 for (const [path, target] of [

@@ -25,10 +25,18 @@ const replace = (source: string, before: string, after: string) => {
 const outputs = new Map<string, string>();
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/index.${suffix}`;
-  const original = readFileSync(join(baseline, path), 'utf8');
+  let original = readFileSync(join(baseline, path), 'utf8');
+  if (suffix === 'd.ts') original = replace(original, ' KeybindingsManager,', '');
   if (original.includes('export * from "./core/settings-manager.')) throw new Error('Expected unpatched SDK');
   const extension = suffix === 'js' ? 'js' : 'ts';
-  const exports = `export * from "./core/settings-manager.${extension}";\nexport { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";\nexport * from "./core/package-manager.${extension}";\n`;
+  const exports = [
+    `export * from "./core/settings-manager.${extension}";`,
+    `export { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";`,
+    `export * from "./core/package-manager.${extension}";`,
+    `export * from "./core/keybindings.${extension}";`,
+    `export * from "./modes/interactive/theme/theme.${extension}";`,
+    `export { getThemesDir } from "./config.${extension}";`,
+  ].join('\n') + '\n';
   const marker = '//# sourceMappingURL=';
   const position = original.indexOf(marker);
   if (position < 0) throw new Error('Published index source map marker changed');
@@ -45,6 +53,37 @@ for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/package-manager.${suffix}`;
   outputs.set(path, codingPackagePolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
 }
+const themeValidationComment = ` * Install full theme validation. Without it, documents are accepted as-is, which is what built-in
+ * themes already do: validating user-authored JSON needs typebox, and a presentation that only uses
+ * built-in themes should not pay ~17 MB of module graph for it.`;
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/modes/interactive/theme/theme.${suffix}`;
+  let body = replace(readFileSync(join(baseline, path), 'utf8'), themeValidationComment,
+    ' * Replace the default full theme validator. File loading validates without CLI initialization.');
+  if (suffix === 'js') {
+    body = replace(body, 'let themeJsonValidator;',
+      'let themeJsonValidator = validateThemeJson;');
+    body = 'import { validateThemeJson } from "./theme-schema.js";\n' + body;
+  }
+  outputs.set(path, body);
+}
+const schemaComment = ` * Theme JSON validation, kept out of \`theme.ts\` on purpose.
+ *
+ * Validating user-authored theme files needs typebox, which costs ~17 MB of module graph to import.
+ * Palette lookup does not, so a presentation that only uses built-in themes should never pay for it.
+ * \`main.ts\` installs this validator before runtime resource loading; other consumers can opt in with
+ * \`setThemeJsonValidator()\`. Built-in themes do not need validation.`;
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/modes/interactive/theme/theme-schema.${suffix}`;
+  outputs.set(path, replace(readFileSync(join(baseline, path), 'utf8'), schemaComment,
+    ' * Full theme JSON validation. The SDK theme module enables it by default.\n * Hosts can replace it with setThemeJsonValidator().'));
+}
+const configPath = 'dist/config.js';
+outputs.set(configPath, replace(readFileSync(join(baseline, configPath), 'utf8'),
+  'export function getThemesDir() {', `export function getThemesDir() {
+    // The host distributes SDK theme assets beside its worker bundle.
+    const bundled = join(isBunBinary ? dirname(process.execPath) : __dirname, "coding-assets", "theme");
+    if (existsSync(bundled)) return bundled;`));
 const staging = mkdtempSync(join(tmpdir(), 'coding-sdk-exports-'));
 let patch = '';
 for (const [path, output] of outputs) {
@@ -62,8 +101,8 @@ const manifest = JSON.stringify({
   repository: 'https://github.com/earendil-works/pi',
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
-  patch: 'settings-exports-and-package-policy-v1',
-  policy: 'Export existing settings and package contracts. Preserve published settings algorithms and package algorithms; add only host discovery, project directory, update scope, protocol output and installer drain options.',
+  patch: 'settings-package-and-presentation-policy-v1',
+  policy: 'Export existing settings, package, keybinding and theme contracts. Preserve published algorithms; add host package policies, default full theme validation and installed worker theme asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

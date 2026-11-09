@@ -1,5 +1,5 @@
 import type { Component } from "@earendil-works/pi-tui";
-import { theme } from "../theme/theme.ts";
+import { theme } from "@earendil-works/pi-coding-agent";
 
 /**
  * Dynamic border component that adjusts to viewport width.

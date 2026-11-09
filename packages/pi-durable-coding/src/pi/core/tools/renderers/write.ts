@@ -13,7 +13,7 @@ import {
 	getLanguageFromPath,
 	highlightCode,
 	type Theme,
-} from "../../../modes/interactive/theme/theme.ts";
+} from "@earendil-works/pi-coding-agent";
 import type { ToolDefinition, ToolRenderResultOptions } from "../../extensions/types.ts";
 import { normalizeDisplayText, renderToolPath, replaceTabs, str } from "../render-utils.ts";
 

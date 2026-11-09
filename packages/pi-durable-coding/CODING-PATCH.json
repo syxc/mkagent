@@ -2,18 +2,18 @@
   "repository": "https://github.com/earendil-works/pi",
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "version": "1.5.0",
-  "patch": "settings-exports-and-package-policy-v1",
-  "policy": "Export existing settings and package contracts. Preserve published settings algorithms and package algorithms; add only host discovery, project directory, update scope, protocol output and installer drain options.",
+  "patch": "settings-package-and-presentation-policy-v1",
+  "policy": "Export existing settings, package, keybinding and theme contracts. Preserve published algorithms; add host package policies, default full theme validation and installed worker theme asset lookup.",
   "files": [
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "e5056db78cb281c6a1c335863e26e490b1841e72c61e2378a6d2582dacf746b2"
+      "sha256": "f0217d7f209402b7d6507c5d23dd8f001f3b9730d8fdd6296d3020ad4e86f2cb"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "bffe427bb50ec20331b21e9d08fa2c8cacbedac5f03df65a924483edadfc5ee3"
+      "sha256": "a4c9c4d663651992f1c4b886fb7b7fd23c5b59b161079a44d72df7f5f3280bd9"
     },
     {
       "path": "dist/core/settings-manager.js",
@@ -34,6 +34,31 @@
       "path": "dist/core/package-manager.d.ts",
       "originalSha256": "ffc17233a0a119c344aa3f438afd9af45e450b3983647e84446e6ebb73110631",
       "sha256": "dd09ce4b684dba4c5ddc764339a0935c670305dfdf1e3566ab5041e1ea5a1634"
+    },
+    {
+      "path": "dist/modes/interactive/theme/theme.js",
+      "originalSha256": "5fb6f0c2fd857cb2459ec8c28c24da458cdf59a8a2355a931cad459af91682c8",
+      "sha256": "a3020de460a4e05dca70d7be6afd44ab9cf14ef626affe195b655a7a0a038e3b"
+    },
+    {
+      "path": "dist/modes/interactive/theme/theme.d.ts",
+      "originalSha256": "0edde18d73b23df689cbc7d1e404841a0a62e50cd70de970e478891b91122edf",
+      "sha256": "6ec5037c94d56cdcf152b220559a9269f0d757093e1a0af017b36373c9de19b5"
+    },
+    {
+      "path": "dist/modes/interactive/theme/theme-schema.js",
+      "originalSha256": "ce89ff25f82a2b840fe5d0bd3efa6870a9efb4ccfd2911468358ae401904ef7a",
+      "sha256": "8ecce2bd5619fe44b65e6cade901060c5b0181fd20e5a947894e93c128db89ef"
+    },
+    {
+      "path": "dist/modes/interactive/theme/theme-schema.d.ts",
+      "originalSha256": "2cfbf6e460669c3beef15c832b962ad2dbdfc161bb3af97d2c2c1caf91a299d0",
+      "sha256": "23b21f2b31d43b5c869461c7f20580423e0e4ed703845c470e58268c3f6cfc12"
+    },
+    {
+      "path": "dist/config.js",
+      "originalSha256": "8d84a58d53f1bd4360188f787b56b16444c20e00452d075cdc77056054387926",
+      "sha256": "3839cb736b166be36876fe88038771cb883f69d3bef52f7f49c86440312642e1"
     }
   ]
 }

@@ -31,7 +31,7 @@ const legacyRunner = await import('../src/upstream/core/extensions/runner.js');
 const { createExtensionRuntime } = await import('../src/upstream/core/extensions/loader.js');
 const nativePrompt = await import('../src/pi/core/system-prompt.ts');
 const hostPrompt = await import('../src/host-system-prompt.ts');
-const { theme: nativeTheme } = await import('../src/pi/modes/interactive/theme/theme.ts');
+const { theme: nativeTheme } = await import('@earendil-works/pi-coding-agent');
 const { theme: headlessTheme } = await import('../src/headless-ui.ts');
 
 const temporary: string[] = [];

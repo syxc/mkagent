@@ -56,7 +56,7 @@ import {
 	resetApiProviders,
 	streamSimple,
 } from "@earendil-works/pi-ai/compat";
-import { getThemeByName, theme } from "../modes/interactive/theme/theme.ts";
+import { getThemeByName, theme } from "@earendil-works/pi-coding-agent";
 import { stripFrontmatter } from "@earendil-works/pi-coding-agent";
 import { processImage } from "../utils/image-process.ts";
 import { sleep } from "../utils/sleep.ts";

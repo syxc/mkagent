@@ -1,6 +1,7 @@
 import { copyFileSync, cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { getThemesDir } from '@earendil-works/pi-coding-agent';
 import { readHtmlVendorSource } from '../../pi-durable-coding/src/compat/html-assets.ts';
 
 const packageDir = dirname(import.meta.dir);
@@ -28,10 +29,11 @@ copyFileSync(durableRequire.resolve('@silvia-odwyer/photon/photon_rs_bg.wasm'), 
 rmSync(join(outdir, 'coding_photon_rs_bg.wasm'), { force: true });
 copyFileSync(join(packageDir, '..', 'pi-durable-coding', 'LICENSE.pi'), join(outdir, 'LICENSE.pi'));
 for (const [source, target] of [
-  ['modes/interactive/theme', 'theme'], ['core/export-html', 'export-html'],
+  [getThemesDir(), 'theme'],
+  [join(packageDir, '..', 'pi-durable-coding', 'src', 'pi', 'core/export-html'), 'export-html'],
 ]) {
-  cpSync(join(packageDir, '..', 'pi-durable-coding', 'src', 'pi', source), join(outdir, 'coding-assets', target), {
-    recursive: true, filter: path => !path.endsWith('.ts'),
+  cpSync(source, join(outdir, 'coding-assets', target), {
+    recursive: true, filter: path => target === 'theme' ? !/\.[cm]?[jt]s(?:\.map)?$/.test(path) : !path.endsWith('.ts'),
   });
 }
 for (const name of ['marked.min.js', 'highlight.min.js'] as const) {

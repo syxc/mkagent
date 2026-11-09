@@ -3,7 +3,7 @@
  */
 
 import type { Component, TUI } from "@earendil-works/pi-tui";
-import { theme } from "../theme/theme.ts";
+import { theme } from "@earendil-works/pi-coding-agent";
 
 // XBM image: 31x36 pixels, LSB first, 1=background, 0=foreground
 export const ARMIN_WIDTH = 31;

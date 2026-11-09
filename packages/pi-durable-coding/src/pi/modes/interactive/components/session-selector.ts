@@ -12,10 +12,10 @@ import {
 	truncateToWidth,
 	visibleWidth,
 } from "@earendil-works/pi-tui";
-import { KeybindingsManager } from "../../../core/keybindings.ts";
+import { KeybindingsManager } from "@earendil-works/pi-coding-agent";
 import type { SessionInfo, SessionListProgress } from "../../../core/session-manager.ts";
 import { canonicalizePath, getPathComparisonKey, shortenHomePath } from "../../../utils/paths.ts";
-import { theme } from "../theme/theme.ts";
+import { theme } from "@earendil-works/pi-coding-agent";
 import { DynamicBorder } from "./dynamic-border.ts";
 import { keyHint, keyText } from "./keybinding-hints.ts";
 import { filterAndSortSessions, hasSessionName, type NameFilter, type SortMode } from "./session-selector-search.ts";

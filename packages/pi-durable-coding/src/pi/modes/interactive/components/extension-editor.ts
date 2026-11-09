@@ -13,9 +13,9 @@ import {
 	Text,
 	type TUI,
 } from "@earendil-works/pi-tui";
-import type { KeybindingsManager } from "../../../core/keybindings.ts";
+import type { KeybindingsManager } from "@earendil-works/pi-coding-agent";
 import { editInExternalEditor } from "../external-editor.ts";
-import { getEditorTheme, theme } from "../theme/theme.ts";
+import { getEditorTheme, theme } from "@earendil-works/pi-coding-agent";
 import { DynamicBorder } from "./dynamic-border.ts";
 import { keyHint } from "./keybinding-hints.ts";
 

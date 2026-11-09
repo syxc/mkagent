@@ -31,7 +31,7 @@ import {
 	SYSTEM_THEME_NAME,
 	type TerminalTheme,
 	theme,
-} from "../theme/theme.ts";
+} from "@earendil-works/pi-coding-agent";
 import { DynamicBorder } from "./dynamic-border.ts";
 import { keyDisplayText } from "./keybinding-hints.ts";
 import { SelectSubmenu, SteppedSubmenu, type SteppedSubmenuStep } from "./settings-submenu.ts";

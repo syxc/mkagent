@@ -11,7 +11,7 @@ import { AgentSession } from '../src/pi/core/agent-session.ts';
 import { ModelRuntime } from '../src/pi/core/model-runtime.ts';
 import { DefaultResourceLoader } from '../src/pi/core/resource-loader.ts';
 import { SessionManager } from '../src/pi/core/session-manager.ts';
-import { SettingsManager, type SettingsScope } from "@earendil-works/pi-coding-agent";
+import { getThemesDir, SettingsManager, type SettingsScope } from "@earendil-works/pi-coding-agent";
 
 let root: string;
 let cwd: string;
@@ -27,7 +27,7 @@ function skill(path: string, name: string) {
 }
 
 function theme(path: string, name: string) {
-  const body = JSON.parse(fs.readFileSync(new URL('../src/pi/modes/interactive/theme/dark.json', import.meta.url), 'utf8'));
+  const body = JSON.parse(fs.readFileSync(join(getThemesDir(), 'dark.json'), 'utf8'));
   put(path, JSON.stringify({ ...body, name }));
 }
 

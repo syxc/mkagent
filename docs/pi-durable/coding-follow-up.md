@@ -64,7 +64,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-tui 的终端组件、pi-mcp 的协议、pi-codemode 的沙箱按实际公开接口复用。当前部分 core 操作及 Agent 注入依赖四文件补丁，durable 也有仓内补丁；两者均须保留例外说明，不记成无补丁的 SDK 能力。
 
-历史辅助函数、图像和 codemode 的共享结果见[验证记录](coding-validation.md)。`137d6de` 后的设置切片改用 Coding SDK 的 SettingsManager、storage、schema、defaults 和 merge，实现正文由发布包提供；四文件补丁只补根导出和声明。三份本地实现及旧深合并导出转换已删除，宿主信任、profile 覆盖和压缩策略仍由外层适配。`2c2b98a` 后的包管理切片改用公开 DefaultPackageManager，删除 2,940 行本地包管理器及退出闭包的 output guard、Git helper 和两份旧转发，移除 semver、hosted-git-info 及后者类型的直接依赖。SDK 仅增加宿主策略、项目目录、更新作用域、stderr 输出和已启动安装任务排空接点；包解析与安装算法仍由发布包提供。当前 runtime 为 186 份 TypeScript、6 项资源，其中 src/pi 为 182 份；辅助来源为 12 项、共享入口为 23 个。focused 51 项、两项类型检查、worker bundle 26 项、完整来源检查和全新 hoisted 冻结安装通过，独立复核无确定缺陷，主链删除继续开放。Marked 与 Highlight.js 的 browser 资源替换是第三方资源去重，不属于 Pi 官方 SDK 复用的验收证据，也不作为下一批主线。
+历史辅助函数、图像和 codemode 的共享结果见[验证记录](coding-validation.md)。`137d6de` 后的设置切片改用 Coding SDK 的 SettingsManager、storage、schema、defaults 和 merge，实现正文由发布包提供；四文件补丁只补根导出和声明。三份本地实现及旧深合并导出转换已删除，宿主信任、profile 覆盖和压缩策略仍由外层适配。`2c2b98a` 后的包管理切片改用公开 DefaultPackageManager，删除 2,940 行本地包管理器及退出闭包的 output guard、Git helper 和两份旧转发，移除 semver、hosted-git-info 及后者类型的直接依赖。SDK 仅增加宿主策略、项目目录、更新作用域、stderr 输出和已启动安装任务排空接点；包解析与安装算法仍由发布包提供。包管理切片时 runtime 为 186 份 TypeScript、6 项资源，其中 src/pi 为 182 份；focused 51 项、两项类型检查、worker bundle 26 项、完整来源检查和全新 hoisted 冻结安装通过，独立复核无确定缺陷。`e20bb1a` 后的主题与快捷键切片改用 SDK Theme、KeybindingsManager 和主题资源，删除九份源码、两份 JSON 和旧转换脚本，移除 highlight.js 直接依赖。SDK 只补现有导出、默认完整校验和 worker 主题路径，不复制算法。当前 runtime 为 177 份 TypeScript、4 项资源，其中 src/pi 为 173 份；辅助来源仍为 12 项、共享入口为 23 个。focused 72 项、两项类型检查、worker bundle 26 项、完整来源检查、全新 hoisted 安装的 45 份补丁核验及固定 Craft 审计通过；独立复核未发现确定的功能缺陷，schema 模块的旧注释已同步。资源加载器、模型及会话主链继续开放。Marked 与 Highlight.js 的 browser 资源替换是第三方资源去重，不属于 Pi 官方 SDK 复用的验收证据，也不作为下一批主线。
 
 完成条件：确认可由官方实现承担的职责已经交还 SDK；调用方和功能验证同步迁移，没有为了引用包而在补丁里复制另一套实现。
 
@@ -101,7 +101,7 @@ SDK 入口已先排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源
 
 继续核对确认 args 模块中的 `printHelp`、`normalizeSessionName` 和三个专用导入仅服务于已移除的启动器，现已删除；公开 `parseArgs` 和模型解析的 thinking 校验保留。71 项 helper、模型及插件回归、参数和 thinking 的实际调用检查、声明构建及单文件来源复现通过，三个改动文件的来源摘要已同步。这是启动器残留清理，不计为官方 SDK 替换；该切片时点的清单为 `224/7`，后续三种模式排除的状态见前文。
 
-已有保留对照用于定位 BOM、输出、取消、图像、压缩、模型和 renderer 的具体契约。主题表已正常读取并核实：49 项前景、7 项背景和 5 项可选 fallback 仍供公开 Theme、schema 和 HTML 使用，独立 Pi SDK 没有完整替代。资源入口现直接调用既有完整 validator，修复未安装 CLI validator 时接受不完整主题的缺口。无调用的终端回报状态和求解器已删除，system-theme 从 655 行收窄至 123 行，保留 indexed 配色、dim、COLORFGBG 和自定义主题。该删除不记作 SDK 新增覆盖。
+已有保留对照用于定位 BOM、输出、取消、图像、压缩、模型和 renderer 的具体契约。此前仅评估独立 Pi 包时，主题表已正常读取并核实：49 项前景、7 项背景和 5 项可选 fallback 仍供公开 Theme、schema 和 HTML 使用。当时保留的完整校验、indexed 配色、dim、COLORFGBG 和自定义主题契约，现由完整 Coding SDK 承接；本地主题、schema、tokens、system-theme 和高亮实现均已删除。历史终端求解器收窄及其验证见验证记录，不再构成保留本地主题源码的理由。
 
 完整生成另确认 `core/tools/renderers/index.ts` 不在实际闭包中，且无保留调用或根导出，现删除该孤立 barrel。生成器的完整 check 会拒绝闭包外残留 TypeScript；定向 check 仍只核对指定文件。主题静态独立复核未发现确定的新缺陷，运行结果和复核范围见验证记录。剩余适配按维护清单中的能力和具体 API 缺口判断，不从文件数量反推必要性。
 

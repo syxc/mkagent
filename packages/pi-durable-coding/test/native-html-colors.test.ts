@@ -9,7 +9,7 @@ import { ansiLinesToHtml, ansiToHtml } from '../src/pi/core/export-html/ansi-to-
 import { exportSessionToHtml } from '../src/pi/core/export-html/index.ts';
 import { createToolHtmlRenderer } from '../src/pi/core/export-html/tool-renderer.ts';
 import { SessionManager } from '../src/pi/core/session-manager.ts';
-import { getThemeByName, loadThemeFromPath, setRegisteredThemes } from '../src/pi/modes/interactive/theme/theme.ts';
+import { getThemeByName, getThemesDir, loadThemeFromPath, setRegisteredThemes } from '@earendil-works/pi-coding-agent';
 
 const indices = [...Array.from({ length: 256 }, (_, index) => String(index)), '256', '65535', '9'.repeat(40), '9'.repeat(400)];
 const samples = indices.flatMap(index => [38, 48].map(channel => `before\x1b[1;${channel};5;${index}m<&"'\x1b[0mafter`));
@@ -103,7 +103,7 @@ test('session HTML export preserves custom tool call and result colors', async (
       resultHtmlExpanded: '<div class="ansi-line"><span style="color:#ff0000">result</span></div>',
     });
 
-    const document = JSON.parse(readFileSync(new URL('../src/pi/modes/interactive/theme/dark.json', import.meta.url), 'utf8'));
+    const document = JSON.parse(readFileSync(join(getThemesDir(), 'dark.json'), 'utf8'));
     document.name = 'fixture';
     document.appearance = 'light';
     document.vars = { ...document.vars, red: 196, alias: 'red', panel: '#123456' };

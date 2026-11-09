@@ -232,7 +232,6 @@
         "cross-spawn": "7.0.6",
         "diff": "8.0.4",
         "fflate": "0.8.2",
-        "highlight.js": "10.7.3",
         "ignore": "7.0.8",
         "jiti": "2.7.0",
         "jszip": "3.10.1",

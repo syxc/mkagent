@@ -58,7 +58,7 @@ test.each(['@earendil-works/pi-coding-agent', '@mariozechner/pi-coding-agent'])(
       ui: { setEditorComponent(factory: typeof createEditor) { createEditor = factory; } },
     } as any);
     expect(createEditor).toBeFunction();
-    const { KeybindingsManager } = await import('../src/pi/core/keybindings.ts');
+    const { KeybindingsManager } = await import('@earendil-works/pi-coding-agent');
     const editor = createEditor!({ requestRender() {} } as any, { borderColor: (text: string) => text } as any,
       new KeybindingsManager());
     editor.handleInput('plugin editor');

@@ -19,7 +19,6 @@
     "cross-spawn": "7.0.6",
     "diff": "8.0.4",
     "fflate": "0.8.2",
-    "highlight.js": "10.7.3",
     "ignore": "7.0.8",
     "jiti": "2.7.0",
     "jszip": "3.10.1",
@@ -117,7 +116,7 @@
       "source": "packages/coding-agent/src/core/agent-session.ts",
       "target": "src/pi/core/agent-session.ts",
       "sha256": "b7c24bf1c1366e931083100d921a80d390d66bacde4acf7472a7b57af1bb69aa",
-      "portSha256": "341ff1e2d8e9758473ef980fc3747bbce7f0dcf15eed608a314be9412718b5e4",
+      "portSha256": "72751f6a671fe6bc517a425a7e659c87a91bb880c98de167e85f78bcecdb7271",
       "changes": [
         "durable-agent-boundary",
         "public-coding-sdk",
@@ -245,8 +244,9 @@
       "source": "packages/coding-agent/src/core/export-html/index.ts",
       "target": "src/pi/core/export-html/index.ts",
       "sha256": "6741a3b59795d3b25fea9f7385f84b7213fa869060152416cde7aa6802c44f9d",
-      "portSha256": "e0b2f99bce25186aa50c789bc8f06a19a41e72ac6b04a4431a08612bf678c656",
+      "portSha256": "6493e3ca01b4801983705778f870413d38297bce08a390a431db3d471ddb783e",
       "changes": [
+        "public-coding-sdk",
         "public-marked-browser-asset",
         "public-highlight-browser-asset"
       ]
@@ -276,8 +276,10 @@
       "source": "packages/coding-agent/src/core/export-html/tool-renderer.ts",
       "target": "src/pi/core/export-html/tool-renderer.ts",
       "sha256": "834559ea738a7ec8ccc252e31a5a0d54ec1850d27e9cbfe6da270baf9b71d449",
-      "portSha256": "834559ea738a7ec8ccc252e31a5a0d54ec1850d27e9cbfe6da270baf9b71d449",
-      "changes": []
+      "portSha256": "a52839227836671695a596ceabc6dd67ad5dbfa5f595ba370b8b3132bdedfa71",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/export-html/vendor/marked-cjk-friendly.min.js",
@@ -332,7 +334,7 @@
       "source": "packages/coding-agent/src/core/extensions/runner.ts",
       "target": "src/pi/core/extensions/runner.ts",
       "sha256": "3cd6d1ad18e8e4c7adf722aed9291bc64f06e3a7d461755c21e3cba4819f4e5e",
-      "portSha256": "a98264611afe8027d75246d94fe1c2cf15e027517b909c2ce7ec64768054da8c",
+      "portSha256": "247621f57939eb9c37a3ca929f54af737e967ed68d76f5c4be95d93ed7b6b27a",
       "changes": [
         "public-coding-sdk",
         "shared-legacy-runtime-policy"
@@ -342,7 +344,7 @@
       "source": "packages/coding-agent/src/core/extensions/types.ts",
       "target": "src/pi/core/extensions/types.ts",
       "sha256": "78cfd4937aa72c02be444354ef5cb94310b9b40e20e477969630eb81c6a7391b",
-      "portSha256": "a99a7c107122d96f202a822ef1407c0ef47b20798f433cfcdd06e864e14d722a",
+      "portSha256": "ffb050b6f9a5b42066c3acc36b27cd38d269f005b4e67337e9610937967c80b2",
       "changes": [
         "public-coding-sdk",
         "explicit-durable-tool-replay-policy"
@@ -378,20 +380,6 @@
       "target": "src/pi/core/http-dispatcher.ts",
       "sha256": "d64922c476d11b90555b8f23cab92ce1f4f83174cb750c125a96d8d4374744e2",
       "portSha256": "d64922c476d11b90555b8f23cab92ce1f4f83174cb750c125a96d8d4374744e2",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/core/key-id-schema.ts",
-      "target": "src/pi/core/key-id-schema.ts",
-      "sha256": "a9c95165ec58e3b7ce8ce495fbe32d421fa75f6f72b49f037a64d876f109847f",
-      "portSha256": "a9c95165ec58e3b7ce8ce495fbe32d421fa75f6f72b49f037a64d876f109847f",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/core/keybindings.ts",
-      "target": "src/pi/core/keybindings.ts",
-      "sha256": "6ddb9730a831e02bc2b32a9650e9b2029379cc37ccf6cdbf9b5bb47f91de321f",
-      "portSha256": "6ddb9730a831e02bc2b32a9650e9b2029379cc37ccf6cdbf9b5bb47f91de321f",
       "changes": []
     },
     {
@@ -508,7 +496,7 @@
       "source": "packages/coding-agent/src/core/resource-loader.ts",
       "target": "src/pi/core/resource-loader.ts",
       "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
-      "portSha256": "fd0608981a5ec49583c29c4e310c36876b7c8d927385e90ef9d836da14f1f0e3",
+      "portSha256": "4745400e27e364d4d1e00274ca919f55c33557839a898f563852de083616fbc5",
       "changes": [
         "public-coding-sdk",
         "host-resource-trust-and-installed-package-policy",
@@ -697,57 +685,73 @@
       "source": "packages/coding-agent/src/core/tools/render-utils.ts",
       "target": "src/pi/core/tools/render-utils.ts",
       "sha256": "691de101cb635dd8e899fa1f07175f7d3f0baf779022c816edd1b86b90a44cb4",
-      "portSha256": "691de101cb635dd8e899fa1f07175f7d3f0baf779022c816edd1b86b90a44cb4",
-      "changes": []
+      "portSha256": "5dba64437a6e783294596ac4d6a5c5adf199a1672f8f2c4b7a8f31b1a5e97478",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/renderers/bash.ts",
       "target": "src/pi/core/tools/renderers/bash.ts",
       "sha256": "ada1e7766ea385344691d944196ff2ff1af45c6f8f17604143b31fff8de55d9f",
-      "portSha256": "ada1e7766ea385344691d944196ff2ff1af45c6f8f17604143b31fff8de55d9f",
-      "changes": []
+      "portSha256": "a41fe9a93e58aceaa0b7ad10fccf40795763838136825826ffebe12fb3bf9aa1",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/renderers/edit.ts",
       "target": "src/pi/core/tools/renderers/edit.ts",
       "sha256": "9f3f6d87ed42ab9a587e751c1299a42af12e6c76848110e8fa7dcbf6852367a8",
-      "portSha256": "9f3f6d87ed42ab9a587e751c1299a42af12e6c76848110e8fa7dcbf6852367a8",
-      "changes": []
+      "portSha256": "385307f2c6e857ed75b81d3ea829734793c3dd4288ed8cfee053ff2a3670bada",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/renderers/find.ts",
       "target": "src/pi/core/tools/renderers/find.ts",
       "sha256": "a33591e8193eb2a5591596019676899587f783149434f857eaf331edb8fabe70",
-      "portSha256": "a33591e8193eb2a5591596019676899587f783149434f857eaf331edb8fabe70",
-      "changes": []
+      "portSha256": "7286615e1d5af8c881a241fcc6f8eb5091d937220caf169b9499c723b2c8e5ce",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/renderers/grep.ts",
       "target": "src/pi/core/tools/renderers/grep.ts",
       "sha256": "8a990da5f4305b0976ad4c245188fbf1fd5e4a3bad69b86c2ffd85bdd1115927",
-      "portSha256": "8a990da5f4305b0976ad4c245188fbf1fd5e4a3bad69b86c2ffd85bdd1115927",
-      "changes": []
+      "portSha256": "c17a8270e1bfc84a81df43206a54546d4c0038e7f5afa96625c22cd099e3aaa5",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/renderers/ls.ts",
       "target": "src/pi/core/tools/renderers/ls.ts",
       "sha256": "69ef43c9bcc3082b4c7880b0ad2edf4c0605c84fac326a2254e55397b9c81084",
-      "portSha256": "69ef43c9bcc3082b4c7880b0ad2edf4c0605c84fac326a2254e55397b9c81084",
-      "changes": []
+      "portSha256": "b1e5046fce188d2bea59299dca797ea27463cc35491ee5380ebc2c2d488e667a",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/renderers/read.ts",
       "target": "src/pi/core/tools/renderers/read.ts",
       "sha256": "34ce43fcfb7fff6d2b230c4d8c2034ec00f91bcf06dcb2a157a4679c350a236e",
-      "portSha256": "34ce43fcfb7fff6d2b230c4d8c2034ec00f91bcf06dcb2a157a4679c350a236e",
-      "changes": []
+      "portSha256": "b2f6ef5f20a495cb3d5896650152680f871a8f5f48ab36fb3d2b8c8c48a0dba0",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/renderers/write.ts",
       "target": "src/pi/core/tools/renderers/write.ts",
       "sha256": "59723b9e77710ef6bef218728bbc585debf53d2320955e7697cbc3e4d1c3bd20",
-      "portSha256": "59723b9e77710ef6bef218728bbc585debf53d2320955e7697cbc3e4d1c3bd20",
-      "changes": []
+      "portSha256": "e8f07614f9a160df40fc05c1abcca8ea09454b328f7dea0f5b6eeaff43935ad1",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/tools/tool-definition-wrapper.ts",
@@ -827,8 +831,10 @@
       "source": "packages/coding-agent/src/extensions/codemode/renderer.ts",
       "target": "src/pi/extensions/codemode/renderer.ts",
       "sha256": "e0a9f27668d3ee5ad7485dcf4df24cec473589a607d413bb30d80977300f11ba",
-      "portSha256": "e0a9f27668d3ee5ad7485dcf4df24cec473589a607d413bb30d80977300f11ba",
-      "changes": []
+      "portSha256": "49e4cd9166282d67cf2f5ee6998063e88d30fc9045a52be88a8fc28866579d17",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/extensions/codemode/tool.ts",
@@ -908,8 +914,10 @@
       "source": "packages/coding-agent/src/extensions/mcp/ui.ts",
       "target": "src/pi/extensions/mcp/ui.ts",
       "sha256": "36eeeba45ed70ab18baff63951a949a8d31ddd7abc0dbe9b6bcf7df20a856dff",
-      "portSha256": "36eeeba45ed70ab18baff63951a949a8d31ddd7abc0dbe9b6bcf7df20a856dff",
-      "changes": []
+      "portSha256": "b40e5a64608d0f0ee09981a1460f174200e7a57a53a6a78e0955b8d0825108f6",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/extensions/tool-search/index.ts",
@@ -931,7 +939,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "a798c983ef24551f8d0035ba660ec85233d84ffc9b9546ce5ff9aa2a115e4ef3",
+      "portSha256": "eace70e5bb36aff3811014b8fd22f92101328f84665f0007ecaeb5602663590c",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",
@@ -951,50 +959,64 @@
       "source": "packages/coding-agent/src/modes/interactive/components/armin.ts",
       "target": "src/pi/modes/interactive/components/armin.ts",
       "sha256": "45d59fdf8adba4ea8a28b573a9127e628ae30a787dfa95e136ccd7bef0d1ddbe",
-      "portSha256": "45d59fdf8adba4ea8a28b573a9127e628ae30a787dfa95e136ccd7bef0d1ddbe",
-      "changes": []
+      "portSha256": "99554ca29a30d40a2d911082e141ec6623fdaea04616cd71d242db02bceaf194",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/assistant-message.ts",
       "target": "src/pi/modes/interactive/components/assistant-message.ts",
       "sha256": "abf3b596f21de78ace3efb774236c9b5ac7647f77890ceb067a65a17c4ea67fb",
-      "portSha256": "abf3b596f21de78ace3efb774236c9b5ac7647f77890ceb067a65a17c4ea67fb",
-      "changes": []
+      "portSha256": "e660a3ca043ec332177dc80d44372520eb0341bc9eb41b6cf848cb18144a1a8c",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/auth-url.ts",
       "target": "src/pi/modes/interactive/components/auth-url.ts",
       "sha256": "a4b3531e947746ca1bc2319b717ff79b37898366d282d02f9fc0b955481fc913",
-      "portSha256": "a4b3531e947746ca1bc2319b717ff79b37898366d282d02f9fc0b955481fc913",
-      "changes": []
+      "portSha256": "cea6278403aa20a2d65bf2b057853d63eb729842c39535a4c06377241c91a58b",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/bash-execution.ts",
       "target": "src/pi/modes/interactive/components/bash-execution.ts",
       "sha256": "445225e244705077013724464e1e63e2cfa20b3bc926754a0fbc93207fc99419",
-      "portSha256": "445225e244705077013724464e1e63e2cfa20b3bc926754a0fbc93207fc99419",
-      "changes": []
+      "portSha256": "9c274f514dda2784abb4720f00c28288473d3569589627e67849db327b64845b",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/bordered-loader.ts",
       "target": "src/pi/modes/interactive/components/bordered-loader.ts",
       "sha256": "f4a6487b80360bde89d8e96ebec16d84d4cd106dcc57c53757be571c7c4da1f6",
-      "portSha256": "f4a6487b80360bde89d8e96ebec16d84d4cd106dcc57c53757be571c7c4da1f6",
-      "changes": []
+      "portSha256": "c7dcba05deb54768bf8cfb3dc01c754c582eda6b3737efcab4258ba6d9c8f8c1",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/branch-summary-message.ts",
       "target": "src/pi/modes/interactive/components/branch-summary-message.ts",
       "sha256": "0831b5b84f58cab44e416f7261d9fbc5ec9cdc93d4ffb02801c8b60029e98e70",
-      "portSha256": "0831b5b84f58cab44e416f7261d9fbc5ec9cdc93d4ffb02801c8b60029e98e70",
-      "changes": []
+      "portSha256": "d568684981a446cb0235cb2562a1d49469c03f977c684f596123bc761f286ded",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/compaction-summary-message.ts",
       "target": "src/pi/modes/interactive/components/compaction-summary-message.ts",
       "sha256": "2f9c153912569dade21400f8f044bab7742c6d0c50d52e5be5a6a12f5ee6147e",
-      "portSha256": "2f9c153912569dade21400f8f044bab7742c6d0c50d52e5be5a6a12f5ee6147e",
-      "changes": []
+      "portSha256": "6886027cf1742c4becbfe8753f6e052be383e0eac7b7b03298af4ebef420a7b4",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/countdown-timer.ts",
@@ -1007,57 +1029,73 @@
       "source": "packages/coding-agent/src/modes/interactive/components/custom-editor.ts",
       "target": "src/pi/modes/interactive/components/custom-editor.ts",
       "sha256": "88c84412094b1422f5a5297c9c624be598d6161faa4177cf31f2849460880612",
-      "portSha256": "88c84412094b1422f5a5297c9c624be598d6161faa4177cf31f2849460880612",
-      "changes": []
+      "portSha256": "85e6d61a8a21e6fa3763b420c7c5fc99ffec3a9cb01cbca8a6e1699c79d9a5fd",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/custom-message.ts",
       "target": "src/pi/modes/interactive/components/custom-message.ts",
       "sha256": "aeabd0b44c714ed44c7fc1949e7482395de0675ab3197782cc17871b75d6005e",
-      "portSha256": "aeabd0b44c714ed44c7fc1949e7482395de0675ab3197782cc17871b75d6005e",
-      "changes": []
+      "portSha256": "0d340b431467031c56560c1387174009be9f1b72d7237b4f54faded492e8d023",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/diff.ts",
       "target": "src/pi/modes/interactive/components/diff.ts",
       "sha256": "b43f8d91ba9f19088dc9dc86126091c3fdfca25eac6461f5510f5e1e9ddd6491",
-      "portSha256": "b43f8d91ba9f19088dc9dc86126091c3fdfca25eac6461f5510f5e1e9ddd6491",
-      "changes": []
+      "portSha256": "94c519bce1f10e1292de2232bd1da28ae75eb84b4ccf21597f7f388f4a837e6f",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/dynamic-border.ts",
       "target": "src/pi/modes/interactive/components/dynamic-border.ts",
       "sha256": "1f7fa398a861906e3dbbd217434f290f09d23c5e561ab7d6ef24808db4353cb0",
-      "portSha256": "1f7fa398a861906e3dbbd217434f290f09d23c5e561ab7d6ef24808db4353cb0",
-      "changes": []
+      "portSha256": "b02be75d856aae87fac541a71119fab17032f4f6b7708d3c5a26c0c502b688c4",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/extension-editor.ts",
       "target": "src/pi/modes/interactive/components/extension-editor.ts",
       "sha256": "3ba0c3631030022670bf1e0d7573768c492e2cbcbaa4e0a4c019041929fe7847",
-      "portSha256": "3ba0c3631030022670bf1e0d7573768c492e2cbcbaa4e0a4c019041929fe7847",
-      "changes": []
+      "portSha256": "ca82d3c678a82e684d35c68139ba60baca906b7a3d2940ce75e2b233d654cace",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/extension-input.ts",
       "target": "src/pi/modes/interactive/components/extension-input.ts",
       "sha256": "efd8f7c27b2a1f1a9215e0cca31a34b3d54db2783ade2914dfa1facf8e1945bd",
-      "portSha256": "efd8f7c27b2a1f1a9215e0cca31a34b3d54db2783ade2914dfa1facf8e1945bd",
-      "changes": []
+      "portSha256": "00b12ede4ae996c5d49b772cb32834eed205e23978c1483d24dad0e89a419c75",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/extension-selector.ts",
       "target": "src/pi/modes/interactive/components/extension-selector.ts",
       "sha256": "d83767b09d73264eb0cb9af54b6f13e0e9c15a429a6dd7b9c8e7498e013b7704",
-      "portSha256": "d83767b09d73264eb0cb9af54b6f13e0e9c15a429a6dd7b9c8e7498e013b7704",
-      "changes": []
+      "portSha256": "185bc67c011d6a949060c1216799623961fa57d458bb7572bc60d1e4a2a9e939",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/footer.ts",
       "target": "src/pi/modes/interactive/components/footer.ts",
       "sha256": "494c5dca212af8d895e20810269fd9d46b3b4f8e12435c803ae93049d6eb4ad4",
-      "portSha256": "494c5dca212af8d895e20810269fd9d46b3b4f8e12435c803ae93049d6eb4ad4",
-      "changes": []
+      "portSha256": "7b8acaa982a9a9e613a511e2263c0fcbe0dcde9e0e06b4597138582a331227fc",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/index.ts",
@@ -1072,15 +1110,19 @@
       "source": "packages/coding-agent/src/modes/interactive/components/keybinding-hints.ts",
       "target": "src/pi/modes/interactive/components/keybinding-hints.ts",
       "sha256": "76b13ee8bfc6e49d5b2b5496eac13523bd9aad95770cbfa4a239336131f94aae",
-      "portSha256": "76b13ee8bfc6e49d5b2b5496eac13523bd9aad95770cbfa4a239336131f94aae",
-      "changes": []
+      "portSha256": "447881d1a2598ffebd6c960ca464f25611fed5d70f9c48093a5c88f11d2625f5",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/login-dialog.ts",
       "target": "src/pi/modes/interactive/components/login-dialog.ts",
       "sha256": "41d7c1d566d5a04d01b220c9b1ac34a0ccd05b7a07e34f5a861886563b2d4b45",
-      "portSha256": "41d7c1d566d5a04d01b220c9b1ac34a0ccd05b7a07e34f5a861886563b2d4b45",
-      "changes": []
+      "portSha256": "1f931c0a2830e049f6db4667d8af058e4ca3a9a33373890f2c3ef39e999e2353",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/markdown-transform.ts",
@@ -1093,15 +1135,19 @@
       "source": "packages/coding-agent/src/modes/interactive/components/model-selector.ts",
       "target": "src/pi/modes/interactive/components/model-selector.ts",
       "sha256": "cf276628534cd5df90fdf084e8262b0e1d3a6bf5fcb3a5cb9e18ab6fcbc7fc01",
-      "portSha256": "cf276628534cd5df90fdf084e8262b0e1d3a6bf5fcb3a5cb9e18ab6fcbc7fc01",
-      "changes": []
+      "portSha256": "104851ebb61221493757697c8584393e984fc672b7db76920be4c247e9a2d7a0",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/oauth-selector.ts",
       "target": "src/pi/modes/interactive/components/oauth-selector.ts",
       "sha256": "8cfc9747a3da1a07924ca952a1bdb7e4c8c8aed0964a194dc5429baa84de3006",
-      "portSha256": "8cfc9747a3da1a07924ca952a1bdb7e4c8c8aed0964a194dc5429baa84de3006",
-      "changes": []
+      "portSha256": "ac8c7a4ec29a6158a9d2e534e3c605924c147c254cb129f79e3d14a0b86cab87",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/session-selector-search.ts",
@@ -1114,14 +1160,16 @@
       "source": "packages/coding-agent/src/modes/interactive/components/session-selector.ts",
       "target": "src/pi/modes/interactive/components/session-selector.ts",
       "sha256": "03a403c25588858828d08e8b28a922e7504d290c3e8fc57f52a8637d67e46a39",
-      "portSha256": "03a403c25588858828d08e8b28a922e7504d290c3e8fc57f52a8637d67e46a39",
-      "changes": []
+      "portSha256": "7e3deec4dfd7f288832dd30857c2daae0bf50925270c8c00535a41b5f613a43e",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/settings-selector.ts",
       "target": "src/pi/modes/interactive/components/settings-selector.ts",
       "sha256": "e8f96c52aeb23f7b7770a0bb5887b474ae0f0ada5bcb66bf607257d5d3bd4f51",
-      "portSha256": "4c19a2c5bed7ca6b263d5399f4b725d5d94b349ed84d0977714067c4605f288b",
+      "portSha256": "00f8c9458010d6f5dc4305127540ed733a7efab2cc5e2cb950680e34d0bfe6b0",
       "changes": [
         "public-coding-sdk"
       ]
@@ -1130,71 +1178,91 @@
       "source": "packages/coding-agent/src/modes/interactive/components/settings-submenu.ts",
       "target": "src/pi/modes/interactive/components/settings-submenu.ts",
       "sha256": "ab0d51b6fd6b9568400736311e79c0a465636335baa1bd709c60cd1d2107735f",
-      "portSha256": "ab0d51b6fd6b9568400736311e79c0a465636335baa1bd709c60cd1d2107735f",
-      "changes": []
+      "portSha256": "8b7423fc2a3383d12bf2a2ed99cab4e4d00b2697504ad38cac583ecf76b6626b",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/show-images-selector.ts",
       "target": "src/pi/modes/interactive/components/show-images-selector.ts",
       "sha256": "6bea191c5442c0fa46c7fd54836de31df2042c8ed3aef3225b2a56a5fc1a65a9",
-      "portSha256": "6bea191c5442c0fa46c7fd54836de31df2042c8ed3aef3225b2a56a5fc1a65a9",
-      "changes": []
+      "portSha256": "6678b1d3b4064b0671f668257628c6e91a4610f854f12ff26d1fcc765b3b6f98",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/skill-invocation-message.ts",
       "target": "src/pi/modes/interactive/components/skill-invocation-message.ts",
       "sha256": "c0a10b3e2a6d034b4ae992aba9f44a3a81cd3e56d55b8b106299b4083d3e3cdb",
-      "portSha256": "c0a10b3e2a6d034b4ae992aba9f44a3a81cd3e56d55b8b106299b4083d3e3cdb",
-      "changes": []
+      "portSha256": "77510ea9d0d09f15fe105cb975f8bcf18fb2ca311adf418841824802d91ee7e1",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/status-indicator.ts",
       "target": "src/pi/modes/interactive/components/status-indicator.ts",
       "sha256": "80d33d17875b6f58af3878d3bb0b29d099e2b7a9fbfb0725a6cd4408bd535ab8",
-      "portSha256": "80d33d17875b6f58af3878d3bb0b29d099e2b7a9fbfb0725a6cd4408bd535ab8",
-      "changes": []
+      "portSha256": "de467926bb6a28f2e5c93b2d146448f610a6e7d125c97fe120d1eb7585e1b2fd",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/theme-selector.ts",
       "target": "src/pi/modes/interactive/components/theme-selector.ts",
       "sha256": "267be3176c67bddb72f0f64a9c3561a256c758707afbeabe2ac68112c8e3b5f8",
-      "portSha256": "267be3176c67bddb72f0f64a9c3561a256c758707afbeabe2ac68112c8e3b5f8",
-      "changes": []
+      "portSha256": "e19b77e9f8cb9c02d672df03a4d05600cca20e2d778e2f4363197213512fefdc",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/thinking-selector.ts",
       "target": "src/pi/modes/interactive/components/thinking-selector.ts",
       "sha256": "a8e562022d04ef4266191ba35a0417fced547666be6e6e97329aa3918b512e18",
-      "portSha256": "a8e562022d04ef4266191ba35a0417fced547666be6e6e97329aa3918b512e18",
-      "changes": []
+      "portSha256": "073af0ebd57ba374edd810a56899e9ca96d19730be2a272b9355fc2e8cdbe805",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/tool-execution.ts",
       "target": "src/pi/modes/interactive/components/tool-execution.ts",
       "sha256": "b23593ca04e66567f94c0768662389db0f830a78c9f1ea193876a2718ce9b336",
-      "portSha256": "b23593ca04e66567f94c0768662389db0f830a78c9f1ea193876a2718ce9b336",
-      "changes": []
+      "portSha256": "1a8fdcfceec4822fc389ec2e0df7a19995e44d40e502499d5d9a55ac31f42f9c",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/tree-selector.ts",
       "target": "src/pi/modes/interactive/components/tree-selector.ts",
       "sha256": "052a2b48101f076895d192d150f9eb74cfa95f9cf9e89aee57e3e98442ed8c69",
-      "portSha256": "052a2b48101f076895d192d150f9eb74cfa95f9cf9e89aee57e3e98442ed8c69",
-      "changes": []
+      "portSha256": "473b05bc8617cb95ec5a5768b402146f05508f007f330dc14776ae1aa9d832b8",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/user-message-selector.ts",
       "target": "src/pi/modes/interactive/components/user-message-selector.ts",
       "sha256": "4ce2e8fdbf378b24c291864d490baa33e72517d292d6afe43f5500e89c85447b",
-      "portSha256": "4ce2e8fdbf378b24c291864d490baa33e72517d292d6afe43f5500e89c85447b",
-      "changes": []
+      "portSha256": "3f76114117ee50d88bff34625aadc76be31ecee924177fcc73fc3deb8b87a217",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/user-message.ts",
       "target": "src/pi/modes/interactive/components/user-message.ts",
       "sha256": "cd5f20bbbac514f68836c6a604995b815e840036a26c1c05c15866087821cdd8",
-      "portSha256": "cd5f20bbbac514f68836c6a604995b815e840036a26c1c05c15866087821cdd8",
-      "changes": []
+      "portSha256": "0e5c842a0f77917ca125324602681b43d6ae52bafd1a3130d731fc3fea306e93",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/modes/interactive/components/visual-truncate.ts",
@@ -1223,54 +1291,6 @@
       "sha256": "390f4025d29e7c566dc8b28c8276adc3bd5e5b4a860111158f3e20293f8ffbc6",
       "portSha256": "390f4025d29e7c566dc8b28c8276adc3bd5e5b4a860111158f3e20293f8ffbc6",
       "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/theme/dark.json",
-      "target": "src/pi/modes/interactive/theme/dark.json",
-      "sha256": "e1f96982f8cb7d2a48eca7db03c9cb282cb1e14a243680cd855638ecd6a251b6",
-      "portSha256": "e1f96982f8cb7d2a48eca7db03c9cb282cb1e14a243680cd855638ecd6a251b6",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/theme/light.json",
-      "target": "src/pi/modes/interactive/theme/light.json",
-      "sha256": "2dee6a4be7f765e7fd7728166b7ebf8c29e4ce313f8ec6b38ae50699e3abc2f3",
-      "portSha256": "2dee6a4be7f765e7fd7728166b7ebf8c29e4ce313f8ec6b38ae50699e3abc2f3",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/theme/system-theme.ts",
-      "target": "src/pi/modes/interactive/theme/system-theme.ts",
-      "sha256": "877a3dc24fd194f2dc5ee9efe8f1699acdcdac6defa197009bc7b39920bbb729",
-      "portSha256": "33f35c0cbdc5e96a5e8b087c9d1d908d4ed49376af1bb2c5e9e8f8345ddcb48d",
-      "changes": [
-        "exclude-terminal-color-report-solver"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/theme/theme-schema.ts",
-      "target": "src/pi/modes/interactive/theme/theme-schema.ts",
-      "sha256": "6440ccc6aa0576f0f9447584b707b3bf09f2b77aed64687f4598db261588474b",
-      "portSha256": "0d02dbb14d89157324170492f7b747971bd9ed42f1a3f448eef88d464a3215fc",
-      "changes": [
-        "validate-themes-at-resource-boundary"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/theme/theme-tokens.ts",
-      "target": "src/pi/modes/interactive/theme/theme-tokens.ts",
-      "sha256": "6c38a169da4f85ee04bc31980a13ef6a498b6be68e63faceda4f5a1e5c632ecf",
-      "portSha256": "6c38a169da4f85ee04bc31980a13ef6a498b6be68e63faceda4f5a1e5c632ecf",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/modes/interactive/theme/theme.ts",
-      "target": "src/pi/modes/interactive/theme/theme.ts",
-      "sha256": "d1da018dbaba222b5f477b77cb9c1c79886dbcc92856b80e1c0c7685256382cf",
-      "portSha256": "5ef38501af0ec46061bc01c4ecce0841080ddf37327f71f3c4a5058449907c5d",
-      "changes": [
-        "resource-theme-validation-without-terminal-reports"
-      ]
     },
     {
       "source": "packages/coding-agent/src/modes/json-event.ts",
@@ -1357,20 +1377,6 @@
       "target": "src/pi/utils/fs-watch.ts",
       "sha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
       "portSha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/utils/highlight-js.d.ts",
-      "target": "src/pi/utils/highlight-js.d.ts",
-      "sha256": "d6fa92ca904ade62331b033a28da2e4e374379e997d5342ef1d390f018500b39",
-      "portSha256": "d6fa92ca904ade62331b033a28da2e4e374379e997d5342ef1d390f018500b39",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/utils/html.ts",
-      "target": "src/pi/utils/html.ts",
-      "sha256": "d3abd075ab64807a1facae1511ec0b9b22f63153c7808eb63e7560fb00b1d48b",
-      "portSha256": "d3abd075ab64807a1facae1511ec0b9b22f63153c7808eb63e7560fb00b1d48b",
       "changes": []
     },
     {
@@ -1489,13 +1495,6 @@
       "changes": [
         "public-pi-ai-sleep-helper"
       ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/syntax-highlight.ts",
-      "target": "src/pi/utils/syntax-highlight.ts",
-      "sha256": "d54b89e54097abd85119385c0ae21320dc587b7494c03833f9ce48328d2e8f41",
-      "portSha256": "d54b89e54097abd85119385c0ae21320dc587b7494c03833f9ce48328d2e8f41",
-      "changes": []
     },
     {
       "source": "packages/coding-agent/src/utils/text.ts",

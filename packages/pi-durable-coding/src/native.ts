@@ -1,4 +1,3 @@
-/// <reference path="./pi/utils/highlight-js.d.ts" />
 /** Coding plugin API and host binding types; upstream run-mode hosts are excluded. */
 export * from './pi/index.ts';
 export { initializeExtensionModels } from './pi/core/agent-session-services.ts';

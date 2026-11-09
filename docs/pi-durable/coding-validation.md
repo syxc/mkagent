@@ -26,6 +26,64 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Theme and keybinding SDK boundary after e20bb1a
+
+Theme and KeybindingsManager now use the public Coding SDK. The patch exports
+existing theme and keybinding contracts, enables the existing full theme
+validator by default and locates coding-assets/theme beside a worker bundle.
+It does not copy the theme, highlighting or keybinding algorithms. The root
+declaration removes a conflicting type-only KeybindingsManager export so the
+published class is available as both a value and a type.
+
+Nine local TypeScript files, two theme JSON files and the old theme conversion
+script are deleted. The direct highlight.js dependency is removed. The SDK can
+still use it transitively. The worker copies theme JSON from the SDK. Its asset
+filter preserves the required HTML template and vendor JavaScript. Complete
+source checks pass for 177 runtime TypeScript files, including 173 under src/pi
+and four facades, four assets, 12 auxiliary sources and 23 forwards.
+
+Before deletion, a baseline records all 56 resolved colors and ANSI results for
+dark, light and three system theme settings. Comparison against the SDK passes.
+All 90 keybinding definitions, legacy name migration and effective custom
+configuration also match. Behavioral checks retain foreground/background slot
+errors, five fallbacks, explicit zero, variable errors, complete file validation,
+HTML colors and shared plugin theme state.
+
+The final focused run passes 72 tests across nine files with 363 assertions.
+Coding declarations, server typecheck and 26 worker bundle tests with 103
+assertions pass. Checks use task-only HOME and configuration. Initial declaration
+checks find an obsolete highlight reference and the conflicting type-only export;
+both are corrected. Three patch installs leave the existing hoisted layout without
+the SDK's nested pi-ai 1.5.0. Ordinary frozen install restores the dependencies;
+final imports, comparison, types and bundle checks pass without force or deletion.
+
+A fresh hoisted frozen install uses new HOME/cache, the public registry and
+disabled scripts. It installs 1,421 packages for 11 workspaces and leaves the
+lockfile unchanged. All 45 patched physical outputs, core four, Coding eleven and
+durable 30, match the tested installation. The eleven Coding outputs also match
+CODING-PATCH.json. Rebuild check from the pristine release passes. Actual workspace
+imports and a relocated bundle load both themes, reject an invalid color through
+the full schema and use the 90 keybinding definitions. The first relocation
+assertion compares macOS /var and /private/var spellings; realpath comparison
+corrects the probe, and checks pass using the same installation.
+
+The fixed Craft v0.15.6 source audit passes for 2,170 files. Punctuation checks
+pass for six documents, all 105 relative link targets exist and diff checks pass.
+Independent review finds no confirmed functional defect. Its additional isolated
+probes verify both plugin aliases, Theme identity and singleton updates, BOM and
+legacy key migration, precedence, disabled and invalid bindings, reload and broken
+JSON fallback. Relocated themes retain 56 colors and the HTML template and all
+three vendor scripts remain present. The schema module's JS and declaration
+headers still describe optional validation; both comments are corrected through
+the patch generator. These two comment-only outputs account for the increase
+from nine to eleven Coding patch files. The final fresh install and patch rebuild
+checks include them. The reviewer does not repeat the full test suite or cover
+Windows/WSL, compiled Bun binaries or real terminal watchers. Review receipts are
+in the presentation-review task directory; main-thread receipts are in the
+presentation-sdk task directory. Resource loader, model registry and session replacement remain open;
+these checks do not validate the future production session's atomic input,
+cancellation or cold recovery.
+
 ## Package manager SDK boundary after 2c2b98a
 
 Host package commands, resource discovery and the legacy package adapter now use

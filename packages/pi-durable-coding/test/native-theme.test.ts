@@ -3,20 +3,15 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { createHash } from 'node:crypto';
 import { createHostResources } from '../src/host-resources.ts';
 import { colorToHex } from '@earendil-works/pi-tui';
-import { portThemeRuntime } from '../scripts/theme-runtime-port.ts';
-import { generateSystemThemeColors } from '../src/pi/modes/interactive/theme/system-theme.ts';
-import { THEME_TOKENS } from '../src/pi/modes/interactive/theme/theme-tokens.ts';
 import {
-  detectColorFgBgTheme, getTerminalTheme, getThemeByName, loadThemeFromPath,
+  detectColorFgBgTheme, getTerminalTheme, getThemeByName, getThemesDir, loadThemeFromPath,
   type ThemeBg, type ThemeColor,
-} from '../src/pi/modes/interactive/theme/theme.ts';
+} from '@earendil-works/pi-coding-agent';
 
-const dark = JSON.parse(readFileSync(new URL('../src/pi/modes/interactive/theme/dark.json', import.meta.url), 'utf8'));
-const light = JSON.parse(readFileSync(new URL('../src/pi/modes/interactive/theme/light.json', import.meta.url), 'utf8'));
-const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+const dark = JSON.parse(readFileSync(join(getThemesDir(), 'dark.json'), 'utf8'));
+const light = JSON.parse(readFileSync(join(getThemesDir(), 'light.json'), 'utf8'));
 const foregrounds = `accent border borderAccent borderMuted success error warning muted dim text thinkingText
   scrollbarTrack scrollbarThumb searchMatchText userMessageText customMessageText customMessageLabel toolTitle toolOutput
   mdHeading mdLink mdLinkUrl mdCode mdCodeBlock mdCodeBlockBorder mdQuote mdQuoteBorder mdHr mdListBullet
@@ -42,7 +37,6 @@ function withThemeDocument(document: unknown, check: (path: string) => void): vo
 test('all public theme names retain their foreground or background slot', () => {
   const names = [...foregrounds, ...backgrounds].sort();
   assert.equal(new Set(names).size, 56);
-  assert.deepEqual(Object.keys(THEME_TOKENS).sort(), names);
   for (const document of [dark, light]) {
     assert.deepEqual(Object.keys(document.colors).sort(), names);
     withThemeDocument(document, path => {
@@ -50,12 +44,10 @@ test('all public theme names retain their foreground or background slot', () => 
       assert.equal(theme.name, document.name);
       assert.deepEqual(Object.keys(theme.colors).sort(), names);
       for (const token of foregrounds) {
-        assert.equal(THEME_TOKENS[token].slot, 'foreground');
         assert.match(theme.fg(token, 'value'), /^\x1b\[(?:38;|39m)/);
         assert.throws(() => theme.bg(token as unknown as ThemeBg, 'value'), /Unknown theme color/);
       }
       for (const token of backgrounds) {
-        assert.equal(THEME_TOKENS[token].slot, 'background');
         assert.match(theme.bg(token, 'value'), /^\x1b\[(?:48;|49m)/);
         assert.throws(() => theme.fg(token as unknown as ThemeColor, 'value'), /Unknown theme color/);
       }
@@ -124,8 +116,6 @@ test('resource loading reports malformed theme documents and variable chains', a
 });
 
 test('system palette and dim tokens match the pre-port dark and light output', () => {
-  assert.equal(digest(generateSystemThemeColors('dark')), '82e86a4b331058b931cd5ceaacefff9c27c3d215b0126e46fdec9d6b7a22dd72');
-  assert.equal(digest(generateSystemThemeColors('light')), 'e10b284cd323b7aa70cece9993c7aef2159a25b3fd89a0f6ac42acf76591f741');
   const previous = process.env.COLORFGBG;
   try {
     for (const [value, appearance, foreground, background] of [
@@ -151,14 +141,6 @@ test('system palette and dim tokens match the pre-port dark and light output', (
   for (const value of ['', 'default', '16', '-1', '001', 'x;invalid']) {
     assert.equal(detectColorFgBgTheme({ COLORFGBG: value }), undefined);
   }
-});
-
-test('theme generation rejects missing or repeated pinned declarations', () => {
-  assert.equal(portThemeRuntime('unrelated.ts', ''), undefined);
-  assert.throws(() => portThemeRuntime('modes/interactive/theme/system-theme.ts', ''), /declaration changed/);
-  assert.throws(() => portThemeRuntime('modes/interactive/theme/system-theme.ts', 'const FAMILIES = {}; const FAMILIES = {};'), /declaration changed/);
-  assert.throws(() => portThemeRuntime('modes/interactive/theme/theme.ts', ''), /declarations changed/);
-  assert.throws(() => portThemeRuntime('modes/interactive/theme/theme.ts', 'type ThemeJsonValidator = never; type ThemeJsonValidator = never;'), /declaration repeated/);
 });
 
 test('resource loading rejects incomplete themes without a CLI-installed validator', async () => {

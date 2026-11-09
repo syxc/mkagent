@@ -13,6 +13,8 @@ describe('published Coding SDK boundary', () => {
     expect(native.withFileMutationQueue).toBe(sdk.withFileMutationQueue);
     expect(native.SettingsManager).toBe(sdk.SettingsManager);
     expect(native.DefaultPackageManager).toBe(sdk.DefaultPackageManager);
+    expect(native.Theme).toBe(sdk.Theme);
+    expect(native.initTheme).toBe(sdk.initTheme);
     expect(native.parseFrontmatter('﻿---\r\nname: example\r\n---\r\nbody')).toEqual({
       frontmatter: { name: 'example' }, body: 'body',
     });
@@ -24,6 +26,8 @@ describe('published Coding SDK boundary', () => {
     expect(codingSDKImport('core/sdk.ts', './settings-manager.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('extensions/codemode/index.ts', '../../core/settings-defaults.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/resource-loader.ts', './package-manager.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('core/extensions/types.ts', '../keybindings.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('core/resource-loader.ts', '../modes/interactive/theme/theme.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './agent-session.ts')).toBeUndefined();
     expect(codingSDKImport('core/sdk.ts', '@earendil-works/pi-agent-core')).toBeUndefined();
   });

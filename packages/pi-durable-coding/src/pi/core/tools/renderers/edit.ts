@@ -8,7 +8,7 @@
 
 import { Box, Container, Spacer, Text } from "@earendil-works/pi-tui";
 import { renderDiff } from "../../../modes/interactive/components/diff.ts";
-import type { Theme } from "../../../modes/interactive/theme/theme.ts";
+import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { ToolDefinition } from "../../extensions/types.ts";
 import type { EditToolDetails } from "../edit.ts";
 import { computeEditsDiff, type Edit, type EditDiffError, type EditDiffResult } from "../edit-diff.ts";

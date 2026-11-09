@@ -481,7 +481,7 @@ export {
 	type ThemeColor,
 	type ThemeStyle,
 	type ThemeToken,
-} from "./modes/interactive/theme/theme.ts";
+} from "@earendil-works/pi-coding-agent";
 // Clipboard utilities
 export { copyToClipboard } from "./utils/clipboard.ts";
 export { parseFrontmatter, stripFrontmatter } from "@earendil-works/pi-coding-agent";

@@ -1,26 +1,41 @@
-# Content SHA-256: 0e5aad7831d402c073b8d7ae54f064d4744dc1744abc4524dde46f8c6c2715ca
+# Content SHA-256: f158243b726cca51e779045dc03271b036a1cc830bb72ee61e25001f61cf1360
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,7 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,10 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
 +export * from "./core/settings-manager.js";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.js";
 +export * from "./core/package-manager.js";
++export * from "./core/keybindings.js";
++export * from "./modes/interactive/theme/theme.js";
++export { getThemesDir } from "./config.js";
  //# sourceMappingURL=index.js.map
 \ No newline at end of file
 diff --git a/dist/index.d.ts b/dist/index.d.ts
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
-@@ -42,4 +42,7 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -5,7 +5,7 @@ export { readStoredCredential } from "./core/auth-storage.ts";
+ export type { CacheWarmingDecision, CacheWarmingStatus } from "./core/cache-warmer.ts";
+ export { type BranchPreparation, type BranchSummaryResult, type CollectEntriesResult, type CompactionResult, type CutPointResult, calculateContextTokens, collectEntriesForBranchSummary, compact, DEFAULT_COMPACTION_SETTINGS, estimateTokens, type FileOperations, findCutPoint, findTurnStartIndex, type GenerateBranchSummaryOptions, generateBranchSummary, generateSummary, generateSummaryWithUsage, getLastAssistantUsage, prepareBranchEntries, serializeConversation, shouldCompact, } from "./core/compaction/index.ts";
+ export { createEventBus, type EventBus, type EventBusController } from "./core/event-bus.ts";
+-export type { AfterProviderResponseEvent, AgentActivityOutcome, AgentBeforeSettleEvent, AgentBeforeSettleEventResult, AgentEndEvent, AgentSettledEvent, AgentStartEvent, AgentToolResult, AgentToolUpdateCallback, AppKeybinding, AutocompleteProviderFactory, BashToolCallEvent, BeforeAgentStartCustomEvent, BeforeAgentStartEvent, BeforeAgentStartEventResult, BeforeAgentStartUserEvent, BeforeProviderHeadersEvent, BeforeProviderRequestEvent, BeforeProviderRequestEventResult, BoundaryContextPreview, BoundaryResult, BoundaryState, BuildSystemPromptOptions, CacheWarmingDecisionEvent, CacheWarmingDecisionEventResult, CompactionEntryDraft, CompactOptions, ContextEditEntryDraft, ContextEvent, ContextEventResult, ContextUsage, ContextWithSystemEvent, CustomEntryDraft, CustomMessageEntryDraft, CustomToolCallEvent, EditToolCallEvent, EntryRenderer, EntryRenderOptions, ExecOptions, ExecResult, ExecuteToolOptions, Extension, ExtensionActions, ExtensionAPI, ExtensionCommandContext, ExtensionCommandContextActions, ExtensionContext, ExtensionContextActions, ExtensionError, ExtensionEvent, ExtensionFactory, ExtensionFlag, ExtensionHandler, ExtensionRuntime, ExtensionShortcut, ExtensionToolContext, ExtensionUIContext, ExtensionUIDialogOptions, ExtensionVirtualModel, ExtensionWidgetOptions, FindToolCallEvent, GrepToolCallEvent, InlineExtension, InputEvent, InputEventResult, InputSource, KeybindingHints, KeybindingsManager, LoadExtensionsResult, LsToolCallEvent, MarkdownTransformContext, MarkdownTransformer, McpServersChangeEvent, MessageEndEvent, MessageEndEventResult, MessageRenderer, MessageRenderOptions, MessageStartEvent, MessageUpdateEvent, ModelSelectEvent, ModelSelectSource, NormalizedBuildSystemPromptOptions, PowerShellToolCallEvent, ProjectTrustContext, ProjectTrustEvent, ProjectTrustEventDecision, ProjectTrustEventResult, ProjectTrustHandler, ProviderConfig, ProviderModelConfig, ProviderStreamEvent, ReadToolCallEvent, RegisteredCommand, RegisteredTool, ResolvedCommand, ResourcesDiscoverEvent, ResourcesDiscoverResult, SessionBeforeCompactEvent, SessionBeforeCompactResult, SessionBeforeForkEvent, SessionBeforeForkResult, SessionBeforeSwitchEvent, SessionBeforeSwitchResult, SessionBeforeTreeEvent, SessionBeforeTreeResult, SessionBoundaryDraft, SessionCompactEvent, SessionCompactFailedEvent, SessionInfoChangedEvent, SessionShutdownEvent, SessionStartEvent, SessionTreeEvent, SlashCommandInfo, SlashCommandSource, SourceInfo, TerminalInputHandler, ThinkingLevelSelectEvent, ToolAnnotations, ToolCallEvent, ToolCallEventResult, ToolDefinition, ToolExecutionEndEvent, ToolExecutionMode, ToolExecutionStartEvent, ToolExecutionUpdateEvent, ToolExposure, ToolInfo, ToolLoadout, ToolLoadoutChanges, ToolNamespace, ToolRendererResolver, ToolRenderers, ToolRenderResultOptions, ToolResultEvent, ToolResultEventResult, TurnEndEvent, TurnEndEventResult, TurnStartEvent, UIPromptEndEvent, UIPromptKind, UIPromptStartEvent, UserBashEvent, UserBashEventResult, WidgetPlacement, WorkingIndicatorOptions, WriteToolCallEvent, } from "./core/extensions/index.ts";
++export type { AfterProviderResponseEvent, AgentActivityOutcome, AgentBeforeSettleEvent, AgentBeforeSettleEventResult, AgentEndEvent, AgentSettledEvent, AgentStartEvent, AgentToolResult, AgentToolUpdateCallback, AppKeybinding, AutocompleteProviderFactory, BashToolCallEvent, BeforeAgentStartCustomEvent, BeforeAgentStartEvent, BeforeAgentStartEventResult, BeforeAgentStartUserEvent, BeforeProviderHeadersEvent, BeforeProviderRequestEvent, BeforeProviderRequestEventResult, BoundaryContextPreview, BoundaryResult, BoundaryState, BuildSystemPromptOptions, CacheWarmingDecisionEvent, CacheWarmingDecisionEventResult, CompactionEntryDraft, CompactOptions, ContextEditEntryDraft, ContextEvent, ContextEventResult, ContextUsage, ContextWithSystemEvent, CustomEntryDraft, CustomMessageEntryDraft, CustomToolCallEvent, EditToolCallEvent, EntryRenderer, EntryRenderOptions, ExecOptions, ExecResult, ExecuteToolOptions, Extension, ExtensionActions, ExtensionAPI, ExtensionCommandContext, ExtensionCommandContextActions, ExtensionContext, ExtensionContextActions, ExtensionError, ExtensionEvent, ExtensionFactory, ExtensionFlag, ExtensionHandler, ExtensionRuntime, ExtensionShortcut, ExtensionToolContext, ExtensionUIContext, ExtensionUIDialogOptions, ExtensionVirtualModel, ExtensionWidgetOptions, FindToolCallEvent, GrepToolCallEvent, InlineExtension, InputEvent, InputEventResult, InputSource, KeybindingHints, LoadExtensionsResult, LsToolCallEvent, MarkdownTransformContext, MarkdownTransformer, McpServersChangeEvent, MessageEndEvent, MessageEndEventResult, MessageRenderer, MessageRenderOptions, MessageStartEvent, MessageUpdateEvent, ModelSelectEvent, ModelSelectSource, NormalizedBuildSystemPromptOptions, PowerShellToolCallEvent, ProjectTrustContext, ProjectTrustEvent, ProjectTrustEventDecision, ProjectTrustEventResult, ProjectTrustHandler, ProviderConfig, ProviderModelConfig, ProviderStreamEvent, ReadToolCallEvent, RegisteredCommand, RegisteredTool, ResolvedCommand, ResourcesDiscoverEvent, ResourcesDiscoverResult, SessionBeforeCompactEvent, SessionBeforeCompactResult, SessionBeforeForkEvent, SessionBeforeForkResult, SessionBeforeSwitchEvent, SessionBeforeSwitchResult, SessionBeforeTreeEvent, SessionBeforeTreeResult, SessionBoundaryDraft, SessionCompactEvent, SessionCompactFailedEvent, SessionInfoChangedEvent, SessionShutdownEvent, SessionStartEvent, SessionTreeEvent, SlashCommandInfo, SlashCommandSource, SourceInfo, TerminalInputHandler, ThinkingLevelSelectEvent, ToolAnnotations, ToolCallEvent, ToolCallEventResult, ToolDefinition, ToolExecutionEndEvent, ToolExecutionMode, ToolExecutionStartEvent, ToolExecutionUpdateEvent, ToolExposure, ToolInfo, ToolLoadout, ToolLoadoutChanges, ToolNamespace, ToolRendererResolver, ToolRenderers, ToolRenderResultOptions, ToolResultEvent, ToolResultEventResult, TurnEndEvent, TurnEndEventResult, TurnStartEvent, UIPromptEndEvent, UIPromptKind, UIPromptStartEvent, UserBashEvent, UserBashEventResult, WidgetPlacement, WorkingIndicatorOptions, WriteToolCallEvent, } from "./core/extensions/index.ts";
+ export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
+ export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
+ export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
+@@ -42,4 +42,10 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
 +export * from "./core/settings-manager.ts";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.ts";
 +export * from "./core/package-manager.ts";
++export * from "./core/keybindings.ts";
++export * from "./modes/interactive/theme/theme.ts";
++export { getThemesDir } from "./config.ts";
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
 diff --git a/dist/core/settings-manager.js b/dist/core/settings-manager.js
@@ -361,3 +376,84 @@ diff --git a/dist/core/package-manager.d.ts b/dist/core/package-manager.d.ts
      private runWithConcurrency;
      /**
       * Get a unique identity for a package, ignoring version/ref.
+diff --git a/dist/modes/interactive/theme/theme.js b/dist/modes/interactive/theme/theme.js
+--- a/dist/modes/interactive/theme/theme.js
++++ b/dist/modes/interactive/theme/theme.js
+@@ -1,3 +1,4 @@
++import { validateThemeJson } from "./theme-schema.js";
+ import * as fs from "node:fs";
+ import * as path from "node:path";
+ import { backgroundAnsi, colorToHex, colorToOklch, foregroundAnsi, getTerminalColorMode, indexedColor, mixColors, parseColor, rgbColor, styleTextWithAnsi, } from "@earendil-works/pi-tui";
+@@ -9,11 +10,9 @@ import { stripBom } from "../../../utils/text.js";
+ import { generateSystemThemeColors, SYSTEM_THEME_NAME, terminalAppearance } from "./system-theme.js";
+ import { THEME_TOKENS, } from "./theme-tokens.js";
+ export { SYSTEM_THEME_NAME } from "./system-theme.js";
+-let themeJsonValidator;
++let themeJsonValidator = validateThemeJson;
+ /**
+- * Install full theme validation. Without it, documents are accepted as-is, which is what built-in
+- * themes already do: validating user-authored JSON needs typebox, and a presentation that only uses
+- * built-in themes should not pay ~17 MB of module graph for it.
++ * Replace the default full theme validator. File loading validates without CLI initialization.
+  */
+ export function setThemeJsonValidator(validator) {
+     themeJsonValidator = validator;
+diff --git a/dist/modes/interactive/theme/theme.d.ts b/dist/modes/interactive/theme/theme.d.ts
+--- a/dist/modes/interactive/theme/theme.d.ts
++++ b/dist/modes/interactive/theme/theme.d.ts
+@@ -17,9 +17,7 @@ export interface ThemeStyle extends TextAttributes {
+ }
+ export type ThemeJsonValidator = (label: string, json: unknown) => ThemeJson;
+ /**
+- * Install full theme validation. Without it, documents are accepted as-is, which is what built-in
+- * themes already do: validating user-authored JSON needs typebox, and a presentation that only uses
+- * built-in themes should not pay ~17 MB of module graph for it.
++ * Replace the default full theme validator. File loading validates without CLI initialization.
+  */
+ export declare function setThemeJsonValidator(validator: ThemeJsonValidator): void;
+ /** The background a theme is designed for. */
+diff --git a/dist/modes/interactive/theme/theme-schema.js b/dist/modes/interactive/theme/theme-schema.js
+--- a/dist/modes/interactive/theme/theme-schema.js
++++ b/dist/modes/interactive/theme/theme-schema.js
+@@ -1,10 +1,6 @@
+ /**
+- * Theme JSON validation, kept out of `theme.ts` on purpose.
+- *
+- * Validating user-authored theme files needs typebox, which costs ~17 MB of module graph to import.
+- * Palette lookup does not, so a presentation that only uses built-in themes should never pay for it.
+- * `main.ts` installs this validator before runtime resource loading; other consumers can opt in with
+- * `setThemeJsonValidator()`. Built-in themes do not need validation.
++ * Full theme JSON validation. The SDK theme module enables it by default.
++ * Hosts can replace it with setThemeJsonValidator().
+  */
+ import { Type } from "typebox";
+ import { Compile } from "typebox/compile";
+diff --git a/dist/modes/interactive/theme/theme-schema.d.ts b/dist/modes/interactive/theme/theme-schema.d.ts
+--- a/dist/modes/interactive/theme/theme-schema.d.ts
++++ b/dist/modes/interactive/theme/theme-schema.d.ts
+@@ -1,10 +1,6 @@
+ /**
+- * Theme JSON validation, kept out of `theme.ts` on purpose.
+- *
+- * Validating user-authored theme files needs typebox, which costs ~17 MB of module graph to import.
+- * Palette lookup does not, so a presentation that only uses built-in themes should never pay for it.
+- * `main.ts` installs this validator before runtime resource loading; other consumers can opt in with
+- * `setThemeJsonValidator()`. Built-in themes do not need validation.
++ * Full theme JSON validation. The SDK theme module enables it by default.
++ * Hosts can replace it with setThemeJsonValidator().
+  */
+ import { type Static, Type } from "typebox";
+ import { type ThemeColorValues } from "./theme-tokens.ts";
+diff --git a/dist/config.js b/dist/config.js
+--- a/dist/config.js
++++ b/dist/config.js
+@@ -350,6 +350,9 @@ export function getPackageDir() {
+  * - For source (src/): src/modes/interactive/theme/
+  */
+ export function getThemesDir() {
++    // The host distributes SDK theme assets beside its worker bundle.
++    const bundled = join(isBunBinary ? dirname(process.execPath) : __dirname, "coding-assets", "theme");
++    if (existsSync(bundled)) return bundled;
+     if (isBunBinary) {
+         return join(getPackageDir(), "theme");
+     }

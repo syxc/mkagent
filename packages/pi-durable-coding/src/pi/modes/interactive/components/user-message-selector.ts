@@ -7,7 +7,7 @@ import {
 	Text,
 	truncateToWidth,
 } from "@earendil-works/pi-tui";
-import { theme } from "../theme/theme.ts";
+import { theme } from "@earendil-works/pi-coding-agent";
 import { DynamicBorder } from "./dynamic-border.ts";
 
 interface UserMessageItem {
