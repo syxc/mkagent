@@ -5,9 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { applySharedHelperPort } from '../scripts/shared-helper-port.ts';
-import { ansiLinesToHtml, ansiToHtml } from '../src/pi/core/export-html/ansi-to-html.ts';
-import { exportSessionToHtml } from '../src/pi/core/export-html/index.ts';
-import { createToolHtmlRenderer } from '../src/pi/core/export-html/tool-renderer.ts';
+import { ansiLinesToHtml, ansiToHtml, exportSessionToHtml, createToolHtmlRenderer } from '@earendil-works/pi-coding-agent';
 import { SessionManager } from '@earendil-works/pi-coding-agent';
 import { getThemeByName, getThemesDir, loadThemeFromPath, setRegisteredThemes } from '@earendil-works/pi-coding-agent';
 
@@ -23,37 +21,6 @@ test('ANSI HTML keeps the original palette, SGR, escaping and wide numeric behav
   assert.equal(digest(ansiLinesToHtml(samples)), '196baaa44af3e50fd449859ada4733a3bd583609f733216a2d301b7460b4c3b4');
   assert.equal(ansiToHtml('\x1b[38;5;256mwide'), '<span style="color:#f8f8f8">wide</span>');
 });
-
-const source = `
-const ANSI_COLORS = ["#000000"];
-function color256ToHex(index: number): string { return ANSI_COLORS[index]; }
-export function ansiToHtml(text: string): string { return text + color256ToHex(0); }
-`;
-
-test('palette generation shares implementation bodies and records the public dependency', () => {
-  const port = applySharedHelperPort('core/export-html/ansi-to-html.ts', source);
-  assert.ok(port);
-  assert.equal(port.dependency, '@earendil-works/pi-tui');
-  assert.match(port.body, /colorToHex\(\{ kind: "indexed", index \}\)/);
-  assert.equal(applySharedHelperPort('core/export-html/ansi-to-html.ts', source.replace('"#000000"', '"#ffffff"'))?.body, port.body);
-  assert.equal(applySharedHelperPort('core/export-html/ansi-to-html.ts', source.replace('return ANSI_COLORS[index];', 'return "different upstream body";'))?.body, port.body);
-});
-
-for (const [name, changed] of [
-  ['index type', source.replace('index: number', 'index: string')],
-  ['return type', source.replace('): string', '): number')],
-  ['optional index', source.replace('index: number', 'index?: number')],
-  ['extra argument', source.replace('index: number', 'index: number, extra: number')],
-  ['exported palette', source.replace('const ANSI_COLORS', 'export const ANSI_COLORS')],
-  ['mutable binding', source.replace('const ANSI_COLORS', 'let ANSI_COLORS')],
-  ['duplicate palette', source + '\nconst ANSI_COLORS = [];'],
-  ['duplicate converter', source + '\nfunction color256ToHex(index: number): string { return ""; }'],
-] as const) {
-  test(`palette generation rejects changed ${name}`, () => {
-    assert.notEqual(changed, source);
-    assert.throws(() => applySharedHelperPort('core/export-html/ansi-to-html.ts', changed), /boundary changed|declaration repeated/);
-  });
-}
 
 for (const [path, changed] of [
   ['core/compaction/compaction.ts', 'export const calculateContextTokens = (usage: never): number => 0;'],

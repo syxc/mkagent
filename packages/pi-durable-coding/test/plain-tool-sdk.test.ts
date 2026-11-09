@@ -4,8 +4,31 @@ import { ToolTask } from '@earendil-works/pi-durable';
 import type { AgentTool } from '../src/agent-runtime.ts';
 import { runToolCall } from '../src/durable-loop.ts';
 import { agentToolToHost, hostToolToAgent } from '../src/host-tools.ts';
-import { createToolDefinitionFromAgentTool, wrapToolDefinition } from '../src/pi/core/tools/tool-definition-wrapper.ts';
+import { createToolDefinitionFromAgentTool, wrapToolDefinition, type ToolDefinition } from '@earendil-works/pi-coding-agent';
+import { hostToolExecution } from '../src/host-tool-task.ts';
 import { response } from './fixtures/durable-harness.ts';
+
+test('SDK tool conversions preserve durable ownership and declaration metadata', () => {
+  const reachesTools = () => 'all' as const;
+  const tool: AgentTool & Pick<ToolDefinition,
+    'exposure' | 'namespace' | 'annotations' | 'reachesTools' | 'defaultActive' | 'promptSnippet' | 'promptGuidelines'> = {
+    name: 'fixture', label: 'Fixture', description: 'Local metadata fixture', parameters: { type: 'object' },
+    replay: 'safe', exposure: 'deferred', namespace: { name: 'fixture' }, annotations: { readOnlyHint: true },
+    reachesTools, defaultActive: false, promptSnippet: 'Fixture prompt', promptGuidelines: ['Fixture rule'],
+    execute: async () => ({ content: [], details: {} }),
+  };
+  Object.defineProperty(tool, hostToolExecution, { value: true });
+  const definition = createToolDefinitionFromAgentTool(tool);
+  const roundtrip = wrapToolDefinition(definition);
+  for (const converted of [definition, roundtrip]) {
+    expect(Object.getOwnPropertyDescriptor(converted, hostToolExecution))
+      .toEqual(Object.getOwnPropertyDescriptor(tool, hostToolExecution));
+    expect(converted).toMatchObject({
+      replay: 'safe', exposure: 'deferred', namespace: { name: 'fixture' }, annotations: { readOnlyHint: true },
+      reachesTools, defaultActive: false, promptSnippet: 'Fixture prompt', promptGuidelines: ['Fixture rule'],
+    });
+  }
+});
 
 type Mode = 'plain' | 'bridged' | 'roundtrip';
 function targetTool(native: AgentTool, mode: Mode): AgentTool {

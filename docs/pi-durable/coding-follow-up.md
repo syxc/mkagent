@@ -1,6 +1,6 @@
 # Durable coding agent 迁移纠偏跟进
 
-更新日期：2026-11-09。纠偏代码起点：`cb0311f`；工具切片已提交于 `62ed325`，请求切片已提交于 `456241a`，后续 SDK 接线状态见下文。`f4f9f26`、`8b1c98f` 及后续各批检查保留各自的功能证据，不能替代本次纠偏验收。
+更新日期：2026-11-10。纠偏代码起点：`cb0311f`；工具切片已提交于 `62ed325`，请求切片已提交于 `456241a`，后续 SDK 接线状态见下文。`f4f9f26`、`8b1c98f` 及后续各批检查保留各自的功能证据，不能替代本次纠偏验收。
 
 MkAgent 第一次将 Pi coding agent 直接换成 pi-durable 后，发现 Coding 能力不足且无法复用原插件生态。当前以切换前 `b77c4a2645d3` 的 MkAgent 为行为和接入边界参照，保留 Pi Coding 层及插件契约，尝试把其底层执行基座换成 durable。保留 `cb0311f` 及后续已确认的功能、修复与存量数据；这不授权回退 Git 或恢复旧依赖。
 
@@ -25,10 +25,10 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 | 顺序 | 编号 | 工作 | 当前状态与通过条件 |
 |---|---|---|---|
 | 0 | F0 | 全面纠正文档 | 进行中。解除与用户目标冲突的整包禁令，纠正公开 AgentSession 构造函数可注入 Agent 的事实，随实际接线同步现行文档 |
-| 1 | F1 | 按需求核对官方能力与实际执行链 | 进行中。公开 SDK 组合已实测插件命令、input hook 和 durable Agent 的单次确定性执行；生产持久化与恢复尚未通过新路径验证，不能由工厂限制推导完整类必须移植 |
+| 1 | F1 | 按需求核对官方能力与实际执行链 | 进行中。公开 SDK 组合已实测插件命令、input hook 和 durable Agent 的单次确定性执行；SDK AgentSession 已接入 durable 子类，生产持久化、输入身份及冷恢复定向验证通过，其他职责继续核对 |
 | 2 | F2 | 优先复用官方内核和 SDK | 进行中。保留已有 ToolTask 和请求复用结果；将 Coding 主链接入公开 SDK，durable 已有能力优先使用 durable |
 | 3 | F3 | 收窄兼容代码和源码范围 | 未完成。以实际删除被 SDK 覆盖的运行时源码和生成转换为验收条件，只保留具有具体缺口依据的适配 |
-| 4 | F4 | 修正测试并验证实际行为 | 待新接线验证。覆盖插件、权限、信任、输入接纳、取消、持久化和旧会话恢复；历史测试结果不替代新路径结果 |
+| 4 | F4 | 修正测试并验证实际行为 | 进行中。新接线的会话、输入接纳、工具取消、持久化、旧会话恢复及 worker 打包定向验证通过，其余受影响路径随源码替换验证；历史测试结果不替代新路径结果 |
 | 5 | F5 | 同步来源、依赖和可复现产物 | 进行中。同步生产依赖、lock、声明和 worker 资源，删除已替代源码及登记，禁止生成器重新带回副本 |
 | 6 | F6 | 汇总架构、升级及功能验收 | 未完成。新接线、实际源码删除、必要验证和独立复核完成后再验收，全部完成后统一普通推送 |
 
@@ -48,7 +48,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 | 依赖补丁 | 区分发布 API 和新增导出；评估原包、外部适配及当前补丁，包含升级和存量数据迁移成本 |
 | 测试 | 哪些断言覆盖真实产品或插件行为，哪些只固定当前私有布局、生成目录和调用细节 |
 
-当前独立核查确认四类任务桥已使用官方 scheduler、task ownership、commit 和等待接口，同时仍有与 GenerationTask/ToolTask 同类的本地状态转换。`62ed325` 已将宿主工具执行、输出、嵌套 admission、replay 和清理交给原包公开 ToolTask phases/abort，删除旧嵌套调用副本；Native 保留完整结果、插件事件及 journal。请求切片现通过仓内新增 GenerationResponseTask 复用 SDK streamResponse 和 partial writer，保留 Native `message_end` 及唯一 transcript writer，并原子提交 SDK receipt、journal 和下一 checkpoint。它属于本地 SDK 扩展，不能记作未修改发布 API。工具轮次与收尾已核对固定发布源码及产品工具 wrapper：SDK 阶段同时写消息、接纳工具、应用 inbox 并转交下一任务，不能直接代替 Native 交付与 journal；具体边界和退出条件见[架构记录](coding-architecture.md#工具轮次与收尾的-sdk-边界)。这些职责未新增 SDK 补丁。公开 Agent/runToolCall 的普通 AgentTool 现已复用同一个 SDK 桥，AgentSession 的工具转换保留桥接标记；低层 task fixture 不自动纳入这一入口保证。session/summary 的具体适配边界见架构记录；此前 F1 至 F3 的能力核对及生产搜索、显式包管理登记仅保留各自时点，公开 Coding SDK 主链接线和源码删除仍未完成。
+当前独立核查确认四类任务桥已使用官方 scheduler、task ownership、commit 和等待接口，同时仍有与 GenerationTask/ToolTask 同类的本地状态转换。`62ed325` 已将宿主工具执行、输出、嵌套 admission、replay 和清理交给原包公开 ToolTask phases/abort，删除旧嵌套调用副本；Native 保留完整结果、插件事件及 journal。请求切片现通过仓内新增 GenerationResponseTask 复用 SDK streamResponse 和 partial writer，保留 Native `message_end` 及唯一 transcript writer，并原子提交 SDK receipt、journal 和下一 checkpoint。它属于本地 SDK 扩展，不能记作未修改发布 API。工具轮次与收尾已核对固定发布源码及产品工具 wrapper：SDK 阶段同时写消息、接纳工具、应用 inbox 并转交下一任务，不能直接代替 Native 交付与 journal；具体边界和退出条件见[架构记录](coding-architecture.md#工具轮次与收尾的-sdk-边界)。这些职责未新增 SDK 补丁。公开 Agent/runToolCall 的普通 AgentTool 现已复用同一个 SDK 桥，AgentSession 的工具转换保留桥接标记；低层 task fixture 不自动纳入这一入口保证。session/summary 的具体适配边界见架构记录；此前 F1 至 F3 的能力核对及生产搜索、显式包管理登记仅保留各自时点；AgentSession 主链已通过 SDK 子类接线，剩余源码删除和整体验收继续开放。
 
 既有 `codingPrepare`、`codingStream`、`codingBoundary` 是仓内 durable 补丁接点。未修改 Pi 1.5.0 的 `pi.generation` 为 v2，本地补丁升为 v4；`pi.tool` 为 v3。codemode 的 replay module 另由 2 升为 3，不与任务或文档 schema 版本混写。主链替代或补丁撤除须显式处理这些状态与日志，具体对照见架构记录。核查安装包可说明当前能力与缺口，不能将其当作未修改发布包的能力。旧阶段与 `LoopInput.resume` 仍有恢复调用方，替换时需显式迁移。存量任务清单包括 `pi.coding.{session,run,call,tool,summary}` 五种 v1；summary 的压缩、分支总结和 bug report 已完成结果、不确定请求禁止重发及取消语义须一并纳入恢复验证。
 
@@ -68,7 +68,9 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `0c69e9f` 的 ModelRuntime 切片直接使用公开 SDK 类、provider composition、virtual routing、凭据串行操作及模型存储，删除九份运行时源码、旧转换脚本和一份转发，共十一文件、2986 行。SDK 窄补丁增加实时宿主 Models 绑定与共用临时凭据入口：扩展 overlay 保留在独立内存集合，宿主 refresh 仍使用原集合和目录存储，迟到检查不能恢复旧宿主快照，默认 SDK create 路径保留；composer 仅收窄结构类型。该模型切片时 runtime 为 160 份 TypeScript、4 项资源，其中 src/pi 为 156 份；辅助来源为 9 项、共享入口为 20 个。142 项定向测试、548 个断言及两项类型检查通过；worker 完整组合通过 25 项，一项图像测试超过默认 5 秒后，以 15 秒预算单项复跑通过，未修改仓库测试超时。完整来源与补丁 check、全新 hoisted 冻结安装的 55 份补丁核验、12 项模型契约及固定 Craft 的 2154 文件审计通过。独立复核未确认新增回归；24 项测试、补充确定性探针、85 个成员对照和公开消费端类型检查通过。复现的自定义 AuthContext 未传入内部集合问题在替换前已存在，当前生产未见该自定义接线，作为既有契约缺口保留跟进；该时点 legacy NativeModelRegistry 的结构适配、插件 runner/types 和 AgentSession 主链仍开放。
 
-`0c69e9f` 后的 runner/types/exec 切片使用公开 SDK ExtensionRunner、插件类型、defineTool 和 execCommand，删除完整 runner、types、exec 实现、两份转发及旧转换脚本，共六文件、4101 行。SDK 补丁只增加实例级 theme/prompt 注入、可选 replay 声明和现有模块根导出，显式保留 KeybindingsManager 值导出；事件、生命周期和命令执行算法继续由 SDK 提供。legacy 薄绑定保留 headless theme 与宿主文档提示词，Native 会话显式注入原提示词构建器，默认 SDK 构造保持。当前 runtime 为 157 份 TypeScript、4 项资源，其中 src/pi 为 153 份；辅助来源为 9 项、共享入口为 18 个。161 项定向测试、831 个断言、两项类型检查和完整来源及补丁 check 通过。worker 完整组合为 25 项通过、图像项默认 5 秒超时；该项随后在 15 秒预算内通过，未改仓库超时。全新 HOME/cache 的 hoisted 冻结安装覆盖 11 个 workspace，lock 未变，58 份补丁产物与已测试安装一致，Coding 为 24 份；SDK-only runner/exec 的 3 项测试、24 个断言及公开消费端类型检查通过，固定 Craft 审计覆盖 2150 文件。独立复核首次因连接超时中断；新的只读复核未确认相对 `0c69e9f` 的新增缺陷，独立运行 105 项测试、424 个断言及源码和公开消费端类型检查通过，并核验补丁算法、403 路径的删除闭包及来源摘要。AgentSession 生产生命周期、原子输入接纳、取消和冷恢复，以及其余源码替换仍开放，F0 至 F6 不关闭。
+`0c69e9f` 后的 runner/types/exec 切片使用公开 SDK ExtensionRunner、插件类型、defineTool 和 execCommand，删除完整 runner、types、exec 实现、两份转发及旧转换脚本，共六文件、4101 行。SDK 补丁只增加实例级 theme/prompt 注入、可选 replay 声明和现有模块根导出，显式保留 KeybindingsManager 值导出；事件、生命周期和命令执行算法继续由 SDK 提供。legacy 薄绑定保留 headless theme 与宿主文档提示词，Native 会话显式注入原提示词构建器，默认 SDK 构造保持。该 runner 切片时 runtime 为 157 份 TypeScript、4 项资源，其中 src/pi 为 153 份；辅助来源为 9 项、共享入口为 18 个。161 项定向测试、831 个断言、两项类型检查和完整来源及补丁 check 通过。worker 完整组合为 25 项通过、图像项默认 5 秒超时；该项随后在 15 秒预算内通过，未改仓库超时。全新 HOME/cache 的 hoisted 冻结安装覆盖 11 个 workspace，lock 未变，58 份补丁产物与已测试安装一致，Coding 为 24 份；SDK-only runner/exec 的 3 项测试、24 个断言及公开消费端类型检查通过，固定 Craft 审计覆盖 2150 文件。独立复核首次因连接超时中断；新的只读复核未确认相对 `0c69e9f` 的新增缺陷，独立运行 105 项测试、424 个断言及源码和公开消费端类型检查通过，并核验补丁算法、403 路径的删除闭包及来源摘要。该 runner 切片时 AgentSession 生产生命周期、原子输入接纳、取消和冷恢复仍开放；后续接线见下段，剩余源码替换及 F0 至 F6 继续开放。
+
+`5a72c8a` 后的 AgentSession 切片将完整会话生命周期、工具注册、插件输入与 HTML 导出交给公开 Coding SDK。`native-agent-session.ts` 仅绑定 durable 结算、输入持久化、journal 身份、summary 和兼容快照；无接点时 SDK 保持原执行循环。旧完整会话类、退出闭包的 helper、工具包装实现、四份 HTML 资源和旧输入转换脚本共十七文件已删除，ZIP writer、sleep 和工具转换也改用 SDK，fflate 直接依赖移除。SDK 窄补丁增加可选执行与接纳接点，工具转换保留声明元数据和 Symbol 描述符，图片 worker 只用模块路径或进程内回退。当前 runtime 为 145 份 TypeScript，其中 src/pi 为 141 份、门面为 4 份，资源为 0；辅助来源为 9 项、共享入口为 18 个。Coding 补丁为 30 份物理输出，与 core 4 份、durable 30 份合计 64 份。生产恢复组合通过 43 项测试、313 个断言，worker 完整组合通过 26 项、103 个断言，两项类型检查通过；会话与工具组合通过 15 项、107 个断言。修复复核问题后的全新 hoisted 冻结安装核验 64 份产物，公开类型和同一 15 项测试通过，lock 未变；固定 Craft 审计覆盖 2137 文件。首次 follow-up 超时由 SDK 转换丢失宿主执行标记引起，图片 canary 失败由 SDK 项目相对 worker 路径引起，两项原回归修复后通过。最终类型探针曾误用 namespace 和 exposure 类型，按公开类型修正后复用安装通过。独立复核确认嵌套工具绕过 durable 和内部模型投影带回宿主元数据两项新增回归；现通过可选 runToolCall、convertToLlm 接点修复，默认 SDK 路径保留。父子 durable 任务、边界与 provider 投影、transcript 和 journal 元数据回归通过；实际 provider 请求在修复前也已清理。独立复查另确认发布图片未沿用共享 Photon，构建目录缺失时会静默丢图；现通过可选 processImage 绑定既有处理器，屏蔽构建依赖的搬迁图片回归、15 项会话工具、26 项 bundle、类型和全新冻结检查通过。图片专项独立复查未发现可确认的新增缺陷；复查方重跑搬迁图片用例通过，并核对十一份相关文件和三十份补丁产物，结论仅覆盖该修复。剩余源码与 F0 至 F6 整体验收继续开放，AuthContext 既有缺口保留跟进。
 
 完成条件：确认可由官方实现承担的职责已经交还 SDK；调用方和功能验证同步迁移，没有为了引用包而在补丁里复制另一套实现。
 

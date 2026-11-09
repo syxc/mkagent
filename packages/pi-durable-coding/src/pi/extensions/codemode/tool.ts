@@ -32,7 +32,7 @@ import type { ToolDefinition, ToolLoadout, ToolLoadoutChanges, ToolNamespace } f
 import type { ModelRegistry } from "@earendil-works/pi-coding-agent";
 import { SETTINGS_DEFAULTS } from "@earendil-works/pi-coding-agent";
 import type { CodemodeMode } from "@earendil-works/pi-coding-agent";
-import { type TypeBoxAgentTool, wrapToolDefinition } from "../../core/tools/tool-definition-wrapper.ts";
+import { type TypeBoxAgentTool, wrapToolDefinition } from "@earendil-works/pi-coding-agent";
 import { loadCodemodeExecutor } from "./execute.lazy.ts";
 import { codemodeRenderers } from "./renderer.ts";
 

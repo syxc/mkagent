@@ -11,7 +11,7 @@ import {
 	createShellToolDefinition,
 	type ShellToolConfig,
 } from "./bash.ts";
-import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
+import { wrapToolDefinition } from "@earendil-works/pi-coding-agent";
 
 const UTF8_OUTPUT_PREFIX = "try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n";
 

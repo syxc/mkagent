@@ -53,16 +53,6 @@ export function portPhotonRuntime(source: string): string {
     + 'export { loadPhoton, type PhotonImageType } from "../../compat/photon.ts";\n';
 }
 
-/** Use published browser assets without copying their upstream implementation. */
-export function portHtmlVendorAssets(source: string): string {
-  for (const [variable, name] of [['markedJs', 'marked.min.js'], ['hljsJs', 'highlight.min.js']]) {
-    const before = `const ${variable} = readFileSync(join(templateDir, "vendor", "${name}"), "utf-8");`;
-    if (source.split(before).length !== 2) throw new Error(`Native HTML ${name} asset boundary changed`);
-    source = source.replace(before, `const ${variable} = readHtmlVendorSource("${name}", templateDir);`);
-  }
-  return 'import { readHtmlVendorSource } from "../../../compat/html-assets.ts";\n' + source;
-}
-
 /** Bundles carry the same non-code assets as the source package. */
 export function portBundledAssets(source: string): string {
   for (const [name, directory] of [

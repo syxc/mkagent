@@ -975,7 +975,7 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "274fc414cfa12dff7dad6925fe5cbe55c515d0851e13eccd7a4401370fa74388",
+      "sha256": "809bd475bb511ca2a444273b98d5b4a930f1fb80e0263fd1fda12923fc7ef475",
       "reason": "Remove the direct highlight.js dependency after replacing local syntax highlighting with the public Coding SDK."
     },
     "package.json": {
@@ -2239,8 +2239,8 @@
       "reason": "Craft build or quality automation adapted to MkAgent targets and the pinned lineage checks"
     },
     "packages/pi-agent-server/src/bundle-smoke.test.ts": {
-      "sha256": "3fd289d2f5bf496615fa72b2493c534f415bb2a97e63fdbe014a5c0fa97c9853",
-      "reason": "Extend offline bundle tests for durable assets, codemode/MCP defaults, initialization races, tools, runtime updates, cancellation and OAuth ownership. Verify relocated Native images and HTML export with one shared Photon WASM and reject the obsolete second asset."
+      "sha256": "6e26304b0262dd5e4fc0f83d35eb92165d050102745bb22fe9875f3b10389438",
+      "reason": "Extend offline bundle tests for durable assets, codemode/MCP defaults, initialization races, tools, runtime updates, cancellation and OAuth ownership. Verify relocated Native images and HTML export with one shared Photon WASM and reject the obsolete second asset. Hide build-time Photon WASM reads in the relocated native prompt fixture so source dependencies cannot mask incompatible release image bindings."
     },
     "packages/pi-agent-server/src/mini-model-query.test.ts": {
       "sha256": "949aca864489239e0e589e1feb080a22b438934d0dff3c5915b75bb1802388b2",
@@ -2429,11 +2429,11 @@
       "reason": "Verify Native EXIF layouts and signed metadata boundaries, and pin the full patch digest that refreshes cached Bun installs."
     },
     "packages/pi-durable-coding/src/compat/archive.ts": {
-      "sha256": "3aeba2fe800dc37eafa07ff87e97eb84b8667c15dcb2143ae51e632cf77aa417",
-      "reason": "Adapt public ZIP records and decoding to Native ordering, binary data, CRC and fresh-directory installer policy."
+      "sha256": "230b3b2c73d031df9fca463de36043b9f7231cbc563e9ef697783da949261adb",
+      "reason": "Keep validated ZIP extraction for the native installer; the public Coding SDK owns ZIP writing."
     },
     "packages/pi-durable-coding/test/native-archive.test.ts": {
-      "sha256": "414f64d3e5487dcab828db81bf47fc5b89c98ec5577200be3804d838028691b4",
+      "sha256": "33c3e011138fb096860816e9286fb35d5b7178474538b1b19d6ed8ab20713119",
       "reason": "Verify ZIP contracts with Python's standard reader, binary fixtures and original Native installer source under explicit hosts."
     },
     "packages/pi-durable-coding/test/native-tool-archive.fixture.ts": {
@@ -2497,7 +2497,7 @@
       "reason": "Check shared codemode formatting, native token budgets, image deduplication, write failures and partial cancellation output."
     },
     "packages/pi-durable-coding/test/shared-sleep.test.ts": {
-      "sha256": "5e1dee9a6b2fc7ff6e389c5b07fbf4aceb563a10aa99faf4cd5c40a61126f537",
+      "sha256": "c4d98451a0e88fc4e31abc4bb3220d822bf4c7bac0760e2439de984ac3b41904",
       "reason": "Check shared timer reuse, listener cleanup, optional signals and native cancellation and timer errors."
     },
     "packages/pi-durable-coding/test/shared-tool-search.test.ts": {
@@ -2513,7 +2513,7 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "85641bb919b26057d6192a5bffa70187bcdf65e78976c2043db493f4d2c2b428",
+      "sha256": "a368fc3f8226a11b5f77235e193c7ef20a757b64dedd3b8a7d30dbc2a0f3e752",
       "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
@@ -2521,7 +2521,7 @@
       "reason": "Verify public SDK argument preparation through both Native edit factories, preserve recorded inputs, execute BOM/CRLF file edits, and reject invalid edits before filesystem access."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "591852657973fcdeeb74763bf677e09c6528729d860396d588c9aa181dad0de5",
+      "sha256": "2f13e454077c361d1011337e10baa93dc3664bd5550f4f37003ee4f2a56922b2",
       "reason": "Guard declarations and retained policy constants when forwarding Native algorithms. Do not bind replaced child-process, shell, read-path or truncation bodies to hashes."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
@@ -2627,10 +2627,6 @@
     "packages/server-core/src/sessions/native-project-trust.isolated.ts": {
       "sha256": "7182404f7b4da1f3812f8e95f11d4918c1ab18d09b7b4be7f03c48556e342c74",
       "reason": "Exercise project resource trust, native MCP revocation and explicit local package install and remove through the actual product owner."
-    },
-    "packages/pi-durable-coding/scripts/native-user-input-port.ts": {
-      "sha256": "759228d35942c87832ca45647f12de33f34fc807606fc7b4678d919950c2bfa1",
-      "reason": "Preserve committed plugin user identity, raw input, attachments and product history receipts."
     },
     "packages/pi-durable-coding/test/native-user-input.test.ts": {
       "sha256": "8f052560307848e47bfd4ef8f9131c71be5b36dca381b6a3a4126c4d69fb6989",
@@ -3325,8 +3321,8 @@
       "reason": "Cross-platform bounded retry runner hardens dependency installation and Electron packaging downloads"
     },
     "packages/pi-agent-server/scripts/build.ts": {
-      "sha256": "6a59415d2042371e0bfb8446e78a03240579efd2b6f60f4bbb93f708d147c9bf",
-      "reason": "Copy theme JSON assets from the public Coding SDK while preserving HTML template and vendor JavaScript resources."
+      "sha256": "1d55081c73dab17771b455e9e635c659e957cd714bbf839ce11fc434e76cda9c",
+      "reason": "Build the durable worker with published Coding SDK theme and HTML assets plus offline browser vendor resources."
     },
     "packages/pi-agent-server/src/cache-warmer.ts": {
       "sha256": "7d1ca54d32dc242776a6fe34cce44810554fe5d4243ee0d42f135619f048d8af",
@@ -3725,7 +3721,7 @@
       "reason": "Record the generated closure after replacing extension runner, plugin types and command execution with the published Coding SDK."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "87be15851e183a78fab993ecf5fcb5478df74c45e832fecfb063776302a4409d",
+      "sha256": "caded7b470e61a8de98f870479d29e3a3b4cff74d885ae64e92239f53ae52533",
       "reason": "Remove the direct highlight.js dependency after replacing local syntax highlighting with the public Coding SDK."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
@@ -3997,11 +3993,11 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "7e277e69e1a31ecc71681014f488a320509c26acead6053ae8d5abf5a6476872",
+      "sha256": "6699dd64f7c5da17b7e539d8528beaea2f6b461dd5af7a0871983b9cd0f3f58c",
       "reason": "Record the generated closure after replacing extension runner, plugin types and command execution with the published Coding SDK."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
-      "sha256": "e132e9a4414b44d25c8d7372f493394f104ce15cf4010e7596a721ed9cf7bffc",
+      "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
       "reason": "Preserve Photon and image worker boundaries; connect both HTML browser assets to published packages and reject missing or repeated asset reads."
     },
     "packages/pi-durable-coding/scripts/resource-loader-port.ts": {
@@ -4009,7 +4005,7 @@
       "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/scripts/session-runtime-port.ts": {
-      "sha256": "55532b8be38572e83201b40f05eacef4ba0b5bc8ce6d0f04a814d5a66b0be003",
+      "sha256": "c45e4a24bea7eee5386b1854de35ef38e33b18637d13b29215322afd9b1176a4",
       "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
     },
     "packages/pi-durable-coding/test/native-theme.test.ts": {
@@ -4017,7 +4013,7 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "38687d6e1bd8a80731778591bd397994ff722af70006f3981ed3a349c8618aef",
+      "sha256": "b949c26890330509099beff0497d33f201484d65840d8f3f580bd74ac8c6c8dd",
       "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
@@ -4069,7 +4065,7 @@
       "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
     },
     "packages/pi-durable-coding/src/durable-coding/session-task.ts": {
-      "sha256": "d0ac1bee698c2abca1aed6e7cd4512b552f91478ac5dc61939e0554f9811358f",
+      "sha256": "a1feae7cf462a658ea04469b59a8521b78512fc21e609eb7a2f8142766c2dd2b",
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in session-task.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/single-tool-task.ts": {
@@ -4133,16 +4129,12 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/config.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/agent-session-runtime.ts": {
-      "sha256": "2268b5bbdcce1aec587144a86dc0c2a28ac5a4bcc24e9cb6d9b2a5c2d026c3a5",
+      "sha256": "29bac8da9d8d38aef07e2d792740e3248cda86dd68edd6b3a27bfc7233309364",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/agent-session-services.ts": {
       "sha256": "008523f4e44ab8416d17b2a0fd9a22c7acdebcf6f2778c45abcbc2e3a97cd9c1",
       "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
-    },
-    "packages/pi-durable-coding/src/pi/core/agent-session.ts": {
-      "sha256": "ce636aafb34bf610a6091082373193135fca459b47211ade7243758b77da4d15",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/auth-guidance.ts": {
       "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
@@ -4155,10 +4147,6 @@
     "packages/pi-durable-coding/src/pi/core/bash-executor.ts": {
       "sha256": "6fae3801533d64ccc018c43682bbff868619dd7cdab8f67730c731a5785d2984",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/bash-executor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/bug-report.ts": {
-      "sha256": "25f122c8964219415dfa8b29462c434d94fbc0b3dbc7ae4fc94b59c56097f749",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/cache-warmer.ts": {
       "sha256": "6476803829f91e2aead921d9f27e22de45ac30797815f08a4ab1dfeefe145f4b",
@@ -4184,10 +4172,6 @@
       "sha256": "37eab7698cdbff8b5987d4529005ea16d7e1ae4a5344d7d0443c3466444aa90e",
       "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
     },
-    "packages/pi-durable-coding/src/pi/core/crash-log.ts": {
-      "sha256": "124e07adcc20808b79df0c1051709726a7d1e9ade2d60cc25d21d9a5094e05f4",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
     "packages/pi-durable-coding/src/pi/core/defaults.ts": {
       "sha256": "e05e32e5613066667b52fa1d8864fec27b3564636f93af7983f53984bce02955",
       "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
@@ -4196,45 +4180,17 @@
       "sha256": "b91285b8dbd14bfbb3fce3775dc4c994a057cf3efa07882fc1bd42c44fbfced5",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/experimental.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/core/export-html/ansi-to-html.ts": {
-      "sha256": "ee49a30e7060b904777e13caa1427627063bd8d513ed57d7099d4d19a8098124",
-      "reason": "Preserve the pinned Native SGR parser and HTML escaping while sharing the ANSI palette and indexed color conversion through public pi-tui."
-    },
     "packages/pi-durable-coding/test/native-html-colors.test.ts": {
-      "sha256": "bd95b1051fae217f01c33f79bbd85c54d691d9f9f17408fb3cbdfa0459b04cd2",
+      "sha256": "f16503b86446b7b97a91bd9fff37444661ef20ee799ac062af77024a08a95b9e",
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
-    },
-    "packages/pi-durable-coding/src/pi/core/export-html/index.ts": {
-      "sha256": "213c411e37d79c8053195d16dc43282f2f676adce685a17e091747509d7cabcc",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/compat/html-assets.ts": {
       "sha256": "7c89c0a4d7deda5bd04ecc6e48e547726fac787abeaa168c20693db3d2522e9d",
       "reason": "Read published Markdown and Highlight.js browser assets or their offline copies; retain the complete BSD notice in standalone HTML."
     },
     "packages/pi-durable-coding/test/native-html-marked.test.ts": {
-      "sha256": "4b46501e359bdcf15155f0bff674445b59b57211df3c2c91a6ca0540d2d488d7",
+      "sha256": "fd637d1cb431de32f48a7e3e9ed0a65560403927b60c6b9503c2f8c41e367b95",
       "reason": "Verify published Markdown rendering and offline asset selection; protect both Native browser asset reads from missing or repeated boundaries."
-    },
-    "packages/pi-durable-coding/src/pi/core/export-html/template.css": {
-      "sha256": "c9d26cc314336192021d604c0f1a4a63115172b24d03500571379f9172c06fc9",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/template.css; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/export-html/template.html": {
-      "sha256": "47d208235b066c856dae69c60281a3b99d164b99be9b81153d880375c9327105",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/template.html; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/export-html/template.js": {
-      "sha256": "14fbe96123a82ee0f3efdd9f9634dd316c59810509fdbd8c5a5f41f3918c07a4",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/template.js; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/export-html/tool-renderer.ts": {
-      "sha256": "37c3142f5180fc7db899ad94c452c6cf2312ec81d7b593695a10707490841fc6",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/core/export-html/vendor/marked-cjk-friendly.min.js": {
-      "sha256": "93d2c938754cb24eef5b9ffecc268a98ef6beeb75dad614b0e874176aeeba565",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/export-html/vendor/marked-cjk-friendly.min.js; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/index.ts": {
       "sha256": "2110cec64677569a29ecba3e130a659dbec4e0bd3f334f118efe422b2efabc2c",
@@ -4249,7 +4205,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/virtual-modules.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/wrapper.ts": {
-      "sha256": "2fa8672f7937fc9737d08d5f3ddcb375316674d513d15b34cb2a23b2007ecce9",
+      "sha256": "4bb0675d11e68a5bdbe8de0e4efafb44dd67ebac35363f4cfeb8274278a9c30a",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/footer-data-provider.ts": {
@@ -4268,10 +4224,6 @@
       "sha256": "ee80193f720d742d5ebcb7d2d2e67e7e7200b3d2df3876ed650f335c41341388",
       "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
-    "packages/pi-durable-coding/src/pi/core/nested-tool-calls.ts": {
-      "sha256": "15b0d9d5b24df2add64e7347b4f904c1948f97a0dd6512eb4f7de7884a9286b7",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
-    },
     "packages/pi-durable-coding/src/pi/core/prompt-templates.ts": {
       "sha256": "80694047c429ea6e3274d2b076a24717decabc03aa0fab9a8903dd21bc163f28",
       "reason": "Use the public Coding SDK for event bus, diagnostics, file mutation queue and frontmatter instead of local copies."
@@ -4281,16 +4233,12 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/resolve-config-value.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/sdk.ts": {
-      "sha256": "f18fdd7dd856fc292ed32b802b2ab0f006dcb0e58bac5c24e832e11a9a070251",
+      "sha256": "973681579e90c437e6390cb2d94b3dec7bd8311088523004352e0418e9ab2cf0",
       "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/core/session-cwd.ts": {
       "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/session-cwd.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/session-export.ts": {
-      "sha256": "834d017c2d2379b5b237d3bc78d63aecf1cd6dae37c8b3c579142ec07786971d",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
     },
     "packages/pi-durable-coding/src/pi/core/skills.ts": {
       "sha256": "fc6d980b0cd93cf4d661eab99240f37dd502ce4817f8000dfef2318d673fa8fb",
@@ -4317,7 +4265,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/timings.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/tools/bash.ts": {
-      "sha256": "d280451775a36a5b8baf5bda15db2569d2b997bcb55a0e88149b63cb415f3005",
+      "sha256": "80d0b38d0fda7adf0e714843a0b935c090a0c9c2460ed9d575b3b4aa0fa67d8a",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/edit-diff.ts": {
@@ -4325,15 +4273,15 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/edit-diff.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/tools/edit.ts": {
-      "sha256": "904287cf39c96f97343e0615b02de675c4b2a8558a17351683274fc16fc8a531",
+      "sha256": "1bd97be22dd5c52f926e7b82614ed71fed12abf07cb1a64e40cd3b0a3308ee11",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/find.ts": {
-      "sha256": "1eac4c13c146038165479761025786f16f691a6455d0b80d1cff8a47a1591371",
+      "sha256": "ecfbd677bc43b709d875a5d5249e679e1bd4e3c0396e1f4e809127e78efa018d",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/grep.ts": {
-      "sha256": "af252b28b6ae0bd9c1d8f9ea50f1d1c58e221c5f72db4daed2f25d9b883fa2e2",
+      "sha256": "05ef4b6255d2f7c2b4ea3b9b9c233a0c5508d563be2a854cb00580505c9ef933",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/index.ts": {
@@ -4341,7 +4289,7 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/ls.ts": {
-      "sha256": "4845a85ec769c96402cb19e71ce65f1b2465b61f3704b78e173cc84cafbc71ac",
+      "sha256": "2fa33916e24a55d9c2c4293249aa05bdbff9688c0276f1a200dc065594c8a84f",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/output-accumulator.ts": {
@@ -4353,11 +4301,11 @@
       "reason": "Pinned Pi v1.5.0 read path port; share durable candidates and retain Native resolution, order and repeated probes."
     },
     "packages/pi-durable-coding/src/pi/core/tools/powershell.ts": {
-      "sha256": "56645690718f03e6c5a19b574a74e3f28f0d0df7563fb226eeee5c88576aefad",
+      "sha256": "043b2316bf8ec411ef00be564bea061531d4f1663e07a377a298f49b107a18fc",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/tools/powershell.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/tools/read.ts": {
-      "sha256": "c8bc08e1f9e35ba4039597a44a5fec1e2d89afac3dbd98bdf1cfb9e21061572a",
+      "sha256": "a6a31630b4999bd8b83a15322a0427c8ee04fe4b9ceff66fb927ab02b9675852",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/tools/render-utils.ts": {
@@ -4392,16 +4340,12 @@
       "sha256": "be89e898a3da950635188fc787ccb9fd8314a31c3594c6498e2b81d4c5e893be",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
-    "packages/pi-durable-coding/src/pi/core/tools/tool-definition-wrapper.ts": {
-      "sha256": "928cd7e3a9ff54c38877e703168fbfc1e0d80848a77f7f2a245c4c493591470e",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
     "packages/pi-durable-coding/src/pi/core/tools/truncate.ts": {
       "sha256": "56d31aab381f14820ef5db0847faa32bb07d4a3c0012ee7a5b6a18c21445ac1e",
       "reason": "Pinned Pi v1.5.0 facade; head and tail share public Chord through external policy. Retain Native size formatting, middle and single-line code."
     },
     "packages/pi-durable-coding/src/pi/core/tools/write.ts": {
-      "sha256": "4267d0deb48e18f17b7108a363b1dadbed2301fd910ebf63374ad135e5144ff8",
+      "sha256": "f1cc9ca48c4d8563bc10e8ddc654e90ad7c4a3adcd7a1f921216f36f85b41d2e",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/core/trust-manager.ts": {
@@ -4429,7 +4373,7 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/tool.ts": {
-      "sha256": "c6c844680f9ed2f7db23a0c09ec36d829380aad062f39269a32cb3064ff952e9",
+      "sha256": "2d07702c5225a307d0f5eb73189326d55f425e46750d17f2f00ae9e35552fc5a",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/worker.ts": {
@@ -4481,7 +4425,7 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "dbbcc765ce7ebcd6b039957204a3776b820791951e24d6fe45a879bf27ce4aa6",
+      "sha256": "cc35ad9e7963950a22aa558d92357e662f61fe4e9523afca6195b97f363b8c13",
       "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
@@ -4549,7 +4493,7 @@
       "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/components/footer.ts": {
-      "sha256": "bad0534314247578608f7bb5feb755b76b453634770cdeee5102affe65078216",
+      "sha256": "b0030a0bb40308721bbb761026e3bd6e4b9ded3b217669496cb9dbdd0b4cff1a",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/components/index.ts": {
@@ -4597,7 +4541,7 @@
       "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/components/skill-invocation-message.ts": {
-      "sha256": "77510ea9d0d09f15fe105cb975f8bcf18fb2ca311adf418841824802d91ee7e1",
+      "sha256": "70dd362e8250312693c47d023f2b0675f75e683f1e4f04d8b3c84d1bd5b3ed7c",
       "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
     },
     "packages/pi-durable-coding/src/pi/modes/interactive/components/status-indicator.ts": {
@@ -4645,7 +4589,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/model-search.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/json-event.ts": {
-      "sha256": "87f6fa86cd73b817470062f5ab0a99c790d0c0e222e25979b96bfcd157e119bf",
+      "sha256": "71fae381d2ce01bac204ad76dc7223a216776c59304b76213f97db76b61b97f1",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/json-event.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/jsonl.ts": {
@@ -4653,7 +4597,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/jsonl.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-client.ts": {
-      "sha256": "5168c714fa0af8aabc30aeffd10b876eb9f756065a67bcb24d98998c7349f8e0",
+      "sha256": "5fb6d46fdf031f2c98e035245fa92863173450b42a677765cf029611f9f17374",
       "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
     },
     "packages/pi-durable-coding/test/rpc-client.test.ts": {
@@ -4661,7 +4605,7 @@
       "reason": "Verify missing-entry rejection before spawn, explicit JSONL requests and options, shutdown, startup errors and outstanding-request rejection using local child-process fixtures."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-types.ts": {
-      "sha256": "8a0bfc89e4841c09d6d86dc2b5b6eeac6f62c8258a460de05c205e510218e88b",
+      "sha256": "aeb51233656307b7dc374ecf23330d9df764e6abc4c9cd57d51041be67f61535",
       "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
     },
     "packages/pi-durable-coding/src/pi/utils/abort.ts": {
@@ -4744,17 +4688,9 @@
       "sha256": "af78a612cd50d7b9643bceaa52a6c92e7e1ec779e264be39fec68ece0d913a65",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/shell.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/utils/sleep.ts": {
-      "sha256": "cc3c01511d5ae856a78deda64a32de1d6e7b7a08f370e460ccaa302e7e8817e3",
-      "reason": "Use public pi-ai sleep while preserving the optional signal, native cancellation error and ordinary timer error identity."
-    },
     "packages/pi-durable-coding/src/pi/utils/text.ts": {
       "sha256": "bb323f9607c499115b532021f4f0163c6df04d834aee9c32c3c77b273bd2d7c6",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/text.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/tool-result-images.ts": {
-      "sha256": "151a2c2a2724e4b09858218a0cb6c9c076fd987080c934597699ab3956a27cf6",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/tool-result-images.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/tools-manager.ts": {
       "sha256": "2df25e7614895d6273df1a4b023f8dccd7f6ff6d0ffaa3ffb326b42938ead153",
@@ -4763,10 +4699,6 @@
     "packages/pi-durable-coding/src/pi/utils/wsl.ts": {
       "sha256": "689ab1d024e0d7e6d956ee9040c50ca8d741627c07718bf487dfdb560985d024",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/wsl.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/zip.ts": {
-      "sha256": "86a4d80390793d5f3982421f6e0d98130924e1a829d7ea1c3fbd9f586d669e81",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/zip.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/stream-fn.ts": {
       "sha256": "a6b2cce7515e43411f9b3469225d39712508542d86bc3e806a9f39b57808454f",
@@ -4793,7 +4725,7 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/test/host-resources.test.ts": {
-      "sha256": "6e9ff48909ecadbf1f5920325a44b543d7b845ee6eccd6baf790a2eb034ba9f0",
+      "sha256": "521cb3ca68af069ee8235151b948008214a9a9245d960f560dffa62221be4ac3",
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/test/fixtures/host-tool-recovery-process.ts": {
@@ -4805,8 +4737,8 @@
       "reason": "Verify plain and bridged ToolTask execution, complete results and arguments, owner cleanup, cancellation and fifteen SIGKILL scenarios including old and new completed receipts."
     },
     "packages/pi-durable-coding/test/plain-tool-sdk.test.ts": {
-      "sha256": "7b21b0c157a1bab214cf19bf9cfa1335c12d8e5cf876c4fd4d5e3f7bbef982e8",
-      "reason": "Verify cancellation during SDK admission, Native validation before permission changes, bridge-marker preservation through tool conversions, and final arguments after failed effects."
+      "sha256": "d9daf6bf59d647c19027cc17c6d9ee3ac8f7cd7136e2bb9934c3b358b807eed2",
+      "reason": "Verify SDK tool metadata and ownership conversion, durable cancellation, authoritative preflight and changed-argument receipts."
     },
     "packages/pi-durable-coding/test/host-tools.test.ts": {
       "sha256": "fa4263f3b46aa05339ed34ccc532fdbbe074a438584bc2939a39a85259570f8c",
@@ -4917,7 +4849,7 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/test/fixtures/host-package-runner.ts": {
-      "sha256": "f1df383d44960838c82d288a260931d0cab58aa321c41d1fdb423653fa6466ee",
+      "sha256": "95ad71bee344118cbb55dcf39c1f4be6d02dda65ff8aaa0356a0077d66ac16a2",
       "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
     },
     "packages/pi-durable-coding/test/host-package-commands.test.ts": {
@@ -5049,7 +4981,7 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "8d5c70059d6945f3fb5d65e50cb87c86f1e159279118213484be8c78eb49cf44",
+      "sha256": "0d05d345ec593dd5c272068b6312442613f2ff61ac72a362a1a6bd18e6e13005",
       "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
@@ -5057,15 +4989,15 @@
       "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "47fb37b6796eed4c4d02d9ad69fea67ae4a13becf5898b6e17d0cc20a6ca4f33",
+      "sha256": "1977bd47aa9acdbd69b1a9ebfd15e0b5624ec44d98100b851183cc5ce26e60e3",
       "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "e7fbe5851010327a3075b7070e447806ee8c92bb31c62e1225fcae6b06153a73",
+      "sha256": "d754b11175118e730ea18d9b39525781f3d17f8ebd77033b604a5c4a86f5983b",
       "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "420c8c278f61567c46e0ef45af8522979ca6f0b7586215e27dda942802c3bf61",
+      "sha256": "8b059d55ff1bc45f7ed063d968ac5d2414131ae14b4759535fec52585f3472f2",
       "reason": "Use the published Coding extension runner, plugin types and command executor with per-instance host presentation bindings and optional durable replay typing; remove covered source and conversion rules."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
@@ -5111,6 +5043,22 @@
     "packages/pi-durable-coding/test/host-extension-runner.test.ts": {
       "sha256": "20891737d0e2bf96aee82949065ba66dd1ba0b74ddce8bd0f29c30e8b8375076",
       "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
+    },
+    "packages/pi-durable-coding/scripts/coding-agent-session-policy.ts": {
+      "sha256": "c74d10756041e47b3a9afc6b56103584ee61558cc346e3bdb23bc6aed6f7676d",
+      "reason": "Expose optional durable settlement, input admission, nested tool execution, internal model projection and prompt image processing hooks while the published AgentSession retains its lifecycle algorithms."
+    },
+    "packages/pi-durable-coding/scripts/coding-tool-policy.ts": {
+      "sha256": "3c14154a6efed065be389dfb5a5e8803364ca9bb3989bdb75af1a249ed6c9c5f",
+      "reason": "Preserve tool execution ownership symbol descriptors and declaration metadata through the published SDK tool conversions without a product module dependency."
+    },
+    "packages/pi-durable-coding/src/native-agent-session.ts": {
+      "sha256": "048085271f1dc8813f11d85429d3d5789d85cd8df5e2e3f677de7815751a9d32",
+      "reason": "Bind the SDK session to durable settlement, distinct nested tool ownership, persistent inputs, journal identity, compatible snapshots and the existing shared image processor; strip host metadata only from internal model projections."
+    },
+    "packages/pi-durable-coding/test/host-agent-session.test.ts": {
+      "sha256": "3df1c691a299caf8f89069bb89025c9fa5a24ee2bb9a726f7cef83c549d71f15",
+      "reason": "Verify default SDK lifecycle, admission before acknowledgement, distinct durable nested task ownership and model projections that preserve transcript and journal input metadata."
     }
   },
   "deleted": {

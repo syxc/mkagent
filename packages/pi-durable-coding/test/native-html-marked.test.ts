@@ -5,7 +5,6 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { runInNewContext } from 'node:vm';
-import { portHtmlVendorAssets } from '../scripts/asset-runtime-port.ts';
 import { readHtmlVendorSource } from '../src/compat/html-assets.ts';
 
 const require = createRequire(import.meta.url);
@@ -47,18 +46,3 @@ test('offline bundles use their shipped browser asset', () => {
     rmSync(directory, { recursive: true, force: true });
   }
 });
-
-const assetReads = [
-  'const markedJs = readFileSync(join(templateDir, "vendor", "marked.min.js"), "utf-8");',
-  'const hljsJs = readFileSync(join(templateDir, "vendor", "highlight.min.js"), "utf-8");',
-];
-for (const read of assetReads) {
-  test(`HTML vendor port rejects missing or repeated asset read: ${read}`, () => {
-    const source = assetReads.join('\n');
-    const output = portHtmlVendorAssets(source);
-    assert.match(output, /const markedJs = readHtmlVendorSource\("marked.min.js", templateDir\);/);
-    assert.match(output, /const hljsJs = readHtmlVendorSource\("highlight.min.js", templateDir\);/);
-    assert.throws(() => portHtmlVendorAssets(source.replace(read, '')), /boundary changed/);
-    assert.throws(() => portHtmlVendorAssets(`${source}\n${read}`), /boundary changed/);
-  });
-}

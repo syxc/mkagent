@@ -1,7 +1,7 @@
 import { copyFileSync, cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { getThemesDir } from '@earendil-works/pi-coding-agent';
+import { getThemesDir, getExportTemplateDir } from '@earendil-works/pi-coding-agent';
 import { readHtmlVendorSource } from '../../pi-durable-coding/src/compat/html-assets.ts';
 
 const packageDir = dirname(import.meta.dir);
@@ -28,13 +28,13 @@ copyFileSync(codemodeRequire.resolve('quickjs-wasi/quickjs.wasm'), join(outdir, 
 copyFileSync(durableRequire.resolve('@silvia-odwyer/photon/photon_rs_bg.wasm'), join(outdir, 'photon_rs_bg.wasm'));
 rmSync(join(outdir, 'coding_photon_rs_bg.wasm'), { force: true });
 copyFileSync(join(packageDir, '..', 'pi-durable-coding', 'LICENSE.pi'), join(outdir, 'LICENSE.pi'));
-for (const [source, target] of [
-  [getThemesDir(), 'theme'],
-  [join(packageDir, '..', 'pi-durable-coding', 'src', 'pi', 'core/export-html'), 'export-html'],
-]) {
-  cpSync(source, join(outdir, 'coding-assets', target), {
-    recursive: true, filter: path => target === 'theme' ? !/\.[cm]?[jt]s(?:\.map)?$/.test(path) : !path.endsWith('.ts'),
-  });
+cpSync(getThemesDir(), join(outdir, 'coding-assets', 'theme'), {
+  recursive: true, filter: path => !/\.[cm]?[jt]s(?:\.map)?$/.test(path),
+});
+for (const name of ['template.html', 'template.css', 'template.js', 'vendor/marked-cjk-friendly.min.js']) {
+  const target = join(outdir, 'coding-assets', 'export-html', name);
+  mkdirSync(dirname(target), { recursive: true });
+  copyFileSync(join(getExportTemplateDir(), name), target);
 }
 for (const name of ['marked.min.js', 'highlight.min.js'] as const) {
   writeFileSync(join(outdir, 'coding-assets', 'export-html', 'vendor', name), readHtmlVendorSource(name));

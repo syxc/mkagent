@@ -1,6 +1,6 @@
 # Pi-durable coding agent 实施计划
 
-状态：2026-11-09 按用户纠正重新打开 F0 至 F6 整体验收。此前 SDK 替换、工具和请求切片、主题及宿主清理的验证保留各自证据，但未达到删除大规模 Coding 源码的原始目标。用户现已明确允许生产使用 `pi-coding-agent` 的公开 SDK；以公开 AgentSession 构造函数可注入外部 Agent 的实际结果为起点推进替换，durable 执行和恢复仍待新路径验证。当前进度见[纠偏跟进](coding-follow-up.md)，未完成前不统一推送。运行时代码起点为 `cb0311f`；本文的既有提交、D0 至 D6 及后续批次账本保留原适用时点。
+状态：2026-11-09 按用户纠正重新打开 F0 至 F6 整体验收。此前 SDK 替换、工具和请求切片、主题及宿主清理的验证保留各自证据，但未达到删除大规模 Coding 源码的原始目标。用户现已明确允许生产使用 `pi-coding-agent` 的公开 SDK；以公开 AgentSession 构造函数可注入外部 Agent 的实际结果为起点推进替换，durable 执行、输入持久化和恢复已通过 AgentSession 新接线的定向验证，其余源码与整体验收继续开放。当前进度见[纠偏跟进](coding-follow-up.md)，未完成前不统一推送。运行时代码起点为 `cb0311f`；本文的既有提交、D0 至 D6 及后续批次账本保留原适用时点。
 
 MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，发现 Coding 能力不足且不能复用 Pi coding agent 的插件生态。当前方向是以切换前的 MkAgent 为产品行为和接入边界参照，保留 Pi coding agent 的 Coding 层与插件契约，尝试将其底层执行基座换成 pi-durable。对 MkAgent 而言，使用的仍是 Pi coding agent 的能力与接口，执行、存储和恢复由 durable 承担。
 
@@ -14,7 +14,9 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `0c69e9f` 的 ModelRuntime 切片直接使用公开 SDK 类、provider composition、virtual routing、凭据串行操作及模型存储，删除九份运行时源码、旧转换脚本和一份转发，共十一文件、2986 行。SDK 窄补丁增加实时宿主 Models 绑定与共用临时凭据入口：扩展 overlay 保留在独立内存集合，宿主 refresh 仍使用原集合和目录存储，迟到检查不能恢复旧宿主快照，默认 SDK create 路径保留；composer 仅收窄结构类型。该模型切片时 runtime 为 160 份 TypeScript、4 项资源，其中 src/pi 为 156 份；辅助来源为 9 项、共享入口为 20 个。142 项定向测试、548 个断言及两项类型检查通过；worker 完整组合通过 25 项，一项图像测试超过默认 5 秒后，以 15 秒预算单项复跑通过，未修改仓库测试超时。完整来源与补丁 check、全新 hoisted 冻结安装的 55 份补丁核验、12 项模型契约及固定 Craft 的 2154 文件审计通过。独立复核未确认新增回归；24 项测试、补充确定性探针、85 个成员对照和公开消费端类型检查通过。复现的自定义 AuthContext 未传入内部集合问题在替换前已存在，当前生产未见该自定义接线，作为既有契约缺口保留跟进；该时点 legacy NativeModelRegistry 的结构适配、插件 runner/types 和 AgentSession 主链仍开放。
 
-`0c69e9f` 后的 runner/types/exec 切片使用公开 SDK ExtensionRunner、插件类型、defineTool 和 execCommand，删除完整 runner、types、exec 实现、两份转发及旧转换脚本，共六文件、4101 行。SDK 补丁只增加实例级 theme/prompt 注入、可选 replay 声明和现有模块根导出，显式保留 KeybindingsManager 值导出；事件、生命周期和命令执行算法继续由 SDK 提供。legacy 薄绑定保留 headless theme 与宿主文档提示词，Native 会话显式注入原提示词构建器，默认 SDK 构造保持。当前 runtime 为 157 份 TypeScript、4 项资源，其中 src/pi 为 153 份；辅助来源为 9 项、共享入口为 18 个。161 项定向测试、831 个断言、两项类型检查和完整来源及补丁 check 通过。worker 完整组合为 25 项通过、图像项默认 5 秒超时；该项随后在 15 秒预算内通过，未改仓库超时。全新 HOME/cache 的 hoisted 冻结安装覆盖 11 个 workspace，lock 未变，58 份补丁产物与已测试安装一致，Coding 为 24 份；SDK-only runner/exec 的 3 项测试、24 个断言及公开消费端类型检查通过，固定 Craft 审计覆盖 2150 文件。独立复核首次因连接超时中断；新的只读复核未确认相对 `0c69e9f` 的新增缺陷，独立运行 105 项测试、424 个断言及源码和公开消费端类型检查通过，并核验补丁算法、403 路径的删除闭包及来源摘要。AgentSession 生产生命周期、原子输入接纳、取消和冷恢复，以及其余源码替换仍开放，F0 至 F6 不关闭。
+`0c69e9f` 后的 runner/types/exec 切片使用公开 SDK ExtensionRunner、插件类型、defineTool 和 execCommand，删除完整 runner、types、exec 实现、两份转发及旧转换脚本，共六文件、4101 行。SDK 补丁只增加实例级 theme/prompt 注入、可选 replay 声明和现有模块根导出，显式保留 KeybindingsManager 值导出；事件、生命周期和命令执行算法继续由 SDK 提供。legacy 薄绑定保留 headless theme 与宿主文档提示词，Native 会话显式注入原提示词构建器，默认 SDK 构造保持。该 runner 切片时 runtime 为 157 份 TypeScript、4 项资源，其中 src/pi 为 153 份；辅助来源为 9 项、共享入口为 18 个。161 项定向测试、831 个断言、两项类型检查和完整来源及补丁 check 通过。worker 完整组合为 25 项通过、图像项默认 5 秒超时；该项随后在 15 秒预算内通过，未改仓库超时。全新 HOME/cache 的 hoisted 冻结安装覆盖 11 个 workspace，lock 未变，58 份补丁产物与已测试安装一致，Coding 为 24 份；SDK-only runner/exec 的 3 项测试、24 个断言及公开消费端类型检查通过，固定 Craft 审计覆盖 2150 文件。独立复核首次因连接超时中断；新的只读复核未确认相对 `0c69e9f` 的新增缺陷，独立运行 105 项测试、424 个断言及源码和公开消费端类型检查通过，并核验补丁算法、403 路径的删除闭包及来源摘要。该 runner 切片时 AgentSession 生产生命周期、原子输入接纳、取消和冷恢复仍开放；后续接线见下段，剩余源码替换及 F0 至 F6 继续开放。
+
+`5a72c8a` 后的 AgentSession 切片将完整会话生命周期、工具注册、插件输入与 HTML 导出交给公开 Coding SDK。`native-agent-session.ts` 仅绑定 durable 结算、输入持久化、journal 身份、summary 和兼容快照；无接点时 SDK 保持原执行循环。旧完整会话类、退出闭包的 helper、工具包装实现、四份 HTML 资源和旧输入转换脚本共十七文件已删除，ZIP writer、sleep 和工具转换也改用 SDK，fflate 直接依赖移除。SDK 窄补丁增加可选执行与接纳接点，工具转换保留声明元数据和 Symbol 描述符，图片 worker 只用模块路径或进程内回退。当前 runtime 为 145 份 TypeScript，其中 src/pi 为 141 份、门面为 4 份，资源为 0；辅助来源为 9 项、共享入口为 18 个。Coding 补丁为 30 份物理输出，与 core 4 份、durable 30 份合计 64 份。生产恢复组合通过 43 项测试、313 个断言，worker 完整组合通过 26 项、103 个断言，两项类型检查通过；会话与工具组合通过 15 项、107 个断言。修复复核问题后的全新 hoisted 冻结安装核验 64 份产物，公开类型和同一 15 项测试通过，lock 未变；固定 Craft 审计覆盖 2137 文件。首次 follow-up 超时由 SDK 转换丢失宿主执行标记引起，图片 canary 失败由 SDK 项目相对 worker 路径引起，两项原回归修复后通过。最终类型探针曾误用 namespace 和 exposure 类型，按公开类型修正后复用安装通过。独立复核确认嵌套工具绕过 durable 和内部模型投影带回宿主元数据两项新增回归；现通过可选 runToolCall、convertToLlm 接点修复，默认 SDK 路径保留。父子 durable 任务、边界与 provider 投影、transcript 和 journal 元数据回归通过；实际 provider 请求在修复前也已清理。独立复查另确认发布图片未沿用共享 Photon，构建目录缺失时会静默丢图；现通过可选 processImage 绑定既有处理器，屏蔽构建依赖的搬迁图片回归、15 项会话工具、26 项 bundle、类型和全新冻结检查通过。图片专项独立复查未发现可确认的新增缺陷；复查方重跑搬迁图片用例通过，并核对十一份相关文件和三十份补丁产物，结论仅覆盖该修复。剩余源码与 F0 至 F6 整体验收继续开放，AuthContext 既有缺口保留跟进。
 
 ## 目标与名称
 
@@ -70,7 +72,7 @@ Native shell 也已共享 Bash 传参和进程树清理，外层保留同步查�
 
 Native 同步与异步读取路径已共用 durable 候选生成器，保留原有顺序和重复探测；durable 默认入口仍全量生成并去重。替换前后各通过 20 项、74 个断言，24 组内核旧结果及 5 组真实文件对照一致，7 个明确类型根无诊断。九文件组合通过 166 项、1006 个断言；独立缓存冻结消费者核对 28 个补丁文件、12 份 Native 文件和 46 份运行时源文件，Bun 与 Node 各通过 38 项、108 个断言。完整 SDK 和产品入口仍未验证。
 
-ZIP 文件记录和目录已交给独立 `fflate` 包，压缩与 CRC 继续用 Node 标准库。工具 ZIP 解包已交给 `JSZip`，外层只保留目录、普通文件和错误适配。写入端的重复条目及最大经典条目数通过标准读取器核对；解包端按 JSZip 的规范化规则保留最后同名条目，只检查保留条目的路径及类型。Native 安装源码在显式宿主中验证 DEFLATE、查找优先级、安装和失败清理。定向生成及最小依赖安装已通过，真实 Windows 发布包及全仓安装未通过完整验证。访问边界偏差见[跟进清单](coding-follow-up.md)，该批当时保持 F1/F3 和完整验收开放；本次结果以文首及现行跟进状态为准。
+早期 ZIP 切片将文件记录和目录交给独立 `fflate` 包，压缩与 CRC 继续用 Node 标准库。工具 ZIP 解包已交给 `JSZip`，外层只保留目录、普通文件和错误适配。写入端的重复条目及最大经典条目数通过标准读取器核对；解包端按 JSZip 的规范化规则保留最后同名条目，只检查保留条目的路径及类型。Native 安装源码在显式宿主中验证 DEFLATE、查找优先级、安装和失败清理。定向生成及最小依赖安装已通过，真实 Windows 发布包及全仓安装未通过完整验证。访问边界偏差见[跟进清单](coding-follow-up.md)，该批当时保持 F1/F3 和完整验收开放。AgentSession 切片现已用 Coding SDK writer 替代本地 writer，移除 fflate 直接依赖，安全的 JSZip 解包适配保留；本次结果以文首及现行跟进状态为准。
 
 store 适配的 journal 前置已完成：重复 flush 按事务草稿中的 nonce 跳过同阶段已准备的前缀，保留回滚重试和真正并发 replace 的拒绝语义。Native codemode 现已接入该事务边界，真实 journal 验证 store 条目与 `run.result` 同批提交，存储拒绝时均不发布。普通 callback 的外部副作用仍不属于 durable 事务。
 
@@ -78,7 +80,7 @@ store 适配的 journal 前置已完成：重复 flush 按事务草稿中的 non
 
 ANSI 标准匹配现已引用无传递依赖的 `ansi-regex@6.2.2`，仅补齐私有 CSI，原生流式策略保留原文。独立冻结消费者保留新旧两版依赖，Bun 和 Node 各通过 30 项、183 个断言，最新 ANSI 与图像组合通过 107 项、743 个断言。完整终端入口未运行，具体证据见验证记录。
 
-当前已引用 core 的公开协议类型和 `streamProxy`，移除对应生成副本；消息声明合并保留在公开 core 模块上。宿主压缩窗口通过公开设置方法的外部包装实现，原生 `SettingsManager` 不再带宿主阈值补丁。包管理、消息、模型、设置、会话、runner、token 及资源算法已共用实现，七份旧接口策略单独维护，生成器只生成转发。可选目录、投影和 runner 依赖参数保留原生默认值；结构类型与旧 JavaScript 宽边界由严格消费者回归覆盖。28 份文件直接使用公开 core 类型，内部执行导入改写由 31 份收敛为 3 份。公开 `AgentSessionConfig.agent` 已支持外部 Agent 注入，原先将工厂限制推广为整个 SDK 限制的判断有误。用户已允许完整 Coding 包的公开 SDK 生产依赖，F1/F3 按真实删除与接线重新验收，durable 恢复仍待验证。F4/F5 的早期完整生成、来源审计、CI、产品构建及分批回归已在 `8b1c98f` 完成，不替代新接线验证。下列及此前各批次的未验证范围保留为当时记录，最新数量、收益和证据见验证记录。
+当前已引用 core 的公开协议类型和 `streamProxy`，移除对应生成副本；消息声明合并保留在公开 core 模块上。宿主压缩窗口通过公开设置方法的外部包装实现，原生 `SettingsManager` 不再带宿主阈值补丁。包管理、消息、模型、设置、会话、runner、token 及资源算法已共用实现，七份旧接口策略单独维护，生成器只生成转发。可选目录、投影和 runner 依赖参数保留原生默认值；结构类型与旧 JavaScript 宽边界由严格消费者回归覆盖。28 份文件直接使用公开 core 类型，内部执行导入改写由 31 份收敛为 3 份。公开 `AgentSessionConfig.agent` 已支持外部 Agent 注入，原先将工厂限制推广为整个 SDK 限制的判断有误。用户已允许完整 Coding 包的公开 SDK 生产依赖，F1/F3 按真实删除与接线重新验收，AgentSession 新接线的定向恢复已验证，剩余替换继续推进。F4/F5 的早期完整生成、来源审计、CI、产品构建及分批回归已在 `8b1c98f` 完成，不替代新接线验证。下列及此前各批次的未验证范围保留为当时记录，最新数量、收益和证据见验证记录。
 
 现有包名 `@mkagent/pi-durable-coding`、插件导入标识和持久化任务身份用于兼容现有调用与数据。不得仅为命名而改写；实现替换确需改变任务时，提供明确版本和迁移路径，不能静默丢弃旧 checkpoint。
 

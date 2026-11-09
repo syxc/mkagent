@@ -298,25 +298,6 @@ export function portTruncation(body: string): string {
     + 'export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES };\n' + body;
 }
 
-export function portZipRuntime(body: string): string {
-  const parsed = ts.createSourceFile('zip.ts', body, ts.ScriptTarget.Latest, true);
-  const exports = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node) ||
-    ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword));
-  const entry = parsed.statements.find(node => ts.isInterfaceDeclaration(node) && node.name.text === 'ZipEntry');
-  const write = exports[0];
-  if (exports.length !== 1 || !write || !ts.isFunctionDeclaration(write) || write.name?.text !== 'writeZipArchive' ||
-      write.modifiers?.some(modifier => modifier.kind !== ts.SyntaxKind.ExportKeyword) ||
-      write.parameters.some(parameter => parameter.questionToken || parameter.initializer || parameter.dotDotDotToken) ||
-      write.parameters.map(parameter => parameter.name.getText(parsed)).join(',') !== 'filePath,entries' ||
-      write.parameters.map(parameter => parameter.type?.getText(parsed)).join(',') !== 'string,readonly ZipEntry[]' ||
-      write.type?.getText(parsed) !== 'Promise<void>' || !entry || !ts.isInterfaceDeclaration(entry) ||
-      entry.members.map(member => member.getText(parsed)).join('') !== 'name: string;data: string | Uint8Array;') {
-    throw new Error('Native ZIP writer boundary changed');
-  }
-  return '/** Native archive policy over the public ZIP implementation. */\n'
-    + 'export { writeZipArchive } from "../../compat/archive.ts";\n';
-}
-
 export function portToolArchives(body: string): string {
   const parsed = ts.createSourceFile('tools-manager.ts', body, ts.ScriptTarget.Latest, true);
   const names = new Set(['extractZipArchive', 'getWindowsTarCommand']);

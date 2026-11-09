@@ -1,5 +1,5 @@
 import { afterEach, expect, mock, spyOn, test } from 'bun:test';
-import { sleep } from '../src/pi/utils/sleep.ts';
+import { sleep } from '@earendil-works/pi-coding-agent';
 
 afterEach(() => mock.restore());
 

@@ -1,14 +1,14 @@
 /** Reproduce Pi Coding SDK sources without the upstream CLI launcher. */
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { isBuiltin } from 'node:module';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
-import { portBundledAssets, portHtmlVendorAssets, portImageAssets } from './asset-runtime-port.ts';
-import { portAgentSession, portCacheWarmer, portNativeMessages, portSDK, portSessionServices, portToolDefinition } from './session-runtime-port.ts';
+import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
+import { portCacheWarmer, portNativeMessages, portSDK, portSessionServices } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludePrivateHostComponents, excludeRunModeEntries } from './shared-helper-port.ts';
 
@@ -41,7 +41,7 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
 }
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
 const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
-const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'core/extensions/virtual-modules.ts'];
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'core/system-prompt.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'core/extensions/virtual-modules.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();
@@ -178,11 +178,6 @@ while (queue.length) {
     body = portResourceLoader(path, body);
     changes.add('explicit-host-project-resource-directory');
   }
-  if (path === 'core/agent-session.ts') {
-    body = portAgentSession(body);
-    changes.add('durable-recovery-and-host-tool-policy');
-    changes.add('host-current-system-prompt-before-agent-start');
-  }
   if (path === 'core/messages.ts') {
     body = portNativeMessages(body);
     changes.add('exclude-host-correlation-from-model-context');
@@ -227,32 +222,6 @@ export function raceWithAbortSignal<T>(operation: Promise<T>, signal: AbortSigna
 `;
     changes.add('public-pi-ai-abort-helper');
   }
-  if (path === 'utils/sleep.ts') {
-    const exports = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node)
-      || (ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)));
-    const sleep = exports[0];
-    if (exports.length !== 1 || !sleep || !ts.isFunctionDeclaration(sleep) || sleep.name?.text !== 'sleep'
-      || sleep.parameters.length !== 2 || sleep.type?.getText(parsed) !== 'Promise<void>'
-      || sleep.parameters[0].type?.kind !== ts.SyntaxKind.NumberKeyword
-      || sleep.parameters[1].type?.getText(parsed) !== 'AbortSignal' || !sleep.parameters[1].questionToken) {
-      throw new Error('Public sleep API changed; review the optional-signal and cancellation-error wrapper');
-    }
-    body = `import { sleep as sharedSleep } from "@earendil-works/pi-ai/utils/sleep";
-
-/** Keep the coding API's optional signal and cancellation error over the shared timer. */
-export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
-\treturn sharedSleep(ms, signal ?? new AbortController().signal).catch((error: unknown) => {
-\t\tif (signal?.aborted && Object.is(error, signal.reason)) throw new Error("Aborted");
-\t\tthrow error;
-\t});
-}
-`;
-    changes.add('public-pi-ai-sleep-helper');
-  }
-  if (path === 'core/tools/tool-definition-wrapper.ts') {
-    body = portToolDefinition(path, body);
-    changes.add('explicit-durable-tool-replay-policy');
-  }
   if (path === 'core/tools/find.ts') {
     body = body.replace('path.PlatformPath', 'typeof path');
     changes.add('node-path-platform-type');
@@ -270,13 +239,6 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
     changes.add('source-asset-location');
     body = portBundledAssets(body);
     changes.add('installed-native-bundle-assets');
-  }
-  if (path === 'core/export-html/index.ts') {
-    body = portHtmlVendorAssets(body);
-    dependencies.add('marked');
-    dependencies.add('@highlightjs/cdn-assets');
-    changes.add('public-marked-browser-asset');
-    changes.add('public-highlight-browser-asset');
   }
   const helper = applySharedHelperPort(path, body);
   if (helper) {
@@ -299,20 +261,6 @@ if (scoped) {
   process.exit(0);
 }
 
-function assets(directory: string) {
-  for (const entry of readdirSync(join(source, directory), { withFileTypes: true })) {
-    const path = directory + '/' + entry.name;
-    if (entry.isDirectory()) assets(path);
-    else if (!path.endsWith('.ts') && path !== 'core/export-html/vendor/marked.min.js'
-      && path !== 'core/export-html/vendor/highlight.min.js') {
-      const body = readFileSync(join(source, path));
-      const target = 'src/pi/' + path;
-      save(target, body);
-      records.push({ source: 'packages/coding-agent/src/' + path, target, sha256: hash(body), portSha256: hash(body), changes: [] });
-    }
-  }
-}
-assets('core/export-html');
 // Reuse the public core state facade and protocol with a durable execution backend.
 // The native agent-loop implementation is deliberately outside this source closure.
 for (const [path, target] of [

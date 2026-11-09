@@ -161,7 +161,20 @@ describe('pi-agent-server bundle', () => {
     ], { cwd: packageDir, encoding: 'utf8', timeout: 120_000 });
     expect(build.status).toBe(0);
     copyFileSync(join(packageDir, 'dist', 'photon_rs_bg.wasm'), join(artifact, 'photon_rs_bg.wasm'));
-    const proc = spawnSync(process.execPath, [output], {
+    // Absolute build-time paths must not mask missing release image bindings.
+    const preload = join(artifact, 'missing-build-photon.cjs');
+    writeFileSync(preload, `
+      const fs = require('node:fs');
+      const readFileSync = fs.readFileSync;
+      fs.readFileSync = (file, ...args) => {
+        const name = String(file);
+        if (name.includes('node_modules') && name.includes('@silvia-odwyer') && name.endsWith('photon_rs_bg.wasm')) {
+          throw Object.assign(new Error('Build-time Photon is unavailable'), { code: 'ENOENT' });
+        }
+        return readFileSync(file, ...args);
+      };
+    `);
+    const proc = spawnSync(process.execPath, ['--preload', blockNetworkPreloadPath, '--preload', preload, output], {
       cwd: project, env: createOfflineEnvironment(), encoding: 'utf8', timeout: RUN_TIMEOUT_MS,
     });
     expect(proc.status).toBe(0);

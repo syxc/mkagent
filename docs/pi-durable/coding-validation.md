@@ -26,6 +26,110 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## AgentSession SDK boundary after 5a72c8a
+
+The public Coding SDK now owns the session lifecycle, tool registry, plugin input,
+retry and export algorithms. The local native-agent-session.ts subclass binds
+that lifecycle to durable settlement, accepted input queues, journal identities,
+summary streams and compatible snapshots. The SDK patch adds optional hooks and
+protected declarations. Without those hooks, the SDK keeps its original loop.
+No task, document, checkpoint or codemode module version changes.
+
+Seventeen files are deleted: the full local session class, unused helpers, tool
+conversion, HTML implementations and four assets, sleep and ZIP forwards, and
+the old input conversion script. ZIP writing, sleep and tool conversion use the
+SDK. Safe JSZip extraction remains local, with path and file type validation.
+The direct fflate dependency is removed. The worker copies four HTML assets
+from the SDK and adds two browser vendor assets. Runtime generation now covers
+145 TypeScript files, including 141 under src/pi and four facades, with no assets.
+The auxiliary inventory has nine sources and 18 forwards. Coding has 30 physical
+patch outputs, core four and durable 30, for a total of 64.
+
+The initial focused set passes 199 tests with 1,018 assertions in 17 files.
+The HTML, archive and sleep set passes 36 tests. These checks precede the final
+review fixes; they are not new runs of the final version. The original admission
+fixture first lacks a registered local provider and has an incorrect expected
+message list. It also waits on a rejection matcher before it triggers rejection.
+The fixture now registers its provider, expects system/user/assistant messages,
+and attaches an error handler before it rejects the promise. A sleep check finds
+an abort listener left after normal completion; the SDK patch removes it on both
+completion and abort. The archive filename limit raises RangeError; the test
+checks that error and retains the boundary case.
+
+The first production follow-up check times out because SDK tool conversion loses
+the host execution Symbol. The accepted tool then enters the host ToolTask twice.
+The patch preserves declaration metadata and own Symbol property descriptors
+through both conversions. The original follow-up identity test passes without
+a larger timeout. The image worker canary also fails: the SDK executes a worker
+relative to the project directory under Bun. That branch is removed. Both the
+SDK and retained local image entry use a module URL or process the image locally.
+The original canary assertion remains.
+
+Independent review confirms two more regressions. SDK nested extension calls
+use core.runToolCall and lose durable child ownership. SDK boundary and virtual
+model projections retain hostMessageId and hostUserInput. Provider requests
+already remove those fields. Two new integration tests fail before the fixes.
+Optional runToolCall and convertToLlm configuration now binds the existing
+durable executor and host projection rule. The SDK retains nested scheduling,
+hooks and default functions. The tests verify distinct parent and child durable
+tasks, the child call identity, successful host-wrapped execution, clean turn_end
+and provider contexts, and unchanged transcript and journal input metadata.
+The first success assertion uses the wrong status value, success; the published
+nested runner uses ok. The corrected fixture keeps all ownership and result
+assertions. The tool metadata fixture also uses public namespace, annotation
+and reachesTools types.
+
+After these fixes, the session/tool set passes 15 tests with 107 assertions.
+The production recovery set passes 43 tests with 313 assertions. It covers
+original input identity, queued follow-up, rejected admission/commit, old phases,
+full tree projection, receipts and actual SIGKILL recovery with SQLite and JSONL.
+The complete worker bundle set passes 26 tests with 103 assertions, with a
+15-second command budget and unchanged repository test timeouts. Coding
+declaration generation and server type checking pass. Full runtime, auxiliary
+and pristine SDK patch checks pass. The source record covers 61 slice paths,
+removes 17 retired records and adds four authored files. Seven changed records
+are updated after review. The fixed Craft v0.15.6 audit passes for 2,137 files.
+
+A first fresh hoisted frozen install verifies all 64 outputs but its temporary
+public consumer uses incorrect namespace and exposure types. That consumer is
+corrected to the published types and passes with the original installation.
+After the review fixes, another fresh HOME/cache install with scripts disabled
+passes installation, all 64 output hashes, strict public types for the two new
+bindings, and the 15 session/tool tests. The lockfile stays unchanged. Both the
+failed consumer result and its correction remain in the task receipts.
+
+The recheck confirms the two fixes and finds a release image regression. The SDK
+session uses photon-node 0.3.4, but the worker ships the shared photon 0.3.3 WASM.
+Their import namespaces differ. When the build dependency is absent, Photon
+loading fails and the SDK substitutes an Image omitted hint. A relocated image
+test now rejects Photon WASM reads from node_modules in its child process. It
+fails before the fix with images:0 and exit code zero. Optional processImage
+configuration now binds the existing shared processor in the native subclass.
+The SDK keeps image normalization, options, hints and its default processor.
+Durable still provides the encoding loop; no second WASM is added.
+
+After the image binding fix, the session/tool set again passes 15 tests with
+107 assertions, the bundle set passes all 26 tests with 103 assertions, and both
+type checks pass. The earlier 43-test recovery set is not rerun for this image
+binding change. A further fresh HOME/cache frozen install verifies all 64 output
+hashes, strict public processImage types, the 15 session/tool tests and the image
+test with build dependencies unavailable. Its lockfile stays unchanged. Full
+runtime, helper and pristine patch checks pass. The source record now covers 62
+slice paths, with six records updated for the image fix. The fixed Craft audit
+still covers 2,137 files and passes.
+
+A focused independent review finds no confirmed new defect in the image fix.
+The reviewer reruns the relocated image test: one pass, zero failures and three
+assertions. Eleven related files match the frozen copy, and all 30 installed
+Coding outputs match the manifest hashes. This review covers the image fix; it
+does not repeat the full slice review, document checks or complete regression
+suite. The AgentSession slice is ready for a local commit after final document
+checks. F0 through F6 and the remaining source replacements stay open. Real services, Windows and complete
+repository/product acceptance are not checked by this slice. The earlier custom
+AuthContext gap remains in the ModelRuntime record. Receipts are in the
+agent-session-sdk, agent-session-hoisted and agent-session-final-hoisted task
+directories.
+
 ## Extension runner, plugin types and exec SDK boundary after 0c69e9f
 
 Production uses the published ExtensionRunner, plugin types, defineTool and

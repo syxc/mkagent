@@ -4,7 +4,7 @@ import {
   defineDoc, defineTask, type ConversationId, type NextTaskState, type PhaseHandler,
   type TaskId, type TaskRuntime, type Tx,
 } from '@earendil-works/pi-durable';
-import type { AgentSession } from '../pi/core/agent-session.ts';
+import type { AgentSession } from '../native-agent-session.ts';
 import type { LoopInput } from './run-task.ts';
 
 export type CodingSessionAction =

@@ -16,7 +16,7 @@ import {
 import { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
 import { resolveToCwd } from "./path-utils.ts";
 import { type EditRenderState, editRenderers } from "./renderers/edit.ts";
-import { type TypeBoxAgentTool, wrapToolDefinition } from "./tool-definition-wrapper.ts";
+import { type TypeBoxAgentTool, wrapToolDefinition } from "@earendil-works/pi-coding-agent";
 
 const replaceEditSchema = Type.Object(
 	{

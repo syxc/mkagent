@@ -4,7 +4,7 @@ import ts from 'typescript';
 import { portEditDiff } from './edit-diff-port.ts';
 import { portPhotonRuntime } from './asset-runtime-port.ts';
 import {
-  portCodemodeRuntime, portZipRuntime, portToolArchives, portImageOrientation, portImageResize, portImageMime,
+  portCodemodeRuntime, portToolArchives, portImageOrientation, portImageResize, portImageMime,
   portAnsi, portChildProcess, portShell, portReadPaths, portTruncation,
 } from './shared-runtime-port.ts';
 
@@ -74,25 +74,11 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
         .replace('CLI argument parsing and help display', 'CLI argument parsing').trimEnd() + '\n';
     },
   },
-  'core/tools/tool-definition-wrapper.ts': {
-    change: 'preserve-host-tool-execution',
-    apply(body) {
-      for (const source of ['definition', 'tool']) {
-        const anchor = `\treturn {\n\t\tname: ${source}.name,`;
-        if (body.split(anchor).length !== 2) throw new Error(`Tool wrapper boundary changed: ${source}`);
-        body = body.replace(anchor, `\treturn {\n\t\t...(Object.getOwnPropertyDescriptor(${source}, hostToolExecution)?.value === true ? { [hostToolExecution]: true as const } : {}),\n\t\tname: ${source}.name,`);
-      }
-      return 'import { hostToolExecution } from "../../../host-tool-task.ts";\n' + body;
-    },
-  },
   'utils/photon.ts': {
     change: 'shared-durable-photon-runtime', dependency: '@silvia-odwyer/photon', apply: portPhotonRuntime,
   },
   'extensions/codemode/execute.ts': {
     change: 'shared-durable-codemode-executor', dependency: '@earendil-works/pi-durable', apply: portCodemodeRuntime,
-  },
-  'utils/zip.ts': {
-    change: 'public-fflate-zip-writer', dependency: 'fflate', apply: portZipRuntime,
   },
   'utils/tools-manager.ts': {
     change: 'public-jszip-tool-archives', dependency: 'jszip', apply: portToolArchives,
@@ -130,18 +116,6 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
     imports: 'import { createEditTool as createDurableEditTool } from "@earendil-works/pi-durable/tools";',
     signatures: { prepareEditArguments: 'function prepareEditArguments(input: unknown): EditToolInput' },
     replacements: { prepareEditArguments: 'const prepareEditArguments = createDurableEditTool().prepareArguments;' },
-  },
-  'core/export-html/ansi-to-html.ts': {
-    change: 'public-pi-tui-html-colors', dependency: '@earendil-works/pi-tui',
-    names: ['ANSI_COLORS', 'color256ToHex'],
-    imports: 'import { colorToHex } from "@earendil-works/pi-tui";\n',
-    replacements: {
-      ANSI_COLORS: 'const ANSI_COLORS = Array.from({ length: 16 }, (_, index) => color256ToHex(index));',
-      color256ToHex: `function color256ToHex(index: number): string {
-\t// Native SGR accepts indices above 255; the indexedColor factory rejects them.
-\treturn colorToHex({ kind: "indexed", index });
-}`,
-    },
   },
   'core/extensions/pi-ai-extension-view.ts': {
     change: 'public-pi-ai-typebox-string-enum',
@@ -207,14 +181,6 @@ function portDeclarations(path: string, body: string, rule: DeclarationPort): st
         ts.isClassDeclaration(statement)) &&
         statement.name && rule.names.includes(statement.name.text)) {
       if (!remaining.delete(statement.name.text)) throw new Error(`Shared declaration repeated: ${path}: ${statement.name.text}`);
-      if (path === 'core/export-html/ansi-to-html.ts' &&
-          (!ts.isFunctionDeclaration(statement) || statement.name.text !== 'color256ToHex' ||
-            statement.modifiers?.length || statement.typeParameters?.length || statement.asteriskToken ||
-            statement.parameters.length !== 1 || statement.parameters[0].type?.kind !== ts.SyntaxKind.NumberKeyword ||
-            statement.parameters[0].questionToken || statement.parameters[0].initializer || statement.parameters[0].dotDotDotToken ||
-            statement.type?.kind !== ts.SyntaxKind.StringKeyword || !statement.body)) {
-        throw new Error('HTML color conversion boundary changed');
-      }
       const signature = rule.signatures?.[statement.name.text];
       if (signature && (!ts.isFunctionDeclaration(statement) || !statement.body ||
           statement.getText(parsed).slice(0, statement.body.getStart(parsed) - statement.getStart(parsed)).trim() !== signature)) {
@@ -241,16 +207,12 @@ function portDeclarations(path: string, body: string, rule: DeclarationPort): st
         text: '{\n\tconst namespaceText = namespace\n\t\t? [namespace.name, namespace.description ?? "", namespace.instructions ?? ""].join(" ")\n\t\t: "";\n\treturn { name: tool.name, text: createToolSearchText(tool), namespaceText };\n}' });
       sharedDocument = true;
     }
-    if ((path === 'extensions/tool-search/tool.ts' || path === 'core/export-html/ansi-to-html.ts') &&
+    if (path === 'extensions/tool-search/tool.ts' &&
         ts.isVariableStatement(statement)) {
       const declarations = statement.declarationList.declarations;
       if (declarations.length === 1 && ts.isIdentifier(declarations[0].name) && rule.names.includes(declarations[0].name.text)) {
         const name = declarations[0].name.text;
         if (!remaining.delete(name)) throw new Error(`Shared declaration repeated: ${path}: ${name}`);
-        if (path === 'core/export-html/ansi-to-html.ts' &&
-            (name !== 'ANSI_COLORS' || statement.modifiers?.length || !(statement.declarationList.flags & ts.NodeFlags.Const))) {
-          throw new Error('HTML palette boundary changed');
-        }
         const replacement = rule.replacements?.[name];
         edits.push({ start: replacement ? statement.getStart(parsed) : statement.getFullStart(), end: statement.end,
           text: replacement ?? '' });

@@ -5,7 +5,7 @@ import type { ExtensionContext, ToolDefinition } from "@earendil-works/pi-coding
 import { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
 import { resolveToCwd } from "./path-utils.ts";
 import { writeRenderers } from "./renderers/write.ts";
-import { type TypeBoxAgentTool, wrapToolDefinition } from "./tool-definition-wrapper.ts";
+import { type TypeBoxAgentTool, wrapToolDefinition } from "@earendil-works/pi-coding-agent";
 
 const writeSchema = Type.Object({
 	path: Type.String({ description: "Path to the file to write (relative or absolute)" }),

@@ -1,5 +1,5 @@
 import type { Usage } from "@earendil-works/pi-ai";
-import type { AgentSessionEvent } from "../core/agent-session.ts";
+import type { AgentSessionEvent } from "../../native-agent-session.ts";
 
 type WithoutPartial<T> = T extends { partial: unknown } ? Omit<T, "partial"> : T;
 

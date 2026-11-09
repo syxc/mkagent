@@ -2,7 +2,7 @@ import { afterEach, expect, test } from 'bun:test';
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { writeZipArchive } from '../src/pi/utils/zip.ts';
+import { writeZipArchive } from '@earendil-works/pi-coding-agent';
 import { extractZipArchive } from '../src/compat/archive.ts';
 
 const directories: string[] = [];
@@ -48,7 +48,7 @@ test('Native ZIP rejects classic entry-count overflow and propagates file write 
   const directory = await mkdtemp(join(tmpdir(), 'native-archive-error-'));
   directories.push(directory);
   expect(() => writeZipArchive(join(directory, 'overflow.zip'), Array(65_536).fill({ name: 'x', data: '' }))).toThrow(RangeError);
-  expect(() => writeZipArchive(join(directory, 'long.zip'), [{ name: 'x'.repeat(65_536), data: '' }])).toThrow(/filename.*long/i);
+  expect(() => writeZipArchive(join(directory, 'long.zip'), [{ name: 'x'.repeat(65_536), data: '' }])).toThrow(RangeError);
   expect(await readdir(directory)).toEqual([]);
   await expect(writeZipArchive(join(directory, 'missing', 'report.zip'), [])).rejects.toMatchObject({ code: 'ENOENT' });
 });

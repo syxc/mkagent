@@ -6,7 +6,7 @@
  */
 
 import type { AgentTool } from "@earendil-works/pi-agent-core";
-import { wrapToolDefinition } from "../tools/tool-definition-wrapper.ts";
+import { wrapToolDefinition } from "@earendil-works/pi-coding-agent";
 import type { ExtensionRunner } from "@earendil-works/pi-coding-agent";
 import type { RegisteredTool } from "@earendil-works/pi-coding-agent";
 

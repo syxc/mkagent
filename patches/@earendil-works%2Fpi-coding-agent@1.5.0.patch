@@ -1,11 +1,12 @@
-# Content SHA-256: f2e1ee0eeb3065471f8236832ebc13f6d41b31f15eb60cffc2b67822eca81f9e
+# Content SHA-256: 1e1f10515bb0298cc391ac516effe0534915d49baaea76d1b3f72e83bc95b7d5
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,23 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,30 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
++export * from "./core/agent-session.js";
 +export * from "./core/settings-manager.js";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.js";
 +export * from "./core/package-manager.js";
@@ -20,11 +21,17 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/extensions/runner.js";
 +export * from "./core/extensions/types.js";
 +export * from "./core/exec.js";
++export * from "./core/tools/tool-definition-wrapper.js";
++export * from "./core/export-html/index.js";
++export * from "./core/export-html/ansi-to-html.js";
++export * from "./core/export-html/tool-renderer.js";
++export * from "./utils/sleep.js";
++export * from "./utils/zip.js";
 +export * from "./core/mcp-servers.js";
 +export * from "./core/keybindings.js";
 +export { KeybindingsManager } from "./core/keybindings.js";
 +export * from "./modes/interactive/theme/theme.js";
-+export { getThemesDir } from "./config.js";
++export { getThemesDir, getExportTemplateDir } from "./config.js";
  //# sourceMappingURL=index.js.map
 \ No newline at end of file
 diff --git a/dist/index.d.ts b/dist/index.d.ts
@@ -39,10 +46,11 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,23 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,30 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
++export * from "./core/agent-session.ts";
 +export * from "./core/settings-manager.ts";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.ts";
 +export * from "./core/package-manager.ts";
@@ -57,11 +65,17 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/extensions/runner.ts";
 +export * from "./core/extensions/types.ts";
 +export * from "./core/exec.ts";
++export * from "./core/tools/tool-definition-wrapper.ts";
++export * from "./core/export-html/index.ts";
++export * from "./core/export-html/ansi-to-html.ts";
++export * from "./core/export-html/tool-renderer.ts";
++export * from "./utils/sleep.ts";
++export * from "./utils/zip.ts";
 +export * from "./core/mcp-servers.ts";
 +export * from "./core/keybindings.ts";
 +export { KeybindingsManager } from "./core/keybindings.ts";
 +export * from "./modes/interactive/theme/theme.ts";
-+export { getThemesDir } from "./config.ts";
++export { getThemesDir, getExportTemplateDir } from "./config.ts";
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
 diff --git a/dist/core/settings-manager.js b/dist/core/settings-manager.js
@@ -1012,6 +1026,427 @@ diff --git a/dist/core/model-runtime.js b/dist/core/model-runtime.js
          // Validate the incoming registration on its own, like the legacy registry:
          // a broken re-registration must throw without touching the stored config.
          validateExtensionProvider(providerId, this.builtins.get(providerId), this.config.getProvider(providerId), config);
+diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
+--- a/dist/core/agent-session.js
++++ b/dist/core/agent-session.js
+@@ -182,6 +182,15 @@ export class AgentSession {
+     _baseSystemPromptOptions;
+     /** Prompt options after before_agent_start mutations for the active run. */
+     _runSystemPromptOptions;
++    _runNestedToolCall = runToolCall;
++    _convertToLlm = convertToLlm;
++    _processImage = processImage;
++    _wrapTool;
++    _onAction;
++    _onToolsChanged;
++    _captureUserInput;
++    _renderSystemPrompt = buildSystemPrompt;
++    _renderSystemPromptSections = buildSystemPromptSections;
+     constructor(config) {
+         this.agent = config.agent;
+         this.sessionManager = config.sessionManager;
+@@ -206,6 +215,15 @@ export class AgentSession {
+         }
+         this._excludedTools = config.excludedToolNames ? createToolNameMatcher(config.excludedToolNames) : undefined;
+         this._baseToolsOverride = config.baseToolsOverride;
++        this._runNestedToolCall = config.runToolCall ?? runToolCall;
++        this._convertToLlm = config.convertToLlm ?? convertToLlm;
++        this._processImage = config.processImage ?? processImage;
++        this._wrapTool = config.wrapTool;
++        this._onAction = config.onAction;
++        this._onToolsChanged = config.onToolsChanged;
++        this._captureUserInput = config.captureUserInput;
++        this._renderSystemPrompt = config.promptDependencies?.buildSystemPrompt ?? buildSystemPrompt;
++        this._renderSystemPromptSections = config.promptDependencies?.buildSystemPromptSections ?? buildSystemPromptSections;
+         this._sessionStartEvent = config.sessionStartEvent ?? { type: "session_start", reason: "startup" };
+         // Always subscribe to agent events for internal handling
+         // (session persistence, extensions, auto-compaction, retry logic)
+@@ -258,7 +276,7 @@ export class AgentSession {
+     async _getSummarizationRequestAuth(selectedModel, signal) {
+         // Route a virtual model first: summaries size their input and output from the model they get.
+         const { model, thinkingLevel } = isVirtualModel(selectedModel)
+-            ? await this._modelRuntime.resolveModel(selectedModel, convertToLlm(this.messages), {
++            ? await this._modelRuntime.resolveModel(selectedModel, this._convertToLlm(this.messages), {
+                 reason: "direct",
+                 thinkingLevel: this.thinkingLevel,
+                 signal,
+@@ -410,7 +428,7 @@ export class AgentSession {
+                         isError: true,
+                     });
+                 }
+-                return runToolCall(toolCall, {
++                return this._runNestedToolCall(toolCall, {
+                     tools: this._getCallableTools(),
+                     assistantMessage,
+                     context: { messages: this.agent.state.messages, tools: this.agent.state.tools },
+@@ -475,7 +493,7 @@ export class AgentSession {
+             const lastResponse = context.messages.findLastIndex((message) => message.role === "assistant");
+             const userTurn = context.messages.slice(lastResponse + 1).some((message) => message.role === "user");
+             const state = getVirtualModelState(this.sessionManager.getBranch(), model.provider, model.id);
+-            const route = await this._modelRuntime.resolveModel(model, convertToLlm(context.messages), {
++            const route = await this._modelRuntime.resolveModel(model, this._convertToLlm(context.messages), {
+                 reason: failed ? "retry" : userTurn ? "user" : "continuation",
+                 thinkingLevel,
+                 signal,
+@@ -628,7 +646,7 @@ export class AgentSession {
+     _buildBoundaryContext(drafts, boundary) {
+         const projection = this._createBoundaryPreviewManager(drafts).buildSessionProjection();
+         const pendingMessages = this._getPendingBoundaryMessages();
+-        const llmMessages = convertToLlm(projection.messages);
++        const llmMessages = this._convertToLlm(projection.messages);
+         const finalRole = llmMessages[llmMessages.length - 1]?.role;
+         const hasNonSystemContext = llmMessages.some((message) => message.role !== "system");
+         const contextCanContinue = hasNonSystemContext && finalRole !== "assistant";
+@@ -700,6 +718,7 @@ export class AgentSession {
+         try {
+             const aborted = this._agentRunAbortRequested;
+             await this._extensionRunner.emit({ type: "agent_settled", aborted });
++            if (this._drainQueuedAdmissions) await this._drainQueuedAdmissions();
+             this._emit({ type: "agent_settled", aborted });
+         }
+         finally {
+@@ -763,6 +782,7 @@ export class AgentSession {
+         }
+         // Emit to extensions first, then notify public listeners.
+         await this._emitExtensionEvent(event);
++        if (this._drainQueuedAdmissions) await this._drainQueuedAdmissions();
+         this._emit(event.type === "agent_end" ? { ...event, willRetry: this._willRetryAfterAgentEnd(event) } : event);
+         // Handle session persistence
+         if (event.type === "message_end") {
+@@ -779,8 +799,10 @@ export class AgentSession {
+                 // Regular LLM message - persist as SessionMessageEntry
+                 entryId = this.sessionManager.appendMessage(event.message);
+             }
+-            if (entryId)
++            if (entryId) {
+                 this._entryIdsByMessage.set(event.message, entryId);
++                this._onMessagePersisted?.(event.message, entryId);
++            }
+             // Other message types (bashExecution, compactionSummary, branchSummary) are persisted elsewhere
+             if (event.message.role === "assistant") {
+                 const assistantMsg = event.message;
+@@ -902,10 +924,16 @@ export class AgentSession {
+             return;
+         }
+         const targetRecord = target;
++        const hostMessageId = targetRecord.hostMessageId;
++        const hostUserInput = targetRecord.hostUserInput;
+         for (const key of Object.keys(targetRecord)) {
+             delete targetRecord[key];
+         }
+         Object.assign(targetRecord, replacement);
++        if (typeof hostMessageId === "string") targetRecord.hostMessageId = hostMessageId;
++        else delete targetRecord.hostMessageId;
++        if (hostUserInput !== undefined) targetRecord.hostUserInput = hostUserInput;
++        else delete targetRecord.hostUserInput;
+     }
+     /** Emit extension events based on agent events */
+     async _emitExtensionEvent(event) {
+@@ -1087,7 +1115,7 @@ export class AgentSession {
+     }
+     /** Current effective system prompt, including changes not yet sent to the model. */
+     get systemPrompt() {
+-        return buildSystemPrompt(this._runSystemPromptOptions ?? this._baseSystemPromptOptions);
++        return this._renderSystemPrompt(this._runSystemPromptOptions ?? this._baseSystemPromptOptions);
+     }
+     /** Current retry attempt (0 if not retrying) */
+     get retryAttempt() {
+@@ -1342,7 +1370,7 @@ export class AgentSession {
+         options.selectedTools = this._applyToolLoadout(options.selectedTools).map((tool) => tool.name);
+         // The tool list and rules must match the declarations the request carries.
+         options.hiddenTools = [...this._hiddenDeclarations];
+-        const sections = diffSystemPromptSections(getCurrentSystemMessage(messages)?.sections ?? {}, buildSystemPromptSections(options));
++        const sections = diffSystemPromptSections(getCurrentSystemMessage(messages)?.sections ?? {}, this._renderSystemPromptSections(options));
+         return sections ? { role: "system", content: "", sections, timestamp: Date.now() } : undefined;
+     }
+     /**
+@@ -1438,12 +1466,12 @@ export class AgentSession {
+      * starting another, and an abort requested meanwhile aborts the run as soon as it exists.
+      * @param onStarted Called once the run's messages are prepared, before the first request.
+      */
+-    async _startRun(trigger, onStarted) {
++    async _startRun(trigger, onStarted, hostMessageId, hostUserInput) {
+         this._isAgentRunActive = true;
+         this._agentRunAbortRequested = false;
+         let messages;
+         try {
+-            messages = await this._prepareRun(trigger);
++            messages = await this._prepareRun(trigger, hostMessageId, hostUserInput);
+         }
+         catch (error) {
+             this._isAgentRunActive = false;
+@@ -1456,13 +1484,14 @@ export class AgentSession {
+         // have while idle. No run exists yet, so they cannot split a tool call from its result.
+         this._flushPendingBashMessages();
+         this._flushPendingCustomMessages();
+-        onStarted?.();
++        if (!this._runToSettlement) onStarted?.();
+         // Compaction before the prompt may have scheduled a retry; the new prompt replaces it.
+         this._failedResponse = undefined;
+         this._recordSelection();
+         // The run records the loadout in the transcript; restored tools that did not register by now
+         // are dropped, so a tool that never registers does not stay pending.
+         this._pendingToolNames.clear();
++        if (this._runToSettlement) return this._runToSettlement(messages, onStarted);
+         try {
+             await this.agent.prompt(messages);
+             while (!this._agentRunAbortRequested) {
+@@ -1495,13 +1524,14 @@ export class AgentSession {
+      * message followed by pending nextTurn messages (consumed here) and handler messages, with a
+      * system patch first when the prompt changed.
+      */
+-    async _prepareRun(trigger) {
++    async _prepareRun(trigger, hostMessageId, hostUserInput) {
+         // Check if we need to compact before sending (catches aborted responses).
+         // The starting message is sent below, so do not call agent.continue() here.
+         const lastAssistant = this._findLastAssistantMessage();
+         if (lastAssistant) {
+             await this._checkCompaction(lastAssistant, false);
+         }
++        this._rebuildSystemPrompt(this.getActiveToolNames());
+         const selectedToolsBefore = this._baseSystemPromptOptions.selectedTools;
+         const result = await this._extensionRunner.emitBeforeAgentStart(trigger, this._baseSystemPromptOptions);
+         // Handlers may edit event.systemPromptOptions.selectedTools or call setActiveTools(),
+@@ -1522,6 +1552,8 @@ export class AgentSession {
+             const text = normalized.hints.length > 0 ? `${trigger.prompt}\n\n${normalized.hints.join("\n")}` : trigger.prompt;
+             messages.push({
+                 role: "user",
++                ...(hostMessageId ? { hostMessageId } : {}),
++                ...(hostUserInput ? { hostUserInput } : {}),
+                 content: [{ type: "text", text }, ...normalized.images],
+                 timestamp: Date.now(),
+             });
+@@ -1588,6 +1620,7 @@ export class AgentSession {
+         this._abortDuringBeforeSettle = false;
+         try {
+             const result = await this._extensionRunner.emitBoundary({ type: "agent_before_settle", outcome: this._lastActivityOutcome }, (entries) => this._buildBoundaryContext(entries, "agent_before_settle"));
++            if (this._drainQueuedAdmissions) await this._drainQueuedAdmissions();
+             this._commitBoundaryDrafts(result.entries);
+             this._flushPendingCustomMessages();
+             const finalContext = this._buildBoundaryContext([], "agent_before_settle");
+@@ -1624,7 +1657,7 @@ export class AgentSession {
+         const normalizedImages = [];
+         const hints = [];
+         for (const image of images) {
+-            const processed = await processImage(Buffer.from(image.data, "base64"), image.mimeType, {
++            const processed = await this._processImage(Buffer.from(image.data, "base64"), image.mimeType, {
+                 autoResizeImages: this.settingsManager.getImageAutoResize(),
+                 resizeOptions: this._limitsModel()?.inputLimits?.images?.resize,
+             });
+@@ -1648,6 +1681,10 @@ export class AgentSession {
+      */
+     async prompt(text, options) {
+         if (this._isEmittingAgentSettled) {
++            if (this._deferSettledAction && await this._deferSettledAction({ type: "prompt", text, options })) {
++                options?.preflightResult?.("queued");
++                return;
++            }
+             this._deferredSettledActions.push(async () => await this.prompt(text, options));
+             return;
+         }
+@@ -1679,16 +1716,17 @@ export class AgentSession {
+             expandedText = this._expandSkillCommand(expandedText);
+             expandedText = expandPromptTemplate(expandedText, [...this.promptTemplates]);
+         }
++        if (options?.hostContextPrefix) expandedText = options.hostContextPrefix + expandedText;
+         // If streaming, queue via steer() or followUp() based on option
+         if (this.isStreaming) {
+             if (!options?.streamingBehavior) {
+                 throw new Error("Agent is already processing. Specify streamingBehavior ('steer' or 'followUp') to queue the message.");
+             }
+             if (options.streamingBehavior === "followUp") {
+-                await this._queueFollowUp(expandedText, currentImages);
++                await this._queueFollowUp(expandedText, currentImages, options?.hostMessageId, options?.hostUserInput);
+             }
+             else {
+-                await this._queueSteer(expandedText, currentImages);
++                await this._queueSteer(expandedText, currentImages, options?.hostMessageId, options?.hostUserInput);
+             }
+             preflightResult?.("queued");
+             return;
+@@ -1708,7 +1746,7 @@ export class AgentSession {
+             }
+             throw new Error(formatNoApiKeyFoundMessage(this.model.provider));
+         }
+-        await this._startRun({ messageType: "user", prompt: expandedText, images: currentImages }, () => preflightResult?.("started"));
++        await this._startRun({ messageType: "user", prompt: expandedText, images: currentImages }, () => preflightResult?.("started"), options?.hostMessageId, options?.hostUserInput);
+     }
+     /**
+      * Try to execute an extension command. Returns true if command was found and executed.
+@@ -1810,30 +1848,32 @@ export class AgentSession {
+     /**
+      * Internal: Queue a steering message (already expanded, no extension command check).
+      */
+-    async _queueSteer(text, images) {
+-        this._steeringMessages.push(text);
+-        this._emitQueueUpdate();
++    async _queueSteer(text, images, hostMessageId, hostUserInput) {
++
+         const content = [{ type: "text", text }];
+         if (images) {
+             content.push(...images);
+         }
+-        this.agent.steer({
+-            role: "user",
+-            content,
+-            timestamp: Date.now(),
+-        });
++        const message = { role: "user", content, timestamp: Date.now(), ...(hostMessageId ? { hostMessageId } : {}), ...(hostUserInput ? { hostUserInput } : {}) };
++        if (this._acceptQueuedInput) await this._acceptQueuedInput("steering", message, text);
++        this._steeringMessages.push(text);
++        this._emitQueueUpdate();
++        this.agent.steer(message);
+     }
+     /**
+      * Internal: Queue a follow-up message (already expanded, no extension command check).
+      */
+-    async _queueFollowUp(text, images) {
+-        this._followUpMessages.push(text);
+-        this._emitQueueUpdate();
++    async _queueFollowUp(text, images, hostMessageId, hostUserInput) {
++
+         const content = [{ type: "text", text }];
+         if (images) {
+             content.push(...images);
+         }
+-        this.agent.followUp({ role: "user", content, timestamp: Date.now() });
++        const message = { role: "user", content, timestamp: Date.now(), ...(hostMessageId ? { hostMessageId } : {}), ...(hostUserInput ? { hostUserInput } : {}) };
++        if (this._acceptQueuedInput) await this._acceptQueuedInput("followUp", message, text);
++        this._followUpMessages.push(text);
++        this._emitQueueUpdate();
++        this.agent.followUp(message);
+     }
+     /**
+      * Throw an error if the text is an extension command.
+@@ -1870,9 +1910,11 @@ export class AgentSession {
+             timestamp: Date.now(),
+         };
+         if (options?.deliverAs === "nextTurn") {
++            if (this._acceptQueuedInput) await this._acceptQueuedInput("nextTurn", appMessage);
+             this._pendingNextTurnMessages.push(appMessage);
+         }
+         else if (this.isStreaming && options?.triggerTurn !== false) {
++            if (this._acceptQueuedInput) await this._acceptQueuedInput(options?.deliverAs === "followUp" ? "followUp" : "steering", appMessage);
+             if (options?.deliverAs === "followUp") {
+                 this.agent.followUp(appMessage);
+             }
+@@ -1882,6 +1924,7 @@ export class AgentSession {
+         }
+         else if (options?.triggerTurn) {
+             if (this._isEmittingAgentSettled) {
++                if (this._deferSettledAction && await this._deferSettledAction({ type: "custom", message, options })) return;
+                 this._deferredSettledActions.push(async () => await this.sendCustomMessage(message, options));
+                 return;
+             }
+@@ -1892,6 +1935,7 @@ export class AgentSession {
+             // result, which providers that validate message order reject on replay. Defer
+             // to the end of the turn. Nothing is emitted yet: message events must not
+             // describe messages the session tree does not contain.
++            if (this._acceptQueuedInput) await this._acceptQueuedInput("pendingCustom", appMessage);
+             this._pendingCustomMessages.push(appMessage);
+         }
+         else {
+@@ -1899,7 +1943,8 @@ export class AgentSession {
+         }
+     }
+     _appendCustomMessage(appMessage) {
+-        this.sessionManager.appendCustomMessageEntry(appMessage.customType, appMessage.content, appMessage.display, appMessage.details);
++        const entryId = this.sessionManager.appendCustomMessageEntry(appMessage.customType, appMessage.content, appMessage.display, appMessage.details);
++        this._onMessagePersisted?.(appMessage, entryId);
+         this._refreshFinalizedContext();
+         this._emit({ type: "message_start", message: appMessage });
+         this._emit({ type: "message_end", message: appMessage });
+@@ -1926,6 +1971,7 @@ export class AgentSession {
+      * @param options.expandPromptTemplates Whether to dispatch extension commands and expand skill commands and prompt templates. Default: false.
+      */
+     async sendUserMessage(content, options) {
++        const { hostMessageId, hostUserInput } = this._captureUserInput?.(content) ?? {};
+         // Normalize content to text string + optional images
+         let text;
+         let images;
+@@ -1952,6 +1998,8 @@ export class AgentSession {
+             streamingBehavior: options?.deliverAs,
+             images,
+             source: "extension",
++            hostMessageId,
++            hostUserInput,
+         });
+     }
+     /**
+@@ -2224,7 +2272,7 @@ export class AgentSession {
+     async _runDefaultCompaction(preparation, model, customInstructions, signal, reason) {
+         // Resolve the request only when Pi summarizes itself: routing may call models or fail.
+         const request = await this._getSummarizationRequestAuth(model, signal);
+-        return compact(preparation, request.model, request.apiKey, request.headers, customInstructions, signal, request.thinkingLevel, this.agent.streamFunction, request.env, this.settingsManager.getRetrySettings(), this._summarizationRetryCallbacks({ source: "compaction", reason }), undefined);
++        return compact(preparation, request.model, request.apiKey, request.headers, customInstructions, signal, request.thinkingLevel, (this._getSummaryStream?.() ?? this.agent.streamFunction), request.env, this.settingsManager.getRetrySettings(), this._summarizationRetryCallbacks({ source: "compaction", reason }), undefined);
+     }
+     _clearManualCompactionState() {
+         this._compactionAbortController = undefined;
+@@ -2781,7 +2829,7 @@ export class AgentSession {
+         };
+         runner.bindCore({
+             sendMessage: (message, options) => {
+-                this.sendCustomMessage(message, options).catch((err) => {
++                (this._onAction ? this._onAction(() => this.sendCustomMessage(message, options)) : this.sendCustomMessage(message, options)).catch((err) => {
+                     runner.emitError({
+                         extensionPath: "<runtime>",
+                         event: "send_message",
+@@ -2790,7 +2838,7 @@ export class AgentSession {
+                 });
+             },
+             sendUserMessage: (content, options) => {
+-                this.sendUserMessage(content, options).catch((err) => {
++                (this._onAction ? this._onAction(() => this.sendUserMessage(content, options)) : this.sendUserMessage(content, options)).catch((err) => {
+                     runner.emitError({
+                         extensionPath: "<runtime>",
+                         event: "send_user_message",
+@@ -2821,7 +2869,7 @@ export class AgentSession {
+             refreshTools: () => this._refreshToolRegistry(),
+             getCommands,
+             setModel: async (model) => {
+-                if (!this._modelRuntime.hasConfiguredAuth(model.provider))
++                if (!(this._canSelectModel ? await this._canSelectModel(model) : this._modelRuntime.hasConfiguredAuth(model.provider)))
+                     return false;
+                 await this.setModel(model);
+                 return true;
+@@ -2941,7 +2989,9 @@ export class AgentSession {
+         for (const tool of wrappedExtensionTools) {
+             toolRegistry.set(tool.name, tool);
+         }
+-        this._toolRegistry = toolRegistry;
++        this._toolRegistry = this._wrapTool ? new Map([...toolRegistry].map(([name, tool]) =>
++            [name, this._wrapTool(tool, definitionRegistry.get(name)?.sourceInfo)])) : toolRegistry;
++        this._onToolsChanged?.([...this._toolRegistry.values()]);
+         const nextActiveToolNames = (options?.activeToolNames ? [...options.activeToolNames] : [...previousActiveToolNames]).filter((name) => this._isAllowedTool(name));
+         if (allowedTools) {
+             for (const toolName of this._toolRegistry.keys()) {
+@@ -2998,7 +3048,7 @@ export class AgentSession {
+                 extensionsResult.runtime.flagValues.set(name, value);
+             }
+         }
+-        this._extensionRunner = new ExtensionRunner(extensionsResult.extensions, extensionsResult.runtime, this._cwd, this.sessionManager, new ModelRegistry(this._modelRuntime));
++        this._extensionRunner = new ExtensionRunner(extensionsResult.extensions, extensionsResult.runtime, this._cwd, this.sessionManager, new ModelRegistry(this._modelRuntime), { buildSystemPrompt: this._renderSystemPrompt });
+         if (this._extensionRunnerRef) {
+             this._extensionRunnerRef.current = this._extensionRunner;
+         }
+@@ -3355,7 +3405,7 @@ export class AgentSession {
+                     customInstructions,
+                     replaceInstructions,
+                     reserveTokens: branchSummarySettings.reserveTokens,
+-                    streamFn: this.agent.streamFunction,
++                    streamFn: this._getSummaryStream?.() ?? this.agent.streamFunction,
+                     retry: this.settingsManager.getRetrySettings(),
+                     callbacks: this._summarizationRetryCallbacks({ source: "branchSummary" }),
+                 });
+@@ -3593,7 +3643,7 @@ export class AgentSession {
+             messages: this.messages,
+             hint: options.hint,
+             signal: options.signal,
+-            streamFn: this.agent.streamFunction,
++            streamFn: this._getSummaryStream?.() ?? this.agent.streamFunction,
+             retry: this.settingsManager.getRetrySettings(),
+             sessionId: this.sessionId,
+         });
 diff --git a/dist/core/extensions/runner.js b/dist/core/extensions/runner.js
 --- a/dist/core/extensions/runner.js
 +++ b/dist/core/extensions/runner.js
@@ -1069,6 +1504,62 @@ diff --git a/dist/core/extensions/runner.js b/dist/core/extensions/runner.js
          const ctx = Object.defineProperties({}, Object.getOwnPropertyDescriptors(this.createContext()));
          ctx.getSystemPrompt = () => {
              this.assertActive();
+diff --git a/dist/core/tools/tool-definition-wrapper.js b/dist/core/tools/tool-definition-wrapper.js
+--- a/dist/core/tools/tool-definition-wrapper.js
++++ b/dist/core/tools/tool-definition-wrapper.js
+@@ -1,6 +1,6 @@
+ /** Wrap a ToolDefinition into an AgentTool for the core runtime. */
+ export function wrapToolDefinition(definition, ctxFactory) {
+-    return {
++    return Object.defineProperties({
+         name: definition.name,
+         label: definition.label,
+         description: definition.description,
+@@ -9,8 +9,16 @@ export function wrapToolDefinition(definition, ctxFactory) {
+         constrainedSampling: definition.constrainedSampling,
+         prepareArguments: definition.prepareArguments,
+         executionMode: definition.executionMode,
++        replay: definition.replay,
++        exposure: definition.exposure,
++        namespace: definition.namespace,
++        annotations: definition.annotations,
++        reachesTools: definition.reachesTools,
++        defaultActive: definition.defaultActive,
++        promptSnippet: definition.promptSnippet,
++        promptGuidelines: definition.promptGuidelines,
+         execute: (toolCallId, params, signal, onUpdate, ctx) => definition.execute(toolCallId, params, signal, onUpdate, ctx ?? ctxFactory?.(toolCallId, signal)),
+-    };
++    }, Object.fromEntries(Object.getOwnPropertySymbols(definition).map(key => [key, Object.getOwnPropertyDescriptor(definition, key)])));
+ }
+ /** Wrap multiple ToolDefinitions into AgentTools for the core runtime. */
+ export function wrapToolDefinitions(definitions, ctxFactory) {
+@@ -23,7 +31,7 @@ export function wrapToolDefinitions(definitions, ctxFactory) {
+  * provides plain AgentTool overrides that do not include prompt metadata or renderers.
+  */
+ export function createToolDefinitionFromAgentTool(tool) {
+-    return {
++    return Object.defineProperties({
+         name: tool.name,
+         label: tool.label,
+         description: tool.description,
+@@ -32,7 +40,15 @@ export function createToolDefinitionFromAgentTool(tool) {
+         constrainedSampling: tool.constrainedSampling,
+         prepareArguments: tool.prepareArguments,
+         executionMode: tool.executionMode,
++        replay: tool.replay,
++        exposure: tool.exposure,
++        namespace: tool.namespace,
++        annotations: tool.annotations,
++        reachesTools: tool.reachesTools,
++        defaultActive: tool.defaultActive,
++        promptSnippet: tool.promptSnippet,
++        promptGuidelines: tool.promptGuidelines,
+         execute: async (toolCallId, params, signal, onUpdate) => tool.execute(toolCallId, params, signal, onUpdate),
+-    };
++    }, Object.fromEntries(Object.getOwnPropertySymbols(tool).map(key => [key, Object.getOwnPropertyDescriptor(tool, key)])));
+ }
+ //# sourceMappingURL=tool-definition-wrapper.js.map
+\ No newline at end of file
 diff --git a/dist/core/package-manager.d.ts b/dist/core/package-manager.d.ts
 --- a/dist/core/package-manager.d.ts
 +++ b/dist/core/package-manager.d.ts
@@ -1371,6 +1862,214 @@ diff --git a/dist/core/model-runtime.d.ts b/dist/core/model-runtime.d.ts
      static create(options?: CreateModelRuntimeOptions): Promise<ModelRuntime>;
      private configureRadiusProviders;
      private providerIds;
+diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
+--- a/dist/core/agent-session.d.ts
++++ b/dist/core/agent-session.d.ts
+@@ -1,3 +1,11 @@
++import type { runToolCall } from "@earendil-works/pi-agent-core";
++import type { convertToLlm } from "./messages.ts";
++import type { processImage } from "../utils/image-process.ts";
++import type { AssistantMessage } from "@earendil-works/pi-ai/compat";
++import type { AgentActivityOutcome, BeforeAgentStartTrigger } from "./extensions/types.ts";
++import type { BashExecutionMessage } from "./messages.ts";
++import type { BuildSystemPromptOptions, NormalizedBuildSystemPromptOptions, SystemPromptSections } from "./system-prompt.ts";
++import type { SourceInfo } from "./source-info.ts";
+ /**
+  * AgentSession - Core abstraction for agent lifecycle and session management.
+  *
+@@ -112,6 +120,17 @@ export type AgentSessionEvent = WithParentToolCallId<Exclude<AgentEvent, {
+ /** Listener function for agent session events */
+ export type AgentSessionEventListener = (event: AgentSessionEvent) => void;
+ export interface AgentSessionConfig {
++    runToolCall?: typeof runToolCall;
++    convertToLlm?: typeof convertToLlm;
++    processImage?: typeof processImage;
++    wrapTool?: (tool: AgentTool, source?: SourceInfo) => AgentTool;
++    onAction?: (work: () => Promise<void>) => Promise<void>;
++    onToolsChanged?: (tools: AgentTool[]) => void;
++    captureUserInput?: (content: string | (TextContent | ImageContent)[]) => Pick<PromptOptions, "hostMessageId" | "hostUserInput">;
++    promptDependencies?: {
++        buildSystemPrompt: (options: BuildSystemPromptOptions) => string;
++        buildSystemPromptSections: (options: BuildSystemPromptOptions) => SystemPromptSections;
++    };
+     agent: Agent;
+     sessionManager: SessionManager;
+     settingsManager: SettingsManager;
+@@ -177,6 +196,10 @@ export type QueuedInputDisposition = "handled" | "queued";
+ export type PromptDisposition = QueuedInputDisposition | "started";
+ /** Options for AgentSession.prompt() */
+ export interface PromptOptions {
++    /** Product metadata stays separate from durable admission identity. */
++    hostMessageId?: string;
++    hostUserInput?: { version: 1; content: string | (TextContent | ImageContent)[] };
++    hostContextPrefix?: string;
+     /** Whether to dispatch extension commands and expand skill commands and prompt templates (default: true) */
+     expandPromptTemplates?: boolean;
+     /** Image attachments */
+@@ -226,44 +249,44 @@ export declare class AgentSession {
+     private _scopedModels;
+     private _unsubscribeAgent?;
+     private _eventListeners;
+-    private _isAgentRunActive;
+-    private _agentRunAbortRequested;
++    protected _isAgentRunActive: boolean;
++    protected _agentRunAbortRequested: boolean;
+     private _idleWaitPromise;
+     private _resolveIdleWait;
+     /** Tracks pending steering messages for UI display. Removed when delivered. */
+-    private _steeringMessages;
++    protected _steeringMessages: string[];
+     /** Tracks pending follow-up messages for UI display. Removed when delivered. */
+-    private _followUpMessages;
++    protected _followUpMessages: string[];
+     /** Messages queued to be included with the next user prompt as context ("asides"). */
+-    private _pendingNextTurnMessages;
++    protected _pendingNextTurnMessages: CustomMessage[];
+     /** Context-only custom messages queued during a run, flushed once the current turn's tool results are in. */
+-    private _pendingCustomMessages;
++    protected _pendingCustomMessages: CustomMessage[];
+     private _compactionAbortController;
+     private _autoCompactionAbortController;
+-    private _overflowRecoveryAttempted;
++    protected _overflowRecoveryAttempted: boolean;
+     private _branchSummaryAbortController;
+     private _retryAbortController;
+-    private _retryAttempt;
++    protected _retryAttempt: number;
+     /**
+      * Failed response that the next request repeats, set by auto-retry and overflow recovery. The
+      * retry is routed with it as `failed`, since the context no longer contains it.
+      */
+-    private _failedResponse;
++    protected _failedResponse: AssistantMessage | undefined;
+     private readonly _bashAbortControllers;
+-    private _pendingBashMessages;
++    protected _pendingBashMessages: BashExecutionMessage[];
+     private _extensionRunner;
+-    private _turnIndex;
+-    private readonly _entryIdsByMessage;
++    protected _turnIndex: number;
++    protected readonly _entryIdsByMessage: WeakMap<object, string>;
+     private readonly _boundaryDispatchedMessages;
+-    private _lastAssistantMessage;
+-    private _lastActivityOutcome;
++    protected _lastAssistantMessage: AssistantMessage | undefined;
++    protected _lastActivityOutcome: AgentActivityOutcome;
+     private _isBeforeSettle;
+     private _abortDuringBeforeSettle;
+     private _isEmittingAgentSettled;
+     private readonly _deferredSettledActions;
+     private _resourceLoader;
+     private _customTools;
+-    private _baseToolDefinitions;
++    protected _baseToolDefinitions: Map<string, ToolDefinition>;
+     private _cwd;
+     private _extensionRunnerRef?;
+     private _initialActiveToolNames?;
+@@ -283,7 +306,7 @@ export declare class AgentSession {
+      */
+     private _allowlistFiltersMcp;
+     private _excludedTools?;
+-    private _baseToolsOverride?;
++    protected _baseToolsOverride: Record<string, AgentTool> | undefined;
+     private _sessionStartEvent;
+     private _extensionUIContext?;
+     private _extensionMode;
+@@ -293,7 +316,7 @@ export declare class AgentSession {
+     private _extensionErrorListener?;
+     private _extensionErrorUnsubscriber?;
+     private _modelRuntime;
+-    private _cacheWarmer?;
++    protected _cacheWarmer: AgentSessionConfig["cacheWarmer"];
+     private _toolRegistry;
+     /** Created on the first `ctx.executeTool()` call. */
+     private _nestedToolCalls;
+@@ -304,7 +327,14 @@ export declare class AgentSession {
+     private _toolPromptGuidelines;
+     private _baseSystemPromptOptions;
+     /** Prompt options after before_agent_start mutations for the active run. */
+-    private _runSystemPromptOptions?;
++    protected _runSystemPromptOptions: NormalizedBuildSystemPromptOptions | undefined;
++    protected _runToSettlement?(messages: AgentMessage[], onStarted?: () => void): Promise<void>;
++    protected _acceptQueuedInput?(kind: "steering" | "followUp" | "nextTurn" | "pendingCustom", message: AgentMessage, text?: string): Promise<void>;
++    protected _drainQueuedAdmissions?(): Promise<void>;
++    protected _onMessagePersisted?(message: AgentMessage, entryId: string): void;
++    protected _deferSettledAction?(action: { type: "prompt"; text: string; options?: PromptOptions } | { type: "custom"; message: Omit<CustomMessage, "role" | "timestamp">; options?: { triggerTurn?: boolean; deliverAs?: "steer" | "followUp" | "nextTurn" } }): Promise<boolean>;
++    protected _getSummaryStream?(): StreamFn;
++    protected _canSelectModel?(model: Model<any>): Promise<boolean>;
+     constructor(config: AgentSessionConfig);
+     get modelRuntime(): ModelRuntime;
+     private _getRequiredRequestAuth;
+@@ -357,16 +387,16 @@ export declare class AgentSession {
+     private _commitBoundaryDrafts;
+     private _reportInvalidBoundaryContinuation;
+     /** Emit an event to all listeners */
+-    private _emit;
++    protected _emit(event: AgentSessionEvent): void;
+     private _emitQueueUpdate;
+     private _emitSessionCompactFailed;
+     private _getIdleWaitPromise;
+-    private _resolveIdleWaitIfIdle;
+-    private _emitAgentSettled;
++    protected _resolveIdleWaitIfIdle(): void;
++    protected _emitAgentSettled(): Promise<void>;
+     /** Internal handler for agent events - shared by subscribe and reconnect */
+     private _handleAgentEvent;
+     private _willRetryAfterAgentEnd;
+-    private _findPersistedMessageEntryId;
++    protected _findPersistedMessageEntryId(message: AgentMessage): string | undefined;
+     /**
+      * Persistently omit a failed attempt and its tool results from model context. Results are
+      * found in the projected context, so the pair stays together whether the attempt comes from
+@@ -541,9 +571,9 @@ export declare class AgentSession {
+      * message followed by pending nextTurn messages (consumed here) and handler messages, with a
+      * system patch first when the prompt changed.
+      */
+-    private _prepareRun;
+-    private _handlePostAgentRun;
+-    private _runBeforeSettleBoundary;
++    protected _prepareRun(trigger: BeforeAgentStartTrigger, hostMessageId?: string, hostUserInput?: PromptOptions["hostUserInput"]): Promise<AgentMessage[]>;
++    protected _handlePostAgentRun(): Promise<boolean>;
++    protected _runBeforeSettleBoundary(): Promise<boolean>;
+     private _runInputHandlers;
+     private _normalizePromptImages;
+     /**
+@@ -624,7 +654,7 @@ export declare class AgentSession {
+      * Append custom messages queued while the agent was running.
+      * Called once the current turn's tool results are in agent state and session history.
+      */
+-    private _flushPendingCustomMessages;
++    protected _flushPendingCustomMessages(): void;
+     /**
+      * Send a user message to the agent. Always triggers a turn.
+      * When the agent is streaming, use deliverAs to specify how to queue the message.
+@@ -783,7 +813,7 @@ export declare class AgentSession {
+     private _applyExtensionBindings;
+     private _refreshCurrentModelFromRegistry;
+     private _bindExtensionCore;
+-    private _refreshToolRegistry;
++    protected _refreshToolRegistry(options?: { activeToolNames?: string[] }): void;
+     /** Whether activating the tool declares it to the model. */
+     private _isDeclarable;
+     /** Whether registering the tool activates it, which declares it to the model. */
+@@ -804,7 +834,7 @@ export declare class AgentSession {
+      * the TUI needs to render the retry and recreate the underlying indicator.
+      */
+     private _summarizationRetryCallbacks;
+-    private _finishCancelledRetry;
++    protected _finishCancelledRetry(): void;
+     /**
+      * Prepare a retryable error for continuation with exponential backoff.
+      * @returns true if the caller should continue the agent, false otherwise
+@@ -855,7 +885,7 @@ export declare class AgentSession {
+      * Flush pending bash messages to agent state and session.
+      * Called after agent turn completes to maintain proper message ordering.
+      */
+-    private _flushPendingBashMessages;
++    protected _flushPendingBashMessages(): void;
+     /**
+      * Set a display name for the current session.
+      */
 diff --git a/dist/core/extensions/runner.d.ts b/dist/core/extensions/runner.d.ts
 --- a/dist/core/extensions/runner.d.ts
 +++ b/dist/core/extensions/runner.d.ts
@@ -1400,6 +2099,26 @@ diff --git a/dist/core/extensions/runner.d.ts b/dist/core/extensions/runner.d.ts
      bindCore(actions: ExtensionActions, contextActions: ExtensionContextActions, providerActions?: {
          registerProvider?: (name: string, config: ProviderConfig) => void;
          registerNativeProvider?: (provider: Provider) => void;
+diff --git a/dist/core/tools/tool-definition-wrapper.d.ts b/dist/core/tools/tool-definition-wrapper.d.ts
+--- a/dist/core/tools/tool-definition-wrapper.d.ts
++++ b/dist/core/tools/tool-definition-wrapper.d.ts
+@@ -13,7 +13,7 @@ export type TypeBoxAgentTool<TParams extends TSchema = TSchema, TDetails = any>
+ /** Creates the context for one tool call. */
+ export type ToolContextFactory = (toolCallId: string, signal: AbortSignal | undefined) => ExtensionToolContext;
+ /** Wrap a ToolDefinition into an AgentTool for the core runtime. */
+-export declare function wrapToolDefinition<TDetails = unknown>(definition: ToolDefinition<any, TDetails>, ctxFactory?: ToolContextFactory): AgentTool<any, TDetails>;
++export declare function wrapToolDefinition<TDetails = unknown>(definition: ToolDefinition<any, TDetails>, ctxFactory?: ToolContextFactory): AgentTool<any, TDetails> & Pick<ToolDefinition<any>, "exposure" | "namespace" | "annotations" | "reachesTools" | "defaultActive" | "promptSnippet" | "promptGuidelines">;
+ /** Wrap multiple ToolDefinitions into AgentTools for the core runtime. */
+ export declare function wrapToolDefinitions(definitions: ToolDefinition<any, any>[], ctxFactory?: ToolContextFactory): AgentTool<any>[];
+ /**
+@@ -22,5 +22,5 @@ export declare function wrapToolDefinitions(definitions: ToolDefinition<any, any
+  * This keeps AgentSession's internal registry definition-first even when a caller
+  * provides plain AgentTool overrides that do not include prompt metadata or renderers.
+  */
+-export declare function createToolDefinitionFromAgentTool(tool: AgentTool<any>): ToolDefinition<any, unknown>;
++export declare function createToolDefinitionFromAgentTool(tool: AgentTool<any> & Pick<ToolDefinition<any>, "exposure" | "namespace" | "annotations" | "reachesTools" | "defaultActive" | "promptSnippet" | "promptGuidelines">): ToolDefinition<any, unknown>;
+ //# sourceMappingURL=tool-definition-wrapper.d.ts.map
+\ No newline at end of file
 diff --git a/dist/core/extensions/types.d.ts b/dist/core/extensions/types.d.ts
 --- a/dist/core/extensions/types.d.ts
 +++ b/dist/core/extensions/types.d.ts
@@ -1511,9 +2230,61 @@ diff --git a/dist/config.js b/dist/config.js
   * - For source (src/): src/modes/interactive/theme/
   */
  export function getThemesDir() {
-+    // The host distributes SDK theme assets beside its worker bundle.
++    // The host distributes SDK assets beside its worker bundle.
 +    const bundled = join(isBunBinary ? dirname(process.execPath) : __dirname, "coding-assets", "theme");
 +    if (existsSync(bundled)) return bundled;
      if (isBunBinary) {
          return join(getPackageDir(), "theme");
+     }
+@@ -365,6 +368,9 @@ export function getThemesDir() {
+  * - For source (src/): src/core/export-html/
+  */
+ export function getExportTemplateDir() {
++    // The host distributes SDK assets beside its worker bundle.
++    const bundled = join(isBunBinary ? dirname(process.execPath) : __dirname, "coding-assets", "export-html");
++    if (existsSync(bundled)) return bundled;
+     if (isBunBinary) {
+         return join(getPackageDir(), "export-html");
+     }
+diff --git a/dist/utils/sleep.js b/dist/utils/sleep.js
+--- a/dist/utils/sleep.js
++++ b/dist/utils/sleep.js
+@@ -7,11 +7,14 @@ export function sleep(ms, signal) {
+             reject(new Error("Aborted"));
+             return;
+         }
+-        const timeout = setTimeout(resolve, ms);
+-        signal?.addEventListener("abort", () => {
++        const cleanup = () => signal?.removeEventListener("abort", onAbort);
++        const timeout = setTimeout(() => { cleanup(); resolve(); }, ms);
++        const onAbort = () => {
++            cleanup();
+             clearTimeout(timeout);
+             reject(new Error("Aborted"));
+-        });
++        };
++        signal?.addEventListener("abort", onAbort, { once: true });
+     });
+ }
+ //# sourceMappingURL=sleep.js.map
+\ No newline at end of file
+diff --git a/dist/utils/image-resize.js b/dist/utils/image-resize.js
+--- a/dist/utils/image-resize.js
++++ b/dist/utils/image-resize.js
+@@ -66,15 +66,7 @@ async function resizeImageInWorker(workerSpecifier, inputBytes, mimeType, option
+ export async function resizeImage(inputBytes, mimeType, options) {
+     const isTypeScriptRuntime = import.meta.url.endsWith(".ts");
+     const workerUrl = new URL(isTypeScriptRuntime ? "./image-resize-worker.ts" : "./image-resize-worker.js", import.meta.url);
+-    // Bun compiled executables resolve worker entrypoints by string path, not via
+-    // new URL(..., import.meta.url). Try the string path first under Bun so the
+-    // release binary uses the embedded worker instead of falling back in-process.
+-    if (typeof process.versions.bun === "string") {
+-        try {
+-            return await resizeImageInWorker("./src/utils/image-resize-worker.ts", inputBytes, mimeType, options);
+-        }
+-        catch { }
+-    }
++    // A project directory cannot supply executable image workers. Use the module URL or process locally.
+     try {
+         return await resizeImageInWorker(workerUrl, inputBytes, mimeType, options);
      }

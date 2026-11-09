@@ -9,6 +9,8 @@ import { codingResourcePolicy } from './coding-resource-policy.ts';
 import { codingExtensionPolicy } from './coding-extension-policy.ts';
 import { codingModelRuntimePolicy } from './coding-model-runtime-policy.ts';
 import { codingRunnerPolicy } from './coding-runner-policy.ts';
+import { codingAgentSessionPolicy } from './coding-agent-session-policy.ts';
+import { codingToolPolicy } from './coding-tool-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -35,6 +37,7 @@ for (const suffix of ['js', 'd.ts']) {
   if (original.includes('export * from "./core/settings-manager.')) throw new Error('Expected unpatched SDK');
   const extension = suffix === 'js' ? 'js' : 'ts';
   const exports = [
+    `export * from "./core/agent-session.${extension}";`,
     `export * from "./core/settings-manager.${extension}";`,
     `export { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";`,
     `export * from "./core/package-manager.${extension}";`,
@@ -49,11 +52,17 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/extensions/runner.${extension}";`,
     `export * from "./core/extensions/types.${extension}";`,
     `export * from "./core/exec.${extension}";`,
+    `export * from "./core/tools/tool-definition-wrapper.${extension}";`,
+    `export * from "./core/export-html/index.${extension}";`,
+    `export * from "./core/export-html/ansi-to-html.${extension}";`,
+    `export * from "./core/export-html/tool-renderer.${extension}";`,
+    `export * from "./utils/sleep.${extension}";`,
+    `export * from "./utils/zip.${extension}";`,
     `export * from "./core/mcp-servers.${extension}";`,
     `export * from "./core/keybindings.${extension}";`,
     `export { KeybindingsManager } from "./core/keybindings.${extension}";`,
     `export * from "./modes/interactive/theme/theme.${extension}";`,
-    `export { getThemesDir } from "./config.${extension}";`,
+    `export { getThemesDir, getExportTemplateDir } from "./config.${extension}";`,
   ].join('\n') + '\n';
   const marker = '//# sourceMappingURL=';
   const position = original.indexOf(marker);
@@ -78,8 +87,12 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(extensionPath, codingExtensionPolicy(readFileSync(join(baseline, extensionPath), 'utf8'), suffix === 'd.ts'));
   const runtimePath = `dist/core/model-runtime.${suffix}`;
   outputs.set(runtimePath, codingModelRuntimePolicy(readFileSync(join(baseline, runtimePath), 'utf8'), suffix === 'd.ts'));
+  const agentSessionPath = `dist/core/agent-session.${suffix}`;
+  outputs.set(agentSessionPath, codingAgentSessionPolicy(readFileSync(join(baseline, agentSessionPath), 'utf8'), suffix === 'd.ts'));
   const runnerPath = `dist/core/extensions/runner.${suffix}`;
   outputs.set(runnerPath, codingRunnerPolicy(readFileSync(join(baseline, runnerPath), 'utf8'), suffix === 'd.ts'));
+  const toolPath = `dist/core/tools/tool-definition-wrapper.${suffix}`;
+  outputs.set(toolPath, codingToolPolicy(readFileSync(join(baseline, toolPath), 'utf8'), suffix === 'd.ts'));
 }
 const extensionTypesPath = 'dist/core/extensions/types.d.ts';
 outputs.set(extensionTypesPath, replace(readFileSync(join(baseline, extensionTypesPath), 'utf8'),
@@ -118,11 +131,32 @@ for (const suffix of ['js', 'd.ts']) {
     ' * Full theme JSON validation. The SDK theme module enables it by default.\n * Hosts can replace it with setThemeJsonValidator().'));
 }
 const configPath = 'dist/config.js';
-outputs.set(configPath, replace(readFileSync(join(baseline, configPath), 'utf8'),
-  'export function getThemesDir() {', `export function getThemesDir() {
-    // The host distributes SDK theme assets beside its worker bundle.
-    const bundled = join(isBunBinary ? dirname(process.execPath) : __dirname, "coding-assets", "theme");
-    if (existsSync(bundled)) return bundled;`));
+let config = readFileSync(join(baseline, configPath), 'utf8');
+for (const [name, directory] of [['getThemesDir', 'theme'], ['getExportTemplateDir', 'export-html']]) {
+  config = replace(config, `export function ${name}() {`, `export function ${name}() {
+    // The host distributes SDK assets beside its worker bundle.
+    const bundled = join(isBunBinary ? dirname(process.execPath) : __dirname, "coding-assets", "${directory}");
+    if (existsSync(bundled)) return bundled;`);
+}
+outputs.set(configPath, config);
+const sleepPath = 'dist/utils/sleep.js';
+let sleep = readFileSync(join(baseline, sleepPath), 'utf8');
+sleep = replace(sleep, '        const timeout = setTimeout(resolve, ms);', `        const cleanup = () => signal?.removeEventListener("abort", onAbort);
+        const timeout = setTimeout(() => { cleanup(); resolve(); }, ms);`);
+sleep = replace(sleep, '        signal?.addEventListener("abort", () => {', '        const onAbort = () => {\n            cleanup();');
+sleep = replace(sleep, '        });\n    });', '        };\n        signal?.addEventListener("abort", onAbort, { once: true });\n    });');
+outputs.set(sleepPath, sleep);
+const imagePath = 'dist/utils/image-resize.js';
+outputs.set(imagePath, replace(readFileSync(join(baseline, imagePath), 'utf8'), `    // Bun compiled executables resolve worker entrypoints by string path, not via
+    // new URL(..., import.meta.url). Try the string path first under Bun so the
+    // release binary uses the embedded worker instead of falling back in-process.
+    if (typeof process.versions.bun === "string") {
+        try {
+            return await resizeImageInWorker("./src/utils/image-resize-worker.ts", inputBytes, mimeType, options);
+        }
+        catch { }
+    }
+`, '    // A project directory cannot supply executable image workers. Use the module URL or process locally.\n'));
 const staging = mkdtempSync(join(tmpdir(), 'coding-sdk-exports-'));
 let patch = '';
 for (const [path, output] of outputs) {
@@ -141,7 +175,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, optional durable tool replay typing, default full theme validation and installed worker theme asset lookup.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt image processing bindings, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, sleep listener cleanup, and installed worker theme and HTML asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

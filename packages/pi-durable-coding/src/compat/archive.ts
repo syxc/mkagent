@@ -1,39 +1,5 @@
 import { mkdir, readFile, readdir, realpath, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, resolve, sep, win32 } from 'node:path';
-import { crc32, deflateRawSync } from 'node:zlib';
-import { Zip, type ZipInputFile } from 'fflate';
-
-interface ZipEntry {
-  name: string;
-  data: string | Uint8Array;
-}
-
-/** Keep ordered, duplicate entries while the public library owns the archive format. */
-export function writeZipArchive(filePath: string, entries: readonly ZipEntry[]): Promise<void> {
-  if (entries.length > 65_535) throw new RangeError('A classic ZIP archive supports at most 65535 entries');
-  const chunks: Uint8Array[] = [];
-  const zip = new Zip((error, chunk) => {
-    if (error) throw error;
-    chunks.push(chunk);
-  });
-  const mtime = new Date();
-  for (const entry of entries) {
-    const size = typeof entry.data === 'string' ? Buffer.byteLength(entry.data) : entry.data.byteLength;
-    if (size > 0xffff_ffff) throw new RangeError('A classic ZIP entry must be smaller than 4 GiB');
-    const data = typeof entry.data === 'string' ? Buffer.from(entry.data) : Buffer.from(entry.data);
-    const compressed = deflateRawSync(data);
-    if (compressed.length > 0xffff_ffff) throw new RangeError('A classic ZIP entry must be smaller than 4 GiB');
-    // Plain completed inputs avoid retaining a deflate window for every archive entry.
-    const file: ZipInputFile = { filename: entry.name, size: data.length, crc: crc32(data), compression: 8, mtime };
-    zip.add(file);
-    file.ondata!(null, compressed, true);
-  }
-  if (chunks.reduce((size, chunk) => size + chunk.length, 0) > 0xffff_ffff) {
-    throw new RangeError('The classic ZIP directory offset must be smaller than 4 GiB');
-  }
-  zip.end();
-  return writeFile(filePath, Buffer.concat(chunks));
-}
 
 /** The installer provides a fresh directory; never merge archive data with existing paths. */
 export async function extractZipArchive(archivePath: string, extractDir: string, assetName: string): Promise<void> {

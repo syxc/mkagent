@@ -22,15 +22,19 @@ export const CODING_SDK_MODULES = new Set([
   'core/settings-manager.ts',
   'core/settings-defaults.ts',
   'core/tools/file-mutation-queue.ts',
+  'core/tools/tool-definition-wrapper.ts',
   'modes/interactive/theme/theme.ts',
   'utils/frontmatter.ts',
 ]);
 
 /** Keep host module resolution in an authored adapter, outside the generated SDK closure. */
 export function codingHostImport(importer: string, specifier: string): string | undefined {
-  if (!specifier.startsWith('.')
-    || posix.normalize(posix.join(posix.dirname(importer), specifier)) !== 'core/extensions/loader.ts') return undefined;
-  const target = posix.relative(posix.dirname('pi/' + importer), 'native-extension-loader.ts');
+  if (!specifier.startsWith('.')) return undefined;
+  const module = posix.normalize(posix.join(posix.dirname(importer), specifier));
+  const host = module === 'core/extensions/loader.ts' ? 'native-extension-loader.ts'
+    : module === 'core/agent-session.ts' ? 'native-agent-session.ts' : undefined;
+  if (!host) return undefined;
+  const target = posix.relative(posix.dirname('pi/' + importer), host);
   return target.startsWith('.') ? target : './' + target;
 }
 
