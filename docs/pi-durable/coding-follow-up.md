@@ -64,7 +64,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-tui 的终端组件、pi-mcp 的协议、pi-codemode 的沙箱按实际公开接口复用。当前部分 core 操作及 Agent 注入依赖四文件补丁，durable 也有仓内补丁；两者均须保留例外说明，不记成无补丁的 SDK 能力。
 
-历史辅助函数、图像和 codemode 的共享结果见[验证记录](coding-validation.md)。`137d6de` 后的设置切片改用 Coding SDK 的 SettingsManager、storage、schema、defaults 和 merge，实现正文由发布包提供；四文件补丁只补根导出和声明。三份本地实现及旧深合并导出转换已删除，宿主信任、profile 覆盖和压缩策略仍由外层适配。当前 runtime 为 189 份 TypeScript、6 项资源，其中 src/pi 为 185 份，主链删除继续开放。Marked 与 Highlight.js 的 browser 资源替换是第三方资源去重，不属于 Pi 官方 SDK 复用的验收证据，也不作为下一批主线。
+历史辅助函数、图像和 codemode 的共享结果见[验证记录](coding-validation.md)。`137d6de` 后的设置切片改用 Coding SDK 的 SettingsManager、storage、schema、defaults 和 merge，实现正文由发布包提供；四文件补丁只补根导出和声明。三份本地实现及旧深合并导出转换已删除，宿主信任、profile 覆盖和压缩策略仍由外层适配。`2c2b98a` 后的包管理切片改用公开 DefaultPackageManager，删除 2,940 行本地包管理器及退出闭包的 output guard、Git helper 和两份旧转发，移除 semver、hosted-git-info 及后者类型的直接依赖。SDK 仅增加宿主策略、项目目录、更新作用域、stderr 输出和已启动安装任务排空接点；包解析与安装算法仍由发布包提供。当前 runtime 为 186 份 TypeScript、6 项资源，其中 src/pi 为 182 份；辅助来源为 12 项、共享入口为 23 个。focused 51 项、两项类型检查、worker bundle 26 项、完整来源检查和全新 hoisted 冻结安装通过，独立复核无确定缺陷，主链删除继续开放。Marked 与 Highlight.js 的 browser 资源替换是第三方资源去重，不属于 Pi 官方 SDK 复用的验收证据，也不作为下一批主线。
 
 完成条件：确认可由官方实现承担的职责已经交还 SDK；调用方和功能验证同步迁移，没有为了引用包而在补丁里复制另一套实现。
 

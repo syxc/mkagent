@@ -6,6 +6,7 @@ export const CODING_SDK_PACKAGE = '@earendil-works/pi-coding-agent';
 export const CODING_SDK_MODULES = new Set([
   'core/diagnostics.ts',
   'core/event-bus.ts',
+  'core/package-manager.ts',
   'core/settings-manager.ts',
   'core/settings-defaults.ts',
   'core/tools/file-mutation-queue.ts',

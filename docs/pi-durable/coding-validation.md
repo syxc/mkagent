@@ -26,6 +26,65 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Package manager SDK boundary after 2c2b98a
+
+Host package commands, resource discovery and the legacy package adapter now use
+the published DefaultPackageManager. The Coding patch adds host discovery
+policy, project directory, update scope, protocol output and installer drain
+options. It exports the existing package contracts from the public root and
+narrows settings to the six methods the manager uses. Settings algorithms are
+unchanged. The six patched Coding outputs have matching installed hashes.
+
+Before deletion, an AST comparison checks all 140 module functions, constants
+and class methods against the patched published implementation. The constructor
+is checked separately for directory and policy initialization. The 2,940-line
+local package manager is deleted. Its output guard and Git helper leave the
+runtime closure and have no remaining consumers; both implementations and their
+two legacy forwards are deleted. Direct semver, hosted-git-info and the latter's
+type dependency are removed. The SDK can still use these transitively.
+Complete generator checks pass for 186 runtime TypeScript files, including 182
+under src/pi and four facades, six assets, 12 auxiliary sources and 23 forwards.
+The old package-manager source-port conversion is also removed.
+
+The final focused run passes 51 tests across seven files with 308 assertions
+and no failures. Coding declarations, server typecheck and all 26 worker bundle
+tests with 103 assertions pass. Coverage includes SDK class identity, directory
+and offline policy, explicit commands, project trust, host-only isolation and
+resource reload. Checks use task-only HOME, configuration and allowlist
+environments. They do not call a real provider or install a real package.
+
+Initial checks expose and correct four validation issues. The patch generator
+first rejects a nonunique replacement anchor; the anchor now includes its
+following declaration. A bare TypeScript scanner misreads template literals;
+AST leaf-token comparison then passes without changing production algorithms.
+One focused assertion incorrectly assumes the compatibility root exports
+DefaultPackageManager; it is removed without widening that root. Complete
+source check detects the unused output guard; checking its consumers also
+identifies the Git helper, and both are deleted instead of added to the closure.
+The final focused and source checks pass after these corrections.
+
+A fresh hoisted frozen install uses new HOME/cache, the public registry and
+disabled scripts. It installs 1,421 packages for 11 workspaces and leaves the
+lockfile unchanged. Imports from the actual Coding workspace verify settings
+exports, merge, trust, offline missing-source callbacks and skip diagnostics.
+All 40 patched physical outputs, core four, Coding six and durable 30, match the
+tested installation. The six Coding outputs also match CODING-PATCH.json.
+Rebuild check from the pristine release passes.
+
+The fixed Craft v0.15.6 source audit passes for 2,182 files. All six changed
+current documents pass punctuation checks, all 105 relative link targets exist,
+and diff checks pass. Historical settings counts remain in their section.
+
+Independent read-only review finds no confirmed defect in this slice. It checks
+root exports, class identity, structural settings, native and legacy project
+directories, callback and diagnostic policy, update scope/trust, installer drain
+and shutdown ownership. Additional isolated probes confirm SDK identity through
+the extension loader and structured project package paths and filters in both
+native `.tau` and legacy `.pi` directories. The review does not repeat the main
+tests or cover real network installation, Windows, source audit or the full
+session migration. Receipts are in the package-sdk task directory. Production
+session replacement, atomic input persistence and cold recovery remain open.
+
 ## Settings SDK boundary after 137d6de
 
 The settings slice uses the published SettingsManager, storage classes, types,

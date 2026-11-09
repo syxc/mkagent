@@ -10,6 +10,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 [能力规格](coding-capabilities-spec.md)定义需求，[纠偏跟进](coding-follow-up.md)定义 F0 至 F6 顺序，[架构记录](coding-architecture.md)描述实际代码，[SDK 维护清单](coding-sdk-maintenance.md)登记发布能力、本地补丁和适配的缺口、恢复、退出条件及升级检查。[需求对照](coding-acceptance.md)和[验证记录](coding-validation.md)区分实现、历史证据和待验项。AgentSession、自有任务种类和剩余源码均按实际契约及 API 缺口登记；原版 CLI 与三种模式宿主已排除。不能从旧文档、现有测试或来源可达图反推必须保留的需求。
 
+`2c2b98a` 后的包管理切片已将宿主命令、资源发现和 legacy 包管理入口接入公开 Coding SDK DefaultPackageManager，删除本地包管理器及无调用的 output guard、Git helper 和两份转发。包管理主体算法由发布包提供，仓内补丁只增加必要的宿主策略、目录、作用域、协议输出和安装任务排空接点。runtime 当前为 186 份 TypeScript、6 项资源，其中 src/pi 为 182 份；focused 51 项、两项类型检查、worker bundle 26 项、完整来源检查及 hoisted 冻结安装通过。资源加载器、会话等主链的 SDK 替换仍未完成，不能据此关闭 F0 至 F6。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

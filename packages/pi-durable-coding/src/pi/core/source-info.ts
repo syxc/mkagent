@@ -1,5 +1,5 @@
 import { canonicalizePath, getPathComparisonKey } from "../utils/paths.ts";
-import type { PathMetadata } from "./package-manager.ts";
+import type { PathMetadata } from "@earendil-works/pi-coding-agent";
 
 export type SourceScope = "user" | "project" | "temporary";
 export type SourceOrigin = "package" | "top-level";

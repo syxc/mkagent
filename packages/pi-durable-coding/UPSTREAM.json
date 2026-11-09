@@ -148,14 +148,6 @@
       "implementation": "src/pi/utils/child-process.ts"
     },
     {
-      "target": "src/upstream/utils/git.ts",
-      "implementation": "src/pi/utils/git.ts"
-    },
-    {
-      "target": "src/upstream/core/output-guard.ts",
-      "implementation": "src/pi/core/output-guard.ts"
-    },
-    {
       "target": "src/upstream/core/exec.ts",
       "implementation": "src/pi/core/exec.ts"
     },

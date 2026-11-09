@@ -233,7 +233,6 @@
         "diff": "8.0.4",
         "fflate": "0.8.2",
         "highlight.js": "10.7.3",
-        "hosted-git-info": "9.0.3",
         "ignore": "7.0.8",
         "jiti": "2.7.0",
         "jszip": "3.10.1",
@@ -241,14 +240,12 @@
         "minimatch": "11.0.3",
         "proper-lockfile": "4.1.2",
         "quickjs-wasi": "3.6.2",
-        "semver": "7.8.5",
         "typebox": "1.3.27",
         "undici": "8.12.3",
       },
       "devDependencies": {
         "@silvia-odwyer/photon-node": "0.3.4",
         "@types/cross-spawn": "6.0.6",
-        "@types/hosted-git-info": "3.0.5",
         "@types/proper-lockfile": "4.1.4",
       },
     },
@@ -1242,8 +1239,6 @@
     "@types/hast": ["@types/hast@3.0.4", "https://repo.huaweicloud.com/repository/npm/@types/hast/-/hast-3.0.4.tgz", { "dependencies": { "@types/unist": "*" } }, "sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ=="],
 
     "@types/heic-convert": ["@types/heic-convert@2.1.1", "", {}, "sha512-+s14762Nf62z9zziIs7ItvAkSUCS3ls4Z5XPT9BlVve3Q3S4DAnf6qekffMTvEWycSUF+kulkGaSN65fK6eKvg=="],
-
-    "@types/hosted-git-info": ["@types/hosted-git-info@3.0.5", "", {}, "sha512-Dmngh7U003cOHPhKGyA7LWqrnvcTyILNgNPmNCxlx7j8MIi54iBliiT8XqVLIQ3GchoOjVAyBzNJVyuaJjqokg=="],
 
     "@types/http-cache-semantics": ["@types/http-cache-semantics@4.0.4", "https://repo.huaweicloud.com/repository/npm/@types/http-cache-semantics/-/http-cache-semantics-4.0.4.tgz", {}, "sha512-1m0bIFVc7eJWyve9S0RnuRgcQqF/Xd5QsUZAZeQFr1Q3/p9JWoQQEqmVy+DPTNpGXwhgIetAoYF8JSc33q29QA=="],
 
@@ -3208,8 +3203,6 @@
     "@mkagent/pi-durable-coding/@earendil-works/pi-ai": ["@earendil-works/pi-ai@1.5.0", "", { "dependencies": { "@anthropic-ai/sdk": "0.129.0", "@aws-sdk/client-bedrock-runtime": "3.1127.0", "@earendil-works/pi-schema": "1.5.0", "@earendil-works/pi-telemetry": "1.5.0", "@google/genai": "2.21.0", "@smithy/node-http-handler": "4.12.1", "http-proxy-agent": "9.1.0", "https-proxy-agent": "9.1.0", "openai": "7.19.0", "partial-json": "0.1.7" }, "bin": { "pi-ai": "dist/cli.js" } }, "sha512-VeWxNqTHSqRCf8AcY/6kvNwh+neRL6MPxZPePVztIQy6qqK9MR/YoCSN/ZgDnIyCD3pqEXgRyQbzk4KV4uvjbg=="],
 
     "@mkagent/pi-durable-coding/marked": ["marked@18.0.11", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-HnslJfsZkRPBDJRHvVtAaWlZHEpSu7u8LgQuJCELjRKuWR+hpq4A7sLq3p8HaI9ypVoXDXxV34CsQJEe1+J5Aw=="],
-
-    "@mkagent/pi-durable-coding/semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
 
     "@mkagent/pi-durable-coding/undici": ["undici@8.12.3", "", {}, "sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw=="],
 

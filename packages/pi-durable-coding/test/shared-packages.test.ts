@@ -29,7 +29,7 @@ function probe(action: string, offline = '') {
   const source = join(import.meta.dir, '../src');
   const code = `
     import { DefaultPackageManager as Legacy } from ${JSON.stringify(join(source, 'upstream/core/package-manager.ts'))};
-    import { DefaultPackageManager as Native } from ${JSON.stringify(join(source, 'pi/core/package-manager.ts'))};
+    import { DefaultPackageManager as Native } from '@earendil-works/pi-coding-agent';
     import { resolveCodingPackages } from ${JSON.stringify(join(source, 'packages.ts'))};
     import { loadProjectContextFiles } from ${JSON.stringify(join(source, 'upstream/core/context-files.ts'))};
     const options = ${JSON.stringify({ cwd, agentDir })};

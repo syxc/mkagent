@@ -148,7 +148,7 @@ const legacyPolicies: Record<string, string> = {
 const forwarded = [
   'core/source-info.ts', 'core/pi-manifest.ts',
   'utils/text.ts', 'utils/paths.ts',
-  'utils/child-process.ts', 'utils/git.ts', 'core/output-guard.ts',
+  'utils/child-process.ts',
   'core/exec.ts', 'core/timings.ts', 'core/mcp-servers.ts',
   'core/skills.ts', 'core/prompt-templates.ts', 'core/system-prompt.ts',
   'core/extensions/types.js', 'core/extensions/pi-ai-extension-view.ts',

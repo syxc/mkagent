@@ -20,7 +20,6 @@
     "diff": "8.0.4",
     "fflate": "0.8.2",
     "highlight.js": "10.7.3",
-    "hosted-git-info": "9.0.3",
     "ignore": "7.0.8",
     "jiti": "2.7.0",
     "jszip": "3.10.1",
@@ -28,7 +27,6 @@
     "minimatch": "11.0.3",
     "proper-lockfile": "4.1.2",
     "quickjs-wasi": "3.6.2",
-    "semver": "7.8.5",
     "typebox": "1.3.27",
     "undici": "8.12.3"
   },
@@ -460,25 +458,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/core/output-guard.ts",
-      "target": "src/pi/core/output-guard.ts",
-      "sha256": "68c0e9a7533f0cf7270bb50a7558185a9f9a0f71304c85bb438dd620161a4f04",
-      "portSha256": "68c0e9a7533f0cf7270bb50a7558185a9f9a0f71304c85bb438dd620161a4f04",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/core/package-manager.ts",
-      "target": "src/pi/core/package-manager.ts",
-      "sha256": "117f6a99c323c4284a905d1731756f745f435e11f82912b44363301f7b698fa0",
-      "portSha256": "7d83c18c70a652a8741c7b8d9529a6f3f4d0692d602beb11d05227923235e095",
-      "changes": [
-        "public-coding-sdk",
-        "host-resource-trust-and-installed-package-policy",
-        "explicit-host-project-resource-directory",
-        "structural-package-settings-interface"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/pi-ai-schemas.ts",
       "target": "src/pi/core/pi-ai-schemas.ts",
       "sha256": "ba5a59729646209cbfa870d8a9b3def24d51c2eb21b1ea6a6a331690c35cddd8",
@@ -529,7 +508,7 @@
       "source": "packages/coding-agent/src/core/resource-loader.ts",
       "target": "src/pi/core/resource-loader.ts",
       "sha256": "933346d5752b71c52859c22c61adfe9dd50e8813e19db021d0bf8fca02f8463a",
-      "portSha256": "64d798ff5e0c17b158e5cdf66402f4c6616f0ff2f7c76c14864f5f9140d6f311",
+      "portSha256": "fd0608981a5ec49583c29c4e310c36876b7c8d927385e90ef9d836da14f1f0e3",
       "changes": [
         "public-coding-sdk",
         "host-resource-trust-and-installed-package-policy",
@@ -598,8 +577,10 @@
       "source": "packages/coding-agent/src/core/source-info.ts",
       "target": "src/pi/core/source-info.ts",
       "sha256": "ad2d4ca1e364c4e3a0c2e113a047d5dbee1a2897d2eeb0d666b5b3fc2e3d51b1",
-      "portSha256": "ad2d4ca1e364c4e3a0c2e113a047d5dbee1a2897d2eeb0d666b5b3fc2e3d51b1",
-      "changes": []
+      "portSha256": "3bde8dde9036379f3c0641f271bbcfcb24b3cfe7ef1c354838749f04b798e7fe",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/core/system-prompt.ts",
@@ -950,7 +931,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "f6297ee5fb54a679f1225518ba7c0b83804a6c5eb5ed942039f0eabd593c8564",
+      "portSha256": "a798c983ef24551f8d0035ba660ec85233d84ffc9b9546ce5ff9aa2a115e4ef3",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",
@@ -1376,13 +1357,6 @@
       "target": "src/pi/utils/fs-watch.ts",
       "sha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
       "portSha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/utils/git.ts",
-      "target": "src/pi/utils/git.ts",
-      "sha256": "c8972c0cf248173f7bc3a42a5e9796db290ea3f978c792a0b371814dda7f2638",
-      "portSha256": "c8972c0cf248173f7bc3a42a5e9796db290ea3f978c792a0b371814dda7f2638",
       "changes": []
     },
     {

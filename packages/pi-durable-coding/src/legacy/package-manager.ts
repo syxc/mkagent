@@ -1,9 +1,15 @@
 // Shared package implementation; adapt only the legacy resource discovery contract.
-export * from "../pi/core/package-manager.ts";
+export {
+	getExtensionTempFolder,
+	type ConfiguredPackage, type MissingSourceAction, type PackageInstallFailure,
+	type PackageManager, type PackageResolutionPolicy, type PackageUpdate,
+	type PathMetadata, type ProgressCallback, type ProgressEvent, type ResolvedPaths,
+	type ResolvedResource,
+} from "@earendil-works/pi-coding-agent";
 import {
 	DefaultPackageManager as NativePackageManager,
 	type MissingSourceAction,
-} from "../pi/core/package-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 import { CONFIG_DIR_NAME } from "../upstream/config.ts";
 
 export class DefaultPackageManager extends NativePackageManager {

@@ -1,8 +1,9 @@
-/** Expose existing SDK settings contracts without copying their implementations. */
+/** Rebuild narrow SDK exports and host package policy options from pristine releases. */
 import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { codingPackagePolicy } from './coding-package-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -27,7 +28,7 @@ for (const suffix of ['js', 'd.ts']) {
   const original = readFileSync(join(baseline, path), 'utf8');
   if (original.includes('export * from "./core/settings-manager.')) throw new Error('Expected unpatched SDK');
   const extension = suffix === 'js' ? 'js' : 'ts';
-  const exports = `export * from "./core/settings-manager.${extension}";\nexport { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";\n`;
+  const exports = `export * from "./core/settings-manager.${extension}";\nexport { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";\nexport * from "./core/package-manager.${extension}";\n`;
   const marker = '//# sourceMappingURL=';
   const position = original.indexOf(marker);
   if (position < 0) throw new Error('Published index source map marker changed');
@@ -40,6 +41,10 @@ const typesPath = 'dist/core/settings-manager.d.ts';
 outputs.set(typesPath, replace(readFileSync(join(baseline, typesPath), 'utf8'),
   'export type SettingsScope =',
   'export declare function deepMergeSettings(base: Settings, overrides: Settings): Settings;\nexport type SettingsScope ='));
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/core/package-manager.${suffix}`;
+  outputs.set(path, codingPackagePolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
+}
 const staging = mkdtempSync(join(tmpdir(), 'coding-sdk-exports-'));
 let patch = '';
 for (const [path, output] of outputs) {
@@ -57,8 +62,8 @@ const manifest = JSON.stringify({
   repository: 'https://github.com/earendil-works/pi',
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
-  patch: 'settings-exports-v1',
-  policy: 'Export existing settings storage, types, defaults and merge contracts from the public root. No settings algorithm or lifecycle changes.',
+  patch: 'settings-exports-and-package-policy-v1',
+  policy: 'Export existing settings and package contracts. Preserve published settings algorithms and package algorithms; add only host discovery, project directory, update scope, protocol output and installer drain options.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),
@@ -71,4 +76,4 @@ if (mode === '--check') {
   writeFileSync(patchPath, patch);
   writeFileSync(manifestPath, manifest);
 }
-console.log(`Validated ${outputs.size} settings export patch files; ${mode}.`);
+console.log(`Validated ${outputs.size} Coding SDK patch files; ${mode}.`);

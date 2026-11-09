@@ -34,7 +34,7 @@ import {
 	type PackageResolutionPolicy,
 	type PathMetadata,
 	type ResolvedResource,
-} from "./package-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 import type { PromptTemplate } from "./prompt-templates.ts";
 import { loadPromptTemplates } from "./prompt-templates.ts";
 import { type PackageSource, SettingsManager } from "@earendil-works/pi-coding-agent";
