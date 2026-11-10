@@ -155,9 +155,6 @@ for (const item of forwarded) {
   save(item.target, content);
 }
 
-port('core/footer-data-provider.ts', 'core/git-paths.ts', ['GitPaths', 'findGitPaths'],
-  'import { existsSync, readFileSync, statSync } from "node:fs";\n'
-  + 'import { dirname, join, resolve } from "node:path";\n\n');
 port('core/agent-session.ts', 'core/boundary-drafts.js', [
   'AgentSession._applyBoundaryDrafts', 'AgentSession._buildBoundaryContext', 'AgentSession._replaceMessageInPlace',
 ], 'import { estimateProjectedContextTokens } from "./context-tokens.js";\n'

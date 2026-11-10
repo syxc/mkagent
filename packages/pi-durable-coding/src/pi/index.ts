@@ -217,7 +217,7 @@ export {
 	wrapRegisteredTools,
 } from "./core/extensions/index.ts";
 // Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
-export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
+export type { ReadonlyFooterDataProvider } from "@earendil-works/pi-coding-agent";
 export type { RegisteredMcpServer } from "@earendil-works/pi-coding-agent";
 export { convertToLlm } from "../native-messages.ts";
 export { ModelRegistry } from "@earendil-works/pi-coding-agent";

@@ -26,6 +26,52 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK footer type after 7f29d4e
+
+The only local consumer of the footer module is the public readonly type
+export. The pinned SDK root already exposes the same type. The generated
+barrel now uses that SDK export. The 346-line footer implementation, its
+30-line watcher and 47-line Git path helper are deleted. The generator no
+longer extracts the Git helper or transforms the footer. No runtime wrapper,
+new dependency or SDK patch is added. The SDK continues to own its internal
+footer and watchers.
+
+| Check | Result and scope |
+|---|---|
+| Generation | Complete runtime and auxiliary checks pass; three retired files stay absent |
+| Public boundary and UI | Each layout passes nine tests and 312 expect calls, including renderer state, fallbacks and relocated image conversion |
+| Declaration generation | Both current barrels pass scoped transpileDeclaration and emit the SDK type export; this is not a full declaration build |
+| Source registration | Seven entries updated and three retired entries removed |
+| Restricted Craft audit | Fixed v0.15.6 audit passes for 2046 permitted files; protected source stays excluded and its registry entry is unchanged |
+| Independent review | No verified findings; strict isolated type probes pass in root, hoisted and pristine layouts; full barrel runtime emit matches the baseline with both verbatimModuleSyntax settings |
+
+The review checks the actual footer declaration with strict enabled and
+skipLibCheck disabled. Each layout accepts valid consumers and rejects 12
+invalid cases, for 36 expected rejections. Only the actual footer type export
+is retained in memory from each root entry, so this does not check the full
+SDK declaration graph. Both complete barrel syntax-only runtime emits match
+the baseline, at 5172 bytes each. The parent verifies all ten slice inputs
+and the probe input hashes before it accepts the review evidence. Concurrent
+source registration and document edits are outside the independent review.
+
+A filename enumeration initially used include and exclude globs in the wrong
+order. The path guard rejected that list before content retrieval. The
+review corrected the order; no protected content was read, and the type
+probe reports zero protected read attempts. F0 through F6 remain open.
+
+All four behavior preflights pass without a protected-source dependency.
+The two existing layouts use the same current sources. Dependencies, SDK
+patches, lock bytes, task schemas and persistence versions stay unchanged.
+No install, broad recovery suite, complete type build or production bundle
+suite is repeated for this type-only export and unused source removal.
+
+Runtime generation now has 30 TypeScript outputs: 26 under src/pi and four
+facades, with no assets. Auxiliary sources drop to eight; forwards remain 15.
+Physical patch outputs remain core four, Coding 72 and durable 33, for 109.
+Other source review and F0 through F6 remain open. Full Craft audit, fresh full
+types and declarations, and protected legacy integration keep their existing
+limits. No real UI, account, paid provider or real Craft data is used.
+
 ## Public SDK messages after 22946a8
 
 This slice removes the 207-line local messages module and the 12-line source

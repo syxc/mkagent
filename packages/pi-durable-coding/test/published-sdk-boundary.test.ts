@@ -56,6 +56,7 @@ describe('published Coding SDK boundary', () => {
     expect(codingHostImport('core/sdk.ts', './agent-session-services.ts')).toBe('../../native-session-services.ts');
     expect(codingHostImport('core/sdk.ts', './agent-session-runtime.ts')).toBe('../../native-session-runtime.ts');
     expect(codingSDKImport('index.ts', './cli/args.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('index.ts', './core/footer-data-provider.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/extensions/index.ts', '../slash-commands.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('modes/index.ts', './json-event.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('modes/rpc/rpc-client.ts', '../json-event.ts')).toBe('@earendil-works/pi-coding-agent');

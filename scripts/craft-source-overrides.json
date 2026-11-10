@@ -2501,8 +2501,8 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "1e70f6e7ec77d60de3d4c0b859d8b44e6506f04b0535476dd72fc63733eebbd5",
-      "reason": "Remove the CLI parser transform after the local parser is replaced by its SDK export."
+      "sha256": "22fe4ddf97609d4cc7dfa5d7cfd16af181b36e964519f9c8977bb867268cedbc",
+      "reason": "Remove the unused footer GitPaths transformation."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
@@ -3697,8 +3697,8 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "1eab061743185732ed6e79ecacb93ca1a73c36e1a94e09f28b64b74e648b64f8",
-      "reason": "Retire the unused configuration-value compatibility forward after its local implementation leaves the closure."
+      "sha256": "0508e9073bcdce91f958013d28b26d605501b7c9571ba4d4a51eef7d8b522c2c",
+      "reason": "Retire the GitPaths extraction after its only local consumer exits the source closure."
     },
     "packages/pi-durable-coding/package.json": {
       "sha256": "03c23daf882ce3e26b17e5ff2314536972fc923d5b229d23dbe8102c501471a3",
@@ -3713,8 +3713,8 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "e63034bc3b0fb891e38059a56c643d629326dbeb395918e93450ae1c71205a4d",
-      "reason": "Stop regenerating an unused configuration-value compatibility forward."
+      "sha256": "0fa46849609af4cd8b8aa8ecabbc1ea6e55ca3d2a769f2da56aab357af091dfe",
+      "reason": "Stop generating the unused footer GitPaths helper."
     },
     "packages/pi-durable-coding/src/compat.ts": {
       "sha256": "037e8dc7ec087684bdca14748aff4f9b902158aee2ac1a8db2e3ad61f8d9d38f",
@@ -3795,10 +3795,6 @@
     "packages/pi-durable-coding/src/upstream/core/extensions/runner.js": {
       "sha256": "6dc02a191b5a17d2eb045b1117c19ca604c795afa546ff21ad7892f4acf8b577",
       "reason": "Forward the legacy entry point to its authored shared host policy; retain pinned provenance in UPSTREAM.json and the canonical runtime manifest."
-    },
-    "packages/pi-durable-coding/src/upstream/core/git-paths.ts": {
-      "sha256": "75b5ff0072877dc915d4c646174620891349924f5aa2a15e81632610df8c917c",
-      "reason": "Port Pi v1.5.0 packages/coding-agent/src/core/footer-data-provider.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
     },
     "packages/pi-durable-coding/src/upstream/core/messages.js": {
       "sha256": "28f06aa87c1eeb5c702680802a29047aa60f6739e40f46ff8415533daf4468e0",
@@ -3961,8 +3957,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "adea9022f05ca6dc2f5ddba48d2452b8e39d4ba1697bbf1b4e68fc5e8263dd2f",
-      "reason": "Remove the complete message implementation from the generated source closure."
+      "sha256": "4d24be6d5cbcfd43be47e1039e98f01d1f5a37da6dd37502b0fb2d54f70031b9",
+      "reason": "Retire the complete footer implementation and its unused watcher from the generated runtime closure."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4116,10 +4112,6 @@
       "sha256": "4bb0675d11e68a5bdbe8de0e4efafb44dd67ebac35363f4cfeb8274278a9c30a",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
-    "packages/pi-durable-coding/src/pi/core/footer-data-provider.ts": {
-      "sha256": "2b35c519981eef661177ccf2816693b3019ca3250375579302410214812fac7f",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/footer-data-provider.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Preserve native defaults while sharing storage, runner, settings, resources and message implementations with legacy policies."
-    },
     "packages/pi-durable-coding/src/pi/core/tools/index.ts": {
       "sha256": "aefddf527ff36d2d24d8310114ff28527c3c62fda1a58603a7f0001396f9f262",
       "reason": "Forward the Native public truncation contracts to the Coding SDK."
@@ -4137,8 +4129,8 @@
       "reason": "Use the public SDK auth backend while retaining the host cancellable refresh-lock extension."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "e16e2ec33ea17f1b103b2a1a33ec5b894ecbfbfa855d3ebe6029fd22819cb386",
-      "reason": "Expose native message metadata policy through the authored SDK binding."
+      "sha256": "67fb901b36a5ea52e2b1b920d9a5970c9265be4218ea26574349ecadfbb13edd",
+      "reason": "Re-export the readonly footer type directly from the published SDK."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "a17cd07031fbd589086c4df3f8d82b51c77524ac54f7f8c33b581cb458a639ce",
@@ -4171,10 +4163,6 @@
     "packages/pi-durable-coding/src/pi/utils/clipboard.ts": {
       "sha256": "b75a97f581b55a8ac199f9b0e13907c568a5c9b192733606110007663ceaafe9",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/clipboard.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/fs-watch.ts": {
-      "sha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/fs-watch.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/management-http.ts": {
       "sha256": "2195b345fdd5c607f87a55b93e7d00c6d70d7dcfe2989b08bbd9f39b529a756a",
@@ -4465,12 +4453,12 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "9dded23a843b3c20e51b219cf74b588d3ecb85e1c697124fc23d3185650b722e",
-      "reason": "Route generated message imports to the host metadata policy binding without copying conversion algorithms."
+      "sha256": "b7f242be709794342d595fe76d9ac9b6c4cbad0225f6bb05ba7759374e9d034d",
+      "reason": "Use the existing public SDK readonly footer type instead of copying the implementation."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "ef09388e92f52b3b5fcb474fc8e5c0d5fee8eb1be2004d1ea490c386c1524605",
-      "reason": "Guard generated message imports against reintroducing the complete source copy."
+      "sha256": "d0e7b8761d26654cbde03cbf91a6d23a13f4ef7c1ab34248ae4021038c86a3df",
+      "reason": "Guard the public SDK footer boundary against copying the full implementation again."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
       "sha256": "71dc246a275bd5abea2cf22b88c1060e3cc1bd161b0884a85d745a31de60be26",

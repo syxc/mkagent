@@ -65,11 +65,6 @@ export function StringEnum<T extends readonly string[]>(
 \treturn Type.Unsafe<T[number]>(publicStringEnum(values, options));
 }` },
   },
-  'core/footer-data-provider.ts': {
-    change: 'shared-lightweight-resource-algorithms',
-    names: ['GitPaths', 'findGitPaths'],
-    imports: 'import { findGitPaths, type GitPaths } from "../../upstream/core/git-paths.ts";\nexport { findGitPaths, type GitPaths };',
-  },
 };
 
 export function portSharedHelpers(path: string, body: string): string {
