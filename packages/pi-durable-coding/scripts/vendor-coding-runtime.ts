@@ -281,24 +281,14 @@ records.push({
   source: 'packages/agent/src/agent-loop.ts', target: 'src/native-operations.ts',
   sha256: hash(helperSource), portSha256: hash(helperBody), changes: ['public-core-operations-with-native-identity'],
 });
-// Clients need the exact native wire types without importing the coding implementation.
+// Keep the existing light type entry point on the public SDK contract.
 const rpcSource = readFileSync(join(source, 'modes/rpc/rpc-types.ts'), 'utf8');
-const rpcAST = ts.createSourceFile('rpc-types.ts', rpcSource, ts.ScriptTarget.Latest, true);
-const uiNames = new Set(['RpcExtensionUIRequest', 'RpcExtensionUIResponse']);
-const uiDeclarations = rpcAST.statements.filter((node): node is ts.TypeAliasDeclaration =>
-  ts.isTypeAliasDeclaration(node) && uiNames.has(node.name.text));
-if (uiDeclarations.length !== uiNames.size) throw new Error('Pinned native UI wire types changed');
-const inspectUIType = (node: ts.Node): void => {
-  if (ts.isTypeReferenceNode(node)) throw new Error('Native UI wire types require an explicit dependency port');
-  ts.forEachChild(node, inspectUIType);
-};
-uiDeclarations.forEach(inspectUIType);
 const uiBody = '// Generated from Pi v1.5.0 (MIT); see LICENSE.pi and UPSTREAM-RUNTIME.json.\n'
-  + uiDeclarations.map(node => node.getText(rpcAST)).join('\n\n') + '\n';
+  + 'export type { RpcExtensionUIRequest, RpcExtensionUIResponse } from "@earendil-works/pi-coding-agent";\n';
 save('src/rpc-ui.ts', uiBody);
 records.push({
   source: 'packages/coding-agent/src/modes/rpc/rpc-types.ts', target: 'src/rpc-ui.ts',
-  sha256: hash(rpcSource), portSha256: hash(uiBody), changes: ['standalone-extension-ui-wire-contracts'],
+  sha256: hash(rpcSource), portSha256: hash(uiBody), changes: ['public-coding-sdk-wire-contracts'],
 });
 const externalDependencies = Object.fromEntries([...dependencies].sort().map(name => {
   const version = packageInfo.dependencies[name] ?? localDependencies[name];

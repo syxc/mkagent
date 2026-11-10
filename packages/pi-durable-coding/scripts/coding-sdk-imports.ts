@@ -4,6 +4,7 @@ import { posix } from 'node:path';
 export const CODING_SDK_PACKAGE = '@earendil-works/pi-coding-agent';
 
 export const CODING_SDK_MODULES = new Set([
+  'cli/args.ts',
   'core/auth-storage.ts',
   'core/bash-executor.ts',
   'core/cache-warmer.ts',
@@ -26,6 +27,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/resource-loader.ts',
   'core/settings-manager.ts',
   'core/settings-defaults.ts',
+  'core/slash-commands.ts',
   'core/source-info.ts',
   'core/timings.ts',
   'core/usage-totals.ts',
@@ -37,6 +39,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/tools/write.ts',
   'extensions/mcp/config.ts',
   'extensions/mcp/index.ts',
+  'modes/json-event.ts',
   'modes/interactive/components/auth-url.ts',
   'modes/interactive/components/dynamic-border.ts',
   'modes/interactive/components/keybinding-hints.ts',

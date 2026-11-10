@@ -26,6 +26,83 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK arguments and protocol types after f302268
+
+The existing public Coding SDK exports supply Args, parseArgs,
+SlashCommandInfo/Source, JsonAgentSessionEvent and RPC UI request/response
+types. The unused direct chalk dependency and its workspace lock entry are
+removed; the SDK transitive dependency and all resolutions remain. Three local files are deleted: arguments (263 lines), slash commands
+(44) and JSON events (61), for 368 lines total. The old CLI transform and
+its test are removed. The RPC UI facade changes from 42 lines to two type
+export lines; its emitted module is empty. No SDK patch, dependency
+or runtime wrapper is added. The local RpcClient still requires cliPath.
+
+| Check | Result and scope |
+|---|---|
+| Generation | Complete runtime and auxiliary checks pass against the fixed Pi revision |
+| Root tests | 46 tests and 424 expect calls pass across boundary, shared transform, RPC and host session tests |
+| Hoisted tests | 36 tests and 98 expect calls pass using the current shared-transform test in a task file, with imports bound to hoisted implementations; boundary and RPC tests run from that layout |
+| Types and build | Root Coding types and actual declarations, hoisted actual declarations through server typecheck, server types and build pass |
+| Worker bundle | First run passes 25 tests; the image test exceeds its five-second limit; that test alone passes in 2.41 seconds with a 20-second budget and four expect calls |
+| Independent comparison | 512 argument cases per layout, 1024 baseline/SDK comparisons, no differences; six normalized parser/helper/constant AST comparisons match |
+| Independent consumers | Four source/declaration programs pass 88 bidirectional type assertions and 16 negative checks; the initial declaration snapshot is stale |
+| Parent declaration recheck | Both actual declaration trees are rebuilt; the same two declaration consumers pass 44 bidirectional assertions and eight negative checks with zero target diagnostics |
+| RPC and light UI | Four missing/empty cliPath starts reject before spawn; RPC UI transpiles to an empty module |
+| Dependency removal recheck | Both frozen installations and all Coding/durable patch hashes pass; root 46 and hoisted 36 tests, Coding types, actual declarations in both layouts and server types pass again |
+| Source audit | Thirteen hashes updated, three entries retired, none added; fixed Craft v0.15.6 audit passes for 2050 files |
+
+Independent review confirms one test defect: compat never exported parseArgs.
+The parent deletes the invalid identity assertion in both layouts and keeps
+the native assertion; the passing boundary tests include that correction.
+No new production source defect is confirmed. The review checks four old
+declaration paths and three obsolete declarations in each layout; its initial
+consumer success does not establish the new aliases. The parent removes all
+six obsolete declarations, rebuilds actual package types and reruns the same
+two declaration consumers without rewriting independent evidence. Each uses
+TypeScript 5.9.3, strict, Bundler resolution, skipLibCheck and target-consumer
+diagnostics. These checks do not claim full dependency declaration checking.
+
+The first hoisted test run passes 34 tests and fails four in its existing
+shared-transform fixture. The fixture omits the required shell sanitizer
+and still expects the retired compaction transform. A task copy bound to
+baseline helper code reproduces the same four failures. The original fixture
+is preserved except for the requested obsolete CLI test removal. The current
+repository test is copied into the task directory and only its imports are
+bound to hoisted modules; all 36 selected tests pass. The original failing
+fixture run remains a failure in the evidence record.
+
+The initial hoisted synchronization completes its writes, then its final
+guard uses a main-fixture character offset on a different hoisted fixture.
+A separate read-only check restores the removed block in memory and matches
+the original hoisted hash, proving all remaining bytes are preserved. No
+completed write is repeated. A parent recheck script first fails during
+module linking because realpathSync is imported from node:path. After that
+import is corrected, declaration and fixture checks pass. An overly specific
+image test pattern selects zero tests; only the pending image check resumes
+with the unique test-name substring. All failed logs remain available.
+
+Runtime generation has 41 TypeScript files: 37 under src/pi and four facades,
+with no assets. Auxiliary sources remain nine, shared entries 15, and patch
+outputs core four, Coding 67 and durable 33, for 104 total. SDK patches remain unchanged. Final dependency inspection finds that chalk
+has no remaining local consumer, so its direct declaration and workspace
+lock entry are removed. Both layouts are installed with frozen lock and
+scripts disabled; 67 Coding and 33 durable output hashes match in each.
+The same 46 root tests, 36 hoisted tests, Coding types, actual declarations
+and server types pass after that removal. The four rebuilt alias hashes
+in each layout remain identical to the parent consumer recheck. Passing
+server build and bundle results remain applicable because their source
+and all SDK patch outputs are unchanged. No task, document, checkpoint or codemode version changes.
+
+Checks use task-owned child homes and temporary directories, offline mode
+and the network blocker. Independent runtime probes also deny network and
+the denied legacy path through the sandbox. No upstream CLI, product UI,
+real account, credential, Craft data or paid model is used. The temporary
+consumer check records zero denied legacy reads. The remaining 37 local
+sources, server copies, host OAuth, default SDK session process policies,
+denied legacy entry and F0 through F6 remain open. Existing stream, long OSC,
+AuthContext, Photon and ToolHtmlRenderer limits remain. Windows and full
+crash recovery are outside this slice.
+
 ## Public SDK credential storage after e6fa864
 
 Native readStoredCredential and the host OAuth backend use the public Coding

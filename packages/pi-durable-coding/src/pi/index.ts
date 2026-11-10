@@ -1,6 +1,6 @@
 // Core session management
 
-export { type Args, parseArgs } from "./cli/args.ts";
+export { type Args, parseArgs } from "@earendil-works/pi-coding-agent";
 
 // Config paths
 export {

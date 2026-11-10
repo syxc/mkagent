@@ -10,7 +10,6 @@
     "@earendil-works/pi-durable": "1.5.0",
     "@earendil-works/pi-mcp": "1.5.0",
     "@earendil-works/pi-tui": "1.5.0",
-    "chalk": "6.0.0",
     "cross-spawn": "7.0.6",
     "jszip": "3.10.1",
     "proper-lockfile": "4.1.2",
@@ -45,16 +44,6 @@
       "portSha256": "7380c823e485933b08fc791eaab1fc8f88e5da85face6377e7d9540c1206dfec",
       "changes": [
         "public-core-operations-with-native-identity"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/cli/args.ts",
-      "target": "src/pi/cli/args.ts",
-      "sha256": "05471cfd210c08ffad9ea58c334849c94de260137efa6b1b0eecfcd355d630e7",
-      "portSha256": "f80a08d503360f227857cea24aefaa2d368b20c11f2efa3e5953ec0fbf7ba425",
-      "changes": [
-        "public-coding-sdk",
-        "exclude-upstream-cli-helpers"
       ]
     },
     {
@@ -124,7 +113,7 @@
       "source": "packages/coding-agent/src/core/extensions/index.ts",
       "target": "src/pi/core/extensions/index.ts",
       "sha256": "510e8a71fe1b73d830c0184dfeb7187b8f7f0887f64c6b171a19956a43e64fea",
-      "portSha256": "d3ffafe5119976fdbe7312626c03c65d15a310b2f35c4fa2630d68a33482606f",
+      "portSha256": "eed9b6ddb1b321d2e60cafc0c512cd16178cd47f23fe9ede34cf236ba563b813",
       "changes": [
         "public-coding-sdk",
         "host-extension-module-import"
@@ -196,15 +185,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/core/slash-commands.ts",
-      "target": "src/pi/core/slash-commands.ts",
-      "sha256": "4f404cefc207904ee084216ca9e14ea1c6dcbb5fb859724a91511a5a44a722f4",
-      "portSha256": "a159df3116b74741ae905a08edbe968ff10bf74fa2db4c532229a2b684277c60",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/telemetry.ts",
       "target": "src/pi/core/telemetry.ts",
       "sha256": "5ec837b287ea0303f704a5278c586e2a5d4003f3ad2ccad94997d2fa59164855",
@@ -253,30 +233,22 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "30809e19777de8386ff31b646c95a6d5da8df7433815480ee775a49db1699560",
+      "portSha256": "f3d3191aebe775f7b375e094e7f2778d71b27f01200af83fba5b45f5dafd954e",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",
-        "host-extension-module-import",
-        "public-coding-sdk"
+        "public-coding-sdk",
+        "host-extension-module-import"
       ]
     },
     {
       "source": "packages/coding-agent/src/modes/index.ts",
       "target": "src/pi/modes/index.ts",
       "sha256": "546cf0e6fa0d645265116bec02b2e53313a2359f5b20bd23c286e6c33c0829f3",
-      "portSha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
+      "portSha256": "a17cd07031fbd589086c4df3f8d82b51c77524ac54f7f8c33b581cb458a639ce",
       "changes": [
-        "exclude-upstream-run-modes"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/modes/json-event.ts",
-      "target": "src/pi/modes/json-event.ts",
-      "sha256": "87f6fa86cd73b817470062f5ab0a99c790d0c0e222e25979b96bfcd157e119bf",
-      "portSha256": "71fae381d2ce01bac204ad76dc7223a216776c59304b76213f97db76b61b97f1",
-      "changes": [
-        "host-extension-module-import"
+        "exclude-upstream-run-modes",
+        "public-coding-sdk"
       ]
     },
     {
@@ -290,7 +262,7 @@
       "source": "packages/coding-agent/src/modes/rpc/rpc-client.ts",
       "target": "src/pi/modes/rpc/rpc-client.ts",
       "sha256": "a34c9eb4937bf3b526128c9a2032cc3295504996a14bf204e4a17e5bb55dcf7f",
-      "portSha256": "d04101c3175dbf914a5493cab5ed210cd47bac521008fccfca76007c0bc3af4e",
+      "portSha256": "f0fe98194cec8636b5cf223b269b602f8923d7de5de450ba1fd7512d2d39fc30",
       "changes": [
         "require-explicit-rpc-cli-entry",
         "host-extension-module-import",
@@ -403,9 +375,9 @@
       "source": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
       "target": "src/rpc-ui.ts",
       "sha256": "be06a1d53916e03e9274cce9e4833692b235494e4047f1f7139d7f0147daae1a",
-      "portSha256": "1b753278961cb97ac8f3e66bbf4ecf832ee8b2dfcab9374d6e689c3ac5db9b46",
+      "portSha256": "1df725f93cbb16919e2ab589fad59c6209b71d8746a3743e6d86bbdb5146f917",
       "changes": [
-        "standalone-extension-ui-wire-contracts"
+        "public-coding-sdk-wire-contracts"
       ]
     },
     {

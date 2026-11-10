@@ -11,7 +11,7 @@ import type { PromptDisposition, QueuedInputDisposition, SessionStats } from "..
 import type { BashResult } from "@earendil-works/pi-coding-agent";
 import type { CompactionResult } from "@earendil-works/pi-coding-agent";
 import type { SessionEntry, SessionTreeNode } from "@earendil-works/pi-coding-agent";
-import type { JsonAgentSessionEvent } from "../json-event.ts";
+import type { JsonAgentSessionEvent } from "@earendil-works/pi-coding-agent";
 import { attachJsonlLineReader, serializeJsonLine } from "./jsonl.ts";
 import type { RpcCommand, RpcResponse, RpcSessionState, RpcSlashCommand } from "./rpc-types.ts";
 

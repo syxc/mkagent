@@ -2,7 +2,7 @@
  * Extension system for lifecycle events and custom tools.
  */
 
-export type { SlashCommandInfo, SlashCommandSource } from "../slash-commands.ts";
+export type { SlashCommandInfo, SlashCommandSource } from "@earendil-works/pi-coding-agent";
 export type { SourceInfo } from "@earendil-works/pi-coding-agent";
 export {
 	createExtensionRuntime,
