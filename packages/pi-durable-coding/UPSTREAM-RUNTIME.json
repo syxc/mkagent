@@ -10,7 +10,6 @@
     "@earendil-works/pi-durable": "1.5.0",
     "@earendil-works/pi-mcp": "1.5.0",
     "@earendil-works/pi-tui": "1.5.0",
-    "cross-spawn": "7.0.6",
     "proper-lockfile": "4.1.2",
     "quickjs-wasi": "3.6.2",
     "typebox": "1.3.27"
@@ -47,8 +46,9 @@
       "source": "packages/coding-agent/src/config.ts",
       "target": "src/pi/config.ts",
       "sha256": "b226dccdba72d5438ec6facadd4f3c5f3ff0d4fe66ee591078c486712dbe915a",
-      "portSha256": "ce62c0e9a0afc235ce59e18b09d6052a3c40b95c32cde1a8bd117194ebfb036f",
+      "portSha256": "00a7edb8e7270b144baa00d913e3770ef2d9424b85a3d39df8e3cfd5705d6dea",
       "changes": [
+        "host-extension-module-import",
         "public-coding-sdk",
         "pinned-coding-version-with-host-install-detection",
         "source-asset-location",
@@ -187,15 +187,6 @@
       "changes": [
         "host-extension-module-import",
         "public-coding-sdk"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/child-process.ts",
-      "target": "src/pi/utils/child-process.ts",
-      "sha256": "cd324f5b9a1abadd85ab5a331750d475c8bd51ec65cae091ad9b416245ec85d4",
-      "portSha256": "15118c0272c36832166cd49d4dac73a568f25052bc6a803a6c341ab73b443ed5",
-      "changes": [
-        "shared-durable-child-process-wait"
       ]
     },
     {

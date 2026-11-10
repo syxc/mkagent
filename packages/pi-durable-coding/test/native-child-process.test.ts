@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { ChildProcess } from 'node:child_process';
 import { PassThrough } from 'node:stream';
-import { spawnProcess, spawnProcessSync, waitForChildProcess } from '../src/pi/utils/child-process.ts';
+import { spawnProcess, spawnProcessSync, waitForChildProcess } from '../src/compat/child-process.ts';
 
 function fakeChild(stdout = true, stderr = true): ChildProcess {
   return Object.defineProperties(new ChildProcess(), {

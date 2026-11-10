@@ -2365,12 +2365,12 @@
       "reason": "Pin Native WSL transport, synchronous errors, cleanup signals and detached tracking with verified process substitutes."
     },
     "packages/pi-durable-coding/src/compat/child-process.ts": {
-      "sha256": "19f86ca51d8ac41ad44fd3a674a56373b29590bd46493d7f53472f2591678db9",
-      "reason": "Select Native exit codes over durable's shared child wait without an output spill queue."
+      "sha256": "f20ef1950d0f840b7b192d5c4077cdc12f943645b15b9ecb82db2a867c1eb393",
+      "reason": "Reexport SDK spawn functions while retaining the durable wait result-code and no-spill policy."
     },
     "packages/pi-durable-coding/test/native-child-process.test.ts": {
-      "sha256": "18f64fd9f1cfa84a3233029d05d28ac39979d5a17b5616c791b2e40f6c7925cc",
-      "reason": "Pin Native process results, idle pipes, descendant output, errors and listener cleanup."
+      "sha256": "73ff48387f485986c1c1d1bc483d571bb655ba951be2924b92267ade88f603f8",
+      "reason": "Exercise real spawn and durable wait behavior through the active process adapter."
     },
     "packages/pi-durable-coding/test/durable-child-process.test.ts": {
       "sha256": "aefec44512616c044051844bc9fcb25207e8d74521b358ba18cb748b58876875",
@@ -2501,20 +2501,20 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "4aed3c645ce3a3cde0cc74aaf134555deba890be26d1f7d58e17cf96642de80e",
-      "reason": "Retire the MIME transformation rule after direct host routing."
+      "sha256": "9aa0f1388b3d6dfcb092602c2815a7cce6935b166c7d3aa3ef8ce6bbb5ada8ae",
+      "reason": "Retire the child-process source transformation rule after direct host routing."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "da47702d39bc7acbb1d17df76c3a9c378c407fdeb0555450c30fd36029d430ca",
-      "reason": "Remove the obsolete MIME forwarding-source transformation and signature parser."
+      "sha256": "ca2592d30d50af7769716216f4e22b0c4fa986ecce5555ea3451be6befa22e01",
+      "reason": "Remove the obsolete child-process wait source transformation and signature parser."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "67e436fde78ba6a771b8692c07268143e75a1dac9e27872199a0d3e62e367e05",
-      "reason": "Remove the obsolete CLI transform test after its local parser is retired."
+      "sha256": "24411942d71e2f55e417bf2816b926f902929a1d6b9f0d73adb75e78a8037e05",
+      "reason": "Retain active shell and declaration transformation guards; remove retired child-process transformation fixtures."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "2a5f3e6c3407cab0eaf5c0058358b84ff0df2a1777b9f13d21039d938b2fd1bd",
@@ -3949,8 +3949,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "f03316e06eb1674e1167067209900361d5313a39839bcc055414a96b22edc485",
-      "reason": "Retire the redundant MIME forwarding module from the generated closure; retain the direct durable image policy adapter."
+      "sha256": "e08219304482b64e66d243d5842705078066d239506a9a394a3370a830303cd5",
+      "reason": "Retire the child-process source port after direct routing to the existing durable wait adapter and SDK spawn exports."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4069,8 +4069,8 @@
       "reason": "Provide the independent native coding host adapter and public contracts in node-process.d.ts."
     },
     "packages/pi-durable-coding/src/pi/config.ts": {
-      "sha256": "ce62c0e9a0afc235ce59e18b09d6052a3c40b95c32cde1a8bd117194ebfb036f",
-      "reason": "Use the shared SDK normalization and BOM functions without another implementation."
+      "sha256": "00a7edb8e7270b144baa00d913e3770ef2d9424b85a3d39df8e3cfd5705d6dea",
+      "reason": "Resolve spawnProcessSync through the authored SDK and durable process adapter."
     },
     "packages/pi-durable-coding/src/pi/core/compaction/compaction.ts": {
       "sha256": "7d6100d3769c3d5b294e172d7f7afe42c380ecf62d68917cf114c9c3213b98ef",
@@ -4143,10 +4143,6 @@
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-types.ts": {
       "sha256": "72368768a995682e5ba00009933a24be407d231e76090ecd145a596591773c09",
       "reason": "Use the SDK BashResult declaration for the existing RPC wire response."
-    },
-    "packages/pi-durable-coding/src/pi/utils/child-process.ts": {
-      "sha256": "15118c0272c36832166cd49d4dac73a568f25052bc6a803a6c341ab73b443ed5",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/child-process.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/shell.ts": {
       "sha256": "ae1fd3d6a210850e4466926ca3be1d080fde1a4b36726f78650fc15be693af36",
@@ -4409,24 +4405,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "b22a38efffec5bc00cc96af0e0d1ff31c20a9de4f286a26f88e09245e33f1c1e",
-      "reason": "Route upstream MIME references directly to the existing durable image adapter before source traversal."
+      "sha256": "3cab72fd83f16056ca2735a5d3eb9126be173efe3a4559683142c7295548ccb7",
+      "reason": "Route child-process imports to the authored adapter before source traversal."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
       "sha256": "ab86fb78ea8d57b9adb32592edefe1f495727adcc66b433481765ecdeb663637",
       "reason": "Guard compat path identity and source traversal at the SDK path and BOM boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "144401c90eb38b9837166d07a4b56fdfba848f5f6803e30fbcba3e945c652a0c",
-      "reason": "Record the SDK tool manager factory and host installation dependencies; retain default module exports."
+      "sha256": "76969b5ae277cd46a4ebb26e255cfe8031922ffab44dba3604e776006a28de02",
+      "reason": "Record existing SDK spawn function reexports at the root; retain 74 physical Coding patch outputs."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "2240132f97b779cafe2d58f41209b53f77496b6627b2ed1c9ca1a66ff9bc563b",
-      "reason": "Add only an instance factory, directory and version binding, and an awaited ZIP callback to the SDK installer."
+      "sha256": "29b481816550457c70bf2373979ee51118b6678942790a9280eb4c1a7fb72d7d",
+      "reason": "Export existing spawnProcess and spawnProcessSync from the SDK root without changing their algorithms or overloads."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "6ac0fa0d2942dccf211500fcf59256d3a038915524febca892b557885a2d2ae2",
-      "reason": "Add a narrow SDK tool manager factory and host policy callbacks without copying the installer algorithm."
+      "sha256": "6532e7b4ae0384e54c0de24c80c39e7725ac23232f46a5013ac85ed98d065bc5",
+      "reason": "Add only existing SDK spawn function root reexports; preserve internal child-process implementation and declarations."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",

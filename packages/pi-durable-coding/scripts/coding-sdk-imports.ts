@@ -72,6 +72,7 @@ export function codingHostImport(importer: string, specifier: string): string | 
     : module === 'core/tools/bash.ts' || module === 'core/tools/powershell.ts' ? 'native-shell-tools.ts'
     : module === 'extensions/codemode/index.ts' || module === 'extensions/codemode/tool.ts' ? 'native-codemode.ts'
     : module === 'extensions/tool-search/index.ts' || module === 'extensions/tool-search/tool.ts' ? 'native-tool-search.ts'
+    : module === 'utils/child-process.ts' ? 'compat/child-process.ts'
     : module === 'utils/mime.ts' ? 'compat/image-mime.ts'
     : module === 'utils/image-convert.ts' ? 'native-image-convert.ts'
     : module === 'utils/image-process.ts' || module === 'utils/image-resize.ts' ? 'native-image-process.ts'

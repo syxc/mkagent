@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import ts from 'typescript';
 import { applySharedHelperPort, excludeRunModeEntries } from '../scripts/shared-helper-port.ts';
-import { portChildProcess, portShell } from '../scripts/shared-runtime-port.ts';
+import { portShell } from '../scripts/shared-runtime-port.ts';
 
 const declarationFixtures = [
   {
@@ -25,12 +25,6 @@ export function StringEnum<T extends readonly string[]>(
 ];
 
 const fixtures = [
-  {
-    name: 'child process', port: portChildProcess,
-    source: `const EXIT_STDIO_GRACE_MS = 100;
-export function waitForChildProcess(child: ChildProcess): Promise<number | null> { throw new Error("unused wait body"); }
-`,
-  },
   {
     name: 'shell', port: portShell,
     source: `import { delimiter, join, win32 } from "node:path";
@@ -106,22 +100,6 @@ test('string enum: generic bounds, optional options and TypeBox branding remain 
     assert.throws(() => port(changed));
   }
 });
-
-const wait = fixtures[0];
-for (const [name, from, to] of [
-  ['optional argument', 'child: ChildProcess', 'child?: ChildProcess'],
-  ['extra argument', 'child: ChildProcess', 'child: ChildProcess, extra: number'],
-  ['async modifier', 'export function', 'export async function'],
-  ['removed export', 'export function', 'function'],
-  ['mutable grace', 'const EXIT_STDIO_GRACE_MS', 'let EXIT_STDIO_GRACE_MS'],
-  ['changed grace', '= 100', '= 101'],
-] as const) {
-  test(`child process: ${name} remains rejected`, () => {
-    const changed = wait.source.replace(from, to);
-    assert.notEqual(changed, wait.source);
-    assert.throws(() => wait.port(changed));
-  });
-}
 
 test('run mode exclusion preserves plugin components and RPC while guarding both entry points', () => {
   const fixtures = [

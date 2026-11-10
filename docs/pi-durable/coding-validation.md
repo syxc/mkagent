@@ -26,6 +26,73 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK child process after d855405
+
+The SDK already contains the same spawnProcess and spawnProcessSync algorithms
+and public signatures as the local source. A local patch exports these two
+functions from the root. The adapter directly exports the SDK functions and
+keeps durable wait(child, () => false).then(result => result.code). The root
+exports are local patch API. SDK wait is not exported or used by this adapter.
+
+Delete the 47-line child-process source module, the 28-line portChildProcess
+function, its rule and its generation-only tests. Route upstream imports to
+the authored adapter before traversal. The config sync call and actual child
+process regression tests now use that adapter. Do not copy spawn algorithms
+into the patch generator or add an execution loop.
+
+| Check | Result and scope |
+|---|---|
+| Generation | Complete runtime, auxiliary and Coding patch generation and checks pass: 20 runtime TypeScript files, 16 src/pi files, four facades, zero resources, eight auxiliary sources and 13 shared forwards |
+| Patch replay | Replay the two root outputs from pristine inputs and apply them to two existing layouts; all 74 Coding output hashes match the manifest; internal spawn JS and declarations remain pristine |
+| Parent behavior | In each layout, native-child-process, durable-child-process and shared-runtime-port pass: 41 tests, zero failures and 155 expect calls; SDK root and adapter function identities match |
+| Types | Scoped adapter declaration emit matches across layouts; strict non-executed consumers preserve tuple overloads, general ChildProcess, SpawnSyncReturns<string> and Promise<number or null>; zero diagnostics with skipLibCheck |
+| Isolation | Task-owned child HOME and temporary paths, disabled env-file loading, network-denying sandbox and network-blocking preload; six build preflights find no protected legacy dependency |
+| Independent review | Zero findings; eight tests and 73 expect calls pass; root exports and internal spawn JS, declarations and source maps are checked in both layouts |
+| Review acceptance | Parent verifies 12 frozen slice inputs and 98 input/evidence records, including all 46 evidence files, by SHA-256 or expected absence |
+| Source registration | Update 11 entries, retire one and add none; all other entries stay unchanged |
+| Restricted Craft audit | Fixed v0.15.6 baseline 8df01c5d0ac73c35add5954e6f190ce038d35845: 2032 allowed files, 1454 common, 873 normalized-identical, 581 modified, 578 MkAgent-only and 858 reviewed deletions |
+| Dependencies and patches | No install, dependency, lock or persistent-schema change; core four, Coding 74 and durable 33 physical outputs remain 111 in total; only two shared Coding root outputs change |
+
+Independent runtime probes use limited source projections. The root projection
+contains the new export line. Child-process JS is complete. Adapter and routing
+bodies are complete, with import paths rewritten. The durable projection keeps
+the unchanged idle constant and wait function. The cross-spawn sentinel throws
+if called; macOS uses the actual Node spawn branches. These probes do not load
+the complete SDK root or Native barrel and do not exercise Windows.
+
+The probes cover argv, cwd, env, stdout, stderr, nonzero exit, sync encoding,
+ENOENT and function identity. Wait probes cover both pipe idle resets, quiet
+pipe release, caller listener preservation, close-code priority, signal
+projection, original error identity, spill draining and full durable signal
+results. Four importer depths exercise the actual routing function.
+
+Keep five failed review attempts: a nonexistent durable package-root env path,
+a source comparison that included a wait-only constant, two Bun custom-namespace
+resolution failures and a sync ENOENT assertion that assumed null status. Bun
+1.3.14 returns undefined in that case. The corrected probe compares with native
+spawnSync in the same runtime. Final results are eight passes and zero failures.
+No production change was needed for these review failures.
+
+Parent acceptance stops twice before it writes a receipt. The first failure
+omits the logical /tmp alias from the allowed roots. The second treats the
+exact deleted-source Git evidence record as a disk path. The corrected check
+allows those two known directory aliases and handles only that exact Git
+record. It then verifies all 98 records. The original review manifests stay
+unchanged. A review process note records that parent validate.ts was read after
+its directory check and before its individual realpath check; the later check
+confirms an allowed regular script. Source implementation paths were checked
+before reading.
+
+Task evidence is under /tmp/mkagent-child-process-sdk-Q4QQ5x. Independent report,
+manifests, projections and failed attempts are under
+/tmp/mkagent-child-process-review-fiwzy1iu. The restricted Craft audit excludes
+protected legacy context source, `.claude/settings.json` and `.env.example`.
+Fresh/frozen install, complete types and declarations, Windows, complete root
+integration, real application checks, full Craft audit and F0 to F6 acceptance
+remain open. Existing resources TS9007 and ToolHtmlRenderer ambiguity remain
+open. This slice does not establish that all 16 remaining src/pi files are
+required adapters. Shell helper review is the next source task.
+
 ## MIME forwarding retirement after 4051994
 
 MIME detection already uses durable/images through the existing Native adapter.

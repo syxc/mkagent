@@ -69,6 +69,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/exec.${extension}";`,
     `export * from "./core/tools/tool-definition-wrapper.${extension}";`,
     `export { formatToolCallWithArgs, getTextOutput, replaceTabs } from "./core/tools/render-utils.${extension}";`,
+    `export { spawnProcess, spawnProcessSync } from "./utils/child-process.${extension}";`,
     `export { writeOutputFile } from "./utils/output-files.${extension}";`,
     `export { ${suffix === 'd.ts' ? 'type PathInputOptions, ' : ''}canonicalizePath, isPathWithin, normalizePath, pathsEqual, resolvePath } from "./utils/paths.${extension}";`,
     `export { stripBom } from "./utils/text.${extension}";`,

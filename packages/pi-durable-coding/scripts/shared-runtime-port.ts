@@ -2,35 +2,6 @@
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
 
-export function portChildProcess(body: string): string {
-  const parsed = ts.createSourceFile('child-process.ts', body, ts.ScriptTarget.Latest, true);
-  const functions = parsed.statements.filter(ts.isFunctionDeclaration)
-    .filter(node => node.name?.text === 'waitForChildProcess');
-  const wait = functions[0];
-  const constants = parsed.statements.filter(ts.isVariableStatement)
-    .filter(node => node.declarationList.declarations.some(declaration =>
-      declaration.name.getText(parsed) === 'EXIT_STDIO_GRACE_MS'));
-  const grace = constants[0];
-  if (functions.length !== 1 || !wait?.body || wait.typeParameters?.length || wait.asteriskToken ||
-      wait.modifiers?.length !== 1 || wait.modifiers[0].kind !== ts.SyntaxKind.ExportKeyword ||
-      wait.parameters.length !== 1 || wait.parameters[0].name.getText(parsed) !== 'child' ||
-      wait.parameters[0].type?.getText(parsed) !== 'ChildProcess' || wait.parameters[0].questionToken ||
-      wait.parameters[0].initializer || wait.parameters[0].dotDotDotToken ||
-      wait.type?.getText(parsed).replace(/\s/g, '') !== 'Promise<number|null>' ||
-      constants.length !== 1 || !grace || grace.declarationList.declarations.length !== 1 ||
-      !(grace.declarationList.flags & ts.NodeFlags.Const) ||
-      grace.declarationList.declarations[0].initializer?.getText(parsed) !== '100') {
-    throw new Error('Native child process wait boundary changed');
-  }
-  const edits = [
-    { start: grace.getFullStart(), end: grace.end, text: '' },
-    { start: wait.getStart(parsed), end: wait.end,
-      text: 'export { waitForChildProcess } from "../../compat/child-process.ts";' },
-  ];
-  for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
-  return body;
-}
-
 export function portShell(body: string): string {
   const parsed = ts.createSourceFile('shell.ts', body, ts.ScriptTarget.Latest, true);
   const expected: Record<string, string> = {
