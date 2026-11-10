@@ -26,6 +26,107 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK compaction after f6a1c6f
+
+The public Coding SDK supplies context estimation, cut selection, compaction,
+branch collection, summary construction, file tracking and conversation
+serialization. The four local compaction files had 1662 lines. Three files,
+with 568 lines, are deleted. The 1094-line implementation becomes a one-line
+SDK export, so the local production source decreases by 1661 lines. The root
+Native entry and RPC types now use the public Coding SDK.
+
+Durable CompactionTask uses ContextView and its own entry selection contract.
+It does not directly supply the Coding SessionEntry/SessionProjection contract.
+The existing Native summary stream still submits requests through the durable
+summary task, with the same task or conversation owner, intent, cancellation,
+complete result receipt and refusal to repeat an uncertain request. No task,
+checkpoint, document or codemode module version changes.
+
+The Coding patch only exposes the existing estimateContextTokens and
+estimateProjectedContextTokens functions and their ContextUsageEstimate return
+type at the root. All six JS and declaration files in the three internal
+compaction modules remain byte-identical to pristine SDK 1.5.0. No algorithm
+moves into a patch template. Equivalent public root exports will remove this
+patch. Physical outputs remain Coding 60, core four and durable 33, for 97.
+
+Read and Edit both reject src/legacy/context-tokens.js under a Read deny rule.
+The file is not changed or read through another tool, and permissions are not
+changed. Its existing import requires the temporary one-line SDK export.
+This is a permission blocker, not an SDK capability gap. After this blocker is
+resolved, change the legacy import to the public root and remove that export.
+The compaction directory is not yet fully removed.
+
+Generation has 65 runtime TypeScript files: 61 under src/pi and four facades,
+with no assets. Auxiliary sources remain nine and shared entries 16. Full
+runtime, auxiliary and patch checks pass. Pristine replay verifies all original
+and resulting Coding hashes. Both existing layouts pass frozen installation
+with scripts disabled. All 60 Coding and 33 durable outputs match in both
+layouts. Dependencies and lock remain unchanged.
+
+The first installation script stops before installation or source copying:
+the hoisted shared-runtime-port test differs from the parent HEAD. This file
+is retained with its hash. Only the other 16 verified implementation paths are
+synchronized. Root tests cover the changed generator rules. The continuation
+checks the existing patch replay, avoids a second apply and confirms the
+retained fixture is unchanged after both installations.
+
+Checks use Bun 1.3.14 and task-owned HOME/config/cache. Providers are local
+stubs. Declarations and build outputs use task directories. No live credentials,
+provider requests, product UI or product data are used.
+
+| Check | Result and scope |
+|---|---|
+| SDK differential probe | 383 assertions and 20 summary call cases pass; old local algorithms match SDK results, SDK module bytes match pristine, and Native and temporary legacy exports have SDK identity |
+| Estimation and context | totalTokens fallback, message roles, valid and invalid usage, trailing messages, context edits and omission, cut points, turn boundaries, compaction preparation and branch collection pass |
+| Summary calls | Previous summaries, instructions, reasoning, headers, env, session ID, split turns, files, branch selection, errors and cancellation pass; a host metadata marker is absent from every constructed request |
+| Root tests | 51 tests and 181 expect calls pass across runtime ports, HTML colors, shared leaves, context tokens, SDK boundaries and sessions/runner |
+| Hoisted behavior tests | 66 tests pass across summary tasks, summary crash recovery, models/messages, host AgentSession, Native recovery and journal; the initial type consumer fails as recorded below |
+| Summary and recovery boundaries | Three summary SIGKILL points, no uncertain request replay, reopening a completed receipt, message identity, metadata, compaction head, edits, forks and rejected persistence pass |
+| Coding types and declarations | Root types and hoisted declarations pass initially; root declarations and the hoisted type consumer pass after the return type export fix |
+| Hoisted server | Typecheck and build pass |
+| Hoisted worker bundle | 26 tests and 105 expect calls pass, including relocated resources, images, dynamic tools and local model/auth fixtures |
+
+The original 12-stage runner records ten successful stages and two failures.
+Both failures report TS2742 for the legacy estimators: the new public functions
+return an internal ContextUsageEstimate type that the root does not export.
+The fix adds only the public type export. Relative to the first patch, only
+dist/index.d.ts changes. Both layouts receive the corrected frozen patch and
+all 60 hashes match. Only the failed root declaration build and hoisted type
+consumer are repeated; both pass. The consumer reports one test and four
+expect calls. Original failure receipts and logs remain unchanged. Successful
+behavior suites and builds are not repeated or counted as new coverage.
+
+The source registry updates 14 hashes, removes three entries and adds none.
+The fixed Craft v0.15.6 audit covers 2076 files and passes. Source hashes,
+replay and focused checks do not establish that the remaining source is needed.
+
+Independent read-only review finds no verified new defect relative to f6a1c6f.
+Its direct checks pass 477 differential assertions, 31 Native integration
+assertions, ten summary and recovery tests with 43 expect calls, and 17 public
+consumer type assertions. Native compact and tree navigation create three
+completed durable summary tasks. Provider requests and stored summary inputs
+do not contain the host metadata marker. Seven Native public types resolve to
+the same SDK declarations. The consumer uses types: [] and skipLibCheck: true;
+it does not replace the full type checks above. All 60 Coding output hashes
+and 65 runtime file hashes match.
+
+The reviewer mistakenly invokes a skill that forks another agent despite the
+no-delegation instruction. That extra agent completes; its output is excluded
+from acceptance evidence. Subsequent checks are performed directly. Initial
+probe failures involve temporary directory and CLI settings, inspect() listing
+only live tasks, and implicit @types/uuid loading. Corrected probes pass. The
+reviewer does not modify the repository or bypass rejected legacy and upstream
+token entry reads. It does not repeat installation or large suites. The parent
+thread owns source registration, documentation and final scope checks; those
+parallel changes are outside the independent review.
+
+F0 through F6, the remaining 61 src/pi files, the temporary legacy export,
+dynamic tools, codemode adapters, SDK internal session/shell policy, the
+existing AuthContext gap, Photon cleanup on an EXIF callback failure and the
+existing ToolHtmlRenderer export ambiguity remain open. This slice does not
+run the full repository suite, product UI, live services, Windows/Linux or the
+complete product acceptance matrix.
+
 ## Public SDK system prompt builders after dc64ddc
 
 The public Coding SDK supplies system prompt construction, normalization,

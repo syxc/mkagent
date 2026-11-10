@@ -25,6 +25,12 @@ describe('published Coding SDK boundary', () => {
     expect(native.loadProjectContextFiles).toBe(sdk.loadProjectContextFiles);
     expect(native.createExtensionRuntime).toBe(sdk.createExtensionRuntime);
     expect(native.ExtensionRunner).toBe(sdk.ExtensionRunner);
+    for (const name of ['calculateContextTokens', 'collectEntriesForBranchSummary', 'compact',
+      'estimateTokens', 'findCutPoint', 'findTurnStartIndex', 'generateBranchSummary',
+      'generateSummary', 'generateSummaryWithUsage', 'getLastAssistantUsage', 'prepareBranchEntries',
+      'serializeConversation', 'shouldCompact', 'DEFAULT_COMPACTION_SETTINGS'] as const) {
+      expect(native[name]).toBe(sdk[name]);
+    }
     expect(native.defineTool).toBe(sdk.defineTool);
     expect(native.createExtensionRuntime().mcpServers).toBeInstanceOf(sdk.McpServerRegistry);
     expect(native.parseFrontmatter('﻿---\r\nname: example\r\n---\r\nbody')).toEqual({
@@ -52,6 +58,8 @@ describe('published Coding SDK boundary', () => {
     expect(codingSDKImport('core/resource-loader.ts', '../modes/interactive/theme/theme.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './session-manager.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './resource-loader.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('index.ts', './core/compaction/index.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('modes/rpc/rpc-types.ts', '../../core/compaction/index.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './model-runtime.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './virtual-models.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/model-runtime.ts', './provider-composer.ts')).toBe('@earendil-works/pi-coding-agent');

@@ -40,7 +40,8 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
 }
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
 const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
-const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'utils/tools-manager.ts', 'extensions/codemode/worker.ts', 'core/extensions/virtual-modules.ts'];
+// Retain the legacy token adapter's existing import until its Read deny rule is resolved.
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/compaction/compaction.ts', 'core/agent-session-services.ts', 'utils/tools-manager.ts', 'extensions/codemode/worker.ts', 'core/extensions/virtual-modules.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();
@@ -66,6 +67,10 @@ while (queue.length) {
   const original = readFileSync(join(source, path), 'utf8');
   let body = original;
   const changes = new Set<string>();
+  if (path === 'core/compaction/compaction.ts') {
+    body = 'export { calculateContextTokens, estimateContextTokens, estimateProjectedContextTokens, estimateTokens } from "@earendil-works/pi-coding-agent";\n';
+    changes.add('legacy-context-token-sdk-forward');
+  }
   if (path === 'index.ts') {
     const launcher = '// Main entry point\nexport { type MainOptions, main } from "./main.ts";\n';
     if (body.split(launcher).length !== 2) throw new Error('Pinned CLI launcher export changed');

@@ -52,6 +52,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export { composeModelProvider, resolveCompatibilityRequestConfig, validateExtensionProvider } from "./core/provider-composer.${extension}";`,
     `export * from "./core/virtual-models.${extension}";`,
     `export * from "./core/session-manager.${extension}";`,
+    `export { ${suffix === 'd.ts' ? 'type ContextUsageEstimate, ' : ''}estimateContextTokens, estimateProjectedContextTokens } from "./core/compaction/compaction.${extension}";`,
     `export * from "./core/resource-loader.${extension}";`,
     ...['source-info', 'timings', 'usage-totals', 'skills', 'prompt-templates', 'system-prompt'].map(name => `export * from "./core/${name}.${extension}";`),
     `export * from "./core/extensions/loader.${extension}";`,

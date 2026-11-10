@@ -92,12 +92,6 @@ export function StringEnum<T extends readonly string[]>(
 \treturn Type.Unsafe<T[number]>(publicStringEnum(values, options));
 }` },
   },
-  'core/compaction/compaction.ts': {
-    change: 'public-pi-ai-context-token-total',
-    names: ['calculateContextTokens'],
-    imports: 'import { calculateContextTokens } from "@earendil-works/pi-ai/utils/estimate";\nexport { calculateContextTokens };',
-    signatures: { calculateContextTokens: 'export function calculateContextTokens(usage: Usage): number' },
-  },
   'core/footer-data-provider.ts': {
     change: 'shared-lightweight-resource-algorithms',
     names: ['GitPaths', 'findGitPaths'],

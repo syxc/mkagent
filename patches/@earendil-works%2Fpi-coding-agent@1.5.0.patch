@@ -1,8 +1,8 @@
-# Content SHA-256: 23b77ce94f262cff87c6500f511d176fe21d2b44c12ed5554570e964ac714458
+# Content SHA-256: 7ce51d9846504acfc31d76b6dfae648d38ed310f033ba606de24122ed8b8f386
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,45 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,46 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -16,6 +16,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export { composeModelProvider, resolveCompatibilityRequestConfig, validateExtensionProvider } from "./core/provider-composer.js";
 +export * from "./core/virtual-models.js";
 +export * from "./core/session-manager.js";
++export { estimateContextTokens, estimateProjectedContextTokens } from "./core/compaction/compaction.js";
 +export * from "./core/resource-loader.js";
 +export * from "./core/source-info.js";
 +export * from "./core/timings.js";
@@ -61,7 +62,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,46 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,47 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -75,6 +76,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { composeModelProvider, resolveCompatibilityRequestConfig, validateExtensionProvider } from "./core/provider-composer.ts";
 +export * from "./core/virtual-models.ts";
 +export * from "./core/session-manager.ts";
++export { type ContextUsageEstimate, estimateContextTokens, estimateProjectedContextTokens } from "./core/compaction/compaction.ts";
 +export * from "./core/resource-loader.ts";
 +export * from "./core/source-info.ts";
 +export * from "./core/timings.ts";

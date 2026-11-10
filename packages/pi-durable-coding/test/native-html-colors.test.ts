@@ -23,7 +23,6 @@ test('ANSI HTML keeps the original palette, SGR, escaping and wide numeric behav
 });
 
 for (const [path, changed] of [
-  ['core/compaction/compaction.ts', 'export const calculateContextTokens = (usage: never): number => 0;'],
   ['core/extensions/pi-ai-extension-view.ts', 'import { type TUnsafe, Type } from "typebox";\nexport const StringEnum = (values: number): number => values;'],
 ] as const) {
   test(`declaration generation rejects variable replacements of guarded helpers in ${path}`, () => {

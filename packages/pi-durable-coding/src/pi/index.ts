@@ -48,7 +48,7 @@ export {
 	prepareBranchEntries,
 	serializeConversation,
 	shouldCompact,
-} from "./core/compaction/index.ts";
+} from "@earendil-works/pi-coding-agent";
 export { createEventBus, type EventBus, type EventBusController } from "@earendil-works/pi-coding-agent";
 // Extension system
 export type {

@@ -6,14 +6,6 @@ import { portChildProcess, portShell } from '../scripts/shared-runtime-port.ts';
 
 const declarationFixtures = [
   {
-    name: 'context tokens',
-    port: (body: string) => applySharedHelperPort('core/compaction/compaction.ts', body)!.body,
-    source: `export function calculateContextTokens(usage: Usage): number {
-\treturn usage.totalTokens || usage.input + usage.output + usage.cacheRead + usage.cacheWrite;
-}
-`,
-  },
-  {
     name: 'string enum',
     port: (body: string) => applySharedHelperPort('core/extensions/pi-ai-extension-view.ts', body)!.body,
     source: `import { type TUnsafe, Type } from "typebox";
@@ -101,7 +93,7 @@ for (const { name, source, port } of declarationFixtures) {
 }
 
 test('string enum: generic bounds, optional options and TypeBox branding remain guarded', () => {
-  const { source, port } = declarationFixtures[1];
+  const { source, port } = declarationFixtures[0];
   for (const [from, to] of [
     ['T extends readonly string[]', 'T extends readonly number[]'],
     ['options?:', 'options:'],

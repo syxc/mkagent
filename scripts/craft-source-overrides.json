@@ -2509,8 +2509,8 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "bdab099f46026be909e2452c574621c9c83f4bf75e0353d7348734916b81e708",
-      "reason": "Remove retired Photon, orientation and resize generation rules while retaining shared helpers with active callers."
+      "sha256": "e28dfd0d40f7ca6463cbd708eb11e78b75a5043adae716c97a05a8dd2a6bf38c",
+      "reason": "Remove the obsolete local context-token function transformation after replacing the compaction closure with the SDK."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
@@ -2521,8 +2521,8 @@
       "reason": "Remove retired orientation and resize declaration converters after their generated forwards leave the runtime closure."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "9286a744e813835b69fe6b988d7c208121a08dd5b6b362f7bb6cf63a8c60e8b9",
-      "reason": "Retire the private component barrel filter test while preserving CLI, run-mode and shared runtime guards."
+      "sha256": "f1d5b79204604a481ef4bda0b8333d7db03ee28d36b07bcecde6040573de410c",
+      "reason": "Remove the retired local context-token transformation fixture while retaining the remaining helper and runtime exclusion checks."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "2a5f3e6c3407cab0eaf5c0058358b84ff0df2a1777b9f13d21039d938b2fd1bd",
@@ -3973,8 +3973,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "dd22a5371981ad1412860b3e32cc4656d4320f430299c6f2725bb578a62d4eb9",
-      "reason": "Retire the complete local system prompt module after binding the SDK builders to Native documentation paths."
+      "sha256": "9dd060f0a9dbd8fa3fafe132c069b7fa08e606a3cca18b51d9a8bcb5ecc3feeb",
+      "reason": "Retire three SDK-covered compaction sources and reduce the remaining module to a temporary legacy import forward blocked by a Read deny rule."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -3989,8 +3989,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "ba34d65c507b1a93b03a993f8e86159996d6f98ece2b57cc1d69829a8e9dc981",
-      "reason": "Remove the obsolete system prompt root seed so SDK-covered source cannot remain in the generated closure."
+      "sha256": "e8f88c488e7e655a041c3ba8811649f74745450a802129a0842f83dadc1901a1",
+      "reason": "Generate only a one-line SDK forward for the legacy import that cannot be changed under the current Read deny rule; this is a temporary permission blocker, not an SDK API gap."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4132,29 +4132,17 @@
       "sha256": "3828abe7869edfba4e82602b591efe05a85b304acea6e44e6e1aa58f9669f400",
       "reason": "Use the published Coding SDK settings implementation while preserving existing host policy adapters."
     },
-    "packages/pi-durable-coding/src/pi/core/compaction/branch-summarization.ts": {
-      "sha256": "eea569fe9bd96925d90cbeb797d65ecee2f2bf962f642d065626c917a338f114",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
-    },
     "packages/pi-durable-coding/src/pi/core/compaction/compaction.ts": {
-      "sha256": "acd5c328ab3ec07828a51e1527e01917627a019783ea624e585cf1a614ec1864",
-      "reason": "Route compaction usage combination to the unchanged SDK algorithm."
-    },
-    "packages/pi-durable-coding/src/pi/core/compaction/index.ts": {
-      "sha256": "f82bde781410ae1a638989ff91bde9cc7045341a76bb9757de2ea6beea4c077d",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/compaction/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/compaction/utils.ts": {
-      "sha256": "37eab7698cdbff8b5987d4529005ea16d7e1ae4a5344d7d0443c3466444aa90e",
-      "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
+      "sha256": "7d6100d3769c3d5b294e172d7f7afe42c380ecf62d68917cf114c9c3213b98ef",
+      "reason": "Temporarily forward four SDK estimators for the unchanged legacy import blocked by a Read deny rule; the complete local algorithm has been removed."
     },
     "packages/pi-durable-coding/src/pi/core/defaults.ts": {
       "sha256": "e05e32e5613066667b52fa1d8864fec27b3564636f93af7983f53984bce02955",
       "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
     },
     "packages/pi-durable-coding/test/native-html-colors.test.ts": {
-      "sha256": "f16503b86446b7b97a91bd9fff37444661ef20ee799ac062af77024a08a95b9e",
-      "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
+      "sha256": "0d40f4137f3ca6c79a7bbb17bb837bf72eb6473364f77269864465c1a162ae73",
+      "reason": "Remove only the obsolete compaction declaration fixture while retaining HTML color and runtime generation coverage."
     },
     "packages/pi-durable-coding/src/compat/html-assets.ts": {
       "sha256": "7c89c0a4d7deda5bd04ecc6e48e547726fac787abeaa168c20693db3d2522e9d",
@@ -4277,8 +4265,8 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "2dca698256f394f64e8b0c6d62a7fb60f01fbe3d16584fe21d238dc2e0be30b3",
-      "reason": "Keep public Native skill exports through SDK discovery with Native directory defaults."
+      "sha256": "6a1fd8457bb00700c61ea28e5a69327b59a5548d1d31d307a57a250814458794",
+      "reason": "Export compaction and branch-summary contracts directly from the public Coding SDK."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4293,16 +4281,16 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/jsonl.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-client.ts": {
-      "sha256": "5fb6d46fdf031f2c98e035245fa92863173450b42a677765cf029611f9f17374",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
+      "sha256": "cd927c1b93065b012bcaeb5c1ea00c227b5a8d0fa5d42b934b4d1f542ff21bba",
+      "reason": "Use the public Coding SDK compaction result declaration for the retained RPC client."
     },
     "packages/pi-durable-coding/test/rpc-client.test.ts": {
       "sha256": "d8844d22330d6197f94bd2088b38352307567065b7629a986d88b9fb52d9da9f",
       "reason": "Verify missing-entry rejection before spawn, explicit JSONL requests and options, shutdown, startup errors and outstanding-request rejection using local child-process fixtures."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-types.ts": {
-      "sha256": "074d7b28c39ce928f23f34acb4ecd01361044f2b078a4be5519390e46f9957ed",
-      "reason": "Reuse the public SDK resource source-info type in existing RPC declarations."
+      "sha256": "dbf466a149a9432f56eeefc14e92a9b5b339e9f2976ab899d46d092d5d4cf184",
+      "reason": "Use the public Coding SDK compaction result declaration for the retained RPC protocol."
     },
     "packages/pi-durable-coding/src/pi/utils/abort.ts": {
       "sha256": "6d7f5f4c81e07bc5f6dd8f1ad5dcd28ff05f30adce472b508484d57bdc4e7325",
@@ -4633,24 +4621,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "dc0725f48a0b257e70a8d3c037189c47e96362259211181ee71c09e488eaac63",
-      "reason": "Stop traversal at system prompt construction and route generated Native imports through its documentation binding."
+      "sha256": "97c54ec4004e429346bf8305a0f687a6c83078ce2c2efdf4874ffed4292a499a",
+      "reason": "Route Native compaction imports and RPC declarations to the public Coding SDK root before source traversal."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "b72b39fb21566d9402a3f29446d227d90a0714bdd7f9a1105d97b63b764fc850",
-      "reason": "Verify SDK identities and generated boundaries, including codemode index and MCP factory imports."
+      "sha256": "7c432361ed7423aadd5cec3f65264e42a61e4a682dcdcb939c45b77d45d55c98",
+      "reason": "Verify Native compaction implementation identity and generated RPC imports use the public SDK boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "c0dad72f8b12873af45d291bc2da3e96218df6fa35a38be87f945986bf9e65b1",
-      "reason": "Track a documentation dependency factory over the existing SDK system prompt builders and their public root exports."
+      "sha256": "c22b769e3925a5075463e3eadcae3125a775dd9b203dfe6751c2f5461d292fdf",
+      "reason": "Track public root exports for two existing SDK context estimators and their return type; keep all compaction algorithms unchanged."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "9915af947f9fd2b75e9eda47ec1b7788c8991d4a19dd748f503ce1843740dcbf",
-      "reason": "Expose existing system prompt APIs and wrap only their documentation dependencies without copying construction algorithms."
+      "sha256": "83c0271895ca41352b05376c9706b0881849ef96ee94502ef148e06ecd163297",
+      "reason": "Expose existing context estimators and ContextUsageEstimate at the SDK root without copying or changing their algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "1eda0a5f714bd3063bb44ee29aa3db60edc5b1a72294fd91f08daa4e2a56f74d",
-      "reason": "Add a documentation dependency factory and root exports while retaining the existing SDK prompt construction, normalization, diff and rendering algorithms."
+      "sha256": "e2a93c91643a184306e073206516e521d9020a1ef99237ac375e725e45a4d7a8",
+      "reason": "Export two existing context estimators and ContextUsageEstimate at the SDK root; leave compaction, branch-summary and serialization modules byte-identical to the published package."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
