@@ -7,7 +7,7 @@ import ts from 'typescript';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets } from './asset-runtime-port.ts';
-import { portNativeMessages, portSDK, portSessionServices } from './session-runtime-port.ts';
+import { portNativeMessages, portSDK } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludeRunModeEntries } from './shared-helper-port.ts';
 
@@ -41,7 +41,7 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
 const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
 // Retain the legacy token adapter and the host OAuth facade as explicit roots.
-const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/compaction/compaction.ts', 'core/agent-session-services.ts', 'utils/tools-manager.ts', 'extensions/codemode/worker.ts', 'core/extensions/virtual-modules.ts', 'extensions/mcp/oauth.ts'];
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/compaction/compaction.ts', 'utils/tools-manager.ts', 'extensions/codemode/worker.ts', 'core/extensions/virtual-modules.ts', 'extensions/mcp/oauth.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();
@@ -186,10 +186,6 @@ while (queue.length) {
   if (path === 'core/sdk.ts') {
     body = portSDK(body);
     changes.add('durable-sdk-host-bindings');
-  }
-  if (path === 'core/agent-session-services.ts') {
-    body = portSessionServices(body);
-    changes.add('shared-extension-model-initialization');
   }
   if (path === 'extensions/mcp/oauth.ts') {
     body = portMcpOAuth(body);

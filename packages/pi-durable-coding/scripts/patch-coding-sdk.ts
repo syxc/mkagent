@@ -17,6 +17,7 @@ import { codingUIPolicy } from './coding-ui-policy.ts';
 import { codingImagePolicy } from './coding-image-policy.ts';
 import { codingImageProcessingPolicy } from './coding-image-processing-policy.ts';
 import { codingCachePolicy } from './coding-cache-policy.ts';
+import { codingSessionServicesPolicy } from './coding-session-services-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -44,6 +45,7 @@ for (const suffix of ['js', 'd.ts']) {
   const extension = suffix === 'js' ? 'js' : 'ts';
   const exports = [
     `export * from "./core/agent-session.${extension}";`,
+    `export { initializeExtensionModels } from "./core/agent-session-services.${extension}";`,
     `export { CacheWarmer } from "./core/cache-warmer.${extension}";`,
     `export { ${suffix === 'd.ts' ? 'type AuthStorageBackend, ' : ''}FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.${extension}";`,
     `export * from "./core/settings-manager.${extension}";`,
@@ -93,6 +95,10 @@ for (const suffix of ['js', 'd.ts']) {
   if (suffix === 'd.ts') outputs.set(path, outputs.get(path)!.replace(marker,
     'export type { BashResult } from "./core/bash-executor.ts";\n'
     + 'export type { ShellDependencies } from "./core/tools/bash.ts";\n' + marker));
+}
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/core/agent-session-services.${suffix}`;
+  outputs.set(path, codingSessionServicesPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
 }
 const mcpDeclaration = 'dist/extensions/mcp/index.d.ts';
 outputs.set(mcpDeclaration, replace(readFileSync(join(baseline, mcpDeclaration), 'utf8'),
@@ -342,7 +348,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, and installed worker theme and HTML asset lookup.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization and an optional session factory, and installed worker theme and HTML asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

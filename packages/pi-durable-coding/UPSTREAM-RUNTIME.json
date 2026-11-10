@@ -61,20 +61,10 @@
       "source": "packages/coding-agent/src/core/agent-session-runtime.ts",
       "target": "src/pi/core/agent-session-runtime.ts",
       "sha256": "3fab6fa2da0c63b38025b393f48d140866ebb877dde77964d51cbc514492f07d",
-      "portSha256": "29bac8da9d8d38aef07e2d792740e3248cda86dd68edd6b3a27bfc7233309364",
+      "portSha256": "4fe2765fbf3bc4bf0e67858c5d6d568082622db6375ac79d902fcae4e45f98d8",
       "changes": [
         "host-extension-module-import",
         "public-coding-sdk"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/agent-session-services.ts",
-      "target": "src/pi/core/agent-session-services.ts",
-      "sha256": "c69826f519aa21b2dc04768eb63b0d10e88be071195beaf43bb1292dec187d01",
-      "portSha256": "008523f4e44ab8416d17b2a0fd9a22c7acdebcf6f2778c45abcbc2e3a97cd9c1",
-      "changes": [
-        "public-coding-sdk",
-        "shared-extension-model-initialization"
       ]
     },
     {

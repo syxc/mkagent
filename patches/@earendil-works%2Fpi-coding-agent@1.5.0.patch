@@ -1,12 +1,13 @@
-# Content SHA-256: e009e16b46996b93364ea648fba510597d64c4559dd411902fd42b9846de3e23
+# Content SHA-256: f63cf26db6e76e9d0186e3652fe2a07ffaf29939642b16ad4d043b005a83a431
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,53 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,54 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
 +export * from "./core/agent-session.js";
++export { initializeExtensionModels } from "./core/agent-session-services.js";
 +export { CacheWarmer } from "./core/cache-warmer.js";
 +export { FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.js";
 +export * from "./core/settings-manager.js";
@@ -69,11 +70,12 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,55 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,56 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
 +export * from "./core/agent-session.ts";
++export { initializeExtensionModels } from "./core/agent-session-services.ts";
 +export { CacheWarmer } from "./core/cache-warmer.ts";
 +export { type AuthStorageBackend, FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.ts";
 +export * from "./core/settings-manager.ts";
@@ -125,6 +127,106 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export type { BashResult } from "./core/bash-executor.ts";
 +export type { ShellDependencies } from "./core/tools/bash.ts";
  //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/core/agent-session-services.js b/dist/core/agent-session-services.js
+--- a/dist/core/agent-session-services.js
++++ b/dist/core/agent-session-services.js
+@@ -67,6 +67,43 @@ export async function createAgentSessionServices(options) {
+         settingsManager,
+     });
+     await resourceLoader.reload(options.resourceLoaderReloadOptions);
++    const diagnostics = await initializeExtensionModels(resourceLoader, modelRuntime);
++    diagnostics.push(...applyExtensionFlagValues(resourceLoader, options.extensionFlagValues));
++    return {
++        cwd,
++        agentDir,
++        modelRuntime,
++        settingsManager,
++        resourceLoader,
++        diagnostics,
++    };
++}
++/**
++ * Create an AgentSession from previously created services.
++ *
++ * This keeps session creation separate from service creation so callers can
++ * resolve model, thinking, tools, and other session inputs against the target
++ * cwd before constructing the session.
++ */
++export async function createAgentSessionFromServices(options, createSession = createAgentSession) {
++    return createSession({
++        cwd: options.services.cwd,
++        agentDir: options.services.agentDir,
++        modelRuntime: options.services.modelRuntime,
++        settingsManager: options.services.settingsManager,
++        resourceLoader: options.services.resourceLoader,
++        sessionManager: options.sessionManager,
++        model: options.model,
++        thinkingLevel: options.thinkingLevel,
++        scopedModels: options.scopedModels,
++        tools: options.tools,
++        excludeTools: options.excludeTools,
++        noTools: options.noTools,
++        customTools: options.customTools,
++        sessionStartEvent: options.sessionStartEvent,
++    });
++}
++export async function initializeExtensionModels(resourceLoader, modelRuntime) {
+     const diagnostics = [];
+     const extensionsResult = resourceLoader.getExtensions();
+     for (const { name, config, extensionPath } of extensionsResult.runtime.pendingProviderRegistrations) {
+@@ -109,39 +146,6 @@ export async function createAgentSessionServices(options) {
+     }
+     extensionsResult.runtime.pendingVirtualModelRegistrations = [];
+     await modelRuntime.refresh({ allowNetwork: false });
+-    diagnostics.push(...applyExtensionFlagValues(resourceLoader, options.extensionFlagValues));
+-    return {
+-        cwd,
+-        agentDir,
+-        modelRuntime,
+-        settingsManager,
+-        resourceLoader,
+-        diagnostics,
+-    };
+-}
+-/**
+- * Create an AgentSession from previously created services.
+- *
+- * This keeps session creation separate from service creation so callers can
+- * resolve model, thinking, tools, and other session inputs against the target
+- * cwd before constructing the session.
+- */
+-export async function createAgentSessionFromServices(options) {
+-    return createAgentSession({
+-        cwd: options.services.cwd,
+-        agentDir: options.services.agentDir,
+-        modelRuntime: options.services.modelRuntime,
+-        settingsManager: options.services.settingsManager,
+-        resourceLoader: options.services.resourceLoader,
+-        sessionManager: options.sessionManager,
+-        model: options.model,
+-        thinkingLevel: options.thinkingLevel,
+-        scopedModels: options.scopedModels,
+-        tools: options.tools,
+-        excludeTools: options.excludeTools,
+-        noTools: options.noTools,
+-        customTools: options.customTools,
+-        sessionStartEvent: options.sessionStartEvent,
+-    });
++    return diagnostics;
+ }
+ //# sourceMappingURL=agent-session-services.js.map
+\ No newline at end of file
+diff --git a/dist/core/agent-session-services.d.ts b/dist/core/agent-session-services.d.ts
+--- a/dist/core/agent-session-services.d.ts
++++ b/dist/core/agent-session-services.d.ts
+@@ -83,4 +83,6 @@ export declare function createAgentSessionServices(options: CreateAgentSessionSe
+  * cwd before constructing the session.
+  */
+ export declare function createAgentSessionFromServices(options: CreateAgentSessionFromServicesOptions): Promise<CreateAgentSessionResult>;
++export declare function createAgentSessionFromServices<Result extends CreateAgentSessionResult>(options: CreateAgentSessionFromServicesOptions, createSession: (options: CreateAgentSessionOptions) => Promise<Result>): Promise<Result>;
++export declare function initializeExtensionModels(resourceLoader: ResourceLoader, modelRuntime: ModelRuntime): Promise<AgentSessionRuntimeDiagnostic[]>;
+ //# sourceMappingURL=agent-session-services.d.ts.map
 \ No newline at end of file
 diff --git a/dist/extensions/mcp/index.d.ts b/dist/extensions/mcp/index.d.ts
 --- a/dist/extensions/mcp/index.d.ts

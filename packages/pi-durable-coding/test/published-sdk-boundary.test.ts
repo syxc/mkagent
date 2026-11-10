@@ -8,6 +8,7 @@ describe('published Coding SDK boundary', () => {
   test('native and compatibility entry points share the published implementations', () => {
     expect(native.createEventBus).toBe(sdk.createEventBus);
     expect(native.parseArgs).toBe(sdk.parseArgs);
+    expect(native.initializeExtensionModels).toBe(sdk.initializeExtensionModels);
     expect(compat.createEventBus).toBe(sdk.createEventBus);
     expect(native.createMcpExtension).toBe(sdk.createMcpExtension);
     expect(native.parseFrontmatter).toBe(sdk.parseFrontmatter);
@@ -48,6 +49,7 @@ describe('published Coding SDK boundary', () => {
   });
 
   test('source generation stops at the SDK boundary without redirecting session adapters', () => {
+    expect(codingHostImport('core/sdk.ts', './agent-session-services.ts')).toBe('../../native-session-services.ts');
     expect(codingSDKImport('index.ts', './cli/args.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/extensions/index.ts', '../slash-commands.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('modes/index.ts', './json-event.ts')).toBe('@earendil-works/pi-coding-agent');

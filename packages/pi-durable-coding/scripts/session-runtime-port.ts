@@ -33,24 +33,3 @@ export function portSDK(source: string): string {
     '\t\tcustomTools: options.customTools,\n\t\tbaseToolsOverride: options.baseToolsOverride,\n\t\twrapTool: options.wrapTool,\n\t\tonAction: options.onAction,\n\t\tonToolsChanged: options.onToolsChanged,\n\t\tcaptureUserInput: options.captureUserInput,');
   return body;
 }
-
-/** Share the pinned startup registration order with hosts that supply their own resource loader. */
-export function portSessionServices(source: string): string {
-  source = 'import * as resourceExtensionLoader from "../../native-extension-loader.ts";\n' + source;
-  source = edit(source, "const resourceLoader = new DefaultResourceLoader({",
-    "const resourceLoader = new DefaultResourceLoader({\n\t\textensionLoader: resourceExtensionLoader,");
-  const start = source.indexOf('\tconst diagnostics: AgentSessionRuntimeDiagnostic[] = [];\n\tconst extensionsResult = resourceLoader.getExtensions();\n\tfor (const { name, config, extensionPath }');
-  const endMarker = '\tawait modelRuntime.refresh({ allowNetwork: false });';
-  const end = source.indexOf(endMarker, start);
-  if (start < 0 || end < 0) throw new Error('Pinned extension model initialization changed');
-  const stop = end + endMarker.length;
-  const implementation = source.slice(start, stop);
-  return source.slice(0, start) +
-    '\tconst diagnostics = await initializeExtensionModels(resourceLoader, modelRuntime);' + source.slice(stop) +
-    `\nexport async function initializeExtensionModels(
-\tresourceLoader: ResourceLoader, modelRuntime: ModelRuntime,
-): Promise<AgentSessionRuntimeDiagnostic[]> {
-${implementation}
-\treturn diagnostics;
-}\n`;
-}

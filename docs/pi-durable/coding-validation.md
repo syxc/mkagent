@@ -26,6 +26,89 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK session services after 59481a6
+
+This slice removes the 242-line local services module and its source
+transform. A 31-line host adapter calls public SDK service factories and
+supplies the native extension loader and durable session constructor.
+The model registration block is extracted from the original SDK function;
+its algorithm stays in the SDK. The patch exports that initializer and adds
+an optional session factory. The original one-argument declaration remains,
+with a generic two-argument overload to retain the supplied result type.
+The default SDK path still uses the original SDK session constructor.
+The full local AgentSessionRuntime remains for a later replacement check.
+
+| Check | Result and scope |
+|---|---|
+| Generation and patch | Complete runtime and auxiliary checks, plus pristine Coding patch replay, pass |
+| Installations | Root, old hoisted and fresh hoisted frozen installs exit zero; each matches 69 Coding and 33 durable output hashes; lock bytes stay unchanged |
+| Root tests | First combined run: 21 pass, six fail because the unchanged plugin test cannot resolve its undeclared follow-redirects fixture dependency |
+| Fresh hoisted tests | All 27 service, boundary, host-session and plugin tests pass, with 500 expect calls; this includes the six plugin cases that fail to resolve in the root layout |
+| Final service check | After an explicit Map value type fixes a test-only compile error, both layouts pass five service tests and 32 expect calls each; the new test also passes strict compilation with explicit bun/node ambient types |
+| Root types | Coding typecheck and actual declaration build pass |
+| Fresh types | Coding typecheck, declaration build and server typecheck fail at two missing estimateProjectedContextTokens exports because the protected legacy file is omitted; these are not recorded as passes |
+| Build and bundle | Fresh server build passes; all 26 bundle tests and 105 expect calls pass |
+| Drift guards | Pristine JS and declaration transforms pass; six missing, repeated or changed anchor probes reject |
+| Source registration | Ten hashes updated, one source entry retired and three entries added |
+| Restricted Craft audit | Fixed v0.15.6 audit passes for 2051 permitted files; one protected legacy file and its copied manifest entry are excluded from the task audit; the full audit remains blocked |
+| Independent review | No verified regression; 15 offline checks, 32 factory calls across eight differential scenarios and a strict declaration consumer pass |
+
+The independent review checks pristine, HEAD, patched SDK and host service
+paths. It verifies real default-loader plugin imports, factory selection,
+exact inherited options, error propagation and durable state export. The
+strict consumer retains the default SDK return type, the injected durable
+subtype and extra result fields. Its 627 declaration inputs stay unchanged
+during compilation; the four host declaration hashes and reviewed production
+inputs still match at acceptance. The only later test change adds the Map
+value type described below. No runtime source changes follow the review.
+The consumer uses skipLibCheck, so this result covers consumed public types.
+Its first probe had an overstrict repeat-transform assertion; that probe
+error is retained and corrected without changing product code.
+
+The first service fixture used an incomplete fake extension and failed on
+path/source metadata. It now uses SDK extensionFactories and real flag
+registration. The test-only Map needs an explicit string-or-boolean value
+type. Its first separate compiler command also picked an unrelated implicit
+uuid type; explicit package ambient types remove that setup error. Original
+failed logs are retained.
+
+The first new hoisted fixture stops before install when a guard meets the
+tracked `.env.example` name. No environment file is read. A resume script
+checks the partial copy, skips environment paths and the protected legacy
+file, and then installs the fixed lock. The original failed seed is not
+repeated. An earlier validation wrapper was stopped by an incorrect
+one-second task limit; process checks confirmed it had ended before resume.
+
+The old hoisted install exits zero and matches all recorded patch hashes,
+but its Coding SDK resolves pi-ai 1.1.0 and cannot import compat-schema.
+It also has incompatible nominal types from separate pi-ai 1.5.0 copies.
+Those behavior, type and build failures remain failures. A fresh hoisted
+install resolves the required schema exports and passes behavior and bundle
+checks. Its full type check remains limited by the omitted protected file.
+No dependency links, broad version upgrades or type assertions hide either
+installation failure. No dependency is added for the old root plugin fixture.
+
+Runtime generation contains 40 TypeScript outputs: 36 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and forwarded entries
+15. Physical patch outputs are core four, Coding 69 and durable 33, for 106.
+The core patch count is checked from its diff entries; that unchanged patch
+is not replayed again in this slice. Dependencies, final lock, task schemas,
+checkpoint formats and document versions do not change.
+
+Source audit is limited explicitly to avoid reading the protected legacy
+path. The task copy of the audit keeps all other checks and the fixed Craft
+baseline. Its success does not replace the blocked full audit. Root types
+and declarations use the existing authorized layout; no protected source is
+copied into the fresh fixture. No original failure receipt is rewritten.
+
+All behavior checks use task-owned child homes, temporary data, offline
+configuration and the network blocker. No upstream CLI, real product UI,
+account, credential, paid model or real Craft data is used. The remaining
+36 local sources, server copies, host OAuth, default SDK process policies,
+legacy protection and F0 through F6 remain open. Windows, full crash recovery
+and the known stream, OSC, AuthContext, Photon and ToolHtmlRenderer limits
+are outside this slice.
+
 ## Public SDK arguments and protocol types after f302268
 
 The existing public Coding SDK exports supply Args, parseArgs,
