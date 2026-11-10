@@ -14,7 +14,7 @@ import { DEFAULT_THINKING_LEVEL } from "./defaults.ts";
 import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "./extensions/index.ts";
 import { createToolNameMatcher } from "@earendil-works/pi-coding-agent";
 import { convertToLlm } from "./messages.ts";
-import { findInitialModel } from "./model-resolver.ts";
+import { findInitialModel } from "@earendil-works/pi-coding-agent";
 import { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import type { ResourceLoader } from "@earendil-works/pi-coding-agent";
 import { DefaultResourceLoader } from "@earendil-works/pi-coding-agent";

@@ -48,6 +48,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/package-manager.${extension}";`,
     `export * from "./core/model-registry.${extension}";`,
     `export * from "./core/model-runtime.${extension}";`,
+    `export { findInitialModel } from "./core/model-resolver.${extension}";`,
     `export * from "./core/models-store.${extension}";`,
     `export { composeModelProvider, resolveCompatibilityRequestConfig, validateExtensionProvider } from "./core/provider-composer.${extension}";`,
     `export * from "./core/virtual-models.${extension}";`,

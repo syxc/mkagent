@@ -198,12 +198,13 @@ async function nativeFixture(check: (value: {
     const modelRuntime = await ModelRuntime.bind({ models: () => models, credentials });
     const bridged: ReturnType<typeof wrapAgentTool>['registration'][] = [];
     ({ session } = await createAgentSession({ ...resources, cwd, agentDir: join(cwd, 'agent'),
-      modelRuntime, model, sessionManager: journal.manager, durable, baseToolsOverride: {}, tools: ['outer', 'leaf'],
+      modelRuntime, sessionManager: journal.manager, durable, baseToolsOverride: {}, tools: ['outer', 'leaf'],
       wrapTool: tool => {
         const bridge = wrapAgentTool(tool, tool => tool, (api, ctx, work) => durable.withHostToolScope(api, ctx, work));
         bridged.push(bridge.registration);
         return bridge.tool;
       } }));
+    expect(session.model).toMatchObject({ provider: 'faux', id: 'local' });
     registry.install({ name: 'fixture-tools', tools: bridged });
     await session.bindExtensions({ onError: error => { throw new Error(error.message); } });
     await journal.flush();

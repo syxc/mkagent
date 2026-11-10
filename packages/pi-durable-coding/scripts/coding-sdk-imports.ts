@@ -14,6 +14,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/keybindings.ts',
   'core/mcp-servers.ts',
   'core/model-registry.ts',
+  'core/model-resolver.ts',
   'core/model-runtime.ts',
   'core/models-store.ts',
   'core/provider-composer.ts',

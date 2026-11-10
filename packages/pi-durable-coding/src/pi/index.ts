@@ -228,7 +228,7 @@ export {
 	resolveCliModel,
 	resolveModelScopeWithDiagnostics,
 	type ScopedModel,
-} from "./core/model-resolver.ts";
+} from "@earendil-works/pi-coding-agent";
 export {
 	type CreateModelRuntimeOptions,
 	CredentialSynchronizationError,

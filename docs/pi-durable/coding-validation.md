@@ -26,6 +26,71 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK model resolution after 81119cc
+
+The complete local model-resolver module is removed: 689 production lines.
+No runtime wrapper is added. CLI resolution and model-scope diagnostics use
+existing public SDK exports. Initial model selection uses findInitialModel
+through one added root export. The internal resolver JS and declaration files
+stay pristine. After import targets are normalized, the retired source matches
+the fixed upstream source. Its emitted algorithm also matches pristine SDK JS.
+
+The SDK keeps the existing selection and thinking priorities. The durable
+session fixture now omits its explicit model and checks automatic selection
+of its synthetic provider. Nested tool ownership and message projection still
+run through the same real durable session. Public boundary checks cover the
+CLI/scope function identities and both generated import boundaries.
+
+| Check | Result and scope |
+|---|---|
+| Complete generation | Runtime, auxiliary and Coding patch checks pass |
+| Replay and installations | Pristine replay and both frozen layouts pass; all 65 Coding and 33 durable hashes match |
+| Root behavior | 21 tests and 475 expect calls pass across public boundaries, durable sessions and extensions |
+| Hoisted behavior | 12 tests and 415 expect calls pass across public boundaries and durable sessions |
+| Coding types | Root typecheck and actual declaration builds in both layouts pass |
+| Hoisted server | Typecheck, build and 26 worker bundle tests with 105 expect calls pass |
+| Dependency removal | The workspace minimatch declaration and matching lock entry are removed; SDK transitive dependencies stay |
+| Checks after dependency removal | Both frozen installs, the same root and hoisted behavior tests, root types and both declaration builds pass; all patch hashes still match |
+| Final source audit | Eleven hashes updated, one entry retired, no additions; fixed Craft v0.15.6 audit passes for 2058 files |
+
+All 11 original validation stages pass. The dependency removal is found during
+final diff review, after those stages. Seven affected stages are then checked
+with new logs and receipts. The original results are preserved. Server and
+bundle checks are not repeated because no runtime algorithm, patch output or
+resolved SDK version changes. The unknown hoisted fixture is preserved.
+
+Independent read-only review against 81119cc finds no confirmed new correctness
+or compatibility defect. Fifty synthetic scenarios make 200 calls across the
+retired implementation, pristine SDK and both installed SDK roots. Return
+values, errors, selected model identity and runtime interactions match. The
+checks cover initial selection priorities, thinking, CLI resolution, scope
+patterns and error propagation. Six root-export identity checks pass. Both
+minimal strict declaration consumers return zero diagnostics; they use
+skipLibCheck and do not check every internal dependency declaration.
+
+The reviewer independently compares normalized algorithm bodies and checks
+thinking helpers and defaults. Both installed resolver JS files match pristine
+byte for byte. A temporary module first fails to resolve just after creation;
+a new process loads it. One scope expectation omits a bare-ID match and is
+corrected in the probe. These temporary probe failures do not establish a
+product defect. No repository or installed SDK file changes. The reviewer does
+not repeat generation, installation, parent session suites or builds, and does
+not review the later dependency removal, source registration or document edits.
+Those later changes are checked by the parent thread as recorded above.
+
+Runtime generation now has 48 TypeScript files: 44 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and shared entries 16.
+Physical outputs remain core four, Coding 65 and durable 33, for 102 total.
+Only the shared root JS and declaration contents change; no physical output
+is added. Task, document, checkpoint and codemode versions do not change.
+
+The remaining 44 src/pi files, server copies, host OAuth, default SDK session
+process policies, denied legacy entry and F0 through F6 remain open. Existing
+stream completion, asynchronous file errors, long unfinished OSC, AuthContext,
+Photon and ToolHtmlRenderer boundaries remain. These checks use synthetic
+models and task-owned configuration. Real services, real credentials, product
+UI, complete cross-platform recovery and Windows/Linux are not checked.
+
 ## Public SDK tool search after 3256182
 
 Two local tool-search modules and their dedicated source transforms are

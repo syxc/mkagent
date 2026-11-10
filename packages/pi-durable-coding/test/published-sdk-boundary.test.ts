@@ -20,6 +20,8 @@ describe('published Coding SDK boundary', () => {
     expect(native.initTheme).toBe(sdk.initTheme);
     expect(native.ModelRegistry).toBe(sdk.ModelRegistry);
     expect(native.ModelRuntime).toBe(sdk.ModelRuntime);
+    expect(native.resolveCliModel).toBe(sdk.resolveCliModel);
+    expect(native.resolveModelScopeWithDiagnostics).toBe(sdk.resolveModelScopeWithDiagnostics);
     expect(native.CredentialSynchronizationError).toBe(sdk.CredentialSynchronizationError);
     expect(native.SessionManager).toBe(sdk.SessionManager);
     expect(native.DefaultResourceLoader).toBe(sdk.DefaultResourceLoader);
@@ -77,6 +79,8 @@ describe('published Coding SDK boundary', () => {
     expect(codingSDKImport('index.ts', './core/compaction/index.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('modes/rpc/rpc-types.ts', '../../core/compaction/index.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './model-runtime.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('core/sdk.ts', './model-resolver.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('index.ts', './core/model-resolver.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './virtual-models.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/model-runtime.ts', './provider-composer.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingHostImport('core/extensions/index.ts', './loader.ts')).toBe('../../../native-extension-loader.ts');

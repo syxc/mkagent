@@ -975,8 +975,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "753523e6a31c157618491ba7263572c8cb0317044e0b049db60038cb76ce4cf0",
-      "reason": "Remove the Coding package direct ansi-regex requirement; retain its existing transitive resolution."
+      "sha256": "e653d28ac9b8c00052d21ea13a86d1e64be7a8ba7152865619ddbdb027550f65",
+      "reason": "Remove only the Coding workspace direct minimatch requirement after SDK model resolution replaces its last local consumer; retain transitive resolutions."
     },
     "package.json": {
       "sha256": "868c3042d38e0ec2084d6bc0926a4966c4ec2c5ad02c2f43e0e371c05f01bfed",
@@ -3701,8 +3701,8 @@
       "reason": "Point the legacy system prompt entry at SDK-backed Native types and the legacy documentation binding."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "2965373a75fad78cfcd40fbfe0e6bbb36bc61c1ddbbcafaf1641b51aeee50713",
-      "reason": "Remove the unused direct ansi-regex dependency after replacing the complete ANSI adapter with the public Coding SDK."
+      "sha256": "ce928510eb4b0e24bfeb214ef1c028dbe335f5dc0dc8338ce6d321fc35cfe95c",
+      "reason": "Remove unused direct minimatch after deleting the SDK-covered model resolver."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -3965,8 +3965,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "64cba809c190b545cb2f834a85f6666046f996836a9d1aa56256888eeb34de45",
-      "reason": "Remove both SDK-covered tool-search modules from the generated source closure."
+      "sha256": "9a888a0f4814b80c30e0ced90bd8132bae328f43a35f7718f120bd76f0164954",
+      "reason": "Remove the complete SDK-covered model resolver from the generated source closure."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4164,17 +4164,13 @@
       "sha256": "17d6969f59d76174ae084232124d81bb18f38d7a7997f78812c7de757c8568e9",
       "reason": "Preserve public pi-agent-core type imports; share message conversion with a default-compatible host metadata and object identity policy."
     },
-    "packages/pi-durable-coding/src/pi/core/model-resolver.ts": {
-      "sha256": "ee80193f720d742d5ebcb7d2d2e67e7e7200b3d2df3876ed650f335c41341388",
-      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
-    },
     "packages/pi-durable-coding/src/pi/core/resolve-config-value.ts": {
       "sha256": "0f53dad47fe5d5d8837c022b7951ccd3bd5a9b577bd662f0986272110e83bcc7",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/resolve-config-value.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/sdk.ts": {
-      "sha256": "ba2e31488f2aa77b2000db7e5cbb45ad95654b6489d75d3f713929bdcf935517",
-      "reason": "Use resource types from shared host bindings after deleting the complete local implementations."
+      "sha256": "389ec1f06ffb3f2b9e02a77d71d6604605ecea7d99bf54abcedd29631a2834e1",
+      "reason": "Select initial models through the public Coding SDK while retaining durable session assembly."
     },
     "packages/pi-durable-coding/src/pi/core/session-cwd.ts": {
       "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
@@ -4205,8 +4201,8 @@
       "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "0f69366478839e7ce1eed9a59184367ac7f62cf944e6a4223a14043a2ba27c2f",
-      "reason": "Export the thin durable tool-search binding while the SDK owns tool registration, validation, activation and presentation."
+      "sha256": "0405e76b4aee67bbe02273ac037adb9dc139f03eb06e0e5fe0c39d4fdd0013a8",
+      "reason": "Expose CLI model resolution and scope diagnostics directly from the public SDK."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4545,24 +4541,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "a99ac2211cb8c19012b3bb52e86ad8accd516d2178851224ea7cef0f4ca6eb37",
-      "reason": "Bind the generated tool-search entry to the thin durable search adapter instead of local SDK source."
+      "sha256": "5944f540ce15f503151be4b233e77757806799ec7650c3a5151542f4bae1b98b",
+      "reason": "Stop model resolution imports at the published Coding SDK root."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "daa9db0e31aa5abbde4eb57b7ea4094e9e2a4ed237a61180799b1578610c21df",
-      "reason": "Verify both tool-search generation imports stop at the native durable binding."
+      "sha256": "3065f26ac615594dd4ecd49d050d5a0b627998944a51b7b9f8441052bc35a825",
+      "reason": "Check model resolver identity and both generated import boundaries."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "53c68b4b91459f0942bc5909cae3b7ad23cf6332fab2a77e13346b862dc8451a",
-      "reason": "Record the optional per-factory tool-search metadata and ranking contract; retain SDK activation and presentation."
+      "sha256": "9c618c8ee19a371f6be8811e7f7e7f9348657a544d8e8e00475147787d75de5b",
+      "reason": "Record the existing model selector export at the public SDK root without changing resolver algorithms."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "cf87f633daeccbd2a8a436021da1c76b4e10b4284418bd7610c7278367979676",
-      "reason": "Add optional instance-level metadata and ranking dependencies to the existing SDK tool-search factories without copying their algorithms."
+      "sha256": "b29fd183b356789d92a251c28780b788b211d64808416f68e4f50cf5d2d125ee",
+      "reason": "Export the existing findInitialModel function at the SDK root; no new implementation or physical patch output."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "9baa6e5347b3c319206fa3876a437e16353703e3ec3d58a9cba2554d24f8cbb4",
-      "reason": "Expose the tool-search factory and optional per-instance metadata and ranking dependencies; retain SDK lifecycle and default behavior."
+      "sha256": "6411ff611a49ee9690b0f578da46c3714cedc89d7f402a95face1f0b9cc42020",
+      "reason": "Export the existing findInitialModel function through both public SDK roots without copying resolver algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4621,8 +4617,8 @@
       "reason": "Inject the SDK-backed Native prompt builders while retaining durable session hooks and state."
     },
     "packages/pi-durable-coding/test/host-agent-session.test.ts": {
-      "sha256": "6c5d202ffb503b73301e88a314e05a39cc8d5cb59cb099c655fd9af3e80199b9",
-      "reason": "Verify streaming sanitization, result recording, cancellation and execution failures through actual public SDK sessions."
+      "sha256": "0b955f1adc7123dd17ac6845284eca454f8986fafc259080b3ea03f09e62026b",
+      "reason": "Exercise SDK automatic model selection in the existing durable session and nested tool ownership scenarios."
     },
     "packages/pi-durable-coding/src/native-search-tools.ts": {
       "sha256": "7aa843a444ed73b08b77b353cf9da96a0dc8ecaed91a850a45887dba78eccabb",
