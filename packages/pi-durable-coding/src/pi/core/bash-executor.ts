@@ -7,7 +7,7 @@
  */
 
 import type { WriteStream } from "node:fs";
-import { splitIncompleteAnsiSuffix, stripAnsi } from "../utils/ansi.ts";
+import { splitIncompleteAnsiSuffix, stripAnsi } from "@earendil-works/pi-coding-agent";
 import { createOutputFileStream } from "@earendil-works/pi-coding-agent";
 import { sanitizeBinaryOutput } from "../utils/shell.ts";
 import type { BashOperations } from "../../native-shell-tools.ts";

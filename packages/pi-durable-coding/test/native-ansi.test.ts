@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { stripAnsi, splitIncompleteAnsiSuffix } from '../src/pi/utils/ansi.ts';
+import { stripAnsi, splitIncompleteAnsiSuffix } from '@earendil-works/pi-coding-agent';
 
 const esc = '\x1b';
 const cases: [string, string, string][] = [

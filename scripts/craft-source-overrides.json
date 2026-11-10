@@ -975,8 +975,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "e0dbde0d746c48e3a7ac2f20f2f52d2a5bbf0217a393278f45a71b1c20a7d9f1",
-      "reason": "Remove the unused direct ignore dependency after SDK skill discovery replaces the last local consumer; keep SDK and all other transitive resolutions unchanged."
+      "sha256": "753523e6a31c157618491ba7263572c8cb0317044e0b049db60038cb76ce4cf0",
+      "reason": "Remove the Coding package direct ansi-regex requirement; retain its existing transitive resolution."
     },
     "package.json": {
       "sha256": "868c3042d38e0ec2084d6bc0926a4966c4ec2c5ad02c2f43e0e371c05f01bfed",
@@ -2376,13 +2376,9 @@
       "sha256": "aefec44512616c044051844bc9fcb25207e8d74521b358ba18cb748b58876875",
       "reason": "Verify the public durable child wait retains signals, output spill draining and original errors."
     },
-    "packages/pi-durable-coding/src/compat/ansi.ts": {
-      "sha256": "9c923000b4c82315bad4979310e376234082d0045665cfccc0796d4fcd6bfc71",
-      "reason": "Compose public ANSI matching with Native private CSI in one pass."
-    },
     "packages/pi-durable-coding/test/native-ansi.test.ts": {
-      "sha256": "82b56d646cf717a1985631834f3a96c1b201b51b9cb28fe04f34f09c19ec13ac",
-      "reason": "Pin original ANSI output, streaming cuts, JavaScript errors and 3860 composed cases."
+      "sha256": "ba0be79f51ef827154e04dfe5fb1de49cc09ddd73851a097d1b9e158f62dca3a",
+      "reason": "Run the unchanged ANSI baseline and stream boundary checks against the public Coding SDK."
     },
     "packages/pi-durable-coding/src/compat/image-mime.ts": {
       "sha256": "15b0abcfee72fd85d3b8a76ab0e832b2875152609ec9dac1b3589083dbece257",
@@ -2509,16 +2505,16 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "b9d69db44f17875986b4199881513c03f54524c204afb5f5a1833e1e26ebfbb6",
-      "reason": "Remove the retired Chord truncation transformation registration and import."
+      "sha256": "0294b2956d49a25d561c0a8847a164cceee774ea172b94a81d90efb74af0eefb",
+      "reason": "Retire the ANSI matcher port after complete SDK reuse."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "8bdf9730bff699a0ca476656aca1ebbf4cfc525e47fc0a49529db44262021f97",
-      "reason": "Delete the obsolete truncation AST transformation after retiring its source module and Chord adapter."
+      "sha256": "05358df8b11a9a1ccfe70bc6549661082ec7d40d41876d880d07c4d735767689",
+      "reason": "Delete the unused ANSI algorithm transformation."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
       "sha256": "f1d5b79204604a481ef4bda0b8333d7db03ee28d36b07bcecde6040573de410c",
@@ -3709,8 +3705,8 @@
       "reason": "Point the legacy system prompt entry at SDK-backed Native types and the legacy documentation binding."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "2e7fa6f2315b791e85edc372a3f6625f1e9ab2ee9231fc65d2d942efd80ef61e",
-      "reason": "Remove the unused direct ignore dependency after SDK skill discovery replaces the last local consumer; keep SDK and all other transitive resolutions unchanged."
+      "sha256": "2965373a75fad78cfcd40fbfe0e6bbb36bc61c1ddbbcafaf1641b51aeee50713",
+      "reason": "Remove the unused direct ansi-regex dependency after replacing the complete ANSI adapter with the public Coding SDK."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -3973,8 +3969,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "beed5e0f167e6bdb94afa06a0d5491ac09313db11cffb02150bb7e61bc19d23d",
-      "reason": "Retire SDK-covered rendering and output file modules from the generated source closure."
+      "sha256": "2c325fc07ac64774f2c0d097ce3cabcbdfc83eb506d8b915be719d6d9c2674e3",
+      "reason": "Retire SDK-covered ANSI source and its direct matcher dependency from the generated closure."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4121,8 +4117,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/auth-storage.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/bash-executor.ts": {
-      "sha256": "383fbd78891e48ac6da0c5203f1891fc771352081320c78e202417b7268db6bd",
-      "reason": "Use the public Coding SDK output stream factory for retained host extension execution."
+      "sha256": "cd43f510c594b78b53a2fde077767ab1b338ee7be66af816a87bf40d462157ac",
+      "reason": "Use the public Coding SDK ANSI helpers for retained host extension execution."
     },
     "packages/pi-durable-coding/src/pi/core/cache-warmer.ts": {
       "sha256": "6476803829f91e2aead921d9f27e22de45ac30797815f08a4ab1dfeefe145f4b",
@@ -4287,10 +4283,6 @@
     "packages/pi-durable-coding/src/pi/utils/abort.ts": {
       "sha256": "6d7f5f4c81e07bc5f6dd8f1ad5dcd28ff05f30adce472b508484d57bdc4e7325",
       "reason": "Use the public pi-ai cancellation helper with a thin optional-signal wrapper that preserves the coding API."
-    },
-    "packages/pi-durable-coding/src/pi/utils/ansi.ts": {
-      "sha256": "2bf767b224748244da29ae7ac9f3ad4833cfbb731d05eda29594e2c40a98acde",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/ansi.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/child-process.ts": {
       "sha256": "15118c0272c36832166cd49d4dac73a568f25052bc6a803a6c341ab73b443ed5",
@@ -4605,24 +4597,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "fa9fab806166e5b8d98020ad5564460684ad5419f5c8f450061dcb1f8443b0d0",
-      "reason": "Stop source traversal at the public Coding rendering and output file contracts."
+      "sha256": "e7c122f34d3cbb76ada50316bbee3819832cf950060995528a8378a779673737",
+      "reason": "Stop source traversal at the public Coding SDK ANSI helpers."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "82beba3318600f614f607391244be719501b503b00fcdcb37a54f77c6397fc94",
-      "reason": "Verify Native range formatting identity and generator exits for rendering and output file callers."
+      "sha256": "970825dd9a76ffd29fffc1a4d35be6db390b7ab988e57eb596449e4e6b7f4547",
+      "reason": "Verify that generated ANSI callers stop at the public SDK boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "cef8a0e1fc6178df4b2d2d01e38378b2d4b78d9f22dc12608034fa5b6391aafe",
-      "reason": "Track five existing rendering and output file root exports; keep all four internal JS and declaration files pristine."
+      "sha256": "f0dd9d5f2d33bd1858fd86802c286affbf81c94a69fa14069d14fa5d619b2ccb",
+      "reason": "Track the existing ANSI helpers exposed at the SDK root; keep the internal JS and declaration pristine."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "8659d0c6262db54dc56d3f4e67fddab2544ae52136d3bc9429c72cb727b98295",
-      "reason": "Expose existing rendering and output file functions at the SDK root without modifying implementations."
+      "sha256": "09090053b078b0ad83c3953f54914a5d8e2a84eb1703898dd1ee7a36c4a40814",
+      "reason": "Expose existing ANSI functions at the SDK root without modifying their algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "b93d871623e993303f6d6e554380662c2b10bf425fb10af094aef1172ad593cf",
-      "reason": "Add five existing rendering and private output function root exports; preserve all four internal JS and declaration files byte-identical to pristine SDK."
+      "sha256": "3ecde173ada388e9d2aeaad9b451ecb73acd9f35a6a749aae0b0039227d9acfa",
+      "reason": "Expose the two existing ANSI helpers at the public root; keep the internal JS and declaration byte-identical to pristine."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",

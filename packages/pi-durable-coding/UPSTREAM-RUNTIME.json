@@ -10,7 +10,6 @@
     "@earendil-works/pi-durable": "1.5.0",
     "@earendil-works/pi-mcp": "1.5.0",
     "@earendil-works/pi-tui": "1.5.0",
-    "ansi-regex": "6.2.2",
     "chalk": "6.0.0",
     "cross-spawn": "7.0.6",
     "jszip": "3.10.1",
@@ -109,7 +108,7 @@
       "source": "packages/coding-agent/src/core/bash-executor.ts",
       "target": "src/pi/core/bash-executor.ts",
       "sha256": "6fae3801533d64ccc018c43682bbff868619dd7cdab8f67730c731a5785d2984",
-      "portSha256": "383fbd78891e48ac6da0c5203f1891fc771352081320c78e202417b7268db6bd",
+      "portSha256": "cd43f510c594b78b53a2fde077767ab1b338ee7be66af816a87bf40d462157ac",
       "changes": [
         "public-coding-sdk",
         "host-extension-module-import"
@@ -446,15 +445,6 @@
       "portSha256": "6d7f5f4c81e07bc5f6dd8f1ad5dcd28ff05f30adce472b508484d57bdc4e7325",
       "changes": [
         "public-pi-ai-abort-helper"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/ansi.ts",
-      "target": "src/pi/utils/ansi.ts",
-      "sha256": "0559e8db84dacf6ca15125d52d46231be26afa943b9b90a070d144b99fa84cbb",
-      "portSha256": "2bf767b224748244da29ae7ac9f3ad4833cfbb731d05eda29594e2c40a98acde",
-      "changes": [
-        "public-ansi-regex-complete-matcher"
       ]
     },
     {

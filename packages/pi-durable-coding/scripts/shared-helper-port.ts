@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import ts from 'typescript';
 import {
   portToolArchives, portImageMime,
-  portAnsi, portChildProcess, portShell,
+  portChildProcess, portShell,
 } from './shared-runtime-port.ts';
 
 export function excludeRunModeEntries(path: string, body: string): string | undefined {
@@ -63,9 +63,6 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
   },
   'utils/mime.ts': {
     change: 'shared-durable-image-mime', dependency: '@earendil-works/pi-durable', apply: portImageMime,
-  },
-  'utils/ansi.ts': {
-    change: 'public-ansi-regex-complete-matcher', dependency: 'ansi-regex', apply: portAnsi,
   },
   'utils/child-process.ts': {
     change: 'shared-durable-child-process-wait', dependency: '@earendil-works/pi-durable', apply: portChildProcess,

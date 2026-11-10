@@ -26,6 +26,78 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK ANSI after 7a68ca4
+
+Bash ANSI stripping and stream suffix splitting now use the public Coding SDK.
+The 80-line local module, five-line matcher adapter and 37-line generator
+transformation are deleted. No wrapper remains. The SDK root only adds the
+existing stripAnsi and splitIncompleteAnsiSuffix exports. Internal ansi.js
+and ansi.d.ts remain byte-identical to pristine SDK 1.5.0. Equivalent upstream
+root exports remove this patch. The durable public entries do not expose
+this function contract. The generator stops at the ANSI module.
+
+The unused direct ansi-regex requirement is removed from package.json, the
+runtime dependency map and the lock workspace entry. Existing transitive
+resolutions remain. Runtime generation now has 61 TypeScript files: 57 under
+src/pi and four facades, with no assets. Auxiliary sources remain nine and
+shared entries 16. Physical patch outputs remain core four, Coding 60 and
+durable 33. No task or persistence version changes.
+
+A candidate probe compares 28592 results and errors plus 179 stream cuts with
+the previous implementation. It covers OSC, CSI, private prefixes, adjacent
+malformed sequences, control characters, Unicode, type errors, the 256-code-unit
+pending limit and a deterministic generated corpus. The unchanged test data
+retains the original 3860-result hash. The generation script completes all
+three generators and both deletions, then its final receipt assertion fails
+because it treats the dependency object as an array. Read-only checks confirm
+the result and record the corrected receipt. Generation and deletion are not
+repeated. Two text replacement attempts also fail before changing the old
+transform; a guarded exact function-range deletion then removes it.
+
+| Check | Result and scope |
+|---|---|
+| Complete generation | Runtime, auxiliary and patch checks pass |
+| Frozen layouts | Both installations pass with scripts disabled; the new lock stays unchanged; all 60 Coding and 33 durable hashes match |
+| Pristine replay | All original and target hashes match; the ANSI JS and declaration remain pristine |
+| Root tests | 60 tests and 264 expect calls pass across public boundaries, runtime ports and ANSI |
+| Hoisted integration | 52 tests and 245 expect calls pass across ANSI, shell, host extensions and public compatibility types |
+| Coding types | Root typecheck and declarations in both layouts pass |
+| Hoisted server | Typecheck, build and 26 worker bundle tests with 105 expect calls pass |
+
+Repeated tests in two layouts do not provide separate functional coverage.
+Checks use Bun 1.3.14, task-owned HOME/config/cache and deterministic local
+providers with network blocking. The unknown hoisted runtime-port fixture
+keeps its previous hash. Source registration updates 12 hashes, removes two
+entries and adds none. The fixed Craft v0.15.6 audit covers 2070 files and passes.
+
+Independent read-only review finds no verified new defect relative to
+7a68ca4. It compares 41975 string inputs and 16 invalid input types in 83982
+result or error comparisons. All match. It also compares 64398 text stream
+partitions and 126096 executions of the previous and current actual bash
+functions with deterministic operations. Chunk output, pending state, final
+flush, UTF-8, exit status, cancellation, exceptions and truncation match.
+Root function identity, pristine algorithm and declaration bytes, source
+retirement, generator exits and dependency removal are confirmed. Initial
+probe startup fails on dependency resolution, sandbox cache writes and
+temporary module loading. The review uses the existing transitive matcher,
+task-owned caches and a fresh isolated process; the final probes pass without
+repository changes. The temporary module loading cause remains unconfirmed.
+
+The review confirms an existing stream boundary: an unfinished OSC longer
+than 256 UTF-16 code units is no longer held as pending. A 257-unit example
+split before BEL leaves OSC payload in bash output, while the same input in
+one chunk produces AZ. Both implementations have this result. This evidence
+does not establish complete removal of arbitrary malformed control strings.
+
+The review does not repeat installation, generation or the parent suite, and
+does not check output file completion or error propagation. The parent thread
+owns source registration, documentation and final scope checks. The existing
+bash stream completion and unhandled error boundary is unchanged. Remaining
+src/pi files, the legacy permission blocker, F0 through F6 and the previously
+recorded AuthContext, Photon and ToolHtmlRenderer issues remain open. This
+slice does not run the full repository suite, live services, product UI,
+Windows/Linux, a separate Node ANSI run or full product acceptance.
+
 ## Public SDK rendering and output files after 0a6fda9
 
 MCP argument and text rendering, Native read ranges, bash output streams and

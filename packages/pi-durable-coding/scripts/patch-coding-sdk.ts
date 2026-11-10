@@ -62,6 +62,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/tools/tool-definition-wrapper.${extension}";`,
     `export { formatToolCallWithArgs, getTextOutput, replaceTabs } from "./core/tools/render-utils.${extension}";`,
     `export * from "./utils/output-files.${extension}";`,
+    `export { splitIncompleteAnsiSuffix, stripAnsi } from "./utils/ansi.${extension}";`,
     `export { ${suffix === 'd.ts' ? 'type MiddleTruncationResult, ' : ''}GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.${extension}";`,
     `export * from "./extensions/codemode/tool.${extension}";`,
     ...['grep', 'find', 'ls'].map(name => `export * from "./core/tools/${name}.${extension}";`),
