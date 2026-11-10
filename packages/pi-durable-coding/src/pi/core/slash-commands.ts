@@ -1,5 +1,5 @@
 import { APP_NAME } from "../config.ts";
-import type { SourceInfo } from "./source-info.ts";
+import type { SourceInfo } from "@earendil-works/pi-coding-agent";
 
 export type SlashCommandSource = "extension" | "prompt" | "skill";
 

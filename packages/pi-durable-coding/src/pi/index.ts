@@ -332,7 +332,7 @@ export {
 	type Skill,
 	type SkillFrontmatter,
 } from "./core/skills.ts";
-export { createSyntheticSourceInfo } from "./core/source-info.ts";
+export { createSyntheticSourceInfo } from "@earendil-works/pi-coding-agent";
 export { type EditDiffResult, generateDiffString, generateUnifiedPatch } from "../native-edit-tools.ts";
 // Tools
 export {

@@ -35,7 +35,7 @@ import {
 	type SessionProjection,
 	sessionEntryToContextMessages,
 } from "@earendil-works/pi-coding-agent";
-import { combineUsage } from "../usage-totals.ts";
+import { combineUsage } from "@earendil-works/pi-coding-agent";
 import {
 	computeFileLists,
 	createFileOps,

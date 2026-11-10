@@ -53,6 +53,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/virtual-models.${extension}";`,
     `export * from "./core/session-manager.${extension}";`,
     `export * from "./core/resource-loader.${extension}";`,
+    ...['source-info', 'timings', 'usage-totals'].map(name => `export * from "./core/${name}.${extension}";`),
     `export * from "./core/extensions/loader.${extension}";`,
     `export * from "./core/extensions/runner.${extension}";`,
     `export * from "./core/extensions/types.${extension}";`,

@@ -11,7 +11,7 @@ import type { PromptDisposition, QueuedInputDisposition, SessionStats } from "..
 import type { BashResult } from "../../core/bash-executor.ts";
 import type { CompactionResult } from "../../core/compaction/index.ts";
 import type { SessionEntry, SessionTreeNode } from "@earendil-works/pi-coding-agent";
-import type { SourceInfo } from "../../core/source-info.ts";
+import type { SourceInfo } from "@earendil-works/pi-coding-agent";
 
 // ============================================================================
 // RPC Commands (stdin)

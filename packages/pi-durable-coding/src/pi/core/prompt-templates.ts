@@ -4,7 +4,7 @@ import { CONFIG_DIR_NAME } from "../config.ts";
 import { parseFrontmatter } from "@earendil-works/pi-coding-agent";
 import { resolvePath } from "../utils/paths.ts";
 import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
-import { createSyntheticSourceInfo, type SourceInfo } from "./source-info.ts";
+import { createSyntheticSourceInfo, type SourceInfo } from "@earendil-works/pi-coding-agent";
 
 /**
  * Represents a prompt template loaded from a markdown file

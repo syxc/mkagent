@@ -3,7 +3,7 @@ import type { Models, Usage } from '@earendil-works/pi-ai';
 import { copyJson } from '@earendil-works/chord';
 import type { NestedToolExecutionResult, TaskId, ToolExecutionResult } from '@earendil-works/pi-durable';
 import { prepareCodemodeModelCall, type CodemodePreparedModelCall } from '@earendil-works/pi-durable/codemode';
-import { combineUsage } from '../pi/core/usage-totals.ts';
+import { combineUsage } from '@earendil-works/pi-coding-agent';
 import {
   CODEMODE_DOCS_PATH, type CodemodeModelRuntime, type CodemodeNestedCall, type CodemodeToolDetails,
 } from '../native-codemode.ts';

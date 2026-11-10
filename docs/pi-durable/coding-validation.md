@@ -26,6 +26,89 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK usage, source and timing helpers after 8b00984
+
+The Coding SDK now supplies usage-totals, source-info and timings through its
+public root. Three complete local implementations, 228 lines, and two unused
+compatibility forwards, four lines, are deleted. Their algorithms matched the
+pinned upstream source before removal. The installed durable declarations do
+not provide these Coding helper contracts. Durable still owns receipts and
+ledger accounting; Native model-call presentation uses the SDK combiner.
+Host resource discovery and trust decisions retain their existing policies.
+
+The patch adds only exports to the existing root JS and declaration outputs.
+All six helper JS/declaration files match pristine Coding SDK 1.5.0. No new
+wrapper, dependency, lock, task or checkpoint version is introduced. The Native
+entry keeps its existing createSyntheticSourceInfo export without adding a
+second implementation. Equivalent upstream root exports will let this patch
+retire. Generated imports stop at these SDK modules.
+
+The runtime inventory decreases from 74 to 71 TypeScript files: 67 under src/pi
+and four facades, with no assets. Auxiliary sources remain nine; shared entries
+decrease from 18 to 16. Coding remains 54 physical patch outputs, core four and
+durable 33, for 91 total. Full runtime, auxiliary and patch checks pass. A
+pristine Coding replay matches every original and resulting hash. Both existing
+installation layouts pass frozen installation with scripts disabled. All 54
+Coding and 33 durable hashes match in each layout; both lock files remain
+unchanged. These checks establish this slice's outputs, not the necessity of
+all remaining source.
+
+Checks use Bun 1.3.14, task-owned HOME/config/cache, an offline provider and the
+network-blocking test preload. Type declarations go to the task directory.
+
+| Check | Result and scope |
+|---|---|
+| Direct SDK helper probe | 35 assertions pass: root/internal function identity, optional cacheWrite1h/reasoning, provider cost ownership, totals, responseModel and Tools/summaries grouping, synthetic and symlink paths, metadata and one shared timing namespace |
+| Root Coding tests | 30 pass, one type-consumer test fails; 227 assertion calls across seven files. The failure is preserved below |
+| Hoisted resource/plugin tests | 39 pass, 351 assertions across six files; includes trust/reload, provenance, SDK loader, codemode and usage recovery. The repeated usage file is layout coverage, not additional distinct cases |
+| Unchanged type consumer in hoisted layout | One test and four assertions pass, including actual declaration output |
+| Coding types and declarations | Root typecheck and actual declaration builds in both layouts pass |
+| Hoisted server | Typecheck and build pass |
+| Hoisted worker bundle | 26 tests and 105 assertions pass, including offline resources, relocated images, controls and runtime updates |
+
+The first 12-stage runner records 11 successful stages and one failed test
+stage. shared-compat-types.test.ts hardcodes root node_modules for bun-types and
+the Coding SDK. Those entries are absent in the root layout, causing TS2688,
+TS2307 and the resulting unused expected-error diagnostic. The fixture is
+unchanged from HEAD in both layouts. Its isolated hoisted rerun passes without
+code, dependency or lock changes. The original failed receipt remains intact;
+it is not reported as a successful root run. No completed install, helper
+probe, declaration or bundle stage was repeated.
+
+The source registry updates 17 hashes, removes five retired entries and adds
+none. The fixed Craft v0.15.6 audit passes over 2080 files: 1455 share relative
+paths, 873 are normalized-identical, 582 are modified Craft-derived, 625 are
+MkAgent-only and 858 are reviewed Craft-only deletions. Source registration
+and runtime inventories do not establish that the remaining source is needed.
+
+The independent read-only review found no confirmed introduced defect. It
+checked the 23 code, manifest and registry paths, the five deletions and all
+327 tracked source, test and script files for retired helper references. It
+confirmed the 17 current registry hashes and five removed entries. Compiled,
+normalized old helper code matches pristine SDK code. All root value exports
+share their internal bindings, and public types use the original declarations.
+
+The reviewer passed 36 usage combinations, including optional splits, provider
+cost ownership and input immutability. Totals, grouping, source metadata,
+synthetic paths, symlink identity and missing-path fallback match the old
+implementations. Deterministic timing checks cover shared main/extensions
+state and silence with PI_TIMING=0. Durable receipt, ledger and accounted
+logic are unchanged. The reviewer did not repeat installation, full suites,
+builds or the Craft audit. These results support the five deletions only;
+remaining resource discovery and codemode adapters still have host policies.
+
+The complete SDK root declaration check reports TS2308 for ToolHtmlRenderer.
+The same diagnostic remains after removing this slice's three added exports;
+both restored root files match the HEAD manifest hashes. This is an existing
+declaration ambiguity, not a helper regression. Successful declaration builds
+above do not establish that the SDK has no declaration errors.
+
+F0 through F6 remain open. The 67 remaining src/pi files still need review
+against public SDK contracts. Full-repository tests, real product UI, live
+accounts or providers, Windows and Linux are not checked here. The existing
+custom AuthContext gap and Photon release gap after a thrown orientation
+callback remain open.
+
 ## Public SDK image processing after 48aa826
 
 The Coding SDK now owns image MIME normalization, conversion and dimension

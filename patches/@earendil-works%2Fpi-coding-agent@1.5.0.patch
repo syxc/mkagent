@@ -1,8 +1,8 @@
-# Content SHA-256: 4a84d7742e778612402eb4b0ba56621f5d30e233d8e1260749ab37a4e8dd9ffb
+# Content SHA-256: fb378aad9e56fbf64f678baf33dde1f6d5016bdb51da054e984f3227220e1bff
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,39 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,42 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -17,6 +17,9 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/virtual-models.js";
 +export * from "./core/session-manager.js";
 +export * from "./core/resource-loader.js";
++export * from "./core/source-info.js";
++export * from "./core/timings.js";
++export * from "./core/usage-totals.js";
 +export * from "./core/extensions/loader.js";
 +export * from "./core/extensions/runner.js";
 +export * from "./core/extensions/types.js";
@@ -55,7 +58,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,40 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,43 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -70,6 +73,9 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/virtual-models.ts";
 +export * from "./core/session-manager.ts";
 +export * from "./core/resource-loader.ts";
++export * from "./core/source-info.ts";
++export * from "./core/timings.ts";
++export * from "./core/usage-totals.ts";
 +export * from "./core/extensions/loader.ts";
 +export * from "./core/extensions/runner.ts";
 +export * from "./core/extensions/types.ts";

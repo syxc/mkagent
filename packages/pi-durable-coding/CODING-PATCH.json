@@ -8,12 +8,12 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "72d5f81a88f7441d9840056ff74506eea0e9f7875b7828784c8e85419c95e0aa"
+      "sha256": "6194db95d075882f9eaae01f6e13970275aab2efb0ab3bfaf520df42d60c6007"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "7ad3fe8fc1f1b71667cf03bb3cb3caac553e9443c3a514bd620fb796511ac161"
+      "sha256": "36316eea51b82b87fd353691a23677f277735d92fcb37bb1383c92c1b8c5a324"
     },
     {
       "path": "dist/utils/image-convert.js",

@@ -26,7 +26,7 @@ import {
 	isToolModifier,
 	SettingsManager,
 } from "@earendil-works/pi-coding-agent";
-import { time } from "./timings.ts";
+import { time } from "@earendil-works/pi-coding-agent";
 import {
 	createBashTool,
 	createCodingTools,

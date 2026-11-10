@@ -89,10 +89,6 @@
   ],
   "forwarded": [
     {
-      "target": "src/upstream/core/source-info.ts",
-      "implementation": "src/pi/core/source-info.ts"
-    },
-    {
       "target": "src/upstream/utils/text.ts",
       "implementation": "src/pi/utils/text.ts"
     },
@@ -103,10 +99,6 @@
     {
       "target": "src/upstream/utils/child-process.ts",
       "implementation": "src/pi/utils/child-process.ts"
-    },
-    {
-      "target": "src/upstream/core/timings.ts",
-      "implementation": "src/pi/core/timings.ts"
     },
     {
       "target": "src/upstream/core/skills.ts",

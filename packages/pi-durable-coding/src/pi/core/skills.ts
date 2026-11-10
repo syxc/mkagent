@@ -5,7 +5,7 @@ import { CONFIG_DIR_NAME, getAgentDir } from "../config.ts";
 import { parseFrontmatter } from "@earendil-works/pi-coding-agent";
 import { isPathWithin, resolvePath } from "../utils/paths.ts";
 import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
-import { createSyntheticSourceInfo, getResourcePathKey, type SourceInfo } from "./source-info.ts";
+import { createSyntheticSourceInfo, getResourcePathKey, type SourceInfo } from "@earendil-works/pi-coding-agent";
 
 /** Max name length per spec */
 const MAX_NAME_LENGTH = 64;
