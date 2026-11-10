@@ -34,7 +34,7 @@ import {
 } from "@earendil-works/pi-mcp/oauth";
 import lockfile from "proper-lockfile";
 import { APP_NAME, getAgentDir } from "../../config.ts";
-import { type AuthStorageBackend, FileAuthStorageBackend } from "../../core/auth-storage.ts";
+import { type AuthStorageBackend, FileAuthStorageBackend } from "@earendil-works/pi-coding-agent";
 import { isClientMetadataDocumentCallback, mcpNamespace } from "@earendil-works/pi-coding-agent";
 
 const CALLBACK_HOST = "127.0.0.1";

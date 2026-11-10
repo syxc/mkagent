@@ -26,6 +26,83 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK credential storage after e6fa864
+
+Native readStoredCredential and the host OAuth backend use the public Coding
+SDK. The patch adds only root exports for two existing backend classes and
+the AuthStorageBackend interface. Internal backend JS and declarations stay
+unchanged. No new runtime wrapper or physical patch output is added.
+
+Three runtime files are removed: auth-storage (507 lines), configuration-value
+resolution (287 lines) and an optional abort forward (seven lines), for 801
+lines total. The unused two-line configuration forward and the 65-line test
+for the retired abort wrapper are also removed. The host MCP cancellable
+refresh lock stays in place. OAuth and trust still use proper-lockfile.
+No dependency or lock entry changes.
+
+| Check | Result and scope |
+|---|---|
+| Source comparison | All emitted auth-storage statements match pristine after imports and comments are removed; this does not prove dependency wiring |
+| Generation and replay | Complete runtime, auxiliary and patch checks pass; pristine replay matches all 67 Coding output hashes |
+| Frozen installations | Both layouts pass; 67 Coding and 33 durable hashes match; lock and the unrelated hoisted fixture are unchanged |
+| Root boundary and session | 12 tests and 419 expect calls pass |
+| OAuth in each layout | The same 15 tests and 137 expect calls pass in each layout; layout repeats do not add behavior coverage |
+| Type and declaration checks | Root Coding types, actual declarations in both layouts and hoisted server types pass after the forward fix |
+| Worker checks | Server build and 26 bundle tests with 105 expect calls pass |
+| Source audit | Twelve hashes updated, five entries retired, none added; fixed Craft v0.15.6 audit passes for 2053 files |
+
+OAuth checks cover local PKCE, redirect rejection, refresh rotation, scope
+changes without tool replay, shared login processes and worker retirement.
+They use task-owned stores and local fixtures on random ports. The parent
+OAuth process permits only local fixture URLs and rejects the product UI port.
+Workers use temporary homes, native config and a local model endpoint that
+rejects every request; the lifecycle tests confirm zero model requests.
+Other parent tests block fetch. No real credential or account is used.
+
+The first install command is stopped by a one-second background limit after
+patch replay and seven of fourteen path synchronizations. Process checks and
+byte comparisons establish that it stopped. A recovery guard first fails
+before writing because it expects every path at baseline. A new recovery
+checks the completed paths and finishes the seven pending paths, then installs
+both layouts. No completed install is repeated.
+
+The initial behavior, build and bundle checks pass. Four type and declaration
+checks fail because an unused upstream configuration forward still points to
+the deleted local module. Removing that forward and its generation entry fixes
+all four checks; the auxiliary check also passes. A temporary repair script
+first has a parse error and does not run. All failed receipts are retained.
+Passing behavior and build checks are retained because the fix removes only
+an unused forward and its generation entry. The acceptance table's stale
+65-file Coding count and 102-output total are corrected to 67 and 104.
+
+Independent read-only review finds no confirmed new production-source defect.
+All 148 runtime cases pass across the baseline, both layouts and pristine SDK.
+They check paths, BOM, failures, locks, cancellation, exception release,
+existing modes, cross-process exclusion and the host refresh-lock extension.
+Three of four declaration consumers pass at first. The root generated facade
+still refers to the retired local classes and gives four identity diagnostics.
+The parent rebuilds the actual root declarations, then reruns that same
+consumer with zero diagnostics. The original failed result is retained;
+the parent recheck is separate from the independent review.
+
+The memory backend keeps its baseline behavior: a sync write can overlap an
+async callback, whose later commit can replace that write. Review also checks
+the concurrent removal of the unused configuration forward. It does not review
+the six documents. Windows, ACLs, stale or compromised lock takeover and
+SIGKILL recovery remain unchecked.
+
+Runtime generation now has 44 TypeScript files: 40 under src/pi and four
+facades, with no assets. Auxiliary sources are nine and shared entries 15.
+Physical outputs remain core four, Coding 67 and durable 33, for 104 total;
+only the two common Coding root outputs change. No task, document, checkpoint
+or codemode version changes.
+
+The remaining local source closure, server copies, host OAuth, default SDK
+session process policies, denied legacy entry and F0 through F6 remain open.
+Existing stream, long OSC, AuthContext, Photon and ToolHtmlRenderer limits
+remain. Real services, real credentials, UI, Windows and full crash recovery
+are not checked by this slice.
+
 ## Public SDK cache warming after a1b3712
 
 The complete local cache-warmer module is removed: 465 production lines.

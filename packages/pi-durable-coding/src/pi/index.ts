@@ -23,7 +23,7 @@ export {
 	parseSkillBlock,
 	type SessionStats,
 } from "../native-agent-session.ts";
-export { readStoredCredential } from "./core/auth-storage.ts";
+export { readStoredCredential } from "@earendil-works/pi-coding-agent";
 export type { CacheWarmingDecision, CacheWarmingStatus } from "@earendil-works/pi-coding-agent";
 // Compaction
 export {

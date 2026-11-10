@@ -45,6 +45,7 @@ for (const suffix of ['js', 'd.ts']) {
   const exports = [
     `export * from "./core/agent-session.${extension}";`,
     `export { CacheWarmer } from "./core/cache-warmer.${extension}";`,
+    `export { ${suffix === 'd.ts' ? 'type AuthStorageBackend, ' : ''}FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.${extension}";`,
     `export * from "./core/settings-manager.${extension}";`,
     `export { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";`,
     `export * from "./core/package-manager.${extension}";`,

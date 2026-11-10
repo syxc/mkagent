@@ -96,13 +96,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/core/auth-storage.ts",
-      "target": "src/pi/core/auth-storage.ts",
-      "sha256": "163626f5abc34099a9afb2803d0cc49b9c66d0feacd605165e88063c328cef68",
-      "portSha256": "163626f5abc34099a9afb2803d0cc49b9c66d0feacd605165e88063c328cef68",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/core/client-identity.ts",
       "target": "src/pi/core/client-identity.ts",
       "sha256": "8c17ba14d52fe1549c79b6ff8f7bcf3cc940d55d155d75dc4a4d7cea67e363c0",
@@ -184,13 +177,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/resolve-config-value.ts",
-      "target": "src/pi/core/resolve-config-value.ts",
-      "sha256": "0f53dad47fe5d5d8837c022b7951ccd3bd5a9b577bd662f0986272110e83bcc7",
-      "portSha256": "0f53dad47fe5d5d8837c022b7951ccd3bd5a9b577bd662f0986272110e83bcc7",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/core/sdk.ts",
       "target": "src/pi/core/sdk.ts",
       "sha256": "f0f6f2b14a61c5c3ebb31d40c97b3f73296a2f0334d582072383302d693714c8",
@@ -257,7 +243,7 @@
       "source": "packages/coding-agent/src/extensions/mcp/oauth.ts",
       "target": "src/pi/extensions/mcp/oauth.ts",
       "sha256": "12fc5abb9185e291a5528f3312733a8e7f0028d1caeeb1bcf9f99a8979f10949",
-      "portSha256": "44bb6ec4a1a78205546ea63c1aa15e182a2f821d1dea2f867f81d47554879bff",
+      "portSha256": "805f825f9a7bf517e122c2a967b769fc4df965ff15796fa678becfb2c1f3be64",
       "changes": [
         "public-coding-sdk",
         "cancellable-host-oauth-refresh-lock"
@@ -267,7 +253,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "056b5452534d1a8f5d96d710e980a4bf0387deedef714df4bd8c5b09a9c9df3b",
+      "portSha256": "30809e19777de8386ff31b646c95a6d5da8df7433815480ee775a49db1699560",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",
@@ -319,15 +305,6 @@
       "changes": [
         "host-extension-module-import",
         "public-coding-sdk"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/abort.ts",
-      "target": "src/pi/utils/abort.ts",
-      "sha256": "f3a3265a2fb2b577bf32334ae8849c1f3dd1ac1487b81d7bc2d5007897fb5790",
-      "portSha256": "6d7f5f4c81e07bc5f6dd8f1ad5dcd28ff05f30adce472b508484d57bdc4e7325",
-      "changes": [
-        "public-pi-ai-abort-helper"
       ]
     },
     {

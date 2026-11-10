@@ -1,13 +1,14 @@
-# Content SHA-256: 118a0e009fa25448d44f98141a429119a7d694d5a4f2fbab78851b4b42c5e7d4
+# Content SHA-256: e009e16b46996b93364ea648fba510597d64c4559dd411902fd42b9846de3e23
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,52 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,53 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
 +export * from "./core/agent-session.js";
 +export { CacheWarmer } from "./core/cache-warmer.js";
++export { FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.js";
 +export * from "./core/settings-manager.js";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.js";
 +export * from "./core/package-manager.js";
@@ -68,12 +69,13 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,54 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,55 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
 +export * from "./core/agent-session.ts";
 +export { CacheWarmer } from "./core/cache-warmer.ts";
++export { type AuthStorageBackend, FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.ts";
 +export * from "./core/settings-manager.ts";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.ts";
 +export * from "./core/package-manager.ts";

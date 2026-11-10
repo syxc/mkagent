@@ -127,10 +127,6 @@
       "implementation": "src/pi/core/extensions/pi-ai-extension-view.ts"
     },
     {
-      "target": "src/upstream/core/resolve-config-value.ts",
-      "implementation": "src/pi/core/resolve-config-value.ts"
-    },
-    {
       "target": "src/upstream/utils/shell.ts",
       "implementation": "src/pi/utils/shell.ts",
       "changes": [

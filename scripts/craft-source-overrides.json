@@ -3697,8 +3697,8 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "df23bbff06aeecf0143bd7bcb9df08741d40b75496c10498b2c869f37e4f019f",
-      "reason": "Point the legacy system prompt entry at SDK-backed Native types and the legacy documentation binding."
+      "sha256": "1eab061743185732ed6e79ecacb93ca1a73c36e1a94e09f28b64b74e648b64f8",
+      "reason": "Retire the unused configuration-value compatibility forward after its local implementation leaves the closure."
     },
     "packages/pi-durable-coding/package.json": {
       "sha256": "ce928510eb4b0e24bfeb214ef1c028dbe335f5dc0dc8338ce6d321fc35cfe95c",
@@ -3713,8 +3713,8 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "e41067c044211b4bd1d866d52152601e4c1ad15ceabc9161bba3c57968e5b6fc",
-      "reason": "Generate legacy prompt forwarding against the SDK-backed Native binding and host URL policy."
+      "sha256": "e63034bc3b0fb891e38059a56c643d629326dbeb395918e93450ae1c71205a4d",
+      "reason": "Stop regenerating an unused configuration-value compatibility forward."
     },
     "packages/pi-durable-coding/src/compat.ts": {
       "sha256": "037e8dc7ec087684bdca14748aff4f9b902158aee2ac1a8db2e3ad61f8d9d38f",
@@ -3815,10 +3815,6 @@
     "packages/pi-durable-coding/src/upstream/core/prompt-templates.ts": {
       "sha256": "c61425f5af958b42e38e3d9e54850b1a7d1c3eec6cb027d99ae2db69c67a3832",
       "reason": "Preserve legacy .pi discovery through the SDK-backed Native prompt binding."
-    },
-    "packages/pi-durable-coding/src/upstream/core/resolve-config-value.ts": {
-      "sha256": "ddfa00cd4eb6c7100312c923417908fc435db6641242e206d137f79f3826401d",
-      "reason": "Port Pi v1.5.0 packages/coding-agent/src/core/resolve-config-value.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
     },
     "packages/pi-durable-coding/src/upstream/core/session-manager.js": {
       "sha256": "a74ab51189cd7d9826c97f523dc18a0ecb86a0f12ec04e3ef406e57c8f531e21",
@@ -3965,8 +3961,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "dfa50bf6cd635cc41d08a6a9d3701dd59790f12ff9818fb86977461284aee5a9",
-      "reason": "Remove the complete cache warmer from the generated source closure."
+      "sha256": "2eb6a87a0efe9d8365ab6ee50df172b67f6db2a17a8b52b0df3993aa9e323980",
+      "reason": "Retire auth storage, configuration resolution and the optional cancellation wrapper from the local runtime closure."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -3981,8 +3977,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "dde9560b53813c40dd3faf27ad785373fa29f26f9d91089fa46952c6c9cb90ef",
-      "reason": "Retire the cache warmer transform after switching its complete implementation to the SDK."
+      "sha256": "2e8c15d47c3cb6bfa0429dfbdad7d0f1228ef795e332167603df57582e48e3bd",
+      "reason": "Remove the obsolete optional cancellation-wrapper transform after its final consumer switches to the SDK."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4108,10 +4104,6 @@
       "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/auth-guidance.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/core/auth-storage.ts": {
-      "sha256": "163626f5abc34099a9afb2803d0cc49b9c66d0feacd605165e88063c328cef68",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/auth-storage.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/core/client-identity.ts": {
       "sha256": "3828abe7869edfba4e82602b591efe05a85b304acea6e44e6e1aa58f9669f400",
       "reason": "Use the published Coding SDK settings implementation while preserving existing host policy adapters."
@@ -4160,10 +4152,6 @@
       "sha256": "17d6969f59d76174ae084232124d81bb18f38d7a7997f78812c7de757c8568e9",
       "reason": "Preserve public pi-agent-core type imports; share message conversion with a default-compatible host metadata and object identity policy."
     },
-    "packages/pi-durable-coding/src/pi/core/resolve-config-value.ts": {
-      "sha256": "0f53dad47fe5d5d8837c022b7951ccd3bd5a9b577bd662f0986272110e83bcc7",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/resolve-config-value.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/core/sdk.ts": {
       "sha256": "b50cc0cf0fadf982c86151cea052c381c87cfff13a0716825e7ed11d868f1a9b",
       "reason": "Construct the public SDK cache warmer with the host background action or Native passthrough default."
@@ -4193,12 +4181,12 @@
       "reason": "Forward worker initialization to the public durable entry point rather than a direct sandbox dependency."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/oauth.ts": {
-      "sha256": "44bb6ec4a1a78205546ea63c1aa15e182a2f821d1dea2f867f81d47554879bff",
-      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
+      "sha256": "805f825f9a7bf517e122c2a967b769fc4df965ff15796fa678becfb2c1f3be64",
+      "reason": "Use the public SDK auth backend while retaining the host cancellable refresh-lock extension."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "056b5452534d1a8f5d96d710e980a4bf0387deedef714df4bd8c5b09a9c9df3b",
-      "reason": "Expose cache warming types directly from the public SDK."
+      "sha256": "30809e19777de8386ff31b646c95a6d5da8df7433815480ee775a49db1699560",
+      "reason": "Expose the already-public SDK readStoredCredential helper directly."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4223,10 +4211,6 @@
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-types.ts": {
       "sha256": "72368768a995682e5ba00009933a24be407d231e76090ecd145a596591773c09",
       "reason": "Use the SDK BashResult declaration for the existing RPC wire response."
-    },
-    "packages/pi-durable-coding/src/pi/utils/abort.ts": {
-      "sha256": "6d7f5f4c81e07bc5f6dd8f1ad5dcd28ff05f30adce472b508484d57bdc4e7325",
-      "reason": "Use the public pi-ai cancellation helper with a thin optional-signal wrapper that preserves the coding API."
     },
     "packages/pi-durable-coding/src/pi/utils/child-process.ts": {
       "sha256": "15118c0272c36832166cd49d4dac73a568f25052bc6a803a6c341ab73b443ed5",
@@ -4385,8 +4369,8 @@
       "reason": "Verify pinned OAuth flow, redirect validation, cancellation and rotation, while keeping explicit headers and provider credentials outside the OAuth store."
     },
     "packages/pi-durable-coding/src/mcp-oauth.ts": {
-      "sha256": "2f38647585a7c3d2c6dfed8ecfe07b45a8d090a935dd944f7fe78dbf46d1f9c2",
-      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
+      "sha256": "ccefe7bf33b9de1e28a40f131f5efbc82c71b73234026c03909c481557554991",
+      "reason": "Expose the SDK auth backends through the existing host OAuth facade."
     },
     "packages/pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts": {
       "sha256": "c92e904082949668fcc63de3ecec5a0a82499cff35e4e27514a68015d5596bed",
@@ -4451,10 +4435,6 @@
     "packages/pi-agent-server/src/test-fixtures/mcp-oauth-worker.ts": {
       "sha256": "9c8fb50d1b47c94399fdc6712e47dcdfed0c7c7302cd1c4fd372800e87963101",
       "reason": "Supply isolated native worker protocol receipts, temporary credentials and a model endpoint that rejects every request."
-    },
-    "packages/pi-durable-coding/test/shared-abort.test.ts": {
-      "sha256": "1b9c6f249a3a8081d05529f61ade9b91bc061a30db9d176b1b0ef40cd17f2ccc",
-      "reason": "Verify the shared public cancellation helper preserves promise identity, abort reasons, listener cleanup and observation of abandoned rejections."
     },
     "packages/pi-durable-coding/test/host-builtins.test.ts": {
       "sha256": "1c57ae6955d9312b7e4ceb5814f374cebf4a75daa970988341cec1fffd3691fe",
@@ -4537,24 +4517,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "f79640c2da8f477988d9d91232e3aa45dc959183834af482223fd7c21399d650",
-      "reason": "Stop cache warmer imports at the published Coding SDK root."
+      "sha256": "fab28c13be8c3c3b362ba131c4ea49accf6d5680b7f5a8e5cff9609d246d169c",
+      "reason": "Route auth storage consumers directly to the public Coding SDK root."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "f7cdbc2f351687e6a39631fd0a3e59ecd89b6f53d6c60baaf15571692f1c473d",
-      "reason": "Check cache warmer imports stop at the public SDK for both generated consumers."
+      "sha256": "7591a39a0d44455bf96c8818c0e472d34cb3b3b724a53561cd87d32eea5ca1dc",
+      "reason": "Check both auth-storage consumers stop at the public SDK boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "7e24367f85b01715fe9b66217322d57300da549ffb80d1183ddf810541d16b35",
-      "reason": "Record the SDK cache warmer export and optional host action contract; keep SDK economics and scheduling."
+      "sha256": "ba2fdc5f23d2139f718d12c6b87e93771bb7a510df0ea1a4eed1198e42ef6045",
+      "reason": "Record only the existing auth backend and interface root exports; preserve all backend algorithms."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "e1c8195bcefd2c653f27dac7b404f9a40f8304f5e744d9d37421d46288d43ddb",
-      "reason": "Expose the SDK cache warmer and apply its narrow host action policy."
+      "sha256": "15e9153f050eb2f888cf539438740826192bae2a234eda57e550821386c9a089",
+      "reason": "Export the SDK auth backends and interface without changing their implementations."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "6366d6e6a4e6ca35e05f8802ec9b19c33a2aabaa69858ade1fadccf59ddf8f90",
-      "reason": "Add only the cache warmer export and instance action boundary; retain SDK algorithms and default best-effort behavior."
+      "sha256": "81c819c143833bfde6ec7c45af178c73183d0be8d3382373fdbb30e32ed38a14",
+      "reason": "Add only root exports for existing auth backend classes and their interface; do not copy or modify backend algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
