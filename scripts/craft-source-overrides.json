@@ -2433,8 +2433,8 @@
       "reason": "Use the SDK usage combiner for Native model-call presentation while durable retains receipt and ledger accounting."
     },
     "packages/pi-durable-coding/src/compat/codemode-discovery.ts": {
-      "sha256": "71f83ba2d2dd73623dd0267816cb4f6c86e26936019e2ad2cb4ec488d4e1e6c1",
-      "reason": "Use durable public declarations and identifier helpers plus SDK codemode types; retain host discovery metadata and namespace policies."
+      "sha256": "65f2a8619a6aafc7954ffffeee65dc80906130508d8cd477f397b42bf0d880c4",
+      "reason": "Use durable ranking directly and the shared namespace document adapter while preserving discovery policy."
     },
     "packages/pi-durable-coding/src/compat/codemode-native.ts": {
       "sha256": "eb543453fe89bc2e8e13be60247de7de2a008f4963004d675f20ba1bebdd5044",
@@ -2489,8 +2489,8 @@
       "reason": "Check shared timer reuse, listener cleanup, optional signals and native cancellation and timer errors."
     },
     "packages/pi-durable-coding/test/shared-tool-search.test.ts": {
-      "sha256": "6b849f2bba5f073040e5e2252b293a3337390cf3f2ffc21990ffff5e17cbd8da",
-      "reason": "Check shared search scores, tokenizer identity, schema metadata, namespace ranking and native activation callbacks."
+      "sha256": "3d1d9d9f82ab6a8a31ab6a1de6c48628ad48369b0efece618cb2190a037abc4f",
+      "reason": "Verify durable tokenization, configurable scores and metadata, namespace ranking, SDK exposure filtering and public session activation."
     },
     "packages/pi-durable-coding/test/codemode-durable-boundary.test.ts": {
       "sha256": "a725df87aeff9733fe059adbff2dab034fdfd8a229cf04070cc1b9b1dc8dca23",
@@ -2501,8 +2501,8 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "0294b2956d49a25d561c0a8847a164cceee774ea172b94a81d90efb74af0eefb",
-      "reason": "Retire the ANSI matcher port after complete SDK reuse."
+      "sha256": "f746bd0b6c2a2ac124dc0d7c733daad0749751e928868b8324da2b70a311d701",
+      "reason": "Retire tool-search-specific source transforms after replacing both generated modules with SDK factories."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
@@ -3965,8 +3965,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "79354f5d188fce5b2ec26dbcfbf27a55f6a66affd36e39c9539fe734681ea956",
-      "reason": "Retire the SDK-covered MCP factory closure while retaining host OAuth as an explicit generation root."
+      "sha256": "64cba809c190b545cb2f834a85f6666046f996836a9d1aa56256888eeb34de45",
+      "reason": "Remove both SDK-covered tool-search modules from the generated source closure."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4204,17 +4204,9 @@
       "sha256": "44bb6ec4a1a78205546ea63c1aa15e182a2f821d1dea2f867f81d47554879bff",
       "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
-    "packages/pi-durable-coding/src/pi/extensions/tool-search/index.ts": {
-      "sha256": "defb69dc3c43533b14a360a2ca4acfabcba5cf25f5f884bd77f60e931d5747c3",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/tool-search/tool.ts": {
-      "sha256": "7a7c69854a2321fc53bbbbf1614f0fedc98930d5151701d4ce9334a86df04dcc",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "5fff4dd51e790723aa1c3f236f5cd2493c7caf97320b67674a1e39f8ff9d0076",
-      "reason": "Export the published MCP factory and configuration contracts directly from the public Coding SDK root."
+      "sha256": "0f69366478839e7ce1eed9a59184367ac7f62cf944e6a4223a14043a2ba27c2f",
+      "reason": "Export the thin durable tool-search binding while the SDK owns tool registration, validation, activation and presentation."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4553,24 +4545,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "04f2b8ef37e6343be548cb2ca9d283660e1383cb113ef702d4e112dde17903c1",
-      "reason": "Stop source traversal at the published MCP factory and configuration contracts."
+      "sha256": "a99ac2211cb8c19012b3bb52e86ad8accd516d2178851224ea7cef0f4ca6eb37",
+      "reason": "Bind the generated tool-search entry to the thin durable search adapter instead of local SDK source."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "64b7760eeaf47d136afa5191a64d0491eabf7fb72227890be5ce2063c4f098d1",
-      "reason": "Verify published MCP factory identity and both generation import boundaries."
+      "sha256": "daa9db0e31aa5abbde4eb57b7ea4094e9e2a4ed237a61180799b1578610c21df",
+      "reason": "Verify both tool-search generation imports stop at the native durable binding."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "92c802b7bb70740750b86927a5c4234b3094e11b65ab02d69a8e6bad92605301",
-      "reason": "Declare MCP credentials through the three public methods used by the SDK factory; keep MCP execution modules pristine."
+      "sha256": "53c68b4b91459f0942bc5909cae3b7ad23cf6332fab2a77e13346b862dc8451a",
+      "reason": "Record the optional per-factory tool-search metadata and ranking contract; retain SDK activation and presentation."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "5b3113cdb5082d5f0e6bad776188c761f745af23e67fc7cc31ca7a1a646ec941",
-      "reason": "Use the structural MCP credential protocol without changing the factory or transport runtime."
+      "sha256": "cf87f633daeccbd2a8a436021da1c76b4e10b4284418bd7610c7278367979676",
+      "reason": "Add optional instance-level metadata and ranking dependencies to the existing SDK tool-search factories without copying their algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "fc31e14e9986ca34fdc5149fd4ba2f22e7666085f6cf2797eb261f3c8d962b30",
-      "reason": "Make only the MCP factory credential declaration structural; preserve the existing SDK MCP implementation."
+      "sha256": "9baa6e5347b3c319206fa3876a437e16353703e3ec3d58a9cba2554d24f8cbb4",
+      "reason": "Expose the tool-search factory and optional per-instance metadata and ranking dependencies; retain SDK lifecycle and default behavior."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4751,6 +4743,10 @@
     "packages/pi-durable-coding/test/host-mcp-sdk.test.ts": {
       "sha256": "52879ca797fb662420bda11fe40fea3eaa0a5da850069de9a7500ba8b3058318",
       "reason": "Verify the public MCP factory with official in-memory transports, durable codemode forwarding, resources, exposure and shutdown."
+    },
+    "packages/pi-durable-coding/src/native-tool-search.ts": {
+      "sha256": "0fbc0821be28531e37c91853898c9e89f3200657720b5e2f52ce4d7151e9a9aa",
+      "reason": "Bind durable metadata and ranking to public Coding SDK factories with namespace text and explicit public return types."
     }
   },
   "deleted": {

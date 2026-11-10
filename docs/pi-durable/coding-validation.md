@@ -26,6 +26,79 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK tool search after 3256182
+
+Two local tool-search modules and their dedicated source transforms are
+removed: 181 production lines. The 26-line native binding provides durable
+metadata and ranking functions plus the Coding namespace text. Codemode
+discovery calls durable ranking directly; the local Bm25Ranker wrapper is
+removed. Registration, parameter validation, exposure filtering, session
+activation and result presentation now use the Coding SDK factories.
+
+The complete durable tool returns output and control.addTools. It does not
+provide the same Coding activation callback or namespace metadata contract.
+The SDK factories therefore receive optional per-instance createDocument and
+rank dependencies. Without dependencies they keep their original default
+path. The patch exports the existing tool-definition factory and its public
+option types. It does not copy the search algorithm into a patch template.
+Remove these changes when upstream provides equivalent public contracts.
+
+| Check | Result and scope |
+|---|---|
+| Complete generation | Runtime, auxiliary and Coding patch checks pass |
+| Pristine replay and installations | Replay and both frozen layouts pass; all 65 Coding and 33 durable hashes match; lock unchanged |
+| Root behavior | 47 tests, 319 expect calls pass across tool search, public boundaries, durable codemode and extensions |
+| Hoisted behavior | 21 tests, 198 expect calls pass across tool search, public boundaries, extension loading and codemode |
+| Coding types | Root typecheck and actual declaration builds in both layouts pass |
+| Hoisted server | Typecheck, build and 26 worker bundle tests with 105 expect calls pass |
+| Source audit | Ten hashes updated, two entries retired, one adapter added; fixed Craft v0.15.6 audit passes for 2059 files |
+
+The shared search checks cover Unicode segmentation, configurable BM25 scores,
+separate namespace weighting, schema text, exposure filtering and activation.
+The public extension stays inactive by default, finds namespace-only matches,
+activates the matched tool and rejects empty queries and invalid limits.
+
+The first patch generation stops before writing outputs because the declaration
+comment and function signature both contain createToolSearchExtension(). The
+exact-match check is narrowed to the complete declaration. The failed log is
+preserved; the corrected generation then passes. Installations and passed
+checks are not repeated. The unknown hoisted runtime-port fixture is preserved.
+
+Independent read-only review against 3256182 finds no confirmed new correctness
+or compatibility defect. All 741 targeted checks pass. They compare Native with
+the retired source and the default SDK with pristine, and cover partial
+injection, factory isolation, dynamic catalogs, namespace weights, activation,
+errors and codemode discovery. Eight in-memory transcript checks pass: loaded
+tools appear in the next toolsAdded declaration, survive serialization and
+restore, and are not activated twice. Both dependency layouts pass six changed
+output hashes, default factory execution and a strict TypeScript consumer with
+positive and negative cases. That consumer uses skipLibCheck; it does not
+check all internal dependency declarations.
+
+The transcript probe uses a minimal agent state and replaces system-prompt
+rebuilding with an empty operation. It does not check a complete model run,
+real MCP connections, disk resume/fork/compaction, SIGKILL recovery, Windows,
+packaged installation or source-map debugging. The first temporary comparison
+process fails to resolve a newly created fixture; a new process passes after
+the file exists. A require.resolve diagnostic also fails for the import-only
+SDK; actual ESM imports pass. These temporary diagnostics do not establish a
+product defect. The reviewer changes no repository or installed SDK files and
+does not repeat the parent suites, builds, installations or generation.
+
+Runtime generation now has 49 TypeScript files: 45 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and shared entries 16.
+Physical patch outputs are core four, Coding 65 and durable 33, for 102 total.
+Only four tool-search JS and declaration files are added to the output list;
+the two root outputs are shared with existing patches. Dependencies, lock,
+task and persistence versions are unchanged.
+
+The remaining 45 src/pi files, server MCP/output/truncation copies, host OAuth,
+default SDK session process policies, denied legacy entry and F0 through F6
+remain open. Existing stream completion, asynchronous file errors, long
+unfinished OSC, AuthContext, Photon and ToolHtmlRenderer boundaries remain.
+Checks use task-owned configuration and synthetic data. Real services, product
+UI, real OAuth browser callbacks and Windows/Linux are not checked.
+
 ## Public SDK MCP factory after 321e121
 
 The native entry now exports createMcpExtension and its configuration types

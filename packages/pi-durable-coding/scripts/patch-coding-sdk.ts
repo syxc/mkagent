@@ -64,6 +64,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export { writeOutputFile } from "./utils/output-files.${extension}";`,
     `export { ${suffix === 'd.ts' ? 'type MiddleTruncationResult, ' : ''}GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.${extension}";`,
     `export * from "./extensions/codemode/tool.${extension}";`,
+    `export { createToolSearchToolDefinition${suffix === 'd.ts' ? ', type ToolSearchDependencies, type ToolSearchToolOptions' : ''} } from "./extensions/tool-search/tool.${extension}";`,
     ...['grep', 'find', 'ls'].map(name => `export * from "./core/tools/${name}.${extension}";`),
     `export * from "./core/export-html/index.${extension}";`,
     `export * from "./core/export-html/ansi-to-html.${extension}";`,
@@ -139,6 +140,37 @@ for (const suffix of ['js', 'd.ts']) {
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/modes/interactive/components/tool-execution.${suffix}`;
   outputs.set(path, codingUIPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
+}
+for (const name of ['tool', 'index']) for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/extensions/tool-search/${name}.${suffix}`;
+  let body = readFileSync(join(baseline, path), 'utf8');
+  if (name === 'tool') {
+    if (suffix === 'js') {
+      body = replace(body, 'function searchAndLoad(tools, query, limit) {',
+        'function searchAndLoad(tools, query, limit, dependencies) {');
+      body = replace(body, 'createToolSearchDocument(tool, tool.namespace)',
+        '(dependencies.createDocument ?? createToolSearchDocument)(tool, tool.namespace)');
+      body = replace(body, 'const matches = new Bm25Ranker().rank(query, documents, limit);',
+        'const matches = dependencies.rank ? dependencies.rank(query, documents, limit) : new Bm25Ranker().rank(query, documents, limit);');
+      body = replace(body, 'createToolSearchToolDefinition(options = {}) {',
+        'createToolSearchToolDefinition(options = {}, dependencies = {}) {');
+      body = replace(body, 'searchAndLoad(options.tools, query, max)',
+        'searchAndLoad(options.tools, query, max, dependencies)');
+    } else {
+      body = replace(body, 'export interface ToolSearchToolOptions {',
+        'export interface ToolSearchDependencies {\n    /** Build metadata through the host shared search implementation. */\n    createDocument?: typeof createToolSearchDocument;\n    /** Rank metadata through the host shared search implementation. */\n    rank?: ToolRanker["rank"];\n}\nexport interface ToolSearchToolOptions {');
+      body = replace(body, 'createToolSearchToolDefinition(options?: ToolSearchToolOptions)',
+        'createToolSearchToolDefinition(options?: ToolSearchToolOptions, dependencies?: ToolSearchDependencies)');
+    }
+  } else if (suffix === 'js') {
+    body = replace(body, 'createToolSearchExtension() {', 'createToolSearchExtension(dependencies = {}) {');
+    body = replace(body, 'createToolSearchToolDefinition({ tools: pi })',
+      'createToolSearchToolDefinition({ tools: pi }, dependencies)');
+  } else {
+    body = 'import type { ToolSearchDependencies } from "./tool.ts";\n' + replace(body,
+      'export declare function createToolSearchExtension()', 'export declare function createToolSearchExtension(dependencies?: ToolSearchDependencies)');
+  }
+  outputs.set(path, body);
 }
 for (const name of ['tool', 'index']) for (const suffix of ['js', 'd.ts']) {
   const path = `dist/extensions/codemode/${name}.${suffix}`;

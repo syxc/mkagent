@@ -413,7 +413,7 @@ export { type CodemodeExtensionOptions, createCodemodeExtension } from "../nativ
 export type { CodemodeStoreEntryData, CodemodeToolDetails } from "../native-codemode.ts";
 export type { LoadedMcpConfig, McpExposure, McpServerConfig, McpServerEntry } from "@earendil-works/pi-coding-agent";
 export { createMcpExtension, type McpExtensionOptions, type McpTransportFactory } from "@earendil-works/pi-coding-agent";
-export { createToolSearchExtension } from "./extensions/tool-search/index.ts";
+export { createToolSearchExtension } from "../native-tool-search.ts";
 // RPC client and protocol for programmatic SDK usage
 export {
 	type JsonAgentSessionEvent,

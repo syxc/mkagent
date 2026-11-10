@@ -64,6 +64,8 @@ describe('published Coding SDK boundary', () => {
     expect(codingHostImport('index.ts', './extensions/codemode/index.ts')).toBe('../native-codemode.ts');
     expect(codingSDKImport('index.ts', './extensions/mcp/index.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('index.ts', './extensions/mcp/config.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingHostImport('index.ts', './extensions/tool-search/index.ts')).toBe('../native-tool-search.ts');
+    expect(codingHostImport('extensions/tool-search/index.ts', './tool.ts')).toBe('../../../native-tool-search.ts');
     expect(codingSDKImport('extensions/codemode/index.ts', '../../core/settings-defaults.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/resource-loader.ts', './package-manager.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/extensions/types.ts', '../model-registry.ts')).toBe('@earendil-works/pi-coding-agent');

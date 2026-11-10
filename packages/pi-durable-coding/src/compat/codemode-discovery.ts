@@ -1,7 +1,8 @@
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import { renderToolSample, toCodemodeIdentifier, type CodemodeTool, type CodemodeGlobal } from "@earendil-works/pi-durable/codemode";
 import type { ToolNamespace } from "@earendil-works/pi-coding-agent";
-import { Bm25Ranker, createToolSearchDocument, DEFAULT_TOOL_SEARCH_LIMIT } from "../pi/extensions/tool-search/tool.ts";
+import { rankToolSearchDocuments, DEFAULT_TOOL_SEARCH_LIMIT } from "@earendil-works/pi-durable/tool-search";
+import { createToolSearchDocument } from "../native-tool-search.ts";
 import { toCodemodeDeclaration, type CodemodeToolOptions } from "../native-codemode.ts";
 
 /**
@@ -30,7 +31,6 @@ export function createNativeCodemodeDiscovery(
 	const guidelines = options.getToolGuidelines?.();
 	const declarations = new Map(tools.map(tool => [tool.name, toCodemodeDeclaration(tool, guidelines?.get(tool.name))]));
 	const samples = new Map([...declarations].map(([name, declaration]) => [name, renderToolSample(declaration)]));
-	const ranker = new Bm25Ranker();
 	const entry = (name: string) => ({ name: toCodemodeIdentifier(name), description: samples.get(name) ?? "" });
 	const globals: CodemodeGlobal[] = [
 		{
@@ -52,7 +52,7 @@ export function createNativeCodemodeDiscovery(
 					if (namespace && (!toolNamespace || !isNamespaceName(toolNamespace, namespace))) return [];
 					return [createToolSearchDocument(tool, toolNamespace)];
 				});
-				return ranker.rank(query, documents, limit).map((match) => entry(match.name));
+				return rankToolSearchDocuments(query, documents, limit).map((match) => entry(match.name));
 			},
 		},
 		{

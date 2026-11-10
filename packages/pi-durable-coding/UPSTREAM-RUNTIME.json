@@ -284,29 +284,10 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/extensions/tool-search/index.ts",
-      "target": "src/pi/extensions/tool-search/index.ts",
-      "sha256": "212528d795f06a7b935670534efa35371277e31b074a6ecd7ff144bce09ee7b6",
-      "portSha256": "defb69dc3c43533b14a360a2ca4acfabcba5cf25f5f884bd77f60e931d5747c3",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/extensions/tool-search/tool.ts",
-      "target": "src/pi/extensions/tool-search/tool.ts",
-      "sha256": "27f675348b17878ae91a50947198ea9fedffb16d12cbd963cec9dcf8aae5bbc2",
-      "portSha256": "7a7c69854a2321fc53bbbbf1614f0fedc98930d5151701d4ce9334a86df04dcc",
-      "changes": [
-        "public-coding-sdk",
-        "shared-durable-tool-search-ranking"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "5fff4dd51e790723aa1c3f236f5cd2493c7caf97320b67674a1e39f8ff9d0076",
+      "portSha256": "0f69366478839e7ce1eed9a59184367ac7f62cf944e6a4223a14043a2ba27c2f",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",

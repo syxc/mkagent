@@ -1,8 +1,8 @@
-# Content SHA-256: 45161f73bb0d8a3fcf6e9ba65ab0fa6e517433e74935c5818032c061cafd9a6d
+# Content SHA-256: 9fc0f58b908edc5b3f74fd30a44ba3509e7b3eb2c3ff08a525a6df3133290373
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,49 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,50 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -33,6 +33,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export { writeOutputFile } from "./utils/output-files.js";
 +export { GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.js";
 +export * from "./extensions/codemode/tool.js";
++export { createToolSearchToolDefinition } from "./extensions/tool-search/tool.js";
 +export * from "./core/tools/grep.js";
 +export * from "./core/tools/find.js";
 +export * from "./core/tools/ls.js";
@@ -65,7 +66,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,51 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,52 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -96,6 +97,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { writeOutputFile } from "./utils/output-files.ts";
 +export { type MiddleTruncationResult, GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.ts";
 +export * from "./extensions/codemode/tool.ts";
++export { createToolSearchToolDefinition, type ToolSearchDependencies, type ToolSearchToolOptions } from "./extensions/tool-search/tool.ts";
 +export * from "./core/tools/grep.ts";
 +export * from "./core/tools/find.ts";
 +export * from "./core/tools/ls.ts";
@@ -369,6 +371,99 @@ diff --git a/dist/modes/interactive/components/tool-execution.d.ts b/dist/modes/
      /**
       * Show new partial arguments. Applied at the next render, so a call streaming many argument deltas between two
       * frames runs its renderer once per frame, not once per delta (#9265).
+diff --git a/dist/extensions/tool-search/tool.js b/dist/extensions/tool-search/tool.js
+--- a/dist/extensions/tool-search/tool.js
++++ b/dist/extensions/tool-search/tool.js
+@@ -208,11 +208,11 @@ function isSearchable(exposure) {
+  * Rank the searchable tools that are not active yet and activate the matches, so the next model
+  * call declares them. Activation is recorded in the transcript like any tool change.
+  */
+-function searchAndLoad(tools, query, limit) {
++function searchAndLoad(tools, query, limit, dependencies) {
+     const active = tools.getActiveTools();
+     const candidates = tools.getAllTools().filter((tool) => isSearchable(tool.exposure) && !active.includes(tool.name));
+-    const documents = candidates.map((tool) => createToolSearchDocument(tool, tool.namespace));
+-    const matches = new Bm25Ranker().rank(query, documents, limit);
++    const documents = candidates.map((tool) => (dependencies.createDocument ?? createToolSearchDocument)(tool, tool.namespace));
++    const matches = dependencies.rank ? dependencies.rank(query, documents, limit) : new Bm25Ranker().rank(query, documents, limit);
+     if (matches.length > 0)
+         tools.setActiveTools([...active, ...matches.map((match) => match.name)]);
+     return matches.map((match) => ({
+@@ -225,7 +225,7 @@ function searchAndLoad(tools, query, limit) {
+  * stays the same while tools are registered, for example when MCP servers connect.
+  */
+ export const TOOL_SEARCH_DESCRIPTION = `# Tool discovery\n\nSearches over deferred tool metadata with BM25 and exposes matching tools for the next model call.\n\nSome of the tools, such as tools of MCP servers, may not have been provided to you upfront, and you should use this tool (\`${TOOL_SEARCH_TOOL_NAME}\`) to search for the required tools. For MCP tool discovery, always use \`${TOOL_SEARCH_TOOL_NAME}\`.`;
+-export function createToolSearchToolDefinition(options = {}) {
++export function createToolSearchToolDefinition(options = {}, dependencies = {}) {
+     return {
+         name: TOOL_SEARCH_TOOL_NAME,
+         label: TOOL_SEARCH_TOOL_NAME,
+@@ -242,7 +242,7 @@ export function createToolSearchToolDefinition(options = {}) {
+             const max = limit ?? DEFAULT_TOOL_SEARCH_LIMIT;
+             if (!Number.isInteger(max) || max <= 0)
+                 throw new Error("limit must be a positive integer");
+-            const tools = options.tools ? searchAndLoad(options.tools, query, max) : [];
++            const tools = options.tools ? searchAndLoad(options.tools, query, max, dependencies) : [];
+             const text = tools.length === 0
+                 ? "No matching tools found."
+                 : `Loaded ${tools.length} tool${tools.length === 1 ? "" : "s"}. They are available from your next call:\n${tools
+diff --git a/dist/extensions/tool-search/tool.d.ts b/dist/extensions/tool-search/tool.d.ts
+--- a/dist/extensions/tool-search/tool.d.ts
++++ b/dist/extensions/tool-search/tool.d.ts
+@@ -70,6 +70,12 @@ export interface ToolSearchToolDetails {
+     /** Tools loaded by this call. */
+     loaded: string[];
+ }
++export interface ToolSearchDependencies {
++    /** Build metadata through the host shared search implementation. */
++    createDocument?: typeof createToolSearchDocument;
++    /** Rank metadata through the host shared search implementation. */
++    rank?: ToolRanker["rank"];
++}
+ export interface ToolSearchToolOptions {
+     /**
+      * The session's tools. `tool_search` searches the tools that are not declared to the model and
+@@ -82,5 +88,5 @@ export interface ToolSearchToolOptions {
+  * stays the same while tools are registered, for example when MCP servers connect.
+  */
+ export declare const TOOL_SEARCH_DESCRIPTION = "# Tool discovery\n\nSearches over deferred tool metadata with BM25 and exposes matching tools for the next model call.\n\nSome of the tools, such as tools of MCP servers, may not have been provided to you upfront, and you should use this tool (`tool_search`) to search for the required tools. For MCP tool discovery, always use `tool_search`.";
+-export declare function createToolSearchToolDefinition(options?: ToolSearchToolOptions): ToolDefinition<typeof toolSearchSchema, ToolSearchToolDetails>;
++export declare function createToolSearchToolDefinition(options?: ToolSearchToolOptions, dependencies?: ToolSearchDependencies): ToolDefinition<typeof toolSearchSchema, ToolSearchToolDetails>;
+ //# sourceMappingURL=tool.d.ts.map
+\ No newline at end of file
+diff --git a/dist/extensions/tool-search/index.js b/dist/extensions/tool-search/index.js
+--- a/dist/extensions/tool-search/index.js
++++ b/dist/extensions/tool-search/index.js
+@@ -6,9 +6,9 @@
+  * `setActiveTools()`.
+  */
+ import { createToolSearchToolDefinition } from "./tool.js";
+-export function createToolSearchExtension() {
++export function createToolSearchExtension(dependencies = {}) {
+     return (pi) => {
+-        pi.registerTool({ ...createToolSearchToolDefinition({ tools: pi }), defaultActive: false });
++        pi.registerTool({ ...createToolSearchToolDefinition({ tools: pi }, dependencies), defaultActive: false });
+     };
+ }
+ export default createToolSearchExtension();
+diff --git a/dist/extensions/tool-search/index.d.ts b/dist/extensions/tool-search/index.d.ts
+--- a/dist/extensions/tool-search/index.d.ts
++++ b/dist/extensions/tool-search/index.d.ts
+@@ -1,3 +1,4 @@
++import type { ToolSearchDependencies } from "./tool.ts";
+ /**
+  * The `tool_search` tool as an extension. The CLI loads it as a built-in extension; SDK users add
+  * `createToolSearchExtension()` to their extension factories.
+@@ -6,7 +7,7 @@
+  * `setActiveTools()`.
+  */
+ import type { ExtensionFactory } from "../../core/extensions/types.ts";
+-export declare function createToolSearchExtension(): ExtensionFactory;
++export declare function createToolSearchExtension(dependencies?: ToolSearchDependencies): ExtensionFactory;
+ declare const _default: ExtensionFactory;
+ export default _default;
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
 diff --git a/dist/extensions/codemode/tool.js b/dist/extensions/codemode/tool.js
 --- a/dist/extensions/codemode/tool.js
 +++ b/dist/extensions/codemode/tool.js
