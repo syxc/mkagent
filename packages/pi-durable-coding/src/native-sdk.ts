@@ -9,7 +9,7 @@ import { Agent, setDefaultStreamFn } from './agent-runtime.ts';
 import type { DurableLoopBinding } from './durable-coding/engine.ts';
 import { AgentSession } from './native-agent-session.ts';
 import * as extensionLoader from './native-extension-loader.ts';
-import { convertToLlm } from './pi/core/messages.ts';
+import { convertToLlm } from './native-messages.ts';
 import { VERSION } from './pi/config.ts';
 
 // Extensions that construct agents directly still need the native fallback stream.

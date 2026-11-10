@@ -57,6 +57,7 @@ export function codingHostImport(importer: string, specifier: string): string | 
     : module === 'core/agent-session-services.ts' ? 'native-session-services.ts'
     : module === 'core/agent-session-runtime.ts' ? 'native-session-runtime.ts'
     : module === 'core/sdk.ts' ? 'native-sdk.ts'
+    : module === 'core/messages.ts' ? 'native-messages.ts'
     : module === 'core/agent-session.ts' ? 'native-agent-session.ts'
     : module === 'core/skills.ts' ? 'native-skills.ts'
     : module === 'core/prompt-templates.ts' ? 'native-prompt-templates.ts'

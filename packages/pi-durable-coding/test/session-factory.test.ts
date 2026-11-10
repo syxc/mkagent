@@ -8,7 +8,7 @@ import { Agent } from '../src/agent-runtime.ts';
 import { DurableLoopBinding } from '../src/durable-coding/engine.ts';
 import { AgentSession } from '../src/native-agent-session.ts';
 import { createAgentSession, type CreateAgentSessionOptions } from '../src/native-sdk.ts';
-import { convertToLlm } from '../src/pi/core/messages.ts';
+import { convertToLlm } from '../src/native-messages.ts';
 
 const directories: string[] = [], sessions: sdk.AgentSession[] = [];
 afterEach(() => {

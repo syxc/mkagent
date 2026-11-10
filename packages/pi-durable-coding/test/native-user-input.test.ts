@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { convertToLlm } from '../src/pi/core/messages.ts';
+import { convertToLlm } from '../src/native-messages.ts';
 
 test('plugin input metadata persists on the native message but never reaches model context', () => {
   const message = { role: 'user' as const, timestamp: 1, content: 'transformed model input',

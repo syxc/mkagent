@@ -219,7 +219,7 @@ export {
 // Footer data provider (git branch + extension statuses - data not otherwise available to extensions)
 export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
 export type { RegisteredMcpServer } from "@earendil-works/pi-coding-agent";
-export { convertToLlm } from "./core/messages.ts";
+export { convertToLlm } from "../native-messages.ts";
 export { ModelRegistry } from "@earendil-works/pi-coding-agent";
 export {
 	type ModelScopeDiagnostic,

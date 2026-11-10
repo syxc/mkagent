@@ -111,16 +111,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/messages.ts",
-      "target": "src/pi/core/messages.ts",
-      "sha256": "5397e3c96c9504266e4ee8b6e88d5098b3280ee7dbb0c687b74708c62a06c8d4",
-      "portSha256": "17d6969f59d76174ae084232124d81bb18f38d7a7997f78812c7de757c8568e9",
-      "changes": [
-        "exclude-host-correlation-from-model-context",
-        "legacy-projection-message-policy"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/tools/index.ts",
       "target": "src/pi/core/tools/index.ts",
       "sha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
@@ -160,7 +150,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "8ade279c71fe033cada64c735b68b1bc3d72c50b960e2a9132e96feed67c4080",
+      "portSha256": "e16e2ec33ea17f1b103b2a1a33ec5b894ecbfbfa855d3ebe6029fd22819cb386",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",

@@ -1,8 +1,8 @@
 // Shared native implementation; preserve legacy projection metadata and object identity.
-export * from "../pi/core/messages.ts";
-import { convertToLlm as convertNativeToLlm } from "../pi/core/messages.ts";
+export * from "../native-messages.ts";
+import { convertToLlm as convertSDKToLlm } from "@earendil-works/pi-coding-agent";
 
 /** @returns {any[]} */
 export function convertToLlm(messages) {
-    return convertNativeToLlm(messages, { preserveHostMetadata: true });
+    return convertSDKToLlm(messages);
 }

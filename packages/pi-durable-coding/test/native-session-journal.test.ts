@@ -11,7 +11,7 @@ import {
 } from '@earendil-works/pi-durable';
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
 import { NativeSessionJournal } from '../src/durable-coding/session-journal.ts';
-import { convertToLlm } from '../src/pi/core/messages.ts';
+import { convertToLlm } from '../src/native-messages.ts';
 import { SessionManager } from '@earendil-works/pi-coding-agent';
 
 const context = BACKGROUND_CONTEXT;

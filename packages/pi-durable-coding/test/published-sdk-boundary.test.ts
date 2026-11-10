@@ -52,6 +52,7 @@ describe('published Coding SDK boundary', () => {
 
   test('source generation stops at the SDK boundary without redirecting session adapters', () => {
     expect(codingHostImport('index.ts', './core/sdk.ts')).toBe('../native-sdk.ts');
+    expect(codingHostImport('index.ts', './core/messages.ts')).toBe('../native-messages.ts');
     expect(codingHostImport('core/sdk.ts', './agent-session-services.ts')).toBe('../../native-session-services.ts');
     expect(codingHostImport('core/sdk.ts', './agent-session-runtime.ts')).toBe('../../native-session-runtime.ts');
     expect(codingSDKImport('index.ts', './cli/args.ts')).toBe('@earendil-works/pi-coding-agent');

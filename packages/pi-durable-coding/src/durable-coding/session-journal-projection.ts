@@ -3,7 +3,7 @@ import { copyJson, type JsonValue } from '@earendil-works/chord';
 import type {
   ContextEdit, ConversationId, EntryDraft, EntryId, EntryRecord, Tx,
 } from '@earendil-works/pi-durable';
-import { convertToLlm } from '../pi/core/messages.ts';
+import { convertToLlm } from '../native-messages.ts';
 import {
   SessionManager, sessionEntryToContextMessages,
   type SessionEntry, type SessionHeader, type SessionProjection,

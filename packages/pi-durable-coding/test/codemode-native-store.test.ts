@@ -18,7 +18,7 @@ import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 import { NativeSessionJournal } from '../src/durable-coding/session-journal.ts';
 import { hostToolToAgent } from '../src/host-tools.ts';
 import { readCodemodeStore } from '../src/compat/codemode-native.ts';
-import { convertToLlm } from '../src/pi/core/messages.ts';
+import { convertToLlm } from '../src/native-messages.ts';
 import { getDefaultStreamFn, setDefaultStreamFn } from '../src/stream-fn.ts';
 
 const context = BACKGROUND_CONTEXT;

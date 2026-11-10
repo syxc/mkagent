@@ -26,6 +26,89 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK messages after 22946a8
+
+This slice removes the 207-line local messages module and the 12-line source
+transform. A 22-line native adapter delegates conversion and summary helpers
+to the public SDK. It removes hostMessageId and hostUserInput from native model
+context without changing transcript objects. Legacy conversion calls the SDK
+directly and retains its open JS return type, metadata and object identity.
+
+The published root exposes convertToLlm. A local export patch also exposes the
+existing summary constructors, constants and message types. Both internal
+messages JS and declaration files match the pristine release in both layouts.
+No conversion algorithm moves into a patch. Remove this export patch when the
+upstream root exposes the same APIs. The adapter remains necessary while the
+host stores correlation fields that must not enter native provider context.
+
+| Check | Result and scope |
+|---|---|
+| Generation | Complete runtime and auxiliary checks and pristine Coding patch replay pass |
+| Installations | Root and hoisted frozen installs exit zero; all 72 Coding and 33 durable hashes match; lock bytes stay unchanged |
+| Behavior | Each layout passes 84 tests and 975 expect calls across eight files, including 18 crash/reopen boundaries |
+| Types | Root Coding typecheck and full declarations pass; after fixture correction, both layouts pass strict test compilation and actual message-adapter declaration generation |
+| Production bundle | Hoisted server rebuild and all 26 bundle tests with 105 expect calls pass |
+| Source registration | Seventeen entries updated, two retired entries removed and one adapter added |
+| Restricted Craft audit | Fixed v0.15.6 audit passes for 2049 permitted files; protected source is excluded before reads and its real registry entry stays unchanged |
+| Independent review | Zero verified findings within this slice; each layout passes 471 differential comparisons, a strict positive consumer and 15 negative cases |
+
+Tests cover SDK helper identities, all custom conversion roles, hidden Bash
+output, frozen messages in each standard provider role, native metadata
+removal and legacy WeakMap identity. Journal, accepted input, provider context,
+durable ownership and cold recovery tests exercise the new binding. The input
+test fixture later gets a narrower standard-message annotation; emitted test
+JavaScript is identical, so behavior suites are not repeated for that correction.
+
+The independent review compares 28 standard-message variants and 73 custom
+variants per layout, plus empty and mixed sparse arrays. It verifies helper
+identity, metadata policy, declaration merging and all 12 pinned upstream
+message import edges. Strict consumers use strict=true and skipLibCheck=true.
+The current adapter declaration is generated with transpileDeclaration and
+connected to the public native export through an in-memory overlay. This is
+not a full declaration build. The parent verifies the paths, bytes and SHA-256
+of all 3711 recorded inputs and 34 evidence files before it accepts the report.
+
+The first review codegraph call returns a protected legacy source fragment
+despite an explicit exclusion. This is an input restriction violation. The
+reviewer stops using codegraph, does not store the fragment in report evidence
+and guards later reads by original path and realpath. Those later probes
+attempt zero protected-source reads. This does not establish zero contact for
+the full review. The parent does not read or use that fragment. The initial
+strict probe also fails with TS2688 for missing top-level bun-types. The probe
+passes in both layouts after it uses the project types bun and node. The
+reviewer corrects one missing boundary-drafts path and records the concurrent
+fixture annotation correction. The review does not repeat the broad parent
+suites or issue a complete session/provider request. F0 through F6 remain open.
+
+The first static preflight uses an unsupported Bun onLoad result shape. The
+next empty-module result exposes missing imports during compilation. The final
+preflight excludes protected imports with onResolve before source reads and
+never runs excluded suites. Both original preflight failures remain recorded;
+completed installs are retained. durable-session-store is excluded because its
+legacy import requires the protected file. No substitute runs in product tests.
+
+The first standalone test compile omits allowJs and reports missing JS
+module declarations. Its new fixture also annotates standard messages as the
+wider AgentMessage union. The correction uses the converter return type and
+allowJs with checkJs=false, as required for the existing JS adapters. Strict
+consumer checking uses skipLibCheck=true; it skips declaration-file bodies.
+Fresh full declarations fail with the two known estimateProjectedContextTokens
+missing exports caused by the protected legacy omission. That failure remains
+open and is not replaced by the scoped adapter declaration result.
+
+The first restricted audit omits CRAFT_AGENT_SOURCE and rejects a missing
+reference checkout. It is then run against the independent checkout at the
+verified v0.15.6 baseline, 8df01c5d0ac73c35add5954e6f190ce038d35845. The restricted
+pass does not establish a full Craft audit pass.
+
+Runtime generation now has 32 TypeScript outputs: 28 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and forwarded entries
+15. Physical patch outputs remain core four, Coding 72 and durable 33, for 109.
+No dependency, task schema, persistence version or existing session data changes.
+Remaining sources and F0 through F6 stay open. Full Craft audit and fresh full
+types remain blocked by the protected legacy path. No real UI, account, paid
+provider or real Craft data is used.
+
 ## Public SDK session factory after b9099bd
 
 This slice removes the complete 500-line local createAgentSession and four

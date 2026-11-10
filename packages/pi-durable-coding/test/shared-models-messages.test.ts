@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import type { Api, Model } from '@earendil-works/pi-ai';
-import * as native from '../src/pi/core/messages.ts';
+import * as native from '../src/native-messages.ts';
+import * as sdk from '@earendil-works/pi-coding-agent';
 import * as legacy from '../src/upstream/core/messages.js';
 import { deepMergeSettings, isToolModifier } from "@earendil-works/pi-coding-agent";
 import { mergeCodingSettings, isToolModifier as legacyToolModifier } from '../src/upstream/core/settings-merge.js';
@@ -35,10 +36,10 @@ describe('shared settings merge', () => {
 
 describe('shared message conversion', () => {
   test('shares summary helpers and their timestamp conversion', () => {
-    expect(legacy.bashExecutionToText).toBe(native.bashExecutionToText);
-    expect(legacy.createBranchSummaryMessage).toBe(native.createBranchSummaryMessage);
-    expect(legacy.createCompactionSummaryMessage).toBe(native.createCompactionSummaryMessage);
-    expect(legacy.createCustomMessage).toBe(native.createCustomMessage);
+    for (const name of ['bashExecutionToText', 'createBranchSummaryMessage', 'createCompactionSummaryMessage', 'createCustomMessage'] as const) {
+      expect(native[name]).toBe(sdk[name]);
+      expect(legacy[name]).toBe(sdk[name]);
+    }
     expect(legacy.createBranchSummaryMessage('branch', 'parent', '2026-01-01T00:00:00Z'))
       .toEqual({ role: 'branchSummary', summary: 'branch', fromId: 'parent', timestamp: 1767225600000 });
   });
@@ -61,6 +62,27 @@ describe('shared message conversion', () => {
     expect(native.convertToLlm([message], {})[0]).toEqual({ role: 'user', content: 'hello', timestamp: 1 });
     expect(message[key]).toBe('fixture');
     expect(legacy.convertToLlm([message])[0]).toBe(message);
+  });
+
+  test('keeps frozen transcript objects while stripping correlation from all provider message roles', () => {
+    const messages: ReturnType<typeof sdk.convertToLlm> = [
+      { role: 'system', content: 'system', timestamp: 1 },
+      { role: 'user', content: 'user', timestamp: 2 },
+      { role: 'toolResult', toolCallId: 'call', toolName: 'fixture', content: [], isError: false, timestamp: 3 },
+      { role: 'assistant', api: 'faux', provider: 'local', model: 'fixture', content: [], stopReason: 'stop', timestamp: 4,
+        usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0,
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } } },
+    ];
+    for (const original of messages) {
+      const message = Object.freeze({ ...original, hostMessageId: 'accepted-input', hostUserInput: { text: 'display' } });
+      const [projected] = native.convertToLlm([message]);
+      expect(projected).toEqual(original);
+      expect(projected).not.toBe(message);
+      expect(legacy.convertToLlm([message])[0]).toBe(message);
+      expect(sdk.convertToLlm([message])[0]).toBe(message);
+      expect(message.hostMessageId).toBe('accepted-input');
+      expect(message.hostUserInput).toEqual({ text: 'display' });
+    }
   });
 
   test('keeps unannotated standard messages by identity in both entry points', () => {

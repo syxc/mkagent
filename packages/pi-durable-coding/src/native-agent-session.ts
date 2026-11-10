@@ -7,7 +7,7 @@ import {
 import { contentText,type AssistantMessage,type Model } from '@earendil-works/pi-ai';
 import type { AgentActivityOutcome,NormalizedBuildSystemPromptOptions } from '@earendil-works/pi-coding-agent';
 import { runToolCall,type Agent,type AgentMessage } from './agent-runtime.ts';
-import { convertToLlm } from './pi/core/messages.ts';
+import { convertToLlm } from './native-messages.ts';
 import { processImage } from './native-image-process.ts';
 import { buildSystemPrompt,buildSystemPromptSections } from './native-system-prompt.ts';
 import { createToolDefinitionFromAgentTool } from '@earendil-works/pi-coding-agent';

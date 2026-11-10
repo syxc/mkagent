@@ -1,8 +1,8 @@
-# Content SHA-256: 6c26931ed4a8c90ea20893b229be6e76dd647d60c3d38916450f2b9faee144a1
+# Content SHA-256: 87d23ea4f3a4dd86cc488d599e0c6e3aa44959013a504899e6ec07fa7785e833
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,54 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,55 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -28,6 +28,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/skills.js";
 +export * from "./core/prompt-templates.js";
 +export * from "./core/system-prompt.js";
++export * from "./core/messages.js";
 +export * from "./core/extensions/loader.js";
 +export * from "./core/extensions/runner.js";
 +export * from "./core/extensions/types.js";
@@ -70,7 +71,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,57 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,58 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -96,6 +97,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/skills.ts";
 +export * from "./core/prompt-templates.ts";
 +export * from "./core/system-prompt.ts";
++export * from "./core/messages.ts";
 +export * from "./core/extensions/loader.ts";
 +export * from "./core/extensions/runner.ts";
 +export * from "./core/extensions/types.ts";

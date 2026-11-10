@@ -7,7 +7,6 @@ import ts from 'typescript';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets } from './asset-runtime-port.ts';
-import { portNativeMessages } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludeRunModeEntries } from './shared-helper-port.ts';
 
@@ -178,11 +177,6 @@ while (queue.length) {
   };
   visit(parsed);
   for (const edit of replacements.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.body + body.slice(edit.end);
-  if (path === 'core/messages.ts') {
-    body = portNativeMessages(body);
-    changes.add('exclude-host-correlation-from-model-context');
-    changes.add('legacy-projection-message-policy');
-  }
   if (path === 'extensions/mcp/oauth.ts') {
     body = portMcpOAuth(body);
     changes.add('cancellable-host-oauth-refresh-lock');
