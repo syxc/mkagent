@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto';
 import { readFile, realpath } from 'node:fs/promises';
 import { Worker } from 'node:worker_threads';
 import { portSharedHelpers } from '../scripts/shared-helper-port.ts';
-import { IMAGE_RESIZE_WORKER_RESPONSE_TYPE, resizeImageInProcess, type ResizedImage } from '../src/pi/utils/image-resize-core.ts';
-import { resizeImage } from '../src/pi/utils/image-resize.ts';
+import { resizeImageInProcess, type ResizedImage } from '../src/compat/image-resize.ts';
+import { resizeImage } from '../src/native-image-process.ts';
 import snapshot from './fixtures/native-image-resize.json';
 import { createResizeFixtures } from './fixtures/native-image-resize.ts';
 
@@ -34,7 +34,9 @@ test.each(['sequential-dimension-rounding', 'orientation-resized'])(
     if (!sample) throw new Error('Missing resize fixture');
     const expected = snapshot.results.find(row => row.name === name);
     if (!expected) throw new Error('Missing original worker result');
-    const worker = new Worker(new URL('../src/pi/utils/image-resize-worker.ts', import.meta.url));
+    const worker = new Worker(new URL('./utils/image-resize-worker.js', import.meta.resolve('@earendil-works/pi-coding-agent')), {
+      workerData: { imageResizeModule: new URL('../src/compat/image-resize.ts', import.meta.url).href },
+    });
     try {
       const response = await new Promise<{ type: string; result: ResizedImage | null }>((resolve, reject) => {
         worker.once('error', reject);
@@ -42,7 +44,7 @@ test.each(['sequential-dimension-rounding', 'orientation-resized'])(
         worker.once('exit', code => reject(new Error(`Worker exited before its reply: ${code}`)));
         worker.postMessage({ inputBytes: images[sample.input], mimeType: sample.mimeType, options: sample.options });
       });
-      expect(response.type).toBe(IMAGE_RESIZE_WORKER_RESPONSE_TYPE);
+      expect(response.type).toBe('pi:image-resize-response');
       expect(summarize(response.result)).toEqual(expected.expected);
     } finally {
       await worker.terminate();
@@ -61,27 +63,6 @@ test('Native resize public entry preserves the caller bytes', async () => {
   expect(summarize(result)).toEqual(expected.expected);
   expect(bytes).toEqual(before);
 }, 5000);
-
-test('Native resize generation refuses changed public declarations', async () => {
-  async function sourceAt(relative: string) {
-    const path = await realpath(new URL(relative, import.meta.url));
-    if (path.toLowerCase().includes('runtime-credentials')) throw new Error('Unexpected source alias');
-    return readFile(path, 'utf8');
-  }
-  const source = await sourceAt('../src/compat/image-resize.ts');
-  const expected = await sourceAt('../src/pi/utils/image-resize-core.ts');
-  expect(portSharedHelpers('utils/image-resize-core.ts', source)).toBe(expected);
-  const mutations = [
-    source.replace("= 'pi:image-resize-response';", "= 'pi:image-resize-response', extraReply = 1;"),
-    source.replace('export async function', 'export default async function'),
-    source.replace('maxWidth?: number', 'maxWidth: number'),
-    source.replace('export interface ImageResizeOptions', 'export default interface ImageResizeOptions'),
-  ];
-  for (const changed of mutations) {
-    expect(changed).not.toBe(source);
-    expect(() => portSharedHelpers('utils/image-resize-core.ts', changed)).toThrow('Native image resize boundary changed');
-  }
-});
 
 test('Native MIME generation refuses changed signatures or the file read limit', async () => {
   async function sourceAt(relative: string) {

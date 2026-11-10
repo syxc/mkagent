@@ -486,7 +486,7 @@ export {
 export { copyToClipboard } from "./utils/clipboard.ts";
 export { parseFrontmatter, stripFrontmatter } from "@earendil-works/pi-coding-agent";
 export { convertToPng } from "../native-image-convert.ts";
-export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
+export { formatDimensionNote, type ResizedImage, resizeImage } from "../native-image-process.ts";
 export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
 // Shell utilities
 export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";

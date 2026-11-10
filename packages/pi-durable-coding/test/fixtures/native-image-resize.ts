@@ -1,5 +1,5 @@
 import * as photon from '@silvia-odwyer/photon-node';
-import type { ImageResizeOptions } from '../../src/pi/utils/image-resize-core.ts';
+import type { ImageResizeOptions } from '../../src/compat/image-resize.ts';
 
 export interface ResizeCase {
   name: string;

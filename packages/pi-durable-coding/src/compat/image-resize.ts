@@ -1,29 +1,9 @@
 import { encodePhotonImageWithin } from '@earendil-works/pi-durable/images';
 import { applyExifOrientation } from './image-orientation.ts';
-import { loadPhoton } from '../pi/utils/photon.ts';
+import { loadPhoton } from './photon.ts';
 
-export interface ImageResizeOptions {
-  maxWidth?: number;
-  maxHeight?: number;
-  maxBytes?: number;
-  jpegQuality?: number;
-}
-
-export interface ResizedImage {
-  data: string;
-  mimeType: string;
-  originalWidth: number;
-  originalHeight: number;
-  width: number;
-  height: number;
-  wasResized: boolean;
-}
-
-// Node can add unrelated worker messages; this tag identifies Native image replies.
-export const IMAGE_RESIZE_WORKER_RESPONSE_TYPE = 'pi:image-resize-response';
-export type ResizeImageWorkerResponse =
-  | { type: typeof IMAGE_RESIZE_WORKER_RESPONSE_TYPE; result: ResizedImage | null }
-  | { type: typeof IMAGE_RESIZE_WORKER_RESPONSE_TYPE; error: string };
+import type { ImageResizeOptions, ResizedImage } from '@earendil-works/pi-coding-agent';
+export type { ImageResizeOptions, ResizedImage } from '@earendil-works/pi-coding-agent';
 
 const DEFAULT_OPTIONS: Required<ImageResizeOptions> = {
   maxWidth: 2000, maxHeight: 2000, maxBytes: 4.5 * 1024 * 1024, jpegQuality: 80,

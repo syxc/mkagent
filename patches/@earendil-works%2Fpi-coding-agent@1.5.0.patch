@@ -1,8 +1,8 @@
-# Content SHA-256: df6519daa5fce1375d617916bb46e430eb1cae650638aa92344ba57d433f0887
+# Content SHA-256: 4a84d7742e778612402eb4b0ba56621f5d30e233d8e1260749ab37a4e8dd9ffb
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,37 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,39 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -38,6 +38,8 @@ diff --git a/dist/index.js b/dist/index.js
 +export { AuthUrlComponent } from "./modes/interactive/components/auth-url.js";
 +export { VisualLinePreview } from "./modes/interactive/components/visual-truncate.js";
 +export { createImageConverters } from "./utils/image-convert.js";
++export * from "./utils/image-process.js";
++export * from "./utils/image-resize.js";
 +export { getThemesDir, getExportTemplateDir } from "./config.js";
  //# sourceMappingURL=index.js.map
 \ No newline at end of file
@@ -53,7 +55,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,38 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,40 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -89,6 +91,8 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { AuthUrlComponent } from "./modes/interactive/components/auth-url.ts";
 +export { VisualLinePreview } from "./modes/interactive/components/visual-truncate.ts";
 +export { createImageConverters } from "./utils/image-convert.ts";
++export * from "./utils/image-process.ts";
++export * from "./utils/image-resize.ts";
 +export { getThemesDir, getExportTemplateDir } from "./config.ts";
 +export type { ShellDependencies } from "./core/tools/bash.ts";
  //# sourceMappingURL=index.d.ts.map
@@ -2895,8 +2899,29 @@ diff --git a/dist/utils/sleep.js b/dist/utils/sleep.js
 diff --git a/dist/utils/image-resize.js b/dist/utils/image-resize.js
 --- a/dist/utils/image-resize.js
 +++ b/dist/utils/image-resize.js
-@@ -66,15 +66,7 @@ async function resizeImageInWorker(workerSpecifier, inputBytes, mimeType, option
- export async function resizeImage(inputBytes, mimeType, options) {
+@@ -1,5 +1,6 @@
+ import { Worker } from "node:worker_threads";
+-import { IMAGE_RESIZE_WORKER_RESPONSE_TYPE, resizeImageInProcess, } from "./image-resize-core.js";
++import { IMAGE_RESIZE_WORKER_RESPONSE_TYPE, resizeImageInProcess as defaultResizeImageInProcess, } from "./image-resize-core.js";
++export function createImageResizer({ resizeImageInProcess = defaultResizeImageInProcess, resizeModule } = {}) {
+ function toTransferableBytes(input) {
+     // Transfer detaches the buffer, so transfer a worker-owned copy and leave the
+     // caller's bytes intact.
+@@ -9,7 +10,7 @@ function isResizeImageWorkerResponse(value) {
+     return (value !== null && typeof value === "object" && "type" in value && value.type === IMAGE_RESIZE_WORKER_RESPONSE_TYPE);
+ }
+ function createResizeWorker(workerSpecifier) {
+-    return new Worker(workerSpecifier);
++    return new Worker(workerSpecifier, { workerData: { imageResizeModule: resizeModule?.href } });
+ }
+ async function resizeImageInWorker(workerSpecifier, inputBytes, mimeType, options) {
+     const worker = createResizeWorker(workerSpecifier);
+@@ -63,18 +64,10 @@ async function resizeImageInWorker(workerSpecifier, inputBytes, mimeType, option
+  * Bun compiled executable layouts), fall back to in-process resizing so image
+  * reads still work.
+  */
+-export async function resizeImage(inputBytes, mimeType, options) {
++async function resizeImage(inputBytes, mimeType, options) {
      const isTypeScriptRuntime = import.meta.url.endsWith(".ts");
      const workerUrl = new URL(isTypeScriptRuntime ? "./image-resize-worker.ts" : "./image-resize-worker.js", import.meta.url);
 -    // Bun compiled executables resolve worker entrypoints by string path, not via
@@ -2912,3 +2937,93 @@ diff --git a/dist/utils/image-resize.js b/dist/utils/image-resize.js
      try {
          return await resizeImageInWorker(workerUrl, inputBytes, mimeType, options);
      }
+@@ -82,6 +75,9 @@ export async function resizeImage(inputBytes, mimeType, options) {
+         return resizeImageInProcess(inputBytes, mimeType, options);
+     }
+ }
++return resizeImage;
++}
++export const resizeImage = createImageResizer();
+ /**
+  * Format a dimension note for resized images.
+  * This helps the model understand the coordinate mapping.
+diff --git a/dist/utils/image-resize.d.ts b/dist/utils/image-resize.d.ts
+--- a/dist/utils/image-resize.d.ts
++++ b/dist/utils/image-resize.d.ts
+@@ -1,5 +1,11 @@
+ import { type ImageResizeOptions, type ResizedImage } from "./image-resize-core.ts";
+ export type { ImageResizeOptions, ResizedImage } from "./image-resize-core.ts";
++export interface ImageResizeDependencies {
++    resizeImageInProcess?: typeof import("./image-resize-core.ts").resizeImageInProcess;
++    /** Installed host module used by the SDK worker; never resolved from the working directory. */
++    resizeModule?: URL;
++}
++export declare function createImageResizer(dependencies?: ImageResizeDependencies): typeof resizeImage;
+ /**
+  * Resize an image to fit within the specified max dimensions and encoded file size.
+  * Runs Photon in a worker thread so WASM decoding, resizing, and encoding do not
+diff --git a/dist/utils/image-process.js b/dist/utils/image-process.js
+--- a/dist/utils/image-process.js
++++ b/dist/utils/image-process.js
+@@ -1,5 +1,6 @@
+-import { convertImageBytesToPng } from "./image-convert.js";
+-import { formatDimensionNote, resizeImage } from "./image-resize.js";
++import { convertImageBytesToPng as defaultConvertImageBytesToPng } from "./image-convert.js";
++import { formatDimensionNote, resizeImage as defaultResizeImage } from "./image-resize.js";
++export function createImageProcessor({ convertImageBytesToPng = defaultConvertImageBytesToPng, resizeImage = defaultResizeImage } = {}) {
+ function baseMimeType(mimeType) {
+     return mimeType.split(";")[0]?.trim().toLowerCase() ?? mimeType.toLowerCase();
+ }
+@@ -38,7 +39,7 @@ function conversionHint(from, to) {
+         return undefined;
+     return `[Image converted from ${from} to ${to}.]`;
+ }
+-export async function processImage(bytes, mimeType, options) {
++async function processImage(bytes, mimeType, options) {
+     const autoResizeImages = options?.autoResizeImages ?? true;
+     const normalized = await normalizeImage(bytes, mimeType);
+     if (!normalized) {
+@@ -80,4 +81,7 @@ export async function processImage(bytes, mimeType, options) {
+         hints,
+     };
+ }
++return processImage;
++}
++export const processImage = createImageProcessor();
+ //# sourceMappingURL=image-process.js.map
+\ No newline at end of file
+diff --git a/dist/utils/image-process.d.ts b/dist/utils/image-process.d.ts
+--- a/dist/utils/image-process.d.ts
++++ b/dist/utils/image-process.d.ts
+@@ -14,5 +14,10 @@ export type ProcessImageResult = {
+     ok: false;
+     message: string;
+ };
++export interface ImageProcessingDependencies {
++    convertImageBytesToPng?: typeof import("./image-convert.ts").convertImageBytesToPng;
++    resizeImage?: typeof import("./image-resize.ts").resizeImage;
++}
++export declare function createImageProcessor(dependencies?: ImageProcessingDependencies): typeof processImage;
+ export declare function processImage(bytes: Uint8Array, mimeType: string, options?: ProcessImageOptions): Promise<ProcessImageResult>;
+ //# sourceMappingURL=image-process.d.ts.map
+\ No newline at end of file
+diff --git a/dist/utils/image-resize-worker.js b/dist/utils/image-resize-worker.js
+--- a/dist/utils/image-resize-worker.js
++++ b/dist/utils/image-resize-worker.js
+@@ -1,11 +1,14 @@
+-import { parentPort } from "node:worker_threads";
+-import { IMAGE_RESIZE_WORKER_RESPONSE_TYPE, resizeImageInProcess, } from "./image-resize-core.js";
++import { parentPort, workerData } from "node:worker_threads";
++import { IMAGE_RESIZE_WORKER_RESPONSE_TYPE, resizeImageInProcess as defaultResizeImageInProcess, } from "./image-resize-core.js";
+ function isResizeImageWorkerRequest(value) {
+     if (!value || typeof value !== "object")
+         return false;
+     const record = value;
+     return record.inputBytes instanceof Uint8Array && typeof record.mimeType === "string";
+ }
++const resizeImageInProcess = workerData?.imageResizeModule
++    ? (await import(workerData.imageResizeModule)).resizeImageInProcess
++    : defaultResizeImageInProcess;
+ const port = parentPort;
+ if (!port) {
+     throw new Error("image resize worker requires parentPort");

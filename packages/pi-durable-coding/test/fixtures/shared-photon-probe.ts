@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import * as sharedPhoton from '@silvia-odwyer/photon/photon_rs.js';
-import { loadPhoton } from '../../src/pi/utils/photon.ts';
+import { loadPhoton } from '../../src/compat/photon.ts';
 import { resizeImageInProcess } from '../../src/compat/image-resize.ts';
 
 const fs = createRequire(import.meta.url)('node:fs') as typeof import('node:fs');

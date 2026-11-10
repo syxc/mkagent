@@ -26,6 +26,106 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK image processing after 48aa826
+
+The Coding SDK now owns image MIME normalization, conversion and dimension
+hints, omission results, resize worker transport and fallback. Six local runtime
+files are deleted: image-process, image-resize, image-resize-worker and the
+image-resize-core, Photon and EXIF forwards. They total 284 lines. The retired
+39-line Photon generator test and the unused image generation rules are also
+removed. Existing output fixtures remain unchanged.
+
+The 12-line native-image-process binding supplies the shared image converter,
+the existing durable resize policy and an explicit host module URL. The SDK
+patch adds optional createImageProcessor and createImageResizer dependencies.
+Its worker loads the supplied module through workerData. The SDK keeps the
+processing, hint, byte-copy, response-tag, error/exit, termination and fallback
+algorithms. Default module APIs use default instances. The worker entry remains
+relative to the installed SDK; it does not execute a project-relative worker.
+The injected policy URL comes from the installed host module, not project
+configuration or the current directory. A worker load or processing failure
+uses the same instance's in-process fallback.
+
+Durable still owns the encoding and size-reduction loop. Its preparation API
+runs in the calling thread and has its own size and format contract. It does
+not directly provide Coding hints, omission results or worker transport.
+The existing host adapter keeps Native sequential dimension rounding and
+metadata. It now imports shared Photon directly and reuses SDK resize types;
+it no longer duplicates the retired worker protocol. No dependency, lock,
+task, document or checkpoint version changes. Equivalent public dependency
+factories and a worker policy entry would let these Coding patches retire.
+
+The runtime inventory decreases from 80 to 74 TypeScript files: 70 under src/pi
+and four facades, with no assets. The auxiliary check still passes for nine
+sources and 18 shared entries. Coding adds four physical outputs and changes
+the existing image-resize.js output. Its total is 54; core 4 and durable 33
+remain unchanged, for 91 patch outputs. Full runtime generation/check, Coding
+patch check and pristine replay pass, with every original and resulting hash.
+
+An initial preparation script stopped because a test source anchor occurred
+twice. Earlier edits remained in place; exact edits completed the remaining
+test migration. The first install preparation was killed by an incorrect
+1000 ms background deadline. No installer process, install log or receipt
+remained, but pristine replay and part of the hoisted synchronization had
+completed. A recovery precondition rejected an assumption that the hoisted
+files were unchanged, before any cleanup. A separate continuation verified
+all 54 replay hashes, classified each target as current, old HEAD or an
+already completed deletion, and finished only the remaining work. Both existing
+isolated and hoisted layouts then passed frozen install with scripts disabled.
+All 54 Coding and 33 durable outputs match their manifests in both layouts;
+the lock is unchanged. The interrupted attempt is not recorded as a pass.
+
+All 11 final verification stages exit zero:
+
+- Full runtime, Coding patch and auxiliary source checks.
+- Root image, UI and boundary tests: 132 tests and 808 assertions in 11 files.
+- Root Coding noEmit and actual declaration emission.
+- Hoisted layout comparison: 23 tests and 257 assertions in six overlapping
+  files. These are not added to the root total as distinct coverage.
+- Hoisted actual Coding declarations, server typecheck and server build.
+- Hoisted bundle: 26 tests and 105 assertions.
+
+The new behavior checks cover MIME aliases, supported passthrough, converted
+byte and option identity, conversion and dimension hints, disabled resizing,
+omission messages, original conversion errors and instance isolation. A real
+SDK worker loads the supplied test policy, reports a nonzero thread identity,
+ignores an unrelated startup message and preserves caller subarray bytes.
+Worker errors and missing policy modules use the instance fallback. Invalid
+worker requests retain their original protocol error. Existing image checks
+cover pinned Native resize results, all eight EXIF orientations, encoding,
+shared Photon and relocated WASM. Bundle checks cover the project-relative
+worker canary, relocated native/read images, resources, codemode/MCP startup,
+cancellation, reload and session races.
+
+Source registration updates 18 entries, removes seven and adds four. The fixed
+Craft v0.15.6 audit passes for 2085 files: 1455 share a relative path, 873 match
+after normalization, 582 are modified Craft-derived files and 630 are
+MkAgent-only files. It also verifies 858 reviewed Craft-only deletions.
+
+Independent read-only review found one source-registration delivery gap and
+no confirmed new runtime, worker security or plugin API regression. The review
+used the earlier registry state: seven retired entries, four missing entries
+and 18 old hashes. The parent has since completed exactly those updates and
+passed the fixed Craft audit above. A final scope check verifies all 36 changed
+paths, each current source hash, all six runtime deletions, the 74-file runtime
+inventory and the 54-output Coding patch digest. The registry finding is
+resolved; the review does not establish completion of the remaining source.
+
+The reviewer independently ran all six new behavior tests under Node 24.22.1.
+A pristine SDK comparison passed 27 assertions across five resize cases and
+12 MIME/option combinations, including orientation, quality reduction and
+invalid images. An external NodeNext strict consumer passed factory type and
+bidirectional resize signature checks with skipLibCheck enabled. The reviewer
+also checked whitespace and read the implementation diff and four new files.
+They read the parent receipts without repeating the full suites, installation
+or build. Windows and signed release behavior remain unverified.
+
+This slice does not complete the remaining 70 src/pi files or F0 through F6.
+The existing AuthContext gap and the previously recorded Photon release gap
+when orientation throws remain open. No full repository suite, real product
+UI, account, paid model, Windows/Linux run, real terminal display or complete
+product executable check was performed.
+
 ## Public SDK image converters after 9bd4b1e
 
 The Coding SDK owns PNG conversion and Kitty transcoder registration. The local

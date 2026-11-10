@@ -1,9 +1,8 @@
 /** Share selected coding algorithms without importing the complete SDK into light entry points. */
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
-import { portPhotonRuntime } from './asset-runtime-port.ts';
 import {
-  portToolArchives, portImageOrientation, portImageResize, portImageMime,
+  portToolArchives, portImageMime,
   portAnsi, portChildProcess, portShell, portTruncation,
 } from './shared-runtime-port.ts';
 
@@ -59,17 +58,8 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
         .replace('CLI argument parsing and help display', 'CLI argument parsing').trimEnd() + '\n';
     },
   },
-  'utils/photon.ts': {
-    change: 'shared-durable-photon-runtime', dependency: '@silvia-odwyer/photon', apply: portPhotonRuntime,
-  },
   'utils/tools-manager.ts': {
     change: 'public-jszip-tool-archives', dependency: 'jszip', apply: portToolArchives,
-  },
-  'utils/exif-orientation.ts': {
-    change: 'shared-durable-image-orientation', dependency: '@earendil-works/pi-durable', apply: portImageOrientation,
-  },
-  'utils/image-resize-core.ts': {
-    change: 'shared-durable-image-encoding', dependency: '@earendil-works/pi-durable', apply: portImageResize,
   },
   'utils/mime.ts': {
     change: 'shared-durable-image-mime', dependency: '@earendil-works/pi-durable', apply: portImageMime,

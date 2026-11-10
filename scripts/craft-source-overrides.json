@@ -2341,20 +2341,16 @@
       "reason": "Initialize the shared public Photon module from installed or adjacent assets without replacing global file reads or searching the project directory."
     },
     "packages/pi-durable-coding/test/shared-photon.test.ts": {
-      "sha256": "72fd9d3a7f865b860552a72029c112417fdafa4bad07c86950eeb13a592c8ae3",
-      "reason": "Keep byte parity and shared runtime checks through the SDK image binding after deleting the source copy."
-    },
-    "packages/pi-durable-coding/test/shared-photon-port.test.ts": {
-      "sha256": "be0c7563d35db7a2474d1791b112ac46440ae1d8370500ee0980b2678536c6e4",
-      "reason": "Reject public Photon API drift while allowing discarded private loader bodies to change without port edits."
+      "sha256": "d50202e48ca3db8f2c87996497967abb94173aa16a16f4177eb142f8a9651052",
+      "reason": "Verify shared Photon conversion without the retired generated Photon forward."
     },
     "packages/pi-durable-coding/test/shared-photon-bundle.test.ts": {
       "sha256": "2fa554cd7dfc4b1ba304cbea0d58c0725227534dab2abc0328539e44f6c095b8",
       "reason": "Exercise relocated Node and Bun compiled image entry points with one WASM, invalid project assets and missing adjacent resources."
     },
     "packages/pi-durable-coding/test/fixtures/shared-photon-probe.ts": {
-      "sha256": "da8ff01e9670dab65f31d6158985b990c15b0bde27edee338de450a66b365fad",
-      "reason": "Run the real shared image adapter in fresh relocated processes and verify cached failure without build-machine asset fallback."
+      "sha256": "01e9af81186322cf017f2d001a6b6f4de77d475648a4791b00ecb2dbfc3dd340",
+      "reason": "Verify shared Photon identity and relocated WASM using the active host entry after generated Photon forwarding is retired."
     },
     "packages/pi-durable-coding/test/durable-boundary-source.test.ts": {
       "sha256": "6c900a6989e98d6c30dc56064ae833f200fd3c4ca20ed1287447b81a4404a702",
@@ -2397,20 +2393,20 @@
       "reason": "Pin original MIME header, BMP, APNG, subarray and file-prefix behavior and verify the public durable export."
     },
     "packages/pi-durable-coding/src/compat/image-resize.ts": {
-      "sha256": "3045f3e9d3cf6e2d8714787a4a03c61b0d9b5b44521e7f43e8a0e9a109a7c1dd",
-      "reason": "Keep Native resize input, dimensions and worker protocol over durable's shared encoding and shrinking loop."
+      "sha256": "f099ed9ec6811ab4271a07ad73ab689ca0d252f95da263d12035273648c6d56b",
+      "reason": "Keep Native sizing policy over durable encoding, use the shared Photon entry directly and reuse public SDK image types without the retired worker protocol."
     },
     "packages/pi-durable-coding/test/native-image-resize.test.ts": {
-      "sha256": "fd59c5fe1973c854c9ef809042f13216824efafd65f6a04437b2f4dbad3bfed9",
-      "reason": "Compare Native resizing with original byte and metadata snapshots through in-process, worker and public entries. Check image source port boundaries."
+      "sha256": "9447523fcb8a099bbc3affa5a84197be68e608653aeea38ad95cd21124a7c884",
+      "reason": "Verify original resize outputs, caller bytes and the real SDK worker with explicit durable policy injection; retire dead generator assertions."
     },
     "packages/pi-durable-coding/test/durable-image-encoding.test.ts": {
       "sha256": "d810261460968bedd0ba6dae34f32deb316f292b7a4d1ecf5bcebeed6f1c7337",
       "reason": "Compare the durable image factory with the original package and verify shared encoder limits, quality order and ownership."
     },
     "packages/pi-durable-coding/test/fixtures/native-image-resize.ts": {
-      "sha256": "5c1b93687927e2340484350fa8e602d82b505013c2640bbacca5d691fc6da2e4",
-      "reason": "Build deterministic image bytes and option cases for original-codec comparisons."
+      "sha256": "e8449da1fd388c3543e6bb2e453467af07e10edfc47503801aa3451577ecfddd",
+      "reason": "Retain pinned Native image result fixtures using the active durable resize policy type entry."
     },
     "packages/pi-durable-coding/test/fixtures/native-image-resize.json": {
       "sha256": "8bb7cef1c768bd03f310f491213d73c8a82a6ecc3030fc5263a7573ea64d3bea",
@@ -2425,8 +2421,8 @@
       "reason": "Reuse durable EXIF metadata and pixel transposition while retaining Native Photon ownership and WebP chunk bounds."
     },
     "packages/pi-durable-coding/test/native-image-orientation.test.ts": {
-      "sha256": "f52180e51cc83769b3c7d344655ff1b9f81fa0a31a613ad0a414619eff144885",
-      "reason": "Verify Native EXIF layouts and signed metadata boundaries, and pin the full patch digest that refreshes cached Bun installs."
+      "sha256": "03d240ed62b9e9820f97f0a6f39b50bcfa81998f20afe57c4bba8ebe4cf75edd",
+      "reason": "Retain EXIF, pixel orientation and encoding regressions through the active durable orientation adapter."
     },
     "packages/pi-durable-coding/src/compat/archive.ts": {
       "sha256": "230b3b2c73d031df9fca463de36043b9f7231cbc563e9ef697783da949261adb",
@@ -2513,16 +2509,16 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "ba047628fffc6480f70811d6fb21da0479c85cb6ab85f36dc93287d4be079cb1",
-      "reason": "Remove the obsolete private component barrel filter after the complete local component barrel retires."
+      "sha256": "bdab099f46026be909e2452c574621c9c83f4bf75e0353d7348734916b81e708",
+      "reason": "Remove retired Photon, orientation and resize generation rules while retaining shared helpers with active callers."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "7dd97515364d4215dbc7a75c3c5ee868dd3b88ddfaea4cb124277f467427a480",
-      "reason": "Delete the unused codemode executor-forward generator; retain unrelated shared runtime policies."
+      "sha256": "b3b9db8b3bb0c608ec56680671fec57c1cdf9cb0fc29e72ac89f8ab2cb16ab40",
+      "reason": "Remove retired orientation and resize declaration converters after their generated forwards leave the runtime closure."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
       "sha256": "9286a744e813835b69fe6b988d7c208121a08dd5b6b362f7bb6cf63a8c60e8b9",
@@ -3985,12 +3981,12 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "a949642836d3d3a943eeaf2c3ed286d58648f8d8ea52b21424eb1cb351d84b2d",
-      "reason": "Record the 80-file closure after deleting the local PNG conversion and registration implementation."
+      "sha256": "0465f8bae8ba5234ccb6b7b04a27e7b51086ec123d87e3d7426cccac40184df3",
+      "reason": "Remove six SDK-covered image runtime files from the pinned generated closure and bind public image exports to the host policy."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
-      "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
-      "reason": "Preserve Photon and image worker boundaries; connect both HTML browser assets to published packages and reject missing or repeated asset reads."
+      "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
+      "reason": "Retire image worker and Photon source conversions after SDK factories replace the local image runtime; retain active bundled asset policy."
     },
     "packages/pi-durable-coding/scripts/resource-loader-port.ts": {
       "sha256": "2eb19fecb916ecaa161b0eaff747fdb51a8c45ed3b5b7c9da935d22b9ba5a5b2",
@@ -4005,8 +4001,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "6b1f6503776c6b3f2fef7b9c539d071568fa69d0709db0473b769663d3e30af1",
-      "reason": "Remove the obsolete private component generation step; retain CLI and run-mode exclusions."
+      "sha256": "17c9b10ce7e0889205430da03bbfb07ac8ad3f889ae867b6411c843bb4c30e7b",
+      "reason": "Remove local image processing and worker roots so complete regeneration cannot restore SDK-covered image copies."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4317,8 +4313,8 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "d8f5e5eecbf1db69ff69b76179993e2194093d6f8c6cc55f78b3e53a52e24fcc",
-      "reason": "Preserve the public convertToPng contract through the shared SDK image converter instance."
+      "sha256": "b101315360f53f40419d4f13949c9826f02fbfe3b0a36d20b21809bd3eb8f7e4",
+      "reason": "Preserve Native resize and dimension-note exports through the SDK factory host binding."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4364,29 +4360,9 @@
       "sha256": "b75a97f581b55a8ac199f9b0e13907c568a5c9b192733606110007663ceaafe9",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/clipboard.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/utils/exif-orientation.ts": {
-      "sha256": "cd1d00822be53a7d38a84083756130f818ec4ed0d905e54a9745463e2ba829a8",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/exif-orientation.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/utils/fs-watch.ts": {
       "sha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/fs-watch.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/image-process.ts": {
-      "sha256": "1bd0cce49a9f1f64df6ce03ab25f4f83a5cd29602b4478616d7bf3e2d6187648",
-      "reason": "Use SDK PNG conversion with existing shared Photon and durable orientation dependencies."
-    },
-    "packages/pi-durable-coding/src/pi/utils/image-resize-core.ts": {
-      "sha256": "608f23438bbdd9c898f7f32a2b51c14951c83d33c5153923350f7ca232f4d0ea",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-resize-core.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/image-resize-worker.ts": {
-      "sha256": "10c44a69b0150a088328a1a2a30332f993598d01eaa4c7e583185d3eab911da2",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-resize-worker.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/image-resize.ts": {
-      "sha256": "d777752e62499e71df217394652ff6285e1ba8ea34d6d258443f28774e76a97f",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-resize.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/management-http.ts": {
       "sha256": "2195b345fdd5c607f87a55b93e7d00c6d70d7dcfe2989b08bbd9f39b529a756a",
@@ -4407,10 +4383,6 @@
     "packages/pi-durable-coding/src/pi/utils/paths.ts": {
       "sha256": "c8a2995b52a181e46cfae3b30f31448d201742d303249f34119ef2fd7a44e672",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/paths.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/photon.ts": {
-      "sha256": "57552081867bbafec842538626424f3ef741053d0473eb3382b89375b94f9635",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/photon.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/pi-user-agent.ts": {
       "sha256": "2e7a31bc3d1c48bf91afa2e46ac1f09050487dfe465d10663ab559caff31d463",
@@ -4697,24 +4669,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "ebaa81b4ec6bfd8ba3d128e7931e630f7b84c411a40a0ec1c1775021a474b6d2",
-      "reason": "Stop image conversion source traversal at the public SDK factory and shared dependency binding."
+      "sha256": "b0bd22188df425effa46ac0488b1e56789f244cfdc06b890c74b7472f092301d",
+      "reason": "Stop source traversal at SDK image processing and resize boundaries and route callers to the shared durable host binding."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
       "sha256": "b72b39fb21566d9402a3f29446d227d90a0714bdd7f9a1105d97b63b764fc850",
       "reason": "Verify SDK identities and generated boundaries, including codemode index and MCP factory imports."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "fa611f432a83496d53ab6e6672143ae00cb85123398131dfb82df5a5ae9750b2",
-      "reason": "Record 50 Coding outputs, including instance-scoped image conversion dependencies without replacing SDK algorithms."
+      "sha256": "7bc70bded0749e62a56259c45150928275faca6698b0d004629cdaac1ae20fb3",
+      "reason": "Track the SDK image processor, resizer and explicit worker dependency boundaries with pristine and installed output hashes."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "96896f18081c830517efa790238f1991ea9b96c707baf3b02c5df11ca6000565",
-      "reason": "Generate the public image converter factory over existing SDK bodies, defaults and registration state."
+      "sha256": "0052374ec4eacad5a79d1bd4dc2dfffba047583bc1f8b50c9b1fd4e63f0c855e",
+      "reason": "Generate optional SDK image processing and worker dependency factories without copying image or worker algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "52fa1b4f30caedf37e81bc565e881e4126d39a08267acf5ead73b4d3fe34b62d",
-      "reason": "Expose a converter factory with per-instance Photon and orientation dependencies; preserve default SDK image bodies and registration behavior."
+      "sha256": "6ef1a04504886acc43de15a2b8f574a594370e58376f5e8dce7feb6fafff0f0f",
+      "reason": "Expose optional image processing, resize and explicit worker module dependencies in the public SDK while retaining its algorithms and safe worker resolution."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4769,8 +4741,8 @@
       "reason": "Preserve tool execution ownership symbol descriptors and declaration metadata through the published SDK tool conversions without a product module dependency."
     },
     "packages/pi-durable-coding/src/native-agent-session.ts": {
-      "sha256": "048085271f1dc8813f11d85429d3d5789d85cd8df5e2e3f677de7815751a9d32",
-      "reason": "Bind the SDK session to durable settlement, distinct nested tool ownership, persistent inputs, journal identity, compatible snapshots and the existing shared image processor; strip host metadata only from internal model projections."
+      "sha256": "cc9d98b33a9fb2408bf694c56ca2f27cb7aa48867604291373ee8b34a3d74c58",
+      "reason": "Bind public SDK session image processing to the shared durable host policy while preserving session execution and recovery."
     },
     "packages/pi-durable-coding/test/host-agent-session.test.ts": {
       "sha256": "3df1c691a299caf8f89069bb89025c9fa5a24ee2bb9a726f7cef83c549d71f15",
@@ -4793,8 +4765,8 @@
       "reason": "Verify public write contracts for bytes, paths, custom operations, raw errors, in-flight cancellation, shared edit queues and renderer component reuse."
     },
     "packages/pi-durable-coding/src/native-read-tools.ts": {
-      "sha256": "7a71ddc52b3efb6468d10672afb7404dcb0baa8a9c7eae8b0d1853932316073c",
-      "reason": "Bind public Coding read factories to existing host image processing, durable MIME detection and documentation paths; reading, cancellation, pagination and rendering stay in the SDK."
+      "sha256": "0eb5a57a4e159ae1b98dd484e3db332c213c9b0e344ec1be5b76aada35fc4e5c",
+      "reason": "Bind public SDK read factories to the same SDK image processor and existing shared durable image policy."
     },
     "packages/pi-durable-coding/test/host-read-sdk.test.ts": {
       "sha256": "fdad5cddf8e0f873a9f137bd914af78f309c1445cca551837bb023421269c411",
@@ -4863,6 +4835,22 @@
     "packages/pi-durable-coding/test/host-image-convert-sdk.test.ts": {
       "sha256": "349a48c4b0074e090a5624bd445a1646aaa157072749c940c66d1385caaed1de",
       "reason": "Verify PNG passthrough, failed and unavailable loaders, image ownership, per-instance registration and callback coalescing."
+    },
+    "packages/pi-durable-coding/scripts/coding-image-processing-policy.ts": {
+      "sha256": "fc25127ae6cbebf9633be01364a38b101e3e4205b82fe030f99765a039793806",
+      "reason": "Add optional instance dependencies to existing SDK image and worker algorithms, with unique pinned source boundaries and unchanged default APIs."
+    },
+    "packages/pi-durable-coding/src/native-image-process.ts": {
+      "sha256": "b73c1302dba07b8db444838465ab21221f9e22c4fef43b2ba4df3330cfb66944",
+      "reason": "Bind SDK image processing and worker transport to shared converters and durable encoding with an explicit installed host module URL."
+    },
+    "packages/pi-durable-coding/test/fixtures/image-resize-worker-policy.ts": {
+      "sha256": "5fead87a56ee73fc66dd0ef22c03ea8159ea9f1bc513ef0fe31299ab557ce2db",
+      "reason": "Provide a deterministic real-thread image policy to verify SDK module injection, unrelated messages, errors and caller byte preservation."
+    },
+    "packages/pi-durable-coding/test/host-image-process-sdk.test.ts": {
+      "sha256": "c422e32f362ee25673f71db97686068fb939e93806610b25f342108e58f6fe9d",
+      "reason": "Verify SDK MIME handling, conversion and resize hints, omission and error contracts, instance isolation, worker injection and fallback."
     }
   },
   "deleted": {

@@ -7,7 +7,7 @@ import ts from 'typescript';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
 import { portResourceLoader } from './resource-loader-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
-import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
+import { portBundledAssets } from './asset-runtime-port.ts';
 import { portCacheWarmer, portNativeMessages, portSDK, portSessionServices } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludeRunModeEntries } from './shared-helper-port.ts';
@@ -41,8 +41,7 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
 }
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
 const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
-// Authored session and read adapters also consume the shared image-processing helper.
-const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'core/system-prompt.ts', 'utils/tools-manager.ts', 'extensions/codemode/worker.ts', 'utils/image-resize-worker.ts', 'utils/image-process.ts', 'core/extensions/virtual-modules.ts'];
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/agent-session-services.ts', 'core/system-prompt.ts', 'utils/tools-manager.ts', 'extensions/codemode/worker.ts', 'core/extensions/virtual-modules.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();
@@ -199,10 +198,6 @@ while (queue.length) {
   if (path === 'extensions/mcp/oauth.ts') {
     body = portMcpOAuth(body);
     changes.add('cancellable-host-oauth-refresh-lock');
-  }
-  if (path === 'utils/image-resize.ts') {
-    body = portImageAssets(path, body);
-    changes.add('installed-image-worker-and-versioned-bundle-wasm');
   }
   if (path === 'utils/abort.ts') {
     const exports = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node)

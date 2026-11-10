@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFile, realpath } from 'node:fs/promises';
 import { exifOrientation } from '@earendil-works/pi-durable/images';
 import * as photon from '@silvia-odwyer/photon-node';
-import { applyExifOrientation } from '../src/pi/utils/exif-orientation.ts';
+import { applyExifOrientation } from '../src/compat/image-orientation.ts';
 
 const layouts = [
   [1, 2, 3, 4, 5, 6],

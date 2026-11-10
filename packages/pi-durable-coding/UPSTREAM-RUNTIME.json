@@ -11,7 +11,6 @@
     "@earendil-works/pi-durable": "1.5.0",
     "@earendil-works/pi-mcp": "1.5.0",
     "@earendil-works/pi-tui": "1.5.0",
-    "@silvia-odwyer/photon": "0.3.3",
     "ansi-regex": "6.2.2",
     "chalk": "6.0.0",
     "cross-spawn": "7.0.6",
@@ -480,7 +479,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "d8f5e5eecbf1db69ff69b76179993e2194093d6f8c6cc55f78b3e53a52e24fcc",
+      "portSha256": "b101315360f53f40419d4f13949c9826f02fbfe3b0a36d20b21809bd3eb8f7e4",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",
@@ -576,54 +575,11 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/utils/exif-orientation.ts",
-      "target": "src/pi/utils/exif-orientation.ts",
-      "sha256": "fbca93e04682d00139c319a0721417d47b505e0c6e5787f4d9d9dba164194ad0",
-      "portSha256": "cd1d00822be53a7d38a84083756130f818ec4ed0d905e54a9745463e2ba829a8",
-      "changes": [
-        "shared-durable-image-orientation"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/utils/fs-watch.ts",
       "target": "src/pi/utils/fs-watch.ts",
       "sha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
       "portSha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
       "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/utils/image-process.ts",
-      "target": "src/pi/utils/image-process.ts",
-      "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
-      "portSha256": "1bd0cce49a9f1f64df6ce03ab25f4f83a5cd29602b4478616d7bf3e2d6187648",
-      "changes": [
-        "host-extension-module-import"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/image-resize-core.ts",
-      "target": "src/pi/utils/image-resize-core.ts",
-      "sha256": "324a1768fafbe20408e354e570c648eec58ee6e9f0892b53a3853f295e41a3b5",
-      "portSha256": "608f23438bbdd9c898f7f32a2b51c14951c83d33c5153923350f7ca232f4d0ea",
-      "changes": [
-        "shared-durable-image-encoding"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/image-resize-worker.ts",
-      "target": "src/pi/utils/image-resize-worker.ts",
-      "sha256": "10c44a69b0150a088328a1a2a30332f993598d01eaa4c7e583185d3eab911da2",
-      "portSha256": "10c44a69b0150a088328a1a2a30332f993598d01eaa4c7e583185d3eab911da2",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/utils/image-resize.ts",
-      "target": "src/pi/utils/image-resize.ts",
-      "sha256": "5e56345bdf2fadc01d81392473f8da6ef85a741ad3c69ff88286931dacef6d24",
-      "portSha256": "d777752e62499e71df217394652ff6285e1ba8ea34d6d258443f28774e76a97f",
-      "changes": [
-        "installed-image-worker-and-versioned-bundle-wasm"
-      ]
     },
     {
       "source": "packages/coding-agent/src/utils/management-http.ts",
@@ -661,15 +617,6 @@
       "sha256": "c8a2995b52a181e46cfae3b30f31448d201742d303249f34119ef2fd7a44e672",
       "portSha256": "c8a2995b52a181e46cfae3b30f31448d201742d303249f34119ef2fd7a44e672",
       "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/utils/photon.ts",
-      "target": "src/pi/utils/photon.ts",
-      "sha256": "806c3941b96e09705e26cd2d449ee8971b3498bbde495f7512b20906120d96a9",
-      "portSha256": "57552081867bbafec842538626424f3ef741053d0473eb3382b89375b94f9635",
-      "changes": [
-        "shared-durable-photon-runtime"
-      ]
     },
     {
       "source": "packages/coding-agent/src/utils/pi-user-agent.ts",

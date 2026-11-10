@@ -9,7 +9,7 @@ import {
 } from '@earendil-works/pi-coding-agent';
 import { detectSupportedImageMimeTypeFromFile } from './compat/image-mime.ts';
 import { getReadmePath } from './pi/config.ts';
-import { processImage } from './pi/utils/image-process.ts';
+import { processImage } from './native-image-process.ts';
 
 export { type ReadOperations, type ReadToolDetails, type ReadToolInput, type ReadToolOptions } from '@earendil-works/pi-coding-agent';
 

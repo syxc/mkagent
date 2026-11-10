@@ -15,6 +15,7 @@ import { codingShellPolicy } from './coding-shell-policy.ts';
 import { codingCodemodePolicy } from './coding-codemode-policy.ts';
 import { codingUIPolicy } from './coding-ui-policy.ts';
 import { codingImagePolicy } from './coding-image-policy.ts';
+import { codingImageProcessingPolicy } from './coding-image-processing-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -71,6 +72,8 @@ for (const suffix of ['js', 'd.ts']) {
     `export { AuthUrlComponent } from "./modes/interactive/components/auth-url.${extension}";`,
     `export { VisualLinePreview } from "./modes/interactive/components/visual-truncate.${extension}";`,
     `export { createImageConverters } from "./utils/image-convert.${extension}";`,
+    `export * from "./utils/image-process.${extension}";`,
+    `export * from "./utils/image-resize.${extension}";`,
     `export { getThemesDir, getExportTemplateDir } from "./config.${extension}";`,
   ].join('\n') + '\n';
   const marker = '//# sourceMappingURL=';
@@ -220,7 +223,7 @@ sleep = replace(sleep, '        signal?.addEventListener("abort", () => {', '   
 sleep = replace(sleep, '        });\n    });', '        };\n        signal?.addEventListener("abort", onAbort, { once: true });\n    });');
 outputs.set(sleepPath, sleep);
 const imagePath = 'dist/utils/image-resize.js';
-outputs.set(imagePath, replace(readFileSync(join(baseline, imagePath), 'utf8'), `    // Bun compiled executables resolve worker entrypoints by string path, not via
+outputs.set(imagePath, codingImageProcessingPolicy(replace(readFileSync(join(baseline, imagePath), 'utf8'), `    // Bun compiled executables resolve worker entrypoints by string path, not via
     // new URL(..., import.meta.url). Try the string path first under Bun so the
     // release binary uses the embedded worker instead of falling back in-process.
     if (typeof process.versions.bun === "string") {
@@ -229,7 +232,11 @@ outputs.set(imagePath, replace(readFileSync(join(baseline, imagePath), 'utf8'), 
         }
         catch { }
     }
-`, '    // A project directory cannot supply executable image workers. Use the module URL or process locally.\n'));
+`, '    // A project directory cannot supply executable image workers. Use the module URL or process locally.\n'), false, 'image-resize'));
+for (const [module, suffix] of [['image-resize', 'd.ts'], ['image-process', 'js'], ['image-process', 'd.ts'], ['image-resize-worker', 'js']]) {
+  const path = `dist/utils/${module}.${suffix}`;
+  outputs.set(path, codingImageProcessingPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts', module));
+}
 const staging = mkdtempSync(join(tmpdir(), 'coding-sdk-exports-'));
 let patch = '';
 for (const [path, output] of outputs) {

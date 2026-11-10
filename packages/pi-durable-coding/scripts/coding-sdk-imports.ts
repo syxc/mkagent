@@ -45,6 +45,7 @@ export function codingHostImport(importer: string, specifier: string): string | 
     : module === 'core/tools/bash.ts' || module === 'core/tools/powershell.ts' ? 'native-shell-tools.ts'
     : module === 'extensions/codemode/index.ts' || module === 'extensions/codemode/tool.ts' ? 'native-codemode.ts'
     : module === 'utils/image-convert.ts' ? 'native-image-convert.ts'
+    : module === 'utils/image-process.ts' || module === 'utils/image-resize.ts' ? 'native-image-process.ts'
     : module === 'modes/interactive/components/index.ts' || module === 'modes/interactive/components/tool-execution.ts' ? 'native-ui.ts' : undefined;
   if (!host) return undefined;
   const target = posix.relative(posix.dirname('pi/' + importer), host);
