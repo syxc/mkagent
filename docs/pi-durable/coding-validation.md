@@ -26,6 +26,78 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK truncation after fd18f6e
+
+Head, tail, middle and single-line truncation, size formatting, constants and
+types now use the public Coding SDK. The 131-line local module and the 80-line
+Chord adapter are deleted, together with the 61-line generator transformation.
+No wrapper remains. Bash extension execution, MCP results, the Native tool
+exports and the codemode binding now import the SDK root.
+
+Durable does not expose this Coding result contract. The Coding root patch
+only exposes the existing GREP_MAX_LINE_LENGTH, truncateMiddle and
+MiddleTruncationResult. The internal truncation JS and declaration files remain
+byte-identical to pristine SDK 1.5.0. Only dist/index.js and dist/index.d.ts
+change relative to the previous patch. Equivalent public root exports remove
+this patch. Physical outputs remain Coding 60, core four and durable 33.
+
+Runtime generation now has 64 TypeScript files: 60 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and shared entries 16.
+The generated closure no longer declares Chord for truncation. The package
+still uses Chord JSON and context APIs in codemode, so its direct dependency
+remains. Package declarations and lock are unchanged.
+
+Full runtime, auxiliary and patch checks pass. Pristine replay checks all
+original and resulting Coding hashes. Both existing layouts pass frozen
+installation with scripts disabled. All 60 Coding and 33 durable outputs match
+in both layouts. The existing hoisted shared-runtime-port fixture retains its
+previous hash and is not overwritten. Root tests cover the changed generator.
+
+The prior candidate probe compares 875 fixed cases against the old Native
+implementation and the SDK. All match the pinned source baseline. The current
+suite keeps these cases and the additional getter, fractional limit, Buffer
+error and surrogate checks; it now imports the public SDK. Native public
+truncation exports also have SDK implementation identity. Constants and middle
+truncation are checked through the public root.
+
+| Check | Result and scope |
+|---|---|
+| Root tests | 916 tests and 1878 expect calls pass across truncation, public boundaries and runtime ports |
+| Hoisted integration | 63 tests and 247 expect calls pass across Native shell, extension execution, codemode output and forwarding, durable options and the public type consumer |
+| Coding types | Root typecheck and declarations in both layouts pass |
+| Hoisted server | Typecheck and build pass |
+| Hoisted worker bundle | 26 tests and 105 expect calls pass, including relocated resources and worker execution |
+
+Checks use Bun 1.3.14 and task-owned HOME/config/cache. Declarations and build
+outputs use task directories. No live credentials, provider requests, product
+UI or product data are used. The source registry updates 14 hashes, removes
+two entries and adds none. The fixed Craft v0.15.6 audit covers 2074 files and
+passes.
+
+Independent read-only review finds no verified new defect relative to
+fd18f6e. Its 17,895 comparisons between the previous implementation and the SDK
+match for results and errors. Seven deterministic MCP cases and three injected
+bash cases pass. Six Native values have SDK identity; eight SDK root values
+have algorithm-module identity. Three public types resolve to their original
+declarations. These symbol checks do not replace the full type checks above.
+The review confirms the two internal files match pristine, three generated
+callers use the SDK boundary, all 60 Coding output hashes match, and retired
+files and generator rules are absent.
+
+Durable has a different truncation contract. For `"a\n"` with maxBytes set to one,
+Coding returns truncatedBy "lines", while durable returns "bytes". This case
+supports use of the Coding implementation for the existing result contract.
+The review does not repeat installation, generation, pristine replay or the
+parent suites. The parent thread owns source registration, documentation and
+final scope checks. Focused tests and source hashes do not establish that
+remaining source is needed. F0 through F6, the remaining 60 src/pi files, the
+legacy permission blocker and temporary compaction export, dynamic tools,
+codemode adapters, internal SDK session/shell policy, the existing AuthContext
+gap, Photon cleanup and the ToolHtmlRenderer ambiguity remain open. This slice
+does not run the full repository suite, product UI, live services,
+Windows/Linux, a separate Node truncation run or the complete product
+acceptance matrix.
+
 ## Public SDK compaction after f6a1c6f
 
 The public Coding SDK supplies context estimation, cut selection, compaction,

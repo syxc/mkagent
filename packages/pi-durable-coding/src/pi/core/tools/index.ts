@@ -70,7 +70,7 @@ export {
 	truncateHead,
 	truncateLine,
 	truncateTail,
-} from "./truncate.ts";
+} from "@earendil-works/pi-coding-agent";
 export {
 	createWriteTool,
 	createWriteToolDefinition,

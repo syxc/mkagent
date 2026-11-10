@@ -13,7 +13,7 @@ import { NATIVE_CODEMODE_FORWARD } from '../durable-coding/codemode-forward.ts';
 import { agentToolToHost, hostToolToAgent, markHostUsageAccounted } from '../host-tools.ts';
 import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 import type { SessionEntry } from '@earendil-works/pi-coding-agent';
-import { formatSize } from '../pi/core/tools/truncate.ts';
+import { formatSize } from '@earendil-works/pi-coding-agent';
 import {
   CODEMODE_STORE_ENTRY_TYPE, getCodemodeCallableTools, type CodemodeStoreEntryData,
   type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions,

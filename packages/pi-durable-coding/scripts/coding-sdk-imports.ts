@@ -28,6 +28,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/tools/file-mutation-queue.ts',
   'core/tools/ls.ts',
   'core/tools/tool-definition-wrapper.ts',
+  'core/tools/truncate.ts',
   'core/tools/write.ts',
   'modes/interactive/components/auth-url.ts',
   'modes/interactive/components/dynamic-border.ts',

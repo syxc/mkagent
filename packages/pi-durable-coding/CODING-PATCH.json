@@ -8,12 +8,12 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "439c0304fd077621118832a55519643042bfbd9b4ceb91ce1beb7dcaf3a0d997"
+      "sha256": "a1058d2e7344f0f29b0f0c41226d16e9d444c9b9e2c3f598d79f2d6c6a12d46d"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "5eae92873feb1e008754a348707b4d4eccea4d6949eb7f49aea271c8a8e54b80"
+      "sha256": "ad4669df827c4ea21bc8d4bed54a36a0f857c46cff5ccf2c42984f7e8344f432"
     },
     {
       "path": "dist/core/system-prompt.js",

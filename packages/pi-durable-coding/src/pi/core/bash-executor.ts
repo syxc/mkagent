@@ -11,7 +11,7 @@ import { splitIncompleteAnsiSuffix, stripAnsi } from "../utils/ansi.ts";
 import { createOutputFileStream } from "../utils/output-files.ts";
 import { sanitizeBinaryOutput } from "../utils/shell.ts";
 import type { BashOperations } from "../../native-shell-tools.ts";
-import { DEFAULT_MAX_BYTES, truncateTail } from "./tools/truncate.ts";
+import { DEFAULT_MAX_BYTES, truncateTail } from "@earendil-works/pi-coding-agent";
 
 // ============================================================================
 // Types

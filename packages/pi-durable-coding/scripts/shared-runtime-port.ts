@@ -126,67 +126,6 @@ export function portShell(body: string): string {
     + 'export { killProcessTree };\n' + body;
 }
 
-export function portTruncation(body: string): string {
-  const parsed = ts.createSourceFile('truncate.ts', body, ts.ScriptTarget.Latest, true);
-  const expected: Record<string, string> = {
-    DEFAULT_MAX_LINES: '7b4d08a1720cf3838212fc9740116c103bc1c62f22209956d7a7719999e64374',
-    DEFAULT_MAX_BYTES: '7a8d5a98971a2ef71318ab0e5e74d5950848bad1b9a4a2e9f79927c6b30f01d2',
-    TruncationResult: '60fbec2ea2f68e45e297f39d014243e58322e39d64258036f3db97ea9d6bae15',
-    TruncationOptions: 'f29fa289a0d02f53d9dd89bbc7e3a5ef759ffa410160cf537bcceaa52559c172',
-    splitLinesForCounting: 'c16490ab83da37e63ee9134b3392d884e112b93c0d11072ba668d0e2e283deb1',
-  };
-  const signatures: Record<string, string> = {
-    truncateHead: 'export function truncateHead(content: string, options: TruncationOptions = {}): TruncationResult',
-    truncateTail: 'export function truncateTail(content: string, options: TruncationOptions = {}): TruncationResult',
-  };
-  const remaining = new Set([...Object.keys(expected), ...Object.keys(signatures)]);
-  const edits: Array<{ start: number; end: number; text: string }> = [];
-  for (const node of parsed.statements) {
-    const name = ts.isVariableStatement(node) ? node.declarationList.declarations[0]?.name.getText(parsed)
-      : ts.isFunctionDeclaration(node) || ts.isInterfaceDeclaration(node) ? node.name?.text : undefined;
-    if (name && Object.hasOwn(signatures, name)) {
-      if (!ts.isFunctionDeclaration(node) || !node.body || !remaining.delete(name) ||
-          body.slice(node.getStart(parsed), node.body.getStart(parsed)).replace(/\s+/g, ' ').trim() !== signatures[name]) {
-        throw new Error('Native truncation public signature changed');
-      }
-      const shared = name === 'truncateHead' ? 'sharedTruncateHead' : 'sharedTruncateTail';
-      const text = `${signatures[name]} {\n\treturn ${shared}(content, options);\n}`;
-      edits.push({ start: node.getStart(parsed), end: node.end, text });
-      continue;
-    }
-    if (name === 'truncateStringToBytesFromEnd') {
-      if (!ts.isFunctionDeclaration(node) ||
-          node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)) {
-        throw new Error('Native tail helper is no longer private');
-      }
-      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
-      continue;
-    }
-    const inspect = (child: ts.Node): void => {
-      if (ts.isIdentifier(child) && child.text === 'truncateStringToBytesFromEnd') {
-        throw new Error('Native tail helper has an unexpected reference');
-      }
-      ts.forEachChild(child, inspect);
-    };
-    inspect(node);
-    if (!name || !Object.hasOwn(expected, name)) continue;
-    if (!remaining.delete(name) || createHash('sha256').update(node.getText(parsed)).digest('hex') !== expected[name]) {
-      throw new Error('Native truncation declaration boundary changed');
-    }
-    if (ts.isInterfaceDeclaration(node)) continue;
-    if (ts.isVariableStatement(node)) {
-      const end = body.indexOf('\n', node.end);
-      edits.push({ start: node.getStart(parsed), end: end < 0 ? node.end : end + 1, text: '' });
-    } else {
-      edits.push({ start: node.getFullStart(), end: node.end, text: '' });
-    }
-  }
-  if (remaining.size) throw new Error('Native truncation declarations changed');
-  for (const edit of edits.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.text + body.slice(edit.end);
-  return 'import { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES, truncateHead as sharedTruncateHead, truncateTail as sharedTruncateTail, splitLinesForCounting } from "../../../compat/truncate.ts";\n'
-    + 'export { DEFAULT_MAX_LINES, DEFAULT_MAX_BYTES };\n' + body;
-}
-
 export function portToolArchives(body: string): string {
   const parsed = ts.createSourceFile('tools-manager.ts', body, ts.ScriptTarget.Latest, true);
   const names = new Set(['extractZipArchive', 'getWindowsTarCommand']);

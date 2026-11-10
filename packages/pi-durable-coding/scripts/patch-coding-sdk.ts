@@ -60,6 +60,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/extensions/types.${extension}";`,
     `export * from "./core/exec.${extension}";`,
     `export * from "./core/tools/tool-definition-wrapper.${extension}";`,
+    `export { ${suffix === 'd.ts' ? 'type MiddleTruncationResult, ' : ''}GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.${extension}";`,
     `export * from "./extensions/codemode/tool.${extension}";`,
     ...['grep', 'find', 'ls'].map(name => `export * from "./core/tools/${name}.${extension}";`),
     `export * from "./core/export-html/index.${extension}";`,

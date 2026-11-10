@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import ts from 'typescript';
 import {
   portToolArchives, portImageMime,
-  portAnsi, portChildProcess, portShell, portTruncation,
+  portAnsi, portChildProcess, portShell,
 } from './shared-runtime-port.ts';
 
 export function excludeRunModeEntries(path: string, body: string): string | undefined {
@@ -72,9 +72,6 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
   },
   'utils/shell.ts': {
     change: 'shared-durable-shell-algorithms', dependency: '@earendil-works/pi-durable', apply: portShell,
-  },
-  'core/tools/truncate.ts': {
-    change: 'public-chord-output-truncation', dependency: '@earendil-works/chord', apply: portTruncation,
   },
   'core/extensions/pi-ai-extension-view.ts': {
     change: 'public-pi-ai-typebox-string-enum',

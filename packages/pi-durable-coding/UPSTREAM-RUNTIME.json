@@ -4,7 +4,6 @@
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "policy": "Pi Coding SDK source with TypeScript declarations, excluding the upstream CLI launcher; execution binds to the local durable Agent boundary.",
   "dependencies": {
-    "@earendil-works/chord": "1.5.0",
     "@earendil-works/pi-agent-core": "1.5.0",
     "@earendil-works/pi-ai": "1.5.0",
     "@earendil-works/pi-coding-agent": "1.5.0",
@@ -110,9 +109,10 @@
       "source": "packages/coding-agent/src/core/bash-executor.ts",
       "target": "src/pi/core/bash-executor.ts",
       "sha256": "6fae3801533d64ccc018c43682bbff868619dd7cdab8f67730c731a5785d2984",
-      "portSha256": "948ba40594fcd3e6d5d643a8e0cd970347609a02cfbfc815f1bc52a67e43f634",
+      "portSha256": "1712fdbe3fb63c797b2883baf3677feb997a539a46a6bd445951ce8e5c72e74a",
       "changes": [
-        "host-extension-module-import"
+        "host-extension-module-import",
+        "public-coding-sdk"
       ]
     },
     {
@@ -263,7 +263,7 @@
       "source": "packages/coding-agent/src/core/tools/index.ts",
       "target": "src/pi/core/tools/index.ts",
       "sha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
-      "portSha256": "90f24a0cb7b9cb5abe698186b71f34bad3ba446556701234678929bbe9640153",
+      "portSha256": "aefddf527ff36d2d24d8310114ff28527c3c62fda1a58603a7f0001396f9f262",
       "changes": [
         "host-extension-module-import",
         "public-coding-sdk"
@@ -276,15 +276,6 @@
       "portSha256": "a47308a17b12059cb9e14b7ac7eb4cb2b8a0d118ce6fd8c9d00587c4e3309069",
       "changes": [
         "public-coding-sdk"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/tools/truncate.ts",
-      "target": "src/pi/core/tools/truncate.ts",
-      "sha256": "8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762",
-      "portSha256": "56d31aab381f14820ef5db0847faa32bb07d4a3c0012ee7a5b6a18c21445ac1e",
-      "changes": [
-        "public-chord-output-truncation"
       ]
     },
     {
@@ -366,7 +357,7 @@
       "source": "packages/coding-agent/src/extensions/mcp/tools.ts",
       "target": "src/pi/extensions/mcp/tools.ts",
       "sha256": "cd3245946deb3cb3df2e7b521a07837525f886d281c5e4600527eb2aed95e2ac",
-      "portSha256": "22175d2ab21613dcdaf1629027fc639f20b4ea4c33731317ec395fb367edeb6d",
+      "portSha256": "d6aeb9e79d26af68d4c907b784bd6d899a42dcde4866cd538a1d25ff08fa8b74",
       "changes": [
         "public-coding-sdk"
       ]

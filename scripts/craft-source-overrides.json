@@ -2445,8 +2445,8 @@
       "reason": "Use durable public declarations and identifier helpers plus SDK codemode types; retain host discovery metadata and namespace policies."
     },
     "packages/pi-durable-coding/src/compat/codemode-native.ts": {
-      "sha256": "36145ab547c6487d7473263dd0701a524143d24f840c9f1973238e9920f522aa",
-      "reason": "Use durable public source parsing and SDK codemode contracts while preserving the existing durable executor and Native store bridge."
+      "sha256": "11c6f67483fa241500eede8afddd936d2051cabd31758e229b146897544345b1",
+      "reason": "Use public Coding SDK formatSize for the retained Native codemode binding."
     },
     "packages/pi-durable-coding/src/compat/codemode-sandbox.ts": {
       "sha256": "3965758b8e893ecb8a08264d7373ecfee95924827761fcda3a246a6421af4a20",
@@ -2509,16 +2509,16 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "e28dfd0d40f7ca6463cbd708eb11e78b75a5043adae716c97a05a8dd2a6bf38c",
-      "reason": "Remove the obsolete local context-token function transformation after replacing the compaction closure with the SDK."
+      "sha256": "b9d69db44f17875986b4199881513c03f54524c204afb5f5a1833e1e26ebfbb6",
+      "reason": "Remove the retired Chord truncation transformation registration and import."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "b3b9db8b3bb0c608ec56680671fec57c1cdf9cb0fc29e72ac89f8ab2cb16ab40",
-      "reason": "Remove retired orientation and resize declaration converters after their generated forwards leave the runtime closure."
+      "sha256": "8bdf9730bff699a0ca476656aca1ebbf4cfc525e47fc0a49529db44262021f97",
+      "reason": "Delete the obsolete truncation AST transformation after retiring its source module and Chord adapter."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
       "sha256": "f1d5b79204604a481ef4bda0b8333d7db03ee28d36b07bcecde6040573de410c",
@@ -3973,8 +3973,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "9dd060f0a9dbd8fa3fafe132c069b7fa08e606a3cca18b51d9a8bcb5ecc3feeb",
-      "reason": "Retire three SDK-covered compaction sources and reduce the remaining module to a temporary legacy import forward blocked by a Read deny rule."
+      "sha256": "bf6d93f70d06365442c9b2bd3874ede10b9753acb0f796710eb54b2843b80040",
+      "reason": "Retire the SDK-covered truncation module and its obsolete Chord dependency from the generated source closure."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4121,8 +4121,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/auth-storage.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/bash-executor.ts": {
-      "sha256": "948ba40594fcd3e6d5d643a8e0cd970347609a02cfbfc815f1bc52a67e43f634",
-      "reason": "Use public Coding SDK BashOperations types through the host binding for the retained shell executor; runtime execution is unchanged here."
+      "sha256": "1712fdbe3fb63c797b2883baf3677feb997a539a46a6bd445951ce8e5c72e74a",
+      "reason": "Use public Coding SDK tail truncation and byte limits for retained host extension execution."
     },
     "packages/pi-durable-coding/src/pi/core/cache-warmer.ts": {
       "sha256": "6476803829f91e2aead921d9f27e22de45ac30797815f08a4ab1dfeefe145f4b",
@@ -4201,16 +4201,12 @@
       "reason": "Use the published Coding SDK settings implementation while preserving existing host policy adapters."
     },
     "packages/pi-durable-coding/src/pi/core/tools/index.ts": {
-      "sha256": "90f24a0cb7b9cb5abe698186b71f34bad3ba446556701234678929bbe9640153",
-      "reason": "Use public Coding SDK plugin tool factories with required host bindings, including Bash and PowerShell policies."
+      "sha256": "aefddf527ff36d2d24d8310114ff28527c3c62fda1a58603a7f0001396f9f262",
+      "reason": "Forward the Native public truncation contracts to the Coding SDK."
     },
     "packages/pi-durable-coding/src/pi/core/tools/render-utils.ts": {
       "sha256": "a47308a17b12059cb9e14b7ac7eb4cb2b8a0d118ce6fd8c9d00587c4e3309069",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/core/tools/truncate.ts": {
-      "sha256": "56d31aab381f14820ef5db0847faa32bb07d4a3c0012ee7a5b6a18c21445ac1e",
-      "reason": "Pinned Pi v1.5.0 facade; head and tail share public Chord through external policy. Retain Native size formatting, middle and single-line code."
     },
     "packages/pi-durable-coding/src/pi/core/trust-manager.ts": {
       "sha256": "ce480f9a1689e2da996609e9708443c391f9ab0cab5bcc047aebc1613b17e2f9",
@@ -4249,8 +4245,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/runtime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/tools.ts": {
-      "sha256": "22175d2ab21613dcdaf1629027fc639f20b4ea4c33731317ec395fb367edeb6d",
-      "reason": "Use SDK key hints and VisualLinePreview instead of local component copies."
+      "sha256": "d6aeb9e79d26af68d4c907b784bd6d899a42dcde4866cd538a1d25ff08fa8b74",
+      "reason": "Use public Coding SDK middle truncation and size formatting for MCP results."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/ui.ts": {
       "sha256": "9b1d42390a4a608cb3dfd49b0eeb0a143336d4f70dcac25698c22b0531b585da",
@@ -4552,17 +4548,13 @@
       "sha256": "fc5e6081f66b911ab9a211c81599904e8730a10bd120c358fca634a3a416ba37",
       "reason": "Verify both public read factories open real path variants and retain missing file and malformed URL errors without private helper mocks."
     },
-    "packages/pi-durable-coding/src/compat/truncate.ts": {
-      "sha256": "3a2111fdf76baa68f482a6fee3c0ac82d7d3ecbaef45d730d9205d8366bc55b3",
-      "reason": "Share public Chord bounds in both directions; preserve Native metadata and byte policy externally without SDK truncation exports."
-    },
     "packages/pi-durable-coding/test/native-truncate.test.ts": {
-      "sha256": "32764897b1c0c7bbd6284456a293854b5958aef03cff9decfeb68df1c1cb53cc",
-      "reason": "Pin Native truncation to Bun and Node baselines, including getter order, errors, first and last empty lines, fractional cuts and surrogate byte weights."
+      "sha256": "08bf5dd9b188ecc2be54147de35a5129da20638587aee39dd0a2e6865b8e64fd",
+      "reason": "Preserve the pinned truncation baseline and edge-case checks through public SDK imports."
     },
     "packages/pi-durable-coding/test/fixtures/native-truncate-cases.ts": {
-      "sha256": "35ae0480ee512fb0eac81a5508bacb7f0d45566f688434d310eb6e502faadecd",
-      "reason": "Explicit Native truncation compatibility cases covering boundaries, Unicode, invalid limits and retained entry points."
+      "sha256": "7c2237a60166fcba281b65495bc24420a1fdb875e1af6b337b4af28c5e567ba8",
+      "reason": "Run the existing fixed truncation cases against the public SDK after deleting the local implementation."
     },
     "packages/pi-durable-coding/test/fixtures/native-truncate-1.5.0.json": {
       "sha256": "426b5cf4e2b82ca0d56b44effdeabdcc155d41d2a800b37024da6b0e66c0619d",
@@ -4621,24 +4613,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "97c54ec4004e429346bf8305a0f687a6c83078ce2c2efdf4874ffed4292a499a",
-      "reason": "Route Native compaction imports and RPC declarations to the public Coding SDK root before source traversal."
+      "sha256": "67dc5716be0305943c79d63075941d1d5495218688200f2daa73e55692b4373d",
+      "reason": "Stop source traversal at the public Coding SDK truncation contract."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "7c432361ed7423aadd5cec3f65264e42a61e4a682dcdcb939c45b77d45d55c98",
-      "reason": "Verify Native compaction implementation identity and generated RPC imports use the public SDK boundary."
+      "sha256": "e6167b3794295cd498dbb164a748a2a16c08f5104b774e3e958e4b585d9440d2",
+      "reason": "Verify Native truncation identity and generated MCP and tool imports use the public SDK boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "c22b769e3925a5075463e3eadcae3125a775dd9b203dfe6751c2f5461d292fdf",
-      "reason": "Track public root exports for two existing SDK context estimators and their return type; keep all compaction algorithms unchanged."
+      "sha256": "80edebf4eebb9143f0aa8e4d84a72e425303edc28661158907fce92f5c4b7a0f",
+      "reason": "Track three existing truncation root exports; keep the internal JS and declaration algorithms unchanged."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "83c0271895ca41352b05376c9706b0881849ef96ee94502ef148e06ecd163297",
-      "reason": "Expose existing context estimators and ContextUsageEstimate at the SDK root without copying or changing their algorithms."
+      "sha256": "826208bcc0619c8a1bc0376789f585a31cbb11dda32818a5f4c9c192eab5182d",
+      "reason": "Expose existing GREP_MAX_LINE_LENGTH, truncateMiddle and MiddleTruncationResult at the SDK root without modifying algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "e2a93c91643a184306e073206516e521d9020a1ef99237ac375e725e45a4d7a8",
-      "reason": "Export two existing context estimators and ContextUsageEstimate at the SDK root; leave compaction, branch-summary and serialization modules byte-identical to the published package."
+      "sha256": "3d5a9f1254f182f918539906d279361d580a4e9c963289bdd1c6705d9e17bfd5",
+      "reason": "Add only existing truncation constant, function and return type root exports; keep internal truncation JS and declarations byte-identical to pristine SDK."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",

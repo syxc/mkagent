@@ -31,6 +31,10 @@ describe('published Coding SDK boundary', () => {
       'serializeConversation', 'shouldCompact', 'DEFAULT_COMPACTION_SETTINGS'] as const) {
       expect(native[name]).toBe(sdk[name]);
     }
+    for (const name of ['DEFAULT_MAX_LINES', 'DEFAULT_MAX_BYTES', 'formatSize',
+      'truncateHead', 'truncateTail', 'truncateLine'] as const) {
+      expect(native[name]).toBe(sdk[name]);
+    }
     expect(native.defineTool).toBe(sdk.defineTool);
     expect(native.createExtensionRuntime().mcpServers).toBeInstanceOf(sdk.McpServerRegistry);
     expect(native.parseFrontmatter('﻿---\r\nname: example\r\n---\r\nbody')).toEqual({
@@ -42,6 +46,8 @@ describe('published Coding SDK boundary', () => {
     expect(codingSDKImport('core/extensions/loader.ts', '../event-bus.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/skills.ts', '../utils/frontmatter.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/tools/index.ts', './write.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('core/tools/index.ts', './truncate.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('extensions/mcp/tools.ts', '../../core/tools/truncate.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingHostImport('core/tools/index.ts', './read.ts')).toBe('../../../native-read-tools.ts');
     expect(codingHostImport('core/tools/index.ts', './edit.ts')).toBe('../../../native-edit-tools.ts');
     expect(codingHostImport('core/tools/index.ts', './bash.ts')).toBe('../../../native-shell-tools.ts');

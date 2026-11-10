@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import * as native from '../src/pi/core/tools/truncate.ts';
+import * as native from '@earendil-works/pi-coding-agent';
 import { digest, evaluate, truncateCases } from './fixtures/native-truncate-cases.ts';
 
 const baseline: { sourceSha256: string; cases: { name: string; digest: string; nodeDigest?: string; error: boolean }[] } =

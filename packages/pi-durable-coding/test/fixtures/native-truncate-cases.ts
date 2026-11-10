@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
-import type { TruncationOptions } from '../../src/pi/core/tools/truncate.ts';
+import type { TruncationOptions } from '@earendil-works/pi-coding-agent';
 
-type Native = typeof import('../../src/pi/core/tools/truncate.ts');
+type Native = typeof import('@earendil-works/pi-coding-agent');
 export type TruncateCase = { name: string; run: (api: Native) => unknown };
 export const truncateCases: TruncateCase[] = [];
 const texts = [
