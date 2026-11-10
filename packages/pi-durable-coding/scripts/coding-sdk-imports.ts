@@ -46,6 +46,7 @@ export const CODING_SDK_MODULES = new Set([
   'modes/interactive/components/keybinding-hints.ts',
   'modes/interactive/components/visual-truncate.ts',
   'modes/interactive/theme/theme.ts',
+  'utils/clipboard.ts',
   'utils/frontmatter.ts',
   'utils/output-files.ts',
 ]);

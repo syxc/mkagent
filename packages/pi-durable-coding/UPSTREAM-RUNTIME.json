@@ -141,7 +141,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "67fb901b36a5ea52e2b1b920d9a5970c9265be4218ea26574349ecadfbb13edd",
+      "portSha256": "07d74d802cecc32ca7df04359d9a53d408e51b91c4b25df325ce30fa6d43dbfc",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",
@@ -197,20 +197,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/utils/clipboard-command.ts",
-      "target": "src/pi/utils/clipboard-command.ts",
-      "sha256": "384255c04f35e0a36d161c43ca931ee5bb6dc3c05ae9a91303b2a5c35964a8b9",
-      "portSha256": "384255c04f35e0a36d161c43ca931ee5bb6dc3c05ae9a91303b2a5c35964a8b9",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/utils/clipboard.ts",
-      "target": "src/pi/utils/clipboard.ts",
-      "sha256": "b75a97f581b55a8ac199f9b0e13907c568a5c9b192733606110007663ceaafe9",
-      "portSha256": "b75a97f581b55a8ac199f9b0e13907c568a5c9b192733606110007663ceaafe9",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/utils/management-http.ts",
       "target": "src/pi/utils/management-http.ts",
       "sha256": "2195b345fdd5c607f87a55b93e7d00c6d70d7dcfe2989b08bbd9f39b529a756a",
@@ -264,13 +250,6 @@
       "changes": [
         "public-jszip-tool-archives"
       ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/wsl.ts",
-      "target": "src/pi/utils/wsl.ts",
-      "sha256": "689ab1d024e0d7e6d956ee9040c50ca8d741627c07718bf487dfdb560985d024",
-      "portSha256": "689ab1d024e0d7e6d956ee9040c50ca8d741627c07718bf487dfdb560985d024",
-      "changes": []
     },
     {
       "source": "packages/coding-agent/src/modes/rpc/rpc-types.ts",

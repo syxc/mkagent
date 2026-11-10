@@ -12,6 +12,8 @@ describe('published Coding SDK boundary', () => {
     expect(native.AgentSessionRuntime).toBe(sdk.AgentSessionRuntime);
     expect(native.createAgentSessionRuntime).toBe(sdk.createAgentSessionRuntime);
     expect(compat.createEventBus).toBe(sdk.createEventBus);
+    expect(native.copyToClipboard).toBe(sdk.copyToClipboard);
+    expect(compat).not.toHaveProperty('copyToClipboard');
     expect(native.createMcpExtension).toBe(sdk.createMcpExtension);
     expect(native.parseFrontmatter).toBe(sdk.parseFrontmatter);
     expect(compat.stripFrontmatter).toBe(sdk.stripFrontmatter);
@@ -57,6 +59,7 @@ describe('published Coding SDK boundary', () => {
     expect(codingHostImport('core/sdk.ts', './agent-session-runtime.ts')).toBe('../../native-session-runtime.ts');
     expect(codingSDKImport('index.ts', './cli/args.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('index.ts', './core/footer-data-provider.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('index.ts', './utils/clipboard.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/extensions/index.ts', '../slash-commands.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('modes/index.ts', './json-event.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('modes/rpc/rpc-client.ts', '../json-event.ts')).toBe('@earendil-works/pi-coding-agent');

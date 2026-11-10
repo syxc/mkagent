@@ -483,7 +483,7 @@ export {
 	type ThemeToken,
 } from "@earendil-works/pi-coding-agent";
 // Clipboard utilities
-export { copyToClipboard } from "./utils/clipboard.ts";
+export { copyToClipboard } from "@earendil-works/pi-coding-agent";
 export { parseFrontmatter, stripFrontmatter } from "@earendil-works/pi-coding-agent";
 export { convertToPng } from "../native-image-convert.ts";
 export { formatDimensionNote, type ResizedImage, resizeImage } from "../native-image-process.ts";

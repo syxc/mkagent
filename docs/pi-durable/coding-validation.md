@@ -26,6 +26,59 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK clipboard after 5a08629
+
+The only exported clipboard consumer was the Native root. It now reexports
+the existing SDK copyToClipboard function. The complete 150-line clipboard
+module, 51-line command helper and 15-line WSL helper are deleted. All three
+were unchanged upstream source. No adapter, SDK patch or dependency is added.
+
+| Check | Result and scope |
+|---|---|
+| Generation | Complete runtime and auxiliary checks pass; three retired files stay absent |
+| UI | Seven tests pass in each layout |
+| Public boundary | Two corrected tests and 109 expect calls pass in each layout; Native uses the SDK function and compat keeps its narrower API |
+| Declaration generation | Current barrels emit the direct SDK clipboard export and match across layouts; scoped transpileDeclaration only |
+| Source registration | Four entries updated and three retired entries removed |
+| Restricted Craft audit | Fixed v0.15.6 audit passes for 2043 permitted files; protected source stays excluded and its registry entry is unchanged |
+| Independent review | No verified findings; seven inputs unchanged; deleted source matches SDK embedded source and installed JavaScript matches pristine; Native API and shared TUI resolution verified |
+
+The parent verifies seven slice inputs, 29 supporting source inputs and the
+review evidence hashes before it accepts the result. Public SDK signature
+and export checks pass. A resolution-only probe confirms that the old module
+and SDK module use the same actual TUI entry and native helper cache. No
+SDK runtime, native binding or clipboard operation is executed by the review.
+Source parity and resolution do not verify packaged or cross-platform native
+behavior. Source registration and document edits remain outside review scope.
+
+The reviewer invoked code-review and that skill automatically ran a forked
+static review despite the no-delegation instruction. Its result is excluded
+from the evidence. All accepted checks were then completed directly. Two
+initial TUI path guesses failed, and a CommonJS resolution attempt failed
+for the ESM-only SDK root. Checks using the actual paths and published ESM
+condition then passed. These review setup failures are retained as limits
+and do not change the product result. F0 through F6 remain open.
+
+The first test runs each report eight passes and one failure. The new
+assertion incorrectly expects compat to expose copyToClipboard. The baseline
+compat entry has no such export. The corrected test checks that absence;
+Native identity and generation mapping checks pass. Only the two affected
+boundary tests are repeated; the seven passing UI tests are retained.
+Initial failure logs are kept. No production API is added to satisfy a test.
+
+Four initial behavior preflights and both corrected boundary preflights
+have no protected-source dependencies. No real clipboard, clipboard command,
+network, real UI, account or paid provider is used. Dependencies, patches,
+lock bytes, task schemas and persistence versions stay unchanged. No install,
+complete type build, broad recovery suite or production bundle is repeated.
+
+Runtime generation now has 27 TypeScript outputs: 23 under src/pi and four
+facades, with no assets. Auxiliary sources remain eight; forwards remain 15.
+Physical patch outputs remain core four, Coding 72 and durable 33, for 109.
+Other source review and F0 through F6 remain open. Full Craft audit, fresh
+full types and declarations, and protected legacy integration keep their
+existing limits.
+
 ## Public SDK footer type after 7f29d4e
 
 The only local consumer of the footer module is the public readonly type
