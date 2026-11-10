@@ -2381,16 +2381,16 @@
       "reason": "Keep Native null results and 4100-byte file sniffing over durable's shared image MIME detector."
     },
     "packages/pi-durable-coding/test/native-image-mime.test.ts": {
-      "sha256": "93f64ca404ac1bd10ca5993bc8a31d733ce96818dc1ae4aa41a03b5f7b984143",
-      "reason": "Pin original MIME header, BMP, APNG, subarray and file-prefix behavior and verify the public durable export."
+      "sha256": "3520b04888618ca0126c973cc3e3b10302792aa727670f15cced060c62a553e7",
+      "reason": "Exercise unchanged MIME headers, subarrays, BMP and exact APNG file-prefix contracts through the active adapter."
     },
     "packages/pi-durable-coding/src/compat/image-resize.ts": {
       "sha256": "f099ed9ec6811ab4271a07ad73ab689ca0d252f95da263d12035273648c6d56b",
       "reason": "Keep Native sizing policy over durable encoding, use the shared Photon entry directly and reuse public SDK image types without the retired worker protocol."
     },
     "packages/pi-durable-coding/test/native-image-resize.test.ts": {
-      "sha256": "9447523fcb8a099bbc3affa5a84197be68e608653aeea38ad95cd21124a7c884",
-      "reason": "Verify original resize outputs, caller bytes and the real SDK worker with explicit durable policy injection; retire dead generator assertions."
+      "sha256": "7854cb328bd5849200c5a3ea067580ec2ba70eb173469fbeb5107a4b8b622ad8",
+      "reason": "Retain actual resize and SDK worker behavior checks; remove only the retired MIME generation test and its imports."
     },
     "packages/pi-durable-coding/test/durable-image-encoding.test.ts": {
       "sha256": "d810261460968bedd0ba6dae34f32deb316f292b7a4d1ecf5bcebeed6f1c7337",
@@ -2501,16 +2501,16 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "f2e13b1c48898e11ad8db3814782cd1d66c42bdae21ff58c28b6b1cc907eefc3",
-      "reason": "Remove the obsolete local ZIP installer port rule after SDK delegation."
+      "sha256": "4aed3c645ce3a3cde0cc74aaf134555deba890be26d1f7d58e17cf96642de80e",
+      "reason": "Retire the MIME transformation rule after direct host routing."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "4aa5abb47e8fbca7e283323dd9a8e89ba1004522492b43f6f85ab3e97314c2cc",
-      "reason": "Delete the obsolete ZIP algorithm conversion when the SDK owns installation."
+      "sha256": "da47702d39bc7acbb1d17df76c3a9c378c407fdeb0555450c30fd36029d430ca",
+      "reason": "Remove the obsolete MIME forwarding-source transformation and signature parser."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
       "sha256": "67e436fde78ba6a771b8692c07268143e75a1dac9e27872199a0d3e62e367e05",
@@ -3949,8 +3949,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "d8b4d598abee82daa9999f01df96bcbdbd40558b5bd43d621c1c1e17948eaa2a",
-      "reason": "Retire the installer and its HTTP and user-agent helpers from the local runtime closure."
+      "sha256": "f03316e06eb1674e1167067209900361d5313a39839bcc055414a96b22edc485",
+      "reason": "Retire the redundant MIME forwarding module from the generated closure; retain the direct durable image policy adapter."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4121,8 +4121,8 @@
       "reason": "Use the public SDK auth backend while retaining the host cancellable refresh-lock extension."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "07d74d802cecc32ca7df04359d9a53d408e51b91c4b25df325ce30fa6d43dbfc",
-      "reason": "Re-export the published SDK clipboard function directly."
+      "sha256": "4aff128f6b4886f25f04ae81b1b8d2f3935b2eb4a96f77651955dbbd7fb11901",
+      "reason": "Export the same MIME file detector directly from the durable policy adapter without an intermediate source port."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "a17cd07031fbd589086c4df3f8d82b51c77524ac54f7f8c33b581cb458a639ce",
@@ -4147,10 +4147,6 @@
     "packages/pi-durable-coding/src/pi/utils/child-process.ts": {
       "sha256": "15118c0272c36832166cd49d4dac73a568f25052bc6a803a6c341ab73b443ed5",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/child-process.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/mime.ts": {
-      "sha256": "9776fa3b491e80b1edcc2d44925f5343a2d4a4ad214d07f5cff726d0028e6e8d",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/mime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/shell.ts": {
       "sha256": "ae1fd3d6a210850e4466926ca3be1d080fde1a4b36726f78650fc15be693af36",
@@ -4413,8 +4409,8 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "831f52331f10bf74f876163a25371d701cd5416fbf2cba824a8cebb74e6e5e5b",
-      "reason": "Stop traversal at the SDK boundary for existing path and BOM helpers."
+      "sha256": "b22a38efffec5bc00cc96af0e0d1ff31c20a9de4f286a26f88e09245e33f1c1e",
+      "reason": "Route upstream MIME references directly to the existing durable image adapter before source traversal."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
       "sha256": "ab86fb78ea8d57b9adb32592edefe1f495727adcc66b433481765ecdeb663637",

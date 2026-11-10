@@ -1,8 +1,6 @@
 import { expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { readFile, realpath } from 'node:fs/promises';
 import { Worker } from 'node:worker_threads';
-import { portSharedHelpers } from '../scripts/shared-helper-port.ts';
 import { resizeImageInProcess, type ResizedImage } from '../src/compat/image-resize.ts';
 import { resizeImage } from '../src/native-image-process.ts';
 import snapshot from './fixtures/native-image-resize.json';
@@ -63,22 +61,3 @@ test('Native resize public entry preserves the caller bytes', async () => {
   expect(summarize(result)).toEqual(expected.expected);
   expect(bytes).toEqual(before);
 }, 5000);
-
-test('Native MIME generation refuses changed signatures or the file read limit', async () => {
-  async function sourceAt(relative: string) {
-    const path = await realpath(new URL(relative, import.meta.url));
-    if (path.toLowerCase().includes('runtime-credentials')) throw new Error('Unexpected source alias');
-    return readFile(path, 'utf8');
-  }
-  const source = await sourceAt('../src/compat/image-mime.ts');
-  const expected = await sourceAt('../src/pi/utils/mime.ts');
-  expect(portSharedHelpers('utils/mime.ts', source)).toBe(expected);
-  for (const changed of [
-    source.replace('= 4100;', '= 4096;'),
-    source.replace('export function', 'export default function'),
-    source.replace('buffer: Uint8Array', 'buffer: ArrayBuffer'),
-  ]) {
-    expect(changed).not.toBe(source);
-    expect(() => portSharedHelpers('utils/mime.ts', changed)).toThrow('Native image MIME boundary changed');
-  }
-});

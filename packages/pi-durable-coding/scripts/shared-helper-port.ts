@@ -1,10 +1,7 @@
 /** Share selected coding algorithms without importing the complete SDK into light entry points. */
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
-import {
-  portImageMime,
-  portChildProcess, portShell,
-} from './shared-runtime-port.ts';
+import { portChildProcess, portShell } from './shared-runtime-port.ts';
 
 export function excludeRunModeEntries(path: string, body: string): string | undefined {
   if (path !== 'index.ts' && path !== 'modes/index.ts') return undefined;
@@ -37,9 +34,6 @@ type SharedHelperPort = {
 } & (DeclarationPort | { apply(body: string): string });
 
 const sharedHelperPorts: Record<string, SharedHelperPort> = {
-  'utils/mime.ts': {
-    change: 'shared-durable-image-mime', dependency: '@earendil-works/pi-durable', apply: portImageMime,
-  },
   'utils/child-process.ts': {
     change: 'shared-durable-child-process-wait', dependency: '@earendil-works/pi-durable', apply: portChildProcess,
   },

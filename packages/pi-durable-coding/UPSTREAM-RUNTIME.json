@@ -143,7 +143,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "07d74d802cecc32ca7df04359d9a53d408e51b91c4b25df325ce30fa6d43dbfc",
+      "portSha256": "4aff128f6b4886f25f04ae81b1b8d2f3935b2eb4a96f77651955dbbd7fb11901",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",
@@ -196,15 +196,6 @@
       "portSha256": "15118c0272c36832166cd49d4dac73a568f25052bc6a803a6c341ab73b443ed5",
       "changes": [
         "shared-durable-child-process-wait"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/mime.ts",
-      "target": "src/pi/utils/mime.ts",
-      "sha256": "561d5511a976cdf4fc2d1b2ac773b21820bbad62e954e39c473f77c46a77f0af",
-      "portSha256": "9776fa3b491e80b1edcc2d44925f5343a2d4a4ad214d07f5cff726d0028e6e8d",
-      "changes": [
-        "shared-durable-image-mime"
       ]
     },
     {

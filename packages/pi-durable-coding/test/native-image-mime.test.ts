@@ -3,7 +3,7 @@ import { mkdtemp, writeFile, unlink, rmdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { detectSupportedImageMimeType as detectDurableMime } from '@earendil-works/pi-durable/images';
-import { detectSupportedImageMimeType, detectSupportedImageMimeTypeFromFile } from '../src/pi/utils/mime.ts';
+import { detectSupportedImageMimeType, detectSupportedImageMimeTypeFromFile } from '../src/compat/image-mime.ts';
 
 const signature = Buffer.from('89504e470d0a1a0a', 'hex');
 function chunk(type: string, data = Buffer.alloc(0)) {

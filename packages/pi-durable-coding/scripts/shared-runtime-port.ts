@@ -2,32 +2,6 @@
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
 
-export function portImageMime(body: string): string {
-  const parsed = ts.createSourceFile('mime.ts', body, ts.ScriptTarget.Latest, true);
-  const exported = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node) ||
-    ts.canHaveModifiers(node) && ts.getModifiers(node)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword));
-  const expected = [
-    ['detectSupportedImageMimeType', 'buffer', 'Uint8Array', 'string|null'],
-    ['detectSupportedImageMimeTypeFromFile', 'filePath', 'string', 'Promise<string|null>'],
-  ];
-  const limit = parsed.statements.filter(ts.isVariableStatement)
-    .flatMap(node => [...node.declarationList.declarations])
-    .find(node => node.name.getText(parsed) === 'IMAGE_TYPE_SNIFF_BYTES')?.initializer;
-  if (exported.length !== expected.length || !limit || !ts.isNumericLiteral(limit) || limit.text !== '4100' ||
-      exported.some((node, index) => !ts.isFunctionDeclaration(node) || !node.body || node.typeParameters?.length ||
-        node.asteriskToken || node.name?.text !== expected[index][0] ||
-        node.modifiers?.some(modifier => modifier.kind !== ts.SyntaxKind.ExportKeyword && modifier.kind !== ts.SyntaxKind.AsyncKeyword) ||
-        !!node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.AsyncKeyword) !== (index === 1) ||
-        node.parameters.length !== 1 || node.parameters[0].name.getText(parsed) !== expected[index][1] ||
-        node.parameters[0].type?.getText(parsed) !== expected[index][2] ||
-        node.parameters[0].questionToken || node.parameters[0].initializer || node.parameters[0].dotDotDotToken ||
-        node.type?.getText(parsed).replace(/\s/g, '') !== expected[index][3])) {
-    throw new Error('Native image MIME boundary changed');
-  }
-  return '/** Native null and file-prefix policy over durable image sniffing. */\n'
-    + 'export { detectSupportedImageMimeType, detectSupportedImageMimeTypeFromFile } from "../../compat/image-mime.ts";\n';
-}
-
 export function portChildProcess(body: string): string {
   const parsed = ts.createSourceFile('child-process.ts', body, ts.ScriptTarget.Latest, true);
   const functions = parsed.statements.filter(ts.isFunctionDeclaration)

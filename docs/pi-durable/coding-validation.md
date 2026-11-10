@@ -26,6 +26,67 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## MIME forwarding retirement after 4051994
+
+MIME detection already uses durable/images through the existing Native adapter.
+This slice removes a redundant two-line source forwarding module, the 25-line
+portImageMime function, its rule and its generation-only test. The generator
+routes upstream MIME imports directly to compat/image-mime before it queues
+relative dependencies. The public index still exports only the file detector.
+The adapter body is unchanged. It retains unknown-format null, the 4100-byte
+file prefix, bytesRead bounds, handle closure and error propagation.
+
+| Check | Result and scope |
+|---|---|
+| Generation | Complete runtime and auxiliary generation and checks pass: 21 runtime TypeScript files, including 17 src/pi and four facade files, zero resources, eight auxiliary sources and 13 shared forwards; Coding patch check passes for 74 outputs |
+| Root behavior | native-image-mime and native-image-resize pass once: 40 tests, zero failures and 185 expect calls |
+| Hoisted behavior | The same two suites pass once in the existing disposable layout: 40 tests, zero failures and 185 expect calls |
+| Declarations | Scoped transpileDeclaration of the full index and MIME adapter passes in both layouts with matching output; this is not a full type check or declaration build |
+| Isolation | Task-owned child HOME and temporary paths, disabled env-file loading, network-denying sandbox and network-blocking preload; build preflights find no protected legacy dependency |
+| Independent review | Zero confirmed findings; seven probe groups and six dependency-fault scenarios pass; parent verifies eight slice inputs and 299 input/evidence records, including all 85 evidence files, by SHA-256 or expected absence |
+| Source registration | Update seven entries, retire the forwarding module entry and add none; other entries remain unchanged |
+| Restricted Craft audit | Fixed v0.15.6 baseline 8df01c5d0ac73c35add5954e6f190ce038d35845: 2033 allowed files, 1454 common, 873 normalized-identical, 581 modified, 579 MkAgent-only and 858 reviewed deletions |
+| Dependencies and patches | No install, dependency, lock, SDK patch or persistent-schema change; core four, Coding 74 and durable 33 physical outputs remain 111 in total |
+
+The review checks six MIME routes, five non-MIME controls and three adjacent
+routes. A search of 155 allowed source, script and related test paths finds no
+retired forwarding reference or transformation. New and old MIME export
+projections expose the same file-detector function object. Complete index
+declarations differ only in that re-export path. Actual durable MIME calls and
+files preserve typed-array offsets, caller bytes, unknown null, ENOENT and the
+APNG prefix boundary.
+
+The dependency-fault probe uses the unchanged adapter function bodies with
+injected open and detectMime functions. Success, unknown format, open error,
+read error, sniff error and close error pass. It checks one prefix read from
+position zero, bytesRead bounds, one close after a successful open, no close
+after an open failure and error identity. This is not an operating-system
+filesystem-fault integration test. Runtime export checks load the MIME export
+projection rather than the complete /native entry.
+
+Keep six failed review attempts: the macOS /tmp realpath assertion, a missing
+root dependency path, nested sandbox launch, CommonJS custom loading, an empty
+runtime onLoad return and a builtin fs mock that did not replace the binding.
+The final probes use the resolved package path, the default TypeScript loader
+and function-body dependency injection. Failed logs remain evidence of failed
+attempts. The reviewer does not repeat the parent behavior suites.
+
+The final diff check first reports one extra blank line at the end of the
+resize test. Remove that trailing LF and refresh its source hash. A byte check
+confirms that this single LF is the only source change after independent review;
+keep the original review inputs and behavior results at their original hashes.
+The final restricted audit checks the refreshed source registration.
+
+Task evidence is under /tmp/mkagent-mime-retirement-N1neND; independent report,
+input/evidence manifests, probes and failed attempts are under
+/tmp/mkagent-mime-review-x4n76ve1. The Craft audit retains the same exclusions:
+protected legacy context source, `.claude/settings.json` and `.env.example`.
+It is a restricted audit. Fresh/frozen install, complete types/declarations,
+broad integration, full Craft audit, protected legacy integration, remaining
+source retirement and F0 to F6 acceptance remain open. Earlier resources
+TS9007, ToolHtmlRenderer ambiguity and install failures are not closed by these
+scoped checks.
+
 ## SDK tool manager policy after 7421c90
 
 The SDK already owns binary discovery, release resolution, download retries,
