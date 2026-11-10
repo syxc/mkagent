@@ -13,7 +13,7 @@
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "5c39b9c77a928a72deaeaf7e49cdc1c630fb242e1e869dbf5b92164079db73a4"
+      "sha256": "20adfc32755be26da1c0c65fa3f2df36bff69678646942caa8ad15e494353022"
     },
     {
       "path": "dist/core/agent-session-services.js",
@@ -24,6 +24,16 @@
       "path": "dist/core/agent-session-services.d.ts",
       "originalSha256": "ab5dac8701f02587db54abc27d119ea44ebd3708f235d5daf8293abd7b2ea71e",
       "sha256": "44552258ea58cf633b7706b18cf2db5a1eb2900e85474722ddaa312f5c1cdc46"
+    },
+    {
+      "path": "dist/core/sdk.js",
+      "originalSha256": "c43e4e1d49ac3ec4b9f48465bf2081bc5980b55f23d44040d02e9046dea45725",
+      "sha256": "587a146a050de93cd46624edf8fc473886065fef2f7c1a951f7cec508e789341"
+    },
+    {
+      "path": "dist/core/sdk.d.ts",
+      "originalSha256": "2cb83c8604497198eda83ba4691d9c001c971c6b358af05f42355afc7666c669",
+      "sha256": "f091b1761a7255a836cfa52c881159a3bfd636684b1b27e0fc266e57bbb78af5"
     },
     {
       "path": "dist/core/agent-session-runtime.d.ts",

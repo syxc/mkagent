@@ -7,7 +7,7 @@ import ts from 'typescript';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets } from './asset-runtime-port.ts';
-import { portNativeMessages, portSDK } from './session-runtime-port.ts';
+import { portNativeMessages } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludeRunModeEntries } from './shared-helper-port.ts';
 
@@ -182,10 +182,6 @@ while (queue.length) {
     body = portNativeMessages(body);
     changes.add('exclude-host-correlation-from-model-context');
     changes.add('legacy-projection-message-policy');
-  }
-  if (path === 'core/sdk.ts') {
-    body = portSDK(body);
-    changes.add('durable-sdk-host-bindings');
   }
   if (path === 'extensions/mcp/oauth.ts') {
     body = portMcpOAuth(body);

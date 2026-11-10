@@ -19,6 +19,7 @@ import { codingImageProcessingPolicy } from './coding-image-processing-policy.ts
 import { codingCachePolicy } from './coding-cache-policy.ts';
 import { codingSessionServicesPolicy } from './coding-session-services-policy.ts';
 import { codingSessionRuntimePolicy } from './coding-session-runtime-policy.ts';
+import { codingSessionFactoryPolicy } from './coding-session-factory-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -95,11 +96,16 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(path, original.slice(0, position) + exports + original.slice(position));
   if (suffix === 'd.ts') outputs.set(path, outputs.get(path)!.replace(marker,
     'export type { BashResult } from "./core/bash-executor.ts";\n'
-    + 'export type { ShellDependencies } from "./core/tools/bash.ts";\n' + marker));
+    + 'export type { ShellDependencies } from "./core/tools/bash.ts";\n'
+    + 'export type { CreateAgentSessionDependencies } from "./core/sdk.ts";\n' + marker));
 }
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/agent-session-services.${suffix}`;
   outputs.set(path, codingSessionServicesPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
+}
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/core/sdk.${suffix}`;
+  outputs.set(path, codingSessionFactoryPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
 }
 const runtimeDeclaration = 'dist/core/agent-session-runtime.d.ts';
 outputs.set(runtimeDeclaration, codingSessionRuntimePolicy(readFileSync(join(baseline, runtimeDeclaration), 'utf8')));

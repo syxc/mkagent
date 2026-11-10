@@ -6,7 +6,7 @@ import {
   type CreateAgentSessionFromServicesOptions,
 } from '@earendil-works/pi-coding-agent';
 import * as extensionLoader from './native-extension-loader.ts';
-import { createAgentSession } from './pi/core/sdk.ts';
+import { createAgentSession } from './native-sdk.ts';
 
 export type {
   AgentSessionRuntimeDiagnostic, AgentSessionServices,

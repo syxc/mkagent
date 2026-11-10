@@ -14,7 +14,7 @@ import { NativeSessionJournal } from '../../src/durable-coding/session-journal.t
 import { BlockedSessionActions } from '../../src/durable-coding/session-task.ts';
 import { createHostResources } from '../../src/host-resources.ts';
 import { ModelRuntime } from '@earendil-works/pi-coding-agent';
-import { createAgentSession } from '../../src/pi/core/sdk.ts';
+import { createAgentSession } from '../../src/native-sdk.ts';
 
 const [mode, directory, replay, crash] = process.argv.slice(2);
 if (!directory || !['initial', 'resume'].includes(mode!)) throw new Error('Invalid synthetic recovery worker input');

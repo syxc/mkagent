@@ -1,4 +1,4 @@
-# Content SHA-256: ea3c3547e129c06c296f744dff0d37c8527ded2971e060cf52e0226a5c2b6d5d
+# Content SHA-256: 6c26931ed4a8c90ea20893b229be6e76dd647d60c3d38916450f2b9faee144a1
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -70,7 +70,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,56 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,57 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -126,6 +126,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { getThemesDir, getExportTemplateDir } from "./config.ts";
 +export type { BashResult } from "./core/bash-executor.ts";
 +export type { ShellDependencies } from "./core/tools/bash.ts";
++export type { CreateAgentSessionDependencies } from "./core/sdk.ts";
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
 diff --git a/dist/core/agent-session-services.js b/dist/core/agent-session-services.js
@@ -227,6 +228,154 @@ diff --git a/dist/core/agent-session-services.d.ts b/dist/core/agent-session-ser
 +export declare function createAgentSessionFromServices<Result extends CreateAgentSessionResult>(options: CreateAgentSessionFromServicesOptions, createSession: (options: CreateAgentSessionOptions) => Promise<Result>): Promise<Result>;
 +export declare function initializeExtensionModels(resourceLoader: ResourceLoader, modelRuntime: ModelRuntime): Promise<AgentSessionRuntimeDiagnostic[]>;
  //# sourceMappingURL=agent-session-services.d.ts.map
+\ No newline at end of file
+diff --git a/dist/core/sdk.js b/dist/core/sdk.js
+--- a/dist/core/sdk.js
++++ b/dist/core/sdk.js
+@@ -66,7 +66,9 @@ function getDefaultAgentDir() {
+  * });
+  * ```
+  */
+-export async function createAgentSession(options = {}) {
++export async function createAgentSession(options = {}, dependencies) {
++    const createAgent = dependencies?.createAgent ?? (config => new Agent(config));
++    const createSession = dependencies?.createSession ?? (config => new AgentSession(config));
+     const cwd = resolvePath(options.cwd ?? options.sessionManager?.getCwd() ?? process.cwd());
+     const agentDir = options.agentDir ? resolvePath(options.agentDir) : getDefaultAgentDir();
+     let resourceLoader = options.resourceLoader;
+@@ -76,7 +78,7 @@ export async function createAgentSession(options = {}) {
+     const settingsManager = options.settingsManager ?? SettingsManager.create(cwd, agentDir);
+     const sessionManager = options.sessionManager ?? SessionManager.create(cwd, getDefaultSessionDir(cwd, agentDir));
+     if (!resourceLoader) {
+-        resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager });
++        resourceLoader = new DefaultResourceLoader({ cwd, agentDir, settingsManager, extensionLoader: dependencies?.extensionLoader });
+         await resourceLoader.reload();
+         time("resourceLoader.reload");
+     }
+@@ -160,7 +162,7 @@ export async function createAgentSession(options = {}) {
+     const initialActiveToolNames = (selectedToolNames ?? defaultToolNames).filter((name) => !isExcludedTool?.(name));
+     // Create convertToLlm wrapper that filters images if blockImages is enabled (defense-in-depth)
+     const convertToLlmWithBlockImages = (messages) => {
+-        const converted = convertToLlm(messages);
++        const converted = (dependencies?.convertToLlm ?? convertToLlm)(messages);
+         // Check setting dynamically so mid-session changes take effect
+         if (!settingsManager.getBlockImages()) {
+             return converted;
+@@ -189,12 +191,14 @@ export async function createAgentSession(options = {}) {
+         });
+     };
+     const extensionRunnerRef = {};
+-    const cacheWarmer = new CacheWarmer(modelRuntime, sessionManager, () => settingsManager.getCacheWarmingMode(), async (event) => extensionRunnerRef.current?.emitCacheWarmingDecision(event) ?? event.action);
++    const cacheWarmer = new CacheWarmer(modelRuntime, sessionManager, () => settingsManager.getCacheWarmingMode(), async (event) => extensionRunnerRef.current?.emitCacheWarmingDecision(event) ?? event.action, dependencies?.cacheWarmingAction);
+     const buildRequestOptions = (options = {}) => {
+         const providerRetrySettings = settingsManager.getProviderRetrySettings();
+         const httpIdleTimeoutMs = settingsManager.getHttpIdleTimeoutMs();
+         const effectiveTimeoutMs = httpIdleTimeoutMs === 0 ? 2147483647 : httpIdleTimeoutMs;
+         const headerRunner = extensionRunnerRef.current;
++        const identity = getClientIdentity(settingsManager);
++        identity.version = dependencies?.identityVersion ?? identity.version;
+         return {
+             ...options,
+             timeoutMs: options.timeoutMs ?? providerRetrySettings.timeoutMs ?? effectiveTimeoutMs,
+@@ -202,7 +206,7 @@ export async function createAgentSession(options = {}) {
+             maxRetries: options.maxRetries ?? providerRetrySettings.maxRetries,
+             maxRetryDelayMs: options.maxRetryDelayMs ?? providerRetrySettings.maxRetryDelayMs,
+             // Replaces the agent loop's default identity; read per request so telemetry changes apply at once.
+-            identity: getClientIdentity(settingsManager),
++            identity,
+             transformHeaders: async (headers) => headerRunner?.hasHandlers("before_provider_headers")
+                 ? headerRunner.emitBeforeProviderHeaders(headers)
+                 : headers,
+@@ -249,7 +253,7 @@ export async function createAgentSession(options = {}) {
+             model: model.id,
+         });
+     };
+-    const agent = new Agent({
++    const agent = createAgent({
+         initialState: {
+             systemPrompt: "",
+             model,
+@@ -289,19 +293,19 @@ export async function createAgentSession(options = {}) {
+     // This stream resolves auth through modelRuntime, so summaries must not pre-resolve it (#11520).
+     markRuntimeStreamFunction(agent.streamFunction, modelRuntime);
+     // Restore missing settings metadata for older sessions.
+-    if (hasExistingSession) {
++    if (options.initializeSessionMetadata !== false && hasExistingSession) {
+         if (!hasThinkingEntry) {
+             sessionManager.appendThinkingLevelChange(thinkingLevel);
+         }
+     }
+-    else {
++    else if (options.initializeSessionMetadata !== false) {
+         // Save initial model and thinking level for new sessions so they can be restored on resume
+         if (model) {
+             sessionManager.appendModelChange(model.provider, model.id);
+         }
+         sessionManager.appendThinkingLevelChange(thinkingLevel);
+     }
+-    const session = new AgentSession({
++    const session = createSession({
+         agent,
+         sessionManager,
+         settingsManager,
+@@ -309,6 +313,11 @@ export async function createAgentSession(options = {}) {
+         scopedModels: options.scopedModels,
+         resourceLoader,
+         customTools: options.customTools,
++        baseToolsOverride: options.baseToolsOverride,
++        wrapTool: options.wrapTool,
++        onAction: options.onAction,
++        onToolsChanged: options.onToolsChanged,
++        captureUserInput: options.captureUserInput,
+         modelRuntime,
+         cacheWarmer,
+         initialActiveToolNames,
+diff --git a/dist/core/sdk.d.ts b/dist/core/sdk.d.ts
+--- a/dist/core/sdk.d.ts
++++ b/dist/core/sdk.d.ts
+@@ -1,3 +1,6 @@
++import type { Agent, AgentOptions } from "@earendil-works/pi-agent-core";
++import type { AgentSessionConfig } from "./agent-session.ts";
++import type { DefaultResourceLoaderOptions } from "./resource-loader.ts";
+ import { type ThinkingLevel } from "@earendil-works/pi-agent-core";
+ import { type Model } from "@earendil-works/pi-ai/compat";
+ import { AgentSession } from "./agent-session.ts";
+@@ -8,6 +11,13 @@ import { SessionManager } from "./session-manager.ts";
+ import { SettingsManager } from "./settings-manager.ts";
+ import { createBashTool, createCodingTools, createEditTool, createFindTool, createGrepTool, createLsTool, createPowerShellTool, createReadOnlyTools, createReadTool, createWriteTool, withFileMutationQueue } from "./tools/index.ts";
+ export interface CreateAgentSessionOptions {
++    /** Skip bootstrap entries when the host restores an already committed tree. */
++    initializeSessionMetadata?: boolean;
++    baseToolsOverride?: AgentSessionConfig["baseToolsOverride"];
++    wrapTool?: AgentSessionConfig["wrapTool"];
++    onAction?: AgentSessionConfig["onAction"];
++    onToolsChanged?: AgentSessionConfig["onToolsChanged"];
++    captureUserInput?: AgentSessionConfig["captureUserInput"];
+     /** Working directory for project-local discovery. Default: process.cwd() */
+     cwd?: string;
+     /** Global config directory. Default: ~/.pi/agent */
+@@ -63,6 +73,15 @@ export interface CreateAgentSessionOptions {
+     /** Session start event metadata for extension runtime startup. */
+     sessionStartEvent?: SessionStartEvent;
+ }
++/** Host bindings; SDK selection, provider hooks and lifecycle assembly stay shared. */
++export interface CreateAgentSessionDependencies<AgentType extends Agent, SessionType extends AgentSession> {
++    createAgent: (options: AgentOptions) => AgentType;
++    createSession: (config: Omit<AgentSessionConfig, "agent"> & { agent: AgentType }) => SessionType;
++    extensionLoader?: DefaultResourceLoaderOptions["extensionLoader"];
++    convertToLlm?: typeof import("./messages.ts").convertToLlm;
++    cacheWarmingAction?: <T>(work: () => Promise<T>) => Promise<T>;
++    identityVersion?: string;
++}
+ /** Result from createAgentSession */
+ export interface CreateAgentSessionResult {
+     /** The created session */
+@@ -114,4 +133,5 @@ export { withFileMutationQueue, createCodingTools, createReadOnlyTools, createRe
+  * ```
+  */
+ export declare function createAgentSession(options?: CreateAgentSessionOptions): Promise<CreateAgentSessionResult>;
++export declare function createAgentSession<AgentType extends Agent, SessionType extends AgentSession>(options: CreateAgentSessionOptions, dependencies: CreateAgentSessionDependencies<AgentType, SessionType>): Promise<Omit<CreateAgentSessionResult, "session"> & { session: SessionType }>;
+ //# sourceMappingURL=sdk.d.ts.map
 \ No newline at end of file
 diff --git a/dist/core/agent-session-runtime.d.ts b/dist/core/agent-session-runtime.d.ts
 --- a/dist/core/agent-session-runtime.d.ts

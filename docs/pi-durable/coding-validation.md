@@ -26,6 +26,93 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK session factory after b9099bd
+
+This slice removes the complete 500-line local createAgentSession and four
+helpers for auth guidance, client identity, defaults and telemetry, 566 lines
+in total. It also removes the old portSDK generation transform. A thin native
+binding calls the public SDK factory with durable agent and session factories,
+the native extension loader, message conversion, a background action and the
+pinned Coding identity version.
+The SDK keeps model and thinking selection, resource loading, tool selection,
+provider hooks and session assembly. No complete algorithm moves into a patch.
+
+The optional second argument links the agent and session subtypes. The original
+one-argument SDK call keeps its default constructors and policies. Host callbacks
+and initializeSessionMetadata are optional SDK inputs. The latter suppresses
+bootstrap writes when the host restores an already committed tree. The native
+binding passes the original options object and retains its independent default
+stream registration. Native warming uses the host action or a direct promise
+callback, as before. The SDK default warming path retains its existing behavior.
+Remove this patch when the SDK provides equivalent public injection contracts.
+
+| Check | Result and scope |
+|---|---|
+| Generation | Complete runtime and auxiliary checks and pristine Coding patch replay pass |
+| Installations | Root and isolated hoisted frozen installs exit zero; all 72 Coding and 33 durable hashes match; lock bytes stay unchanged |
+| Root behavior | 46 tests and 731 expect calls pass across six files, including 18 crash/reopen boundaries |
+| Hoisted behavior | 56 tests and 773 expect calls pass across seven files, including the same recovery cases and ten plugin tests |
+| Types | After a type export correction, root Coding typecheck and actual declarations pass; the new factory test compiles strictly in both layouts |
+| Build and bundle | Hoisted server build and all 26 bundle tests with 105 expect calls pass |
+| Source registration | Twelve hashes updated, five retired entries removed and three entries added |
+| Restricted Craft audit | Fixed v0.15.6 audit passes for 2050 permitted files; the denied source is excluded before reads and its real registry entry stays unchanged |
+| Independent review | One reproduced bundled identity-version regression; other scoped probes pass. The parent fixes the finding and verifies the regression in both layouts |
+| After review correction | Each layout passes seven factory tests with 56 expect calls and strict test compilation; root types and actual declarations pass; hoisted rebuild and all 26 bundle tests with 105 expect calls pass; all 28 drift cases are rejected |
+
+The independent review runs eight runtime groups and four cache-warming groups
+per layout. Strict positive consumers have zero diagnostics and each negative
+consumer gets the four expected diagnostics. All 24 original drift cases pass.
+The parent verifies 64 evidence hashes and all 127 reviewed input hashes before
+the correction. The review conclusion applies to this factory slice only.
+
+The review finds that SDK identity reads the adjacent package version after
+bundling. It gives 0.0.0 without package.json and 0.2.6 with the host metadata;
+the old native path uses the fixed Coding version 1.5.0. A new regression test
+bundles the actual native factory and first reproduces the old installed-patch
+failure. The correction adds an optional identityVersion dependency and binds
+the existing native VERSION. SDK identity and dynamic telemetry attribution
+stay shared; the one-argument SDK default keeps its original version source.
+After correction, the native bundle uses 1.5.0 in both metadata cases and still
+updates attribution when settings change. The original finding and failure
+remain recorded. Tests after correction do not repeat the complete recovery
+suite; the identity-only change leaves the task and storage paths unchanged.
+The bundle suite rebuilds the production server before its tests.
+
+The initial parent drift probe assumes every edit argument is a literal and
+rejects the signature variable in the probe itself. It resolves that constant
+from the policy AST and then rejects all 28 missing or duplicate anchors. This
+fixture correction changes no product code.
+
+Behavior tests cover the SDK default and durable constructors, injected durable
+state, inherited and non-enumerable options, callback projection, tool modifiers
+and exclusions, invalid tool lists, host metadata removal and dynamic image
+blocking. New and existing sessions retain their entries when metadata writes
+are disabled. The default native resource loader loads a temporary plugin that
+imports the public Coding API. Existing host-session tests cover durable tool
+ownership, input admission and provider/transcript metadata separation. Recovery
+tests use temporary journals and deterministic local providers.
+
+The first type checks fail because the new binding tries to export Tool from
+the SDK root, which has no such export. The fix exports the original local tool
+type. It changes no runtime code or SDK patch. The strict test compile, Coding
+typecheck and declaration build then pass; original failures remain recorded.
+The strict test compile uses skipLibCheck=true, so it checks consumer code but
+skips all declaration-file bodies.
+
+Runtime generation now has 33 TypeScript outputs: 29 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and forwarded entries
+15. Physical patch outputs are core four, Coding 72 and durable 33, for 109.
+No dependency, task schema or persistence version changes.
+
+The hoisted fixture retains its known protected legacy omission. Its complete
+type check and the full Craft audit remain blocked; the restricted audit does
+not establish a full pass. The earlier root plugin resolution failures and old
+hoisted installation failures remain in their original records. These checks
+use task-owned child homes, offline settings, a network blocker and temporary
+data. No upstream CLI, real UI, account, paid model or real Craft data is used.
+Remaining local sources, server copies, host OAuth and default process policy
+still need review. F0 through F6 remain open.
+
 ## Public SDK session runtime after 4ab53da
 
 This slice removes the 447-line local AgentSessionRuntime and its 59-line

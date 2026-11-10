@@ -18,11 +18,9 @@
   },
   "coreImports": [
     "*",
-    "Agent",
     "AgentMessage",
     "AgentTool",
-    "ThinkingLevel",
-    "setDefaultStreamFn"
+    "ThinkingLevel"
   ],
   "files": [
     {
@@ -58,22 +56,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/auth-guidance.ts",
-      "target": "src/pi/core/auth-guidance.ts",
-      "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
-      "portSha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/core/client-identity.ts",
-      "target": "src/pi/core/client-identity.ts",
-      "sha256": "8c17ba14d52fe1549c79b6ff8f7bcf3cc940d55d155d75dc4a4d7cea67e363c0",
-      "portSha256": "3828abe7869edfba4e82602b591efe05a85b304acea6e44e6e1aa58f9669f400",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/compaction/compaction.ts",
       "target": "src/pi/core/compaction/compaction.ts",
       "sha256": "32714966eb644da31cd84e8eb172965256160626b3d26ae9752c3894300f2b0b",
@@ -81,13 +63,6 @@
       "changes": [
         "legacy-context-token-sdk-forward"
       ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/defaults.ts",
-      "target": "src/pi/core/defaults.ts",
-      "sha256": "e05e32e5613066667b52fa1d8864fec27b3564636f93af7983f53984bce02955",
-      "portSha256": "e05e32e5613066667b52fa1d8864fec27b3564636f93af7983f53984bce02955",
-      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/extensions/index.ts",
@@ -146,27 +121,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/sdk.ts",
-      "target": "src/pi/core/sdk.ts",
-      "sha256": "f0f6f2b14a61c5c3ebb31d40c97b3f73296a2f0334d582072383302d693714c8",
-      "portSha256": "fb095a721190a3469eb619da35d26be72e7ff73bc0fcd0f774c5cd59d87be299",
-      "changes": [
-        "durable-agent-boundary",
-        "host-extension-module-import",
-        "public-coding-sdk",
-        "durable-sdk-host-bindings"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/telemetry.ts",
-      "target": "src/pi/core/telemetry.ts",
-      "sha256": "5ec837b287ea0303f704a5278c586e2a5d4003f3ad2ccad94997d2fa59164855",
-      "portSha256": "1bf9b43ef8744c9220624abfb3bebf0ff652a5a3d6a14d776690abc918beacf6",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/tools/index.ts",
       "target": "src/pi/core/tools/index.ts",
       "sha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
@@ -206,7 +160,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "f3d3191aebe775f7b375e094e7f2778d71b27f01200af83fba5b45f5dafd954e",
+      "portSha256": "8ade279c71fe033cada64c735b68b1bc3d72c50b960e2a9132e96feed67c4080",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",

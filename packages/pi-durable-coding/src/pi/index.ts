@@ -276,7 +276,7 @@ export {
 	createReadTool,
 	createWriteTool,
 	type PromptTemplate,
-} from "./core/sdk.ts";
+} from "../native-sdk.ts";
 export {
 	type BranchSummaryEntry,
 	buildContextEntries,

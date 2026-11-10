@@ -11,7 +11,7 @@ import { DurableLoopBinding, currentCodingToolInvocation } from '../src/durable-
 import { NativeSessionJournal } from '../src/durable-coding/session-journal.ts';
 import { createHostResources } from '../src/host-resources.ts';
 import { wrapAgentTool } from '../src/host-tools.ts';
-import { createAgentSession } from '../src/pi/core/sdk.ts';
+import { createAgentSession } from '../src/native-sdk.ts';
 import { response } from './fixtures/durable-harness.ts';
 import {
   AgentSession, DefaultResourceLoader, getReadmePath, markRuntimeStreamFunction,
