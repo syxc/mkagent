@@ -18,9 +18,9 @@ import {
 } from "@earendil-works/pi-tui";
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import type { KeybindingsManager } from "@earendil-works/pi-coding-agent";
-import { AuthUrlComponent } from "../../modes/interactive/components/auth-url.ts";
-import { DynamicBorder } from "../../modes/interactive/components/dynamic-border.ts";
-import { keyHint } from "../../modes/interactive/components/keybinding-hints.ts";
+import { AuthUrlComponent } from "@earendil-works/pi-coding-agent";
+import { DynamicBorder } from "@earendil-works/pi-coding-agent";
+import { keyHint } from "@earendil-works/pi-coding-agent";
 import { getSelectListTheme, type Theme } from "@earendil-works/pi-coding-agent";
 
 export interface McpMenu {

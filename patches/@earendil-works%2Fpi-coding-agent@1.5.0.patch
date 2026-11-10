@@ -1,8 +1,8 @@
-# Content SHA-256: f4d2cb6b56e9313816895afd148f34eb73da067ddc663e068017b917f33da26e
+# Content SHA-256: 4b97ae88da1a4cbc8f2bd91704b5238262cedfc293d5380b745407e0449235b6
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,34 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,36 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -35,6 +35,8 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/keybindings.js";
 +export { KeybindingsManager } from "./core/keybindings.js";
 +export * from "./modes/interactive/theme/theme.js";
++export { AuthUrlComponent } from "./modes/interactive/components/auth-url.js";
++export { VisualLinePreview } from "./modes/interactive/components/visual-truncate.js";
 +export { getThemesDir, getExportTemplateDir } from "./config.js";
  //# sourceMappingURL=index.js.map
 \ No newline at end of file
@@ -50,7 +52,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,35 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,37 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -83,10 +85,45 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/keybindings.ts";
 +export { KeybindingsManager } from "./core/keybindings.ts";
 +export * from "./modes/interactive/theme/theme.ts";
++export { AuthUrlComponent } from "./modes/interactive/components/auth-url.ts";
++export { VisualLinePreview } from "./modes/interactive/components/visual-truncate.ts";
 +export { getThemesDir, getExportTemplateDir } from "./config.ts";
 +export type { ShellDependencies } from "./core/tools/bash.ts";
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
+diff --git a/dist/modes/interactive/components/tool-execution.js b/dist/modes/interactive/components/tool-execution.js
+--- a/dist/modes/interactive/components/tool-execution.js
++++ b/dist/modes/interactive/components/tool-execution.js
+@@ -121,6 +121,9 @@ export class ToolExecutionComponent extends Container {
+             return { handled: true };
+         });
+     }
++    _ensurePngTranscoder(onRegistered) {
++        ensurePngTranscoder(onRegistered);
++    }
+     /**
+      * Show new partial arguments. Applied at the next render, so a call streaming many argument deltas between two
+      * frames runs its renderer once per frame, not once per delta (#9265).
+@@ -302,7 +305,7 @@ export class ToolExecutionComponent extends Container {
+                         ? previousImages[index]
+                         : new Image(source.data, source.mimeType, { fallbackColor: (s) => theme.fg("toolOutput", s) }, { maxWidthCells: source.widthCells });
+                     if (source.mimeType !== "image/png") {
+-                        ensurePngTranscoder(() => {
++                        this._ensurePngTranscoder(() => {
+                             this.invalidate();
+                             this.ui.requestRender();
+                         });
+diff --git a/dist/modes/interactive/components/tool-execution.d.ts b/dist/modes/interactive/components/tool-execution.d.ts
+--- a/dist/modes/interactive/components/tool-execution.d.ts
++++ b/dist/modes/interactive/components/tool-execution.d.ts
+@@ -46,6 +46,7 @@ export declare class ToolExecutionComponent extends Container {
+     private createCallFallback;
+     private createResultFallback;
+     private createResultRegion;
++    protected _ensurePngTranscoder(onRegistered: () => void): void;
+     /**
+      * Show new partial arguments. Applied at the next render, so a call streaming many argument deltas between two
+      * frames runs its renderer once per frame, not once per delta (#9265).
 diff --git a/dist/extensions/codemode/tool.js b/dist/extensions/codemode/tool.js
 --- a/dist/extensions/codemode/tool.js
 +++ b/dist/extensions/codemode/tool.js

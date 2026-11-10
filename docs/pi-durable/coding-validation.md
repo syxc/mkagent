@@ -26,6 +26,99 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK UI components after f02db2e
+
+The public Coding SDK now owns UI components, CustomEditor and the complete
+ToolExecutionComponent renderer lifecycle. A 25-line native-ui module lists the
+existing UI exports and subclasses only ToolExecutionComponent to bind PNG
+registration to the shared Photon asset. Its inherited seven-argument
+constructor and SDK state, lastComponent, argument batching, layouts, images,
+mouse handling, fallback and invalidation remain in the SDK. MCP now imports
+AuthUrlComponent and VisualLinePreview through added root exports of existing
+SDK classes. One protected registration method retains the SDK default path
+and lets Native bind its existing shared WASM. No component algorithm moves
+into the patch. Public CLI, setup components and run modes remain excluded.
+
+The local component barrel, its private-component filter and its test retire.
+The generation boundary now stops at SDK components. In total, 41 tracked source
+files and 8885 lines retire, including orphan component helpers, the external
+editor, model search/refresh, experimental flag and HTTP dispatcher. Each file
+matched the prior runtime hash before moving to Trash. Runtime now contains 81
+TypeScript files: 77 under src/pi and four generated facades, with no assets.
+The separate auxiliary check passes for nine sources and 18 shared entries.
+The patch inventory is core 4, Coding 48 and durable 33, for 85 physical outputs.
+Only the Coding patch changes in this slice; no task or serialized version changes.
+
+Full runtime generation/check and pristine Coding patch replay pass, including
+all 48 original and resulting hashes. Both existing normal and hoisted layouts
+pass frozen install with scripts disabled. All 48 Coding and 33 durable outputs
+match their manifests in both layouts, and the lock file is unchanged. An early
+hook placement attached the argument batching comment to the new PNG method;
+the generator now inserts the hook before that comment. The final patch was
+regenerated, replayed and installed before the final functional checks.
+
+The first seven-test UI run passed four and failed three. One assertion assumed
+that the smaller compat entry exported the full UI; it never did. The test now
+checks Native and both virtual Pi package names. Two mouse assertions rejected
+the SDK dispatcher target metadata. They now check the handled field and supply
+the complete mouse event. No API was expanded to satisfy those assumptions.
+Final root UI, SDK boundary and generation checks pass 42 tests with 257
+assertions across three files. Coding noEmit and actual declaration emission pass.
+
+A root four-file plugin combination passed 46 tests and failed six: each failed
+fixture could not resolve follow-redirects from the isolated root layout. The
+root server type check also failed because @mkagent/core and @mkagent/shared
+workspace links were absent, with related missing-module and derived type
+errors. The package sources exist. The existing hoisted layout has those links
+and follow-redirects. No runtime dependency was added for these checks.
+
+The hoisted runner captures successful exit codes for all five stages:
+
+- Ten related test files pass 80 tests and 453 assertions, including all plugin
+  fixtures that failed to resolve in the root layout. They cover SDK identities,
+  both renderer shells, frame batching, shared state, lastComponent, partial and
+  final results, error fallback, mouse expansion, native/SDK default PNG paths,
+  image cache/visibility and a relocated Bun bundle with only the shared WASM.
+- Coding actual declaration emission, server type check and server build pass.
+- Native extension UI with a local kernel passes 19 tests and 82 assertions,
+  covering startup, reload, dialogs, cancellation, disconnect/reconnect and
+  session close/replacement races. This uses deterministic local data.
+
+The root 42 tests overlap the hoisted suites and are not added to that total.
+Source registration updates 11 entries, removes 41 and adds four. The fixed
+Craft v0.15.6 source audit passes for 2086 files. This checks the independent
+reference checkout, not a live Craft application. All six documents pass
+punctuation checks and all 153 local links resolve.
+
+The completed independent read-only review found no verified new correctness,
+plugin compatibility or publication defect. Seven additional loader, editor and
+renderer probes pass with 93 assertions. An external strict declaration
+consumer passes with skipLibCheck enabled, covering CustomEditor subclasses,
+ExtensionUIContext factories, inherited ToolExecutionComponent construction and
+protected override, plus both MCP classes. Native did not export
+ToolRenderContext at HEAD; the probe imports it from the official SDK and does
+not treat that existing boundary as a new defect. Node 24.22.1 passes the SDK
+default PNG path and a relocated shared-WASM bundle without project or parent
+node_modules, build-machine WASM reads or network access. Both checks cover
+PNG output, cache and visibility.
+
+The review scans 1238 existing package source files and 2823 relative references
+with no remaining reference to the 41 deleted files. Runtime token comparison
+matches 36 deleted component/internal files against pristine SDK code after
+removing types, module declarations and comments. All 81 runtime hashes and 48
+SDK hashes pass. A trailing blank line in shared-runtime-port.test.ts caused the
+review whitespace check to fail; that line is removed and git diff --check now
+passes. The review did not repeat installation, the server build or the full
+parent suites. Their successful exit codes come from the parent runner.
+
+The existing image-convert helper still contains SDK-derived PNG conversion and
+transcoder registration logic to bind shared Photon. That remaining copy and
+AuthContext remain open, as do the other source responsibilities and F0 through
+F6. These checks do not cover the full repository suite, a new product UI
+session, accounts, paid models, Windows/Linux, live OAuth/clipboard/browser
+flows or a standalone executable. Evidence is under
+/tmp/mkagent-ui-sdk-4YCu2K and /tmp/mkagent-ui-review-uTREMA.
+
 ## Public SDK codemode factories after d581616
 
 The Coding SDK now owns codemode descriptions, declarations, loadout selection,

@@ -466,7 +466,7 @@ export {
 	UserMessageComponent,
 	UserMessageSelectorComponent,
 	type VisualTruncateResult,
-} from "./modes/interactive/components/index.ts";
+} from "../native-ui.ts";
 // Theme utilities for custom tools and extensions
 export {
 	getLanguageFromPath,

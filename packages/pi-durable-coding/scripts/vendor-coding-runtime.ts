@@ -10,7 +10,7 @@ import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets, portImageAssets } from './asset-runtime-port.ts';
 import { portCacheWarmer, portNativeMessages, portSDK, portSessionServices } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
-import { applySharedHelperPort, excludePrivateHostComponents, excludeRunModeEntries } from './shared-helper-port.ts';
+import { applySharedHelperPort, excludeRunModeEntries } from './shared-helper-port.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const checkout = process.argv[2];
@@ -80,12 +80,6 @@ while (queue.length) {
     // Exclude transport hosts before walking either entry point's dependencies.
     body = modeEntry;
     changes.add('exclude-upstream-run-modes');
-  }
-  const privateComponents = excludePrivateHostComponents(path, body);
-  if (privateComponents !== undefined) {
-    // Cut private host exports before the component barrel adds their dependencies.
-    body = privateComponents;
-    changes.add('exclude-private-host-components');
   }
   if (path === 'modes/rpc/rpc-client.ts') {
     const edits = [

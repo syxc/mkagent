@@ -8,12 +8,22 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "f0c800f9967f0684062441119b25121228546673a30fd8e80b8e1e16c8b54e10"
+      "sha256": "96e6925e2ecd578244b72776232005f308fb9b84413ebbb228859f7d007f28cd"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "8087904af54d1652262d718c58b4f98b058c83d5c8820960b2241f5e9355beeb"
+      "sha256": "9d8b0aef0ea00e98ec3d6c90da7624ea958f4bd20777ebf5159df77c47027dd9"
+    },
+    {
+      "path": "dist/modes/interactive/components/tool-execution.js",
+      "originalSha256": "a603fedabdba2412efc3c880251b6181492537394c8b5e7a7e3c11090ca045c7",
+      "sha256": "d662b1838f5e24ea4800f2bb4fd78130f15f9f46f4345f1566a68b68bb817970"
+    },
+    {
+      "path": "dist/modes/interactive/components/tool-execution.d.ts",
+      "originalSha256": "dacb62cf7358e088a48adfed8c643fcb327a45acdb32c8a54a3c656e7378ced7",
+      "sha256": "6bf4e1927addfa299045a089366d2b708335f6e89c45628ad6901ea4dea65d3c"
     },
     {
       "path": "dist/extensions/codemode/tool.js",

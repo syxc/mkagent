@@ -2513,8 +2513,8 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "ef731b99d0ad16ef3024790f83d198dcf9bea5391a756e4bf291f7d6d0fc057e",
-      "reason": "Remove the retired codemode executor forward rule after SDK factory binding replaces its only generated consumer."
+      "sha256": "ba047628fffc6480f70811d6fb21da0479c85cb6ab85f36dc93287d4be079cb1",
+      "reason": "Remove the obsolete private component barrel filter after the complete local component barrel retires."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
@@ -2525,8 +2525,8 @@
       "reason": "Delete the unused codemode executor-forward generator; retain unrelated shared runtime policies."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "1330d2ddfe70f82f5768fa2d1645aabd5d3d1e63075cd4096134212072f7b1af",
-      "reason": "Verify retained helper generation contracts and remove checks for the retired read path transformation."
+      "sha256": "9286a744e813835b69fe6b988d7c208121a08dd5b6b362f7bb6cf63a8c60e8b9",
+      "reason": "Retire the private component barrel filter test while preserving CLI, run-mode and shared runtime guards."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "2a5f3e6c3407cab0eaf5c0058358b84ff0df2a1777b9f13d21039d938b2fd1bd",
@@ -3985,8 +3985,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "54621cf29f883d43945438a829516c76e9273f6dc714561c43a9f0aa09ce44cd",
-      "reason": "Record the reduced runtime closure after deleting five codemode source files and routing the retained worker through durable."
+      "sha256": "b7cfd8cbe84fd4ab1ae04d74621b207daaccbfd18217d97f1d5f8a8685e98999",
+      "reason": "Record the 81-file runtime closure after replacing SDK UI components and deleting 41 source copies and orphan helpers."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
@@ -4005,8 +4005,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "f7bbc080c18b4272627957d9e0612507671a439439f2a40cfb7294d2a9e238a1",
-      "reason": "Route the retained codemode worker to the public durable worker entry point."
+      "sha256": "6b1f6503776c6b3f2fef7b9c539d071568fa69d0709db0473b769663d3e30af1",
+      "reason": "Remove the obsolete private component generation step; retain CLI and run-mode exclusions."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4168,10 +4168,6 @@
       "sha256": "e05e32e5613066667b52fa1d8864fec27b3564636f93af7983f53984bce02955",
       "reason": "Preserve upstream public pi-agent-core protocol type imports without changing runtime JavaScript or durable execution."
     },
-    "packages/pi-durable-coding/src/pi/core/experimental.ts": {
-      "sha256": "b91285b8dbd14bfbb3fce3775dc4c994a057cf3efa07882fc1bd42c44fbfced5",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/experimental.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/test/native-html-colors.test.ts": {
       "sha256": "f16503b86446b7b97a91bd9fff37444661ef20ee799ac062af77024a08a95b9e",
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
@@ -4203,10 +4199,6 @@
     "packages/pi-durable-coding/src/pi/core/footer-data-provider.ts": {
       "sha256": "2b35c519981eef661177ccf2816693b3019ca3250375579302410214812fac7f",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/footer-data-provider.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Preserve native defaults while sharing storage, runner, settings, resources and message implementations with legacy policies."
-    },
-    "packages/pi-durable-coding/src/pi/core/http-dispatcher.ts": {
-      "sha256": "d64922c476d11b90555b8f23cab92ce1f4f83174cb750c125a96d8d4374744e2",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/http-dispatcher.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/messages.ts": {
       "sha256": "17d6969f59d76174ae084232124d81bb18f38d7a7997f78812c7de757c8568e9",
@@ -4309,12 +4301,12 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/runtime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/tools.ts": {
-      "sha256": "ef95e0c093cd518831f808449ad96bfc76fcfb83825def9171014305ce20f10f",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
+      "sha256": "22175d2ab21613dcdaf1629027fc639f20b4ea4c33731317ec395fb367edeb6d",
+      "reason": "Use SDK key hints and VisualLinePreview instead of local component copies."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/ui.ts": {
-      "sha256": "acf61b5394483875c4a4091315e32129ed041d07fb68a140136050afbfeb8fff",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
+      "sha256": "9b1d42390a4a608cb3dfd49b0eeb0a143336d4f70dcac25698c22b0531b585da",
+      "reason": "Use SDK AuthUrlComponent, DynamicBorder and key hints while retaining MCP host interaction."
     },
     "packages/pi-durable-coding/src/pi/extensions/tool-search/index.ts": {
       "sha256": "defb69dc3c43533b14a360a2ca4acfabcba5cf25f5f884bd77f60e931d5747c3",
@@ -4325,168 +4317,12 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "54480187c5e41266adc321bc406ae4d8c26f0f110b39a6d5780f2965b07431ac",
-      "reason": "Expose SDK codemode factories and contracts through the thin durable binding instead of local source copies."
+      "sha256": "be0d94079165904d95c42468d5b097cc70229f5f131a770518bf2f333235b384",
+      "reason": "Preserve the explicit public UI export list through SDK components and the thin shared-image binding."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
       "reason": "Retain RPC client/protocol and JSON events while excluding InteractiveMode and print/RPC server hosts before dependency traversal."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/armin.ts": {
-      "sha256": "99554ca29a30d40a2d911082e141ec6623fdaea04616cd71d242db02bceaf194",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/assistant-message.ts": {
-      "sha256": "d55bf0bb4dabe207825e00bb385abce6ff37278360ee4987c2fd92c79b1fde24",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/auth-url.ts": {
-      "sha256": "cea6278403aa20a2d65bf2b057853d63eb729842c39535a4c06377241c91a58b",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/bash-execution.ts": {
-      "sha256": "9c274f514dda2784abb4720f00c28288473d3569589627e67849db327b64845b",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/bordered-loader.ts": {
-      "sha256": "c7dcba05deb54768bf8cfb3dc01c754c582eda6b3737efcab4258ba6d9c8f8c1",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/branch-summary-message.ts": {
-      "sha256": "d568684981a446cb0235cb2562a1d49469c03f977c684f596123bc761f286ded",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/compaction-summary-message.ts": {
-      "sha256": "6886027cf1742c4becbfe8753f6e052be383e0eac7b7b03298af4ebef420a7b4",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/countdown-timer.ts": {
-      "sha256": "6ade4aa41c2c2400bdb79d47701c95504be48e3ab9f2b1aee3836a888c2d1da9",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/countdown-timer.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/custom-editor.ts": {
-      "sha256": "85e6d61a8a21e6fa3763b420c7c5fc99ffec3a9cb01cbca8a6e1699c79d9a5fd",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/custom-message.ts": {
-      "sha256": "5e6e15d87fc9cb1cbb81be4710898b7f5cf55f31ebe2ed9c2a69249feffb0e20",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/diff.ts": {
-      "sha256": "94c519bce1f10e1292de2232bd1da28ae75eb84b4ccf21597f7f388f4a837e6f",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/dynamic-border.ts": {
-      "sha256": "b02be75d856aae87fac541a71119fab17032f4f6b7708d3c5a26c0c502b688c4",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/extension-editor.ts": {
-      "sha256": "ca82d3c678a82e684d35c68139ba60baca906b7a3d2940ce75e2b233d654cace",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/extension-input.ts": {
-      "sha256": "00b12ede4ae996c5d49b772cb32834eed205e23978c1483d24dad0e89a419c75",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/extension-selector.ts": {
-      "sha256": "185bc67c011d6a949060c1216799623961fa57d458bb7572bc60d1e4a2a9e939",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/footer.ts": {
-      "sha256": "b0030a0bb40308721bbb761026e3bd6e4b9ded3b217669496cb9dbdd0b4cff1a",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/index.ts": {
-      "sha256": "53e84d5afab56fc8fdb9f4e78617e2416aa6a01d18f14ffc36c8c0973da17d2e",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/index.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/keybinding-hints.ts": {
-      "sha256": "447881d1a2598ffebd6c960ca464f25611fed5d70f9c48093a5c88f11d2625f5",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/login-dialog.ts": {
-      "sha256": "1f931c0a2830e049f6db4667d8af058e4ca3a9a33373890f2c3ef39e999e2353",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/markdown-transform.ts": {
-      "sha256": "e1ab7cf8037f9652c4c4069af2739b1d8691f297a8007591ffa0a630fef06f7d",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/model-selector.ts": {
-      "sha256": "8649b68850082a05ddcd5b42795f3dcd39a13876f5a3e05b769a792ffea6fe36",
-      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/oauth-selector.ts": {
-      "sha256": "ac8c7a4ec29a6158a9d2e534e3c605924c147c254cb129f79e3d14a0b86cab87",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/session-selector-search.ts": {
-      "sha256": "b81b270dc70ea55417cb2805111a33af419f34195345663b52447afcbb6b69fd",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/session-selector.ts": {
-      "sha256": "4d48e25d79ebbbb03186eca0a0ebd7682741e16df252ede0b0c352ca2f100d07",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/settings-selector.ts": {
-      "sha256": "00f8c9458010d6f5dc4305127540ed733a7efab2cc5e2cb950680e34d0bfe6b0",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/settings-submenu.ts": {
-      "sha256": "8b7423fc2a3383d12bf2a2ed99cab4e4d00b2697504ad38cac583ecf76b6626b",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/show-images-selector.ts": {
-      "sha256": "6678b1d3b4064b0671f668257628c6e91a4610f854f12ff26d1fcc765b3b6f98",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/skill-invocation-message.ts": {
-      "sha256": "70dd362e8250312693c47d023f2b0675f75e683f1e4f04d8b3c84d1bd5b3ed7c",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/status-indicator.ts": {
-      "sha256": "de467926bb6a28f2e5c93b2d146448f610a6e7d125c97fe120d1eb7585e1b2fd",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/theme-selector.ts": {
-      "sha256": "e19b77e9f8cb9c02d672df03a4d05600cca20e2d778e2f4363197213512fefdc",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/thinking-selector.ts": {
-      "sha256": "073af0ebd57ba374edd810a56899e9ca96d19730be2a272b9355fc2e8cdbe805",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/tool-execution.ts": {
-      "sha256": "c7ed3761183fc5f9cb27249af203c1ce3aab59c6c5ab4706948fdc9d6cdb7cfa",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/tree-selector.ts": {
-      "sha256": "ef1415ef713aec3cb7a57d2fafbfe3fe0d29feda293db27d6681e694e11e1ed9",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/user-message-selector.ts": {
-      "sha256": "3f76114117ee50d88bff34625aadc76be31ecee924177fcc73fc3deb8b87a217",
-      "reason": "Use public Coding SDK themes and keybindings and remove the obsolete local highlight declaration reference."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/user-message.ts": {
-      "sha256": "1a6a1b967d5306bb3c98676e93cc97ac8d7d4aefdd0ac8b214c847feaa5e37e6",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/components/visual-truncate.ts": {
-      "sha256": "0e52adab4b4568ff6cfe8798f994d70122f7fd2e1b7618438023637915187c05",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/components/visual-truncate.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/external-editor.ts": {
-      "sha256": "6b5a394373cb1d991e9cc0b2e42c70958351261bfc8e5e2c8f6ed8039df736ad",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/external-editor.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/model-catalog-refresh.ts": {
-      "sha256": "a284a0fe3b3560ce4f402fce10226d80618c5cfa14241571163543b9e10c15c9",
-      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
-    },
-    "packages/pi-durable-coding/src/pi/modes/interactive/model-search.ts": {
-      "sha256": "390f4025d29e7c566dc8b28c8276adc3bd5e5b4a860111158f3e20293f8ffbc6",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/interactive/model-search.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/json-event.ts": {
       "sha256": "71fae381d2ce01bac204ad76dc7223a216776c59304b76213f97db76b61b97f1",
@@ -4865,24 +4701,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "542d03880d365f56bd2e4823b06be646c2fc23f4cce240c12b5d9cc495754991",
-      "reason": "Stop source traversal at the SDK codemode factories and bind the existing durable executor."
+      "sha256": "d0d2195a53cefdb2bd60ae69c4f0c08da40208ced6657414014d94e6df1b920f",
+      "reason": "Stop UI source traversal at public Coding SDK exports and the thin shared-image host binding."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
       "sha256": "b72b39fb21566d9402a3f29446d227d90a0714bdd7f9a1105d97b63b764fc850",
       "reason": "Verify SDK identities and generated boundaries, including codemode index and MCP factory imports."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "11ef15d23d28a84c8b19f200d3675dfd0ba64ae42bcd5962540f43e2de9a82bc",
-      "reason": "Record all 46 Coding outputs including optional codemode executor binding and existing public presentation exports."
+      "sha256": "ed3c8609846dc25ba56be858c80de32b74d0325138e214535880e98dd1687e67",
+      "reason": "Record 48 Coding outputs, including the protected tool renderer PNG hook and existing UI root exports."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "d3ce39398f3643821c87bccc70dece682fba1acf4318e124752c6a695df85032",
-      "reason": "Generate existing codemode public exports and the narrow optional executor binding without copying factory or presentation algorithms."
+      "sha256": "7c0e2f64eee1fbf80dac8a2b5577f32e9101e46219e32789273f957284c12c09",
+      "reason": "Generate existing AuthUrlComponent and VisualLinePreview root exports and a protected PNG registration hook without copying UI algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "bba667e50aff8b547d3c2668fceeea97306b549940126d78a8c3d20b2515dcd3",
-      "reason": "Expose existing Coding codemode contracts and add an optional executor dependency; keep presentation, loadout, grammar and rendering in the SDK."
+      "sha256": "bc879e9886b557e43aa4ad151214faa48f582f11cf7830be3b0a401a1481d8ff",
+      "reason": "Expose existing MCP UI classes and add one protected PNG registration hook; retain SDK component and renderer algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -5003,6 +4839,22 @@
     "packages/pi-durable-coding/test/host-codemode-sdk.test.ts": {
       "sha256": "5d8008d36ef96ae7facda6bad414695c16cce3c8310b5a67003209b3da4f28eb",
       "reason": "Verify three SDK factory bindings, inherited options and receivers, nested calls, branch store, default executor and a bundled worker without project dependencies."
+    },
+    "packages/pi-durable-coding/scripts/coding-ui-policy.ts": {
+      "sha256": "8e1bb4f257effc1ab71c6a2c60a5b198be16536c410fdaa7866a1f2b5bd85d03",
+      "reason": "Add only a protected image transcoder registration hook; preserve the SDK renderer lifecycle and default image path."
+    },
+    "packages/pi-durable-coding/src/native-ui.ts": {
+      "sha256": "56ef9773ef86c36d8681b2c63ca9c24527126d41c623a86e4e34e97eb78d5d8e",
+      "reason": "Re-export existing SDK UI contracts and override only PNG registration to use the existing shared Photon asset."
+    },
+    "packages/pi-durable-coding/test/host-ui-sdk.test.ts": {
+      "sha256": "4358980d63ac3842db575e99297e3f7d7445c353f1561a8c4372af01e9a8266f",
+      "reason": "Verify public component identities, renderer lifecycle, argument batching, fallback, image caching and a relocated shared-WASM bundle."
+    },
+    "packages/pi-durable-coding/test/fixtures/ui-image.ts": {
+      "sha256": "594873139e43ce094536223de07fc77338cd279c6cffca7da47a839cf5b67096",
+      "reason": "Verify default SDK and Native image conversion, PNG output, cache and visibility in fresh processes."
     }
   },
   "deleted": {

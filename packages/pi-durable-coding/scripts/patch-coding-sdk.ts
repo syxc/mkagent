@@ -13,6 +13,7 @@ import { codingAgentSessionPolicy } from './coding-agent-session-policy.ts';
 import { codingToolPolicy } from './coding-tool-policy.ts';
 import { codingShellPolicy } from './coding-shell-policy.ts';
 import { codingCodemodePolicy } from './coding-codemode-policy.ts';
+import { codingUIPolicy } from './coding-ui-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -66,6 +67,8 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/keybindings.${extension}";`,
     `export { KeybindingsManager } from "./core/keybindings.${extension}";`,
     `export * from "./modes/interactive/theme/theme.${extension}";`,
+    `export { AuthUrlComponent } from "./modes/interactive/components/auth-url.${extension}";`,
+    `export { VisualLinePreview } from "./modes/interactive/components/visual-truncate.${extension}";`,
     `export { getThemesDir, getExportTemplateDir } from "./config.${extension}";`,
   ].join('\n') + '\n';
   const marker = '//# sourceMappingURL=';
@@ -74,6 +77,10 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(path, original.slice(0, position) + exports + original.slice(position));
   if (suffix === 'd.ts') outputs.set(path, outputs.get(path)!.replace(marker,
     'export type { ShellDependencies } from "./core/tools/bash.ts";\n' + marker));
+}
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/modes/interactive/components/tool-execution.${suffix}`;
+  outputs.set(path, codingUIPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
 }
 for (const name of ['tool', 'index']) for (const suffix of ['js', 'd.ts']) {
   const path = `dist/extensions/codemode/${name}.${suffix}`;

@@ -25,6 +25,10 @@ export const CODING_SDK_MODULES = new Set([
   'core/tools/ls.ts',
   'core/tools/tool-definition-wrapper.ts',
   'core/tools/write.ts',
+  'modes/interactive/components/auth-url.ts',
+  'modes/interactive/components/dynamic-border.ts',
+  'modes/interactive/components/keybinding-hints.ts',
+  'modes/interactive/components/visual-truncate.ts',
   'modes/interactive/theme/theme.ts',
   'utils/frontmatter.ts',
 ]);
@@ -39,7 +43,8 @@ export function codingHostImport(importer: string, specifier: string): string | 
     : module === 'core/tools/read.ts' ? 'native-read-tools.ts'
     : module === 'core/tools/edit.ts' || module === 'core/tools/edit-diff.ts' ? 'native-edit-tools.ts'
     : module === 'core/tools/bash.ts' || module === 'core/tools/powershell.ts' ? 'native-shell-tools.ts'
-    : module === 'extensions/codemode/index.ts' || module === 'extensions/codemode/tool.ts' ? 'native-codemode.ts' : undefined;
+    : module === 'extensions/codemode/index.ts' || module === 'extensions/codemode/tool.ts' ? 'native-codemode.ts'
+    : module === 'modes/interactive/components/index.ts' || module === 'modes/interactive/components/tool-execution.ts' ? 'native-ui.ts' : undefined;
   if (!host) return undefined;
   const target = posix.relative(posix.dirname('pi/' + importer), host);
   return target.startsWith('.') ? target : './' + target;

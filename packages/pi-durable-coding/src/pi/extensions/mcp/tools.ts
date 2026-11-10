@@ -32,8 +32,8 @@ import type {
 import { READ_MCP_RESOURCE_TOOL } from "@earendil-works/pi-coding-agent";
 import { formatToolCallWithArgs, getTextOutput, replaceTabs } from "../../core/tools/render-utils.ts";
 import { formatSize, truncateMiddle } from "../../core/tools/truncate.ts";
-import { keyHint } from "../../modes/interactive/components/keybinding-hints.ts";
-import { VisualLinePreview } from "../../modes/interactive/components/visual-truncate.ts";
+import { keyHint } from "@earendil-works/pi-coding-agent";
+import { VisualLinePreview } from "@earendil-works/pi-coding-agent";
 import { writeOutputFile } from "../../utils/output-files.ts";
 import type { McpExposure } from "./config.ts";
 
