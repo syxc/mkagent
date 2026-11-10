@@ -117,7 +117,7 @@
     },
     {
       "target": "src/upstream/core/system-prompt.ts",
-      "implementation": "src/pi/core/system-prompt.ts",
+      "implementation": "src/native-system-prompt.ts",
       "changes": [
         "host-documentation-paths"
       ]

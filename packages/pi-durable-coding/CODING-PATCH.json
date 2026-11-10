@@ -8,12 +8,22 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "a43ee18391f42d33d98b7e26a2dd683cc2b952867a01bde24c903fdf435d2778"
+      "sha256": "e908a0043383664df4b6a75e0c054f1d4ec1f05bc44d3d3436c55c7cf50d9080"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "611360a61a2934d4b52d09db83bacf3f164f8acf86f155ac62fc4e396ad2cd69"
+      "sha256": "d5a92f219794e6b0f71f4f6e6b5cbe919a83d649218e1353212e9cad539fee46"
+    },
+    {
+      "path": "dist/core/system-prompt.js",
+      "originalSha256": "5f68e89c31ba3d4d1af8ad2bfd0c7c548879d47ee6ab4aabee50a826100da32c",
+      "sha256": "7a2e6698747bad290efdb1066c22435ca828e1f6dba92600785cb410ceeea9e3"
+    },
+    {
+      "path": "dist/core/system-prompt.d.ts",
+      "originalSha256": "4304c6b9a20f0ee613c64cc67f96adde1357c2af525200418780238111b40966",
+      "sha256": "85517609e1b07ffb6d236d24038009423f17c9995fa48667c3f5a624325ed34e"
     },
     {
       "path": "dist/core/skills.js",

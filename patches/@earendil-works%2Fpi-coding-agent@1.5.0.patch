@@ -1,8 +1,8 @@
-# Content SHA-256: 6198e0a5d1f21c1f905814b228a2b955652521afec5ef5aa5a63a494364958cd
+# Content SHA-256: 23b77ce94f262cff87c6500f511d176fe21d2b44c12ed5554570e964ac714458
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,44 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,45 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -22,6 +22,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/usage-totals.js";
 +export * from "./core/skills.js";
 +export * from "./core/prompt-templates.js";
++export * from "./core/system-prompt.js";
 +export * from "./core/extensions/loader.js";
 +export * from "./core/extensions/runner.js";
 +export * from "./core/extensions/types.js";
@@ -60,7 +61,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,45 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,46 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -80,6 +81,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/usage-totals.ts";
 +export * from "./core/skills.ts";
 +export * from "./core/prompt-templates.ts";
++export * from "./core/system-prompt.ts";
 +export * from "./core/extensions/loader.ts";
 +export * from "./core/extensions/runner.ts";
 +export * from "./core/extensions/types.ts";
@@ -106,6 +108,67 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { getThemesDir, getExportTemplateDir } from "./config.ts";
 +export type { ShellDependencies } from "./core/tools/bash.ts";
  //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/core/system-prompt.js b/dist/core/system-prompt.js
+--- a/dist/core/system-prompt.js
++++ b/dist/core/system-prompt.js
+@@ -2,7 +2,7 @@
+  * System prompt construction and project context loading
+  */
+ import { getSystemMessageText } from "@earendil-works/pi-ai";
+-import { getDocsPath, getExamplesPath, getReadmePath } from "../config.js";
++import { getDocsPath as defaultGetDocsPath, getExamplesPath as defaultGetExamplesPath, getReadmePath as defaultGetReadmePath } from "../config.js";
+ import { formatSkillsForPrompt } from "./skills.js";
+ const SYSTEM_PROMPT_SECTION_NAME = /^[a-z][a-z0-9_-]*$/;
+ /** Normalize prompt input into the mutable, collection-complete shape exposed to extensions. */
+@@ -65,7 +65,8 @@ function buildRules(selectedTools, toolGuidelines, promptGuidelines) {
+     return rules.map((rule) => `- ${rule}`).join("\n");
+ }
+ /** Build the ordered, independently replaceable sections of the structured system prompt. */
+-export function buildSystemPromptSections(input) {
++export function createSystemPromptBuilder({ getDocsPath = defaultGetDocsPath, getExamplesPath = defaultGetExamplesPath, getReadmePath = defaultGetReadmePath } = {}) {
++function buildSystemPromptSections(input) {
+     const options = normalizeBuildSystemPromptOptions(input);
+     const { customPrompt, selectedTools, hiddenTools, toolSnippets, toolGuidelines, promptGuidelines, appendSystemPrompt, sections: customSections, cwd, contextFiles, skills, } = options;
+     for (const name of Object.keys(customSections)) {
+@@ -122,15 +123,18 @@ export function buildSystemPromptSections(input) {
+  * The complete prompt state for `input`. A forced prompt is opaque and lives in `content`
+  * with no sections; otherwise `content` is empty and the structured sections carry the prompt.
+  */
+-export function buildSystemPromptState(input) {
++function buildSystemPromptState(input) {
+     if (input.forceSystemPrompt !== undefined)
+         return { content: input.forceSystemPrompt };
+     return { content: "", sections: buildSystemPromptSections(input) };
+ }
+ /** Build the system prompt text, rendered exactly as the transcript's system message replays it. */
+-export function buildSystemPrompt(input) {
++function buildSystemPrompt(input) {
+     return getSystemMessageText({ role: "system", ...buildSystemPromptState(input), timestamp: 0 });
+ }
++return { buildSystemPromptSections, buildSystemPromptState, buildSystemPrompt };
++}
++export const { buildSystemPromptSections, buildSystemPromptState, buildSystemPrompt } = createSystemPromptBuilder();
+ /**
+  * Diff the sections the model currently has (replayed from the transcript, so never null)
+  * against the desired ones. Returns a `SystemMessage.sections` patch, or undefined when
+diff --git a/dist/core/system-prompt.d.ts b/dist/core/system-prompt.d.ts
+--- a/dist/core/system-prompt.d.ts
++++ b/dist/core/system-prompt.d.ts
+@@ -74,4 +74,13 @@ export declare function buildSystemPrompt(input: BuildSystemPromptOptions): stri
+  * nothing changed.
+  */
+ export declare function diffSystemPromptSections(previous: Record<string, string | null>, current: SystemPromptSections): Record<string, string | null> | undefined;
++export declare function createSystemPromptBuilder(dependencies?: {
++    getDocsPath?: () => string;
++    getExamplesPath?: () => string;
++    getReadmePath?: () => string;
++}): {
++    buildSystemPromptSections: typeof buildSystemPromptSections;
++    buildSystemPromptState: typeof buildSystemPromptState;
++    buildSystemPrompt: typeof buildSystemPrompt;
++};
+ //# sourceMappingURL=system-prompt.d.ts.map
 \ No newline at end of file
 diff --git a/dist/core/skills.js b/dist/core/skills.js
 --- a/dist/core/skills.js

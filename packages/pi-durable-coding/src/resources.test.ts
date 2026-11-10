@@ -42,6 +42,8 @@ describe('ported native resource behavior', () => {
       import { loadPromptTemplates } from ${JSON.stringify(join(import.meta.dir, 'upstream/core/prompt-templates.ts'))};
       import { loadSkills as nativeSkills } from ${JSON.stringify(join(import.meta.dir, 'native-skills.ts'))};
       import { loadPromptTemplates as nativePrompts } from ${JSON.stringify(join(import.meta.dir, 'native-prompt-templates.ts'))};
+      import { buildSystemPromptSections as nativeSections } from ${JSON.stringify(join(import.meta.dir, 'native-system-prompt.ts'))};
+      import { buildSystemPromptSections as legacySections } from ${JSON.stringify(join(import.meta.dir, 'host-system-prompt.ts'))};
       import { loadSkills as sdkSkills, loadPromptTemplates as sdkPrompts } from ${JSON.stringify(import.meta.resolve('@earendil-works/pi-coding-agent'))};
       import { CONFIG_DIR_NAME } from ${JSON.stringify(join(import.meta.dir, 'pi/config.ts'))};
       const options = ${JSON.stringify({ cwd, agentDir, includeDefaults: true, skillPaths: [], promptPaths: [] })};
@@ -51,6 +53,8 @@ describe('ported native resource behavior', () => {
       };
       console.log(JSON.stringify({
         configDir: CONFIG_DIR_NAME,
+        nativeReadme: nativeSections(options).docs.match(/Main documentation: (.+)/)[1],
+        legacyReadme: legacySections(options).docs.match(/Main documentation: (.+)/)[1],
         legacySkills: discoverCodingSkills(options).skills.map(item => item.name),
         legacyPrompts: loadPromptTemplates(options).templates.map(item => item.name),
         nativeSkills: nativeSkills(options).skills.map(item => item.name),
@@ -71,6 +75,8 @@ describe('ported native resource behavior', () => {
     expect({ code: child.exitCode, error: child.stderr.toString() }).toEqual({ code: 0, error: '' });
     expect(JSON.parse(child.stdout.toString())).toEqual({
       configDir: '.tau', legacySkills: ['pi'], legacyPrompts: ['pi'], nativeSkills: ['tau'], nativePrompts: ['tau'],
+      nativeReadme: join(installation, 'README.md'),
+      legacyReadme: 'https://github.com/earendil-works/pi/tree/v1.5.0/packages/coding-agent/README.md',
       inheritedNativeSkills: ['tau'], hiddenNativeSkills: ['tau'],
       explicitNativeSkills: ['pi'], explicitNativePrompts: ['pi'], explicitSDKSkills: ['pi'], explicitSDKPrompts: ['pi'],
       skillScopes: ['project'], promptScopes: ['project'],

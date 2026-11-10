@@ -26,6 +26,83 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK system prompt builders after dc64ddc
+
+The public Coding SDK supplies system prompt construction, normalization,
+section validation, rendering and diff algorithms. The complete 228-line local
+module is deleted. The former 30-line legacy wrapper becomes a five-line
+binding, and the Native binding has six lines. Both only inject documentation
+getters. Native paths come from its installation; legacy paths remain the fixed
+v1.5.0 GitHub URLs. Default SDK exports retain the SDK's own paths.
+
+Durable does not expose this Coding construction contract. The Coding patch
+adds createSystemPromptBuilder and existing root exports. The factory places
+the three existing builders in a documentation dependency closure. Normalization
+and diff remain shared module functions. Reversing only these changes restores
+the complete system-prompt JS and declaration bytes from pristine SDK 1.5.0.
+No construction algorithm moves into a patch template. Equivalent public
+upstream dependency injection and exports will let this patch retire.
+No task, checkpoint, document or codemode module version changes.
+
+Full generation has 68 runtime TypeScript files: 64 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and shared entries 16.
+Coding has 60 physical patch outputs, core four and durable 33, for 97 total.
+The two additional outputs are system-prompt JS and declarations; root outputs
+are shared. Runtime, auxiliary and patch checks pass. Pristine replay verifies
+all original and resulting Coding hashes. Both existing layouts pass frozen
+installation with scripts disabled. All 60 Coding and 33 durable outputs match
+in both layouts. Dependencies and lock remain unchanged.
+
+Checks use Bun 1.3.14 and task-owned HOME/config/cache. Declarations and server
+build outputs go to task directories. No live credentials, provider requests,
+product UI or product data are used.
+
+| Check | Result and scope |
+|---|---|
+| SDK differential probe | 142 assertions pass across 13 inputs: all three Native, legacy and default SDK builders match their previous implementations; original module bytes, root/internal identities and shared normalization/diff also pass |
+| Prompt boundaries | Empty and nonempty custom/force prompts, context files, Windows cwd, guidelines, hidden tools, skills, section validation, inherited and nonenumerable options, array cloning, multiple builders and lazy getters pass |
+| Root tests | 28 tests and 220 assertion calls pass across resources, shared sessions, host extensions and the published SDK boundary |
+| Hoisted plugin and recovery tests | 43 tests and 422 assertion calls pass across host resources, extension SDK, codemode, host AgentSession and Native recovery; the latter covers 18 recovery points |
+| Coding types and declarations | Root typecheck and actual declaration builds in both layouts pass |
+| Hoisted server | Typecheck and build pass |
+| Hoisted worker bundle | 26 tests and 105 assertions pass, including relocated resources, images, dynamic tools and local model/auth fixtures |
+
+The original 12-stage runner records 11 successful stages and one failed probe
+stage. Its temporary reference module cannot resolve pi-ai from the task
+directory, so it stops before differential assertions. The original failed
+receipt and log remain. The probe alone is corrected to resolve pi-ai from the
+Coding package and rerun in an isolated child process. All 142 assertions pass.
+Successful installation, test and build stages are not repeated. Repeated
+coverage in two layouts is not counted as distinct feature coverage.
+
+The source registry updates 13 hashes, removes the complete local module and
+adds the Native binding. The fixed Craft v0.15.6 audit covers 2079 files and
+passes. Source hashes, patch replay and this focused test run do not establish
+that all remaining source is necessary.
+
+Independent read-only review finds no reproducible new correctness or public
+contract defect relative to dc64ddc. Its separate probe passes 24 input cases
+and 286 runtime assertions, including the SDK default, Native and legacy runner
+plugin chains. A consumer semantic check passes 20 type-equivalence assertions
+and two expected-error checks. The review also reverses the factory changes
+and confirms the installed JS matches pristine bytes. Its first two probe
+starts fail because of an incorrect local Bun path and require.resolve on an
+import-only package; corrected probe starts pass. These are probe failures,
+not repository defects. The review does not repeat installation, declaration
+builds or the larger suites.
+
+At the review's 2026-11-10 12:08 +0800 read, documentation still reports the
+previous slice's 69/65 runtime counts and 58 Coding outputs. The parent thread
+then updates all six documents to 68/64 and 60, keeping earlier counts as
+historical evidence. All six punctuation checks, 183 local link checks, the
+exact 22-path scope, current source hashes and diff checks pass.
+
+F0 through F6, the remaining 64 src/pi files, dynamic tools, codemode adapters,
+SDK internal session/shell policy, the existing AuthContext gap, Photon cleanup
+on an EXIF callback failure and the existing ToolHtmlRenderer export ambiguity
+remain open. This slice does not run the full repository suite, product UI,
+live services, Windows/Linux or the complete product acceptance matrix.
+
 ## Public SDK skill and prompt discovery after c6227a6
 
 The public Coding SDK now supplies skills and prompt-template discovery,

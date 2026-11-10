@@ -99,6 +99,7 @@ const legacyPolicies: Record<string, string> = {
   'core/session-manager.js': 'src/legacy/session-manager.js',
   'core/skills.ts': 'src/native-skills.ts',
   'core/prompt-templates.ts': 'src/native-prompt-templates.ts',
+  'core/system-prompt.ts': 'src/native-system-prompt.ts',
 };
 
 // These public helpers need one implementation, including when old entry points import them.

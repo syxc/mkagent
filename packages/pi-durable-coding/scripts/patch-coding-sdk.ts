@@ -53,7 +53,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/virtual-models.${extension}";`,
     `export * from "./core/session-manager.${extension}";`,
     `export * from "./core/resource-loader.${extension}";`,
-    ...['source-info', 'timings', 'usage-totals', 'skills', 'prompt-templates'].map(name => `export * from "./core/${name}.${extension}";`),
+    ...['source-info', 'timings', 'usage-totals', 'skills', 'prompt-templates', 'system-prompt'].map(name => `export * from "./core/${name}.${extension}";`),
     `export * from "./core/extensions/loader.${extension}";`,
     `export * from "./core/extensions/runner.${extension}";`,
     `export * from "./core/extensions/types.${extension}";`,
@@ -83,6 +83,29 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(path, original.slice(0, position) + exports + original.slice(position));
   if (suffix === 'd.ts') outputs.set(path, outputs.get(path)!.replace(marker,
     'export type { ShellDependencies } from "./core/tools/bash.ts";\n' + marker));
+}
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/core/system-prompt.${suffix}`;
+  let body = readFileSync(join(baseline, path), 'utf8');
+  if (suffix === 'js') {
+    body = replace(body, 'import { getDocsPath, getExamplesPath, getReadmePath }',
+      'import { getDocsPath as defaultGetDocsPath, getExamplesPath as defaultGetExamplesPath, getReadmePath as defaultGetReadmePath }');
+    body = replace(body, 'export function buildSystemPromptSections(input) {',
+      'export function createSystemPromptBuilder({ getDocsPath = defaultGetDocsPath, getExamplesPath = defaultGetExamplesPath, getReadmePath = defaultGetReadmePath } = {}) {\nfunction buildSystemPromptSections(input) {');
+    for (const name of ['buildSystemPromptState', 'buildSystemPrompt']) {
+      body = replace(body, `export function ${name}(input) {`, `function ${name}(input) {`);
+    }
+    body = replace(body, '/**\n * Diff the sections',
+      'return { buildSystemPromptSections, buildSystemPromptState, buildSystemPrompt };\n}\nexport const { buildSystemPromptSections, buildSystemPromptState, buildSystemPrompt } = createSystemPromptBuilder();\n/**\n * Diff the sections');
+  } else {
+    body = replace(body, '//# sourceMappingURL=',
+      'export declare function createSystemPromptBuilder(dependencies?: {\n'
+      + '    getDocsPath?: () => string;\n    getExamplesPath?: () => string;\n    getReadmePath?: () => string;\n'
+      + '}): {\n    buildSystemPromptSections: typeof buildSystemPromptSections;\n'
+      + '    buildSystemPromptState: typeof buildSystemPromptState;\n    buildSystemPrompt: typeof buildSystemPrompt;\n};\n'
+      + '//# sourceMappingURL=');
+  }
+  outputs.set(path, body);
 }
 for (const name of ['skills', 'prompt-templates']) for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/${name}.${suffix}`;

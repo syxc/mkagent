@@ -276,15 +276,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/system-prompt.ts",
-      "target": "src/pi/core/system-prompt.ts",
-      "sha256": "eef891d637974d09a6611d33e52d66d5f2a93d6e9512259ba45f593c42143617",
-      "portSha256": "eccb797b20b395fb10ff904fe2358b5b5cae57a9c0f1a926802cfeac424de9b7",
-      "changes": [
-        "host-extension-module-import"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/telemetry.ts",
       "target": "src/pi/core/telemetry.ts",
       "sha256": "5ec837b287ea0303f704a5278c586e2a5d4003f3ad2ccad94997d2fa59164855",
