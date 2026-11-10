@@ -58,16 +58,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/agent-session-runtime.ts",
-      "target": "src/pi/core/agent-session-runtime.ts",
-      "sha256": "3fab6fa2da0c63b38025b393f48d140866ebb877dde77964d51cbc514492f07d",
-      "portSha256": "4fe2765fbf3bc4bf0e67858c5d6d568082622db6375ac79d902fcae4e45f98d8",
-      "changes": [
-        "host-extension-module-import",
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/auth-guidance.ts",
       "target": "src/pi/core/auth-guidance.ts",
       "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
@@ -159,20 +149,13 @@
       "source": "packages/coding-agent/src/core/sdk.ts",
       "target": "src/pi/core/sdk.ts",
       "sha256": "f0f6f2b14a61c5c3ebb31d40c97b3f73296a2f0334d582072383302d693714c8",
-      "portSha256": "b50cc0cf0fadf982c86151cea052c381c87cfff13a0716825e7ed11d868f1a9b",
+      "portSha256": "fb095a721190a3469eb619da35d26be72e7ff73bc0fcd0f774c5cd59d87be299",
       "changes": [
         "durable-agent-boundary",
         "host-extension-module-import",
         "public-coding-sdk",
         "durable-sdk-host-bindings"
       ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/session-cwd.ts",
-      "target": "src/pi/core/session-cwd.ts",
-      "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
-      "portSha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
-      "changes": []
     },
     {
       "source": "packages/coding-agent/src/core/telemetry.ts",

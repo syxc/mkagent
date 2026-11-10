@@ -3961,8 +3961,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "3e2f58bd462c7a1cf2fd8e0bbe6478ffd176168ff6b343ac42b21d47ac2ab46f",
-      "reason": "Retire the SDK-covered session services source from the local runtime closure."
+      "sha256": "86e56ef1a0468f7506c6641c003a137d77b3291fcbd9cc8caad1d5aa861e019b",
+      "reason": "Retire the SDK-covered runtime and cwd helper from the local source closure."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4088,10 +4088,6 @@
       "sha256": "ceae99179302d8b1c6ac14197e7111ce0c866f8119483c1ef6af5808661f877d",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/config.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/core/agent-session-runtime.ts": {
-      "sha256": "4fe2765fbf3bc4bf0e67858c5d6d568082622db6375ac79d902fcae4e45f98d8",
-      "reason": "Bind retained runtime assembly to the host service adapter backed by published SDK factories."
-    },
     "packages/pi-durable-coding/src/pi/core/auth-guidance.ts": {
       "sha256": "8fbee7c272953bf881f22e9ce4b163bb0df9c091f63ee823dbfe32186991efe0",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/auth-guidance.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
@@ -4145,12 +4141,8 @@
       "reason": "Preserve public pi-agent-core type imports; share message conversion with a default-compatible host metadata and object identity policy."
     },
     "packages/pi-durable-coding/src/pi/core/sdk.ts": {
-      "sha256": "b50cc0cf0fadf982c86151cea052c381c87cfff13a0716825e7ed11d868f1a9b",
-      "reason": "Construct the public SDK cache warmer with the host background action or Native passthrough default."
-    },
-    "packages/pi-durable-coding/src/pi/core/session-cwd.ts": {
-      "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/session-cwd.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "fb095a721190a3469eb619da35d26be72e7ff73bc0fcd0f774c5cd59d87be299",
+      "reason": "Expose the SDK runtime through a durable subtype binding and preserve the host service factories."
     },
     "packages/pi-durable-coding/src/pi/core/telemetry.ts": {
       "sha256": "1bf9b43ef8744c9220624abfb3bebf0ff652a5a3d6a14d776690abc918beacf6",
@@ -4501,24 +4493,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "a21baa9a39c626393bceff94c6751084636f87697df05ce4245696b4e7ca3a68",
-      "reason": "Route generated session services imports to the thin host loader and durable session binding."
+      "sha256": "0e1c68fc3c39d225036b3443092a672bcb29fc0d12852f07b848bdf71762d19c",
+      "reason": "Route runtime exports to the public SDK type binding instead of copying its lifecycle implementation."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "7bf29fff4f8f82db3a442b2c1caaffae9a77a195bc9434fa2f577bbcafe42fc9",
-      "reason": "Check shared SDK model initializer identity and keep service imports on the host adapter boundary."
+      "sha256": "43c27475e7550eaa72cc976ccb1201fa5419ba6bd23db7c0bb882517bfafe03c",
+      "reason": "Check runtime class and factory identity and prevent source generation from crossing the SDK boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "cb42ac40d532b2b2b19b2de444734a7b1e49d40d820fd59f5719dce2a332a8b5",
-      "reason": "Record the shared SDK model initializer and optional session factory boundary without copying service algorithms."
+      "sha256": "6ec0795b92d06d575babae15f52ba3ed1201756acc46b9e4081bc1cdcf0ef73f",
+      "reason": "Record generic session subtype declarations for the published runtime; keep runtime JavaScript unchanged."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "c612038444c853709257855988ceac2c3aabd4ff770f88d080331465e8ea7460",
-      "reason": "Expose existing model initialization and accept an optional session factory in published SDK services."
+      "sha256": "827abeca1eb8370f6807a53ec89699d81dddc4377ac081372fd465d8d3a3287a",
+      "reason": "Apply guarded declaration-only runtime generics while preserving published JavaScript."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "2cf95aa5df4c0a6f105e6b735cd2acb5f22b83b667a29f46da927f62f2ff0f4c",
-      "reason": "Share published SDK service algorithms; expose model initialization and an optional factory while preserving the default SDK session path."
+      "sha256": "b60db10aca664f8fe3508c43218c724dd2f3fa84619318ed0ca78a69f188c2c8",
+      "reason": "Retain runtime session subtypes with declaration-only generics; leave the published lifecycle and cwd algorithms unchanged."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4719,6 +4711,18 @@
     "packages/pi-durable-coding/test/session-services.test.ts": {
       "sha256": "f1a36884666c5a788775b99c4dbe162a4ffbb308e896e6baa3127b7637841911",
       "reason": "Verify registration, offline refresh, diagnostics, flags, inherited options, factory projection and default versus durable session identity."
+    },
+    "packages/pi-durable-coding/scripts/coding-session-runtime-policy.ts": {
+      "sha256": "8f87da7b741550cc9d7dfe411c666ce93507881cba3fbbc3f813e3672e0a18df",
+      "reason": "Add guarded runtime declaration generics without copying or changing runtime algorithms."
+    },
+    "packages/pi-durable-coding/src/native-session-runtime.ts": {
+      "sha256": "eec885750aae0b0ecbf3580d34c4265972cba44c384c248420d41cb8339dc83c",
+      "reason": "Bind public runtime values and generic types to the durable session subtype without runtime wrappers."
+    },
+    "packages/pi-durable-coding/test/session-runtime.test.ts": {
+      "sha256": "1fd30c212d55ec5286c1acda32a678347fdbe807deb9f7ccb37e217ccab4de1e",
+      "reason": "Verify durable runtime lifecycle, callbacks, cancellation, failure, fork, import, stored cwd and in-memory behavior."
     }
   },
   "deleted": {

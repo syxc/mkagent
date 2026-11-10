@@ -1,4 +1,4 @@
-# Content SHA-256: f63cf26db6e76e9d0186e3652fe2a07ffaf29939642b16ad4d043b005a83a431
+# Content SHA-256: ea3c3547e129c06c296f744dff0d37c8527ded2971e060cf52e0226a5c2b6d5d
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -227,6 +227,76 @@ diff --git a/dist/core/agent-session-services.d.ts b/dist/core/agent-session-ser
 +export declare function createAgentSessionFromServices<Result extends CreateAgentSessionResult>(options: CreateAgentSessionFromServicesOptions, createSession: (options: CreateAgentSessionOptions) => Promise<Result>): Promise<Result>;
 +export declare function initializeExtensionModels(resourceLoader: ResourceLoader, modelRuntime: ModelRuntime): Promise<AgentSessionRuntimeDiagnostic[]>;
  //# sourceMappingURL=agent-session-services.d.ts.map
+\ No newline at end of file
+diff --git a/dist/core/agent-session-runtime.d.ts b/dist/core/agent-session-runtime.d.ts
+--- a/dist/core/agent-session-runtime.d.ts
++++ b/dist/core/agent-session-runtime.d.ts
+@@ -9,7 +9,8 @@ import { SessionManager } from "./session-manager.ts";
+  * The caller gets the created session, its cwd-bound services, and all
+  * diagnostics collected during setup.
+  */
+-export interface CreateAgentSessionRuntimeResult extends CreateAgentSessionResult {
++export interface CreateAgentSessionRuntimeResult<Session extends AgentSession = AgentSession> extends CreateAgentSessionResult {
++    session: Session;
+     services: AgentSessionServices;
+     diagnostics: AgentSessionRuntimeDiagnostic[];
+ }
+@@ -20,13 +21,13 @@ export interface CreateAgentSessionRuntimeResult extends CreateAgentSessionResul
+  * services for the effective cwd, resolves session options against those
+  * services, and finally creates the AgentSession.
+  */
+-export type CreateAgentSessionRuntimeFactory = (options: {
++export type CreateAgentSessionRuntimeFactory<Session extends AgentSession = AgentSession> = (options: {
+     cwd: string;
+     agentDir: string;
+     sessionManager: SessionManager;
+     sessionStartEvent?: SessionStartEvent;
+     projectTrustContext?: ProjectTrustContext;
+-}) => Promise<CreateAgentSessionRuntimeResult>;
++}) => Promise<CreateAgentSessionRuntimeResult<Session>>;
+ /**
+  * Thrown when /import references a JSONL file path that does not exist.
+  */
+@@ -41,7 +42,7 @@ export declare class SessionImportFileNotFoundError extends Error {
+  * and apply the next runtime. If creation fails, the error is propagated to the
+  * caller. The caller is responsible for user-facing error handling.
+  */
+-export declare class AgentSessionRuntime {
++export declare class AgentSessionRuntime<Session extends AgentSession = AgentSession> {
+     private rebindSession?;
+     private beforeSessionInvalidate?;
+     private _session;
+@@ -49,13 +50,13 @@ export declare class AgentSessionRuntime {
+     private readonly createRuntime;
+     private _diagnostics;
+     private _modelFallbackMessage?;
+-    constructor(_session: AgentSession, _services: AgentSessionServices, createRuntime: CreateAgentSessionRuntimeFactory, _diagnostics?: AgentSessionRuntimeDiagnostic[], _modelFallbackMessage?: string);
++    constructor(_session: Session, _services: AgentSessionServices, createRuntime: CreateAgentSessionRuntimeFactory<Session>, _diagnostics?: AgentSessionRuntimeDiagnostic[], _modelFallbackMessage?: string);
+     get services(): AgentSessionServices;
+-    get session(): AgentSession;
++    get session(): Session;
+     get cwd(): string;
+     get diagnostics(): readonly AgentSessionRuntimeDiagnostic[];
+     get modelFallbackMessage(): string | undefined;
+-    setRebindSession(rebindSession?: (session: AgentSession) => Promise<void>): void;
++    setRebindSession(rebindSession?: (session: Session) => Promise<void>): void;
+     /**
+      * Set a synchronous callback that runs after `session_shutdown` handlers finish
+      * but before the current session is invalidated.
+@@ -109,11 +110,11 @@ export declare class AgentSessionRuntime {
+  * The same factory is stored on the returned AgentSessionRuntime and reused for
+  * later /new, /resume, /fork, and import flows.
+  */
+-export declare function createAgentSessionRuntime(createRuntime: CreateAgentSessionRuntimeFactory, options: {
++export declare function createAgentSessionRuntime<Session extends AgentSession = AgentSession>(createRuntime: CreateAgentSessionRuntimeFactory<Session>, options: {
+     cwd: string;
+     agentDir: string;
+     sessionManager: SessionManager;
+     sessionStartEvent?: SessionStartEvent;
+-}): Promise<AgentSessionRuntime>;
++}): Promise<AgentSessionRuntime<Session>>;
+ export { type AgentSessionRuntimeDiagnostic, type AgentSessionServices, type CreateAgentSessionFromServicesOptions, type CreateAgentSessionServicesOptions, createAgentSessionFromServices, createAgentSessionServices, } from "./agent-session-services.ts";
+ //# sourceMappingURL=agent-session-runtime.d.ts.map
 \ No newline at end of file
 diff --git a/dist/extensions/mcp/index.d.ts b/dist/extensions/mcp/index.d.ts
 --- a/dist/extensions/mcp/index.d.ts

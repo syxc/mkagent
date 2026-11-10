@@ -26,6 +26,76 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK session runtime after 4ab53da
+
+This slice removes the 447-line local AgentSessionRuntime and its 59-line
+cwd helper. A 15-line adapter binds the public SDK values and types to the
+durable session subtype. It also exports the existing host service adapter.
+The SDK class and factory keep their identity. No runtime wrapper or subclass
+is added. Only runtime declarations change; the JavaScript stays pristine.
+Result, factory, class and creation declarations use a Session type parameter
+that defaults to the SDK AgentSession. Constructors, the session getter and
+rebind callbacks preserve the supplied subtype. Remove this patch when the
+published SDK provides equivalent subtype declarations.
+
+| Check | Result and scope |
+|---|---|
+| Generation and patch | Complete runtime and auxiliary checks and pristine Coding patch replay pass |
+| Installations | Root and isolated hoisted frozen installs exit zero; both match 70 Coding and 33 durable hashes; lock bytes stay unchanged |
+| Runtime JavaScript | Installed root runtime is byte-identical to the pristine SDK; no lifecycle or cwd algorithm is copied into the patch |
+| Root tests | After fixture correction, all 22 runtime, service, boundary and host-session tests pass, with 507 expect calls |
+| Hoisted tests | All 32 runtime, service, boundary, host-session and plugin tests pass, with 549 expect calls |
+| Types | Root Coding typecheck and actual declaration build pass; the new runtime test compiles strictly in both layouts |
+| Build and bundle | Hoisted server build passes; all 26 bundle tests and 105 expect calls pass |
+| Source registration | Seven hashes updated, two retired entries removed and three entries added |
+| Restricted Craft audit | Fixed v0.15.6 audit passes for 2052 permitted files; the protected legacy source is excluded and its real registry entry remains unchanged |
+| Independent review | No verified findings; strict consumers, 13 negative controls, 33 declaration drift probes and SDK identity checks pass; all 41 reviewed inputs and 1766 consumed declarations match the accepted report |
+
+The independent review compares the removed runtime and cwd helper with SDK
+JavaScript, including import semantics and the host service binding. The
+constructor and factory probe checks identity and initial factory injection;
+it uses a sentinel session. Parent checks cover full lifecycle behavior.
+The strict consumer uses skipLibCheck=true, which skips all declaration-file
+bodies, including SDK, host and dependency declarations. Consumer inference,
+calls, assignments and assertions remain strict. The parent verifies the
+sealed evidence hashes, all reviewed inputs and all consumed declarations
+against the current files before it accepts the report. This conclusion
+applies to this slice; it does not establish that other retained sources
+are necessary.
+
+Behavior checks cover creation, replacement, new/switch/fork/import,
+cancellation, invalid input, factory failure and teardown/setup/rebind order.
+The import test retains input bytes and an existing colliding JSONL file.
+Durable session state remains available after replacement and branch changes.
+The first cwd fixture incorrectly expects an in-memory manager to reject a
+missing cwd. The SDK checks stored sessions with a session file and explicitly
+skips that check for in-memory managers. The corrected test covers both paths.
+The first strict test compile also uses message instead of the ExtensionError
+error field. Both are test-only corrections; original failures are retained.
+The root first run has 21 passes, one failure and 502 expect calls; its strict
+test compile also fails before correction. Product code does not change to
+satisfy either incorrect fixture.
+
+Runtime generation now has 38 TypeScript outputs: 34 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and forwarded entries
+15. Physical patch outputs are core four, Coding 70 and durable 33, for 107.
+Dependencies, task schemas, checkpoint formats and document versions do not
+change. The unchanged core patch is counted from its diff entries.
+
+The hoisted fixture from the service slice is synchronized after all baseline
+files are checked against HEAD. No protected legacy source is read or copied.
+Its known full-type limitation remains, and the unchanged failing full type
+checks are not repeated. Root plugin dependency resolution and the older
+hoisted failure records remain in the service section. No original failure
+receipt is rewritten. The restricted Craft audit excludes the protected file
+before reads and is not a complete audit.
+
+All behavior checks use temporary data, task-owned child homes, offline
+configuration and the network blocker. No upstream CLI, real UI, account,
+credential, paid model or real Craft data is used. Remaining local sources,
+server copies, host OAuth and default process policy still need review.
+F0 through F6 remain open.
+
 ## Public SDK session services after 59481a6
 
 This slice removes the 242-line local services module and its source

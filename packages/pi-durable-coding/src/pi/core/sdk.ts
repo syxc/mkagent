@@ -129,7 +129,7 @@ export interface CreateAgentSessionResult {
 
 // Re-exports
 
-export * from "./agent-session-runtime.ts";
+export * from "../../native-session-runtime.ts";
 export type {
 	ExtensionAPI,
 	ExtensionCommandContext,
