@@ -392,7 +392,7 @@ export {
 	type WriteToolOptions,
 	withFileMutationQueue,
 } from "./core/tools/index.ts";
-export { formatReadLineRange } from "./core/tools/render-utils.ts";
+export { formatReadLineRange } from "@earendil-works/pi-coding-agent";
 export {
 	hasTrustRequiringProjectResources,
 	type ProjectTrustDecision,

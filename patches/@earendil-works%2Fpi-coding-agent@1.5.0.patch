@@ -1,8 +1,8 @@
-# Content SHA-256: a35dc6ad0b9585071e805bd0441d17ca8104e5a8a2263bf4d589ee8bc425e380
+# Content SHA-256: b6818b07e3627df5911af36997e0e9b01ed553f1e9eaa760a9bb4f96e53543da
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,47 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,49 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -29,6 +29,8 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/extensions/types.js";
 +export * from "./core/exec.js";
 +export * from "./core/tools/tool-definition-wrapper.js";
++export { formatToolCallWithArgs, getTextOutput, replaceTabs } from "./core/tools/render-utils.js";
++export * from "./utils/output-files.js";
 +export { GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.js";
 +export * from "./extensions/codemode/tool.js";
 +export * from "./core/tools/grep.js";
@@ -63,7 +65,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,48 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,50 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -90,6 +92,8 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/extensions/types.ts";
 +export * from "./core/exec.ts";
 +export * from "./core/tools/tool-definition-wrapper.ts";
++export { formatToolCallWithArgs, getTextOutput, replaceTabs } from "./core/tools/render-utils.ts";
++export * from "./utils/output-files.ts";
 +export { type MiddleTruncationResult, GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.ts";
 +export * from "./extensions/codemode/tool.ts";
 +export * from "./core/tools/grep.ts";

@@ -26,6 +26,79 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK rendering and output files after 0a6fda9
+
+MCP argument and text rendering, Native read ranges, bash output streams and
+codemode image files now use the public Coding SDK. The 180-line rendering
+module and the 34-line output file module are deleted. No wrapper remains.
+The SDK root only adds five existing function exports: formatToolCallWithArgs,
+getTextOutput, replaceTabs, writeOutputFile and createOutputFileStream.
+formatReadLineRange already has a public export. The four internal JS and
+declaration files remain byte-identical to pristine SDK 1.5.0. Equivalent
+public root exports remove this patch.
+
+Durable does not expose these Coding rendering and private output file
+contracts. The existing ANSI and shell adapters still serve bash execution.
+The generator stops at both retired modules. Runtime generation now has 62
+TypeScript files: 58 under src/pi and four facades, with no assets. Auxiliary
+sources remain nine and shared entries 16. Physical outputs remain Coding 60,
+core four and durable 33. Package declarations and lock are unchanged.
+
+The candidate probe compares 5561 results and errors with the previous local
+renderer. It covers the four used rendering helpers, malformed ranges,
+parameters, ANSI, control characters, Unicode and image fallback. Output
+checks confirm five root implementation identities, four files with exact
+text or binary contents and 0600 permissions, streamed bytes, unique paths,
+and two missing-directory errors. The unchanged SDK writer retains wx
+exclusive creation; this parent probe does not inject a path collision.
+
+| Check | Result and scope |
+|---|---|
+| Complete generation | Runtime, auxiliary and patch checks pass |
+| Frozen layouts | Both installations pass with scripts disabled and unchanged lock; all 60 Coding and 33 durable hashes match |
+| Pristine replay | All original and resulting hashes match; both utility modules remain pristine |
+| Root tests | 33 tests and 80 expect calls pass across public boundaries, runtime ports and HTML colors |
+| Hoisted integration | 72 tests and 344 expect calls pass across shell, extension execution, codemode output/forwarding/usage, durable options and public types |
+| Coding types | Root typecheck and declarations in both layouts pass |
+| Hoisted server | Typecheck, build and 26 worker bundle tests with 105 expect calls pass |
+
+Checks use Bun 1.3.14, task-owned HOME/config/cache and deterministic local
+providers. Output probes use a task-owned temporary directory. The existing
+hoisted runtime-port fixture retains its previous hash. The source registry
+updates ten hashes, removes two entries and adds none. The fixed Craft v0.15.6
+audit covers 2072 files and passes.
+
+Independent read-only review finds no verified new defect relative to
+0a6fda9. Its 586 assertions pass. These cover actual MCP components and reuse,
+ANSI and image fallback, 400 range combinations, Native function identity,
+private output paths and bytes, exclusive creation, collision and symlink
+rejection, and missing-directory errors. Bash streaming, cancellation and
+execution errors match the previous implementation. Valid PNG data passes
+through Native codemode, duplicate images share a path, and write failures
+preserve text and images with an error label. Four internal files match
+pristine, only two root patch outputs change, and both source retirements
+and generator exits are confirmed. Initial probe failures came from an
+incorrect control-character expectation and an invalid image fixture. The
+corrected probes pass without repository changes.
+
+The review confirms an existing bash boundary: bash-executor.ts calls
+stream.end() without waiting for completion or handling stream errors. With
+a missing temporary directory, both the previous and current implementations
+return BashResult before an unhandled ENOENT event. The parent helper probe
+uses finished(stream); this does not prove that the bash caller waits for
+successful writes. This existing boundary remains open.
+
+The review does not repeat installation, generation or the parent test suite,
+and does not independently run full type checks, declarations or the worker
+bundle. The parent thread owns documentation, source registration and final
+scope checks. This evidence does not establish that the remaining 58 src/pi
+files are needed. F0 through F6, the legacy permission blocker and temporary
+compaction export, dynamic tools, codemode adapters, internal SDK session and
+shell policy, the existing AuthContext gap, Photon cleanup and the
+ToolHtmlRenderer ambiguity remain open. This slice does not run the full
+repository suite, product UI, live services, Windows/Linux, a separate Node
+utility run or the complete product acceptance matrix.
+
 ## Public SDK truncation after fd18f6e
 
 Head, tail, middle and single-line truncation, size formatting, constants and

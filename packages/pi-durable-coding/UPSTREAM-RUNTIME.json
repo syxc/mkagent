@@ -109,10 +109,10 @@
       "source": "packages/coding-agent/src/core/bash-executor.ts",
       "target": "src/pi/core/bash-executor.ts",
       "sha256": "6fae3801533d64ccc018c43682bbff868619dd7cdab8f67730c731a5785d2984",
-      "portSha256": "1712fdbe3fb63c797b2883baf3677feb997a539a46a6bd445951ce8e5c72e74a",
+      "portSha256": "383fbd78891e48ac6da0c5203f1891fc771352081320c78e202417b7268db6bd",
       "changes": [
-        "host-extension-module-import",
-        "public-coding-sdk"
+        "public-coding-sdk",
+        "host-extension-module-import"
       ]
     },
     {
@@ -270,15 +270,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/tools/render-utils.ts",
-      "target": "src/pi/core/tools/render-utils.ts",
-      "sha256": "691de101cb635dd8e899fa1f07175f7d3f0baf779022c816edd1b86b90a44cb4",
-      "portSha256": "a47308a17b12059cb9e14b7ac7eb4cb2b8a0d118ce6fd8c9d00587c4e3309069",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/trust-manager.ts",
       "target": "src/pi/core/trust-manager.ts",
       "sha256": "ce480f9a1689e2da996609e9708443c391f9ab0cab5bcc047aebc1613b17e2f9",
@@ -357,7 +348,7 @@
       "source": "packages/coding-agent/src/extensions/mcp/tools.ts",
       "target": "src/pi/extensions/mcp/tools.ts",
       "sha256": "cd3245946deb3cb3df2e7b521a07837525f886d281c5e4600527eb2aed95e2ac",
-      "portSha256": "d6aeb9e79d26af68d4c907b784bd6d899a42dcde4866cd538a1d25ff08fa8b74",
+      "portSha256": "68c05335e79f36145550ed5d3bc233e60de29cfdd9cd71b6603180faf764bb99",
       "changes": [
         "public-coding-sdk"
       ]
@@ -394,7 +385,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "6a1fd8457bb00700c61ea28e5a69327b59a5548d1d31d307a57a250814458794",
+      "portSha256": "a0a14500aa473acce8fcae11ee1a3357c4362742bce939bd9c8c59e9274d948c",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",
@@ -517,13 +508,6 @@
       "target": "src/pi/utils/open-browser.ts",
       "sha256": "7f7c69e37ac63c62b4584e47cae874d4682bc1d5fb8e2913ce5682bc2dd089af",
       "portSha256": "7f7c69e37ac63c62b4584e47cae874d4682bc1d5fb8e2913ce5682bc2dd089af",
-      "changes": []
-    },
-    {
-      "source": "packages/coding-agent/src/utils/output-files.ts",
-      "target": "src/pi/utils/output-files.ts",
-      "sha256": "a7ad819c4087b6f3ac79147d5e052718e181b105efc112be16a779a78a333620",
-      "portSha256": "a7ad819c4087b6f3ac79147d5e052718e181b105efc112be16a779a78a333620",
       "changes": []
     },
     {

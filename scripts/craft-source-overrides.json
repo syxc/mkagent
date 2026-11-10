@@ -2445,8 +2445,8 @@
       "reason": "Use durable public declarations and identifier helpers plus SDK codemode types; retain host discovery metadata and namespace policies."
     },
     "packages/pi-durable-coding/src/compat/codemode-native.ts": {
-      "sha256": "11c6f67483fa241500eede8afddd936d2051cabd31758e229b146897544345b1",
-      "reason": "Use public Coding SDK formatSize for the retained Native codemode binding."
+      "sha256": "eb543453fe89bc2e8e13be60247de7de2a008f4963004d675f20ba1bebdd5044",
+      "reason": "Use the public Coding SDK private output writer for the retained Native codemode binding."
     },
     "packages/pi-durable-coding/src/compat/codemode-sandbox.ts": {
       "sha256": "3965758b8e893ecb8a08264d7373ecfee95924827761fcda3a246a6421af4a20",
@@ -3973,8 +3973,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "bf6d93f70d06365442c9b2bd3874ede10b9753acb0f796710eb54b2843b80040",
-      "reason": "Retire the SDK-covered truncation module and its obsolete Chord dependency from the generated source closure."
+      "sha256": "beed5e0f167e6bdb94afa06a0d5491ac09313db11cffb02150bb7e61bc19d23d",
+      "reason": "Retire SDK-covered rendering and output file modules from the generated source closure."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4121,8 +4121,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/auth-storage.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/bash-executor.ts": {
-      "sha256": "1712fdbe3fb63c797b2883baf3677feb997a539a46a6bd445951ce8e5c72e74a",
-      "reason": "Use public Coding SDK tail truncation and byte limits for retained host extension execution."
+      "sha256": "383fbd78891e48ac6da0c5203f1891fc771352081320c78e202417b7268db6bd",
+      "reason": "Use the public Coding SDK output stream factory for retained host extension execution."
     },
     "packages/pi-durable-coding/src/pi/core/cache-warmer.ts": {
       "sha256": "6476803829f91e2aead921d9f27e22de45ac30797815f08a4ab1dfeefe145f4b",
@@ -4204,10 +4204,6 @@
       "sha256": "aefddf527ff36d2d24d8310114ff28527c3c62fda1a58603a7f0001396f9f262",
       "reason": "Forward the Native public truncation contracts to the Coding SDK."
     },
-    "packages/pi-durable-coding/src/pi/core/tools/render-utils.ts": {
-      "sha256": "a47308a17b12059cb9e14b7ac7eb4cb2b8a0d118ce6fd8c9d00587c4e3309069",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
     "packages/pi-durable-coding/src/pi/core/trust-manager.ts": {
       "sha256": "ce480f9a1689e2da996609e9708443c391f9ab0cab5bcc047aebc1613b17e2f9",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/trust-manager.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
@@ -4245,8 +4241,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/runtime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/tools.ts": {
-      "sha256": "d6aeb9e79d26af68d4c907b784bd6d899a42dcde4866cd538a1d25ff08fa8b74",
-      "reason": "Use public Coding SDK middle truncation and size formatting for MCP results."
+      "sha256": "68c05335e79f36145550ed5d3bc233e60de29cfdd9cd71b6603180faf764bb99",
+      "reason": "Use public Coding SDK rendering helpers and private output files for MCP results."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/ui.ts": {
       "sha256": "9b1d42390a4a608cb3dfd49b0eeb0a143336d4f70dcac25698c22b0531b585da",
@@ -4261,8 +4257,8 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "6a1fd8457bb00700c61ea28e5a69327b59a5548d1d31d307a57a250814458794",
-      "reason": "Export compaction and branch-summary contracts directly from the public Coding SDK."
+      "sha256": "a0a14500aa473acce8fcae11ee1a3357c4362742bce939bd9c8c59e9274d948c",
+      "reason": "Forward the existing Native formatReadLineRange export directly to the public Coding SDK."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4323,10 +4319,6 @@
     "packages/pi-durable-coding/src/pi/utils/open-browser.ts": {
       "sha256": "7f7c69e37ac63c62b4584e47cae874d4682bc1d5fb8e2913ce5682bc2dd089af",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/open-browser.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/output-files.ts": {
-      "sha256": "a7ad819c4087b6f3ac79147d5e052718e181b105efc112be16a779a78a333620",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/output-files.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/paths.ts": {
       "sha256": "c8a2995b52a181e46cfae3b30f31448d201742d303249f34119ef2fd7a44e672",
@@ -4613,24 +4605,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "67dc5716be0305943c79d63075941d1d5495218688200f2daa73e55692b4373d",
-      "reason": "Stop source traversal at the public Coding SDK truncation contract."
+      "sha256": "fa9fab806166e5b8d98020ad5564460684ad5419f5c8f450061dcb1f8443b0d0",
+      "reason": "Stop source traversal at the public Coding rendering and output file contracts."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "e6167b3794295cd498dbb164a748a2a16c08f5104b774e3e958e4b585d9440d2",
-      "reason": "Verify Native truncation identity and generated MCP and tool imports use the public SDK boundary."
+      "sha256": "82beba3318600f614f607391244be719501b503b00fcdcb37a54f77c6397fc94",
+      "reason": "Verify Native range formatting identity and generator exits for rendering and output file callers."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "80edebf4eebb9143f0aa8e4d84a72e425303edc28661158907fce92f5c4b7a0f",
-      "reason": "Track three existing truncation root exports; keep the internal JS and declaration algorithms unchanged."
+      "sha256": "cef8a0e1fc6178df4b2d2d01e38378b2d4b78d9f22dc12608034fa5b6391aafe",
+      "reason": "Track five existing rendering and output file root exports; keep all four internal JS and declaration files pristine."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "826208bcc0619c8a1bc0376789f585a31cbb11dda32818a5f4c9c192eab5182d",
-      "reason": "Expose existing GREP_MAX_LINE_LENGTH, truncateMiddle and MiddleTruncationResult at the SDK root without modifying algorithms."
+      "sha256": "8659d0c6262db54dc56d3f4e67fddab2544ae52136d3bc9429c72cb727b98295",
+      "reason": "Expose existing rendering and output file functions at the SDK root without modifying implementations."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "3d5a9f1254f182f918539906d279361d580a4e9c963289bdd1c6705d9e17bfd5",
-      "reason": "Add only existing truncation constant, function and return type root exports; keep internal truncation JS and declarations byte-identical to pristine SDK."
+      "sha256": "b93d871623e993303f6d6e554380662c2b10bf425fb10af094aef1172ad593cf",
+      "reason": "Add five existing rendering and private output function root exports; preserve all four internal JS and declaration files byte-identical to pristine SDK."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",

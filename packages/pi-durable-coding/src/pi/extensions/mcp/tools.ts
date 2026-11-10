@@ -30,11 +30,11 @@ import type {
 	ToolRenderers,
 } from "@earendil-works/pi-coding-agent";
 import { READ_MCP_RESOURCE_TOOL } from "@earendil-works/pi-coding-agent";
-import { formatToolCallWithArgs, getTextOutput, replaceTabs } from "../../core/tools/render-utils.ts";
+import { formatToolCallWithArgs, getTextOutput, replaceTabs } from "@earendil-works/pi-coding-agent";
 import { formatSize, truncateMiddle } from "@earendil-works/pi-coding-agent";
 import { keyHint } from "@earendil-works/pi-coding-agent";
 import { VisualLinePreview } from "@earendil-works/pi-coding-agent";
-import { writeOutputFile } from "../../utils/output-files.ts";
+import { writeOutputFile } from "@earendil-works/pi-coding-agent";
 import type { McpExposure } from "./config.ts";
 
 /**

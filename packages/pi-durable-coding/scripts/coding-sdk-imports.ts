@@ -27,6 +27,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/usage-totals.ts',
   'core/tools/file-mutation-queue.ts',
   'core/tools/ls.ts',
+  'core/tools/render-utils.ts',
   'core/tools/tool-definition-wrapper.ts',
   'core/tools/truncate.ts',
   'core/tools/write.ts',
@@ -36,6 +37,7 @@ export const CODING_SDK_MODULES = new Set([
   'modes/interactive/components/visual-truncate.ts',
   'modes/interactive/theme/theme.ts',
   'utils/frontmatter.ts',
+  'utils/output-files.ts',
 ]);
 
 /** Keep host module resolution in an authored adapter, outside the generated SDK closure. */

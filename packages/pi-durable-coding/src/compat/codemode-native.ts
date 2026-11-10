@@ -18,7 +18,7 @@ import {
   CODEMODE_STORE_ENTRY_TYPE, getCodemodeCallableTools, type CodemodeStoreEntryData,
   type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions,
 } from '../native-codemode.ts';
-import { writeOutputFile } from '../pi/utils/output-files.ts';
+import { writeOutputFile } from '@earendil-works/pi-coding-agent';
 import { NativeCodemodeCalls, nativeCodemodeModels, nativeResultText } from './codemode-calls.ts';
 import { createNativeCodemodeDiscovery } from './codemode-discovery.ts';
 import { CodemodeAdmissionError, leaseNativeCodemodeSandbox } from './codemode-sandbox.ts';
