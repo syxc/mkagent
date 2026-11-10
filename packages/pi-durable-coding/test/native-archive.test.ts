@@ -145,6 +145,7 @@ test.each(['fd', 'rg'] as const)('Native ensureTool awaits ZIP extraction, insta
   expect(result.files).toEqual([`${tool}.exe`]);
   expect(result.statuses.map((status: { type: string }) => status.type)).toEqual(['info', 'info']);
   expect(result.commands).toEqual(tool === 'fd' ? ['fd', 'fdfind'] : ['rg']);
+  expect(result.versions).toEqual(['fixture']);
 });
 
 test.each(['fd', 'rg'] as const)('Native ensureTool retains versioned, root and recursive binary precedence (%s)', async tool => {

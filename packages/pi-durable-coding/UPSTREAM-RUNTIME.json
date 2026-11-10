@@ -11,7 +11,6 @@
     "@earendil-works/pi-mcp": "1.5.0",
     "@earendil-works/pi-tui": "1.5.0",
     "cross-spawn": "7.0.6",
-    "jszip": "3.10.1",
     "proper-lockfile": "4.1.2",
     "quickjs-wasi": "3.6.2",
     "typebox": "1.3.27"
@@ -200,13 +199,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/utils/management-http.ts",
-      "target": "src/pi/utils/management-http.ts",
-      "sha256": "2195b345fdd5c607f87a55b93e7d00c6d70d7dcfe2989b08bbd9f39b529a756a",
-      "portSha256": "2195b345fdd5c607f87a55b93e7d00c6d70d7dcfe2989b08bbd9f39b529a756a",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/utils/mime.ts",
       "target": "src/pi/utils/mime.ts",
       "sha256": "561d5511a976cdf4fc2d1b2ac773b21820bbad62e954e39c473f77c46a77f0af",
@@ -216,28 +208,12 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/utils/pi-user-agent.ts",
-      "target": "src/pi/utils/pi-user-agent.ts",
-      "sha256": "2e7a31bc3d1c48bf91afa2e46ac1f09050487dfe465d10663ab559caff31d463",
-      "portSha256": "2e7a31bc3d1c48bf91afa2e46ac1f09050487dfe465d10663ab559caff31d463",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/utils/shell.ts",
       "target": "src/pi/utils/shell.ts",
       "sha256": "bacb0f871b92e38ac17221e0c1b00ac5211e0f5c0063675afd980513c7c79fb4",
       "portSha256": "ae1fd3d6a210850e4466926ca3be1d080fde1a4b36726f78650fc15be693af36",
       "changes": [
         "shared-durable-shell-algorithms"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/tools-manager.ts",
-      "target": "src/pi/utils/tools-manager.ts",
-      "sha256": "d9f37a23a5af7ccfc2bb2ea172677e0c5fc8bbe5f265305eae75a5e775f3fa50",
-      "portSha256": "2df25e7614895d6273df1a4b023f8dccd7f6ff6d0ffaa3ffb326b42938ead153",
-      "changes": [
-        "public-jszip-tool-archives"
       ]
     },
     {

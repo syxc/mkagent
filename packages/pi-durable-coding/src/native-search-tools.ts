@@ -4,10 +4,14 @@ import {
   createFindToolDefinition as sdkFindDefinition,
   createGrepTool as sdkGrepTool,
   createGrepToolDefinition as sdkGrepDefinition,
+  createToolManager,
   type FindToolOptions,
   type GrepToolOptions,
 } from '@earendil-works/pi-coding-agent';
-import { ensureTool } from './pi/utils/tools-manager.ts';
+import { extractZipArchive } from './compat/archive.ts';
+import { getBinDir, VERSION } from './pi/config.ts';
+
+const { ensureTool } = createToolManager({ getBinDir, version: VERSION, extractZipArchive });
 
 export {
   type FindOperations, type FindToolDetails, type FindToolInput, type FindToolOptions,

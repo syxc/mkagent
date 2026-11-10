@@ -40,7 +40,7 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
 const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
 // Retain the legacy token adapter and the host OAuth facade as explicit roots.
-const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/compaction/compaction.ts', 'utils/tools-manager.ts', 'extensions/codemode/worker.ts', 'core/extensions/virtual-modules.ts', 'extensions/mcp/oauth.ts'];
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/compaction/compaction.ts', 'extensions/codemode/worker.ts', 'core/extensions/virtual-modules.ts', 'extensions/mcp/oauth.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();

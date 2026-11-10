@@ -72,6 +72,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export { writeOutputFile } from "./utils/output-files.${extension}";`,
     `export { ${suffix === 'd.ts' ? 'type PathInputOptions, ' : ''}canonicalizePath, isPathWithin, normalizePath, pathsEqual, resolvePath } from "./utils/paths.${extension}";`,
     `export { stripBom } from "./utils/text.${extension}";`,
+    `export { createToolManager${suffix === 'd.ts' ? ', type ToolManagerDependencies' : ''} } from "./utils/tools-manager.${extension}";`,
     `export { ${suffix === 'd.ts' ? 'type MiddleTruncationResult, ' : ''}GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.${extension}";`,
     `export * from "./extensions/codemode/tool.${extension}";`,
     `export { createToolSearchToolDefinition${suffix === 'd.ts' ? ', type ToolSearchDependencies, type ToolSearchToolOptions' : ''} } from "./extensions/tool-search/tool.${extension}";`,
@@ -200,6 +201,33 @@ for (const name of ['tool', 'index']) for (const suffix of ['js', 'd.ts']) {
 for (const name of ['bash', 'powershell']) for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/tools/${name}.${suffix}`;
   outputs.set(path, codingShellPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts', name === 'powershell'));
+}
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/utils/tools-manager.${suffix}`;
+  let body = readFileSync(join(baseline, path), 'utf8');
+  if (suffix === 'js') {
+    body = replace(body, 'const TOOLS_DIR = getBinDir();',
+      'export function createToolManager(dependencies = {}) {\nconst TOOLS_DIR = (dependencies.getBinDir ?? getBinDir)();');
+    body = replace(body, 'getPiUserAgent(VERSION)', 'getPiUserAgent(dependencies.version ?? VERSION)');
+    for (const name of ['getToolPath', 'getLatestVersion', 'ensureTool']) {
+      const prefix = name === 'getToolPath' ? '' : 'async ';
+      body = replace(body, `export ${prefix}function ${name}(`, `${prefix}function ${name}(`);
+    }
+    body = replace(body, '            extractZipArchive(archivePath, extractDir, assetName);',
+      '            await (dependencies.extractZipArchive ?? extractZipArchive)(archivePath, extractDir, assetName);');
+    body = replace(body, '//# sourceMappingURL=',
+      'return { getToolPath, getLatestVersion, ensureTool };\n}\n'
+      + 'export const { getToolPath, getLatestVersion, ensureTool } = createToolManager();\n//# sourceMappingURL=');
+  } else {
+    body = replace(body, '//# sourceMappingURL=',
+      '/** Host installation policy; binary discovery, download and cleanup remain in the SDK. */\n'
+      + 'export interface ToolManagerDependencies {\n    getBinDir?: () => string;\n    version?: string;\n'
+      + '    extractZipArchive?: (archivePath: string, extractDir: string, assetName: string) => void | Promise<void>;\n}\n'
+      + 'export declare function createToolManager(dependencies?: ToolManagerDependencies): {\n'
+      + '    getToolPath: typeof getToolPath;\n    getLatestVersion: typeof getLatestVersion;\n    ensureTool: typeof ensureTool;\n};\n'
+      + '//# sourceMappingURL=');
+  }
+  outputs.set(path, body);
 }
 const managerPath = 'dist/core/settings-manager.js';
 outputs.set(managerPath, replace(readFileSync(join(baseline, managerPath), 'utf8'),

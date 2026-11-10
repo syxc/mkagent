@@ -26,6 +26,79 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK tool manager policy after 7421c90
+
+The SDK already owns binary discovery, release resolution, download retries,
+platform mapping, extraction, installation and cleanup. A local patch adds
+createToolManager and ToolManagerDependencies at the root. The three optional
+dependencies are getBinDir, version and extractZipArchive. The original module
+exports use a default instance. The ZIP callback is awaited. These new exports
+are local patch API, not API published upstream.
+
+The existing search adapter binds the host directory, version and safe JSZip
+extractor. Its four factories retain explicit operations access and resolver
+overrides. The extractor is unchanged: CRC, path and file-type validation,
+an empty destination and exclusive writes remain required. Delete the complete
+tools-manager (349 lines), management-http (78 lines) and pi-user-agent (six
+lines) local modules, plus the obsolete 37-line ZIP conversion. Do not move
+the installer algorithm into a patch template. The two SDK HTTP/user-agent
+helpers and their declarations remain pristine in both layouts.
+
+| Check | Result and scope |
+|---|---|
+| Generation | Complete runtime, auxiliary and Coding patch generation and checks pass; all three retired modules stay absent |
+| Patch replay | Only dist/index.js, dist/index.d.ts and the tools-manager JS/declaration change; replay these four outputs from pristine inputs in a task directory and apply them to both existing layouts; all 74 Coding outputs match the manifest |
+| Root behavior | Initial run: 36 passes and five failures; after the fixture resolution correction, rerun only those five installer cases: five passes, zero failures and 33 expect calls |
+| Hoisted behavior | First complete run: 41 passes, zero failures and 232 expect calls across published-sdk-boundary, host-search-sdk and native-archive |
+| Host policy and ZIP | Actual SDK installer and host binding run with deterministic fetch and command stubs; host directory and version, awaited extraction, binary priority, failure cleanup, unsafe paths, CRC, symlinks and non-empty destination are covered |
+| Search | Existing regression cases cover resolver overrides, inherited/non-enumerable operations, single getter access, ctx.cwd and cancellation |
+| Declarations | Scoped transpileDeclaration of native-search-tools succeeds with matching output in both layouts; no full type check or complete declaration build is claimed |
+| Isolation | Task-owned child HOME and temporary paths, disabled env-file loading, network denial and a network-blocking preload; build preflights find no protected legacy dependency |
+| Installation | No install is attempted in this slice; prior offline frozen installs remain failed; existing-layout replay and hash checks do not establish fresh installation |
+| Source registration | Update 10 entries, retire three and add none; leave the protected entry intact |
+| Restricted Craft audit | Fixed v0.15.6 baseline 8df01c5d0ac73c35add5954e6f190ce038d35845: 2034 allowed files, 1454 common, 873 normalized-identical, 581 modified, 580 MkAgent-only and 858 reviewed deletions |
+| Independent review | Zero confirmed findings; 19 independent probes pass on attempt four; parent verifies all 13 slice inputs, 2160 supporting inputs and 88 evidence files by SHA-256 |
+
+The review independently rebuilds the four changed patch outputs from pristine
+inputs. They match the manifest and both existing SDK layouts. The other 70
+patch blocks are unchanged from the base. A filtered closure search of 2121
+safe source paths finds no references to the three retired source modules.
+The review compares complete compiled retired implementations with pristine
+SDK output after the documented host ZIP normalization.
+
+The first review harness stops on a builtin-path check. Attempt two has 15
+passes and four failures from the clock/ESM stubs. Attempt three has 14 passes
+and five failures from reused fixture directories. Attempt four uses a new
+empty directory and passes all 19 probes. Keep all failed logs. No parent
+suite is repeated. Default SDK comparisons, manager isolation, offline and
+unsupported-platform ordering, host directory/version, asynchronous ZIP
+success/failure cleanup, resolver overrides, cancellation and declaration
+contracts are covered. Two stale helper declarations still exist in types/;
+they do not establish a source caller or a complete declaration build.
+
+The first installer fixture used createRequire.resolve against an SDK root
+with only types/import export conditions. Five cases failed with Cannot find
+module. Confirm the export conditions and use import.meta.resolve with
+fileURLToPath. Preserve the 36 passing cases and the initial failure log.
+Do not add a root alias or change production dependencies to satisfy the fixture.
+The installer fixture stubs the network helper; it does not test real downloads
+or real Windows commands.
+
+The first restricted audit stopped at its path guard before reading excluded
+configuration. The completed audit excludes the protected legacy source,
+`.claude/settings.json` and `.env.example`, as well as documentation and the registry
+from the comparison set. Registry checks still read the registry. Logical and
+real paths are checked before source reads; Git fallback checks the same path.
+The two extra configuration exclusions explain part of the count change from
+the previous slice. This is not a complete Craft audit.
+
+The inventory is now 22 runtime TypeScript files (18 src/pi and four facades),
+zero assets, eight auxiliary sources and 13 forwarded entries. Physical patch
+outputs are core four, Coding 74 and durable 33, total 111. Dependencies, lock,
+task schemas and persistence versions are unchanged. Remaining source retirement, fresh full types/declarations, protected legacy
+integration and F0 through F6 remain open. No new production bundle, broad
+recovery suite or real Windows check is claimed.
+
 ## SDK path and BOM root exports after 49a9476
 
 SDK internal modules already contain the same path and BOM algorithms.
@@ -2394,8 +2467,9 @@ factories pass operations and bind the existing host resolver. That resolver
 keeps the managed binary directory, PI_OFFLINE, platform checks and safe ZIP
 installation. Without configuration the SDK still uses its own resolver. The ls
 factory uses the SDK directly. The SDK retains search, path, limit and renderer
-algorithms. Generation stops at those module boundaries and keeps tools-manager
-as an explicit source root. No dependency, lockfile or persisted version changes.
+algorithms. At that stage, generation stopped at those module boundaries and kept
+tools-manager as an explicit source root. The later tool manager slice
+removes that root and delegates installation to the SDK. No dependency, lockfile or persisted version changes.
 
 The first six-test run passes five tests and fails one because the ls assertion
 omits the SDK's existing Use limit=4 for more hint. Only the assertion changes.

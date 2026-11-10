@@ -2,7 +2,7 @@
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
 import {
-  portToolArchives, portImageMime,
+  portImageMime,
   portChildProcess, portShell,
 } from './shared-runtime-port.ts';
 
@@ -37,9 +37,6 @@ type SharedHelperPort = {
 } & (DeclarationPort | { apply(body: string): string });
 
 const sharedHelperPorts: Record<string, SharedHelperPort> = {
-  'utils/tools-manager.ts': {
-    change: 'public-jszip-tool-archives', dependency: 'jszip', apply: portToolArchives,
-  },
   'utils/mime.ts': {
     change: 'shared-durable-image-mime', dependency: '@earendil-works/pi-durable', apply: portImageMime,
   },

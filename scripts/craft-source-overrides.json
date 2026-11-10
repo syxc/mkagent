@@ -2421,12 +2421,12 @@
       "reason": "Keep validated ZIP extraction for the native installer; the public Coding SDK owns ZIP writing."
     },
     "packages/pi-durable-coding/test/native-archive.test.ts": {
-      "sha256": "33c3e011138fb096860816e9286fb35d5b7178474538b1b19d6ed8ab20713119",
-      "reason": "Verify ZIP contracts with Python's standard reader, binary fixtures and original Native installer source under explicit hosts."
+      "sha256": "1469a1fbe414b6433051cd3124059eba281eaeb7b376646deb941b6c08aee382",
+      "reason": "Verify the host version reaches the shared SDK installer without losing safe ZIP checks."
     },
     "packages/pi-durable-coding/test/native-tool-archive.fixture.ts": {
-      "sha256": "8ba15122afa41892804085f4678d47f83aa1304e1f0e4fa027528077dedab16e",
-      "reason": "Execute only allowed Native installer source with explicit platform, command and HTTP hosts and an isolated initial PATH."
+      "sha256": "cd40de5291342aa2f34d57fb30cf3b9f33899deb2d7053f1f7fe8c46fb18ce6a",
+      "reason": "Exercise actual SDK installer bytes and host binding in an isolated module fixture with ESM package resolution."
     },
     "packages/pi-durable-coding/src/compat/codemode-calls.ts": {
       "sha256": "921c4e2b0c197a8daeb840e467d00e512abdc6f9c46a2124e8147728e3b152ab",
@@ -2501,16 +2501,16 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "22fe4ddf97609d4cc7dfa5d7cfd16af181b36e964519f9c8977bb867268cedbc",
-      "reason": "Remove the unused footer GitPaths transformation."
+      "sha256": "f2e13b1c48898e11ad8db3814782cd1d66c42bdae21ff58c28b6b1cc907eefc3",
+      "reason": "Remove the obsolete local ZIP installer port rule after SDK delegation."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "98c76609719cf7f4f82bbba85076b52fb6194947ebc17c8dda5f52bb2f6ce3b7",
-      "reason": "Exclude the binary output sanitizer after its only local runtime caller is retired."
+      "sha256": "4aa5abb47e8fbca7e283323dd9a8e89ba1004522492b43f6f85ab3e97314c2cc",
+      "reason": "Delete the obsolete ZIP algorithm conversion when the SDK owns installation."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
       "sha256": "67e436fde78ba6a771b8692c07268143e75a1dac9e27872199a0d3e62e367e05",
@@ -3949,8 +3949,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "c3b05d8140708f2a9db4deb9690bc6612a6ec2b9e5fb15147a6300ceebcbeeac",
-      "reason": "Retire path and BOM source implementations from the runtime closure."
+      "sha256": "d8b4d598abee82daa9999f01df96bcbdbd40558b5bd43d621c1c1e17948eaa2a",
+      "reason": "Retire the installer and its HTTP and user-agent helpers from the local runtime closure."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -3961,8 +3961,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "ee0d37e261c36f04df8d8ab3b3e57b8eb1036117ca5037631b29f0b7f9b0099c",
-      "reason": "Remove the retired message-conversion source transformation."
+      "sha256": "37caff24f3f66c157afba6e34164c12ba59a5f516f5d3ae8a2530661c75b280b",
+      "reason": "Stop selecting the complete tool manager as an explicit local source root."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4148,25 +4148,13 @@
       "sha256": "15118c0272c36832166cd49d4dac73a568f25052bc6a803a6c341ab73b443ed5",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/child-process.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/utils/management-http.ts": {
-      "sha256": "2195b345fdd5c607f87a55b93e7d00c6d70d7dcfe2989b08bbd9f39b529a756a",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/management-http.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/utils/mime.ts": {
       "sha256": "9776fa3b491e80b1edcc2d44925f5343a2d4a4ad214d07f5cff726d0028e6e8d",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/mime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/utils/pi-user-agent.ts": {
-      "sha256": "2e7a31bc3d1c48bf91afa2e46ac1f09050487dfe465d10663ab559caff31d463",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/pi-user-agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/utils/shell.ts": {
       "sha256": "ae1fd3d6a210850e4466926ca3be1d080fde1a4b36726f78650fc15be693af36",
       "reason": "Remove the output sanitizer with no remaining local execution caller while retaining durable shell policies."
-    },
-    "packages/pi-durable-coding/src/pi/utils/tools-manager.ts": {
-      "sha256": "2df25e7614895d6273df1a4b023f8dccd7f6ff6d0ffaa3ffb326b42938ead153",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/tools-manager.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/stream-fn.ts": {
       "sha256": "a6b2cce7515e43411f9b3469225d39712508542d86bc3e806a9f39b57808454f",
@@ -4433,16 +4421,16 @@
       "reason": "Guard compat path identity and source traversal at the SDK path and BOM boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "d83cb63eb2f520dc5313533f7ca22ac4e892a4200184c2fb8b33263de1ee70ca",
-      "reason": "Record existing path and BOM root exports; both internal JavaScript and declaration algorithms stay pristine."
+      "sha256": "144401c90eb38b9837166d07a4b56fdfba848f5f6803e30fbcba3e945c652a0c",
+      "reason": "Record the SDK tool manager factory and host installation dependencies; retain default module exports."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "603f2bd09aa35dd1fde673486144a941dcd2632fa070cb1c0db8ea19a4a4404e",
-      "reason": "Export only the path functions, BOM function and path option type required by current callers."
+      "sha256": "2240132f97b779cafe2d58f41209b53f77496b6627b2ed1c9ca1a66ff9bc563b",
+      "reason": "Add only an instance factory, directory and version binding, and an awaited ZIP callback to the SDK installer."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "965f375de8c6b3f4b5ef20bb5a499a595e7f3aa3799e70c0a9a03dfe484f5b32",
-      "reason": "Add narrow existing path and BOM exports to the Coding SDK root without changing helper algorithms."
+      "sha256": "6ac0fa0d2942dccf211500fcf59256d3a038915524febca892b557885a2d2ae2",
+      "reason": "Add a narrow SDK tool manager factory and host policy callbacks without copying the installer algorithm."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4505,8 +4493,8 @@
       "reason": "Exercise durable ownership and metadata boundaries through the public SDK factory binding."
     },
     "packages/pi-durable-coding/src/native-search-tools.ts": {
-      "sha256": "7aa843a444ed73b08b77b353cf9da96a0dc8ecaed91a850a45887dba78eccabb",
-      "reason": "Bind the published Coding SDK grep and find factories to the host binary directory, offline policy and validated installer without copying execution or rendering algorithms."
+      "sha256": "78861ccedb3c9daf6d2564a0bcefb69f0d205db228d99775d70614d22b14ff99",
+      "reason": "Bind the existing host directory, version and safe ZIP policy to the SDK installer."
     },
     "packages/pi-durable-coding/test/fixtures/host-search-runner.ts": {
       "sha256": "4d14badcd11c3db28b2076a7a1323c597cf969905d26e607151d96eb6562edfb",
