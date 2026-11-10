@@ -3,7 +3,7 @@ import { createModels, fauxProvider, type ClassifierModel } from '@earendil-work
 import type { AgentTool } from '@earendil-works/pi-agent-core';
 import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 import { executeNativeCodemode } from '../src/compat/codemode-native.ts';
-import type { CodemodeStoreEntryData } from '../src/pi/extensions/codemode/tool.ts';
+import type { CodemodeStoreEntryData } from '../src/native-codemode.ts';
 import { currentCodingHostToolApi } from '../src/durable-coding/engine.ts';
 
 const text = (result: Awaited<ReturnType<typeof executeNativeCodemode>>) =>

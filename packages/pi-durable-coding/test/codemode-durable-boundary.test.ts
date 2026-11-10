@@ -6,7 +6,7 @@ import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import {
   createModels, fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall,
 } from '@earendil-works/pi-ai';
-import { CodemodeSandbox } from '@earendil-works/pi-codemode';
+import { CodemodeSandbox } from '@earendil-works/pi-durable/codemode/node';
 import {
   createRegistry, defineExtension, Harness, MemoryStorage,
   type ToolExecutionResult, type ToolRegistration,
@@ -16,8 +16,8 @@ import {
 } from '@earendil-works/pi-durable/codemode';
 import type { AgentTool } from '../src/agent-runtime.ts';
 import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
-import { executeCodemode } from '../src/pi/extensions/codemode/execute.ts';
-import type { CodemodeStoreEntryData } from '../src/pi/extensions/codemode/tool.ts';
+import { executeNativeCodemode as executeCodemode } from '../src/compat/codemode-native.ts';
+import type { CodemodeStoreEntryData } from '../src/native-codemode.ts';
 import { createNativeCodemodeDiscovery } from '../src/compat/codemode-discovery.ts';
 
 const context = BACKGROUND_CONTEXT;

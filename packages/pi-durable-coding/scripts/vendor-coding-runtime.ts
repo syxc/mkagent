@@ -117,6 +117,12 @@ while (queue.length) {
       changes.add('public-coding-sdk');
       return;
     }
+    if (specifier === '@earendil-works/pi-codemode/worker') {
+      replacements.push({ start: literal.getStart(parsed), end: literal.end, body: '"@earendil-works/pi-durable/codemode/worker"' });
+      dependencies.add('@earendil-works/pi-durable');
+      changes.add('public-durable-codemode-worker');
+      return;
+    }
     if (specifier === '@silvia-odwyer/photon-node') {
       if (path !== 'utils/photon.ts' && path !== 'utils/exif-orientation.ts') {
         throw new Error('Native Photon import needs an explicit shared adapter: ' + path);

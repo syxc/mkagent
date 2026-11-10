@@ -975,8 +975,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "809bd475bb511ca2a444273b98d5b4a930f1fb80e0263fd1fda12923fc7ef475",
-      "reason": "Remove the direct highlight.js dependency after replacing local syntax highlighting with the public Coding SDK."
+      "sha256": "4a3dcdc9bdff5e6383a638ba0026488ce307baa7a0819c299233eb57561cbbf8",
+      "reason": "Remove only the two workspace direct pi-codemode dependencies; official Coding and durable transitive dependencies remain."
     },
     "package.json": {
       "sha256": "868c3042d38e0ec2084d6bc0926a4966c4ec2c5ad02c2f43e0e371c05f01bfed",
@@ -1015,8 +1015,8 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "packages/pi-agent-server/package.json": {
-      "sha256": "d6df4a0d5f1fb02294bf4b8f214b90b800477f4114d7ec00a41f171f93b93533",
-      "reason": "Replace Craft's coding-agent runtime with pi-durable, pi-ai, chord, codemode and schema 1.5.0, retain pi-mcp 1.1.0, and build the subprocess with its worker and WASM assets. Depend on the local coding package with one durable engine."
+      "sha256": "87b9bfcb4518f3bfa550af7082e67d94499511ba5453acf8a5b1b08e39cee49a",
+      "reason": "Use durable public codemode entry points instead of a direct pi-codemode dependency."
     },
     "packages/pi-agent-server/src/adapt-credential.test.ts": {
       "sha256": "d1333c4dba8dc86ef234d5f0a69cc0b47d79d5242f6a50671d008f2023b64216",
@@ -2441,20 +2441,20 @@
       "reason": "Execute only allowed Native installer source with explicit platform, command and HTTP hosts and an isolated initial PATH."
     },
     "packages/pi-durable-coding/src/compat/codemode-calls.ts": {
-      "sha256": "9b48f314e5850bff3639bcd638b19ba850a576cbb1ffa920b1bb241971258701",
-      "reason": "Project Native live rows and display usage from real durable child receipts without duplicating execution."
+      "sha256": "7e79bd87fe4c0668d77f7fea2ba7a6389fbd71e4d68b71fd2cdd8e2122100fa2",
+      "reason": "Use SDK codemode contracts and documentation through the native binding while retaining durable call ownership and result projection."
     },
     "packages/pi-durable-coding/src/compat/codemode-discovery.ts": {
-      "sha256": "3b17cd58d5e4bf318e3a45d013e3ca434a57c6ac91d8005f3bf4a47e1500ba29",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
+      "sha256": "71f83ba2d2dd73623dd0267816cb4f6c86e26936019e2ad2cb4ec488d4e1e6c1",
+      "reason": "Use durable public declarations and identifier helpers plus SDK codemode types; retain host discovery metadata and namespace policies."
     },
     "packages/pi-durable-coding/src/compat/codemode-native.ts": {
-      "sha256": "da32c4b04c324df826d0479bce53fa39e9e2e58e078c8ee87df2bc4b4750d8c9",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
+      "sha256": "36145ab547c6487d7473263dd0701a524143d24f840c9f1973238e9920f522aa",
+      "reason": "Use durable public source parsing and SDK codemode contracts while preserving the existing durable executor and Native store bridge."
     },
     "packages/pi-durable-coding/src/compat/codemode-sandbox.ts": {
-      "sha256": "ce819e20f87bf96f7ad396c66c59000314cc212e04113761160e038300bd4c45",
-      "reason": "Retain Native worker admission, paths, memory, FIFO, deadlines and joined cleanup as a durable sandbox lease."
+      "sha256": "3965758b8e893ecb8a08264d7373ecfee95924827761fcda3a246a6421af4a20",
+      "reason": "Use the public durable Node sandbox and loader while preserving host admission, lease and worker cleanup policies."
     },
     "packages/pi-durable-coding/src/durable-coding/codemode-forward.ts": {
       "sha256": "3e2bb4bad824c2361c25f6171e67b6fc8c82f6525e29e3e5b94d65d6794d8e59",
@@ -2465,8 +2465,8 @@
       "reason": "Preserve usage overrides and persist accounting metadata across wrappers and strict JSON receipts."
     },
     "packages/pi-durable-coding/test/native-codemode-durable.test.ts": {
-      "sha256": "2b62732b6f443bc20567b4b190fb8d8ac78dabefd2c5f199812e13aab6b877a2",
-      "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
+      "sha256": "1db52a09ae1d9f64d65d9e3cd860f9723159cb7917f07dd6ee2e527ea0fca9a0",
+      "reason": "Verify Native durable execution through the SDK factory binding and public durable result contracts."
     },
     "packages/pi-durable-coding/test/native-codemode-forward.test.ts": {
       "sha256": "f4b36a549fc7615f4d3cd0b7150ad75c5a022884f1d4d0d3dd78183d4b51ee20",
@@ -2489,12 +2489,12 @@
       "reason": "Verify shared model resolution, validation before effects, structured image errors and usage through the public durable helper."
     },
     "packages/pi-durable-coding/test/native-codemode-models.test.ts": {
-      "sha256": "790c8b9817f2068f043de6e4e8190626c47664dd429537a6a39aaa621369e0a3",
-      "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
+      "sha256": "a3b2c111a1f67249fc636378b3b76f373beceec1660cc686029a1c69e07ab0fe",
+      "reason": "Verify model calls and usage using SDK codemode factories and the public durable sandbox."
     },
     "packages/pi-durable-coding/test/shared-codemode-output.test.ts": {
-      "sha256": "29dbbe48f9d52cf1c618309eabd2f57714c55eba0d82183b0ae782c7fbd6adaf",
-      "reason": "Check shared codemode formatting, native token budgets, image deduplication, write failures and partial cancellation output."
+      "sha256": "11cb28779856e305b29ea256039be8e3285f081e7b1dce13055d4c7c857f641c",
+      "reason": "Verify shared durable output formatting through public sandbox and result entry points."
     },
     "packages/pi-durable-coding/test/shared-sleep.test.ts": {
       "sha256": "c4d98451a0e88fc4e31abc4bb3220d822bf4c7bac0760e2439de984ac3b41904",
@@ -2505,24 +2505,24 @@
       "reason": "Check shared search scores, tokenizer identity, schema metadata, namespace ranking and native activation callbacks."
     },
     "packages/pi-durable-coding/test/codemode-durable-boundary.test.ts": {
-      "sha256": "ec1d43789dae3b0a353f52fb7ba768218c1715a0261fac656d56b32dda9b37b3",
-      "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
+      "sha256": "a725df87aeff9733fe059adbff2dab034fdfd8a229cf04070cc1b9b1dc8dca23",
+      "reason": "Verify the existing durable codemode boundary through public SDK contracts and the retained Native executor."
     },
     "packages/pi-durable-coding/src/legacy/api-types.ts": {
       "sha256": "a0524a6fec510bb5c5a0673b349bf53394b1a01933d459edeb9ce53ff559751f",
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "1cafc34d51f783b26328594dd8af484eb36241d1f5fd5383d2817d9cbaa5cded",
-      "reason": "Retain required shared helper rules and remove obsolete edit argument, diff and read path transformations after SDK replacement."
+      "sha256": "ef731b99d0ad16ef3024790f83d198dcf9bea5391a756e4bf291f7d6d0fc057e",
+      "reason": "Remove the retired codemode executor forward rule after SDK factory binding replaces its only generated consumer."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "acbd3797958c14de7f1f1d6b70f28a5ac3873f037d21d05250f963f2132c10e7",
-      "reason": "Generate required shared runtime boundaries without the retired read path adapter transformation."
+      "sha256": "7dd97515364d4215dbc7a75c3c5ee868dd3b88ddfaea4cb124277f467427a480",
+      "reason": "Delete the unused codemode executor-forward generator; retain unrelated shared runtime policies."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
       "sha256": "1330d2ddfe70f82f5768fa2d1645aabd5d3d1e63075cd4096134212072f7b1af",
@@ -3321,8 +3321,8 @@
       "reason": "Cross-platform bounded retry runner hardens dependency installation and Electron packaging downloads"
     },
     "packages/pi-agent-server/scripts/build.ts": {
-      "sha256": "1d55081c73dab17771b455e9e635c659e957cd714bbf839ce11fc434e76cda9c",
-      "reason": "Build the durable worker with published Coding SDK theme and HTML assets plus offline browser vendor resources."
+      "sha256": "b77634306276ecde16db0ef746fd78f0ada9f122eacc0473578a06cc6cdbc46e",
+      "reason": "Resolve the existing QuickJS WASM through the public durable Node entry point for worker publication."
     },
     "packages/pi-agent-server/src/cache-warmer.ts": {
       "sha256": "7d1ca54d32dc242776a6fe34cce44810554fe5d4243ee0d42f135619f048d8af",
@@ -3369,8 +3369,8 @@
       "reason": "Verify durable read-tool image resizing and BMP conversion through the builtin tool set."
     },
     "packages/pi-agent-server/src/tools/codemode-worker.ts": {
-      "sha256": "76c44903cd194028200bdbbb63924ef19592dca199143b79b72b32f02251000a",
-      "reason": "Expose the installed pi-codemode worker as a separate bundle entrypoint for packaged execution."
+      "sha256": "f8ebe2bfd64867d1cc65e1bed86bfee51e7e71d31819318598b2aa41ae3bea82",
+      "reason": "Initialize the codemode worker through the public durable worker entry point."
     },
     "packages/pi-agent-server/src/tools/local/management-http.ts": {
       "sha256": "53a9ddb9b1abf1d000a7955f793ef27c102e6ab2a33158b8b3cffc9ed97bd8aa",
@@ -3469,8 +3469,8 @@
       "reason": "Combine durable coding tools and Photon with public Coding SDK search registrations; offer PowerShell as a deferred coding-profile tool routed through host approval."
     },
     "packages/pi-agent-server/src/tools/codemode.ts": {
-      "sha256": "a6066d75853ab6887e7380e245b359585e87567502a23870b6664275bb1721d1",
-      "reason": "Bind pi-durable codemode to the installed pi-codemode sandbox, packaged worker and WASM assets, with host approval for model calls."
+      "sha256": "d8407c503f239750cd64e09a82218c8294c517629a94097afac46bb02cb072f4",
+      "reason": "Use the public durable Node sandbox and loader while retaining host tool approval and model binding."
     },
     "packages/pi-agent-server/src/tools/search.ts": {
       "sha256": "bbce9815d492ad8dded29bd1ce90519ef91ad57e8de5196367feff6626594626",
@@ -3701,8 +3701,8 @@
       "reason": "Run the standalone bundle outside the source tree with an unchanged Pi plugin and modified host approval."
     },
     "packages/pi-durable-coding/DURABLE-PATCH.json": {
-      "sha256": "d39c1fa86e75642c74eea90870fee105d9be3e9c861c4f12eda784dd77fc6997",
-      "reason": "Record all 28 pristine and patched durable outputs after removing obsolete path generator changes and unused low-level tool exports."
+      "sha256": "622dec6eba0b897b15422ebd2143f7407d89c99157c6cd1bc134e0903d4490a1",
+      "reason": "Record all 33 durable outputs including four flat package modules, preserving prior codemode store, lease, output and model exports."
     },
     "packages/pi-durable-coding/LICENSE.pi": {
       "sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48",
@@ -3713,8 +3713,8 @@
       "reason": "Record the generated closure after replacing extension runner, plugin types and command execution with the published Coding SDK."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "caded7b470e61a8de98f870479d29e3a3b4cff74d885ae64e92239f53ae52533",
-      "reason": "Remove the direct highlight.js dependency after replacing local syntax highlighting with the public Coding SDK."
+      "sha256": "ef0b5ec10359607838d89f0c495102e6d58a4a6b4cc408fc5570f2885c0d6bf6",
+      "reason": "Prefer the durable codemode dependency and remove the redundant direct pi-codemode dependency."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -3921,8 +3921,8 @@
       "reason": "Type-check coding adapters and typed source ports."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
-      "sha256": "8a2fc89af5a392b934fcc4c2e50270139e463a4c3fe3ac2fae635e1bc4a42f69",
-      "reason": "Keep the complete 28-file durable patch and body digest; expose only the two required diff functions and restore original path handling after local adapters retire."
+      "sha256": "13eb61c2e57b30cb2aa91b78725cf17a4942c4244a0c87f6ef30f03eb0372da3",
+      "reason": "Preserve prior durable compatibility exports and expose its existing codemode source, declarations, Node sandbox and worker dependency without copying implementation."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
       "sha256": "ee864d6fee7ac95fc1ce126e0784733ce1891e600b47481ddcb5d73bc3fa0ce4",
@@ -3985,8 +3985,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "f4e69a7b6b1d3a41ce729f05e14e1834383440fe9ecb1373aea4b7b7f4367f70",
-      "reason": "Record the reduced closure after replacing Bash and PowerShell factories, output accumulation and shell rendering with public SDK implementations."
+      "sha256": "54621cf29f883d43945438a829516c76e9273f6dc714561c43a9f0aa09ce44cd",
+      "reason": "Record the reduced runtime closure after deleting five codemode source files and routing the retained worker through durable."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
@@ -4005,8 +4005,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "62daea5f79b4335ea91935826dfa3759249bb7961ae5fbfe084f729224989efa",
-      "reason": "Generate only the remaining pinned Coding source closure; replace covered SDK implementations and retain explicit helper roots consumed by authored host adapters."
+      "sha256": "f7bbc080c18b4272627957d9e0612507671a439439f2a40cfb7294d2a9e238a1",
+      "reason": "Route the retained codemode worker to the public durable worker entry point."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4276,37 +4276,17 @@
       "sha256": "2eca640b1fa887ffe091a1fcef163b961596f1f28cb6954ec573f216a1a0de06",
       "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
     },
-    "packages/pi-durable-coding/src/pi/extensions/codemode/execute.lazy.ts": {
-      "sha256": "484dafb4ba45f57542ec391d667c6e3cfe424385564498d9974abf1e1745c02f",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/execute.lazy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/codemode/execute.ts": {
-      "sha256": "6403cb6ef6b21a1195c9d6851ca444d7cd3bcbd27d8a3141749759b55ea1229c",
-      "reason": "Forward Native codemode to the durable adapter instead of maintaining a separate execution loop."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/codemode/index.ts": {
-      "sha256": "ffebd66132249f3c7950393fe173d29841a36a8ee1b5563e038370ec9515988e",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/codemode/renderer.ts": {
-      "sha256": "a4398fde74203a4821810f7f94aada740e7010b89d5b373aaf2cbb429735e3d3",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/codemode/tool.ts": {
-      "sha256": "2d07702c5225a307d0f5eb73189326d55f425e46750d17f2f00ae9e35552fc5a",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
     "packages/pi-durable-coding/src/pi/extensions/codemode/worker.ts": {
-      "sha256": "eff1f57d225d054ec40aa6753631426a426528f2ef769c4e82020757cb055911",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/codemode/worker.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "4542d37a9f75150b52fc393fcd757f08fb0d681d92bebee6a40171e09b4bec82",
+      "reason": "Forward worker initialization to the public durable entry point rather than a direct sandbox dependency."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/config.ts": {
       "sha256": "5b66196e62c4e1bbac93177d260b1601785b8edc5e14ae2e0113944834e8079d",
       "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/index.ts": {
-      "sha256": "df9fac7a788e8106da7d35724efc59aabe950b8b19405cb1a9fa9c79cba01519",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
+      "sha256": "d5653af651aaeee65e4e4a0baedfee4b144396e091213fbb2305c1a6e0cc8daf",
+      "reason": "Use the SDK codemode factory with the existing durable executor binding for MCP registrations."
     },
     "packages/pi-durable-coding/src/pi/extensions/mcp/log.ts": {
       "sha256": "6e4d70a321a4dce8946b208276cee50bb8b3d9908894dc12af833754dde0e407",
@@ -4345,8 +4325,8 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "93ddd167c7062074e793896d084b59b060018425508aa49ac3d6c32254cf26e3",
-      "reason": "Preserve public edit diff contracts through the host SDK boundary and direct durable exports."
+      "sha256": "54480187c5e41266adc321bc406ae4d8c26f0f110b39a6d5780f2965b07431ac",
+      "reason": "Expose SDK codemode factories and contracts through the thin durable binding instead of local source copies."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4805,12 +4785,12 @@
       "reason": "Exercise the real durable codemode sandbox through the coding Agent, production approval, official child ownership, caller restrictions and tool-search activation receipts."
     },
     "packages/pi-durable-coding/test/codemode-native-store.test.ts": {
-      "sha256": "837dde1e8c4c0e51009836460b9e555d143b2ab5d95d6e5ac4555f6ee81a2618",
-      "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
+      "sha256": "d91fa6b1891b707683ae40f63fa0330dc7d2ede6491f86574f1b346cb23f313b",
+      "reason": "Verify Native branch store behavior using public SDK types and the retained durable execution bridge."
     },
     "packages/pi-durable-coding/test/durable-codemode-options.test.ts": {
-      "sha256": "cd8a059edc8457c0088f85e5532ed9f232cd2a2bccc3f9a0b8bafdae0d5162db",
-      "reason": "Verify public host policies, issued-call observation, result projection and cancellation during VM work and asynchronous formatting through real durable tasks."
+      "sha256": "801cad44728bae6e5c66c3b5c8fbb9d0faf25391bd65a2da8b720eb899b35c3b",
+      "reason": "Verify durable option contracts through its public Node sandbox and codemode entry points."
     },
     "packages/pi-durable-coding/test/native-read-path.test.ts": {
       "sha256": "fc5e6081f66b911ab9a211c81599904e8730a10bd120c358fca634a3a416ba37",
@@ -4869,8 +4849,8 @@
       "reason": "Add a bounded prepared-response task and generic streamResponse runtime binding without copying the streaming algorithm or changing GenerationTask v4."
     },
     "packages/pi-durable-coding/scripts/patch-generation-response.ts": {
-      "sha256": "af98005363f7c493bac3aafdbfe292fe5091bb0aa279a4cfa163f99023c655c1",
-      "reason": "Generate typed request and root-export outputs, retain unrelated sections, stamp full content and verify complete pristine replay before writing or checking the patch and manifest."
+      "sha256": "dcd277c037244b8489deb7caaa978df8ce1dbe8d343d0a94981d0cf2eba7032b",
+      "reason": "Rebuild durable codemode exports and standard new-file patch sections, then replay and hash all outputs against pristine dependencies."
     },
     "packages/pi-durable-coding/src/durable-coding/generation-response.ts": {
       "sha256": "3e38328e0be8825f6ca97efea5ad0906a1a85fef5ff0af81b60276ff8332f3a8",
@@ -4885,24 +4865,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "be787b387a5e049691f381ae46a10158090c8dc1e80297738f3994248ad21935",
-      "reason": "Stop source traversal at public Coding SDK shell factories and preserve the host dependency binding."
+      "sha256": "542d03880d365f56bd2e4823b06be646c2fc23f4cce240c12b5d9cc495754991",
+      "reason": "Stop source traversal at the SDK codemode factories and bind the existing durable executor."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "b4c2a6d03a3db0d5febc4b5ed15d151d166c12ea66b258f69626dfaf27a2d352",
-      "reason": "Verify SDK identity and generation boundaries, including host shell factories without local execution or renderer copies."
+      "sha256": "b72b39fb21566d9402a3f29446d227d90a0714bdd7f9a1105d97b63b764fc850",
+      "reason": "Verify SDK identities and generated boundaries, including codemode index and MCP factory imports."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "418189d579a9b4ba8259e914df0532a6d4b2ca42a70292b34c9e90ec6c8e5bbd",
-      "reason": "Record optional host shell policy dependencies while the SDK retains process execution, output accumulation and rendering."
+      "sha256": "11ef15d23d28a84c8b19f200d3675dfd0ba64ae42bcd5962540f43e2de9a82bc",
+      "reason": "Record all 46 Coding outputs including optional codemode executor binding and existing public presentation exports."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "906d7aeddbee8220b5defe1808f1661c3298099d664ec845f5e1ee444b3ddfbf",
-      "reason": "Generate narrow SDK exports and host policies, including optional shell configuration, environment, wait, termination and tracking dependencies."
+      "sha256": "d3ce39398f3643821c87bccc70dece682fba1acf4318e124752c6a695df85032",
+      "reason": "Generate existing codemode public exports and the narrow optional executor binding without copying factory or presentation algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "49b978938907eaf2c63ccf56a02e5aafac289ff5af16fd7f26550ca0cbbfac86",
-      "reason": "Expose required Coding SDK contracts and narrow host policy hooks, including shell dependencies; retain published execution and rendering algorithms."
+      "sha256": "bba667e50aff8b547d3c2668fceeea97306b549940126d78a8c3d20b2515dcd3",
+      "reason": "Expose existing Coding codemode contracts and add an optional executor dependency; keep presentation, loadout, grammar and rendering in the SDK."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -5007,6 +4987,22 @@
     "packages/pi-durable-coding/test/host-shell-sdk.test.ts": {
       "sha256": "deebc5aa59823ce646d1e61e30cdb15c38dd28349609025044aa514f4029150b",
       "reason": "Verify public shell options and receivers, session environment, UTF-8 and private spill bytes, cancellation, timeout, process policy injection and renderer lifecycle."
+    },
+    "packages/pi-durable-coding/scripts/coding-codemode-policy.ts": {
+      "sha256": "f3a056f6922bfef33cbe851d66ba435fe76f7b7c061b39b5f78fb06c57c0cb1c",
+      "reason": "Add only an optional executor dependency to published Coding codemode factories; preserve original options and default lazy executor."
+    },
+    "packages/pi-durable-coding/scripts/durable-codemode-exports.ts": {
+      "sha256": "ed342ad76cbf0a89689504f43f4a541f1f71e698dde5f6cc66f53f4dfa9afd36",
+      "reason": "Expose the existing durable sandbox dependency, worker and helpers while preserving prior public exports; flat modules avoid the Bun 1.3.14 new-file parent-directory defect."
+    },
+    "packages/pi-durable-coding/src/native-codemode.ts": {
+      "sha256": "12912b125b867dba9a985abe109aeb1c15e312edadd29c3f23e4ebf8da663843",
+      "reason": "Bind three public Coding codemode factories to the existing durable executor and re-export SDK presentation contracts using public return types."
+    },
+    "packages/pi-durable-coding/test/host-codemode-sdk.test.ts": {
+      "sha256": "5d8008d36ef96ae7facda6bad414695c16cce3c8310b5a67003209b3da4f28eb",
+      "reason": "Verify three SDK factory bindings, inherited options and receivers, nested calls, branch store, default executor and a bundled worker without project dependencies."
     }
   },
   "deleted": {

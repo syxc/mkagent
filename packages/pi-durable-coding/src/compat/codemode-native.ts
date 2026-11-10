@@ -3,7 +3,7 @@ import { copyJson } from '@earendil-works/chord';
 import { withAbortSignal } from '@earendil-works/chord/context';
 import type { AgentToolResult } from '@earendil-works/pi-agent-core';
 import type { AssistantMessage } from '@earendil-works/pi-ai';
-import { parseCodemodeSource } from '@earendil-works/pi-codemode/source';
+import { parseCodemodeSource } from '@earendil-works/pi-durable/codemode';
 import { NestedCallDoc, type ToolExecutionApi, type ToolExecutionResult, type ToolRegistration } from '@earendil-works/pi-durable';
 import { createCodemodeTool, createModelTools, formatCodemodeResult } from '@earendil-works/pi-durable/codemode';
 import {
@@ -17,7 +17,7 @@ import { formatSize } from '../pi/core/tools/truncate.ts';
 import {
   CODEMODE_STORE_ENTRY_TYPE, getCodemodeCallableTools, type CodemodeStoreEntryData,
   type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions,
-} from '../pi/extensions/codemode/tool.ts';
+} from '../native-codemode.ts';
 import { writeOutputFile } from '../pi/utils/output-files.ts';
 import { NativeCodemodeCalls, nativeCodemodeModels, nativeResultText } from './codemode-calls.ts';
 import { createNativeCodemodeDiscovery } from './codemode-discovery.ts';

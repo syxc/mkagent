@@ -12,6 +12,7 @@ import { codingRunnerPolicy } from './coding-runner-policy.ts';
 import { codingAgentSessionPolicy } from './coding-agent-session-policy.ts';
 import { codingToolPolicy } from './coding-tool-policy.ts';
 import { codingShellPolicy } from './coding-shell-policy.ts';
+import { codingCodemodePolicy } from './coding-codemode-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -54,6 +55,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/extensions/types.${extension}";`,
     `export * from "./core/exec.${extension}";`,
     `export * from "./core/tools/tool-definition-wrapper.${extension}";`,
+    `export * from "./extensions/codemode/tool.${extension}";`,
     ...['grep', 'find', 'ls'].map(name => `export * from "./core/tools/${name}.${extension}";`),
     `export * from "./core/export-html/index.${extension}";`,
     `export * from "./core/export-html/ansi-to-html.${extension}";`,
@@ -72,6 +74,10 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(path, original.slice(0, position) + exports + original.slice(position));
   if (suffix === 'd.ts') outputs.set(path, outputs.get(path)!.replace(marker,
     'export type { ShellDependencies } from "./core/tools/bash.ts";\n' + marker));
+}
+for (const name of ['tool', 'index']) for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/extensions/codemode/${name}.${suffix}`;
+  outputs.set(path, codingCodemodePolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts', name === 'index'));
 }
 for (const name of ['bash', 'powershell']) for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/tools/${name}.${suffix}`;
@@ -229,7 +235,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, and installed worker theme and HTML asset lookup.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, and installed worker theme and HTML asset lookup.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

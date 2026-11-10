@@ -2,11 +2,11 @@ import { copyFileSync, cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { getThemesDir, getExportTemplateDir } from '@earendil-works/pi-coding-agent';
+import { getQuickJSWasmPath } from '@earendil-works/pi-durable/codemode/node';
 import { readHtmlVendorSource } from '../../pi-durable-coding/src/compat/html-assets.ts';
 
 const packageDir = dirname(import.meta.dir);
 const outdir = join(packageDir, 'dist');
-const codemodeRequire = createRequire(import.meta.resolveSync('@earendil-works/pi-codemode'));
 const durableRequire = createRequire(import.meta.resolveSync('@earendil-works/pi-durable'));
 
 const build = await Bun.build({
@@ -23,7 +23,7 @@ if (!build.success) {
 }
 
 mkdirSync(outdir, { recursive: true });
-copyFileSync(codemodeRequire.resolve('quickjs-wasi/quickjs.wasm'), join(outdir, 'quickjs.wasm'));
+copyFileSync(getQuickJSWasmPath(), join(outdir, 'quickjs.wasm'));
 // read resolves this beside the bundle; source mode falls back to the package.
 copyFileSync(durableRequire.resolve('@silvia-odwyer/photon/photon_rs_bg.wasm'), join(outdir, 'photon_rs_bg.wasm'));
 rmSync(join(outdir, 'coding_photon_rs_bg.wasm'), { force: true });

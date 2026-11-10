@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import ts from 'typescript';
 import { portPhotonRuntime } from './asset-runtime-port.ts';
 import {
-  portCodemodeRuntime, portToolArchives, portImageOrientation, portImageResize, portImageMime,
+  portToolArchives, portImageOrientation, portImageResize, portImageMime,
   portAnsi, portChildProcess, portShell, portTruncation,
 } from './shared-runtime-port.ts';
 
@@ -75,9 +75,6 @@ const sharedHelperPorts: Record<string, SharedHelperPort> = {
   },
   'utils/photon.ts': {
     change: 'shared-durable-photon-runtime', dependency: '@silvia-odwyer/photon', apply: portPhotonRuntime,
-  },
-  'extensions/codemode/execute.ts': {
-    change: 'shared-durable-codemode-executor', dependency: '@earendil-works/pi-durable', apply: portCodemodeRuntime,
   },
   'utils/tools-manager.ts': {
     change: 'public-jszip-tool-archives', dependency: 'jszip', apply: portToolArchives,

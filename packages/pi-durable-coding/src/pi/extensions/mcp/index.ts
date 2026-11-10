@@ -40,7 +40,7 @@ import type {
 import { mcpNamespace } from "@earendil-works/pi-coding-agent";
 import type { ModelRegistry } from "@earendil-works/pi-coding-agent";
 import { openBrowser } from "../../utils/open-browser.ts";
-import { CODEMODE_TOOL_NAME } from "../codemode/tool.ts";
+import { CODEMODE_TOOL_NAME } from "../../../native-codemode.ts";
 import { TOOL_SEARCH_TOOL_NAME } from "../tool-search/tool.ts";
 import {
 	getMcpToolExposure,

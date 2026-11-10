@@ -1,4 +1,4 @@
-# Content SHA-256: 3f96b7bdda486145bc011c49bc374394f2304b83c891d25b0f5ad767d3724872
+# Content SHA-256: c9bfcb49c10e04c68e18a078370bec558d0e45856b2feff9933fa99a71db6f95
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -489,28 +489,33 @@ index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..72fbdd3cc71b0dcf8e74fc29e5a19c2a
                      journal.entries.push(copyJson(entry, { omitUndefinedProperties: true }));
                  }
 diff --git a/dist/codemode/index.d.ts b/dist/codemode/index.d.ts
-index 3e1c49c52cfcb495f0e6fd74250bf07008107766..08abe1a2ca9ede37ffce130b88bae3cf95125e09 100644
 --- a/dist/codemode/index.d.ts
 +++ b/dist/codemode/index.d.ts
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,8 @@
 -export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
 +export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, type CodemodeResultInfo, type CodemodeSandboxLease, type CodemodeStoreAdapter, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
  export { type CodemodeNamespace, DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.ts";
+-//# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=index.d.ts.map
 +export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult, type CodemodeFormatOptions, type OutputFile } from "./output.js";
 +export { type CodemodeModelSource, type CodemodePreparedModelCall, createModelTools, prepareCodemodeModelCall } from "./models.js";
- //# sourceMappingURL=index.d.ts.map
-\ No newline at end of file
++export { parseCodemodeSource } from "@earendil-works/pi-codemode/source";
++export { renderToolSample, toCodemodeIdentifier } from "@earendil-works/pi-codemode/declarations";
++export type { CodemodeResult, CodemodeTool } from "@earendil-works/pi-codemode/portable";
 diff --git a/dist/codemode/index.js b/dist/codemode/index.js
-index 0556d0b84a189bac4f496369a5cd0384181cdf87..ea28e52c55cacca6405007fc1c7d2a3191bec23c 100644
 --- a/dist/codemode/index.js
 +++ b/dist/codemode/index.js
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,7 @@
  export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, CodemodeStoreDoc, createCodemodeExtension, createCodemodeTool, } from "./codemode.js";
  export { DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.js";
+-//# sourceMappingURL=index.js.map
+\ No newline at end of file
++//# sourceMappingURL=index.js.map
 +export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult } from "./output.js";
 +export { createModelTools, prepareCodemodeModelCall } from "./models.js";
- //# sourceMappingURL=index.js.map
-\ No newline at end of file
++export { parseCodemodeSource } from "@earendil-works/pi-codemode/source";
++export { renderToolSample, toCodemodeIdentifier } from "@earendil-works/pi-codemode/declarations";
 diff --git a/dist/codemode/models.d.ts b/dist/codemode/models.d.ts
 index fa6aed962716c514ae9de778ca33960fc707087a..6d11686fb4db10c945f228fe9b262f49924d165a 100644
 --- a/dist/codemode/models.d.ts
@@ -1818,3 +1823,63 @@ diff --git a/dist/tools/index.js b/dist/tools/index.js
  import { defineExtension } from "../harness/define.js";
  import { createBashTool } from "./bash.js";
  import { createEditTool } from "./edit.js";
+diff --git a/package.json b/package.json
+--- a/package.json
++++ b/package.json
+@@ -114,9 +114,21 @@
+ 			"import": "./dist/testing/index.js",
+ 			"default": "./dist/testing/index.js"
+ 		},
+-		"./package.json": "./package.json"
++		"./package.json": "./package.json",
++		"./codemode/node": {
++			"types": "./codemode-node.d.ts",
++			"import": "./codemode-node.js",
++			"default": "./codemode-node.js"
++		},
++		"./codemode/worker": {
++			"types": "./codemode-worker.d.ts",
++			"import": "./codemode-worker.js",
++			"default": "./codemode-worker.js"
++		}
+ 	},
+-	"sideEffects": false,
++	"sideEffects": [
++		"./codemode-worker.js"
++	],
+ 	"files": [
+ 		"dist",
+ 		"README.md",
+diff --git a/codemode-node.js b/codemode-node.js
+new file mode 100644
+index 0000000..ee94e3f
+--- /dev/null
++++ b/codemode-node.js
+@@ -0,0 +1,5 @@
++import { createRequire } from "node:module";
++export { CodemodeSandbox, loadQuickJSWasm } from "@earendil-works/pi-codemode";
++export function getQuickJSWasmPath() {
++    return createRequire(import.meta.resolve("@earendil-works/pi-codemode")).resolve("quickjs-wasi/quickjs.wasm");
++}
+diff --git a/codemode-node.d.ts b/codemode-node.d.ts
+new file mode 100644
+index 0000000..deb18fd
+--- /dev/null
++++ b/codemode-node.d.ts
+@@ -0,0 +1,2 @@
++export { CodemodeSandbox, loadQuickJSWasm } from "@earendil-works/pi-codemode";
++export declare function getQuickJSWasmPath(): string;
+diff --git a/codemode-worker.js b/codemode-worker.js
+new file mode 100644
+index 0000000..99aab52
+--- /dev/null
++++ b/codemode-worker.js
+@@ -0,0 +1 @@
++import "@earendil-works/pi-codemode/worker";
+diff --git a/codemode-worker.d.ts b/codemode-worker.d.ts
+new file mode 100644
+index 0000000..cb0ff5c
+--- /dev/null
++++ b/codemode-worker.d.ts
+@@ -0,0 +1 @@
++export {};

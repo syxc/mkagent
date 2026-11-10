@@ -1,4 +1,4 @@
-import { CodemodeSandbox, loadQuickJSWasm } from '@earendil-works/pi-codemode';
+import { CodemodeSandbox, loadQuickJSWasm } from '@earendil-works/pi-durable/codemode/node';
 import type { CodemodeSandboxLease } from '@earendil-works/pi-durable/codemode';
 import { getCodemodeWorkerSpecifier, getQuickJSWasmPath } from '../pi/config.ts';
 

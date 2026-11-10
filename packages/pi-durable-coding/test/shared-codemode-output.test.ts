@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import {
   formatCodemodeResult, type CodemodeFormatOptions,
 } from '@earendil-works/pi-durable/codemode';
-import type { CodemodeResult } from '@earendil-works/pi-codemode/portable';
+import type { CodemodeResult } from '@earendil-works/pi-durable/codemode';
 
 const result = (output: CodemodeResult['output'] = [], value?: unknown): CodemodeResult => ({
   ok: true, output, value, calls: [], storeWrites: { set: {}, delete: [] },

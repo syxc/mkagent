@@ -3,17 +3,37 @@
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "version": "1.5.0",
   "patch": "coding-sdk-host-boundaries-v1",
-  "policy": "Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, and installed worker theme and HTML asset lookup.",
+  "policy": "Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, and installed worker theme and HTML asset lookup.",
   "files": [
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "60233898638fdced4b3495900fd053958d49747f112445348c404e0d115ec1a5"
+      "sha256": "f0c800f9967f0684062441119b25121228546673a30fd8e80b8e1e16c8b54e10"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "10e42ac6d26262f68989769736eb21cf0607da5be6ee61f1ad4612da55616a55"
+      "sha256": "8087904af54d1652262d718c58b4f98b058c83d5c8820960b2241f5e9355beeb"
+    },
+    {
+      "path": "dist/extensions/codemode/tool.js",
+      "originalSha256": "05f0912683e8830c23797c7a1dedc8d2bb2580a079f44e07bcb5a46a81d732d3",
+      "sha256": "5583dd976685cba60edb4123c2145ee919378fef8580421d0ef426f05f2e1bfe"
+    },
+    {
+      "path": "dist/extensions/codemode/tool.d.ts",
+      "originalSha256": "fc6d9b5d35085c241c66fff79eefef8230457ffab09cb0a4c55b2532d4f56648",
+      "sha256": "2f0eb3a8749c5228fb842a2488559b046677e2a57110ff008f250213a346abaa"
+    },
+    {
+      "path": "dist/extensions/codemode/index.js",
+      "originalSha256": "7306902a1079689f601231d4c9bd3abb1d92ec388d202ff08920e4aee87343f4",
+      "sha256": "812361a1943a79ad5662faf2592630b7d2c7c2047fa41e6e4f8ef41104d45173"
+    },
+    {
+      "path": "dist/extensions/codemode/index.d.ts",
+      "originalSha256": "e94902883fb8a18dfc4bcadf0cfc7e09b2701702754f5ae60967c1c6e07b75a2",
+      "sha256": "68af3b25615c7b6d146842e308f460db78d3a1f5067a0ace188b8c33f4f0201d"
     },
     {
       "path": "dist/core/tools/bash.js",

@@ -24,12 +24,12 @@
     {
       "path": "dist/codemode/index.d.ts",
       "originalSha256": "957445b146e49e4b76107b97e280f763101c5c8a17989db12fdcec58e3c16e71",
-      "sha256": "2d327b634167035781ccd778ea883298f934c99dba160d4aef42111676810a8f"
+      "sha256": "891e1423571716d305757c145eb8cc5e05aec917c765ad19b777addba9d30dfa"
     },
     {
       "path": "dist/codemode/index.js",
       "originalSha256": "a8989014539cd530e35d53e50f1fd0cb823a2a711f30ae20719ca92cfb99695e",
-      "sha256": "34ba1edac0681ddff14bee4518cff2d6682e6baf8fd7a689e2d5a8dd6402a70e"
+      "sha256": "715e51eedc7ff2472c39439e36ebe2b3a3859867e56cfb96220e3bef34bbe08d"
     },
     {
       "path": "dist/codemode/models.d.ts",
@@ -150,6 +150,31 @@
       "path": "dist/tools/index.js",
       "originalSha256": "d4692776daa1192a2fc8e3b834657f224ebb5af8df71dd5f969b8cb6e4b46806",
       "sha256": "969f5977ff0ca88edff36a88d4f0724b4586f94153cc48247981c212db277261"
+    },
+    {
+      "path": "package.json",
+      "originalSha256": "63f2c3f3af7795aed20b6bf427917324db16129898c918fd6e7074c3df252d1b",
+      "sha256": "43a64b3c47e9ede0e4a7f362dbe1aec5420f8aa0925ac8a95b77584d4a62c09a"
+    },
+    {
+      "path": "codemode-node.js",
+      "originalSha256": null,
+      "sha256": "6d6d522d44a64b709ad91f810c139498ee3a9de99e2fbcc6365069dab3444c7b"
+    },
+    {
+      "path": "codemode-node.d.ts",
+      "originalSha256": null,
+      "sha256": "8baefe1c619d527474e00f30ee0b2dab7143f3c367412c70495a26a845d0c97b"
+    },
+    {
+      "path": "codemode-worker.js",
+      "originalSha256": null,
+      "sha256": "833e3084cfa44bb0fe0ae9a19aa28f09b4a0c518e4ba2440899c25675249e938"
+    },
+    {
+      "path": "codemode-worker.d.ts",
+      "originalSha256": null,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881"
     }
   ],
   "policy": "One durable scheduler. Native response delivery, SDK receipt, journal, and next checkpoint commit together. Interrupted requests are not repeated."

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { copyJson } from '@earendil-works/chord';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { createAssistantMessageEventStream, createModels, type AssistantMessage, type Model } from '@earendil-works/pi-ai';
-import { CodemodeSandbox } from '@earendil-works/pi-codemode';
+import { CodemodeSandbox } from '@earendil-works/pi-durable/codemode/node';
 import {
   createRegistry, Harness, MemoryStorage, type CommitPublication, type ToolExecutionApi,
 } from '@earendil-works/pi-durable';
@@ -17,7 +17,7 @@ import { executeNativeCodemode } from '../src/compat/codemode-native.ts';
 import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 import { NativeSessionJournal } from '../src/durable-coding/session-journal.ts';
 import { hostToolToAgent } from '../src/host-tools.ts';
-import { readCodemodeStore } from '../src/pi/extensions/codemode/execute.ts';
+import { readCodemodeStore } from '../src/compat/codemode-native.ts';
 import { convertToLlm } from '../src/pi/core/messages.ts';
 import { getDefaultStreamFn, setDefaultStreamFn } from '../src/stream-fn.ts';
 

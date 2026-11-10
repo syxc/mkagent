@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { createModels, fauxAssistantMessage, fauxProvider, fauxText, fauxToolCall } from '@earendil-works/pi-ai';
-import { CodemodeSandbox } from '@earendil-works/pi-codemode';
+import { CodemodeSandbox } from '@earendil-works/pi-durable/codemode/node';
 import {
   createRegistry, defineTool, Harness, MemoryStorage, type CommitPublication, type TaskId, type ToolExecutionResult,
   type ToolRegistration,

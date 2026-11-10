@@ -6,7 +6,7 @@ import { prepareCodemodeModelCall, type CodemodePreparedModelCall } from '@earen
 import { combineUsage } from '../pi/core/usage-totals.ts';
 import {
   CODEMODE_DOCS_PATH, type CodemodeModelRuntime, type CodemodeNestedCall, type CodemodeToolDetails,
-} from '../pi/extensions/codemode/tool.ts';
+} from '../native-codemode.ts';
 
 type Call = { readonly id: number; readonly name: string; readonly args: unknown };
 const prefix = 'pi.codemode.';

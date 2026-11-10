@@ -2,22 +2,6 @@
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
 
-export function portCodemodeRuntime(body: string): string {
-  const parsed = ts.createSourceFile('execute.ts', body, ts.ScriptTarget.Latest, true);
-  const functions = new Map(parsed.statements.filter(ts.isFunctionDeclaration)
-    .flatMap(node => node.name ? [[node.name.text, node] as const] : []));
-  const execute = functions.get('executeCodemode'), store = functions.get('readCodemodeStore');
-  if (!execute || execute.parameters.length !== 6 ||
-      execute.parameters.map(parameter => parameter.name.getText(parsed)).join(',') !== 'toolCallId,input,signal,onUpdate,ctx,options' ||
-      execute.type?.getText(parsed) !== 'Promise<AgentToolResult<CodemodeToolDetails>>' ||
-      !store || store.parameters.length !== 1 || store.parameters[0].name.getText(parsed) !== 'branch' ||
-      store.type?.getText(parsed) !== 'Record<string, unknown>') {
-    throw new Error('Native codemode public boundary changed');
-  }
-  return '/** Native policy over the public durable codemode executor. */\n'
-    + 'export { executeNativeCodemode as executeCodemode, readCodemodeStore } from "../../../compat/codemode-native.ts";\n';
-}
-
 export function portImageOrientation(body: string): string {
   const parsed = ts.createSourceFile('exif-orientation.ts', body, ts.ScriptTarget.Latest, true);
   const exports = parsed.statements.filter(node => ts.isExportDeclaration(node) || ts.isExportAssignment(node) ||

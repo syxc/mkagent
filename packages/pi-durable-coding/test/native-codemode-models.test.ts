@@ -3,7 +3,7 @@ import { createModels, fauxProvider, type ClassifierModel, type ImageModel, type
 import type { ExtensionToolContext } from '@earendil-works/pi-coding-agent';
 import {
   CODEMODE_DOCS_PATH, createCodemodeToolDefinition, type CodemodeToolDetails,
-} from '../src/pi/extensions/codemode/tool.ts';
+} from '../src/native-codemode.ts';
 
 const model: ClassifierModel<'local-classifier'> = {
   id: 'judge', name: 'Judge', type: 'classifier', provider: 'local', api: 'local-classifier',

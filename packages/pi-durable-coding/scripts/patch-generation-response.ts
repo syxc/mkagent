@@ -1,11 +1,12 @@
 /** Rebuild the complete SDK patch, preserving every unrelated patch section. */
 import { createHash } from 'node:crypto';
-import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import ts from 'typescript';
 import { patchGeneration, replaceOnce } from './durable-boundary-source.ts';
 import { patchGenerationResponse } from './generation-response-source.ts';
+import { durableCodemodeExports } from './durable-codemode-exports.ts';
 
 const [checkout, installed, pristine, mode] = process.argv.slice(2);
 if (!checkout || !installed || !pristine || !['--write', '--check'].includes(mode!)) {
@@ -79,18 +80,23 @@ outputs.set('dist/index.js', replaceOnce(readFileSync(join(baseline, 'dist/index
 outputs.set('dist/index.d.ts', replaceOnce(readFileSync(join(baseline, 'dist/index.d.ts'), 'utf8'),
   'GenerationTask, } from "./harness/generation.ts";',
   'GenerationTask, type GenerationResponseInput, type GenerationResponseCheckpoint, type GenerationResponseResult, GenerationResponseTask, } from "./harness/generation.ts";'));
+for (const [path, content] of durableCodemodeExports(baseline)) outputs.set(path, content);
 // Only generated candidates live here. Keep them when a check fails for diagnosis.
 const staging = mkdtempSync(join(tmpdir(), 'durable-response-patch-'));
 const sections = new Map<string, string>();
 for (const [path, content] of outputs) {
   const candidate = join(staging, path.replaceAll('/', '-'));
   writeFileSync(candidate, content);
-  const diff = Bun.spawnSync(['git', 'diff', '--no-index', '--no-color', '--', join(baseline, path), candidate]);
+  const original = join(baseline, path);
+  const added = !existsSync(original);
+  const diff = Bun.spawnSync(['git', 'diff', '--no-index', '--no-color', '--', added ? '/dev/null' : original, candidate]);
   if (diff.exitCode !== 1) throw new Error(`Expected a patch for ${path}: ${diff.stderr}`);
   const lines = diff.stdout.toString().split('\n');
   const start = lines.findIndex(line => line.startsWith('@@'));
   if (start < 0) throw new Error('Missing patch hunks');
-  sections.set(path, `diff --git a/${path} b/${path}\n--- a/${path}\n+++ b/${path}\n${lines.slice(start).join('\n')}`);
+  const index = added ? lines.find(line => line.startsWith('index ')) : undefined;
+  if (added && !index) throw new Error('Missing new-file blob header');
+  sections.set(path, `diff --git a/${path} b/${path}\n${added ? `new file mode 100644\n${index}\n` : ''}--- ${added ? '/dev/null' : 'a/' + path}\n+++ b/${path}\n${lines.slice(start).join('\n')}`);
 }
 let patch = originalPatch.split(/(?=^diff --git )/m).map(section => {
   const path = /^diff --git a\/(\S+) b\//.exec(section)?.[1];
@@ -121,7 +127,7 @@ const manifest = JSON.stringify({
   patch: 'coding-boundary-v1+generation-response-v1', generationTaskVersion: 4, generationResponseTaskVersion: 1,
   typescript: ts.version, sourceSha256: sha(original), patchedSourceSha256: sha(source), batchSourceSha256: sha(batch),
   responseSourceSha256: sha(readFileSync(join(import.meta.dir, 'generation-response-source.ts'), 'utf8')),
-  files: paths.map(path => ({ path, originalSha256: sha(readFileSync(join(baseline, path), 'utf8')),
+  files: paths.map(path => ({ path, originalSha256: existsSync(join(baseline, path)) ? sha(readFileSync(join(baseline, path), 'utf8')) : null,
     sha256: sha(outputs.get(path) ?? readFileSync(join(target, path), 'utf8')) })),
   policy: 'One durable scheduler. Native response delivery, SDK receipt, journal, and next checkpoint commit together. Interrupted requests are not repeated.',
 }, null, 2) + '\n';

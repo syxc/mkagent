@@ -26,6 +26,90 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK codemode factories after d581616
+
+The Coding SDK now owns codemode descriptions, declarations, loadout selection,
+grammar, rendering and its three factories. A 32-line native-codemode binding
+supplies the existing durable executor through an optional dependency. It passes
+the original options and keeps the SDK default lazy executor when no dependency
+is supplied. Five local files retire: execute.lazy (2 lines), execute (2), index
+(49), renderer (166) and tool (434), for 653 lines. The obsolete executor-forward
+generation rule also retires. Runtime now has 122 TypeScript files, including 118
+under src/pi and four facades, with no assets. The auxiliary check confirms nine
+sources and 18 shared entries; removing the generation rule does not reduce that
+separate inventory to 17.
+
+The durable patch exposes its existing source/declaration helpers, Node sandbox,
+WASM location and worker through public entry points. These exports are local
+SDK changes. They reuse durable's own pi-codemode dependency without copying its
+implementation. Both workspaces remove their direct pi-codemode dependency; the
+official SDK transitive dependencies remain. Native code still binds ToolTask
+ownership, hidden child tools, approval, branch store, progress, usage and worker
+leases. Task, document and replay module versions do not change.
+
+Initial installation, an attempt with standard blob headers and a minimal
+installation all failed with EACCES during mkdir. The exact
+[Bun 1.3.14 implementation](https://github.com/oven-sh/bun/blob/bun-v1.3.14/src/patch/patch.zig)
+creates new-file parent directories with the file mode, 0644, using a relative
+path. An isolated check applied all 33 patch sections successfully after moving
+only the four new modules to the package root. The final exports still use
+/codemode/node and /codemode/worker; their physical modules use flat paths. The
+worker initialization module is listed in sideEffects. Empty directories left
+by failed attempts were inspected and moved to Trash. No permissions or shared
+cache were changed.
+
+Comparison with the prior patch also found that the first export generator
+omitted existing store, lease, output and model exports. The generator now
+preserves those contracts. The final patch has 33 durable outputs and 46 Coding
+outputs, plus four core outputs, for 83 physical files. Full pristine patch
+replay and runtime generation checks pass. Both existing normal and hoisted
+installations pass frozen install with scripts disabled. Every Coding and durable
+output matches its manifest. The lock change is exactly the removal of the two
+workspace dependency declarations.
+
+The first factory test run passed five tests and failed one because it compared
+an AgentTool renderer with a ToolDefinition renderer. The SDK AgentTool factory
+does not expose that renderer. The assertion now compares corresponding SDK
+factories; production behavior was not changed for the test. Final checks pass:
+
+- Six factory and bundled-worker tests, 42 assertions. They cover inherited
+  options and receivers, nested calls, store writes, loadout and discovery,
+  the SDK default executor and a worker running without project node_modules.
+- 137 related codemode and generated-boundary tests, 627 assertions, in 13 files.
+- 26 worker bundle tests, 105 assertions.
+- Coding and server type checks, actual declaration generation in both normal
+  and hoisted layouts, full runtime and auxiliary source checks, and both full
+  SDK patch checks.
+
+The total is 169 tests and 774 assertions, with no final failures. Source
+registration updates 31 entries, removes five and adds four. The fixed Craft
+v0.15.6 audit passes for 2123 files. All six documents pass punctuation checks
+and 147 local links pass validation.
+
+The independent read-only review found no verified new defect from this slice.
+It passed 109 tests with 669 assertions in 13 related files, plus six factory
+and worker tests with 42 assertions in the hoisted layout. It also checked both
+manifest inventories, full patch replay, runtime generation and declaration
+output. An external NodeNext consumer probe passed with skipLibCheck enabled.
+Node 24.22.1 passed public entry point, default and durable worker, WASM loading
+and relocated bundle checks. The review scripts needed layout path corrections
+and a new process after dependency links were created; no source change was
+needed. Review evidence is under the temporary directory's review subdirectory.
+The review did not repeat dependency installation, a full server build or the
+whole repository test suite. It used existing server bundle logs and did not
+validate Windows, Linux, product UI, Craft, accounts or paid models.
+
+The ordinary whitespace check reports seven space-before-tab lines in the new
+patch context because the upstream package.json uses tabs. Those exact context
+lines are checked separately; other changed text uses the default whitespace
+check. The upstream JSON format remains unchanged.
+
+These checks do not cover a new product UI session, real accounts, paid model
+calls, Windows hardware, every standalone consumer layout or all codemode
+documentation publication forms. F0 through F6 and the remaining source review
+stay open. The temporary evidence directory is
+`/tmp/mkagent-codemode-sdk-Pmgket`.
+
 ## Public SDK shell factories after 145dd49
 
 The public Bash and PowerShell factories now use the Coding SDK. Four local

@@ -1,8 +1,8 @@
-# Content SHA-256: 0ed55bc32ccc328b3fb15e0e87ac237491ffd37f3a77219adcc076e5a766e3db
+# Content SHA-256: f4d2cb6b56e9313816895afd148f34eb73da067ddc663e068017b917f33da26e
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,33 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,34 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -22,6 +22,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/extensions/types.js";
 +export * from "./core/exec.js";
 +export * from "./core/tools/tool-definition-wrapper.js";
++export * from "./extensions/codemode/tool.js";
 +export * from "./core/tools/grep.js";
 +export * from "./core/tools/find.js";
 +export * from "./core/tools/ls.js";
@@ -49,7 +50,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,34 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,35 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -69,6 +70,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/extensions/types.ts";
 +export * from "./core/exec.ts";
 +export * from "./core/tools/tool-definition-wrapper.ts";
++export * from "./extensions/codemode/tool.ts";
 +export * from "./core/tools/grep.ts";
 +export * from "./core/tools/find.ts";
 +export * from "./core/tools/ls.ts";
@@ -83,6 +85,109 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./modes/interactive/theme/theme.ts";
 +export { getThemesDir, getExportTemplateDir } from "./config.ts";
 +export type { ShellDependencies } from "./core/tools/bash.ts";
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/extensions/codemode/tool.js b/dist/extensions/codemode/tool.js
+--- a/dist/extensions/codemode/tool.js
++++ b/dist/extensions/codemode/tool.js
+@@ -276,7 +276,7 @@ function getScriptReach(code) {
+         return [];
+     return DISCOVERY_GLOBALS.test(code) ? "all" : (code.match(/\w+/g) ?? []);
+ }
+-export function createCodemodeToolDefinition(options = {}) {
++export function createCodemodeToolDefinition(options = {}, dependencies) {
+     return {
+         name: CODEMODE_TOOL_NAME,
+         label: CODEMODE_TOOL_NAME,
+@@ -292,7 +292,7 @@ export function createCodemodeToolDefinition(options = {}) {
+         // Capable models write the script as raw text instead of a JSON-escaped string.
+         constrainedSampling: { type: "grammar", variants: { openai_lark: CODEMODE_SOURCE_GRAMMAR } },
+         // The sandbox (worker, QuickJS wasm) loads on the first call, not at startup.
+-        execute: async (toolCallId, params, signal, onUpdate, ctx) => (await loadCodemodeExecutor()).executeCodemode(toolCallId, params, signal, onUpdate, ctx, options),
++        execute: async (toolCallId, params, signal, onUpdate, ctx) => (dependencies?.executeCodemode ?? (await loadCodemodeExecutor()).executeCodemode)(toolCallId, params, signal, onUpdate, ctx, options),
+         ...codemodeRenderers,
+     };
+ }
+@@ -300,8 +300,8 @@ export function createCodemodeToolDefinition(options = {}) {
+  * Create the codemode tool as an AgentTool. The description lists the given tools; the script can
+  * call whatever tools the agent loop provides at execution time.
+  */
+-export function createCodemodeTool(tools = [], options = {}) {
+-    const definition = createCodemodeToolDefinition(options);
++export function createCodemodeTool(tools = [], options = {}, dependencies) {
++    const definition = createCodemodeToolDefinition(options, dependencies);
+     const tool = wrapToolDefinition(definition);
+     Object.assign(tool, {
+         description: createCodemodeDescription(tools, { models: options.models === true }),
+diff --git a/dist/extensions/codemode/tool.d.ts b/dist/extensions/codemode/tool.d.ts
+--- a/dist/extensions/codemode/tool.d.ts
++++ b/dist/extensions/codemode/tool.d.ts
+@@ -1,3 +1,4 @@
++import type { executeCodemode } from "./execute.ts";
+ /**
+  * The `codemode` tool: the model writes JavaScript that calls other tools. Scripts use `tools`,
+  * `ALL_TOOLS`, `text()`, `image()`, `exit()`, `store()`/`load()`, `console.*`, and `return <value>`,
+@@ -36,6 +37,9 @@ export interface CodemodeStoreEntryData {
+ }
+ /** The part of the model registry that scripts reach through `models`. */
+ export type CodemodeModelRuntime = Pick<ModelRegistry, "getModelsOfType" | "getAvailableOfType" | "getModelOfType" | "classify" | "generateImages">;
++export interface CodemodeDependencies {
++    executeCodemode?: typeof executeCodemode;
++}
+ export interface CodemodeToolOptions {
+     /** Namespace of a tool, for `searchTools()` ranking and its `namespace` filter. */
+     getToolNamespace?: (toolName: string) => ToolNamespace | undefined;
+@@ -116,10 +120,10 @@ export interface CodemodeDescriptionOptions {
+  * late (for example by MCP servers that connect). Tool sections are limited to `inlineBudget`.
+  */
+ export declare function createCodemodeDescription(tools: readonly AgentTool<any>[], options?: CodemodeDescriptionOptions): string;
+-export declare function createCodemodeToolDefinition(options?: CodemodeToolOptions): ToolDefinition<typeof codemodeSchema, CodemodeToolDetails | undefined>;
++export declare function createCodemodeToolDefinition(options?: CodemodeToolOptions, dependencies?: CodemodeDependencies): ToolDefinition<typeof codemodeSchema, CodemodeToolDetails | undefined>;
+ /**
+  * Create the codemode tool as an AgentTool. The description lists the given tools; the script can
+  * call whatever tools the agent loop provides at execution time.
+  */
+-export declare function createCodemodeTool(tools?: readonly AgentTool<any>[], options?: CodemodeToolOptions): TypeBoxAgentTool<typeof codemodeSchema>;
++export declare function createCodemodeTool(tools?: readonly AgentTool<any>[], options?: CodemodeToolOptions, dependencies?: CodemodeDependencies): TypeBoxAgentTool<typeof codemodeSchema>;
+ //# sourceMappingURL=tool.d.ts.map
+\ No newline at end of file
+diff --git a/dist/extensions/codemode/index.js b/dist/extensions/codemode/index.js
+--- a/dist/extensions/codemode/index.js
++++ b/dist/extensions/codemode/index.js
+@@ -14,7 +14,7 @@ function readInlineBudget(pi) {
+     const budget = pi.getSettings().codemode?.inlineBudget;
+     return typeof budget === "number" && Number.isFinite(budget) && budget >= 0 ? budget : undefined;
+ }
+-export function createCodemodeExtension(options = {}) {
++export function createCodemodeExtension(options = {}, dependencies) {
+     return (pi) => {
+         pi.registerTool({
+             ...createCodemodeToolDefinition({
+@@ -24,7 +24,7 @@ export function createCodemodeExtension(options = {}) {
+                 getToolGuidelines: () => new Map(pi.getAllTools().map((tool) => [tool.name, tool.promptGuidelines ?? []])),
+                 getMode: () => options.mode ?? readMode(pi),
+                 getInlineBudget: () => options.inlineBudget ?? readInlineBudget(pi),
+-            }),
++            }, dependencies),
+             defaultActive: false,
+         });
+     };
+diff --git a/dist/extensions/codemode/index.d.ts b/dist/extensions/codemode/index.d.ts
+--- a/dist/extensions/codemode/index.d.ts
++++ b/dist/extensions/codemode/index.d.ts
+@@ -1,3 +1,4 @@
++import type { CodemodeDependencies } from "./tool.ts";
+ /**
+  * The `codemode` tool as an extension. The CLI loads it as a built-in extension; SDK users
+  * add `createCodemodeExtension()` to their extension factories.
+@@ -15,7 +16,7 @@ export interface CodemodeExtensionOptions {
+     /** Expose the model catalog and classifiers to scripts as `models`. Default: `true`. */
+     models?: boolean;
+ }
+-export declare function createCodemodeExtension(options?: CodemodeExtensionOptions): ExtensionFactory;
++export declare function createCodemodeExtension(options?: CodemodeExtensionOptions, dependencies?: CodemodeDependencies): ExtensionFactory;
+ declare const _default: ExtensionFactory;
+ export default _default;
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
 diff --git a/dist/core/tools/bash.js b/dist/core/tools/bash.js
