@@ -411,8 +411,8 @@ export {
 // Built-in extensions. The CLI loads them; SDK sessions add them to their extension factories.
 export { type CodemodeExtensionOptions, createCodemodeExtension } from "../native-codemode.ts";
 export type { CodemodeStoreEntryData, CodemodeToolDetails } from "../native-codemode.ts";
-export type { LoadedMcpConfig, McpExposure, McpServerConfig, McpServerEntry } from "./extensions/mcp/config.ts";
-export { createMcpExtension, type McpExtensionOptions, type McpTransportFactory } from "./extensions/mcp/index.ts";
+export type { LoadedMcpConfig, McpExposure, McpServerConfig, McpServerEntry } from "@earendil-works/pi-coding-agent";
+export { createMcpExtension, type McpExtensionOptions, type McpTransportFactory } from "@earendil-works/pi-coding-agent";
 export { createToolSearchExtension } from "./extensions/tool-search/index.ts";
 // RPC client and protocol for programmatic SDK usage
 export {

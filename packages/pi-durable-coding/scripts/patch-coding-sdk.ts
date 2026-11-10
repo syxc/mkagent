@@ -89,6 +89,10 @@ for (const suffix of ['js', 'd.ts']) {
     'export type { BashResult } from "./core/bash-executor.ts";\n'
     + 'export type { ShellDependencies } from "./core/tools/bash.ts";\n' + marker));
 }
+const mcpDeclaration = 'dist/extensions/mcp/index.d.ts';
+outputs.set(mcpDeclaration, replace(readFileSync(join(baseline, mcpDeclaration), 'utf8'),
+  'credentials?: McpOAuthCredentialStore;',
+  'credentials?: Pick<McpOAuthCredentialStore, "forServer" | "tokens" | "remove">;'));
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/system-prompt.${suffix}`;
   let body = readFileSync(join(baseline, path), 'utf8');

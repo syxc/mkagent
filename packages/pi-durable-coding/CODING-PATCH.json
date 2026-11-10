@@ -16,6 +16,11 @@
       "sha256": "842a9b40c040856755a6ffdda86760d286273edb3cfc32666e6717a13ed544ee"
     },
     {
+      "path": "dist/extensions/mcp/index.d.ts",
+      "originalSha256": "2326ac2f37daa7bbf258629846b4ff6d4d8d2c570331777b2da0852525de843e",
+      "sha256": "d948c8984862485717a129c52dead3cbf58221d83606011eb1034ae20ceb29cf"
+    },
+    {
       "path": "dist/core/system-prompt.js",
       "originalSha256": "5f68e89c31ba3d4d1af8ad2bfd0c7c548879d47ee6ab4aabee50a826100da32c",
       "sha256": "7a2e6698747bad290efdb1066c22435ca828e1f6dba92600785cb410ceeea9e3"

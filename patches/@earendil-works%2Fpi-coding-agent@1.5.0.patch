@@ -1,4 +1,4 @@
-# Content SHA-256: 3472c6344c53dea17c71ae0a3a61f8046a51cdb52b4733c472bdfb8669fb2a92
+# Content SHA-256: 45161f73bb0d8a3fcf6e9ba65ab0fa6e517433e74935c5818032c061cafd9a6d
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -118,6 +118,18 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export type { ShellDependencies } from "./core/tools/bash.ts";
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
+diff --git a/dist/extensions/mcp/index.d.ts b/dist/extensions/mcp/index.d.ts
+--- a/dist/extensions/mcp/index.d.ts
++++ b/dist/extensions/mcp/index.d.ts
+@@ -36,7 +36,7 @@ export interface McpExtensionOptions {
+     /** Defaults to stdio and streamable HTTP transports built from the server config. */
+     createTransport?: McpTransportFactory;
+     /** Defaults to `mcp-auth.json` in the agent directory. */
+-    credentials?: McpOAuthCredentialStore;
++    credentials?: Pick<McpOAuthCredentialStore, "forServer" | "tokens" | "remove">;
+     /** File server log messages are appended to. Defaults to `mcp.log` in the agent directory. */
+     logPath?: string;
+     /** Opens the OAuth authorization URL. Defaults to the platform browser. */
 diff --git a/dist/core/system-prompt.js b/dist/core/system-prompt.js
 --- a/dist/core/system-prompt.js
 +++ b/dist/core/system-prompt.js

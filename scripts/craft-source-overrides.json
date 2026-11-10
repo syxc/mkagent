@@ -3965,8 +3965,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "4f5486866b3ad69fc579c2f5eeb40bfe0cbb571013228c072d58970a6864465a",
-      "reason": "Retire the unused bash executor after RPC consumers move to the SDK result declaration."
+      "sha256": "79354f5d188fce5b2ec26dbcfbf27a55f6a66affd36e39c9539fe734681ea956",
+      "reason": "Retire the SDK-covered MCP factory closure while retaining host OAuth as an explicit generation root."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -3981,8 +3981,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "e8f88c488e7e655a041c3ba8811649f74745450a802129a0842f83dadc1901a1",
-      "reason": "Generate only a one-line SDK forward for the legacy import that cannot be changed under the current Read deny rule; this is a temporary permission blocker, not an SDK API gap."
+      "sha256": "4d2769f04151333b77125d26dfcb1f2d1c95fb9b923c65d188cfdf8385f8419b",
+      "reason": "Retain the public host OAuth facade and cancellable refresh lock after the factory closure exits local generation."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4200,41 +4200,9 @@
       "sha256": "4542d37a9f75150b52fc393fcd757f08fb0d681d92bebee6a40171e09b4bec82",
       "reason": "Forward worker initialization to the public durable entry point rather than a direct sandbox dependency."
     },
-    "packages/pi-durable-coding/src/pi/extensions/mcp/config.ts": {
-      "sha256": "5b66196e62c4e1bbac93177d260b1601785b8edc5e14ae2e0113944834e8079d",
-      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/mcp/index.ts": {
-      "sha256": "d5653af651aaeee65e4e4a0baedfee4b144396e091213fbb2305c1a6e0cc8daf",
-      "reason": "Use the SDK codemode factory with the existing durable executor binding for MCP registrations."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/mcp/log.ts": {
-      "sha256": "6e4d70a321a4dce8946b208276cee50bb8b3d9908894dc12af833754dde0e407",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/log.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/extensions/mcp/oauth.ts": {
       "sha256": "44bb6ec4a1a78205546ea63c1aa15e182a2f821d1dea2f867f81d47554879bff",
       "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/mcp/resources.ts": {
-      "sha256": "33af5f3d935f4777c585731c1e70093b46689a3a2ff5c27e307b53783a01abaf",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/mcp/runtime.lazy.ts": {
-      "sha256": "ff26d6c1aefacd0e3434f82a988b5d02bd7994163316c05c84671adda0467473",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/runtime.lazy.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/mcp/runtime.ts": {
-      "sha256": "f2bf62f39179e2d956df3783f1d561667c589afd6f6ee94ebdaeaf6b22de154c",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/extensions/mcp/runtime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/mcp/tools.ts": {
-      "sha256": "68c05335e79f36145550ed5d3bc233e60de29cfdd9cd71b6603180faf764bb99",
-      "reason": "Use public Coding SDK rendering helpers and private output files for MCP results."
-    },
-    "packages/pi-durable-coding/src/pi/extensions/mcp/ui.ts": {
-      "sha256": "9b1d42390a4a608cb3dfd49b0eeb0a143336d4f70dcac25698c22b0531b585da",
-      "reason": "Use SDK AuthUrlComponent, DynamicBorder and key hints while retaining MCP host interaction."
     },
     "packages/pi-durable-coding/src/pi/extensions/tool-search/index.ts": {
       "sha256": "defb69dc3c43533b14a360a2ca4acfabcba5cf25f5f884bd77f60e931d5747c3",
@@ -4245,8 +4213,8 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "a0a14500aa473acce8fcae11ee1a3357c4362742bce939bd9c8c59e9274d948c",
-      "reason": "Forward the existing Native formatReadLineRange export directly to the public Coding SDK."
+      "sha256": "5fff4dd51e790723aa1c3f236f5cd2493c7caf97320b67674a1e39f8ff9d0076",
+      "reason": "Export the published MCP factory and configuration contracts directly from the public Coding SDK root."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4299,10 +4267,6 @@
     "packages/pi-durable-coding/src/pi/utils/mime.ts": {
       "sha256": "9776fa3b491e80b1edcc2d44925f5343a2d4a4ad214d07f5cff726d0028e6e8d",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/mime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/utils/open-browser.ts": {
-      "sha256": "7f7c69e37ac63c62b4584e47cae874d4682bc1d5fb8e2913ce5682bc2dd089af",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/open-browser.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/paths.ts": {
       "sha256": "c8a2995b52a181e46cfae3b30f31448d201742d303249f34119ef2fd7a44e672",
@@ -4589,24 +4553,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "f3e433f2e69437eaf4e125c14196997c7d0cfdf2473155bf480eecb8ce4cf2e0",
-      "reason": "Stop source traversal at the SDK bash result contract; retire the unused ANSI boundary."
+      "sha256": "04f2b8ef37e6343be548cb2ca9d283660e1383cb113ef702d4e112dde17903c1",
+      "reason": "Stop source traversal at the published MCP factory and configuration contracts."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "1679d8ba482793e8e02590c76e794be878ad16f7897d1467cf6066e676f292bb",
-      "reason": "Verify both RPC type consumers stop at the SDK bash result boundary."
+      "sha256": "64b7760eeaf47d136afa5191a64d0491eabf7fb72227890be5ce2063c4f098d1",
+      "reason": "Verify published MCP factory identity and both generation import boundaries."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "258e225f083be6cb696d2e861e35c8bcac8104c01bce3b3ecd58fd33f8dbaee8",
-      "reason": "Expose only the existing BashResult declaration and retire root functions with no remaining production consumer; keep internal execution modules pristine."
+      "sha256": "92c802b7bb70740750b86927a5c4234b3094e11b65ab02d69a8e6bad92605301",
+      "reason": "Declare MCP credentials through the three public methods used by the SDK factory; keep MCP execution modules pristine."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "3147f0edb992b743ac35a9b57faed987e26361ffba80195855f0837efa494fd2",
-      "reason": "Expose the existing BashResult type without a runtime export; remove unused ANSI and stream-file root functions."
+      "sha256": "5b3113cdb5082d5f0e6bad776188c761f745af23e67fc7cc31ca7a1a646ec941",
+      "reason": "Use the structural MCP credential protocol without changing the factory or transport runtime."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "377511a9db3e6721169f7421d13c2e4a1ecc9defc7821afb0c232b9c653705ab",
-      "reason": "Expose BashResult only in the public declaration root and remove unused root function exports; execution and helper algorithms remain pristine."
+      "sha256": "fc31e14e9986ca34fdc5149fd4ba2f22e7666085f6cf2797eb261f3c8d962b30",
+      "reason": "Make only the MCP factory credential declaration structural; preserve the existing SDK MCP implementation."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4783,6 +4747,10 @@
     "packages/pi-durable-coding/src/native-system-prompt.ts": {
       "sha256": "54e402ee68aa2492e0cfda42951e238df0ec2d111161c799130916590b4c6205",
       "reason": "Bind SDK system prompt builders to Native documentation getters and share original normalization, diff and public types."
+    },
+    "packages/pi-durable-coding/test/host-mcp-sdk.test.ts": {
+      "sha256": "52879ca797fb662420bda11fe40fea3eaa0a5da850069de9a7500ba8b3058318",
+      "reason": "Verify the public MCP factory with official in-memory transports, durable codemode forwarding, resources, exposure and shutdown."
     }
   },
   "deleted": {

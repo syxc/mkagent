@@ -26,6 +26,84 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK MCP factory after 321e121
+
+The native entry now exports createMcpExtension and its configuration types
+from the public Coding SDK root. These exports already exist in pristine
+1.5.0. No runtime wrapper is added. Eight MCP modules and open-browser are
+deleted: nine files and 3140 production lines. The retired modules match the
+fixed upstream after import paths are normalized. Four configuration values
+and three agent-directory cases also match.
+
+Only dist/extensions/mcp/index.d.ts changes in the SDK outputs. The factory
+uses forServer, tokens and remove, so credentials now requires those public
+methods through Pick. Its previous class type rejects the host store because
+both classes declare private fields. Two positive assignments and four invalid
+shapes pass the type checks in both dependency layouts. Restoring the pristine
+declaration in memory produces the expected TS2322 for the host store. The
+factory, transport and OAuth runtime algorithms remain pristine. Remove the
+patch when upstream publishes an equivalent structural credential contract.
+
+The host OAuth facade still has production server callers. Its implementation
+remains byte-identical to the base, including cancellable refresh-lock waits.
+The generator retains it as an explicit root. The first closure calculation
+would have removed that root; the final generation restores it before source
+retirement. This does not establish that the complete OAuth module must remain
+local. Native codemode still binds the durable executor. The SDK MCP factory
+uses its name and activation state; it does not create another executor.
+
+| Check | Result and scope |
+|---|---|
+| Complete generation | Runtime, auxiliary and Coding patch checks pass |
+| Pristine replay and installations | Replay and both frozen layouts pass; all 61 Coding and 33 durable hashes match, 19 selected internal files remain pristine, lock unchanged |
+| Root MCP and boundary | Four tests, 107 expect calls pass with official in-memory transports |
+| Related root behavior | 63 tests, 169 expect calls pass across runtime ports, codemode and extensions |
+| Hoisted integration | First run: 33 pass, four fail, 305 expect calls; the four fixture cases later pass with 22 expect calls |
+| Credential types | Both layouts pass the positive and negative cases; pristine declaration gives one expected incompatibility |
+| Coding types | Root typecheck and actual declaration builds in both layouts pass |
+| Hoisted server | Typecheck, build and 26 worker bundle tests with 105 expect calls pass |
+| Source audit | Eight hashes updated, nine entries retired, one test added; fixed Craft v0.15.6 audit passes for 2060 files |
+
+The first MCP test run imports the codemode definition from the wrong entry,
+checks a nonexistent compat export and expects codemode instead of deferred
+exposure. The tests are corrected to the actual public API and then pass.
+The first credential probe assumes the same physical dependency directory in
+both layouts. The next uses require resolution against an import-only export
+and also fails. The final probe uses the consumer TypeScript module resolver
+and passes. None of these corrections changes production behavior.
+
+The first hoisted run blocks all fetch calls, including the fixture's local
+OAuth server. Three authorization tests fail at discovery; a connection-close
+test waits for a blocked local request and times out. Only those four tests
+are rerun. A task-only preload allows HTTP on 127.0.0.1 with a port, rejects
+port 9100 and all other hosts, checks redirects, and blocks WebSocket. All
+four pass. The original failures remain recorded. Subprocess fixtures use
+only the task's local server. Other passed checks are not repeated.
+
+Independent read-only review finds no confirmed new defect relative to
+321e121. Six in-memory differential scenarios cover configuration trust,
+credential injection, plugin registration and withdrawal, exposure, resources,
+durable codemode forwarding and transport shutdown. A separate lock-contention
+probe confirms cancellation before grant mutation. The probe makes zero fetch
+calls. The review also checks actual production callers, exports and source
+closure; it does not count parent tests as independent checks.
+
+Runtime generation now has 51 TypeScript files: 47 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and shared entries 16.
+Physical patch outputs are core four, Coding 61 and durable 33, for 98 total.
+Only the MCP factory declaration is added to the patch output list. Dependency,
+lock, task and persistence versions are unchanged. The unknown hoisted
+runtime-port fixture is preserved. Two corrected tests are synchronized after
+checking their previous contents and that fixture's hash.
+
+This slice does not remove the server's separate MCP, output-file or truncation
+copies. The remaining 47 src/pi files, host OAuth, default SDK session process
+policies, denied legacy entry and F0 through F6 remain open. Existing stream
+completion, asynchronous file errors, long unfinished OSC, AuthContext, Photon
+and ToolHtmlRenderer boundaries remain. The checks use task-owned configuration
+and synthetic data. Full repository acceptance, real services, product UI,
+real OAuth browser callbacks and Windows/Linux are not checked.
+
 ## Unused bash executor retirement after a46f170
 
 The local bash executor has no runtime caller. Only the RPC client and response

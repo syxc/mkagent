@@ -32,6 +32,8 @@ export const CODING_SDK_MODULES = new Set([
   'core/tools/tool-definition-wrapper.ts',
   'core/tools/truncate.ts',
   'core/tools/write.ts',
+  'extensions/mcp/config.ts',
+  'extensions/mcp/index.ts',
   'modes/interactive/components/auth-url.ts',
   'modes/interactive/components/dynamic-border.ts',
   'modes/interactive/components/keybinding-hints.ts',
