@@ -63,6 +63,7 @@ export function portShell(body: string): string {
     isLegacyWslBashPath: 'function isLegacyWslBashPath(path: string): boolean',
     getBashShellConfig: 'function getBashShellConfig(shell: string): ShellConfig',
     killProcessTree: 'export function killProcessTree(pid: number): void',
+    sanitizeBinaryOutput: 'export function sanitizeBinaryOutput(str: string): string',
   };
   const imports: Record<string, string> = {
     'import { delimiter, join, win32 } from "node:path";': 'import { delimiter, win32 } from "node:path";',

@@ -26,6 +26,87 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Unused bash executor retirement after a46f170
+
+The local bash executor has no runtime caller. Only the RPC client and response
+protocol import its BashResult type. SDK AgentSession already calls the SDK
+internal executor. Both RPC imports now use the public SDK declaration root.
+The root patch adds only the existing BashResult type. It adds no runtime
+function or wrapper. Upstream publication of the same type removes this patch.
+
+The 146-line local executor and 11 lines for its unused sanitizer are deleted,
+for 157 production lines. The generator stops at the result type boundary and
+removes the sanitizer through the existing signature guard. Root exports for
+stripAnsi, splitIncompleteAnsiSuffix and createOutputFileStream have no
+remaining production consumer and are removed. MCP/codemode still use
+writeOutputFile. The six internal JS and declaration files for the executor,
+ANSI and output files remain byte-identical to pristine SDK 1.5.0.
+
+The old 94-line private ANSI test is deleted. Its historical comparison and
+3860-result hash remain evidence for the previous slice. Three regressions
+use actual SDK AgentSession instances with deterministic operations. They
+check every byte cut in a UTF-8/ANSI sample, control character removal, streamed
+output, nonzero status and session recording. They also check partial output
+on cancellation, signal state, cleanup after success or failure, and failure
+propagation without a recorded result. They do not check default process
+operations or output file completion. One declaration edit fails to match
+indentation before changing any file; the exact source match then succeeds.
+
+Runtime generation now has 60 TypeScript files: 56 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and shared entries 16.
+Physical patch outputs remain core four, Coding 60 and durable 33. Only the
+two Coding root output hashes change. Dependencies, lock, task versions and
+persistence versions are unchanged.
+
+| Check | Result and scope |
+|---|---|
+| Complete generation | Runtime, auxiliary and patch checks pass |
+| Frozen layouts | Both installations pass with scripts disabled and unchanged lock; all 60 Coding and 33 durable hashes match |
+| Pristine replay | All original and target hashes match; the six executor/helper files remain pristine |
+| Root tests | 47 tests and 405 expect calls pass across public boundaries, runtime ports, actual sessions and RPC |
+| Hoisted integration | 69 tests and 600 expect calls pass across actual sessions, shell helpers/factories, RPC and public compatibility types |
+| Coding types | Root typecheck and declarations in both layouts pass |
+| Hoisted server | Typecheck, build and 26 worker bundle tests with 105 expect calls pass |
+
+Repeated tests in two layouts do not provide separate functional coverage.
+Checks use Bun 1.3.14, task-owned HOME/config/cache and local deterministic
+providers with network blocking. Synchronization copies 13 changed paths and
+preserves the unknown hoisted runtime-port fixture without reading or replacing
+its content. The changed main fixture runs only in the root suite. Source
+registration updates 12 hashes, removes two entries and adds none. The fixed
+Craft v0.15.6 audit covers 2068 files and passes.
+
+Independent read-only review finds no confirmed new defect relative to
+a46f170. It confirms the production inheritance and internal executor path,
+the two type-only RPC changes, six pristine internal files and the narrowed
+root exports. A strict public BashResult consumer, type identity checks and
+negative cases produce zero diagnostics with skipLibCheck enabled. This does
+not replace the parent project type and declaration checks.
+
+An isolated Node 24.22.1 process completes 1017 assertions, including 113
+executor comparisons and 38 actual SDK session calls. These check selected
+byte cuts, incomplete UTF-8, output and exception identity, prefix, event IDs,
+callbacks, cwd, state, records, cancellation, truncation and recorded file
+paths. The review also checks the remaining writer contents and 0600 mode,
+import mappings and sanitizer removal guards. It confirms that the failure
+test stores a separate entry array. New session tests do not reproduce every
+input from the retired private ANSI test.
+
+The initial Bun network precheck fails its expected error-code assertion
+before functional checks. This failure remains recorded. Node then returns
+EPERM from the network precheck and passes the functional probe. Neither the
+failed Bun precheck nor unchecked stream completion is reported as passing.
+The review does not repeat parent suites, installation, generation, project
+types/build, source registration or documentation checks. The parent owns
+source registration, documentation and final scope checks. The previous
+description of a retained local runtime executor was incorrect. This retirement does not establish that default SDK session bash
+operations use all host durable process policies. The existing stream end
+completion, asynchronous file error and long unfinished OSC boundaries remain.
+The remaining 56 src/pi files, the legacy permission blocker, F0 through F6 and
+the recorded AuthContext, Photon and ToolHtmlRenderer issues remain open. This
+slice does not run the full repository suite, live services, product UI,
+Windows/Linux or full product acceptance.
+
 ## Public SDK ANSI after 7a68ca4
 
 Bash ANSI stripping and stream suffix splitting now use the public Coding SDK.

@@ -51,8 +51,8 @@ describe('published Coding SDK boundary', () => {
     expect(codingSDKImport('extensions/mcp/tools.ts', '../../core/tools/truncate.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('index.ts', './core/tools/render-utils.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('extensions/mcp/tools.ts', '../../core/tools/render-utils.ts')).toBe('@earendil-works/pi-coding-agent');
-    expect(codingSDKImport('core/bash-executor.ts', '../utils/output-files.ts')).toBe('@earendil-works/pi-coding-agent');
-    expect(codingSDKImport('core/bash-executor.ts', '../utils/ansi.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('modes/rpc/rpc-client.ts', '../../core/bash-executor.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('modes/rpc/rpc-types.ts', '../../core/bash-executor.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('extensions/mcp/tools.ts', '../../utils/output-files.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingHostImport('core/tools/index.ts', './read.ts')).toBe('../../../native-read-tools.ts');
     expect(codingHostImport('core/tools/index.ts', './edit.ts')).toBe('../../../native-edit-tools.ts');

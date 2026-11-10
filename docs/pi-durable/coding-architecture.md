@@ -124,7 +124,7 @@ Native Photon 入口直接使用[共享加载适配](../../packages/pi-durable-c
 
 Native 图像 MIME 识别通过[类型适配](../../packages/pi-durable-coding/src/compat/image-mime.ts)共用 durable 的既有头部解析算法。适配仅保留未识别时的 `null` 和文件前 4100 字节的读取窗口，完整文件读取器的 APNG 扫描范围与原生入口不同，因此继续使用内核的字节检测函数。私有剪贴板图片读取入口已在后续宿主残留清理中删除。
 
-Native ANSI 完整匹配和流式残片切分直接使用公开 Coding SDK 的 stripAnsi 与 splitIncompleteAnsiSuffix；本地模块、正则适配及旧生成转换已删除，不留包装。根只补既有导出，内部 JS/声明保持 pristine。类型错误、私有 CSI、相邻序列、快速路径及 256 个 UTF-16 码元的残片上限保持，具体对照和安装范围见[ANSI 验证](coding-validation.md#public-sdk-ansi-after-7a68ca4)。ansi-regex 直接依赖已移除，其他包所需的传递依赖保留。
+会话 bash 的 ANSI 清理和流式残片处理由 SDK AgentSession 内部执行器承担。本地执行器只有 RPC 两处类型引用，现改为 SDK BashResult 根声明并删除完整副本及无调用 sanitizer；不新增运行时转发。stripAnsi、splitIncompleteAnsiSuffix 与 createOutputFileStream 的根导出已撤除，内部六份 JS/声明保持 pristine。此前 ANSI 模块、正则适配、生成转换和 ansi-regex 直接依赖已删除；其对照保留为历史证据，当前回归改用实际会话。具体调用、验证与既有边界见[bash 执行器退役验证](coding-validation.md#unused-bash-executor-retirement-after-a46f170)。
 
 Native 子进程等待通过[薄适配](../../packages/pi-durable-coding/src/compat/child-process.ts)共用 durable 的既有算法。等待函数及类型通过 `env/node` 补丁公开，算法正文保持原样。适配保留 Native 的退出码返回值和原来的无写盘队列等待策略，100ms 输出空闲期限、持续输出续期、继承管道释放及监听器清理由内核负责。进程启动继续使用 Node 和 Windows `cross-spawn`，不另建执行环境或调度循环。
 
@@ -166,14 +166,14 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 | 本地位置 | 上游来源与移植方式 |
 |---|---|
-| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，UI、图片、用量、来源、计时、资源发现、系统提示词、compaction、截断、工具渲染与输出文件及 ANSI SDK 替换后为 57 份 TypeScript、0 项资源，剩余源码继续按职责核对。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留待核对的工具、扩展、RPC client/协议等源码；插件 UI 组件和 CustomEditor 改用公开 SDK，AgentSession 使用公开 SDK 和自有 durable 子类。 |
+| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，UI、图片、用量、来源、计时、资源发现、系统提示词、compaction、截断、工具渲染与输出文件及 ANSI SDK 替换、无调用 bash 执行器退役后为 56 份 TypeScript、0 项资源，剩余源码继续按职责核对。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留待核对的工具、扩展、RPC client/协议等源码；插件 UI 组件和 CustomEditor 改用公开 SDK，AgentSession 使用公开 SDK 和自有 durable 子类。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 105 行 core 子类，保留 durable 队列身份、恢复和独立的可变默认对象。默认消息转换直接使用发布版 core；模型和 usage 两个默认对象仍从锁定上游提取，stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
 | `src/native-operations.ts` | 22 行门面，调用仓内 core 补丁导出的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
 | `src/upstream/**` | 3 项选取源码：Git 路径、boundary drafts 和同步 durable context；另有 16 个共享入口。旧完整 loader 和 manifest 转发已删除；插件 runtime、注册、factory、缓存及发现现由公开 SDK 承担，context 与 prompt 去重也已删除本地副本。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
 
-前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 61 份 TypeScript 和 0 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 9 项来源产物及 16 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
+前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 60 份 TypeScript 和 0 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 9 项来源产物及 16 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
 `461e7c9` 后的入口核对确认，MkAgent 通过 `CodingHost/createAgentSession` 装配，仓内产品没有 `main`/`MainOptions` 调用。先前切片排除原版 Pi 启动器及其独占的 24 份源码，包含 CLI 认证、配置向导、自更新、旧 Pi 配置迁移和 CLI 内置扩展集合；Llama 管理扩展仅由该集合进入。`5662422` 后的限定复核另确认，原始 MkAgent 和当前宿主均自行管理会话、UI 与传输，不依赖上游终端、stdout 或 stdin/stdout RPC 模式宿主。现从根入口和 modes barrel 排除 `InteractiveMode`、`InteractiveModeOptions`、`runPrintMode`、`PrintModeOptions`、`runRpcMode`，并删除三个实现文件。生成规则在遍历任一入口的依赖前完成排除。`RpcClient` 及其 options、RPC 协议、`JsonAgentSessionEvent`、Theme、CustomEditor、renderer/UI、`ExtensionMode`、AgentSessionRuntime 和插件生命周期保留；MCP/codemode/tool-search 的公开工厂保留。直接使用被排除模式的外部消费者须迁移到自有宿主，这项导出变化不承诺任意外部消费者零影响。此处删除不需要的模式宿主，不计作官方 SDK 完整覆盖，也没有证明其余辅助闭包全部必要。
 
@@ -285,7 +285,9 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `0a6fda9` 后的工具渲染与输出文件切片直接使用公开 Coding SDK，删除 180 行渲染模块和 34 行输出文件模块，不留包装。根只补三个既有渲染函数和两个文件输出函数，内部四份 JS/声明保持 pristine。该切片时 runtime 为 62 份 TypeScript（src/pi 58、门面 4）、0 项资源，辅助来源 9 项、共享入口 16 个，补丁仍为 core 4、Coding 60、durable 33 共 97 份。5561 组候选对照、文件权限与流式错误探针、根工程 33 项、hoisted 72 项集成和 26 项 bundle 测试、类型、两布局声明及 server 构建通过。两布局冻结安装、全部 hash、完整生成与 pristine 重放通过，依赖和 lock 未变。来源更新 10 项、移除 2 项且无新增，固定 Craft 审计覆盖 2072 文件并通过。独立复核状态和验证边界见[工具渲染与输出文件验证](coding-validation.md#public-sdk-rendering-and-output-files-after-0a6fda9)。该时点其余 58 份 src/pi、legacy 权限阻塞及 F0 至 F6 继续开放。
 
-`7a68ca4` 后的 ANSI 切片直接使用公开 Coding SDK，删除 80 行本地模块、5 行正则适配和 37 行生成转换，不留包装，并移除 ansi-regex 直接依赖。根只补两个既有函数导出，内部 JS/声明保持 pristine。当前 runtime 为 61 份 TypeScript（src/pi 57、门面 4）、0 项资源，辅助来源 9 项、共享入口 16 个，补丁仍为 core 4、Coding 60、durable 33 共 97 份。28592 组结果与异常、179 个流切分对照及两布局定向回归、类型、声明和 worker 构建通过，两布局冻结安装、全部 hash、完整生成与 pristine 重放通过。来源更新 12 项、移除 2 项且无新增，固定 Craft 审计覆盖 2070 文件并通过。独立复核状态和验证边界见[ANSI 验证](coding-validation.md#public-sdk-ansi-after-7a68ca4)。其余 57 份 src/pi、legacy 权限阻塞及 F0 至 F6 继续开放。
+`7a68ca4` 后的 ANSI 切片直接使用公开 Coding SDK，删除 80 行本地模块、5 行正则适配和 37 行生成转换，不留包装，并移除 ansi-regex 直接依赖。根只补两个既有函数导出，内部 JS/声明保持 pristine。该切片时 runtime 为 61 份 TypeScript（src/pi 57、门面 4）、0 项资源，辅助来源 9 项、共享入口 16 个，补丁仍为 core 4、Coding 60、durable 33 共 97 份。28592 组结果与异常、179 个流切分对照及两布局定向回归、类型、声明和 worker 构建通过，两布局冻结安装、全部 hash、完整生成与 pristine 重放通过。来源更新 12 项、移除 2 项且无新增，固定 Craft 审计覆盖 2070 文件并通过。独立复核状态和验证边界见[ANSI 验证](coding-validation.md#public-sdk-ansi-after-7a68ca4)。该时点其余 57 份 src/pi、legacy 权限阻塞及 F0 至 F6 继续开放。
+
+`a46f170` 后的调用核对确认，本地 bash-executor 没有运行时调用，仅 RPC 两处引用 BashResult 类型；实际执行由 SDK AgentSession 内部实现承担。现将两处类型改用 SDK 根声明，删除 146 行执行器及 11 行无调用 sanitizer，共 157 行生产源码，不增加包装。根仅补 BashResult 类型导出，撤除 stripAnsi、splitIncompleteAnsiSuffix 和 createOutputFileStream 三个无生产消费者的导出，保留 MCP/codemode 使用的 writeOutputFile；内部执行器、ANSI 与输出文件六份 JS/声明保持 pristine。旧 94 行私有 ANSI 测试退出，真实会话回归覆盖字节切分、清理、记录、取消及错误。当前 runtime 为 60 份 TypeScript（src/pi 56、门面 4）、0 项资源，辅助来源 9 项、共享入口 16 个，补丁仍为 core 4、Coding 60、durable 33 共 97 份。根工程 47 项、hoisted 69 项及 26 项 bundle、类型、两布局声明与 server 构建通过；冻结安装、全部 hash、完整生成与 pristine 重放通过，lock 未变。来源更新 12 项、移除 2 项且无新增，固定 Craft 审计覆盖 2068 文件并通过。独立复核状态及边界见[bash 执行器退役验证](coding-validation.md#unused-bash-executor-retirement-after-a46f170)。其余 56 份 src/pi、默认会话的宿主进程策略、legacy 权限阻塞及 F0 至 F6 继续开放。
 
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|

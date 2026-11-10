@@ -8,7 +8,7 @@
 import type { AgentMessage, ThinkingLevel } from "@earendil-works/pi-agent-core";
 import type { ImageContent, Model } from "@earendil-works/pi-ai";
 import type { PromptDisposition, QueuedInputDisposition, SessionStats } from "../../../native-agent-session.ts";
-import type { BashResult } from "../../core/bash-executor.ts";
+import type { BashResult } from "@earendil-works/pi-coding-agent";
 import type { CompactionResult } from "@earendil-works/pi-coding-agent";
 import type { SessionEntry, SessionTreeNode } from "@earendil-works/pi-coding-agent";
 import type { SourceInfo } from "@earendil-works/pi-coding-agent";

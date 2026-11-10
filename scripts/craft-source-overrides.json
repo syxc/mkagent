@@ -2376,10 +2376,6 @@
       "sha256": "aefec44512616c044051844bc9fcb25207e8d74521b358ba18cb748b58876875",
       "reason": "Verify the public durable child wait retains signals, output spill draining and original errors."
     },
-    "packages/pi-durable-coding/test/native-ansi.test.ts": {
-      "sha256": "ba0be79f51ef827154e04dfe5fb1de49cc09ddd73851a097d1b9e158f62dca3a",
-      "reason": "Run the unchanged ANSI baseline and stream boundary checks against the public Coding SDK."
-    },
     "packages/pi-durable-coding/src/compat/image-mime.ts": {
       "sha256": "15b0abcfee72fd85d3b8a76ab0e832b2875152609ec9dac1b3589083dbece257",
       "reason": "Keep Native null results and 4100-byte file sniffing over durable's shared image MIME detector."
@@ -2513,12 +2509,12 @@
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "05358df8b11a9a1ccfe70bc6549661082ec7d40d41876d880d07c4d735767689",
-      "reason": "Delete the unused ANSI algorithm transformation."
+      "sha256": "98c76609719cf7f4f82bbba85076b52fb6194947ebc17c8dda5f52bb2f6ce3b7",
+      "reason": "Exclude the binary output sanitizer after its only local runtime caller is retired."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "f1d5b79204604a481ef4bda0b8333d7db03ee28d36b07bcecde6040573de410c",
-      "reason": "Remove the retired local context-token transformation fixture while retaining the remaining helper and runtime exclusion checks."
+      "sha256": "c739b334b1451e90d958189530ef37b67337e008c21355149d24020b7c34f1c4",
+      "reason": "Guard retirement of the unused binary sanitizer from generated host shell helpers."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "2a5f3e6c3407cab0eaf5c0058358b84ff0df2a1777b9f13d21039d938b2fd1bd",
@@ -3969,8 +3965,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "2c325fc07ac64774f2c0d097ce3cabcbdfc83eb506d8b915be719d6d9c2674e3",
-      "reason": "Retire SDK-covered ANSI source and its direct matcher dependency from the generated closure."
+      "sha256": "4f5486866b3ad69fc579c2f5eeb40bfe0cbb571013228c072d58970a6864465a",
+      "reason": "Retire the unused bash executor after RPC consumers move to the SDK result declaration."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4115,10 +4111,6 @@
     "packages/pi-durable-coding/src/pi/core/auth-storage.ts": {
       "sha256": "163626f5abc34099a9afb2803d0cc49b9c66d0feacd605165e88063c328cef68",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/auth-storage.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/bash-executor.ts": {
-      "sha256": "cd43f510c594b78b53a2fde077767ab1b338ee7be66af816a87bf40d462157ac",
-      "reason": "Use the public Coding SDK ANSI helpers for retained host extension execution."
     },
     "packages/pi-durable-coding/src/pi/core/cache-warmer.ts": {
       "sha256": "6476803829f91e2aead921d9f27e22de45ac30797815f08a4ab1dfeefe145f4b",
@@ -4269,16 +4261,16 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/jsonl.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-client.ts": {
-      "sha256": "cd927c1b93065b012bcaeb5c1ea00c227b5a8d0fa5d42b934b4d1f542ff21bba",
-      "reason": "Use the public Coding SDK compaction result declaration for the retained RPC client."
+      "sha256": "d04101c3175dbf914a5493cab5ed210cd47bac521008fccfca76007c0bc3af4e",
+      "reason": "Use the SDK BashResult declaration for the existing RPC method contract."
     },
     "packages/pi-durable-coding/test/rpc-client.test.ts": {
       "sha256": "d8844d22330d6197f94bd2088b38352307567065b7629a986d88b9fb52d9da9f",
       "reason": "Verify missing-entry rejection before spawn, explicit JSONL requests and options, shutdown, startup errors and outstanding-request rejection using local child-process fixtures."
     },
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-types.ts": {
-      "sha256": "dbf466a149a9432f56eeefc14e92a9b5b339e9f2976ab899d46d092d5d4cf184",
-      "reason": "Use the public Coding SDK compaction result declaration for the retained RPC protocol."
+      "sha256": "72368768a995682e5ba00009933a24be407d231e76090ecd145a596591773c09",
+      "reason": "Use the SDK BashResult declaration for the existing RPC wire response."
     },
     "packages/pi-durable-coding/src/pi/utils/abort.ts": {
       "sha256": "6d7f5f4c81e07bc5f6dd8f1ad5dcd28ff05f30adce472b508484d57bdc4e7325",
@@ -4321,8 +4313,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/pi-user-agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/shell.ts": {
-      "sha256": "af78a612cd50d7b9643bceaa52a6c92e7e1ec779e264be39fec68ece0d913a65",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/shell.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "ae1fd3d6a210850e4466926ca3be1d080fde1a4b36726f78650fc15be693af36",
+      "reason": "Remove the output sanitizer with no remaining local execution caller while retaining durable shell policies."
     },
     "packages/pi-durable-coding/src/pi/utils/text.ts": {
       "sha256": "bb323f9607c499115b532021f4f0163c6df04d834aee9c32c3c77b273bd2d7c6",
@@ -4597,24 +4589,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "e7c122f34d3cbb76ada50316bbee3819832cf950060995528a8378a779673737",
-      "reason": "Stop source traversal at the public Coding SDK ANSI helpers."
+      "sha256": "f3e433f2e69437eaf4e125c14196997c7d0cfdf2473155bf480eecb8ce4cf2e0",
+      "reason": "Stop source traversal at the SDK bash result contract; retire the unused ANSI boundary."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "970825dd9a76ffd29fffc1a4d35be6db390b7ab988e57eb596449e4e6b7f4547",
-      "reason": "Verify that generated ANSI callers stop at the public SDK boundary."
+      "sha256": "1679d8ba482793e8e02590c76e794be878ad16f7897d1467cf6066e676f292bb",
+      "reason": "Verify both RPC type consumers stop at the SDK bash result boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "f0dd9d5f2d33bd1858fd86802c286affbf81c94a69fa14069d14fa5d619b2ccb",
-      "reason": "Track the existing ANSI helpers exposed at the SDK root; keep the internal JS and declaration pristine."
+      "sha256": "258e225f083be6cb696d2e861e35c8bcac8104c01bce3b3ecd58fd33f8dbaee8",
+      "reason": "Expose only the existing BashResult declaration and retire root functions with no remaining production consumer; keep internal execution modules pristine."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "09090053b078b0ad83c3953f54914a5d8e2a84eb1703898dd1ee7a36c4a40814",
-      "reason": "Expose existing ANSI functions at the SDK root without modifying their algorithms."
+      "sha256": "3147f0edb992b743ac35a9b57faed987e26361ffba80195855f0837efa494fd2",
+      "reason": "Expose the existing BashResult type without a runtime export; remove unused ANSI and stream-file root functions."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "3ecde173ada388e9d2aeaad9b451ecb73acd9f35a6a749aae0b0039227d9acfa",
-      "reason": "Expose the two existing ANSI helpers at the public root; keep the internal JS and declaration byte-identical to pristine."
+      "sha256": "377511a9db3e6721169f7421d13c2e4a1ecc9defc7821afb0c232b9c653705ab",
+      "reason": "Expose BashResult only in the public declaration root and remove unused root function exports; execution and helper algorithms remain pristine."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4673,8 +4665,8 @@
       "reason": "Inject the SDK-backed Native prompt builders while retaining durable session hooks and state."
     },
     "packages/pi-durable-coding/test/host-agent-session.test.ts": {
-      "sha256": "3df1c691a299caf8f89069bb89025c9fa5a24ee2bb9a726f7cef83c549d71f15",
-      "reason": "Verify default SDK lifecycle, admission before acknowledgement, distinct durable nested task ownership and model projections that preserve transcript and journal input metadata."
+      "sha256": "6c5d202ffb503b73301e88a314e05a39cc8d5cb59cb099c655fd9af3e80199b9",
+      "reason": "Verify streaming sanitization, result recording, cancellation and execution failures through actual public SDK sessions."
     },
     "packages/pi-durable-coding/src/native-search-tools.ts": {
       "sha256": "7aa843a444ed73b08b77b353cf9da96a0dc8ecaed91a850a45887dba78eccabb",

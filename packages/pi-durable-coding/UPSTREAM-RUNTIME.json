@@ -105,16 +105,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/core/bash-executor.ts",
-      "target": "src/pi/core/bash-executor.ts",
-      "sha256": "6fae3801533d64ccc018c43682bbff868619dd7cdab8f67730c731a5785d2984",
-      "portSha256": "cd43f510c594b78b53a2fde077767ab1b338ee7be66af816a87bf40d462157ac",
-      "changes": [
-        "public-coding-sdk",
-        "host-extension-module-import"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/cache-warmer.ts",
       "target": "src/pi/core/cache-warmer.ts",
       "sha256": "596080fbe60702a44bcd8a31aeca45a5048d24c53fb0f0b40dd8781f776a8842",
@@ -421,7 +411,7 @@
       "source": "packages/coding-agent/src/modes/rpc/rpc-client.ts",
       "target": "src/pi/modes/rpc/rpc-client.ts",
       "sha256": "a34c9eb4937bf3b526128c9a2032cc3295504996a14bf204e4a17e5bb55dcf7f",
-      "portSha256": "cd927c1b93065b012bcaeb5c1ea00c227b5a8d0fa5d42b934b4d1f542ff21bba",
+      "portSha256": "d04101c3175dbf914a5493cab5ed210cd47bac521008fccfca76007c0bc3af4e",
       "changes": [
         "require-explicit-rpc-cli-entry",
         "host-extension-module-import",
@@ -432,7 +422,7 @@
       "source": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
       "target": "src/pi/modes/rpc/rpc-types.ts",
       "sha256": "be06a1d53916e03e9274cce9e4833692b235494e4047f1f7139d7f0147daae1a",
-      "portSha256": "dbf466a149a9432f56eeefc14e92a9b5b339e9f2976ab899d46d092d5d4cf184",
+      "portSha256": "72368768a995682e5ba00009933a24be407d231e76090ecd145a596591773c09",
       "changes": [
         "host-extension-module-import",
         "public-coding-sdk"
@@ -518,7 +508,7 @@
       "source": "packages/coding-agent/src/utils/shell.ts",
       "target": "src/pi/utils/shell.ts",
       "sha256": "bacb0f871b92e38ac17221e0c1b00ac5211e0f5c0063675afd980513c7c79fb4",
-      "portSha256": "af78a612cd50d7b9643bceaa52a6c92e7e1ec779e264be39fec68ece0d913a65",
+      "portSha256": "ae1fd3d6a210850e4466926ca3be1d080fde1a4b36726f78650fc15be693af36",
       "changes": [
         "shared-durable-shell-algorithms"
       ]

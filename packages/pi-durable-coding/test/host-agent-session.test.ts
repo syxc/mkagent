@@ -67,6 +67,60 @@ async function fixture(Session: typeof AgentSession = AgentSession) {
   return { session, agent, sessionManager };
 }
 
+test('SDK session bash preserves UTF-8 and ANSI across byte cuts and records sanitized output', async () => {
+  const { session, sessionManager } = await fixture();
+  const input = Buffer.from('\x1b[31m中文👩\x1b[0m\r\n\x1b]title\x1b\\end\x00');
+  const expected = '中文👩\nend';
+  for (let cut = 0; cut <= input.length; cut++) {
+    const chunks: string[] = [];
+    const result = await session.executeBash('fixture', chunk => chunks.push(chunk), {
+      id: 'bash-fixture', excludeFromContext: true,
+      operations: { async exec(command, cwd, { onData }) {
+        expect(command).toBe('fixture');
+        expect(cwd).toBe(sessionManager.getCwd());
+        onData(input.subarray(0, cut));
+        onData(input.subarray(cut));
+        return { exitCode: 7 };
+      } },
+    });
+    expect(result).toEqual({ output: expected, exitCode: 7, cancelled: false,
+      truncated: false, fullOutputPath: undefined });
+    expect(chunks.join('')).toBe(expected);
+    expect(session.isBashRunning).toBe(false);
+    const entry = sessionManager.getLeafEntry();
+    expect(entry?.type).toBe('message');
+    if (entry?.type === 'message') expect(entry.message).toMatchObject({
+      role: 'bashExecution', command: 'fixture', output: expected, exitCode: 7, excludeFromContext: true,
+    });
+  }
+});
+
+test('SDK session bash returns partial output on cancellation and releases the running command', async () => {
+  const { session } = await fixture();
+  const result = await session.executeBash('fixture', undefined, { operations: {
+    async exec(_command, _cwd, { onData, signal }) {
+      expect(session.isBashRunning).toBe(true);
+      onData(Buffer.from('before\x1b[31m'));
+      session.abortBash();
+      expect(signal?.aborted).toBe(true);
+      throw new Error('fixture cancellation');
+    },
+  } });
+  expect(result).toMatchObject({ output: 'before', cancelled: true, exitCode: undefined, truncated: false });
+  expect(session.isBashRunning).toBe(false);
+});
+
+test('SDK session bash propagates operation failures without recording a result', async () => {
+  const { session, sessionManager } = await fixture();
+  const before = sessionManager.getEntries();
+  const error = new Error('fixture execution failed');
+  await expect(session.executeBash('fixture', undefined, { operations: {
+    async exec() { throw error; },
+  } })).rejects.toBe(error);
+  expect(sessionManager.getEntries()).toEqual(before);
+  expect(session.isBashRunning).toBe(false);
+});
+
 test('the SDK default lifecycle keeps agent identity, prompt paths, persistence and settlement', async () => {
   const { session, agent, sessionManager } = await fixture();
   const events: string[] = [];

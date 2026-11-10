@@ -38,6 +38,7 @@ import { spawn, spawnSync } from "child_process";
 function isLegacyWslBashPath(path: string): boolean { return false; }
 function getBashShellConfig(shell: string): ShellConfig { throw new Error("unused shell body"); }
 export function killProcessTree(pid: number): void { throw new Error("unused cleanup body"); }
+export function sanitizeBinaryOutput(str: string): string { throw new Error("unused sanitizer body"); }
 `,
   },
   ...declarationFixtures,
