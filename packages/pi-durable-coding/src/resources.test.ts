@@ -40,8 +40,9 @@ describe('ported native resource behavior', () => {
     const code = `
       import { discoverCodingSkills } from ${JSON.stringify(join(import.meta.dir, 'resources.ts'))};
       import { loadPromptTemplates } from ${JSON.stringify(join(import.meta.dir, 'upstream/core/prompt-templates.ts'))};
-      import { loadSkills as nativeSkills } from ${JSON.stringify(join(import.meta.dir, 'pi/core/skills.ts'))};
-      import { loadPromptTemplates as nativePrompts } from ${JSON.stringify(join(import.meta.dir, 'pi/core/prompt-templates.ts'))};
+      import { loadSkills as nativeSkills } from ${JSON.stringify(join(import.meta.dir, 'native-skills.ts'))};
+      import { loadPromptTemplates as nativePrompts } from ${JSON.stringify(join(import.meta.dir, 'native-prompt-templates.ts'))};
+      import { loadSkills as sdkSkills, loadPromptTemplates as sdkPrompts } from ${JSON.stringify(import.meta.resolve('@earendil-works/pi-coding-agent'))};
       import { CONFIG_DIR_NAME } from ${JSON.stringify(join(import.meta.dir, 'pi/config.ts'))};
       const options = ${JSON.stringify({ cwd, agentDir, includeDefaults: true, skillPaths: [], promptPaths: [] })};
       const explicit = {
@@ -53,7 +54,13 @@ describe('ported native resource behavior', () => {
         legacySkills: discoverCodingSkills(options).skills.map(item => item.name),
         legacyPrompts: loadPromptTemplates(options).templates.map(item => item.name),
         nativeSkills: nativeSkills(options).skills.map(item => item.name),
+        inheritedNativeSkills: nativeSkills(Object.create(options)).skills.map(item => item.name),
+        hiddenNativeSkills: nativeSkills(Object.defineProperties({}, Object.fromEntries(Object.entries(options).map(([key, value]) => [key, { value }])))).skills.map(item => item.name),
         nativePrompts: nativePrompts(options).templates.map(item => item.name),
+        explicitNativeSkills: nativeSkills(options, '.pi').skills.map(item => item.name),
+        explicitNativePrompts: nativePrompts(options, '.pi').templates.map(item => item.name),
+        explicitSDKSkills: sdkSkills(options, '.pi').skills.map(item => item.name),
+        explicitSDKPrompts: sdkPrompts(options, '.pi').templates.map(item => item.name),
         skillScopes: discoverCodingSkills(explicit).skills.map(item => item.sourceInfo.scope),
         promptScopes: loadPromptTemplates(explicit).templates.map(item => item.sourceInfo.scope),
       }));
@@ -64,6 +71,8 @@ describe('ported native resource behavior', () => {
     expect({ code: child.exitCode, error: child.stderr.toString() }).toEqual({ code: 0, error: '' });
     expect(JSON.parse(child.stdout.toString())).toEqual({
       configDir: '.tau', legacySkills: ['pi'], legacyPrompts: ['pi'], nativeSkills: ['tau'], nativePrompts: ['tau'],
+      inheritedNativeSkills: ['tau'], hiddenNativeSkills: ['tau'],
+      explicitNativeSkills: ['pi'], explicitNativePrompts: ['pi'], explicitSDKSkills: ['pi'], explicitSDKPrompts: ['pi'],
       skillScopes: ['project'], promptScopes: ['project'],
     });
   });

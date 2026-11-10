@@ -53,7 +53,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/virtual-models.${extension}";`,
     `export * from "./core/session-manager.${extension}";`,
     `export * from "./core/resource-loader.${extension}";`,
-    ...['source-info', 'timings', 'usage-totals'].map(name => `export * from "./core/${name}.${extension}";`),
+    ...['source-info', 'timings', 'usage-totals', 'skills', 'prompt-templates'].map(name => `export * from "./core/${name}.${extension}";`),
     `export * from "./core/extensions/loader.${extension}";`,
     `export * from "./core/extensions/runner.${extension}";`,
     `export * from "./core/extensions/types.${extension}";`,
@@ -83,6 +83,22 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(path, original.slice(0, position) + exports + original.slice(position));
   if (suffix === 'd.ts') outputs.set(path, outputs.get(path)!.replace(marker,
     'export type { ShellDependencies } from "./core/tools/bash.ts";\n' + marker));
+}
+for (const name of ['skills', 'prompt-templates']) for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/core/${name}.${suffix}`;
+  const fn = name === 'skills' ? 'loadSkills' : 'loadPromptTemplates';
+  const options = name === 'skills' ? 'LoadSkillsOptions' : 'LoadPromptTemplatesOptions';
+  let body = readFileSync(join(baseline, path), 'utf8');
+  body = suffix === 'd.ts'
+    ? replace(body, `${fn}(options: ${options})`, `${fn}(options: ${options}, projectConfigDir?: string)`)
+    : replace(body, `${fn}(options)`, `${fn}(options, projectConfigDir = CONFIG_DIR_NAME)`);
+  if (suffix === 'js') {
+    const count = name === 'skills' ? 2 : 1;
+    const before = 'resolve(resolvedCwd, CONFIG_DIR_NAME,';
+    if (body.split(before).length !== count + 1) throw new Error('Published resource directory boundary changed: ' + name);
+    body = body.replaceAll(before, 'resolve(resolvedCwd, projectConfigDir,');
+  }
+  outputs.set(path, body);
 }
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/utils/image-convert.${suffix}`;

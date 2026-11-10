@@ -42,6 +42,8 @@ export function codingHostImport(importer: string, specifier: string): string | 
   const module = posix.normalize(posix.join(posix.dirname(importer), specifier));
   const host = module === 'core/extensions/loader.ts' ? 'native-extension-loader.ts'
     : module === 'core/agent-session.ts' ? 'native-agent-session.ts'
+    : module === 'core/skills.ts' ? 'native-skills.ts'
+    : module === 'core/prompt-templates.ts' ? 'native-prompt-templates.ts'
     : module === 'core/tools/grep.ts' || module === 'core/tools/find.ts' ? 'native-search-tools.ts'
     : module === 'core/tools/read.ts' ? 'native-read-tools.ts'
     : module === 'core/tools/edit.ts' || module === 'core/tools/edit-diff.ts' ? 'native-edit-tools.ts'

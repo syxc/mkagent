@@ -331,7 +331,7 @@ export {
 	loadSkillsFromDir,
 	type Skill,
 	type SkillFrontmatter,
-} from "./core/skills.ts";
+} from "../native-skills.ts";
 export { createSyntheticSourceInfo } from "@earendil-works/pi-coding-agent";
 export { type EditDiffResult, generateDiffString, generateUnifiedPatch } from "../native-edit-tools.ts";
 // Tools

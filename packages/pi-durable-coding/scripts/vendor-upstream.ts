@@ -97,6 +97,8 @@ const legacyPolicies: Record<string, string> = {
   'core/context-tokens.js': 'src/legacy/context-tokens.js',
   'core/extensions/runner.js': 'src/legacy/extension-runner.js',
   'core/session-manager.js': 'src/legacy/session-manager.js',
+  'core/skills.ts': 'src/native-skills.ts',
+  'core/prompt-templates.ts': 'src/native-prompt-templates.ts',
 };
 
 // These public helpers need one implementation, including when old entry points import them.
@@ -133,14 +135,14 @@ for (const item of forwarded) {
     + (path === 'utils/shell.ts' ? `export { getShellConfig, type ShellConfig } from ${specifier};\n`
       : `export * from ${specifier};\n`);
   if (path === 'core/skills.ts') {
-    content += 'import { loadSkills as loadNativeSkills, type LoadSkillsOptions } from "../../pi/core/skills.ts";\n'
+    content += `import { loadSkills as loadNativeSkills, type LoadSkillsOptions } from ${specifier};\n`
       + 'import { CONFIG_DIR_NAME, getAgentDir } from "../config.ts";\n\n'
       + 'export function loadSkills(options: LoadSkillsOptions) {\n'
       + '  return loadNativeSkills({ ...options, agentDir: options.agentDir ?? getAgentDir() }, CONFIG_DIR_NAME);\n'
       + '}\n';
   }
   if (path === 'core/prompt-templates.ts') {
-    content += 'import { loadPromptTemplates as loadNativePromptTemplates, type LoadPromptTemplatesOptions } from "../../pi/core/prompt-templates.ts";\n'
+    content += `import { loadPromptTemplates as loadNativePromptTemplates, type LoadPromptTemplatesOptions } from ${specifier};\n`
       + 'import { CONFIG_DIR_NAME } from "../config.ts";\n\n'
       + 'export function loadPromptTemplates(options: LoadPromptTemplatesOptions) {\n'
       + '  return loadNativePromptTemplates(options, CONFIG_DIR_NAME);\n'

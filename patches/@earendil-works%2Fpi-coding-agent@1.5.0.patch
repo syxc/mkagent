@@ -1,8 +1,8 @@
-# Content SHA-256: fb378aad9e56fbf64f678baf33dde1f6d5016bdb51da054e984f3227220e1bff
+# Content SHA-256: 6198e0a5d1f21c1f905814b228a2b955652521afec5ef5aa5a63a494364958cd
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,42 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,44 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -20,6 +20,8 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/source-info.js";
 +export * from "./core/timings.js";
 +export * from "./core/usage-totals.js";
++export * from "./core/skills.js";
++export * from "./core/prompt-templates.js";
 +export * from "./core/extensions/loader.js";
 +export * from "./core/extensions/runner.js";
 +export * from "./core/extensions/types.js";
@@ -58,7 +60,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,43 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,45 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -76,6 +78,8 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/source-info.ts";
 +export * from "./core/timings.ts";
 +export * from "./core/usage-totals.ts";
++export * from "./core/skills.ts";
++export * from "./core/prompt-templates.ts";
 +export * from "./core/extensions/loader.ts";
 +export * from "./core/extensions/runner.ts";
 +export * from "./core/extensions/types.ts";
@@ -103,6 +107,75 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export type { ShellDependencies } from "./core/tools/bash.ts";
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
+diff --git a/dist/core/skills.js b/dist/core/skills.js
+--- a/dist/core/skills.js
++++ b/dist/core/skills.js
+@@ -313,7 +313,7 @@ function escapeXml(str) {
+  * Load skills from all configured locations.
+  * Returns skills and any validation diagnostics.
+  */
+-export function loadSkills(options) {
++export function loadSkills(options, projectConfigDir = CONFIG_DIR_NAME) {
+     const { agentDir, skillPaths, includeDefaults } = options;
+     // Resolve agentDir - if not provided, use default from config
+     const resolvedCwd = resolvePath(options.cwd);
+@@ -353,10 +353,10 @@ export function loadSkills(options) {
+     }
+     if (includeDefaults) {
+         addSkills(loadSkillsFromDirInternal(join(resolvedAgentDir, "skills"), "user", true));
+-        addSkills(loadSkillsFromDirInternal(resolve(resolvedCwd, CONFIG_DIR_NAME, "skills"), "project", true));
++        addSkills(loadSkillsFromDirInternal(resolve(resolvedCwd, projectConfigDir, "skills"), "project", true));
+     }
+     const userSkillsDir = join(resolvedAgentDir, "skills");
+-    const projectSkillsDir = resolve(resolvedCwd, CONFIG_DIR_NAME, "skills");
++    const projectSkillsDir = resolve(resolvedCwd, projectConfigDir, "skills");
+     const getSource = (resolvedPath) => {
+         if (!includeDefaults) {
+             if (isPathWithin(userSkillsDir, resolvedPath))
+diff --git a/dist/core/skills.d.ts b/dist/core/skills.d.ts
+--- a/dist/core/skills.d.ts
++++ b/dist/core/skills.d.ts
+@@ -59,5 +59,5 @@ export interface LoadSkillsOptions {
+  * Load skills from all configured locations.
+  * Returns skills and any validation diagnostics.
+  */
+-export declare function loadSkills(options: LoadSkillsOptions): LoadSkillsResult;
++export declare function loadSkills(options: LoadSkillsOptions, projectConfigDir?: string): LoadSkillsResult;
+ //# sourceMappingURL=skills.d.ts.map
+\ No newline at end of file
+diff --git a/dist/core/prompt-templates.js b/dist/core/prompt-templates.js
+--- a/dist/core/prompt-templates.js
++++ b/dist/core/prompt-templates.js
+@@ -174,7 +174,7 @@ function loadTemplatesFromDir(dir, getSourceInfo) {
+  * 2. Project: cwd/{CONFIG_DIR_NAME}/prompts/
+  * 3. Explicit prompt paths
+  */
+-export function loadPromptTemplates(options) {
++export function loadPromptTemplates(options, projectConfigDir = CONFIG_DIR_NAME) {
+     const resolvedCwd = resolvePath(options.cwd);
+     const resolvedAgentDir = resolvePath(options.agentDir);
+     const promptPaths = options.promptPaths;
+@@ -186,7 +186,7 @@ export function loadPromptTemplates(options) {
+         diagnostics.push(...result.diagnostics);
+     };
+     const globalPromptsDir = join(resolvedAgentDir, "prompts");
+-    const projectPromptsDir = resolve(resolvedCwd, CONFIG_DIR_NAME, "prompts");
++    const projectPromptsDir = resolve(resolvedCwd, projectConfigDir, "prompts");
+     const isUnderPath = (target, root) => {
+         const normalizedRoot = resolve(root);
+         if (target === normalizedRoot) {
+diff --git a/dist/core/prompt-templates.d.ts b/dist/core/prompt-templates.d.ts
+--- a/dist/core/prompt-templates.d.ts
++++ b/dist/core/prompt-templates.d.ts
+@@ -50,7 +50,7 @@ export interface LoadPromptTemplatesResult {
+  * 2. Project: cwd/{CONFIG_DIR_NAME}/prompts/
+  * 3. Explicit prompt paths
+  */
+-export declare function loadPromptTemplates(options: LoadPromptTemplatesOptions): LoadPromptTemplatesResult;
++export declare function loadPromptTemplates(options: LoadPromptTemplatesOptions, projectConfigDir?: string): LoadPromptTemplatesResult;
+ /**
+  * Expand a prompt template if it matches a template name.
+  * Returns the expanded content or the original text if not a template.
 diff --git a/dist/utils/image-convert.js b/dist/utils/image-convert.js
 --- a/dist/utils/image-convert.js
 +++ b/dist/utils/image-convert.js

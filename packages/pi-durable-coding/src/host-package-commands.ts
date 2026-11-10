@@ -1,7 +1,7 @@
 /** Explicit native package operations share host settings and project trust. */
 import type { ExtensionFactory } from '@earendil-works/pi-coding-agent';
 import { DefaultPackageManager, type SettingsManager } from '@earendil-works/pi-coding-agent';
-import { parseCommandArgs } from './pi/core/prompt-templates.ts';
+import { parseCommandArgs } from '@earendil-works/pi-coding-agent';
 
 const usage = '/packages list|install|remove|update [--local] [source]';
 

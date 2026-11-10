@@ -140,8 +140,8 @@ export type {
 	SlashCommandSource,
 	ToolDefinition,
 } from "./extensions/index.ts";
-export type { PromptTemplate } from "./prompt-templates.ts";
-export type { Skill } from "./skills.ts";
+export type { PromptTemplate } from "../../native-prompt-templates.ts";
+export type { Skill } from "../../native-skills.ts";
 export type { Tool } from "./tools/index.ts";
 
 export {

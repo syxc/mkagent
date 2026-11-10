@@ -975,8 +975,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "4a3dcdc9bdff5e6383a638ba0026488ce307baa7a0819c299233eb57561cbbf8",
-      "reason": "Remove only the two workspace direct pi-codemode dependencies; official Coding and durable transitive dependencies remain."
+      "sha256": "e0dbde0d746c48e3a7ac2f20f2f52d2a5bbf0217a393278f45a71b1c20a7d9f1",
+      "reason": "Remove the unused direct ignore dependency after SDK skill discovery replaces the last local consumer; keep SDK and all other transitive resolutions unchanged."
     },
     "package.json": {
       "sha256": "868c3042d38e0ec2084d6bc0926a4966c4ec2c5ad02c2f43e0e371c05f01bfed",
@@ -3705,12 +3705,12 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "e26ef7b5486ccff5f0cd7d873c670fdb49312b5dca1f13c9a72aa5839feca0ae",
-      "reason": "Remove two unused compatibility forwards after resource provenance and timing callers use the SDK."
+      "sha256": "d8b3e9cdf3bcd1911013696d5a743284abb824a713c0096c253abb8b7a9b330e",
+      "reason": "Point legacy skill and prompt entries at shared host defaults over SDK discovery."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "ef0b5ec10359607838d89f0c495102e6d58a4a6b4cc408fc5570f2885c0d6bf6",
-      "reason": "Prefer the durable codemode dependency and remove the redundant direct pi-codemode dependency."
+      "sha256": "2e7fa6f2315b791e85edc372a3f6625f1e9ab2ee9231fc65d2d942efd80ef61e",
+      "reason": "Remove the unused direct ignore dependency after SDK skill discovery replaces the last local consumer; keep SDK and all other transitive resolutions unchanged."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -3721,8 +3721,8 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "f41dc59826f99bdb097738447254485224195f9506699afb7131f84df391ffeb",
-      "reason": "Retire source-info and timing forwards after all repository consumers use the published SDK."
+      "sha256": "ae3b49bb38653e46e41dc5d5a8430ad01849ce90963cd83a9b0cd20c86a2d0d8",
+      "reason": "Generate legacy resource forwards against host directory adapters while preserving explicit agent directories."
     },
     "packages/pi-durable-coding/src/compat.ts": {
       "sha256": "037e8dc7ec087684bdca14748aff4f9b902158aee2ac1a8db2e3ad61f8d9d38f",
@@ -3773,8 +3773,8 @@
       "reason": "Resolve installed package resources offline and require explicit installation."
     },
     "packages/pi-durable-coding/src/resources.test.ts": {
-      "sha256": "01ed7563146218c1dd0895a24ad65a46388c58c53f6a96d477a758b30d8edf6d",
-      "reason": "Verify native resources and require an explicit host directory before skill discovery."
+      "sha256": "4abea44f2c3560a3c2eb405c1d83d0aa8db502c60256e30d67acc5f655347a46",
+      "reason": "Verify Native and SDK directory overrides, legacy .pi discovery and provenance, plus inherited and non-enumerable Native skill options."
     },
     "packages/pi-durable-coding/src/resources.ts": {
       "sha256": "4c0e9b8b2cf2c63987630ee4d0dbc7ad29690d2b62bb9e4d0b76f0ca996d6df0",
@@ -3821,8 +3821,8 @@
       "reason": "Forward the legacy entry point to its authored shared host policy; retain pinned provenance in UPSTREAM.json and the canonical runtime manifest."
     },
     "packages/pi-durable-coding/src/upstream/core/prompt-templates.ts": {
-      "sha256": "e709b153af914e4ec1badf8a55180f6ce1ae2ad0b513d503df068916cc6d1042",
-      "reason": "Forward legacy helper imports to the canonical native Pi implementation without another source copy."
+      "sha256": "c61425f5af958b42e38e3d9e54850b1a7d1c3eec6cb027d99ae2db69c67a3832",
+      "reason": "Preserve legacy .pi discovery through the SDK-backed Native prompt binding."
     },
     "packages/pi-durable-coding/src/upstream/core/resolve-config-value.ts": {
       "sha256": "ddfa00cd4eb6c7100312c923417908fc435db6641242e206d137f79f3826401d",
@@ -3841,8 +3841,8 @@
       "reason": "Forward the legacy entry point to its authored shared host policy; retain pinned provenance in UPSTREAM.json and the canonical runtime manifest."
     },
     "packages/pi-durable-coding/src/upstream/core/skills.ts": {
-      "sha256": "7f4a230f1bf95dde720e329a125f948743d2307134bff3b09e6814436a76911e",
-      "reason": "Share native skill parsing while preserving the explicit host directory boundary."
+      "sha256": "c4de11037e8468058ec632102ec5a029cdc34c1b64a43632ba1fd9a9e3f5e569",
+      "reason": "Preserve legacy .pi discovery and required host agent directories through the SDK-backed Native skill binding."
     },
     "packages/pi-durable-coding/src/upstream/core/system-prompt.ts": {
       "sha256": "4355e82ee9d299b8abb6ca811691ef8625527c3b61e6c12dd0bc7a3951ffeb84",
@@ -3973,16 +3973,12 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "21095d499f2d5cbc73b70adcdd4ab7069966f985ccef4e6ec341408a7da6c209",
-      "reason": "Remove three SDK-covered helper implementations and record generated callers using the public Coding SDK."
+      "sha256": "a45a9a94d074e3d4c2bd7efd74c3a88fa4b050a627fb6c926194ddeae5d28035",
+      "reason": "Retire complete skill and prompt modules and record generated callers using thin host directory bindings."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
       "reason": "Retire image worker and Photon source conversions after SDK factories replace the local image runtime; retain active bundled asset policy."
-    },
-    "packages/pi-durable-coding/scripts/resource-loader-port.ts": {
-      "sha256": "2eb19fecb916ecaa161b0eaff747fdb51a8c45ed3b5b7c9da935d22b9ba5a5b2",
-      "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/scripts/session-runtime-port.ts": {
       "sha256": "c45e4a24bea7eee5386b1854de35ef38e33b18637d13b29215322afd9b1176a4",
@@ -3993,8 +3989,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "17c9b10ce7e0889205430da03bbfb07ac8ad3f889ae867b6411c843bb4c30e7b",
-      "reason": "Remove local image processing and worker roots so complete regeneration cannot restore SDK-covered image copies."
+      "sha256": "06f881e290eda175b7494102a6433b2c0ae5c3cc7645ab928432b9419685270b",
+      "reason": "Remove the obsolete source-port hook after resource discovery is supplied by the public SDK."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4196,33 +4192,25 @@
       "sha256": "ee80193f720d742d5ebcb7d2d2e67e7e7200b3d2df3876ed650f335c41341388",
       "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
     },
-    "packages/pi-durable-coding/src/pi/core/prompt-templates.ts": {
-      "sha256": "a0e70da69655315b804712d81cc5b14ba67f5f95daa4b80e138abaab8013eb3a",
-      "reason": "Use SDK synthetic provenance helpers while retaining existing host prompt discovery policy."
-    },
     "packages/pi-durable-coding/src/pi/core/resolve-config-value.ts": {
       "sha256": "0f53dad47fe5d5d8837c022b7951ccd3bd5a9b577bd662f0986272110e83bcc7",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/resolve-config-value.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/core/sdk.ts": {
-      "sha256": "9bb2c901fa3adc3683fff8e64b98d4579ad268f97290ee916553221323495fbb",
-      "reason": "Use the SDK timing namespace during Native session construction."
+      "sha256": "ba2e31488f2aa77b2000db7e5cbb45ad95654b6489d75d3f713929bdcf935517",
+      "reason": "Use resource types from shared host bindings after deleting the complete local implementations."
     },
     "packages/pi-durable-coding/src/pi/core/session-cwd.ts": {
       "sha256": "581c849ce1ccb50da0ee9eabb3c34b80aed757aafcb79784349229e50df4d727",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/session-cwd.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/skills.ts": {
-      "sha256": "c72d25d7c0b808426c147e8d930ff4cff14f5259af715ed21480fa72c1e87843",
-      "reason": "Use SDK resource identity and provenance helpers while retaining host skill discovery policy."
     },
     "packages/pi-durable-coding/src/pi/core/slash-commands.ts": {
       "sha256": "a159df3116b74741ae905a08edbe968ff10bf74fa2db4c532229a2b684277c60",
       "reason": "Reuse public SDK source metadata types for slash commands."
     },
     "packages/pi-durable-coding/src/pi/core/system-prompt.ts": {
-      "sha256": "eef891d637974d09a6611d33e52d66d5f2a93d6e9512259ba45f593c42143617",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/system-prompt.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "eccb797b20b395fb10ff904fe2358b5b5cae57a9c0f1a926802cfeac424de9b7",
+      "reason": "Use the SDK skill prompt formatter through the shared Native binding."
     },
     "packages/pi-durable-coding/src/pi/core/telemetry.ts": {
       "sha256": "1bf9b43ef8744c9220624abfb3bebf0ff652a5a3d6a14d776690abc918beacf6",
@@ -4293,8 +4281,8 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "cc953d77f38ff655e5cab47c919f82490d37892751b93885d39d9e852b870776",
-      "reason": "Preserve the Native synthetic source-info export through the SDK implementation."
+      "sha256": "2dca698256f394f64e8b0c6d62a7fb60f01fbe3d16584fe21d238dc2e0be30b3",
+      "reason": "Keep public Native skill exports through SDK discovery with Native directory defaults."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4529,8 +4517,8 @@
       "reason": "Provide a deterministic loopback MCP server that records authorization outcomes without retaining fixture token values."
     },
     "packages/pi-durable-coding/src/host-package-commands.ts": {
-      "sha256": "12cba9eabfd01462f0a22d4a48694d5c77e842d604f863a27d3bf720fb26cefa",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
+      "sha256": "cf0014df81548fadd66a03c1bcfb7b0caeed642b8286f63461015ad5689a1450",
+      "reason": "Use the SDK command argument parser directly without a local algorithm."
     },
     "packages/pi-durable-coding/test/fixtures/host-package-runner.ts": {
       "sha256": "95ad71bee344118cbb55dcf39c1f4be6d02dda65ff8aaa0356a0077d66ac16a2",
@@ -4649,24 +4637,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "9b825133aa84b8d94bb3249043190278ddc58c3c281569971512751fa3928b74",
-      "reason": "Stop runtime source traversal at published usage, provenance and timing helper modules."
+      "sha256": "82853dcc11be9f924489f2c378802d63dfef77e14362d7534c1c67f644671748",
+      "reason": "Stop traversal at skill and prompt modules and route Native callers through explicit directory defaults."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
       "sha256": "b72b39fb21566d9402a3f29446d227d90a0714bdd7f9a1105d97b63b764fc850",
       "reason": "Verify SDK identities and generated boundaries, including codemode index and MCP factory imports."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "a9bad42b5ceb7f9531ff2f54b3e27977571ed73865ae7b704d0a0db581b7aa30",
-      "reason": "Track existing SDK root exports for usage totals, resource provenance and timing helpers without changes to their algorithms."
+      "sha256": "0084435483cee4ea3d958714b906a33df7aedcc6a51265523715b037cf0fc9b7",
+      "reason": "Track optional project directories on the SDK skill and prompt loaders and root exports for their existing algorithms and types."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "aaf42656d0b5fbc2b1ecc3d019dddfea22707ce73321f514ef579c1655a0545f",
-      "reason": "Expose existing SDK usage, provenance and timing functions and declarations from the public root without modifying their implementations."
+      "sha256": "1048f19864c5da9fb0470b4f477c41f9cf98b428de71266ba10cef9015b9b9c2",
+      "reason": "Add only optional project directory parameters to published skill and prompt discovery and export existing module APIs."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "75c07aedaf39bc8860da892b7843927421e022546affd68890798f4bc5d4bbdb",
-      "reason": "Add root exports for existing usage, provenance and timing APIs; all helper JS and declarations remain pristine."
+      "sha256": "23df5abdfe603724dc22df77e2a75f67ea6f3bb0606d25a16ee2d9c1ac43b003",
+      "reason": "Expose existing skill and prompt APIs and add only optional project directory arguments; retain SDK parsing, discovery, diagnostics, ignore and provenance algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4831,6 +4819,14 @@
     "packages/pi-durable-coding/test/host-image-process-sdk.test.ts": {
       "sha256": "c422e32f362ee25673f71db97686068fb939e93806610b25f342108e58f6fe9d",
       "reason": "Verify SDK MIME handling, conversion and resize hints, omission and error contracts, instance isolation, worker injection and fallback."
+    },
+    "packages/pi-durable-coding/src/native-skills.ts": {
+      "sha256": "ad66dcdfb82f3f3a9aeb3a83737d7e9c3321dc28f3fde6ea125b98c1c73717b9",
+      "reason": "Bind SDK discovery to Native project and agent defaults while preserving inherited and non-enumerable required option fields; keep all skill algorithms in the SDK."
+    },
+    "packages/pi-durable-coding/src/native-prompt-templates.ts": {
+      "sha256": "e9501bc9dfe3321632010f6299c12736d51f84999bf7a3072266ae5f74d3b505",
+      "reason": "Bind public SDK prompt discovery to the Native installation project directory; reuse the published parsers, expansion and provenance algorithms."
     }
   },
   "deleted": {

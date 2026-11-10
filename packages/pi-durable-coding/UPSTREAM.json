@@ -102,7 +102,7 @@
     },
     {
       "target": "src/upstream/core/skills.ts",
-      "implementation": "src/pi/core/skills.ts",
+      "implementation": "src/native-skills.ts",
       "changes": [
         "explicit-host-agent-directory",
         "explicit-host-project-resource-directory"
@@ -110,7 +110,7 @@
     },
     {
       "target": "src/upstream/core/prompt-templates.ts",
-      "implementation": "src/pi/core/prompt-templates.ts",
+      "implementation": "src/native-prompt-templates.ts",
       "changes": [
         "explicit-host-project-resource-directory"
       ]

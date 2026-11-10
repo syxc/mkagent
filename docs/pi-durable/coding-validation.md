@@ -26,6 +26,103 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK skill and prompt discovery after c6227a6
+
+The public Coding SDK now supplies skills and prompt-template discovery,
+validation, diagnostics, source metadata, argument parsing and expansion.
+The two complete local modules and their old directory conversion script are
+deleted: three files and 849 lines. Two Native bindings total 19 lines. They
+retain the Native installation directory and skills agentDir default. Legacy
+skills still require agentDir before scanning; both legacy loaders use `.pi`.
+The direct ignore dependency and its workspace lock declaration are removed.
+The SDK's own ignore dependency and other transitive resolutions remain.
+
+Durable does not expose these Coding discovery contracts. The Coding patch
+adds an optional projectConfigDir to two load functions, replaces three directory
+expressions and exports existing modules at the root. Default SDK calls still
+use its own CONFIG_DIR_NAME. All other JS and declaration content in the four
+module outputs matches pristine SDK 1.5.0 after reversing these parameter
+changes. No discovery or expansion algorithm moves into a local patch template.
+Equivalent upstream parameters and root exports will let this patch retire.
+No task, checkpoint, document or codemode module version changes.
+
+Full generation now has 69 runtime TypeScript files: 65 under src/pi and four
+facades, with no assets. Auxiliary sources remain nine and shared entries 16.
+Coding has 58 physical patch outputs, core four and durable 33, for 95 total.
+The four additional outputs are the skills and prompt-templates JS/declarations;
+root outputs are shared. Full runtime, auxiliary and patch checks pass. A
+pristine replay verifies all original and resulting Coding hashes. Both existing
+layouts pass frozen installation with scripts disabled, including a second
+necessary installation after removing the direct dependency. All 58 Coding and
+33 durable outputs match in both layouts. Lock changes are limited to the
+workspace's direct ignore declaration, as checked against HEAD.
+
+Checks use Bun 1.3.14 and task-owned HOME/config/cache. No live credentials,
+provider requests or product data are used. Declarations go to task directories.
+
+| Check | Result and scope |
+|---|---|
+| SDK differential probe | 41 assertions pass: four original module outputs, root/internal and binding identities, ten default differential cases, alternate directory, user/project scope and expansion |
+| Root initial tests | 26 pass, seven fail; 133 assertion calls across five files. All 13 resource tests pass. Environment failures and the separate reruns are preserved below |
+| Package-command rerun | Ten tests and 59 assertions pass in an isolated process with fake npm/git and task-owned random local ports |
+| RPC rerun | Four tests pass in a separate process after the timed-out package tests no longer affect its spawn mock |
+| Hoisted resource/plugin tests | 38 tests and 257 assertions pass across six files, including repeated resource tests, trust/reload, no implicit HOME skills, SDK loader, codemode and the type consumer |
+| Coding types and declarations | Root typecheck and actual declaration builds in both layouts pass |
+| Hoisted server | Typecheck and build pass |
+| Hoisted worker bundle | 26 tests and 105 assertions pass |
+
+The 12-stage runner records 11 successful stages and one failed root-test stage.
+PI_OFFLINE=1 skips updateConfiguredSources, so the fake npm update does not run.
+The blanket fetch guard also blocks the fixture's random-port heartbeat. Two
+update cases time out; their unfinished spawn mock then affects three RPC cases.
+The original receipt remains failed. A separate rerun uses PI_OFFLINE=0 and a
+fetch guard that permits HTTP to 127.0.0.1 on nonprivileged ports except 9100,
+rejects redirects and blocks external fetch and WebSocket. Package and RPC
+files run in separate processes. All 14 tests pass without repository code,
+test, dependency or lock changes. Completed generation, probes, declarations
+and bundle stages are not repeated.
+
+The source registry updates 17 hashes, removes three entries and adds the two
+bindings. The fixed Craft v0.15.6 audit passes over 2079 files: 1455 share paths,
+873 are normalized-identical, 582 are modified Craft-derived, 624 are MkAgent-only
+and 858 are reviewed Craft-only deletions. These results verify source records;
+they do not establish the necessity of the remaining 65 src/pi files.
+
+The parent then reproduced a new Native binding defect: spreading the options
+object drops inherited or non-enumerable required fields, while the SDK accepts
+them. The binding now reads and forwards the four public fields directly. The
+existing alternate-directory fixture covers inherited and non-enumerable options.
+Both layouts pass all 13 resource tests, 41 assertions each, after the fix; the
+root typecheck also passes. These repeated resource cases are fix and layout
+coverage. Public signatures, generated outputs, dependencies and SDK patches
+are unchanged. The two source hashes are refreshed and the fixed Craft audit
+passes again over the same 2079 files.
+
+The independent read-only review found no reproducible new correctness defect.
+Its 59 offline behavior and implementation checks pass. Resource and published
+SDK boundary tests pass: 15 tests and 92 assertions. Nine API type-equivalence
+assertions pass in an isolated consumer; Native config imports use their actual
+declarations to isolate that type boundary. Both vendor checks, 19 current
+source hashes and diff checks pass. The review compares normalized algorithms
+and verifies independent Native and SDK directory defaults, explicit overrides,
+legacy agentDir rejection and shared helper identities.
+
+The review includes the direct ignore dependency and workspace lock removal.
+Its reported stale current counts and lock description are corrected in the six
+documents; versioned historical counts remain. The review finished before the
+parent's later options fix, which has the separate regression evidence above.
+ToolHtmlRenderer TS2308 remains when the two new root exports are removed. The
+review's initial TS2846 came from a probe import of a declaration file; changing
+it to import type lets the nine assertions pass. The review did not repeat
+installation, full builds, broad suites, live services or platform checks.
+
+F0 through F6 remain open. Remaining source, dynamic tools, codemode adapters,
+SDK default-session shell policy and the existing custom AuthContext gap still
+need their bounded checks. The existing ToolHtmlRenderer declaration ambiguity
+and Photon release gap after a thrown orientation callback remain open.
+Full-repository tests, real product UI, live accounts or providers, Windows and
+Linux are not checked here.
+
 ## Public SDK usage, source and timing helpers after 8b00984
 
 The Coding SDK now supplies usage-totals, source-info and timings through its

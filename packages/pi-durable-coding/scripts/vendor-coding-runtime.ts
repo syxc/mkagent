@@ -5,7 +5,6 @@ import { isBuiltin } from 'node:module';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
-import { portResourceLoader } from './resource-loader-port.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets } from './asset-runtime-port.ts';
 import { portCacheWarmer, portNativeMessages, portSDK, portSessionServices } from './session-runtime-port.ts';
@@ -174,10 +173,6 @@ while (queue.length) {
   };
   visit(parsed);
   for (const edit of replacements.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.body + body.slice(edit.end);
-  if (path === 'core/skills.ts' || path === 'core/prompt-templates.ts') {
-    body = portResourceLoader(path, body);
-    changes.add('explicit-host-project-resource-directory');
-  }
   if (path === 'core/messages.ts') {
     body = portNativeMessages(body);
     changes.add('exclude-host-correlation-from-model-context');
