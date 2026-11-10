@@ -16,6 +16,7 @@ import { codingCodemodePolicy } from './coding-codemode-policy.ts';
 import { codingUIPolicy } from './coding-ui-policy.ts';
 import { codingImagePolicy } from './coding-image-policy.ts';
 import { codingImageProcessingPolicy } from './coding-image-processing-policy.ts';
+import { codingCachePolicy } from './coding-cache-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -43,6 +44,7 @@ for (const suffix of ['js', 'd.ts']) {
   const extension = suffix === 'js' ? 'js' : 'ts';
   const exports = [
     `export * from "./core/agent-session.${extension}";`,
+    `export { CacheWarmer } from "./core/cache-warmer.${extension}";`,
     `export * from "./core/settings-manager.${extension}";`,
     `export { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";`,
     `export * from "./core/package-manager.${extension}";`,
@@ -189,6 +191,8 @@ outputs.set(typesPath, replace(readFileSync(join(baseline, typesPath), 'utf8'),
   'export type SettingsScope =',
   'export declare function deepMergeSettings(base: Settings, overrides: Settings): Settings;\nexport type SettingsScope ='));
 for (const suffix of ['js', 'd.ts']) {
+  const cachePath = `dist/core/cache-warmer.${suffix}`;
+  outputs.set(cachePath, codingCachePolicy(readFileSync(join(baseline, cachePath), 'utf8'), suffix === 'd.ts'));
   const path = `dist/core/package-manager.${suffix}`;
   outputs.set(path, codingPackagePolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
   const sessionPath = `dist/core/session-manager.${suffix}`;

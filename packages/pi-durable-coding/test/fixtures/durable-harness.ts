@@ -11,6 +11,9 @@ import { Harness, createRegistry, type HarnessSettings, type Report } from '@ear
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 
+// Resolve the public Coding SDK from the workspace that owns the dependency.
+export { CacheWarmer, SessionManager } from '@earendil-works/pi-coding-agent';
+
 export function response(text: string, stopReason: AssistantMessage['stopReason'] = 'stop'): AssistantMessage {
   return {
     role: 'assistant', content: [{ type: 'text', text }], stopReason,

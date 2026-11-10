@@ -7,7 +7,7 @@ import ts from 'typescript';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
 import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets } from './asset-runtime-port.ts';
-import { portCacheWarmer, portNativeMessages, portSDK, portSessionServices } from './session-runtime-port.ts';
+import { portNativeMessages, portSDK, portSessionServices } from './session-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludeRunModeEntries } from './shared-helper-port.ts';
 
@@ -186,10 +186,6 @@ while (queue.length) {
   if (path === 'core/sdk.ts') {
     body = portSDK(body);
     changes.add('durable-sdk-host-bindings');
-  }
-  if (path === 'core/cache-warmer.ts') {
-    body = portCacheWarmer(body);
-    changes.add('host-background-action-and-usage-receipt');
   }
   if (path === 'core/agent-session-services.ts') {
     body = portSessionServices(body);

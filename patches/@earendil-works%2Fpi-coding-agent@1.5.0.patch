@@ -1,12 +1,13 @@
-# Content SHA-256: 277d92595c83289a41f17a93a94e330278161e5dcad2b45c0346935933f9d550
+# Content SHA-256: 118a0e009fa25448d44f98141a429119a7d694d5a4f2fbab78851b4b42c5e7d4
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,51 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,52 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
 +export * from "./core/agent-session.js";
++export { CacheWarmer } from "./core/cache-warmer.js";
 +export * from "./core/settings-manager.js";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.js";
 +export * from "./core/package-manager.js";
@@ -67,11 +68,12 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,53 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,54 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
 +export * from "./core/agent-session.ts";
++export { CacheWarmer } from "./core/cache-warmer.ts";
 +export * from "./core/settings-manager.ts";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.ts";
 +export * from "./core/package-manager.ts";
@@ -811,6 +813,91 @@ diff --git a/dist/core/settings-manager.d.ts b/dist/core/settings-manager.d.ts
  export type SettingsScope = "global" | "project";
  export interface SettingsManagerCreateOptions {
      projectTrusted?: boolean;
+diff --git a/dist/core/cache-warmer.js b/dist/core/cache-warmer.js
+--- a/dist/core/cache-warmer.js
++++ b/dist/core/cache-warmer.js
+@@ -77,14 +77,16 @@ export class CacheWarmer {
+     models;
+     sessionManager;
+     getMode;
++    runAction;
+     /** Lets extensions override `event.action`; failures fall back to pi's decision. */
+     decide;
+     /** Called with the persisted usage entry after each successful refresh. */
+     onWarmed;
+-    constructor(models, sessionManager, getMode, decide = async (event) => event.action) {
++    constructor(models, sessionManager, getMode, decide = async (event) => event.action, runAction) {
+         this.models = models;
+         this.sessionManager = sessionManager;
+         this.getMode = getMode;
++        this.runAction = runAction;
+         this.decide = decide;
+         this.inactive = { state: "inactive", reason: "waiting for first request" };
+     }
+@@ -201,6 +203,23 @@ export class CacheWarmer {
+         run.timer.unref?.();
+     }
+     async refresh(run) {
++        let entry;
++        if (this.runAction) {
++            try {
++                entry = await this.runAction(() => this.refreshInAction(run));
++            }
++            catch {
++                if (this.run === run) this.stop("cache usage persistence failed");
++                return;
++            }
++        }
++        else {
++            entry = await this.refreshInAction(run);
++        }
++        try { if (entry) this.onWarmed?.(entry); } catch { /* Observers do not own warming. */ }
++        if (this.run === run) this.schedule(run);
++    }
++    async refreshInAction(run) {
+         run.timer = undefined;
+         if (!this.validateRun(run))
+             return;
+@@ -234,8 +253,9 @@ export class CacheWarmer {
+             return;
+         }
+         run.extensionOverride = extensionOverride;
++        let message;
+         try {
+-            const message = await this.models
++            message = await this.models
+                 .streamSimple(run.model, run.context, {
+                 ...run.options,
+                 maxTokens: 1,
+@@ -243,18 +263,19 @@ export class CacheWarmer {
+                 signal: run.controller.signal,
+             })
+                 .result();
+-            if (!this.validateRun(run))
+-                return;
+-            if (message.stopReason !== "error" && message.stopReason !== "aborted") {
+-                const entry = this.sessionManager.appendUsage("cache_warm", message.provider, message.responseModel ?? message.model, message.usage, extensionOverride ? "extension override" : undefined);
+-                this.onWarmed?.(entry);
+-            }
+         }
+         catch {
+-            // Cache warming is best-effort and must not affect the active agent run.
++            // Network failures remain best-effort inside or outside a host action.
++            return;
++        }
++        if (!this.validateRun(run) || message.stopReason === "error" || message.stopReason === "aborted") return;
++        try {
++            return this.sessionManager.appendUsage("cache_warm", message.provider, message.responseModel ?? message.model, message.usage, extensionOverride ? "extension override" : undefined);
++        }
++        catch (error) {
++            // A host must see persistence errors; the default SDK path stays best-effort.
++            if (this.runAction) throw error;
+         }
+-        if (this.run === run)
+-            this.schedule(run);
+     }
+     refreshDeadlineMissed(run) {
+         if (Date.now() <= run.refreshDeadlineAt)
 diff --git a/dist/core/package-manager.js b/dist/core/package-manager.js
 --- a/dist/core/package-manager.js
 +++ b/dist/core/package-manager.js
@@ -2270,6 +2357,31 @@ diff --git a/dist/core/tools/tool-definition-wrapper.js b/dist/core/tools/tool-d
  }
  //# sourceMappingURL=tool-definition-wrapper.js.map
 \ No newline at end of file
+diff --git a/dist/core/cache-warmer.d.ts b/dist/core/cache-warmer.d.ts
+--- a/dist/core/cache-warmer.d.ts
++++ b/dist/core/cache-warmer.d.ts
+@@ -75,11 +75,12 @@ export declare class CacheWarmer {
+     private readonly models;
+     private readonly sessionManager;
+     private readonly getMode;
++    private readonly runAction;
+     /** Lets extensions override `event.action`; failures fall back to pi's decision. */
+     private readonly decide;
+     /** Called with the persisted usage entry after each successful refresh. */
+     onWarmed?: (entry: UsageEntry) => void;
+-    constructor(models: Pick<ModelRuntime, "streamSimple">, sessionManager: Pick<SessionManager, "appendUsage" | "getBranch">, getMode: () => CacheWarmingMode, decide?: (event: CacheWarmingDecisionEvent) => Promise<CacheWarmingAction>);
++    constructor(models: Pick<ModelRuntime, "streamSimple">, sessionManager: Pick<SessionManager, "appendUsage" | "getBranch">, getMode: () => CacheWarmingMode, decide?: (event: CacheWarmingDecisionEvent) => Promise<CacheWarmingAction>, runAction?: <T>(work: () => Promise<T>) => Promise<T>);
+     get status(): CacheWarmingStatus;
+     /** Keep the prompt cache entry written by `request` warm while `isCurrent` holds. */
+     start(request: CacheWarmRequest, isCurrent: () => boolean): void;
+@@ -91,6 +92,7 @@ export declare class CacheWarmer {
+     private stop;
+     private schedule;
+     private refresh;
++    private refreshInAction;
+     private refreshDeadlineMissed;
+     private validateRun;
+     private getModeStopReason;
 diff --git a/dist/core/package-manager.d.ts b/dist/core/package-manager.d.ts
 --- a/dist/core/package-manager.d.ts
 +++ b/dist/core/package-manager.d.ts

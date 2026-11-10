@@ -24,7 +24,7 @@ export {
 	type SessionStats,
 } from "../native-agent-session.ts";
 export { readStoredCredential } from "./core/auth-storage.ts";
-export type { CacheWarmingDecision, CacheWarmingStatus } from "./core/cache-warmer.ts";
+export type { CacheWarmingDecision, CacheWarmingStatus } from "@earendil-works/pi-coding-agent";
 // Compaction
 export {
 	type BranchPreparation,

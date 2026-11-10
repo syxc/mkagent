@@ -26,6 +26,72 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK cache warming after a1b3712
+
+The complete local cache-warmer module is removed: 465 production lines.
+The old source transform is removed. No runtime wrapper is added. The SDK
+keeps cache economics, TTL checks, scheduling and extension decisions. The
+patch exports the existing class and adds one optional instance action hook.
+The Native caller keeps its prior passthrough when no host action is supplied.
+
+A host action owns the fresh journal phase and usage commit. Notification and
+rescheduling occur after the action completes. A persistence failure stops the
+current run; network failures stay best-effort. Without an action hook, SDK
+network, append and observer failures remain best-effort. Existing host tests
+cover commit ordering, foreground rebase, pending receipts, failure cleanup,
+cancellation and close. Three added cases cover the SDK default failure path.
+
+| Check | Result and scope |
+|---|---|
+| Complete generation | Runtime, auxiliary and Coding patch checks pass |
+| Replay and installations | Pristine replay and both frozen layouts pass; all 67 Coding and 33 durable hashes match |
+| Root behavior after fixes | 31 tests and 509 expect calls pass across public boundaries, durable sessions, extensions and host warming |
+| Hoisted behavior after fixes | 22 tests and 449 expect calls pass across boundaries, sessions and host warming |
+| Coding types | Root typecheck and actual declaration builds in both layouts pass |
+| Host checks after fixes | Server typecheck and build pass; 26 bundle tests with 105 expect calls pass |
+| Source audit | Fourteen hashes updated, one entry retired, one added; fixed Craft v0.15.6 audit passes for 2058 files |
+
+The first root run fails because the server test directly imports an SDK that
+only the Coding workspace declares. A test-fixture export fixes that import.
+The next root run exposes the existing kernel imports of the shared workspace,
+which the server does not declare. Adding that existing workspace dependency
+and its lock entry fixes resolution. Both frozen installs, behavior suites,
+server types, build and bundle checks pass after the declaration change.
+A preparatory script first stops at an overly broad lock anchor before any
+copy or install; the anchor is narrowed. All failed receipts are retained.
+The Coding type and declaration results are retained because the later changes
+affect only test imports and the host workspace declaration.
+
+Independent read-only review finds no confirmed new correctness or compatibility
+issue within its source checks and offline differential probes. Across both
+layouts, 73 general scenarios and five host-only scenarios produce 407 passing
+comparison assertions. The review also checks 22 unchanged functions, eight
+manifest hashes and two strict public declaration consumers. The consumers use
+skipLibCheck and do not prove all dependency declarations are valid.
+
+The probes use real CacheWarmer modules and cost calculations with in-memory
+stream, session-manager and commit adapters. They do not prove actual journal
+concurrency or rollback. Real synthetic journal and host-close results come
+from the parent suites. The review checks the fixture import change but does
+not independently execute the later host workspace declaration change. Parent
+frozen installation, host tests, typecheck, build and bundle results cover that
+change. Later source registration and document updates are outside the review
+scope; the parent checks them separately. The review does not repeat parent
+suites or test real services, UI or Windows.
+
+Runtime generation has 47 TypeScript files: 43 under src/pi and four facades,
+with no assets. Auxiliary sources remain nine and shared entries 16. Physical
+outputs are core four, Coding 67 and durable 33, for 104 total. Two cache-warmer
+outputs are added; both shared root contents change. No task, document,
+checkpoint or codemode version changes.
+
+The remaining source closure, server copies, host OAuth, default SDK session
+process policies, denied legacy entry and F0 through F6 remain open. Existing
+stream, long OSC, AuthContext, Photon and ToolHtmlRenderer limits remain. These
+checks use task-owned data and synthetic models with networking blocked.
+Real services, real credentials, product UI, Windows and full crash recovery
+are not checked.
+
 ## Public SDK model resolution after 81119cc
 
 The complete local model-resolver module is removed: 689 production lines.

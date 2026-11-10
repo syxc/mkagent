@@ -6,8 +6,7 @@ import { defineExtension, type Conversation, type Harness } from '@earendil-work
 import { createAssistantMessageEventStream } from '@earendil-works/pi-ai';
 import { NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
 import type { UsageEntry } from '@mkagent/pi-durable-coding/native';
-import { CacheWarmer } from '../../pi-durable-coding/src/pi/core/cache-warmer.ts';
-import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { CacheWarmer, durableFixture, response, SessionManager } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
 import { DurableKernel } from './kernel.ts';
 import type { CodingHost } from './coding-host.ts';
 
@@ -169,6 +168,36 @@ test('close aborts an in-flight warm request before disposing its native session
   expect(state.entries).toEqual([]);
   expect(state.errors).toEqual([]);
   await expect(state.native.journal.phase(async () => {})).rejects.toThrow('closed');
+}, 8_000);
+
+test.each(['network', 'append', 'observer'])('keeps default SDK warming best-effort after a %s failure', async failure => {
+  const state = await fixture();
+  state.native.session.cancelCacheWarming();
+  const manager = SessionManager.inMemory();
+  const requested = Promise.withResolvers<void>();
+  const warmer = new CacheWarmer({
+    streamSimple: () => {
+      requested.resolve();
+      if (failure === 'network') throw new Error('local network failure');
+      const stream = createAssistantMessageEventStream();
+      queueMicrotask(() => stream.push({ type: 'done', reason: 'stop', message: response('warm') }));
+      return stream;
+    },
+  }, {
+    getBranch: () => state.native.journal.manager.getBranch(),
+    appendUsage: (...args) => {
+      if (failure === 'append') throw new Error('local append failure');
+      return manager.appendUsage(...args);
+    },
+  }, () => 'idle');
+  warmer.onWarmed = () => { throw new Error('local observer failure'); };
+  cleanup.push(() => warmer.cancel());
+  warmer.start({ model: state.native.session.model!, context: { messages: [] }, options: {} }, () => true);
+  warmer.onAgentSettled();
+  await requested.promise;
+  await new Promise<void>(resolve => setImmediate(resolve));
+  expect(warmer.status.state).toBe('scheduled');
+  expect(manager.getEntries().filter(entry => entry.type === 'usage')).toHaveLength(failure === 'observer' ? 1 : 0);
 }, 8_000);
 
 test('an append failure escapes the network catch and stops further cache warming', async () => {

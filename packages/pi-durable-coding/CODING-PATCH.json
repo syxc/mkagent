@@ -8,12 +8,12 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "2299521c5727bbe6448ff79371b7b2f52e0728f3b8286931cbfd3179442c5c3f"
+      "sha256": "2c0210a94d6cdd7bb32154f6344f3ecdf4e818fecabd123b2cde8c8ef94368df"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "9191197b12733688fe3e61f019b3dc4b5fdae72958e1b87eca2ca104da6362c6"
+      "sha256": "0d10e37d921537e1fe6d1e84483f4a396552efd4213fdfd2d074628d6663f94f"
     },
     {
       "path": "dist/extensions/mcp/index.d.ts",
@@ -141,6 +141,11 @@
       "sha256": "2a3394e4ed8a916a0a1847b1a2e6bc5aeaad5ba54d8e8844f3ff86e228cfa2da"
     },
     {
+      "path": "dist/core/cache-warmer.js",
+      "originalSha256": "9c4b000930d6d3c567073102f6b6a52660110bb0f79cf78dd72c4dd1ebc87fc0",
+      "sha256": "db958b98e1411968b2e83c78d0e9fb06dd4ee510b8139b5a772da0ef0d83b749"
+    },
+    {
       "path": "dist/core/package-manager.js",
       "originalSha256": "09d952572969a8266fe87d9976240b3f8b4dcd268c99fa45e1e951333875172d",
       "sha256": "2de123eab2d4e05d5fab55b42fca46126eb3c4930ac63c2dfe4d021d5158635d"
@@ -179,6 +184,11 @@
       "path": "dist/core/tools/tool-definition-wrapper.js",
       "originalSha256": "02fe785c52294d14216605d40d5592ac2accd1a3125891523e2a6c87feb5810c",
       "sha256": "c8036de82f5deeadf973725d15af0888d0168798eb4ed909a4156f122906cd4c"
+    },
+    {
+      "path": "dist/core/cache-warmer.d.ts",
+      "originalSha256": "9ec1f639e8383183ff90247ba78047ff22469fc4639ce92936dd7bcf47358734",
+      "sha256": "0ee3e7a856293fadf0163d5c465d5903dcbdc9f5e979666b003f3def3ef5a40a"
     },
     {
       "path": "dist/core/package-manager.d.ts",

@@ -8,7 +8,7 @@ import { getAgentDir } from "../config.ts";
 import { resolvePath } from "../utils/paths.ts";
 import { AgentSession, markRuntimeStreamFunction, type AgentSessionConfig } from "../../native-agent-session.ts";
 import { formatNoModelsAvailableMessage } from "./auth-guidance.ts";
-import { CacheWarmer } from "./cache-warmer.ts";
+import { CacheWarmer } from "@earendil-works/pi-coding-agent";
 import { getClientIdentity } from "./client-identity.ts";
 import { DEFAULT_THINKING_LEVEL } from "./defaults.ts";
 import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "./extensions/index.ts";
@@ -348,7 +348,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		sessionManager,
 		() => settingsManager.getCacheWarmingMode(),
 		async (event) => extensionRunnerRef.current?.emitCacheWarmingDecision(event) ?? event.action,
-		options.onBackgroundAction,
+		options.onBackgroundAction ?? (work => work()),
 	);
 	const buildRequestOptions = (options: ModelsSimpleStreamOptions = {}): ModelsSimpleStreamOptions => {
 		const providerRetrySettings = settingsManager.getProviderRetrySettings();

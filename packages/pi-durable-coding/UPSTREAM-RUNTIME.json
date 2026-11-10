@@ -103,16 +103,6 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/core/cache-warmer.ts",
-      "target": "src/pi/core/cache-warmer.ts",
-      "sha256": "596080fbe60702a44bcd8a31aeca45a5048d24c53fb0f0b40dd8781f776a8842",
-      "portSha256": "6476803829f91e2aead921d9f27e22de45ac30797815f08a4ab1dfeefe145f4b",
-      "changes": [
-        "public-coding-sdk",
-        "host-background-action-and-usage-receipt"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/core/client-identity.ts",
       "target": "src/pi/core/client-identity.ts",
       "sha256": "8c17ba14d52fe1549c79b6ff8f7bcf3cc940d55d155d75dc4a4d7cea67e363c0",
@@ -204,7 +194,7 @@
       "source": "packages/coding-agent/src/core/sdk.ts",
       "target": "src/pi/core/sdk.ts",
       "sha256": "f0f6f2b14a61c5c3ebb31d40c97b3f73296a2f0334d582072383302d693714c8",
-      "portSha256": "389ec1f06ffb3f2b9e02a77d71d6604605ecea7d99bf54abcedd29631a2834e1",
+      "portSha256": "b50cc0cf0fadf982c86151cea052c381c87cfff13a0716825e7ed11d868f1a9b",
       "changes": [
         "durable-agent-boundary",
         "host-extension-module-import",
@@ -277,7 +267,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "0405e76b4aee67bbe02273ac037adb9dc139f03eb06e0e5fe0c39d4fdd0013a8",
+      "portSha256": "056b5452534d1a8f5d96d710e980a4bf0387deedef714df4bd8c5b09a9c9df3b",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",

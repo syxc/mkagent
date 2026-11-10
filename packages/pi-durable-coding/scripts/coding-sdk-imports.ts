@@ -5,6 +5,7 @@ export const CODING_SDK_PACKAGE = '@earendil-works/pi-coding-agent';
 
 export const CODING_SDK_MODULES = new Set([
   'core/bash-executor.ts',
+  'core/cache-warmer.ts',
   'core/compaction/index.ts',
   'core/diagnostics.ts',
   'core/event-bus.ts',
