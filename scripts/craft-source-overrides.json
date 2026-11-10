@@ -3697,8 +3697,8 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "0508e9073bcdce91f958013d28b26d605501b7c9571ba4d4a51eef7d8b522c2c",
-      "reason": "Retire the GitPaths extraction after its only local consumer exits the source closure."
+      "sha256": "fb496a28291c2640a3345576ab04528774d5d23e5d970a6e374fc903abfd89ee",
+      "reason": "Remove the two obsolete path and BOM forwarding modules."
     },
     "packages/pi-durable-coding/package.json": {
       "sha256": "03c23daf882ce3e26b17e5ff2314536972fc923d5b229d23dbe8102c501471a3",
@@ -3713,12 +3713,12 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "0fa46849609af4cd8b8aa8ecabbc1ea6e55ca3d2a769f2da56aab357af091dfe",
-      "reason": "Stop generating the unused footer GitPaths helper."
+      "sha256": "0c010b7d3d103a74e157378210fc650c29b53f8b671dc9f68dba7e81511b6116",
+      "reason": "Stop generating path and BOM forwards after all callers use the SDK."
     },
     "packages/pi-durable-coding/src/compat.ts": {
-      "sha256": "037e8dc7ec087684bdca14748aff4f9b902158aee2ac1a8db2e3ad61f8d9d38f",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
+      "sha256": "a91cfacbb8925a898ecda49deb5070501c01621d74e6334ba4e6a4072ea3e670",
+      "reason": "Preserve normalizePath and resolvePath through the patched SDK root."
     },
     "packages/pi-durable-coding/src/durable-projection.ts": {
       "sha256": "7e01de10a83aff31ca44fc550a266b6c97da6537500decf30c58d403c8d1dedb",
@@ -3769,8 +3769,8 @@
       "reason": "Verify Native installation documentation and legacy URLs remain separate in the alternate installation fixture."
     },
     "packages/pi-durable-coding/src/resources.ts": {
-      "sha256": "4c0e9b8b2cf2c63987630ee4d0dbc7ad29690d2b62bb9e4d0b76f0ca996d6df0",
-      "reason": "Use the SDK resource source-info constructor and public type without a local algorithm or forwarding file."
+      "sha256": "38cc3b2e08c0d8515ab46133463b75d2cfa7a9c8b549b6db836f8b2c164dba20",
+      "reason": "Use SDK canonicalization, containment, equality and BOM functions for resource discovery."
     },
     "packages/pi-durable-coding/src/session-view.ts": {
       "sha256": "f975b8a58655badf561eb24a76035a354213e5c27112cd904f9f608d03550b83",
@@ -3840,17 +3840,9 @@
       "sha256": "4702f46dc0bcfc56aa19c41e9ce2aa899f1dbf3133a24ecbead15b7550627266",
       "reason": "Forward legacy helper imports to the canonical native Pi implementation without another source copy."
     },
-    "packages/pi-durable-coding/src/upstream/utils/paths.ts": {
-      "sha256": "70b7f9c225d3f4a303b9dd7d51f55f83be57cf39f035f5998398fe718139cc79",
-      "reason": "Forward the legacy path utilities entry point to the shared native Pi implementation recorded in UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/upstream/utils/shell.ts": {
       "sha256": "812b78b6d02f04583f9d62baf17ca1a773356a17654ec375540ac0c9a3b00fc2",
       "reason": "Port Pi v1.5.0 packages/coding-agent/src/utils/shell.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
-    },
-    "packages/pi-durable-coding/src/upstream/utils/text.ts": {
-      "sha256": "cdc96deb22f2d19e55313fe5522705cbda7f15c677d4ece00ee2bc55b62a99f2",
-      "reason": "Forward the legacy text utilities entry point to the shared native Pi implementation recorded in UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/test/durable-boundaries.test.ts": {
       "sha256": "349eb0443c4f10a351cfa113d9a8fdbf14459cdc24d3897780fac8a1a84c567e",
@@ -3957,8 +3949,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "58a06823a8d194db76c3c7c8e5c0c0701865b5f71c901bd2206cc6b72da3c51e",
-      "reason": "Retire the complete clipboard implementation and its two private helpers from the source closure."
+      "sha256": "c3b05d8140708f2a9db4deb9690bc6612a6ec2b9e5fb15147a6300ceebcbeeac",
+      "reason": "Retire path and BOM source implementations from the runtime closure."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4077,8 +4069,8 @@
       "reason": "Provide the independent native coding host adapter and public contracts in node-process.d.ts."
     },
     "packages/pi-durable-coding/src/pi/config.ts": {
-      "sha256": "ceae99179302d8b1c6ac14197e7111ce0c866f8119483c1ef6af5808661f877d",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/config.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "ce62c0e9a0afc235ce59e18b09d6052a3c40b95c32cde1a8bd117194ebfb036f",
+      "reason": "Use the shared SDK normalization and BOM functions without another implementation."
     },
     "packages/pi-durable-coding/src/pi/core/compaction/compaction.ts": {
       "sha256": "7d6100d3769c3d5b294e172d7f7afe42c380ecf62d68917cf114c9c3213b98ef",
@@ -4117,8 +4109,8 @@
       "reason": "Forward the Native public truncation contracts to the Coding SDK."
     },
     "packages/pi-durable-coding/src/pi/core/trust-manager.ts": {
-      "sha256": "ce480f9a1689e2da996609e9708443c391f9ab0cab5bcc047aebc1613b17e2f9",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/trust-manager.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "5a8f6cfa01a22273163e405854a4e6aad65dec6e45b75dba12fc6a02c518d0fb",
+      "reason": "Use the SDK path and BOM functions while retaining current trust policy."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/worker.ts": {
       "sha256": "4542d37a9f75150b52fc393fcd757f08fb0d681d92bebee6a40171e09b4bec82",
@@ -4164,10 +4156,6 @@
       "sha256": "9776fa3b491e80b1edcc2d44925f5343a2d4a4ad214d07f5cff726d0028e6e8d",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/mime.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/utils/paths.ts": {
-      "sha256": "c8a2995b52a181e46cfae3b30f31448d201742d303249f34119ef2fd7a44e672",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/paths.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/utils/pi-user-agent.ts": {
       "sha256": "2e7a31bc3d1c48bf91afa2e46ac1f09050487dfe465d10663ab559caff31d463",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/pi-user-agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
@@ -4175,10 +4163,6 @@
     "packages/pi-durable-coding/src/pi/utils/shell.ts": {
       "sha256": "ae1fd3d6a210850e4466926ca3be1d080fde1a4b36726f78650fc15be693af36",
       "reason": "Remove the output sanitizer with no remaining local execution caller while retaining durable shell policies."
-    },
-    "packages/pi-durable-coding/src/pi/utils/text.ts": {
-      "sha256": "bb323f9607c499115b532021f4f0163c6df04d834aee9c32c3c77b273bd2d7c6",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/text.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/utils/tools-manager.ts": {
       "sha256": "2df25e7614895d6273df1a4b023f8dccd7f6ff6d0ffaa3ffb326b42938ead153",
@@ -4441,24 +4425,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "3e7b0ec8246ced919477041ec73ae1e2fcb8205068bef20fa10ea68cf6a648d5",
-      "reason": "Use the existing public SDK clipboard export instead of copying the complete implementation."
+      "sha256": "831f52331f10bf74f876163a25371d701cd5416fbf2cba824a8cebb74e6e5e5b",
+      "reason": "Stop traversal at the SDK boundary for existing path and BOM helpers."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "3c4ae7924e4456dead45f069d1d3f48fef65f58113ca7767bc6e5c61a02fabb0",
-      "reason": "Guard SDK clipboard identity at the Native entry and preserve the narrower compat exports."
+      "sha256": "ab86fb78ea8d57b9adb32592edefe1f495727adcc66b433481765ecdeb663637",
+      "reason": "Guard compat path identity and source traversal at the SDK path and BOM boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "71dc246a275bd5abea2cf22b88c1060e3cc1bd161b0884a85d745a31de60be26",
-      "reason": "Record the existing root outputs exposing SDK message helpers and types; internal message conversion remains pristine."
+      "sha256": "d83cb63eb2f520dc5313533f7ca22ac4e892a4200184c2fb8b33263de1ee70ca",
+      "reason": "Record existing path and BOM root exports; both internal JavaScript and declaration algorithms stay pristine."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "4a4647691c3582289f656c1a35e64c15cc33cbfd62efb80c21729a08b648572e",
-      "reason": "Expose existing SDK message helper and type exports at the public root without changing their implementations."
+      "sha256": "603f2bd09aa35dd1fde673486144a941dcd2632fa070cb1c0db8ea19a4a4404e",
+      "reason": "Export only the path functions, BOM function and path option type required by current callers."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "c92a84bba4ab4ac56b2c5957ff34d7784b3dab4e726bd562359a17fca7a72a0b",
-      "reason": "Add only public root exports for existing SDK message helpers and types; message implementation files remain pristine."
+      "sha256": "965f375de8c6b3f4b5ef20bb5a499a595e7f3aa3799e70c0a9a03dfe484f5b32",
+      "reason": "Add narrow existing path and BOM exports to the Coding SDK root without changing helper algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",

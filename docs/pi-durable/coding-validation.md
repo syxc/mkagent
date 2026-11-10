@@ -26,6 +26,80 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK path and BOM root exports after 49a9476
+
+SDK internal modules already contain the same path and BOM algorithms.
+A local patch adds six required functions and PathInputOptions to the SDK
+root. These root exports are local changes, not published upstream API.
+Only dist/index.js and dist/index.d.ts change. The four internal helper
+JavaScript and declaration files stay pristine. Two complete local modules
+(193 lines) and two forwarding modules (four lines) are deleted. No adapter,
+dependency, task schema or persistence version is added.
+
+| Check | Result and scope |
+|---|---|
+| Generation | Complete runtime, auxiliary and Coding patch generation and checks pass; four retired files stay absent |
+| Root behavior | Initial run has 19 passes and eight failures; retain the 19 passes and rerun only the failed shared-package suite from the Coding package directory: eight passes and 36 expect calls |
+| Hoisted behavior | All four suites pass together from the Coding package directory: 27 tests and 302 expect calls |
+| Compat declarations | Scoped transpileDeclaration passes in both layouts; emitted declarations match |
+| Resource declarations | Both baseline and current resources.ts report TS9007 under scoped isolated declaration generation; this check remains failed |
+| Install attempts | Two root frozen installs with different existing caches fail under an OS network deny rule; the hoisted install step is not started |
+| Existing SDK application | Two root output hunks pass git apply --check and apply in a temporary pristine stage; verified output bytes are applied to both existing layouts; all 72 Coding patch outputs match the manifest and four internal helper outputs stay pristine in each layout |
+| Source registration | Twelve entries updated, four retired entries removed and no entries added |
+| Restricted Craft audit | Fixed v0.15.6 audit passes for 2039 permitted files; protected source stays excluded and its registry entry is unchanged |
+| Independent review | No verified findings; 44 isolated assertions pass; 16 slice inputs, 2216 supporting inputs and 35 evidence files verified by the parent |
+
+The parent verifies all 16 slice inputs, their base hashes and deletion states,
+2216 supporting inputs and 35 evidence files before accepting the review.
+The only supporting-input drift is the source registry, updated concurrently
+by the parent. The review does not use it as source evidence. The first
+closure scan included registry path strings and hashes outside the required
+source scope; a later scan excludes registry and inventory files. This
+scope deviation is recorded and grants no broader review conclusion.
+
+The reviewer works directly without skills, delegation or semantic indexes.
+Two failed setup probes are kept: a missing repository-root SDK entry and
+an in-memory patch parser that mishandles a missing final newline. Corrected
+package-path resolution and EOF handling pass. A rejected port-header
+assumption and expected untracked declaration checks are also recorded.
+Existing generated declarations still use old helper forwards; those files
+are untracked and their signatures match. No full declaration rebuild is
+claimed. The isolated probe copies exact SDK helper bytes and uses a throwing
+child-process stub, which is not called. It does not load the full SDK root
+or compat closure; Windows cases simulate process.platform only. No real
+platform command or Windows machine is used by the review.
+
+Eight static preflights have no protected-source dependencies. The unchanged
+shared-package tests initially start eval children at the repository root,
+which has no direct Coding SDK entry. The package that declares this SDK
+has a valid entry. Running the same suite from that package directory
+resolves the SDK and passes. No root alias or production dependency is added.
+The initial failure logs are kept; the root result is a 19-test pass plus
+an eight-test supplement, not one successful 27-test run.
+
+The scoped resources.ts check reports the same TS9007 in HEAD and the new
+source: an explicit return type is required for isolated declarations.
+No production signature is changed to satisfy this probe. The compat check
+does not establish a complete type check or declaration build.
+
+Both frozen install attempts use existing caches and deny network access.
+The second cache has more entries but still lacks required metadata. No
+further install is attempted. Before the two root output hunks are applied,
+all 72 installed Coding outputs match the old manifest. Existing root output
+files are backed up outside the repository. After application, all 72 outputs
+match the new manifest in each layout. This checks existing SDK bytes and
+behavior. It does not establish a successful fresh or frozen installation.
+
+Tests use task-owned HOME and configuration with network blocked. No real
+UI, account, credentials or paid provider is used. Dependencies and lock
+bytes stay unchanged. No full type build, broad recovery suite or production
+bundle is repeated. Runtime generation has 25 TypeScript outputs: 21 under
+src/pi and four facades, with no assets. Auxiliary sources remain eight;
+forwards are 13. Physical patch outputs remain core four, Coding 72 and
+durable 33, for 109. Other source review and F0 through F6 remain open.
+Full Craft audit, fresh full types and declarations, and protected legacy
+integration keep their existing limits.
+
 ## Public SDK clipboard after 5a08629
 
 The only exported clipboard consumer was the Native root. It now reexports

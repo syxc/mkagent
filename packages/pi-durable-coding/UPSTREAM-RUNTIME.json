@@ -48,8 +48,9 @@
       "source": "packages/coding-agent/src/config.ts",
       "target": "src/pi/config.ts",
       "sha256": "b226dccdba72d5438ec6facadd4f3c5f3ff0d4fe66ee591078c486712dbe915a",
-      "portSha256": "ceae99179302d8b1c6ac14197e7111ce0c866f8119483c1ef6af5808661f877d",
+      "portSha256": "ce62c0e9a0afc235ce59e18b09d6052a3c40b95c32cde1a8bd117194ebfb036f",
       "changes": [
+        "public-coding-sdk",
         "pinned-coding-version-with-host-install-detection",
         "source-asset-location",
         "installed-native-bundle-assets"
@@ -115,8 +116,10 @@
       "source": "packages/coding-agent/src/core/trust-manager.ts",
       "target": "src/pi/core/trust-manager.ts",
       "sha256": "ce480f9a1689e2da996609e9708443c391f9ab0cab5bcc047aebc1613b17e2f9",
-      "portSha256": "ce480f9a1689e2da996609e9708443c391f9ab0cab5bcc047aebc1613b17e2f9",
-      "changes": []
+      "portSha256": "5a8f6cfa01a22273163e405854a4e6aad65dec6e45b75dba12fc6a02c518d0fb",
+      "changes": [
+        "public-coding-sdk"
+      ]
     },
     {
       "source": "packages/coding-agent/src/extensions/codemode/worker.ts",
@@ -213,13 +216,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/utils/paths.ts",
-      "target": "src/pi/utils/paths.ts",
-      "sha256": "c8a2995b52a181e46cfae3b30f31448d201742d303249f34119ef2fd7a44e672",
-      "portSha256": "c8a2995b52a181e46cfae3b30f31448d201742d303249f34119ef2fd7a44e672",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/utils/pi-user-agent.ts",
       "target": "src/pi/utils/pi-user-agent.ts",
       "sha256": "2e7a31bc3d1c48bf91afa2e46ac1f09050487dfe465d10663ab559caff31d463",
@@ -234,13 +230,6 @@
       "changes": [
         "shared-durable-shell-algorithms"
       ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/text.ts",
-      "target": "src/pi/utils/text.ts",
-      "sha256": "bb323f9607c499115b532021f4f0163c6df04d834aee9c32c3c77b273bd2d7c6",
-      "portSha256": "bb323f9607c499115b532021f4f0163c6df04d834aee9c32c3c77b273bd2d7c6",
-      "changes": []
     },
     {
       "source": "packages/coding-agent/src/utils/tools-manager.ts",

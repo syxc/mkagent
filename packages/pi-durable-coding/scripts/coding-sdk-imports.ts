@@ -49,6 +49,8 @@ export const CODING_SDK_MODULES = new Set([
   'utils/clipboard.ts',
   'utils/frontmatter.ts',
   'utils/output-files.ts',
+  'utils/paths.ts',
+  'utils/text.ts',
 ]);
 
 /** Keep host module resolution in an authored adapter, outside the generated SDK closure. */

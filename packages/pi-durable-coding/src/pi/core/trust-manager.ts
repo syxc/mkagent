@@ -3,8 +3,8 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import lockfile from "proper-lockfile";
 import { CONFIG_DIR_NAME } from "../config.ts";
-import { canonicalizePath, pathsEqual, resolvePath } from "../utils/paths.ts";
-import { stripBom } from "../utils/text.ts";
+import { canonicalizePath, pathsEqual, resolvePath } from "@earendil-works/pi-coding-agent";
+import { stripBom } from "@earendil-works/pi-coding-agent";
 
 export type ProjectTrustDecision = boolean | null;
 

@@ -4,8 +4,8 @@ import { homedir } from "os";
 import { basename, dirname, join, resolve, sep, win32 } from "path";
 import { fileURLToPath } from "url";
 import { spawnProcessSync } from "./utils/child-process.ts";
-import { normalizePath } from "./utils/paths.ts";
-import { stripBom } from "./utils/text.ts";
+import { normalizePath } from "@earendil-works/pi-coding-agent";
+import { stripBom } from "@earendil-works/pi-coding-agent";
 
 // =============================================================================
 // Package Detection

@@ -17,6 +17,8 @@ describe('published Coding SDK boundary', () => {
     expect(native.createMcpExtension).toBe(sdk.createMcpExtension);
     expect(native.parseFrontmatter).toBe(sdk.parseFrontmatter);
     expect(compat.stripFrontmatter).toBe(sdk.stripFrontmatter);
+    expect(compat.normalizePath).toBe(sdk.normalizePath);
+    expect(compat.resolvePath).toBe(sdk.resolvePath);
     expect(native.withFileMutationQueue).toBe(sdk.withFileMutationQueue);
     expect(native.createWriteTool).toBe(sdk.createWriteTool);
     expect(native.createWriteToolDefinition).toBe(sdk.createWriteToolDefinition);
@@ -60,6 +62,8 @@ describe('published Coding SDK boundary', () => {
     expect(codingSDKImport('index.ts', './cli/args.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('index.ts', './core/footer-data-provider.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('index.ts', './utils/clipboard.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('config.ts', './utils/paths.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('core/trust-manager.ts', '../utils/text.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/extensions/index.ts', '../slash-commands.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('modes/index.ts', './json-event.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('modes/rpc/rpc-client.ts', '../json-event.ts')).toBe('@earendil-works/pi-coding-agent');

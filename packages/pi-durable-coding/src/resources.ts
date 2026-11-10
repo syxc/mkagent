@@ -6,8 +6,7 @@ import { loadProjectContextFiles, dedupePrompts } from '@earendil-works/pi-codin
 import { loadSkills, formatSkillsForPrompt, type Skill } from './upstream/core/skills.ts';
 import { loadPromptTemplates, type PromptTemplate } from './upstream/core/prompt-templates.ts';
 import { createSourceInfo, type SourceInfo } from '@earendil-works/pi-coding-agent';
-import { canonicalizePath, isPathWithin, pathsEqual } from './upstream/utils/paths.ts';
-import { stripBom } from './upstream/utils/text.ts';
+import { canonicalizePath, isPathWithin, pathsEqual, stripBom } from '@earendil-works/pi-coding-agent';
 import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
 import type { ResolvedResource } from './upstream/core/package-manager.ts';
 

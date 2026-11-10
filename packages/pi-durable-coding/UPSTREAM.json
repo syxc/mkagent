@@ -79,14 +79,6 @@
   ],
   "forwarded": [
     {
-      "target": "src/upstream/utils/text.ts",
-      "implementation": "src/pi/utils/text.ts"
-    },
-    {
-      "target": "src/upstream/utils/paths.ts",
-      "implementation": "src/pi/utils/paths.ts"
-    },
-    {
       "target": "src/upstream/utils/child-process.ts",
       "implementation": "src/pi/utils/child-process.ts"
     },

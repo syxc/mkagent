@@ -1,8 +1,8 @@
-# Content SHA-256: 87d23ea4f3a4dd86cc488d599e0c6e3aa44959013a504899e6ec07fa7785e833
+# Content SHA-256: 637a85fdc30cef3996d215aed80a0834779ea269b491609c46add86d6168872b
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,55 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,57 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -36,6 +36,8 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/tools/tool-definition-wrapper.js";
 +export { formatToolCallWithArgs, getTextOutput, replaceTabs } from "./core/tools/render-utils.js";
 +export { writeOutputFile } from "./utils/output-files.js";
++export { canonicalizePath, isPathWithin, normalizePath, pathsEqual, resolvePath } from "./utils/paths.js";
++export { stripBom } from "./utils/text.js";
 +export { GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.js";
 +export * from "./extensions/codemode/tool.js";
 +export { createToolSearchToolDefinition } from "./extensions/tool-search/tool.js";
@@ -71,7 +73,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,58 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,60 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -105,6 +107,8 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/tools/tool-definition-wrapper.ts";
 +export { formatToolCallWithArgs, getTextOutput, replaceTabs } from "./core/tools/render-utils.ts";
 +export { writeOutputFile } from "./utils/output-files.ts";
++export { type PathInputOptions, canonicalizePath, isPathWithin, normalizePath, pathsEqual, resolvePath } from "./utils/paths.ts";
++export { stripBom } from "./utils/text.ts";
 +export { type MiddleTruncationResult, GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.ts";
 +export * from "./extensions/codemode/tool.ts";
 +export { createToolSearchToolDefinition, type ToolSearchDependencies, type ToolSearchToolOptions } from "./extensions/tool-search/tool.ts";
