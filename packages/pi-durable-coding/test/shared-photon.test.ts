@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { PhotonImage as OracleImage } from '@silvia-odwyer/photon-node';
 import * as sharedPhoton from '@silvia-odwyer/photon/photon_rs.js';
 import { loadPhoton } from '../src/pi/utils/photon.ts';
-import { convertImageBytesToPng, convertToPng, loadPngTranscoder } from '../src/pi/utils/image-convert.ts';
+import { convertImageBytesToPng, convertToPng, loadPngTranscoder } from '../src/native-image-convert.ts';
 
 test('Native shares durable Photon without replacing global file reads', async () => {
   const fs = createRequire(import.meta.url)('node:fs') as typeof import('node:fs');

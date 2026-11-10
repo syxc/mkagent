@@ -166,14 +166,14 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 | 本地位置 | 上游来源与移植方式 |
 |---|---|
-| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，UI SDK 替换后为 77 份 TypeScript、0 项资源，剩余源码继续按职责核对。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留待核对的工具、扩展、RPC client/协议等源码；插件 UI 组件和 CustomEditor 改用公开 SDK，AgentSession 使用公开 SDK 和自有 durable 子类。 |
+| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，UI 与图片转换 SDK 替换后为 76 份 TypeScript、0 项资源，剩余源码继续按职责核对。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留待核对的工具、扩展、RPC client/协议等源码；插件 UI 组件和 CustomEditor 改用公开 SDK，AgentSession 使用公开 SDK 和自有 durable 子类。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 105 行 core 子类，保留 durable 队列身份、恢复和独立的可变默认对象。默认消息转换直接使用发布版 core；模型和 usage 两个默认对象仍从锁定上游提取，stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
 | `src/native-operations.ts` | 22 行门面，调用仓内 core 补丁导出的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 从上游 RPC 类型中抽取扩展 UI 请求和响应声明，使宿主可单独引用协议。 |
 | `src/upstream/**` | 3 项选取源码：Git 路径、boundary drafts 和同步 durable context；另有 18 个共享入口。旧完整 loader 和 manifest 转发已删除；插件 runtime、注册、factory、缓存及发现现由公开 SDK 承担，context 与 prompt 去重也已删除本地副本。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
 
-前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 81 份 TypeScript 和 0 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 9 项来源产物及 18 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
+前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 80 份 TypeScript 和 0 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 9 项来源产物及 18 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
 `461e7c9` 后的入口核对确认，MkAgent 通过 `CodingHost/createAgentSession` 装配，仓内产品没有 `main`/`MainOptions` 调用。先前切片排除原版 Pi 启动器及其独占的 24 份源码，包含 CLI 认证、配置向导、自更新、旧 Pi 配置迁移和 CLI 内置扩展集合；Llama 管理扩展仅由该集合进入。`5662422` 后的限定复核另确认，原始 MkAgent 和当前宿主均自行管理会话、UI 与传输，不依赖上游终端、stdout 或 stdin/stdout RPC 模式宿主。现从根入口和 modes barrel 排除 `InteractiveMode`、`InteractiveModeOptions`、`runPrintMode`、`PrintModeOptions`、`runRpcMode`，并删除三个实现文件。生成规则在遍历任一入口的依赖前完成排除。`RpcClient` 及其 options、RPC 协议、`JsonAgentSessionEvent`、Theme、CustomEditor、renderer/UI、`ExtensionMode`、AgentSessionRuntime 和插件生命周期保留；MCP/codemode/tool-search 的公开工厂保留。直接使用被排除模式的外部消费者须迁移到自有宿主，这项导出变化不承诺任意外部消费者零影响。此处删除不需要的模式宿主，不计作官方 SDK 完整覆盖，也没有证明其余辅助闭包全部必要。
 
@@ -263,7 +263,11 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `f02db2e` 后的 UI 切片使用公开 Coding SDK 组件、CustomEditor 和 renderer 生命周期，删除本地组件及退出闭包的 41 份源码、8885 行。25 行 `native-ui.ts` 明确转出现有 UI 列表，仅由 ToolExecutionComponent 子类覆写 PNG 注册来使用共享 Photon；七参数构造、state/lastComponent、参数帧合并、图片缓存、鼠标和错误回退均由 SDK 提供。MCP 使用的 AuthUrlComponent 和 VisualLinePreview 只增加现有类的公开根导出。SDK protected 接点保留默认 PNG 路径，上游提供等效注册接点及两项导出后撤除补丁。
 
-当前 runtime 为 81 份 TypeScript（src/pi 77、门面 4）、0 项资源，辅助来源 9 项、共享入口 18 个；core 4、Coding 48、durable 33 共 85 份补丁输出。根工程定向 42 项、257 个断言通过；hoisted 工程相关 80 项、453 个断言和真实 Native 扩展/本地 kernel 的 UI 协议 19 项、82 个断言通过，Coding 两布局实际声明通过，hoisted 的 server 类型和构建通过。根工程完整插件组合的六项依赖解析失败及 server workspace 链接失败按布局保留记录，不记为通过。来源更新 11 项、移除 41 项、新增 4 项，固定 Craft 审计覆盖 2086 文件并通过；独立复核未确认新增缺陷。`image-convert.ts` 仍有既有转换与注册算法副本，不能据此关闭剩余源码收敛。失败修正、独立探针和范围见[UI 验证](coding-validation.md#public-sdk-ui-components-after-f02db2e)，F0 至 F6 继续开放。
+该 UI 切片时 runtime 为 81 份 TypeScript（src/pi 77、门面 4）、0 项资源，辅助来源 9 项、共享入口 18 个；core 4、Coding 48、durable 33 共 85 份补丁输出。根工程定向 42 项、257 个断言通过；hoisted 工程相关 80 项、453 个断言和真实 Native 扩展/本地 kernel 的 UI 协议 19 项、82 个断言通过，Coding 两布局实际声明通过，hoisted 的 server 类型和构建通过。根工程完整插件组合的六项依赖解析失败及 server workspace 链接失败按布局保留记录，不记为通过。来源更新 11 项、移除 41 项、新增 4 项，固定 Craft 审计覆盖 2086 文件并通过；独立复核未确认新增缺陷。该时点 `image-convert.ts` 仍有既有转换与注册算法副本，不能据此关闭剩余源码收敛。失败修正、独立探针和范围见[UI 验证](coding-validation.md#public-sdk-ui-components-after-f02db2e)，F0 至 F6 继续开放。
+
+`9bd4b1e` 后的图片切片将 PNG 转换和 Kitty transcoder 注册交给公开 Coding SDK，删除 89 行 `src/pi/utils/image-convert.ts`。durable/images 的现有处理入口包含尺寸、体积和格式选择，未直接提供这里的无尺寸策略 PNG 转换与同步注册契约。SDK 已有完整实现，窄补丁只增加 createImageConverters 实例工厂，注入 loadPhoton 和 applyExifOrientation；默认依赖、函数正文、释放和回调合并保持 SDK 实现。12 行 `native-image-convert.ts` 绑定既有共享 Photon 与 durable EXIF 策略，四个导出直接引用同一实例的函数。上游提供等效依赖工厂后撤除补丁。
+
+当前 runtime 为 80 份 TypeScript（src/pi 76、门面 4）、0 项资源，辅助来源 9 项、共享入口 18 个；core 4、Coding 50、durable 33 共 87 份补丁输出。根工程 136 项图片与 UI 测试、817 个断言，hoisted 17 项布局对照、257 个断言及 26 项 bundle、105 个断言通过。根声明两次 TS2742 失败后，以公开工厂返回类型逐项标注四个导出，最终两布局实际声明及 hoisted server 类型通过；hoisted server 构建已在该类型修正前通过。来源更新 9 项、移除 1 项并新增 3 项，固定 Craft 审计覆盖 2088 文件并通过；两布局冻结安装、Coding/durable hash、完整生成检查及 pristine Coding 重放通过，lock 未变。具体证据见[图片转换验证](coding-validation.md#public-sdk-image-converters-after-9bd4b1e)，image-process、resize、AuthContext 及 F0 至 F6 继续开放。
 
 下表保留前几批的候选对照和观察结果，反映当时选取的 Native 行为，并非本次最终必要例外清单。2026-11-08 的纠偏须先把这些行为分为实际产品/公开插件契约和内部实现细节，再决定官方 SDK 能承担的范围。完整 SDK 导出、逐字节一致和局部无净删行收益不能单独决定保留。`runtime-credentials.ts` 的历史读取缺口已补齐；主题文件的全局路径误拦截也已按用户要求修正，同一全局 deny 源中增加精确相对路径例外后，正常 Read 成功。完整主题契约、运行时闭包重算与固定 Craft 审计均已完成；先前项目 allow 被全局 deny 覆盖的历史及当前范围见[验证记录](coding-validation.md#theme-contract-and-complete-source-after-6240ed9)。
 

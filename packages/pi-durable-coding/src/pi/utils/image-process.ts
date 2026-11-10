@@ -1,4 +1,4 @@
-import { convertImageBytesToPng } from "./image-convert.ts";
+import { convertImageBytesToPng } from "../../native-image-convert.ts";
 import { formatDimensionNote, type ImageResizeOptions, resizeImage } from "./image-resize.ts";
 
 export interface ProcessImageOptions {

@@ -2341,8 +2341,8 @@
       "reason": "Initialize the shared public Photon module from installed or adjacent assets without replacing global file reads or searching the project directory."
     },
     "packages/pi-durable-coding/test/shared-photon.test.ts": {
-      "sha256": "9cbca234f6c3948128721be2159a90b3f60b7497b38650ebf89f97716e159c37",
-      "reason": "Verify shared module identity, concurrent loading, unchanged global file reads and real PNG entry points against the original Node codec."
+      "sha256": "72fd9d3a7f865b860552a72029c112417fdafa4bad07c86950eeb13a592c8ae3",
+      "reason": "Keep byte parity and shared runtime checks through the SDK image binding after deleting the source copy."
     },
     "packages/pi-durable-coding/test/shared-photon-port.test.ts": {
       "sha256": "be0c7563d35db7a2474d1791b112ac46440ae1d8370500ee0980b2678536c6e4",
@@ -3985,8 +3985,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "b7cfd8cbe84fd4ab1ae04d74621b207daaccbfd18217d97f1d5f8a8685e98999",
-      "reason": "Record the 81-file runtime closure after replacing SDK UI components and deleting 41 source copies and orphan helpers."
+      "sha256": "a949642836d3d3a943eeaf2c3ed286d58648f8d8ea52b21424eb1cb351d84b2d",
+      "reason": "Record the 80-file closure after deleting the local PNG conversion and registration implementation."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "6e7925a1bd8b5a90aa32ed915eb8df45a1c480a83a62771eecf02b7e3df2062b",
@@ -4317,8 +4317,8 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "be0d94079165904d95c42468d5b097cc70229f5f131a770518bf2f333235b384",
-      "reason": "Preserve the explicit public UI export list through SDK components and the thin shared-image binding."
+      "sha256": "d8f5e5eecbf1db69ff69b76179993e2194093d6f8c6cc55f78b3e53a52e24fcc",
+      "reason": "Preserve the public convertToPng contract through the shared SDK image converter instance."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "af0367572b6e6ce4eac2b5db1d2658a45ae6a860a0746757a571467de14a52e4",
@@ -4372,13 +4372,9 @@
       "sha256": "f40e22497371b59286e516eeff70495b20a099daef160c82cc1c196cf637df41",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/fs-watch.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
-    "packages/pi-durable-coding/src/pi/utils/image-convert.ts": {
-      "sha256": "5c61e36a267b9bbd5beeb2bb3f2a0938ed7a05f7333d4a17355ea807fc7bcd3b",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-convert.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
     "packages/pi-durable-coding/src/pi/utils/image-process.ts": {
-      "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/utils/image-process.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
+      "sha256": "1bd0cce49a9f1f64df6ce03ab25f4f83a5cd29602b4478616d7bf3e2d6187648",
+      "reason": "Use SDK PNG conversion with existing shared Photon and durable orientation dependencies."
     },
     "packages/pi-durable-coding/src/pi/utils/image-resize-core.ts": {
       "sha256": "608f23438bbdd9c898f7f32a2b51c14951c83d33c5153923350f7ca232f4d0ea",
@@ -4701,24 +4697,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "d0d2195a53cefdb2bd60ae69c4f0c08da40208ced6657414014d94e6df1b920f",
-      "reason": "Stop UI source traversal at public Coding SDK exports and the thin shared-image host binding."
+      "sha256": "ebaa81b4ec6bfd8ba3d128e7931e630f7b84c411a40a0ec1c1775021a474b6d2",
+      "reason": "Stop image conversion source traversal at the public SDK factory and shared dependency binding."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
       "sha256": "b72b39fb21566d9402a3f29446d227d90a0714bdd7f9a1105d97b63b764fc850",
       "reason": "Verify SDK identities and generated boundaries, including codemode index and MCP factory imports."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "ed3c8609846dc25ba56be858c80de32b74d0325138e214535880e98dd1687e67",
-      "reason": "Record 48 Coding outputs, including the protected tool renderer PNG hook and existing UI root exports."
+      "sha256": "fa611f432a83496d53ab6e6672143ae00cb85123398131dfb82df5a5ae9750b2",
+      "reason": "Record 50 Coding outputs, including instance-scoped image conversion dependencies without replacing SDK algorithms."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "7c0e2f64eee1fbf80dac8a2b5577f32e9101e46219e32789273f957284c12c09",
-      "reason": "Generate existing AuthUrlComponent and VisualLinePreview root exports and a protected PNG registration hook without copying UI algorithms."
+      "sha256": "96896f18081c830517efa790238f1991ea9b96c707baf3b02c5df11ca6000565",
+      "reason": "Generate the public image converter factory over existing SDK bodies, defaults and registration state."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "bc879e9886b557e43aa4ad151214faa48f582f11cf7830be3b0a401a1481d8ff",
-      "reason": "Expose existing MCP UI classes and add one protected PNG registration hook; retain SDK component and renderer algorithms."
+      "sha256": "52fa1b4f30caedf37e81bc565e881e4126d39a08267acf5ead73b4d3fe34b62d",
+      "reason": "Expose a converter factory with per-instance Photon and orientation dependencies; preserve default SDK image bodies and registration behavior."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4845,8 +4841,8 @@
       "reason": "Add only a protected image transcoder registration hook; preserve the SDK renderer lifecycle and default image path."
     },
     "packages/pi-durable-coding/src/native-ui.ts": {
-      "sha256": "56ef9773ef86c36d8681b2c63ca9c24527126d41c623a86e4e34e97eb78d5d8e",
-      "reason": "Re-export existing SDK UI contracts and override only PNG registration to use the existing shared Photon asset."
+      "sha256": "f7ddbd90e444becabaabc63974076e1637a36063daf9ae4bdd22d695917db492",
+      "reason": "Use the shared SDK image converter instance for protected PNG registration."
     },
     "packages/pi-durable-coding/test/host-ui-sdk.test.ts": {
       "sha256": "4358980d63ac3842db575e99297e3f7d7445c353f1561a8c4372af01e9a8266f",
@@ -4855,6 +4851,18 @@
     "packages/pi-durable-coding/test/fixtures/ui-image.ts": {
       "sha256": "594873139e43ce094536223de07fc77338cd279c6cffca7da47a839cf5b67096",
       "reason": "Verify default SDK and Native image conversion, PNG output, cache and visibility in fresh processes."
+    },
+    "packages/pi-durable-coding/scripts/coding-image-policy.ts": {
+      "sha256": "636e8517a4479d3da7733d23afbe4ac102161c6670b44fbd99372516c797e18f",
+      "reason": "Add only an image dependency factory scope around existing SDK functions and state, with unchanged default dependencies."
+    },
+    "packages/pi-durable-coding/src/native-image-convert.ts": {
+      "sha256": "7892db67cda86a4b4c4c2fd5001e54537d29d73efc6844d044bfded3aca19607",
+      "reason": "Bind public SDK image algorithms to shared Photon and the existing durable EXIF policy in twelve lines."
+    },
+    "packages/pi-durable-coding/test/host-image-convert-sdk.test.ts": {
+      "sha256": "349a48c4b0074e090a5624bd445a1646aaa157072749c940c66d1385caaed1de",
+      "reason": "Verify PNG passthrough, failed and unavailable loaders, image ownership, per-instance registration and callback coalescing."
     }
   },
   "deleted": {

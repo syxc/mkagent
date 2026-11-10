@@ -480,7 +480,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "be0d94079165904d95c42468d5b097cc70229f5f131a770518bf2f333235b384",
+      "portSha256": "d8f5e5eecbf1db69ff69b76179993e2194093d6f8c6cc55f78b3e53a52e24fcc",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",
@@ -592,18 +592,13 @@
       "changes": []
     },
     {
-      "source": "packages/coding-agent/src/utils/image-convert.ts",
-      "target": "src/pi/utils/image-convert.ts",
-      "sha256": "5c61e36a267b9bbd5beeb2bb3f2a0938ed7a05f7333d4a17355ea807fc7bcd3b",
-      "portSha256": "5c61e36a267b9bbd5beeb2bb3f2a0938ed7a05f7333d4a17355ea807fc7bcd3b",
-      "changes": []
-    },
-    {
       "source": "packages/coding-agent/src/utils/image-process.ts",
       "target": "src/pi/utils/image-process.ts",
       "sha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
-      "portSha256": "fffb65fba877607644f8028c0f24aa6e74228e15427e112ee367e7983f2a79e5",
-      "changes": []
+      "portSha256": "1bd0cce49a9f1f64df6ce03ab25f4f83a5cd29602b4478616d7bf3e2d6187648",
+      "changes": [
+        "host-extension-module-import"
+      ]
     },
     {
       "source": "packages/coding-agent/src/utils/image-resize-core.ts",

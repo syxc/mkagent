@@ -1,6 +1,6 @@
 /** Use the SDK UI and retain only the shared image asset binding. */
 import { ToolExecutionComponent as SDKToolExecutionComponent } from '@earendil-works/pi-coding-agent';
-import { ensurePngTranscoder } from './pi/utils/image-convert.ts';
+import { ensurePngTranscoder } from './native-image-convert.ts';
 
 export {
   ArminComponent, AssistantMessageComponent, BashExecutionComponent, BorderedLoader,

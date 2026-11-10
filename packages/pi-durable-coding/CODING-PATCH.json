@@ -8,12 +8,22 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "96e6925e2ecd578244b72776232005f308fb9b84413ebbb228859f7d007f28cd"
+      "sha256": "14ac352e187e8f8554bdfc2e2bc43045b43d31fa67200777bf0bd93605890e55"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "9d8b0aef0ea00e98ec3d6c90da7624ea958f4bd20777ebf5159df77c47027dd9"
+      "sha256": "e3751403aac044ab62def1abc6b04b21486529ee63ab98d344cd5f961966dc43"
+    },
+    {
+      "path": "dist/utils/image-convert.js",
+      "originalSha256": "12387e0f5d6575e8037556b9703cdac7eee61584d7e1788bc6e24310612b8799",
+      "sha256": "3341161b840c185f848ef633d98d2dbcbd935435434ffaa8028dea7bd62426bf"
+    },
+    {
+      "path": "dist/utils/image-convert.d.ts",
+      "originalSha256": "c94be4cd2284d99eb2ff1c61e5d6420dcae2f344fa8dce0e9d98a4caf20f6a26",
+      "sha256": "bc53061bc0bd5099666ea8db4780076fc7020fa97a9b629cdaffb787fa5bc960"
     },
     {
       "path": "dist/modes/interactive/components/tool-execution.js",

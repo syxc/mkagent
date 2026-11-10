@@ -14,6 +14,7 @@ import { codingToolPolicy } from './coding-tool-policy.ts';
 import { codingShellPolicy } from './coding-shell-policy.ts';
 import { codingCodemodePolicy } from './coding-codemode-policy.ts';
 import { codingUIPolicy } from './coding-ui-policy.ts';
+import { codingImagePolicy } from './coding-image-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -69,6 +70,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./modes/interactive/theme/theme.${extension}";`,
     `export { AuthUrlComponent } from "./modes/interactive/components/auth-url.${extension}";`,
     `export { VisualLinePreview } from "./modes/interactive/components/visual-truncate.${extension}";`,
+    `export { createImageConverters } from "./utils/image-convert.${extension}";`,
     `export { getThemesDir, getExportTemplateDir } from "./config.${extension}";`,
   ].join('\n') + '\n';
   const marker = '//# sourceMappingURL=';
@@ -77,6 +79,10 @@ for (const suffix of ['js', 'd.ts']) {
   outputs.set(path, original.slice(0, position) + exports + original.slice(position));
   if (suffix === 'd.ts') outputs.set(path, outputs.get(path)!.replace(marker,
     'export type { ShellDependencies } from "./core/tools/bash.ts";\n' + marker));
+}
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/utils/image-convert.${suffix}`;
+  outputs.set(path, codingImagePolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
 }
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/modes/interactive/components/tool-execution.${suffix}`;

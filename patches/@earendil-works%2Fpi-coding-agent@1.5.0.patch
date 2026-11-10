@@ -1,8 +1,8 @@
-# Content SHA-256: 4b97ae88da1a4cbc8f2bd91704b5238262cedfc293d5380b745407e0449235b6
+# Content SHA-256: df6519daa5fce1375d617916bb46e430eb1cae650638aa92344ba57d433f0887
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,36 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,37 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -37,6 +37,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./modes/interactive/theme/theme.js";
 +export { AuthUrlComponent } from "./modes/interactive/components/auth-url.js";
 +export { VisualLinePreview } from "./modes/interactive/components/visual-truncate.js";
++export { createImageConverters } from "./utils/image-convert.js";
 +export { getThemesDir, getExportTemplateDir } from "./config.js";
  //# sourceMappingURL=index.js.map
 \ No newline at end of file
@@ -52,7 +53,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,37 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,38 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -87,10 +88,87 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./modes/interactive/theme/theme.ts";
 +export { AuthUrlComponent } from "./modes/interactive/components/auth-url.ts";
 +export { VisualLinePreview } from "./modes/interactive/components/visual-truncate.ts";
++export { createImageConverters } from "./utils/image-convert.ts";
 +export { getThemesDir, getExportTemplateDir } from "./config.ts";
 +export type { ShellDependencies } from "./core/tools/bash.ts";
  //# sourceMappingURL=index.d.ts.map
 \ No newline at end of file
+diff --git a/dist/utils/image-convert.js b/dist/utils/image-convert.js
+--- a/dist/utils/image-convert.js
++++ b/dist/utils/image-convert.js
+@@ -1,6 +1,7 @@
+ import { getCapabilities, setImageTranscoder } from "@earendil-works/pi-tui";
+-import { applyExifOrientation } from "./exif-orientation.js";
+-import { loadPhoton } from "./photon.js";
++import { applyExifOrientation as defaultApplyExifOrientation } from "./exif-orientation.js";
++import { loadPhoton as defaultLoadPhoton } from "./photon.js";
++export function createImageConverters({ loadPhoton = defaultLoadPhoton, applyExifOrientation = defaultApplyExifOrientation } = {}) {
+ function encodePng(photon, bytes) {
+     try {
+         const rawImage = photon.PhotonImage.new_from_byteslice(bytes);
+@@ -19,7 +20,7 @@ function encodePng(photon, bytes) {
+         return null;
+     }
+ }
+-export async function convertImageBytesToPng(bytes) {
++async function convertImageBytesToPng(bytes) {
+     const photon = await loadPhoton();
+     if (!photon) {
+         // Photon not available, can't convert
+@@ -31,7 +32,7 @@ export async function convertImageBytesToPng(bytes) {
+  * Convert image to PNG format for terminal display.
+  * Kitty graphics protocol requires PNG format (f=100).
+  */
+-export async function convertToPng(base64Data, mimeType) {
++async function convertToPng(base64Data, mimeType) {
+     // Already PNG, no conversion needed
+     if (mimeType === "image/png") {
+         return { data: base64Data, mimeType };
+@@ -50,7 +51,7 @@ export async function convertToPng(base64Data, mimeType) {
+  * Load photon and return a synchronous PNG transcoder for pi-tui's Kitty image rendering.
+  * Returns undefined if photon cannot be loaded.
+  */
+-export async function loadPngTranscoder() {
++async function loadPngTranscoder() {
+     const photon = await loadPhoton();
+     if (!photon)
+         return undefined;
+@@ -66,7 +67,7 @@ let pngTranscoderRegistered = false;
+  * Loads photon once. `onRegistered` runs after registration so callers can re-render images that
+  * showed text fallbacks; it is not called if the transcoder was already registered or cannot load.
+  */
+-export function ensurePngTranscoder(onRegistered) {
++function ensurePngTranscoder(onRegistered) {
+     if (pngTranscoderRegistered || getCapabilities().images !== "kitty")
+         return;
+     pngTranscoderLoad ??= loadPngTranscoder().then((transcoder) => {
+@@ -81,4 +82,7 @@ export function ensurePngTranscoder(onRegistered) {
+             onRegistered();
+     });
+ }
++return { convertImageBytesToPng, convertToPng, loadPngTranscoder, ensurePngTranscoder };
++}
++export const { convertImageBytesToPng, convertToPng, loadPngTranscoder, ensurePngTranscoder } = createImageConverters();
+ //# sourceMappingURL=image-convert.js.map
+\ No newline at end of file
+diff --git a/dist/utils/image-convert.d.ts b/dist/utils/image-convert.d.ts
+--- a/dist/utils/image-convert.d.ts
++++ b/dist/utils/image-convert.d.ts
+@@ -1,4 +1,14 @@
+ import { type ImageTranscoder } from "@earendil-works/pi-tui";
++export interface ImageConversionDependencies {
++    loadPhoton?: typeof import("./photon.ts").loadPhoton;
++    applyExifOrientation?: typeof import("./exif-orientation.ts").applyExifOrientation;
++}
++export declare function createImageConverters(dependencies?: ImageConversionDependencies): {
++    convertImageBytesToPng: typeof convertImageBytesToPng;
++    convertToPng: typeof convertToPng;
++    loadPngTranscoder: typeof loadPngTranscoder;
++    ensurePngTranscoder: typeof ensurePngTranscoder;
++};
+ export declare function convertImageBytesToPng(bytes: Uint8Array): Promise<Uint8Array | null>;
+ /**
+  * Convert image to PNG format for terminal display.
 diff --git a/dist/modes/interactive/components/tool-execution.js b/dist/modes/interactive/components/tool-execution.js
 --- a/dist/modes/interactive/components/tool-execution.js
 +++ b/dist/modes/interactive/components/tool-execution.js

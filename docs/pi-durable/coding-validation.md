@@ -26,6 +26,107 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK image converters after 9bd4b1e
+
+The Coding SDK owns PNG conversion and Kitty transcoder registration. The local
+89-line image-convert source copy is deleted. A 12-line native-image-convert
+binding supplies the existing shared Photon loader and durable EXIF policy.
+Its four exports directly reference functions from one SDK factory instance.
+The local image-process, resize and other image responsibilities remain open.
+
+The published durable/images preparation path selects size, quality and format.
+It does not directly supply this PNG conversion and synchronous registration
+contract. The Coding SDK already has those algorithms. A narrow local patch
+adds createImageConverters with optional loadPhoton and applyExifOrientation
+dependencies. It puts the existing function bodies and registration state in
+instance scope. Default module exports use a default instance with the original
+SDK dependencies. Conversion, release, failures and callback behavior stay in
+the SDK. The patch can retire when an equivalent public factory is available.
+No task, document or checkpoint version changes.
+
+The runtime inventory decreases from 81 to 80 TypeScript files: 76 under src/pi
+and four facades, with no assets. The auxiliary check passes for nine sources
+and 18 shared entries. Coding adds two physical outputs for image-convert JS and
+declarations; the root exports share existing outputs. The inventory is core 4,
+Coding 50 and durable 33, for 87 outputs. Core and durable patches do not change.
+
+Full runtime generation/check, Coding patch check and pristine replay pass,
+including every original and resulting Coding hash. Both existing isolated and
+hoisted layouts pass frozen install with scripts disabled. All 50 Coding and 33
+durable outputs match their manifests in both layouts. The lock file is unchanged.
+
+The first eight-stage runner records seven successful stages and a failed root
+actual declaration emission. Root noEmit, hoisted actual declarations, server
+types/build and the functional suites passed. The unannotated destructured
+exports caused TS2742 for three functions in the isolated layout. Annotating the
+whole destructuring statement with ReturnType still failed for those functions.
+The final binding annotates each export with an indexed member of the public
+factory return type. Actual declaration emission now passes in both layouts,
+and hoisted server types pass again. The emitted declaration references only
+the public SDK factory. The original failure receipts remain unchanged.
+
+Functional checks passed before this final type annotation change:
+
+- Root: 136 tests and 817 assertions across 11 image, UI and boundary files.
+  These cover PNG passthrough, unavailable and rejected loaders, input subarrays,
+  orientation result ownership, cleanup after encoding failure, per-instance
+  registration, concurrent callbacks and non-Kitty behavior. Existing checks
+  cover EXIF orientations 1 through 8, PNG/JPEG/WebP/GIF byte parity, MIME,
+  resizing, durable encoding, renderer behavior and relocated Bun/Node WASM.
+- Hoisted: 17 tests and 257 assertions across five overlapping files. These
+  confirm the other installation layout and are not added to the root total.
+- Hoisted bundle: 26 tests and 105 assertions, including relocated native/read
+  images, shared Photon, the project-relative worker canary, resources,
+  codemode/MCP startup, cancellation, reload and session races.
+
+The final edit adds portable export types and direct references to the same
+factory functions. The passed functional and bundle suites were not repeated
+for that declaration correction. Both actual declarations and server types
+were checked after the correction; the server build passed before it.
+
+Source registration updates nine entries, removes one and adds three. The fixed
+Craft v0.15.6 audit passes for 2088 files: 1455 share a relative path, 873 match
+after normalization, 582 are modified Craft-derived files and 633 are MkAgent-only.
+The audit also checks 858 reviewed Craft-only deletions. This uses an independent
+reference checkout and does not access a live Craft installation.
+
+The completed independent read-only review found no reproducible new defect.
+Its TypeScript AST comparison confirms that encodePng, all four public function
+bodies and both registration state declarations match pristine SDK text. Default
+PNG/JPEG/WebP/GIF outputs match for factory instances, the default instance and
+the public convertToPng export. Controlled promises confirm per-instance load
+and callback coalescing. The TUI transcoder remains global: the last instance to
+finish registration supplies it. The factory does not make that TUI resource
+local to an instance.
+
+Independent relocated Node bundles and an image-only Bun executable pass JPEG
+and WebP checks for all eight EXIF orientations through both conversion entries.
+Without the adjacent WASM, conversion returns unavailable and PNG passthrough
+still works. A forged working-directory WASM is ignored, and fs.readFileSync
+is unchanged. Public declaration consumers pass strict NodeNext and Bundler
+checks with skipLibCheck enabled. A direct NodeNext host-source probe first
+failed with TS2322 in unchanged compat/photon.ts; using emitted dependency
+declarations passes. The project uses Bundler resolution. This probe failure
+does not establish a new declaration defect. The review did not repeat the
+parent declaration builds; the final portable export annotations are covered
+by the parent checks above.
+
+The review also reproduces an existing resource boundary. If orientation throws
+after decoding creates a Photon image, encoding returns null without freeing
+that original image. The same path exists at HEAD and in pristine SDK code.
+It is recorded separately from new defects; this slice does not fix it. The
+review checks image generation routes, manifest hashes, the exact 81-to-80
+closure change, patch digest and whitespace. It did not repeat installation,
+full replay or the parent suites. Parent evidence is under
+/tmp/mkagent-image-convert-sdk-qTx1zs; independent probes are under
+/tmp/mkagent-image-review-wLm43Q.
+
+These checks do not close the remaining 76 src/pi responsibilities, AuthContext
+or F0 through F6. The full repository suite, real product UI, accounts, paid
+models, Windows/Linux, real terminal display and a full product executable are
+not checked here. The previous UI section retains its own dependency-layout
+failures and evidence.
+
 ## Public SDK UI components after f02db2e
 
 The public Coding SDK now owns UI components, CustomEditor and the complete
