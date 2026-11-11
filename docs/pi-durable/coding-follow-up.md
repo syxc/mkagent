@@ -40,6 +40,8 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 `2893172` 后修正 Coding SDK find 声明中 Node 25 已移除的 path.PlatformPath，改用 Node 现有路径实现类型；无运行时算法变化。固定发布包及 94 份原文件哈希核验通过，补丁重放仅改变一份声明，其余 93 份输出保持。关闭 skipLibCheck 的完整 SDK 消费检查验证默认、POSIX、Windows 参数和无效参数拒绝；采用既有 SDK 测试默认库时仍有 GenAI 与 Gaxios 两条诊断，仓库 ESNext-only 配置另有 DOM 类型缺失，两种失败均保留。独立静态复核未确认新增缺陷，三项来源及受限 Craft 2033 文件审计通过。未重新安装或构建 worker，F0 至 F6 继续开放，见[find 路径声明验证](coding-validation.md#sdk-find-path-declaration-after-2893172)。
 
+`7604411` 后补齐 GenAI 声明引用的 MCP 开发依赖，并为固定 Gaxios 增加两份仅约束 fetch 调用签名的声明补丁，未改运行时。补丁重放及 75 份 build 文件对比通过；现存 SDK 物理目录的默认库严格检查覆盖 1654 文件，保留 Bun、Node 类型并关闭 skipLibCheck，零诊断。ESNext-only 仍有 11 条 DOM 类型诊断。两次隔离安装均因 Coding SDK cache copy 的 EPERM 失败，当前隔离包入口断链；仅生成 lock 及其冻结检查通过，审阅后同步根 lock，不能记作完整安装通过。精确文件静态复核未确认声明缺陷，但完整来源 diff 未独立核验，首次索引复核的越界也保留记录。F0 至 F6 继续开放，见[依赖声明验证](coding-validation.md#sdk-dependency-declarations-after-7604411)。
+
 ## F1 架构与依赖清点
 
 先核对切换前 MkAgent 如何使用 Coding SDK 及必须保留的行为，再检查当前生产调用和 SDK 能力。记录所需行为、实际调用方、发布 API、仓内补丁、缺口及下一步；SDK 执行器接入是否可行须有证据，不能从当前源码目录反推需求。原始 `b77c4a2645d3` 的 1.1.0 依赖仅供行为和接入对照，当前 SDK 候选继续用固定 Pi 1.5.0。

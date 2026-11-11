@@ -80,10 +80,13 @@ Server 二进制管理器从 449 行缩为 126 行，删除 75 行重试副本�
 
 ## 本地 SDK 补丁
 
-根 `patchedDependencies` 登记 core、Coding 和 durable 三份补丁。物理文件数为 core 4 个、Coding 94 个、durable 33 个，共 131 个，JS 与声明分别计数。OSC 切片新增 ansi.js 并改既有 bash-executor.js，其余 92 份 Coding 摘要保持；本切片核验全部 Coding 输出，未重验 core/durable。MCP runtime 切片新增 runtime 两份输出，改变两个共用根入口，其余 86 份摘要保持。后续配置切片只改变两个共用根输出，其他 88 份摘要保持；工具聚合切片新增工具 index 的 JS 与声明两份输出并改变两个共用根入口，其他 88 份摘要保持，runtime 生成清单降为 11 份；手写配置、工具绑定、writer 和 MCP runtime 门面另计。逻辑职责可能共用文件，不能将逻辑组重复相加。
+根 `patchedDependencies` 登记 core、Coding 和 durable 三份 Pi 补丁，另有 Gaxios 的两份声明补丁。物理文件数为 core 4 个、Coding 94 个、durable 33 个，共 131 个，JS 与声明分别计数。OSC 切片新增 ansi.js 并改既有 bash-executor.js，其余 92 份 Coding 摘要保持；本切片核验全部 Coding 输出，未重验 core/durable。MCP runtime 切片新增 runtime 两份输出，改变两个共用根入口，其余 86 份摘要保持。后续配置切片只改变两个共用根输出，其他 88 份摘要保持；工具聚合切片新增工具 index 的 JS 与声明两份输出并改变两个共用根入口，其他 88 份摘要保持，runtime 生成清单降为 11 份；手写配置、工具绑定、writer 和 MCP runtime 门面另计。逻辑职责可能共用文件，不能将逻辑组重复相加。
+
+GenAI 2.21.0 的声明无条件导入 optional peer 的 Client，因此根工程以开发依赖补齐 MCP SDK 1.32.2。该版本满足 ^1.25.2，维护时核对 peer 范围和 lock 闭包；上游声明不再需要该 peer，或现有依赖已完整提供它时，移除这项直接开发依赖。它不替代 Pi 的 MCP 实现，完整安装仍受当前 EPERM 阻塞。
 
 | 补丁组 | 产品或插件契约、发布 API 缺口 | 当前最小接点及退出条件 | 恢复与升级检查 |
 |---|---|---|---|
+| Gaxios 7.1.3 fetch 类型：CJS、ESM 两份 d.ts，单独计数 | GenAI 的间接依赖把 Bun fetch 的静态 preconnect 也纳入实例方法约束；兼容主版本 7.3.1 仍有同一声明 | 只将内部 FetchCompliance 改为调用签名，公开泛型、参数和返回类型保持；上游提供准确声明后撤除补丁，不升级运行时 | 两份补丁重放与 75 份 build 文件对比通过，默认库下 SDK 物理声明检查零诊断；公开包入口和完整安装仍失败，ESNext-only 仍缺 DOM 类型，见[依赖声明验证](coding-validation.md#sdk-dependency-declarations-after-7604411) |
 | Coding HTML 根类型：共用 index.d.ts | 两个 HTML 模块声明相同结构的 ToolHtmlRenderer，星号导出触发 TS2308 | 显式选择已有 ExportOptions 接口，保留工厂及依赖类型，不新增算法或类型副本。上游提供无冲突的等效根契约后撤除此选择 | 两布局各 1 项根声明回归与 3 项既有 HTML 测试通过；根声明及消费者关闭 skipLibCheck，四份内部 HTML JS/声明保持 pristine，见[HTML 根声明验证](coding-validation.md#sdk-root-html-renderer-typing-after-0b74761) |
 | Coding OSC streaming：新增 ansi.js，共用 bash-executor.js | 发布 helper 的 256 字符窗口会漏出跨块长 OSC payload，结束时也可能输出未闭合 metadata | 在 SDK 现有清理器前增加顺序 OSC 扫描，长序列仅保留起始符及尾部 ESC，pending 保持有界；结束与取消时丢弃未闭合 OSC。上游提供等效有界流行为后撤除此修复 | 两布局各 9 项新增回归、45 项既有测试及定向类型检查通过，独立静态与内存探针复核未确认缺陷；包括三种终止符、分块、1 MiB metadata、历史与输出文件。父线程补充的复现版本与类型执行证据未再独立复核，见[OSC 流验证](coding-validation.md#bounded-sdk-osc-streaming-after-41040a6) |
 | Coding Bash output completion：新增 bash-executor.js 一份输出 | 发布执行器在 end() 后即返回路径，未等文件完成，也未受控处理流的异步错误 | 现有 shell policy 仅增加标准 finished promise、即时错误观察和结果前等待；执行本身失败时保留原错误，0600 与 wx 不变。上游提供等效完成和错误处理后撤除此修复 | 正常、取消、文件错误与原执行错误优先级两布局各 4 项，既有回归各 41 项及定向类型检查通过；独立静态复核未确认缺陷。长时间执行中的文件错误、并发取消、慢写及其他平台未直接验证，见[Bash 输出验证](coding-validation.md#sdk-bash-output-completion-after-8e50091) |

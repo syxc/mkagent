@@ -975,12 +975,12 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "3a715fc0d8a4dfa22bd33a4b59a4bf6328ef1a7c184d6e6cd8229d1f0b7b4adb",
-      "reason": "Declare the server build's existing Coding SDK 1.5.0 dependency; retain all resolved package versions and the SDK transitive QuickJS dependency."
+      "sha256": "7049f6c8d95fc85d3173bf0d2b5ac89c988ea6b66608a705802179d374fc9405",
+      "reason": "Resolve GenAI's required MCP declaration peer and the Gaxios callable-fetch declaration patch; retain all previously resolved package versions."
     },
     "package.json": {
-      "sha256": "868c3042d38e0ec2084d6bc0926a4966c4ec2c5ad02c2f43e0e371c05f01bfed",
-      "reason": "Register the pinned Coding SDK settings export patch while preserving the existing dependency versions."
+      "sha256": "bcf30949042333bf4c26724b24634c3487ed0ba29c56153e0477e854bbea35a1",
+      "reason": "Declare GenAI's MCP type dependency for development and register a declaration-only Gaxios fetch compatibility patch."
     },
     "packages/core/README.md": {
       "sha256": "cac1ded695383920e62457a566c3ececed3acc5568a733f7eff4ab78c69ba2cd",
@@ -4347,6 +4347,10 @@
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
       "sha256": "9ea1d71d9de46238a084b0d1774ffe08cbfee942297197574400c21a47fd76f7",
       "reason": "Use the existing Node path implementation type in find declarations; preserve runtime algorithms and the other 93 Coding outputs."
+    },
+    "patches/gaxios@7.1.3.patch": {
+      "sha256": "39286a74f848790c1a713b478de9d94a4031cb2520e7822657b2111d71abb1df",
+      "reason": "Constrain Gaxios fetch compatibility to its call signature in both declaration formats without requiring Bun's static preconnect member."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",

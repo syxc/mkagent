@@ -388,6 +388,51 @@ test is added for this declaration-only change. Existing runtime test results
 are not repeated. Protected legacy, remaining adapters, product recovery and
 F0 through F6 remain open.
 
+## SDK dependency declarations after 7604411
+
+GenAI 2.21.0 imports the MCP Client in its declarations even though its
+runtime peer is optional. The root now declares MCP SDK 1.32.2 as a development
+dependency. This satisfies the published ^1.25.2 peer range. Gaxios 7.1.3 keeps
+its runtime version. A two-file patch changes its internal FetchCompliance
+interface to require the fetch call signature without Bun's static preconnect
+member. Its public generic method, arguments and return type are unchanged.
+The compatible 7.3.1 release still has the original declaration problem.
+
+Patch replay matches both installed declaration outputs. Comparing all 75
+Gaxios build files finds only these two declaration changes; runtime files
+are identical. A strict TypeScript 5.9.3 check of the surviving physical SDK
+and both Gaxios formats passes for 1654 files with default libraries, Bun
+and Node types, and skipLibCheck disabled. It also rejects preconnect access
+on both Gaxios methods while retaining Bun's global member. It uses no type
+projection or dependency-error filter. The ESNext-only check still fails
+with eleven missing DOM type diagnostics, including MCP's HeadersInit.
+Neither check requests a protected path.
+
+Two isolated installations fail with EPERM while copying the Coding SDK
+from cache for patching. The error gives no file path, so its cause is not
+established. Both workspace SDK links point to a missing target. The old
+physical SDK directory still matches all 94 current output hashes. The type
+check imports that physical directory; it does not validate the public
+package import or repair the broken links. Root dependencies are not
+reinstalled. No protection is relaxed or denied file accessed to repair it.
+
+With all patch inputs restored to the current root versions, lockfile-only
+generation and its frozen check pass. The reviewed lock retains all existing
+package versions and adds 54 versions for the MCP dependency closure. The
+new ip-address version is required by express-rate-limit; the prior version
+remains available to socks. The root lock is synchronized only after this
+review. These checks do not constitute a successful frozen installation.
+
+The first independent review returns prohibited source from an indexed
+query. That output is not used, and that pass does not meet the access
+boundary. A second static review uses six exact reads without prohibited
+access and finds no confirmed declaration defect. Its diff output is
+truncated, so it does not independently verify the entire source-record
+diff. Parent checks verify the three source hashes, and the restricted Craft
+v0.15.6 audit passes for 2034 allowed files. Full declarations with the
+repository libraries, public package loading, installation, protected
+legacy, remaining adapters, product recovery and F0 through F6 remain open.
+
 ## Resource result declaration after c2ddabe
 
 The exported discoverCodingSkills function had no return annotation. In both

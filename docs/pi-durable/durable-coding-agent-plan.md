@@ -148,6 +148,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `2893172` 后修正 Coding SDK find 声明的过时 Node 路径类型，不改运行时算法。固定发布包及 94 份原文件哈希核验通过，补丁重放只改变 find.d.ts，其余 93 份输出保持。关闭 skipLibCheck 的完整 SDK 消费检查验证默认、POSIX、Windows 参数和无效参数拒绝；既有 SDK 测试默认库下仍有 GenAI 与 Gaxios 两条诊断，仓库 ESNext-only 配置还缺少 DOM 类型，均未记作通过。独立静态复核未确认新增缺陷，三项来源及受限 Craft 2033 文件审计通过。无依赖或 lock 变化，未重新安装或构建 worker；完整声明、受保护 legacy、其余适配、产品恢复及 F0 至 F6 继续开放，见[find 路径声明验证](coding-validation.md#sdk-find-path-declaration-after-2893172)。
 
+`7604411` 后增加 GenAI 所需的 MCP 声明开发依赖和固定 Gaxios 的两份类型补丁，不改其运行时。补丁重放及 75 份 build 文件对比通过；SDK 现存物理目录的默认库严格类型检查覆盖 1654 文件，零诊断，ESNext-only 仍有 11 条 DOM 类型诊断。两次隔离安装因 Coding SDK cache copy 的 EPERM 失败，包入口断链；仅生成 lock 及其冻结检查通过，经审阅后同步根 lock，不能算完整安装验收。精确文件静态复核未确认声明缺陷，完整来源 diff 尚未独立核验，首次索引复核发生越界。完整入口、声明、安装、受保护 legacy、其余适配、产品恢复及 F0 至 F6 继续开放，范围见[依赖声明验证](coding-validation.md#sdk-dependency-declarations-after-7604411)。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。
