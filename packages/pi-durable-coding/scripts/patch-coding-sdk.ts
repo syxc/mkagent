@@ -89,6 +89,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./utils/zip.${extension}";`,
     `export * from "./core/mcp-servers.${extension}";`,
     `export * from "./extensions/mcp/oauth.${extension}";`,
+    `export { McpServerLog, formatMcpLogMessage } from "./extensions/mcp/log.${extension}";`,
     `export { MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName, limitMcpContent, saveToTempFile, toModelContent } from "./extensions/mcp/tools.${extension}";`,
     `export * from "./core/keybindings.${extension}";`,
     `export { KeybindingsManager } from "./core/keybindings.${extension}";`,

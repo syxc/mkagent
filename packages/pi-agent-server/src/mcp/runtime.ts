@@ -30,7 +30,7 @@ import {
 } from '@mkagent/pi-durable-coding/mcp-oauth';
 import { resolveConfigValueOrThrow, resolveHeadersOrThrow } from '@mkagent/pi-durable-coding/mcp-config';
 import { isMcpAppResource } from './resources.ts';
-import { McpServerLog } from './log.ts';
+import type { McpServerLog } from '@mkagent/pi-durable-coding/mcp-log';
 import { isSecureMcpUrl, type McpServerEntry } from './mcp-servers.ts';
 
 const DEFAULT_TIMEOUT_SECONDS = 60;

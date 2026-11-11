@@ -3397,12 +3397,8 @@
       "reason": "Adapt pi-coding-agent 1.1.0 MCP config loading to native coding paths and shared project trust while preserving host precedence and credential routing checks; omit CLI config writers."
     },
     "packages/pi-agent-server/src/mcp/extension.ts": {
-      "sha256": "22cb52f122ef0d5c0464031f027a2549018d621b691b880bfab84e033895a4cc",
-      "reason": "Integrate native plugin MCP declarations, configured namespace priority, dynamic tools and live provider credential callbacks."
-    },
-    "packages/pi-agent-server/src/mcp/log.ts": {
-      "sha256": "d2c4f1e25fe42b995a695da6f5a950c76195e7f35dcc3cee9280852c43b36747",
-      "reason": "Vendor pi-coding-agent 1.1.0 extensions/mcp/log.js formatting, synchronous append and log rotation behavior."
+      "sha256": "7c16bd944179e440e95b70923467fd048cfe9613cb14ce6f4f66a67520aad1e3",
+      "reason": "Use SDK MCP logging at the host agent directory while retaining plugin registration, namespace priority and live credential callbacks."
     },
     "packages/pi-agent-server/src/mcp/mcp-servers.ts": {
       "sha256": "d96737cdb414da6d9c251bbc06d6955ac79e14dc380a78e961fd11fc0c446833",
@@ -3413,8 +3409,8 @@
       "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/resources.js resource listing and reading to durable tool registration and visibility."
     },
     "packages/pi-agent-server/src/mcp/runtime.ts": {
-      "sha256": "4353bc2991a1809f0a9d2abeff7b1a85ee5f002e53975dbd0a6d7e5cae81dbef",
-      "reason": "Resolve MCP headers, process environment and OAuth client secrets through the Coding SDK with the existing platform default shell policy."
+      "sha256": "b608830d9f5844d187a57453327a731d529d0b23585e8b2210040ab44f38401a",
+      "reason": "Use the SDK MCP log type for server notifications; keep host transport, lifecycle and default-shell configuration bindings."
     },
     "packages/pi-agent-server/src/mcp/tools.ts": {
       "sha256": "f5ece4f39e8fddb68c75288832647bfb1e66ecd9ab2f1ce12d7568300115b61a",
@@ -3685,8 +3681,8 @@
       "reason": "Route the shared shell compatibility entry to the active SDK and durable binding."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "4d0b14c25ac88c2dc4cd5755f6d33ba531703b81f1dc6072c1f6eacf6ad7ab4e",
-      "reason": "Expose the MCP configuration binding through the existing Coding SDK dependency."
+      "sha256": "be304a55a371a5817aecaeaf51202b1e3c1e469c90dbbda52d12308d1b3a70e2",
+      "reason": "Expose the MCP log facade through the existing Coding SDK dependency."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -4365,16 +4361,16 @@
       "reason": "Check the OAuth module source route to the public SDK; retain existing SDK identity and trust boundary checks."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "fa741f7834eab77370ca328f2289cad91cb48e2555a3cafb9c080200693d5dbc",
-      "reason": "Record 82 Coding outputs, including existing configuration root exports and optional platform default shell selection."
+      "sha256": "4ed7253a8d8e107e6ec13a3bd6c7bb8fbfd1a1856f0b08d5f79cbd84db30c66b",
+      "reason": "Record 82 Coding outputs; existing MCP logging functions are added to the two shared root exports only."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "d2ac6b11eb4d58465fb61e408db8c5705a4bdc0f1a47ad82618c8a520a0e4edb",
-      "reason": "Export existing strict configuration resolvers and add an optional default shell policy without copying the parser or command algorithm."
+      "sha256": "36d44166acc5ee0fd375f141b858209ae7a093d169d1855ef49319785df7f6f2",
+      "reason": "Export existing MCP logging contracts without changing the published formatter, synchronous append or rotation algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "73d59a3effc66dab532e593088123873617888f5e156a9aea786809e1ce21599",
-      "reason": "Export existing strict configuration resolvers and preserve host MCP shell semantics with an optional policy parameter."
+      "sha256": "ce996bb9a0891d718c94ac7336c892c89043fb7f700a6e16559a62194797efa5",
+      "reason": "Add existing MCP log class and formatter root exports; preserve the published logging module and declarations."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4631,6 +4627,14 @@
     "packages/pi-agent-server/src/mcp/config-sdk.test.ts": {
       "sha256": "f236ea5c9b2301faccaf3d56f78064deff0ae3a6bb287fc59fe4c342d34032f3",
       "reason": "Verify SDK templates, strict errors, uncached commands, MCP transport and OAuth boundaries, and modeled Windows shell selection."
+    },
+    "packages/pi-durable-coding/src/mcp-log.ts": {
+      "sha256": "49942588f28074fa9749f2427c5f62b61f66b98bc43787233b82e9c6c7000a1d",
+      "reason": "Forward the SDK MCP log class and formatter; the host supplies its existing log path."
+    },
+    "packages/pi-agent-server/src/mcp/log-sdk.test.ts": {
+      "sha256": "ac3b7a9da483e9ed757647a228df1dd4ff6b1dc874b144395f33d17b4fd80b33",
+      "reason": "Verify SDK MCP formatting, synchronous append, byte limits, external rotation and filesystem failure recovery at task-owned paths."
     }
   },
   "deleted": {

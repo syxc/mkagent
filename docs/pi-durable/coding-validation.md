@@ -26,6 +26,67 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK MCP logging after 61734e9
+
+Delete the server's 71-line MCP log copy. The two-line handwritten mcp-log
+facade forwards the existing McpServerLog class and formatMcpLogMessage function
+from the Coding SDK root. The extension still selects agentDir/mcp.log and the
+runtime still passes server notifications to that instance. Durable's public
+entries do not provide this MCP logging contract. No formatter, file writer or
+rotation algorithm is copied into a wrapper or patch template.
+
+The SDK needs only existing-name root exports. Generation and check pass for
+82 Coding outputs. Only dist/index.js and dist/index.d.ts change relative to
+61734e9; both installed logging modules and declarations in the two existing
+layouts match the pristine release. All 82 output hashes match each layout.
+Core has four outputs and durable has 33, for 119 total. The generated runtime
+list stays at 13 TypeScript files, with nine src/pi files and four facades.
+The new handwritten facade is outside that list. Dependencies, lockfile and
+persistence versions do not change, and no install runs.
+
+Each existing layout passes 47 MCP tests: six log cases plus config-sdk,
+tools-sdk, visibility, registrations and provider regressions. The log tests
+cover levels and logger names, CRLF/LF indentation, undefined and non-JSON data,
+synchronous writes from separate instances, the exact five-MiB threshold,
+UTF-8 byte accounting, external rotation and filesystem failure recovery.
+Guarded preflights inspect 2139 root and 2600 hoisted loads with zero protected
+loads. The actual facade, emitted declaration consumer, test and both production
+callers compile with zero diagnostics under strict mode and skipLibCheck.
+These are scoped checks, not a full declaration build or full Native validation.
+
+Independent review finds no reproducible migration defect. The parent verifies
+all eight frozen source files, 13 evidence files and five review artifacts before
+acceptance. Root, hoisted and pristine narrow modules each match the old
+implementation's 336-node AST, 980 formatting cases and ten filesystem scenarios.
+Two narrow declaration consumers pass strict mode with skipLibCheck and zero
+diagnostics. Both installed log modules, declarations and maps match pristine.
+
+The independent full-root preflight stops at sandbox EPERM on lib/credentials;
+protection is not relaxed. The reviewer verifies the parent's 47/0 results and
+actual facade/runtime/extension type evidence but does not rerun those checks.
+The added multi-instance test uses sequential writes in one process. Its UTF-8
+case does not directly test the next automatic rotation; the independent probe
+covers that case, plus rename and append failure recovery. Real multiprocess
+rotation, Windows and real services remain unverified. Initial AST-helper and
+declaration-import failures in the review runner are corrected before the
+successful narrow checks; they are not product failures.
+
+Source registration updates six entries, retires one and adds two. Other entries
+stay unchanged. The fixed Craft v0.15.6 restricted audit passes 2019 allowed
+files: 1454 common paths, 873 normalized matches, 581 modified files,
+565 MkAgent-only files and 858 reviewed Craft-only deletions. Whole-legacy,
+context-tokens.js and sensitive configuration exclusions remain. Behavioral
+children use task-owned HOME and temporary directories, PI_OFFLINE, no environment
+file, the loopback-only preload and OS sandbox. Real user configuration,
+external network access and port 9100 remain blocked.
+
+Evidence is under /tmp/mkagent-mcp-log-sdk-9frVL8. Preserve applied.json,
+validation.json, review-inputs.json, review-verified.json, the independent-review
+subdirectory, source-registration.json and restricted-craft-audit.json.
+Full Native, full declarations, fresh install,
+real Windows, full Craft and F0 through F6 remain open. Continue review of
+remaining server configuration, resource and runtime responsibilities.
+
 ## Public SDK MCP configuration after b728360
 
 Delete the server's 224-line configuration resolver copy. The Coding SDK now

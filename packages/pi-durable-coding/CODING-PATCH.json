@@ -8,12 +8,12 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "6e4ed4985c0946dc5d648e23bf1ba6e425e7ca24ef023fcdb7bebddee196b222"
+      "sha256": "2b593d6fcd2324f6c9fbf24dccc408ce0dd304a90e006582e54ff86debf53212"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "5e35d01e5dd44429d4410a9ab93821e92b06345fd80c4d68e26815895cd2612a"
+      "sha256": "9f5d8e36924b8c77891b5a46cf0f98c7cd1b17ad5f8a22deb5d7352b8a99eaad"
     },
     {
       "path": "dist/core/agent-session-services.js",

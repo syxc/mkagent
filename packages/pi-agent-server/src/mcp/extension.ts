@@ -13,7 +13,7 @@ import type { CodemodeNamespace } from '@earendil-works/pi-durable/codemode';
 import { loadMcpConfig } from './config.ts';
 import { getMcpToolExposure, mcpNamespace, validateMcpServerConfig, type McpServerEntry } from './mcp-servers.ts';
 import { McpServerConnection, createDefaultTransport } from './runtime.ts';
-import { McpServerLog } from './log.ts';
+import { McpServerLog } from '@mkagent/pi-durable-coding/mcp-log';
 import { createMcpResourceToolDefinitions } from './resources.ts';
 import { createMcpToolDefinition, createMcpToolName } from './tools.ts';
 

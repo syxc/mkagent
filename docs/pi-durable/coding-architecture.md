@@ -335,6 +335,8 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `b728360` 后的 MCP 配置切片删除 server 的 224 行解析副本，模板、环境回退、严格错误和不缓存命令执行均交给 Coding SDK。两个已有严格函数只补根出口；10 行手写绑定为 MCP 选择平台默认 shell，runtime 的 headers、stdio env 和 OAuth clientSecret 三处调用共用此绑定。独立复核确认初版在 Windows 优先选择 Git Bash，改变 `%VAR%` 语义；SDK 因此增加可选默认 shell 策略，未传选项仍保持原行为。模型回归修复前失败，修复后两布局各 41 项测试及实际绑定、声明消费者严格类型检查通过，使用 skipLibCheck；未再独立复核，没有真实 Windows 验证。Coding 补丁为 82 份，总数 119 份，生成清单仍为 13 份，手写绑定另计；来源更新 5 项、退役 1 项、新增 2 项，受限 Craft 审计通过 2018 个允许文件。完整 Native、声明及 F0 至 F6 继续开放，见[MCP 配置验证](coding-validation.md#public-sdk-mcp-configuration-after-b728360)。
 
+`61734e9` 后的 MCP 日志切片删除 server 的 71 行完整副本，两行手写门面直接转出 Coding SDK 的 McpServerLog 与 formatMcpLogMessage。extension 仍传入 agentDir/mcp.log，runtime 继续把通知交给同一日志实例；格式化、同步追加与轮转算法全部使用 SDK。补丁只增加两个根出口，两个布局的日志 JS/声明保持 pristine，Coding 仍为 82 份输出、总数 119 份。两布局各 47 项 MCP 测试和实际门面、声明、新测试及两个生产调用点的严格类型检查通过，使用 skipLibCheck。来源更新 6 项、退役 1 项、新增 2 项，受限 Craft 审计通过 2019 个允许文件；生成清单仍为 13 份，手写门面另计。独立复核及限制见[MCP 日志验证](coding-validation.md#public-sdk-mcp-logging-after-61734e9)，其余源码与 F0 至 F6 继续开放。
+
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |
