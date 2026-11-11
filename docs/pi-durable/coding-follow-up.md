@@ -176,6 +176,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `7cae8c6` 后的工具聚合切片删除 224 行完整副本，47 行 Native 门面保留全部 75 个具名导出并绑定十二个既有工厂；write 和 ls 使用 SDK 默认工厂。SDK 补丁仅为原有八个聚合函数增加十六个可选工厂接点，不把算法搬进模板。两现有布局各 5 项测试、232 个断言及实际声明定向 strict/skipLibCheck 检查通过，包含真实文件写入、编辑和读取。独立复核未确认缺陷，12 个源码路径、192 个产物路径、25 个支持输入及复核的 243 个输入、9 个产物摘要已接纳。来源更新 8 项、新增 3 项、退役 1 项，受限 Craft 审计通过 2026 个允许文件。Coding 92 份、总数 129 份补丁输出，runtime 完整生成与 check 后为 11 份 TypeScript，其中 src/pi 为 7 份，0 项资源，手写绑定另计。失败修正和完整入口、声明、恢复、SDK 内部默认工具与 executeBash 策略的限制见[工具聚合验证](coding-validation.md#sdk-tool-factories-after-7cae8c6)。剩余源码及 F0 至 F6 继续开放。
 
+`965df73` 后的会话工具接线切片为 SDK AgentSession 增加两个可选实例工厂，Native 固定绑定已有工具和 Bash operations；SDK 继续承担装配、reload、执行与历史生命周期。产品原有 baseToolsOverride 保持优先，逐次 operations 也不受影响。两现有布局各 5 项测试、36 个断言及实际声明定向 strict/skipLibCheck 检查通过；独立静态复核未确认缺陷，228 个输入、4 个 base blob 和 16 个复核产物摘要已接纳。来源更新 4 项、新增 1 项，受限 Craft 审计通过 2027 个允许文件。仅改变两份 AgentSession 输出，Coding 92 份、总数 129 份及 runtime 11 份清单保持。SDK 内部默认工具与交互 Bash 的工厂接线已补齐；完整入口、声明构建、恢复、真实进程树取消及其他平台仍未验证，见[会话工具接线验证](coding-validation.md#sdk-session-tool-bindings-after-965df73)。剩余源码及 F0 至 F6 继续开放。
+
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 
 | 优先范围 | 下一步与保留条件 |

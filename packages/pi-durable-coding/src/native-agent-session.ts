@@ -9,6 +9,8 @@ import type { AgentActivityOutcome,NormalizedBuildSystemPromptOptions } from '@e
 import { runToolCall,type Agent,type AgentMessage } from './agent-runtime.ts';
 import { convertToLlm } from './native-messages.ts';
 import { processImage } from './native-image-process.ts';
+import { createAllToolDefinitions } from './native-tools.ts';
+import { createLocalBashOperations } from './native-shell-tools.ts';
 import { createToolDefinitionFromAgentTool } from '@earendil-works/pi-coding-agent';
 import type { AgentTool } from './agent-runtime.ts';
 
@@ -51,7 +53,7 @@ export class AgentSession extends SDKAgentSession {
   private _durableQueueAdmissions=new Set<Promise<void>>();
 
   constructor(config: AgentSessionConfig) {
-    super({ ...config,runToolCall,convertToLlm,processImage });
+    super({ ...config,runToolCall,convertToLlm,processImage,createAllToolDefinitions,createLocalBashOperations });
     this.agent.durable.bindSessionState(() => this.exportDurableState(),state =>
       this.restoreDurableState(state as ReturnType<AgentSession["exportDurableState"]>));
     this.agent.durable.bindInputQueues((inputs,cancelled) => {
@@ -108,7 +110,7 @@ export class AgentSession extends SDKAgentSession {
     return this.modelRuntime.hasConfiguredAuth(model.provider)||!!(await this.modelRuntime.checkAuth(model.provider));
   }
 
-  protected override _getSummaryStream() { return this.agent.durable.summaryStream; }
+  protected override _getSummaryStream(): Agent['durable']['summaryStream'] { return this.agent.durable.summaryStream; }
 
   protected override _onMessagePersisted(message: AgentMessage,entryId: string): void {
     this.agent.durable.tagEntry(message,entryId);

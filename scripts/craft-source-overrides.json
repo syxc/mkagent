@@ -4341,16 +4341,16 @@
       "reason": "Assert that generated tool aggregation imports resolve to the Native SDK factory binding."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "76b91b865621405c3c0a506d14262d5188f9f970b59901abdbd511bbccab1936",
-      "reason": "Record the optional SDK tool-factory binding and root exports in 92 physical outputs; retain the other 88 existing output hashes."
+      "sha256": "1e51521cce1a960729ad2a4dd120096ed353151ccef363ead4dd0a3c0da87266",
+      "reason": "Record optional AgentSession tool and Bash operation factories; only the two AgentSession outputs change among 92 Coding outputs."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
       "sha256": "bcaefc507e0d812ce521a8131adbfe8174d2cd38cead90c9d27b783807dfb727",
       "reason": "Expose existing tool contracts and generate an optional factory binding from the published SDK algorithm."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "62d0881cb14d168078393a9d3e43e709869ea5402f27737c43b749daec770bfd",
-      "reason": "Add an instance tool-factory binding and root exports without copying the published aggregation algorithms into a template."
+      "sha256": "d594178f9e3b6272937299bdddf82c71d13abb98b91f82f6efaa6f22f9f9b383",
+      "reason": "Add two optional per-session factory hooks while preserving SDK tool assembly, explicit overrides and Bash execution lifecycle."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4397,16 +4397,16 @@
       "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
     },
     "packages/pi-durable-coding/scripts/coding-agent-session-policy.ts": {
-      "sha256": "c74d10756041e47b3a9afc6b56103584ee61558cc346e3bdb23bc6aed6f7676d",
-      "reason": "Expose optional durable settlement, input admission, nested tool execution, internal model projection and prompt image processing hooks while the published AgentSession retains its lifecycle algorithms."
+      "sha256": "62ffe3bcdc4e930f0068be107f29fa132b878c81b8d850e8be0bc3a760b306a1",
+      "reason": "Expose optional host tool and Bash operation factories alongside durable hooks while the SDK retains session, runtime and Bash lifecycle algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-tool-policy.ts": {
       "sha256": "3c14154a6efed065be389dfb5a5e8803364ca9bb3989bdb75af1a249ed6c9c5f",
       "reason": "Preserve tool execution ownership symbol descriptors and declaration metadata through the published SDK tool conversions without a product module dependency."
     },
     "packages/pi-durable-coding/src/native-agent-session.ts": {
-      "sha256": "ef979635f88b67b3891a89ecbf7c77ed9e7a44294615514b66559f345590fc75",
-      "reason": "Use SDK prompt defaults after configuration unification; retain durable execution, message conversion, image and persistence bindings."
+      "sha256": "16709dd34a4a8c46ebad2c47b0f99462344bf2908dfcebefc14ffb2f71cacd38",
+      "reason": "Bind existing Native tool and shell factories to SDK session defaults; retain durable state, input, conversion, image and persistence bindings."
     },
     "packages/pi-durable-coding/test/host-agent-session.test.ts": {
       "sha256": "e2ff7e7cdd572f61074b1b76e38e77ae1b7cf55f8cfda833416487e7408cd903",
@@ -4663,6 +4663,10 @@
     "packages/pi-durable-coding/test/tool-factories-sdk.test.ts": {
       "sha256": "3b0518e3a5d736b384c2e61fb1cf3ae15be015cad10f81fa0a5cf079f1dcf2be",
       "reason": "Verify SDK and Native tool order, factory selection, option identity, fallback, failures, and real file write/edit/read."
+    },
+    "packages/pi-durable-coding/test/session-tool-bindings.test.ts": {
+      "sha256": "0aedafb71ff6b0547dce4a0d076d771ab3f6bddf38fe6ffc0f538fcaaba0c47b",
+      "reason": "Verify instance factories, reload, explicit overrides, shell settings, output, cancellation, history and Native defaults without provider access."
     }
   },
   "deleted": {

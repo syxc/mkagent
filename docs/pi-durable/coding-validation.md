@@ -26,6 +26,62 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK session tool bindings after 965df73
+
+AgentSession now accepts two optional instance factories: createAllToolDefinitions
+and createLocalBashOperations. Native AgentSession binds its existing tool and
+shell factories before the SDK builds the runtime. The SDK keeps tool assembly,
+registration and the Bash execution lifecycle. The product CodingHost already
+supplies baseToolsOverride; this change also covers sessions that use default
+tools and executeBash without explicit operations.
+
+Unconfigured SDK sessions keep their original factories. Explicit base tools
+bypass the default factory, and per-call Bash operations take precedence. Reload
+uses the same instance factories. Shell settings, prefix, output events, abort
+state, history and failure cleanup remain under SDK control. Remove these hooks
+when the public SDK provides equivalent instance bindings.
+
+Only the AgentSession JS and declaration outputs change among the 92 Coding
+outputs. The other 90 output hashes and patch sections stay unchanged. Core has
+four outputs and durable 33, for a total of 129. The runtime inventory remains
+eleven TypeScript files, seven in src/pi, with no assets. Hand-written bindings
+are counted separately. No complete runtime or auxiliary generation was needed
+or rerun in this slice.
+
+Patch generation, check and pristine replay pass. The first apply stopped before
+installation: diagnostic serialization failed while reporting an existing
+isolatedDeclarations error in the Native summary-stream method. An explicit
+public return type fixed that error. A separate sync completed eleven writes
+across the two existing layouts, including the actual Native declarations.
+There was no fresh install.
+
+The first root behavior run passed four tests and failed one because the test
+expected an SDK-wrapped execute function to retain reference identity. The test
+now checks execution before and after reload. The next root run passed all five
+tests and 36 assertions, then its type check rejected an overly broad fixture
+override type. Excluding agent from that override fixed the type. The compiled
+behavior code is byte-identical after this type-only change, so the final root
+result reuses the passing behavior log. The hoisted layout independently passes
+all five tests and 36 assertions. Both layouts pass scoped strict noEmit checks
+with skipLibCheck against actual declarations and source consumers. Guarded
+builds report zero protected loads. A real local Bash command verifies the
+Native prefix and history; injected operations cover cancellation and failure.
+Task fixtures were retained when trash cleanup failed inside the sandbox.
+
+Independent static review found no confirmed defects or slice blockers. Parent
+verification matched all 228 input hashes, four allowed base blobs and sixteen
+review outputs. The frozen set contains five sources, 188 artifacts, four context
+files and thirty support inputs, plus the input manifest. Source registration
+updates four entries and adds the test, with no retired entries or unrelated
+changes. The restricted Craft v0.15.6 audit passes for 2027 allowed files and
+excludes legacy and sensitive paths.
+
+Full Native imports, a full declaration build, a fresh install, recovery
+integration, real process-tree cancellation and other platforms remain
+unverified in this slice. The earlier internal default-factory gap is closed;
+these scoped results do not establish complete acceptance. F0 through F6 and
+the remaining source review stay open.
+
 ## SDK tool factories after 7cae8c6
 
 The 224-line copied tool aggregation module is deleted. A 47-line Native

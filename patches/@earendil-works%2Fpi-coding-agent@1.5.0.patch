@@ -1,4 +1,4 @@
-# Content SHA-256: b223b0f22e1bce2cffb3e7fac840f0a29f612fa4220741482c94abb6992f6d34
+# Content SHA-256: 9ef658c9637d0e95bfa5b21016e3f3be698b5d3ec06f7fa8bf084539bef72911
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -3080,13 +3080,15 @@ diff --git a/dist/core/model-runtime.js b/dist/core/model-runtime.js
 diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
 --- a/dist/core/agent-session.js
 +++ b/dist/core/agent-session.js
-@@ -182,6 +182,15 @@ export class AgentSession {
+@@ -182,6 +182,17 @@ export class AgentSession {
      _baseSystemPromptOptions;
      /** Prompt options after before_agent_start mutations for the active run. */
      _runSystemPromptOptions;
 +    _runNestedToolCall = runToolCall;
 +    _convertToLlm = convertToLlm;
 +    _processImage = processImage;
++    _createAllToolDefinitions = createAllToolDefinitions;
++    _createLocalBashOperations = createLocalBashOperations;
 +    _wrapTool;
 +    _onAction;
 +    _onToolsChanged;
@@ -3096,13 +3098,15 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
      constructor(config) {
          this.agent = config.agent;
          this.sessionManager = config.sessionManager;
-@@ -206,6 +215,15 @@ export class AgentSession {
+@@ -206,6 +217,17 @@ export class AgentSession {
          }
          this._excludedTools = config.excludedToolNames ? createToolNameMatcher(config.excludedToolNames) : undefined;
          this._baseToolsOverride = config.baseToolsOverride;
 +        this._runNestedToolCall = config.runToolCall ?? runToolCall;
 +        this._convertToLlm = config.convertToLlm ?? convertToLlm;
 +        this._processImage = config.processImage ?? processImage;
++        this._createAllToolDefinitions = config.createAllToolDefinitions ?? createAllToolDefinitions;
++        this._createLocalBashOperations = config.createLocalBashOperations ?? createLocalBashOperations;
 +        this._wrapTool = config.wrapTool;
 +        this._onAction = config.onAction;
 +        this._onToolsChanged = config.onToolsChanged;
@@ -3112,7 +3116,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          this._sessionStartEvent = config.sessionStartEvent ?? { type: "session_start", reason: "startup" };
          // Always subscribe to agent events for internal handling
          // (session persistence, extensions, auto-compaction, retry logic)
-@@ -258,7 +276,7 @@ export class AgentSession {
+@@ -258,7 +280,7 @@ export class AgentSession {
      async _getSummarizationRequestAuth(selectedModel, signal) {
          // Route a virtual model first: summaries size their input and output from the model they get.
          const { model, thinkingLevel } = isVirtualModel(selectedModel)
@@ -3121,7 +3125,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
                  reason: "direct",
                  thinkingLevel: this.thinkingLevel,
                  signal,
-@@ -410,7 +428,7 @@ export class AgentSession {
+@@ -410,7 +432,7 @@ export class AgentSession {
                          isError: true,
                      });
                  }
@@ -3130,7 +3134,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
                      tools: this._getCallableTools(),
                      assistantMessage,
                      context: { messages: this.agent.state.messages, tools: this.agent.state.tools },
-@@ -475,7 +493,7 @@ export class AgentSession {
+@@ -475,7 +497,7 @@ export class AgentSession {
              const lastResponse = context.messages.findLastIndex((message) => message.role === "assistant");
              const userTurn = context.messages.slice(lastResponse + 1).some((message) => message.role === "user");
              const state = getVirtualModelState(this.sessionManager.getBranch(), model.provider, model.id);
@@ -3139,7 +3143,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
                  reason: failed ? "retry" : userTurn ? "user" : "continuation",
                  thinkingLevel,
                  signal,
-@@ -628,7 +646,7 @@ export class AgentSession {
+@@ -628,7 +650,7 @@ export class AgentSession {
      _buildBoundaryContext(drafts, boundary) {
          const projection = this._createBoundaryPreviewManager(drafts).buildSessionProjection();
          const pendingMessages = this._getPendingBoundaryMessages();
@@ -3148,7 +3152,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          const finalRole = llmMessages[llmMessages.length - 1]?.role;
          const hasNonSystemContext = llmMessages.some((message) => message.role !== "system");
          const contextCanContinue = hasNonSystemContext && finalRole !== "assistant";
-@@ -700,6 +718,7 @@ export class AgentSession {
+@@ -700,6 +722,7 @@ export class AgentSession {
          try {
              const aborted = this._agentRunAbortRequested;
              await this._extensionRunner.emit({ type: "agent_settled", aborted });
@@ -3156,7 +3160,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
              this._emit({ type: "agent_settled", aborted });
          }
          finally {
-@@ -763,6 +782,7 @@ export class AgentSession {
+@@ -763,6 +786,7 @@ export class AgentSession {
          }
          // Emit to extensions first, then notify public listeners.
          await this._emitExtensionEvent(event);
@@ -3164,7 +3168,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          this._emit(event.type === "agent_end" ? { ...event, willRetry: this._willRetryAfterAgentEnd(event) } : event);
          // Handle session persistence
          if (event.type === "message_end") {
-@@ -779,8 +799,10 @@ export class AgentSession {
+@@ -779,8 +803,10 @@ export class AgentSession {
                  // Regular LLM message - persist as SessionMessageEntry
                  entryId = this.sessionManager.appendMessage(event.message);
              }
@@ -3176,7 +3180,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
              // Other message types (bashExecution, compactionSummary, branchSummary) are persisted elsewhere
              if (event.message.role === "assistant") {
                  const assistantMsg = event.message;
-@@ -902,10 +924,16 @@ export class AgentSession {
+@@ -902,10 +928,16 @@ export class AgentSession {
              return;
          }
          const targetRecord = target;
@@ -3193,7 +3197,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
      }
      /** Emit extension events based on agent events */
      async _emitExtensionEvent(event) {
-@@ -1087,7 +1115,7 @@ export class AgentSession {
+@@ -1087,7 +1119,7 @@ export class AgentSession {
      }
      /** Current effective system prompt, including changes not yet sent to the model. */
      get systemPrompt() {
@@ -3202,7 +3206,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
      }
      /** Current retry attempt (0 if not retrying) */
      get retryAttempt() {
-@@ -1342,7 +1370,7 @@ export class AgentSession {
+@@ -1342,7 +1374,7 @@ export class AgentSession {
          options.selectedTools = this._applyToolLoadout(options.selectedTools).map((tool) => tool.name);
          // The tool list and rules must match the declarations the request carries.
          options.hiddenTools = [...this._hiddenDeclarations];
@@ -3211,7 +3215,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          return sections ? { role: "system", content: "", sections, timestamp: Date.now() } : undefined;
      }
      /**
-@@ -1438,12 +1466,12 @@ export class AgentSession {
+@@ -1438,12 +1470,12 @@ export class AgentSession {
       * starting another, and an abort requested meanwhile aborts the run as soon as it exists.
       * @param onStarted Called once the run's messages are prepared, before the first request.
       */
@@ -3226,7 +3230,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          }
          catch (error) {
              this._isAgentRunActive = false;
-@@ -1456,13 +1484,14 @@ export class AgentSession {
+@@ -1456,13 +1488,14 @@ export class AgentSession {
          // have while idle. No run exists yet, so they cannot split a tool call from its result.
          this._flushPendingBashMessages();
          this._flushPendingCustomMessages();
@@ -3242,7 +3246,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          try {
              await this.agent.prompt(messages);
              while (!this._agentRunAbortRequested) {
-@@ -1495,13 +1524,14 @@ export class AgentSession {
+@@ -1495,13 +1528,14 @@ export class AgentSession {
       * message followed by pending nextTurn messages (consumed here) and handler messages, with a
       * system patch first when the prompt changed.
       */
@@ -3258,7 +3262,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          const selectedToolsBefore = this._baseSystemPromptOptions.selectedTools;
          const result = await this._extensionRunner.emitBeforeAgentStart(trigger, this._baseSystemPromptOptions);
          // Handlers may edit event.systemPromptOptions.selectedTools or call setActiveTools(),
-@@ -1522,6 +1552,8 @@ export class AgentSession {
+@@ -1522,6 +1556,8 @@ export class AgentSession {
              const text = normalized.hints.length > 0 ? `${trigger.prompt}\n\n${normalized.hints.join("\n")}` : trigger.prompt;
              messages.push({
                  role: "user",
@@ -3267,7 +3271,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
                  content: [{ type: "text", text }, ...normalized.images],
                  timestamp: Date.now(),
              });
-@@ -1588,6 +1620,7 @@ export class AgentSession {
+@@ -1588,6 +1624,7 @@ export class AgentSession {
          this._abortDuringBeforeSettle = false;
          try {
              const result = await this._extensionRunner.emitBoundary({ type: "agent_before_settle", outcome: this._lastActivityOutcome }, (entries) => this._buildBoundaryContext(entries, "agent_before_settle"));
@@ -3275,7 +3279,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
              this._commitBoundaryDrafts(result.entries);
              this._flushPendingCustomMessages();
              const finalContext = this._buildBoundaryContext([], "agent_before_settle");
-@@ -1624,7 +1657,7 @@ export class AgentSession {
+@@ -1624,7 +1661,7 @@ export class AgentSession {
          const normalizedImages = [];
          const hints = [];
          for (const image of images) {
@@ -3284,7 +3288,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
                  autoResizeImages: this.settingsManager.getImageAutoResize(),
                  resizeOptions: this._limitsModel()?.inputLimits?.images?.resize,
              });
-@@ -1648,6 +1681,10 @@ export class AgentSession {
+@@ -1648,6 +1685,10 @@ export class AgentSession {
       */
      async prompt(text, options) {
          if (this._isEmittingAgentSettled) {
@@ -3295,7 +3299,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
              this._deferredSettledActions.push(async () => await this.prompt(text, options));
              return;
          }
-@@ -1679,16 +1716,17 @@ export class AgentSession {
+@@ -1679,16 +1720,17 @@ export class AgentSession {
              expandedText = this._expandSkillCommand(expandedText);
              expandedText = expandPromptTemplate(expandedText, [...this.promptTemplates]);
          }
@@ -3315,7 +3319,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
              }
              preflightResult?.("queued");
              return;
-@@ -1708,7 +1746,7 @@ export class AgentSession {
+@@ -1708,7 +1750,7 @@ export class AgentSession {
              }
              throw new Error(formatNoApiKeyFoundMessage(this.model.provider));
          }
@@ -3324,7 +3328,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
      }
      /**
       * Try to execute an extension command. Returns true if command was found and executed.
-@@ -1810,30 +1848,32 @@ export class AgentSession {
+@@ -1810,30 +1852,32 @@ export class AgentSession {
      /**
       * Internal: Queue a steering message (already expanded, no extension command check).
       */
@@ -3369,7 +3373,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
      }
      /**
       * Throw an error if the text is an extension command.
-@@ -1870,9 +1910,11 @@ export class AgentSession {
+@@ -1870,9 +1914,11 @@ export class AgentSession {
              timestamp: Date.now(),
          };
          if (options?.deliverAs === "nextTurn") {
@@ -3381,7 +3385,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
              if (options?.deliverAs === "followUp") {
                  this.agent.followUp(appMessage);
              }
-@@ -1882,6 +1924,7 @@ export class AgentSession {
+@@ -1882,6 +1928,7 @@ export class AgentSession {
          }
          else if (options?.triggerTurn) {
              if (this._isEmittingAgentSettled) {
@@ -3389,7 +3393,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
                  this._deferredSettledActions.push(async () => await this.sendCustomMessage(message, options));
                  return;
              }
-@@ -1892,6 +1935,7 @@ export class AgentSession {
+@@ -1892,6 +1939,7 @@ export class AgentSession {
              // result, which providers that validate message order reject on replay. Defer
              // to the end of the turn. Nothing is emitted yet: message events must not
              // describe messages the session tree does not contain.
@@ -3397,7 +3401,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
              this._pendingCustomMessages.push(appMessage);
          }
          else {
-@@ -1899,7 +1943,8 @@ export class AgentSession {
+@@ -1899,7 +1947,8 @@ export class AgentSession {
          }
      }
      _appendCustomMessage(appMessage) {
@@ -3407,7 +3411,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          this._refreshFinalizedContext();
          this._emit({ type: "message_start", message: appMessage });
          this._emit({ type: "message_end", message: appMessage });
-@@ -1926,6 +1971,7 @@ export class AgentSession {
+@@ -1926,6 +1975,7 @@ export class AgentSession {
       * @param options.expandPromptTemplates Whether to dispatch extension commands and expand skill commands and prompt templates. Default: false.
       */
      async sendUserMessage(content, options) {
@@ -3415,7 +3419,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          // Normalize content to text string + optional images
          let text;
          let images;
-@@ -1952,6 +1998,8 @@ export class AgentSession {
+@@ -1952,6 +2002,8 @@ export class AgentSession {
              streamingBehavior: options?.deliverAs,
              images,
              source: "extension",
@@ -3424,7 +3428,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          });
      }
      /**
-@@ -2224,7 +2272,7 @@ export class AgentSession {
+@@ -2224,7 +2276,7 @@ export class AgentSession {
      async _runDefaultCompaction(preparation, model, customInstructions, signal, reason) {
          // Resolve the request only when Pi summarizes itself: routing may call models or fail.
          const request = await this._getSummarizationRequestAuth(model, signal);
@@ -3433,7 +3437,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
      }
      _clearManualCompactionState() {
          this._compactionAbortController = undefined;
-@@ -2781,7 +2829,7 @@ export class AgentSession {
+@@ -2781,7 +2833,7 @@ export class AgentSession {
          };
          runner.bindCore({
              sendMessage: (message, options) => {
@@ -3442,7 +3446,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
                      runner.emitError({
                          extensionPath: "<runtime>",
                          event: "send_message",
-@@ -2790,7 +2838,7 @@ export class AgentSession {
+@@ -2790,7 +2842,7 @@ export class AgentSession {
                  });
              },
              sendUserMessage: (content, options) => {
@@ -3451,7 +3455,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
                      runner.emitError({
                          extensionPath: "<runtime>",
                          event: "send_user_message",
-@@ -2821,7 +2869,7 @@ export class AgentSession {
+@@ -2821,7 +2873,7 @@ export class AgentSession {
              refreshTools: () => this._refreshToolRegistry(),
              getCommands,
              setModel: async (model) => {
@@ -3460,7 +3464,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
                      return false;
                  await this.setModel(model);
                  return true;
-@@ -2941,7 +2989,9 @@ export class AgentSession {
+@@ -2941,7 +2993,9 @@ export class AgentSession {
          for (const tool of wrappedExtensionTools) {
              toolRegistry.set(tool.name, tool);
          }
@@ -3471,7 +3475,16 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          const nextActiveToolNames = (options?.activeToolNames ? [...options.activeToolNames] : [...previousActiveToolNames]).filter((name) => this._isAllowedTool(name));
          if (allowedTools) {
              for (const toolName of this._toolRegistry.keys()) {
-@@ -2998,7 +3048,7 @@ export class AgentSession {
+@@ -2987,7 +3041,7 @@ export class AgentSession {
+                 name,
+                 createToolDefinitionFromAgentTool(tool),
+             ]))
+-            : createAllToolDefinitions(this._cwd, {
++            : this._createAllToolDefinitions(this._cwd, {
+                 read: { autoResizeImages },
+                 bash: { commandPrefix: shellCommandPrefix, shellPath },
+             });
+@@ -2998,7 +3052,7 @@ export class AgentSession {
                  extensionsResult.runtime.flagValues.set(name, value);
              }
          }
@@ -3480,7 +3493,16 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
          if (this._extensionRunnerRef) {
              this._extensionRunnerRef.current = this._extensionRunner;
          }
-@@ -3355,7 +3405,7 @@ export class AgentSession {
+@@ -3181,7 +3235,7 @@ export class AgentSession {
+         const shellPath = this.settingsManager.getShellPath();
+         const resolvedCommand = prefix ? `${prefix}\n${command}` : command;
+         try {
+-            const result = await executeBashWithOperations(resolvedCommand, this.sessionManager.getCwd(), options?.operations ?? createLocalBashOperations({ shellPath }), {
++            const result = await executeBashWithOperations(resolvedCommand, this.sessionManager.getCwd(), options?.operations ?? this._createLocalBashOperations({ shellPath }), {
+                 onChunk: (delta) => {
+                     onChunk?.(delta);
+                     this._emit({ type: "bash_execution_update", id: options?.id, delta });
+@@ -3355,7 +3409,7 @@ export class AgentSession {
                      customInstructions,
                      replaceInstructions,
                      reserveTokens: branchSummarySettings.reserveTokens,
@@ -3489,7 +3511,7 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
                      retry: this.settingsManager.getRetrySettings(),
                      callbacks: this._summarizationRetryCallbacks({ source: "branchSummary" }),
                  });
-@@ -3593,7 +3643,7 @@ export class AgentSession {
+@@ -3593,7 +3647,7 @@ export class AgentSession {
              messages: this.messages,
              hint: options.hint,
              signal: options.signal,
@@ -3941,10 +3963,12 @@ diff --git a/dist/core/model-runtime.d.ts b/dist/core/model-runtime.d.ts
 diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
 --- a/dist/core/agent-session.d.ts
 +++ b/dist/core/agent-session.d.ts
-@@ -1,3 +1,11 @@
+@@ -1,3 +1,13 @@
 +import type { runToolCall } from "@earendil-works/pi-agent-core";
 +import type { convertToLlm } from "./messages.ts";
 +import type { processImage } from "../utils/image-process.ts";
++import type { createAllToolDefinitions } from "./tools/index.ts";
++import type { createLocalBashOperations } from "./tools/bash.ts";
 +import type { AssistantMessage } from "@earendil-works/pi-ai/compat";
 +import type { AgentActivityOutcome, BeforeAgentStartTrigger } from "./extensions/types.ts";
 +import type { BashExecutionMessage } from "./messages.ts";
@@ -3953,13 +3977,15 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
  /**
   * AgentSession - Core abstraction for agent lifecycle and session management.
   *
-@@ -112,6 +120,17 @@ export type AgentSessionEvent = WithParentToolCallId<Exclude<AgentEvent, {
+@@ -112,6 +122,19 @@ export type AgentSessionEvent = WithParentToolCallId<Exclude<AgentEvent, {
  /** Listener function for agent session events */
  export type AgentSessionEventListener = (event: AgentSessionEvent) => void;
  export interface AgentSessionConfig {
 +    runToolCall?: typeof runToolCall;
 +    convertToLlm?: typeof convertToLlm;
 +    processImage?: typeof processImage;
++    createAllToolDefinitions?: typeof createAllToolDefinitions;
++    createLocalBashOperations?: typeof createLocalBashOperations;
 +    wrapTool?: (tool: AgentTool, source?: SourceInfo) => AgentTool;
 +    onAction?: (work: () => Promise<void>) => Promise<void>;
 +    onToolsChanged?: (tools: AgentTool[]) => void;
@@ -3971,7 +3997,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      agent: Agent;
      sessionManager: SessionManager;
      settingsManager: SettingsManager;
-@@ -177,6 +196,10 @@ export type QueuedInputDisposition = "handled" | "queued";
+@@ -177,6 +200,10 @@ export type QueuedInputDisposition = "handled" | "queued";
  export type PromptDisposition = QueuedInputDisposition | "started";
  /** Options for AgentSession.prompt() */
  export interface PromptOptions {
@@ -3982,7 +4008,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      /** Whether to dispatch extension commands and expand skill commands and prompt templates (default: true) */
      expandPromptTemplates?: boolean;
      /** Image attachments */
-@@ -226,44 +249,44 @@ export declare class AgentSession {
+@@ -226,44 +253,44 @@ export declare class AgentSession {
      private _scopedModels;
      private _unsubscribeAgent?;
      private _eventListeners;
@@ -4042,7 +4068,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      private _cwd;
      private _extensionRunnerRef?;
      private _initialActiveToolNames?;
-@@ -283,7 +306,7 @@ export declare class AgentSession {
+@@ -283,7 +310,7 @@ export declare class AgentSession {
       */
      private _allowlistFiltersMcp;
      private _excludedTools?;
@@ -4051,7 +4077,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      private _sessionStartEvent;
      private _extensionUIContext?;
      private _extensionMode;
-@@ -293,7 +316,7 @@ export declare class AgentSession {
+@@ -293,7 +320,7 @@ export declare class AgentSession {
      private _extensionErrorListener?;
      private _extensionErrorUnsubscriber?;
      private _modelRuntime;
@@ -4060,7 +4086,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      private _toolRegistry;
      /** Created on the first `ctx.executeTool()` call. */
      private _nestedToolCalls;
-@@ -304,7 +327,14 @@ export declare class AgentSession {
+@@ -304,7 +331,14 @@ export declare class AgentSession {
      private _toolPromptGuidelines;
      private _baseSystemPromptOptions;
      /** Prompt options after before_agent_start mutations for the active run. */
@@ -4076,7 +4102,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      constructor(config: AgentSessionConfig);
      get modelRuntime(): ModelRuntime;
      private _getRequiredRequestAuth;
-@@ -357,16 +387,16 @@ export declare class AgentSession {
+@@ -357,16 +391,16 @@ export declare class AgentSession {
      private _commitBoundaryDrafts;
      private _reportInvalidBoundaryContinuation;
      /** Emit an event to all listeners */
@@ -4097,7 +4123,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      /**
       * Persistently omit a failed attempt and its tool results from model context. Results are
       * found in the projected context, so the pair stays together whether the attempt comes from
-@@ -541,9 +571,9 @@ export declare class AgentSession {
+@@ -541,9 +575,9 @@ export declare class AgentSession {
       * message followed by pending nextTurn messages (consumed here) and handler messages, with a
       * system patch first when the prompt changed.
       */
@@ -4110,7 +4136,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      private _runInputHandlers;
      private _normalizePromptImages;
      /**
-@@ -624,7 +654,7 @@ export declare class AgentSession {
+@@ -624,7 +658,7 @@ export declare class AgentSession {
       * Append custom messages queued while the agent was running.
       * Called once the current turn's tool results are in agent state and session history.
       */
@@ -4119,7 +4145,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      /**
       * Send a user message to the agent. Always triggers a turn.
       * When the agent is streaming, use deliverAs to specify how to queue the message.
-@@ -783,7 +813,7 @@ export declare class AgentSession {
+@@ -783,7 +817,7 @@ export declare class AgentSession {
      private _applyExtensionBindings;
      private _refreshCurrentModelFromRegistry;
      private _bindExtensionCore;
@@ -4128,7 +4154,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      /** Whether activating the tool declares it to the model. */
      private _isDeclarable;
      /** Whether registering the tool activates it, which declares it to the model. */
-@@ -804,7 +834,7 @@ export declare class AgentSession {
+@@ -804,7 +838,7 @@ export declare class AgentSession {
       * the TUI needs to render the retry and recreate the underlying indicator.
       */
      private _summarizationRetryCallbacks;
@@ -4137,7 +4163,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      /**
       * Prepare a retryable error for continuation with exponential backoff.
       * @returns true if the caller should continue the agent, false otherwise
-@@ -855,7 +885,7 @@ export declare class AgentSession {
+@@ -855,7 +889,7 @@ export declare class AgentSession {
       * Flush pending bash messages to agent state and session.
       * Called after agent turn completes to maintain proper message ordering.
       */

@@ -9,6 +9,8 @@ export function codingAgentSessionPolicy(source: string, declarations: boolean):
     body = 'import type { runToolCall } from "@earendil-works/pi-agent-core";\n'
       + 'import type { convertToLlm } from "./messages.ts";\n'
       + 'import type { processImage } from "../utils/image-process.ts";\n'
+      + 'import type { createAllToolDefinitions } from "./tools/index.ts";\n'
+      + 'import type { createLocalBashOperations } from "./tools/bash.ts";\n'
       + 'import type { AssistantMessage } from "@earendil-works/pi-ai/compat";\n'
       + 'import type { AgentActivityOutcome, BeforeAgentStartTrigger } from "./extensions/types.ts";\n'
       + 'import type { BashExecutionMessage } from "./messages.ts";\n'
@@ -18,6 +20,8 @@ export function codingAgentSessionPolicy(source: string, declarations: boolean):
     runToolCall?: typeof runToolCall;
     convertToLlm?: typeof convertToLlm;
     processImage?: typeof processImage;
+    createAllToolDefinitions?: typeof createAllToolDefinitions;
+    createLocalBashOperations?: typeof createLocalBashOperations;
     wrapTool?: (tool: AgentTool, source?: SourceInfo) => AgentTool;
     onAction?: (work: () => Promise<void>) => Promise<void>;
     onToolsChanged?: (tools: AgentTool[]) => void;
@@ -71,6 +75,8 @@ export function codingAgentSessionPolicy(source: string, declarations: boolean):
   edit('    constructor(config) {', `    _runNestedToolCall = runToolCall;
     _convertToLlm = convertToLlm;
     _processImage = processImage;
+    _createAllToolDefinitions = createAllToolDefinitions;
+    _createLocalBashOperations = createLocalBashOperations;
     _wrapTool;
     _onAction;
     _onToolsChanged;
@@ -82,6 +88,8 @@ export function codingAgentSessionPolicy(source: string, declarations: boolean):
         this._runNestedToolCall = config.runToolCall ?? runToolCall;
         this._convertToLlm = config.convertToLlm ?? convertToLlm;
         this._processImage = config.processImage ?? processImage;
+        this._createAllToolDefinitions = config.createAllToolDefinitions ?? createAllToolDefinitions;
+        this._createLocalBashOperations = config.createLocalBashOperations ?? createLocalBashOperations;
         this._wrapTool = config.wrapTool;
         this._onAction = config.onAction;
         this._onToolsChanged = config.onToolsChanged;
@@ -89,6 +97,9 @@ export function codingAgentSessionPolicy(source: string, declarations: boolean):
         this._renderSystemPrompt = config.promptDependencies?.buildSystemPrompt ?? buildSystemPrompt;
         this._renderSystemPromptSections = config.promptDependencies?.buildSystemPromptSections ?? buildSystemPromptSections;`);
   edit('return runToolCall(toolCall, {', 'return this._runNestedToolCall(toolCall, {');
+  edit(': createAllToolDefinitions(this._cwd, {', ': this._createAllToolDefinitions(this._cwd, {');
+  edit('options?.operations ?? createLocalBashOperations({ shellPath })',
+    'options?.operations ?? this._createLocalBashOperations({ shellPath })');
   edit('await processImage(Buffer.from(image.data, "base64"), image.mimeType, {',
     'await this._processImage(Buffer.from(image.data, "base64"), image.mimeType, {');
   for (const messages of ['this.messages', 'context.messages', 'projection.messages']) {
