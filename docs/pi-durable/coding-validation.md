@@ -355,6 +355,39 @@ output or persisted task version changes. No installation or worker rebuild
 is repeated. Full declarations, protected legacy, remaining adapters, product
 recovery acceptance and F0 through F6 remain open.
 
+## SDK find path declaration after 2893172
+
+The published find declaration references path.PlatformPath, which Node 25
+no longer exports. The existing patch generator now uses typeof path.posix.
+This accepts Node's default, POSIX and Windows path implementations and keeps
+the optional argument and return type. No runtime algorithm changes.
+
+The public 1.5.0 archive matches the bun.lock SHA-512 value. All 94 selected
+original files match their registered hashes. Generator --write and --check
+pass. Replaying the patch verifies all 94 outputs; only find.d.ts changes,
+and the other 93 outputs remain identical. The root and existing isolated
+SDK declarations are updated after all previous output hashes are checked.
+No installation, worker build, dependency or lock change is needed.
+
+The consumer check uses strict TypeScript 5.9.3, Bun and Node types, and
+skipLibCheck disabled. With the same default libraries as the existing SDK
+type test, all 1546 files are checked. Before the fix it reports three SDK
+diagnostics and an unused negative-example directive. After the fix, default,
+POSIX and Windows path arguments pass and a string argument is rejected.
+Only the GenAI missing MCP peer and Gaxios fetch.preconnect diagnostics remain.
+Full declaration acceptance still fails. A separate check with the repository's
+ESNext-only library setting retains twelve diagnostics, including missing DOM
+types; its original fourteen-diagnostic result is also preserved. Neither
+result filters dependency errors or requests a protected path.
+
+Independent static review finds no confirmed introduced defect. It checks the
+three changed source artifacts and the permitted declaration evidence, without
+running tests or an installation. Three source records are updated, and the
+restricted Craft v0.15.6 audit passes for 2033 allowed files. No new repository
+test is added for this declaration-only change. Existing runtime test results
+are not repeated. Protected legacy, remaining adapters, product recovery and
+F0 through F6 remain open.
+
 ## Resource result declaration after c2ddabe
 
 The exported discoverCodingSkills function had no return annotation. In both

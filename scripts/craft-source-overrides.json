@@ -4337,16 +4337,16 @@
       "reason": "Assert that generated tool aggregation imports resolve to the Native SDK factory binding."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "6bcdd984ec1ee85b1d9b03a6f95cbb8a99e44593617b2d971f909aa49a2a3f62",
-      "reason": "Regenerate AgentSession declarations with the published runner trigger type; leave runtime algorithms and the other 93 Coding outputs unchanged."
+      "sha256": "d0fdfbfdcd9d7020cf5f36c182648a51554c30b149d0209dba29a663559ac2b1",
+      "reason": "Use the existing Node path implementation type in find declarations; preserve runtime algorithms and the other 93 Coding outputs."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "789a1d2d4f467dbebd164d350519f4f383e1f804bd1cdba8c20f088c8e81bfa8",
-      "reason": "Select one existing SDK root HTML renderer contract without changing runtime algorithms."
+      "sha256": "e617596f1445fa64683954afb7b631555f69bfb35480ef8a90eda4c1bac3a06f",
+      "reason": "Regenerate find declarations with the existing Node path implementation type instead of the removed PlatformPath name."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "8b69ab867f8c6bf79956bc030e44e8b20cbc715aa7e5d2ff60f10b1a550ec504",
-      "reason": "Regenerate AgentSession declarations with the published runner trigger type; leave runtime algorithms and the other 93 Coding outputs unchanged."
+      "sha256": "9ea1d71d9de46238a084b0d1774ffe08cbfee942297197574400c21a47fd76f7",
+      "reason": "Use the existing Node path implementation type in find declarations; preserve runtime algorithms and the other 93 Coding outputs."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
