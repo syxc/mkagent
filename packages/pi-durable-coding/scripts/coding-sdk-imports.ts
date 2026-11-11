@@ -6,7 +6,6 @@ export const CODING_SDK_PACKAGE = '@earendil-works/pi-coding-agent';
 export const CODING_SDK_MODULES = new Set([
   'cli/args.ts',
   'core/auth-storage.ts',
-  'core/bash-executor.ts',
   'core/cache-warmer.ts',
   'core/compaction/index.ts',
   'core/diagnostics.ts',
@@ -73,7 +72,7 @@ export function codingHostImport(importer: string, specifier: string): string | 
     : module === 'core/tools/bash.ts' || module === 'core/tools/powershell.ts' ? 'native-shell-tools.ts'
     : module === 'extensions/codemode/index.ts' || module === 'extensions/codemode/tool.ts' ? 'native-codemode.ts'
     : module === 'extensions/tool-search/index.ts' || module === 'extensions/tool-search/tool.ts' ? 'native-tool-search.ts'
-    : module === 'modes/rpc/rpc-client.ts' ? 'compat/rpc-client.ts'
+    : module === 'modes/index.ts' || module === 'modes/rpc/rpc-client.ts' ? 'compat/rpc-client.ts'
     : module === 'utils/shell.ts' ? 'compat/shell.ts'
     : module === 'utils/child-process.ts' ? 'compat/child-process.ts'
     : module === 'utils/mime.ts' ? 'compat/image-mime.ts'

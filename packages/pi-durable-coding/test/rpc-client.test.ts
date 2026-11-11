@@ -9,7 +9,9 @@ import { codingHostImport, codingSDKImport } from '../scripts/coding-sdk-imports
 
 const roots: string[] = [];
 test('generation routes the client to host policy and protocol types to the SDK', () => {
+  assert.equal(codingHostImport('index.ts', './modes/index.ts'), '../compat/rpc-client.ts');
   assert.equal(codingHostImport('modes/index.ts', './rpc/rpc-client.ts'), '../../compat/rpc-client.ts');
+  assert.equal(codingSDKImport('modes/rpc/rpc-client.ts', '../../core/bash-executor.ts'), undefined);
   assert.equal(codingSDKImport('modes/index.ts', './rpc/rpc-types.ts'), '@earendil-works/pi-coding-agent');
 });
 afterEach(() => {

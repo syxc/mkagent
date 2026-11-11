@@ -1,6 +1,9 @@
 import { RpcClient as SDKRpcClient } from '@earendil-works/pi-coding-agent';
 
-export type { ModelInfo, RpcClientOptions, RpcEventListener } from '@earendil-works/pi-coding-agent';
+export type {
+  JsonAgentSessionEvent, ModelInfo, RpcClientOptions, RpcCommand, RpcEventListener,
+  RpcExtensionUIRequest, RpcExtensionUIResponse, RpcResponse, RpcSessionState,
+} from '@earendil-works/pi-coding-agent';
 
 /** Keep CLI ownership with the caller while the SDK owns the client lifecycle and JSONL. */
 export class RpcClient extends SDKRpcClient {

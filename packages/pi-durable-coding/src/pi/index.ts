@@ -426,7 +426,7 @@ export {
 	type RpcExtensionUIResponse,
 	type RpcResponse,
 	type RpcSessionState,
-} from "./modes/index.ts";
+} from "../compat/rpc-client.ts";
 // UI components for extensions
 export {
 	ArminComponent,

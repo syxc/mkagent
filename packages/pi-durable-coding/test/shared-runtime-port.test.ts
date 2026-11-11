@@ -86,23 +86,13 @@ test('string enum: generic bounds, optional options and TypeBox branding remain 
   }
 });
 
-test('run mode exclusion preserves plugin components and RPC while guarding both entry points', () => {
+test('run mode exclusion preserves plugin components and RPC at the root entry', () => {
   const fixtures = [
     {
       path: 'index.ts',
       removed: ['\tInteractiveMode,\n', '\ttype InteractiveModeOptions,\n', '\ttype PrintModeOptions,\n', '\trunPrintMode,\n', '\trunRpcMode,\n'],
       source: '// Run modes for programmatic SDK usage\nexport {\n\tInteractiveMode,\n\ttype InteractiveModeOptions,\n\ttype PrintModeOptions,\n\trunPrintMode,\n\trunRpcMode,\n\tRpcClient,\n} from "./modes/index.ts";\nexport { CustomEditor, Theme } from "./components.ts";\n',
       targets: ['./modes/index.ts', './components.ts'],
-    },
-    {
-      path: 'modes/index.ts',
-      removed: [
-        'export { InteractiveMode, type InteractiveModeOptions } from "./interactive/interactive-mode.ts";\n',
-        'export { type PrintModeOptions, runPrintMode } from "./print-mode.ts";\n',
-        'export { runRpcMode } from "./rpc/rpc-mode.ts";\n',
-      ],
-      source: '/**\n * Run modes for the coding agent.\n */\nexport { InteractiveMode, type InteractiveModeOptions } from "./interactive/interactive-mode.ts";\nexport { type PrintModeOptions, runPrintMode } from "./print-mode.ts";\nexport { runRpcMode } from "./rpc/rpc-mode.ts";\nexport { RpcClient } from "./rpc/rpc-client.ts";\nexport type { RpcResponse } from "./rpc/rpc-types.ts";\nexport type { JsonAgentSessionEvent } from "./json-event.ts";\n',
-      targets: ['./rpc/rpc-client.ts', './rpc/rpc-types.ts', './json-event.ts'],
     },
   ];
   for (const { path, source, removed, targets } of fixtures) {
@@ -118,5 +108,6 @@ test('run mode exclusion preserves plugin components and RPC while guarding both
       assert.throws(() => excludeRunModeEntries(path, source + declaration), /run mode export changed/);
     }
   }
+  assert.equal(excludeRunModeEntries('modes/index.ts', 'retired barrel'), undefined);
   assert.equal(excludeRunModeEntries('modes/rpc/rpc-types.ts', 'protocol'), undefined);
 });

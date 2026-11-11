@@ -100,8 +100,7 @@ for (const suffix of ['js', 'd.ts']) {
   if (position < 0) throw new Error('Published index source map marker changed');
   outputs.set(path, original.slice(0, position) + exports + original.slice(position));
   if (suffix === 'd.ts') outputs.set(path, outputs.get(path)!.replace(marker,
-    'export type { BashResult } from "./core/bash-executor.ts";\n'
-    + 'export type { ShellDependencies } from "./core/tools/bash.ts";\n'
+    'export type { ShellDependencies } from "./core/tools/bash.ts";\n'
     + 'export type { CreateAgentSessionDependencies } from "./core/sdk.ts";\n' + marker));
 }
 for (const suffix of ['js', 'd.ts']) {

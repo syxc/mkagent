@@ -1,4 +1,4 @@
-# Content SHA-256: f4d82268449b90e4a54c7c9aaf990804010aa6be7c56973185f804c1d2720849
+# Content SHA-256: 8a7ee66186875c1b8346cf2b21aa570d96f69fb927b0f39932830c945d992fa3
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -76,7 +76,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,63 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,62 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -136,7 +136,6 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./utils/image-process.ts";
 +export * from "./utils/image-resize.ts";
 +export { getThemesDir, getExportTemplateDir } from "./config.ts";
-+export type { BashResult } from "./core/bash-executor.ts";
 +export type { ShellDependencies } from "./core/tools/bash.ts";
 +export type { CreateAgentSessionDependencies } from "./core/sdk.ts";
  //# sourceMappingURL=index.d.ts.map

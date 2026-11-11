@@ -26,6 +26,69 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## RPC export cleanup after 45bb5c8
+
+Remove the redundant 13-line modes barrel. Route all ten RPC names from the
+root entry to the existing host adapter before dependency traversal. The
+16-line adapter adds nine SDK type exports; its class body does not change.
+Remove the unused BashResult root type export, its module route and obsolete
+route expectations. Remove the retired barrel transformation. SDK internal
+bash result types and all runtime JavaScript stay unchanged.
+
+Full runtime, auxiliary and Coding patch generation and check pass. The runtime
+has 15 TypeScript files: 11 under src/pi and four facades, with zero resources.
+Auxiliary sources remain eight items and 13 shared entries. Only dist/index.d.ts
+changes among the 78 Coding patch outputs. Core has four and durable has 33,
+for 115 total outputs. A pristine replay matches the installed declaration.
+All 78 Coding hashes match in both existing layouts. Each layout passes
+17 tests, scoped declaration emission and a strict consumer with skipLibCheck.
+No install, dependency, lockfile or persistence version change occurred.
+
+The independent review found no defect in the 12 frozen source inputs. It
+checked all ten root exports, exact SDK symbol identity for nine RPC types,
+run-mode exclusion, all 78 installed Coding hashes and a zero-fuzz pristine
+root declaration replay. Its guarded root-layout run passes all 17 tests.
+It did not rerun the hoisted layout. The parent verified all 45 evidence
+hashes and the unchanged initial and final input hashes. The review scan
+helper first ended with NameError after writing its results; that task-only
+script failure and its correction remain in harness-failures.json.
+
+The review also found stale ignored declarations. The package `./native` types
+entry reaches types/pi/index.d.ts, which still routed through the old modes
+barrel. Two old RPC declarations imported BashResult from the SDK root; an
+isolated import reproduced TS2305. Source adapter checks had not covered those
+artifacts. The parent used isolated declaration emission to refresh the actual
+root and RPC adapter declarations in each layout, then moved four retired RPC
+declarations per layout to trash after saving their old bytes in the task
+folder. It checked the Native-to-root link statically and compiled the actual
+RPC declaration branch, with zero diagnostics in each layout. Both runs use
+skipLibCheck. They do not validate the complete Native declaration graph.
+
+The first parent artifact consumer imported a `.d.ts` value directly and failed
+with TS2846 after the artifact writes had completed. The parent confirmed all
+writes and removals, then reran only verification with a `.js` module specifier
+that resolves to the emitted declaration. The original failed probe remains.
+No write or removal was repeated. No frozen source input changed. The parent
+checked this artifact repair without another independent review. Other stale
+ignored declarations and the full declaration build remain open.
+
+Source registration updates 11 entries, retires one and adds none. Other
+entries stay unchanged. The fixed Craft v0.15.6 restricted audit passes
+2019 allowed files: 1454 share the relative path, 873 match after normalization,
+581 are modified Craft-derived files, 565 are MkAgent-only files and 858 are
+reviewed Craft-only deletions. The whole legacy subtree and sensitive
+configuration remain excluded. This result does not establish a full audit.
+
+Evidence is under /tmp/mkagent-rpc-exports-vCg13R: generated.json, applied.json,
+validation.json, review-accepted.json, declarations-prepared.json,
+declarations-refreshed.json, declaration-harness-failure.json,
+source-registration.json and restricted-audit.log. The independent report is
+/var/folders/4l/61ksyg6s4fxcv89x_90ym4p00000gn/T/mkagent-rpc-export-review-mn1hk3er/report.md.
+Behavior tests use task-owned HOME and CLI fixtures, network denial and a
+protected-load preflight. No original CLI, real model, account, UI or protected
+source ran. Full Native and published boundary tests, fresh install, full types
+and declarations, real platforms, full Craft and F0 through F6 remain open.
+
 ## SDK RPC client policy after 7ed106f
 
 Delete the 620-line RPC client, 58-line JSONL reader and 303-line protocol

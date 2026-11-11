@@ -2501,16 +2501,16 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "1b8d6fbde7b43420137ec656c6224f3845ba72245fe44bdc570e94beab12fcfe",
-      "reason": "Remove the retired shell source transformation rule and its import."
+      "sha256": "ed623ff9cd77d3bf103ab8d6d8caffaa373f3f3bdc10d08765a391a67199303d",
+      "reason": "Keep root run-mode exclusion and remove the retired mode barrel transformation."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "c281abc710b94561feddc08d96fabab35787a6f718b23d6c14956b874a4e13e5",
-      "reason": "Remove retired shell source transformation fixtures and retain active declaration guards."
+      "sha256": "391a95ae43f6a86ac4bec378f35b92b05cbc5a11f15fe186d27653c9ec10a66f",
+      "reason": "Guard root-only run-mode exclusion and confirm that the retired barrel no longer has a transformation."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "2a5f3e6c3407cab0eaf5c0058358b84ff0df2a1777b9f13d21039d938b2fd1bd",
@@ -3945,8 +3945,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "eb3fbf7286efaa89b440df1148aedbc13782a5986fb99b0555a281b55de9d65a",
-      "reason": "Retire the RPC client, JSONL reader and protocol source ports after SDK routing."
+      "sha256": "bbc26a4f936f4ab682053abc201d5ed526b9b2399d91c1ec397ae9d67017ada6",
+      "reason": "Retire the redundant RPC barrel after routing the root entry to the existing host adapter."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4117,16 +4117,12 @@
       "reason": "Use the public SDK auth backend while retaining the host cancellable refresh-lock extension."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "7ea819453d3680f1ae8e9579708c96d096c69a886be519ccb483e0e59c919dd8",
-      "reason": "Export the shell compatibility contract through the authored SDK binding."
-    },
-    "packages/pi-durable-coding/src/pi/modes/index.ts": {
-      "sha256": "451018d0d86b9eeb446c58d7cfd82eb1bef493015b4a38a72d945a7a3ba5278c",
-      "reason": "Export the host RPC client policy and SDK protocol types without local RPC source files."
+      "sha256": "de73fbdbf9e2eca494edd527c1bfdf77e9e0490178489868be0d0f6351df7a44",
+      "reason": "Export all ten RPC names directly from the existing host adapter and exclude upstream run-mode hosts."
     },
     "packages/pi-durable-coding/test/rpc-client.test.ts": {
-      "sha256": "17f748e376a2ef715c3200433c76fdfa5e9809ff51850bf21772689c58315613",
-      "reason": "Test SDK lifecycle, live options, CLI ownership, events and fragmented Unicode JSONL; isolate timeouts from event-producing fixtures."
+      "sha256": "6c56532dbfc476f1f8009ab01d689e94903f95c080cc8736f54bb7dfdf2f55d4",
+      "reason": "Check direct root routing and retirement of the BashResult route with the existing RPC behavior tests."
     },
     "packages/pi-durable-coding/src/stream-fn.ts": {
       "sha256": "a6b2cce7515e43411f9b3469225d39712508542d86bc3e806a9f39b57808454f",
@@ -4385,24 +4381,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "1ba9517873dfa92330aa8005094229d0051522c97d97784084ee196059d832b8",
-      "reason": "Route the RPC client to the authored CLI policy and public protocol types to the SDK before source traversal."
+      "sha256": "9e6773ac7b514bcbf6215fb954020d58a7dc1c38fa2f29920e127627b4965201",
+      "reason": "Route both RPC entry paths to the host adapter before traversal and remove the unused BashResult module route."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "ab86fb78ea8d57b9adb32592edefe1f495727adcc66b433481765ecdeb663637",
-      "reason": "Guard compat path identity and source traversal at the SDK path and BOM boundary."
+      "sha256": "a360454b0fcd97496541de99fa4526597c6f1ed2548dc4f539ce37b9a50bc298",
+      "reason": "Remove obsolete BashResult route expectations after deletion of local RPC implementations."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "7ce81df1b565284b94c2821b6cdc04c85f67dfe0427dd8ddf563bec29470a3b9",
-      "reason": "Record the protected SDK RPC CLI resolver and 78 physical Coding patch outputs."
+      "sha256": "35f833a7383d78efd2502de660797cbcb65668dc9536c4ccde54d6027423cbfe",
+      "reason": "Remove the unused SDK root BashResult type export; retain 78 physical Coding patch outputs."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "4b8880c9c83a64a42e4eddeab9249e44c8d4d04a84bca585789b4189775f8255",
-      "reason": "Add a protected RPC CLI resolver with the published default; keep lifecycle and JSONL algorithms in the SDK."
+      "sha256": "acb3c8919615f3836edf81f89af64d6098ee065359302384627624688d179891",
+      "reason": "Remove the unused BashResult root type export without changing SDK execution code."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "0a3ed146d65868d0a2e834c6414c4ce15fba04d104a88d9fb08da16ac41cf41f",
-      "reason": "Expose a protected RPC CLI resolver while preserving the SDK default and all lifecycle and JSONL algorithms."
+      "sha256": "80882d4d2e551f613fbf7eb88be55e559daad917d62ee43a004ec22e1ee18da5",
+      "reason": "Remove only the unused BashResult root declaration export; preserve all SDK runtime algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4633,8 +4629,8 @@
       "reason": "Delegate all message conversion, summaries and helpers to the SDK; strip host correlation only from native model context."
     },
     "packages/pi-durable-coding/src/compat/rpc-client.ts": {
-      "sha256": "e22939439bb50b1a452b68ae29c335f2ed0d41ef4b0ea7131b02b87eb187b0a0",
-      "reason": "Require a caller CLI through the protected SDK resolver; inherit client state, methods and JSONL without copies."
+      "sha256": "298548dcf0f460a4d7557cd0ed4246a2df6fa97e168024a9d2d1b238cbd3736b",
+      "reason": "Forward nine SDK RPC types beside the existing explicit CLI policy without adding runtime behavior."
     }
   },
   "deleted": {

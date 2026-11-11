@@ -3,18 +3,12 @@ import { createHash } from 'node:crypto';
 import ts from 'typescript';
 
 export function excludeRunModeEntries(path: string, body: string): string | undefined {
-  if (path !== 'index.ts' && path !== 'modes/index.ts') return undefined;
-  const removed = path === 'index.ts' ? [
+  if (path !== 'index.ts') return undefined;
+  const removed = [
     '\tInteractiveMode,\n', '\ttype InteractiveModeOptions,\n', '\ttype PrintModeOptions,\n',
     '\trunPrintMode,\n', '\trunRpcMode,\n',
-  ] : [
-    'export { InteractiveMode, type InteractiveModeOptions } from "./interactive/interactive-mode.ts";\n',
-    'export { type PrintModeOptions, runPrintMode } from "./print-mode.ts";\n',
-    'export { runRpcMode } from "./rpc/rpc-mode.ts";\n',
   ];
-  const comment = path === 'index.ts'
-    ? ['// Run modes for programmatic SDK usage', '// RPC client and protocol for programmatic SDK usage']
-    : [' * Run modes for the coding agent.', ' * RPC client and protocol exports.'];
+  const comment = ['// Run modes for programmatic SDK usage', '// RPC client and protocol for programmatic SDK usage'];
   for (const before of [...removed, comment[0]]) {
     if (body.split(before).length !== 2) throw new Error(`Pinned run mode export changed: ${path}`);
     body = body.replace(before, before === comment[0] ? comment[1] : '');

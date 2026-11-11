@@ -13,7 +13,7 @@
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "5a867846e47972866823525cfdaa5538ec5e31ec7c523a50796003d0dab419e1"
+      "sha256": "552e1bd17e2b4f4246bd8ccb40cd33ce0a2098f585f398b7c300d9a8147f647b"
     },
     {
       "path": "dist/core/agent-session-services.js",
