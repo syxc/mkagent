@@ -5,7 +5,6 @@ import { isBuiltin } from 'node:module';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
-import { portMcpOAuth } from './mcp-oauth-port.ts';
 import { portBundledAssets } from './asset-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludeRunModeEntries } from './shared-helper-port.ts';
@@ -39,8 +38,8 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
 }
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
 const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
-// Retain the legacy token adapter and the host OAuth facade as explicit roots.
-const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/compaction/compaction.ts', 'extensions/codemode/worker.ts', 'core/extensions/virtual-modules.ts', 'extensions/mcp/oauth.ts'];
+// Retain the legacy token adapter as an explicit root.
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/compaction/compaction.ts', 'extensions/codemode/worker.ts', 'core/extensions/virtual-modules.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();
@@ -164,10 +163,6 @@ while (queue.length) {
   };
   visit(parsed);
   for (const edit of replacements.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.body + body.slice(edit.end);
-  if (path === 'extensions/mcp/oauth.ts') {
-    body = portMcpOAuth(body);
-    changes.add('cancellable-host-oauth-refresh-lock');
-  }
   if (path === 'config.ts') {
     body = body.replace('export const VERSION: string = pkg.version || "0.0.0";',
       `export const VERSION: string = ${JSON.stringify(packageInfo.version)};`);

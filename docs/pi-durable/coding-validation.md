@@ -26,6 +26,91 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK MCP OAuth after e927004
+
+Delete the 592-line OAuth source copy and the 65-line source conversion. The
+existing facade now exports the SDK classes, functions and types directly.
+The local copy equals the pinned source after import routing and its old lock
+conversion. The pristine published implementation equals that pinned source
+under the recorded TypeScript normalization. Default app name, directory and
+environment lookup also match. No real user configuration was read.
+
+Add the existing OAuth module to the two SDK root exports. Patch only optional
+AbortSignal support around lock acquisition. Keep the SDK lock parameters,
+server-plus-URL key, credential schema, migration, PKCE, state/path/issuer
+checks, scope handling and provider lifecycle. An aborted waiter cannot mutate
+a grant. Check cancellation again after acquiring the lock and before invoking
+the callback. Once the callback starts, let it save a received refresh-token
+rotation and release the lock. Calls without a signal keep native retries.
+Restore pristine extensions/mcp/index.d.ts: the old credentials Pick workaround
+is no longer needed because both consumers use the same SDK class.
+
+Full runtime, auxiliary and Coding patch generation and check pass. Runtime
+has 13 TypeScript files: nine under src/pi and four facades, with zero
+resources. Auxiliary sources remain eight items and 13 shared entries. Four
+migration outputs change, while the retired MCP declaration output is restored
+in both existing installations. Coding has 79 outputs; core has four and
+durable has 33, for 116 total. The root outputs are shared across patch groups.
+Dependencies, lockfile and persistence versions do not change. The direct
+proper-lockfile dependency remains; its protected consumer closure was not
+checked. No fresh install occurred.
+
+Each existing layout passes 27 tests across six files. Coverage includes SDK
+identity, legacy grant migration and isolation, cancellation before mutation,
+active rotation persistence, explicit PKCE login, invalid callback rejection,
+provider isolation, remote plaintext HTTP rejection, scope step-up without
+replaying rejected tools, and cross-process login/logout ordering. Guarded
+preflights inspect 2091 root and 2125 hoisted loads with zero protected loads.
+Children use task-owned HOME and temporary directories, a loopback-only preload
+and OS sandbox, whole-legacy read denial and explicit port 9100 denial.
+Refresh the actual facade declaration and retire the old OAuth declaration in
+each layout. Strict consumers pass with zero diagnostics and skipLibCheck;
+this does not establish full SDK declaration correctness.
+
+The first sandbox command failed before test execution because its network
+address syntax was invalid. The corrected root run passed 26 tests and failed
+one subprocess fixture: repository-root eval could not resolve the server's
+workspace dependency. Change only the two cwd values to the server package,
+with no root alias or import changes. The final root and hoisted runs each pass
+27 tests. Keep the original failure logs and the successful v3 logs.
+
+Independent review reports no confirmed findings. Its direct SDK preflight
+loads 108 items with zero protected loads. It independently passes 21 tests
+and 84 assertions across both layouts, including real file locks, cancellation
+at acquisition, active writes, deadline/error behavior and drift rejection.
+It replays the four migration outputs and checks their installed hashes; all
+79 patch paths and manifest entries agree in order. It does not replay all
+historical outputs. Parent acceptance verifies 13 frozen source inputs, 30 SDK
+inputs, 22 primary review artifacts, detached checksums and parent behavior
+log hashes. The review did not run the original server suites or type builds.
+
+Three review process deviations remain recorded. The broad facade preflight
+was blocked on an SDK credentials code directory; the restriction was retained
+and only the direct SDK boundary was tested. An initial probe timeout lost its
+captured output because of wrapper error handling. Later runs kept logs; only
+the task probe's rejection/abort order and fixture lock directories changed.
+A resolver wrapper expected MODULE_NOT_FOUND but received ERR_MODULE_NOT_FOUND;
+the same saved output was checked with the corrected assertion.
+
+Source registration updates nine entries, retires two and adds two. Other
+entries are unchanged. The fixed Craft v0.15.6 restricted audit passes 2017
+allowed files: 1454 common paths, 873 normalized matches, 581 modified files,
+563 MkAgent-only files and 858 reviewed Craft-only deletions. Its first sandbox
+run failed because Git could not open /dev/null for read/write. A task sandbox
+exception permits only that device. The next run was denied during lstat of
+a context-tokens.js forwarding path, before source data was read. Exclude that
+protected basename before file and manifest traversal. Keep whole-legacy and
+sensitive-configuration exclusions. This scope is narrower than the previous
+audit and is not a full Craft audit. The initial parent acceptance script also
+rejected logical /tmp versus real /private/tmp paths before any writes; use
+real paths for that artifact containment assertion.
+
+Evidence is under /tmp/mkagent-oauth-sdk-hB2yi4: comparison.json, generated.json,
+validation.json, review-accepted.json, source-registration.json,
+restricted-audit.json and review-independent/report.md. Full Native and the
+published boundary suite, full declaration builds, skipLibCheck=false,
+fresh frozen install, real platforms, full Craft and F0 through F6 remain open.
+
 ## Public SDK project trust after f0a3fae
 
 Delete the 254-line trust-manager source copy. The fixed upstream file differs

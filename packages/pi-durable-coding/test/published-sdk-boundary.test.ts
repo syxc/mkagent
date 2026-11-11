@@ -95,7 +95,7 @@ describe('published Coding SDK boundary', () => {
     expect(codingSDKImport('core/extensions/types.ts', '../keybindings.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/resource-loader.ts', '../modes/interactive/theme/theme.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('index.ts', './core/auth-storage.ts')).toBe('@earendil-works/pi-coding-agent');
-    expect(codingSDKImport('extensions/mcp/oauth.ts', '../../core/auth-storage.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('index.ts', './extensions/mcp/oauth.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './cache-warmer.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('index.ts', './core/cache-warmer.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/sdk.ts', './session-manager.ts')).toBe('@earendil-works/pi-coding-agent');

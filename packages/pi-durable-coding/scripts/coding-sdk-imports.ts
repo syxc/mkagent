@@ -40,6 +40,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/tools/write.ts',
   'extensions/mcp/config.ts',
   'extensions/mcp/index.ts',
+  'extensions/mcp/oauth.ts',
   'modes/json-event.ts',
   'modes/rpc/rpc-types.ts',
   'modes/interactive/components/auth-url.ts',

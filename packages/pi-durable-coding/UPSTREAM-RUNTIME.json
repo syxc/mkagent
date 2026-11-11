@@ -8,9 +8,7 @@
     "@earendil-works/pi-ai": "1.5.0",
     "@earendil-works/pi-coding-agent": "1.5.0",
     "@earendil-works/pi-durable": "1.5.0",
-    "@earendil-works/pi-mcp": "1.5.0",
     "@earendil-works/pi-tui": "1.5.0",
-    "proper-lockfile": "4.1.2",
     "quickjs-wasi": "3.6.2",
     "typebox": "1.3.27"
   },
@@ -116,16 +114,6 @@
       "portSha256": "4542d37a9f75150b52fc393fcd757f08fb0d681d92bebee6a40171e09b4bec82",
       "changes": [
         "public-durable-codemode-worker"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/extensions/mcp/oauth.ts",
-      "target": "src/pi/extensions/mcp/oauth.ts",
-      "sha256": "12fc5abb9185e291a5528f3312733a8e7f0028d1caeeb1bcf9f99a8979f10949",
-      "portSha256": "805f825f9a7bf517e122c2a967b769fc4df965ff15796fa678becfb2c1f3be64",
-      "changes": [
-        "public-coding-sdk",
-        "cancellable-host-oauth-refresh-lock"
       ]
     },
     {

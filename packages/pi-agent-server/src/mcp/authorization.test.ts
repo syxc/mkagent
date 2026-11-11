@@ -296,7 +296,7 @@ test('logout in a separate process cannot be undone by another process refreshin
     `;
     const rotating = Bun.spawn({
       cmd: [process.execPath, '--eval', program, JSON.stringify({ root, file, url: server.url, action: 'refresh' })],
-      cwd: join(import.meta.dir, '../../../..'), stdin: 'pipe', stdout: 'pipe', stderr: 'pipe',
+      cwd: join(import.meta.dir, '../..'), stdin: 'pipe', stdout: 'pipe', stderr: 'pipe',
     });
     let loggingOut: typeof rotating | undefined;
     const rotatingLines = createInterface({ input: Readable.fromWeb(rotating.stdout) });
@@ -305,7 +305,7 @@ test('logout in a separate process cannot be undone by another process refreshin
       expect((await rotatingLines[Symbol.asyncIterator]().next()).value).toBe('held');
       loggingOut = Bun.spawn({
         cmd: [process.execPath, '--eval', program, JSON.stringify({ root, file, url: server.url, action: 'logout' })],
-        cwd: join(import.meta.dir, '../../../..'), stdin: 'pipe', stdout: 'pipe', stderr: 'pipe',
+        cwd: join(import.meta.dir, '../..'), stdin: 'pipe', stdout: 'pipe', stderr: 'pipe',
       });
       logoutLines = createInterface({ input: Readable.fromWeb(loggingOut.stdout) });
       expect((await logoutLines[Symbol.asyncIterator]().next()).value).toBe('ready');

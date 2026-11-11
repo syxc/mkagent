@@ -92,7 +92,9 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `45bb5c8` 后的 RPC 出口切片删除 13 行冗余 modes barrel，根入口直接路由至既有适配器；适配器只补九个 SDK 类型转导出，类正文未改。无本地源码消费者的 BashResult 根类型补丁、生成路由和旧 barrel 转换已撤除。该 RPC 出口切片时 runtime 为 15 份 TypeScript（src/pi 11、门面 4）、0 项资源；辅助来源 8 项、共享入口 13 个，补丁仍为 core 4、Coding 78、durable 33 共 115 份。完整生成与 check、两现有布局全部 78 项摘要及各 17 项测试通过。独立根布局复核未发现源码缺陷，确认十项出口、九种类型身份及 17 项测试通过；45 份证据和 12 项冻结输入已核验。复核发现旧 types 仍引用已撤除类型并复现 TS2305；父线程已在两布局各定向刷新根和适配器声明、移除四份退役声明，实际 RPC 声明分支消费者为 0 诊断，使用 skipLibCheck，未重建或验证完整 Native 声明。来源更新 11 项、移除 1 项、无新增；固定 Craft v0.15.6 受限审计通过 2019 个允许文件。依赖、lock 和持久化版本未变，无重新安装；其余源码及整体验收继续开放。范围及脚本失败记录见[RPC 出口验证](coding-validation.md#rpc-export-cleanup-after-45bb5c8)。
 
-`f0a3fae` 后的信任管理切片删除 254 行完整副本，存储、文件锁、路径继承与资源检测直接使用公开 Coding SDK；宿主审批和 `.mkagent/mcp.json` 检查保留。补丁只转出已有 getProjectTrustOptions，不改信任算法，不加包装。当前 runtime 为 14 份 TypeScript（src/pi 10、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个；补丁仍为 core 4、Coding 78、durable 33 共 115 份。完整生成与 check、两布局全部 78 项摘要及各 9 项信任测试通过；两布局根声明定向刷新，退役信任声明已移除，实际信任声明分支消费者为 0 诊断，使用 skipLibCheck。独立复核发现 1 项临时目录路径夹具问题；父线程以 realpathSync 修正后，两布局在逻辑 `/tmp` 路径下各 9 项通过，未做第二次独立复核，产品逻辑未改。来源更新 9 项、移除 1 项、无新增，固定 Craft 受限审计通过 2018 个允许文件。依赖、lock 和持久化版本未变，无重新安装；完整声明及整体验收仍开放，见[信任管理验证](coding-validation.md#public-sdk-project-trust-after-f0a3fae)。
+`f0a3fae` 后的信任管理切片删除 254 行完整副本，存储、文件锁、路径继承与资源检测直接使用公开 Coding SDK；宿主审批和 `.mkagent/mcp.json` 检查保留。补丁只转出已有 getProjectTrustOptions，不改信任算法，不加包装。该信任管理切片时 runtime 为 14 份 TypeScript（src/pi 10、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个；补丁仍为 core 4、Coding 78、durable 33 共 115 份。完整生成与 check、两布局全部 78 项摘要及各 9 项信任测试通过；两布局根声明定向刷新，退役信任声明已移除，实际信任声明分支消费者为 0 诊断，使用 skipLibCheck。独立复核发现 1 项临时目录路径夹具问题；父线程以 realpathSync 修正后，两布局在逻辑 `/tmp` 路径下各 9 项通过，未做第二次独立复核，产品逻辑未改。来源更新 9 项、移除 1 项、无新增，固定 Craft 受限审计通过 2018 个允许文件。依赖、lock 和持久化版本未变，无重新安装；完整声明及整体验收仍开放，见[信任管理验证](coding-validation.md#public-sdk-project-trust-after-f0a3fae)。
+
+`e927004` 后的 MCP OAuth 切片删除 592 行完整实现和 65 行旧源码转换，公开门面直接转出 SDK 同一组类、函数与类型，不加运行时包装。SDK 继续负责凭据、迁移、PKCE、回调校验、刷新和跨进程锁；局部补丁只补已有根出口及可选 signal 锁等待，进入写入后仍保存已收到的轮换结果。旧 credentials Pick 声明补丁已撤除。当前 runtime 为 13 份 TypeScript（src/pi 9、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个；core 4、Coding 79、durable 33 共 116 份输出。完整生成与 check 通过，两现有布局各 27 项测试及实际门面声明严格消费者通过，消费者使用 skipLibCheck。独立复核未确认缺陷，21 项探针通过，父线程已核验 13 项源码、30 项 SDK 输入和报告产物。来源更新 9 项、退役 2 项、新增 2 项；固定 Craft 受限审计通过 2017 个允许文件，另排除受保护文件名，范围较前收窄。依赖、lock 和持久化版本未变，无重新安装；proper-lockfile 直接依赖尚未清理，受保护闭包未核验。完整声明、Native 入口及 F0 至 F6 继续开放，失败修正与范围见[OAuth SDK 验证](coding-validation.md#public-sdk-mcp-oauth-after-e927004)。
 
 ## 目标与名称
 
@@ -420,9 +422,9 @@ kernel 持有原生资源，首次启动复用信任预加载结果，后续 rel
 
 本批采用原生 `/mcp` 命令约定，在 coding 模式提供状态、`login`、`logout` 与 `reconnect`，缺少服务名时通过已有 RPC select 选择。自动连接、工具执行、reload 和恢复只发送已有令牌或刷新，不发起交互登录。401 保留需要授权的连接，不注册失效工具；显式登录成功后重连并更新 durable 工具和 codemode 目录。
 
-授权、PKCE、回环回调、粘贴完整回跳、DCR/CIMD、state/path/issuer 校验及刷新锁复用固定 Pi v1.5.0 源码，通过独立 `mcp-oauth` 入口公开。宿主 MCP 依赖对齐 1.5.0。实际安装存在两份同版本模块，初测复现 `instanceof` 漏判，现从授权实现所在入口公开同一个异常类，不依赖模块去重。
+该接线批次的授权、PKCE、回环回调、粘贴完整回跳、DCR/CIMD、state/path/issuer 校验及刷新锁复用固定 Pi v1.5.0 源码，通过独立 `mcp-oauth` 入口公开。宿主 MCP 依赖对齐 1.5.0。实际安装存在两份同版本模块，初测复现 `instanceof` 漏判，现从授权实现所在入口公开同一个异常类，不依赖模块去重。
 
-凭据写入显式 agentDir 的 `mcp-auth.json`，按服务名与 URL 隔离。Stop、UI 失效、reload、重建和所有者释放先取消并等待本所有者的交互操作。退出开始即停止本连接发放令牌及启动刷新，等待本连接已开始的刷新保存，再取得跨进程刷新锁删除凭据；交互登录也在该锁内读取及更新 grant、client 和 PKCE 状态。生成转换给原生锁增加可取消等待，自动刷新保留原有等待与保存行为。连接关闭也等待令牌轮换保存。OAuth 仅向 HTTPS 或回环 HTTP 资源发送令牌，匿名远程 HTTP 不绑定 OAuth provider。授权 URL 由 widget 展示，独占一行的 HTTP(S) 链接复用已有平台 URL 打开能力。
+凭据写入显式 agentDir 的 `mcp-auth.json`，按服务名与 URL 隔离。Stop、UI 失效、reload、重建和所有者释放先取消并等待本所有者的交互操作。退出开始即停止本连接发放令牌及启动刷新，等待本连接已开始的刷新保存，再取得跨进程刷新锁删除凭据；交互登录也在该锁内读取及更新 grant、client 和 PKCE 状态。该批次的生成转换给原生锁增加可取消等待，自动刷新保留原有等待与保存行为。当前完整 OAuth 副本及旧转换已删除，改用 SDK 同一类与局部取消接点，见[OAuth SDK 验证](coding-validation.md#public-sdk-mcp-oauth-after-e927004)。连接关闭也等待令牌轮换保存。OAuth 仅向 HTTPS 或回环 HTTP 资源发送令牌，匿名远程 HTTP 不绑定 OAuth provider。授权 URL 由 widget 展示，独占一行的 HTTP(S) 链接复用已有平台 URL 打开能力。
 
 | 验证 | 实际结果 |
 |---|---|

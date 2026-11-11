@@ -8,12 +8,12 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "344321f8d2dece0679625f88ebc5016b5a03b3f5600151bccf0c506c7e6463b4"
+      "sha256": "595a129ea6d0a5dddf8039dde20a666d1cd6924fb615f451a366fd6694d77a38"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "7f6b4eb9c96dc216956687f356c4b3c05b7dbc9808d72c316b869a2a85d0851e"
+      "sha256": "8c401fb9dfea28b8d5b4be9b45f7f225fecfb95e0ddb992c38c26c8f603c46fa"
     },
     {
       "path": "dist/core/agent-session-services.js",
@@ -41,9 +41,14 @@
       "sha256": "9b78d181023833916d377bcaac89d22c3dd994981b454539a62a769af6f47e6c"
     },
     {
-      "path": "dist/extensions/mcp/index.d.ts",
-      "originalSha256": "2326ac2f37daa7bbf258629846b4ff6d4d8d2c570331777b2da0852525de843e",
-      "sha256": "d948c8984862485717a129c52dead3cbf58221d83606011eb1034ae20ceb29cf"
+      "path": "dist/extensions/mcp/oauth.js",
+      "originalSha256": "d5d0410f68510a4ef4929099dea95483b4ba500151903476ef652bdef6b44451",
+      "sha256": "15e1be93b00e517e7b17c476dd941195cdddf781df01241366bc3300ae575e8d"
+    },
+    {
+      "path": "dist/extensions/mcp/oauth.d.ts",
+      "originalSha256": "bbcb6c296fb2f620c5c0dde4377342f43301307ffbe98ad2e152b2bea163cb34",
+      "sha256": "52efdb0649d4e3e84ad9a4475cab0c730f82e4f1cb4143ba237ece515cbe2b63"
     },
     {
       "path": "dist/core/system-prompt.js",

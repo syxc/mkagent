@@ -20,6 +20,7 @@ import { codingCachePolicy } from './coding-cache-policy.ts';
 import { codingSessionServicesPolicy } from './coding-session-services-policy.ts';
 import { codingSessionRuntimePolicy } from './coding-session-runtime-policy.ts';
 import { codingSessionFactoryPolicy } from './coding-session-factory-policy.ts';
+import { codingMcpOAuthPolicy } from './coding-mcp-oauth-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -86,6 +87,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./utils/sleep.${extension}";`,
     `export * from "./utils/zip.${extension}";`,
     `export * from "./core/mcp-servers.${extension}";`,
+    `export * from "./extensions/mcp/oauth.${extension}";`,
     `export * from "./core/keybindings.${extension}";`,
     `export { KeybindingsManager } from "./core/keybindings.${extension}";`,
     `export * from "./modes/interactive/theme/theme.${extension}";`,
@@ -114,10 +116,10 @@ for (const suffix of ['js', 'd.ts']) {
 }
 const runtimeDeclaration = 'dist/core/agent-session-runtime.d.ts';
 outputs.set(runtimeDeclaration, codingSessionRuntimePolicy(readFileSync(join(baseline, runtimeDeclaration), 'utf8')));
-const mcpDeclaration = 'dist/extensions/mcp/index.d.ts';
-outputs.set(mcpDeclaration, replace(readFileSync(join(baseline, mcpDeclaration), 'utf8'),
-  'credentials?: McpOAuthCredentialStore;',
-  'credentials?: Pick<McpOAuthCredentialStore, "forServer" | "tokens" | "remove">;'));
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/extensions/mcp/oauth.${suffix}`;
+  outputs.set(path, codingMcpOAuthPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
+}
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/system-prompt.${suffix}`;
   let body = readFileSync(join(baseline, path), 'utf8');

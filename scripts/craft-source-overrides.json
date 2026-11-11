@@ -3945,8 +3945,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "2041ae251cd8dcedae447e63b701c0638853334a57719ea9f0c5e99d03f5f25a",
-      "reason": "Retire the complete trust-manager copy and stop source traversal at the published SDK."
+      "sha256": "4f38e8812ff9f0168a1d0210280be3ee9bb69c4b6355854c12ac1085b838f5b9",
+      "reason": "Retire the complete OAuth source copy; retain 13 runtime TypeScript outputs and stop traversal at the public SDK boundary."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -3957,8 +3957,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "6dc52ece394528eb4543218cc592459f0996c8f8b55003d400711c65932b99ec",
-      "reason": "Remove the retired source-level RPC CLI policy transform."
+      "sha256": "4265e70a55bfc1fdb622b693062964523d70aa181e19a6a0c3a293ce00eec2ef",
+      "reason": "Remove the retired OAuth source root and source-level lock conversion after SDK delegation."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4108,10 +4108,6 @@
       "sha256": "4542d37a9f75150b52fc393fcd757f08fb0d681d92bebee6a40171e09b4bec82",
       "reason": "Forward worker initialization to the public durable entry point rather than a direct sandbox dependency."
     },
-    "packages/pi-durable-coding/src/pi/extensions/mcp/oauth.ts": {
-      "sha256": "805f825f9a7bf517e122c2a967b769fc4df965ff15796fa678becfb2c1f3be64",
-      "reason": "Use the public SDK auth backend while retaining the host cancellable refresh-lock extension."
-    },
     "packages/pi-durable-coding/src/pi/index.ts": {
       "sha256": "cbb3794a39ab9334071b3cf019b674d49ab90c528c6113b38f839c50bf1f8cf9",
       "reason": "Forward the five public trust names directly from the published SDK."
@@ -4229,8 +4225,8 @@
       "reason": "Verify pinned OAuth flow, redirect validation, cancellation and rotation, while keeping explicit headers and provider credentials outside the OAuth store."
     },
     "packages/pi-durable-coding/src/mcp-oauth.ts": {
-      "sha256": "ccefe7bf33b9de1e28a40f131f5efbc82c71b73234026c03909c481557554991",
-      "reason": "Expose the SDK auth backends through the existing host OAuth facade."
+      "sha256": "614028778fdde58200683b0b9b0d3dbdd06984691bc56bf409c8f1c8cf05eee4",
+      "reason": "Expose the SDK OAuth classes and functions directly through the existing host facade."
     },
     "packages/pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts": {
       "sha256": "c92e904082949668fcc63de3ecec5a0a82499cff35e4e27514a68015d5596bed",
@@ -4241,12 +4237,8 @@
       "reason": "Exercise native MCP registration, OAuth and live plugin provider credentials through the isolated product owner and freshly bundled worker."
     },
     "packages/pi-agent-server/src/mcp/authorization.test.ts": {
-      "sha256": "9c3db860f83fa7711fd949d9d3f3021ab5db3c0c217c303d2f8e5278be23e8e8",
-      "reason": "Verify shared OAuth rotation, cancellation and logout ordering across credential stores and actual Bun subprocesses."
-    },
-    "packages/pi-durable-coding/scripts/mcp-oauth-port.ts": {
-      "sha256": "c0fa4142887da3d9a8be6647ce1c0d496f723e95e8a5b9ebca74afe66cccaa28",
-      "reason": "Reproduce optional cancellation for the pinned cross-process OAuth lock without changing automatic refresh draining."
+      "sha256": "69ddb65871e7cac7fc6cf52de1145a98d28106e584c58ded788c3e416ad27cc8",
+      "reason": "Resolve workspace dependencies from the server package in both eval subprocesses; retain OAuth rotation, cancellation and logout checks."
     },
     "packages/pi-agent-server/src/mcp/native-extension.ts": {
       "sha256": "bde4328bd0ce641e831b69260a16d489fedaf4c8f9df969fe0938f852f1fd877",
@@ -4377,24 +4369,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "a4b1c26b2785ad0c83da8e8ce99fcbb4acff1e795b4f43eac412ca7f8b2ab964",
-      "reason": "Route trust-manager imports to the public SDK before source traversal."
+      "sha256": "f8e7d981d49fcc861fe71534a5d9d9e73597321d1394364489b9ef0ae305b34a",
+      "reason": "Route MCP OAuth directly to the public Coding SDK before source traversal."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "98bf267283c2e65e2929a02b93e78d8b791d7543e0d9f54b88a81d2d26341d0e",
-      "reason": "Check trust implementation identity and the direct SDK source route."
+      "sha256": "ce632d9c8940f122194b8fb9bfb8271ee926ab05857b4265101dcbb088d302d4",
+      "reason": "Check the OAuth module source route to the public SDK; retain existing SDK identity and trust boundary checks."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "24bbc490f812aba6e7bc4c4b94638929adad4ef4e77e7e98ae5b5a6ce1f47a4f",
-      "reason": "Export the existing SDK trust choices from the root without patching trust algorithms; retain 78 Coding outputs."
+      "sha256": "af3738d6193c5d7d61bb393a33e0a5cb5b62387c437e0766178b7439623ecdc1",
+      "reason": "Record 79 Coding outputs after OAuth root exports and cancellable lock policy replace the retired credential Pick declaration patch."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "909a70fc679343662e5e7585016d727c00d66cacc522d34dc89cf34d27c276f7",
-      "reason": "Expose only the existing getProjectTrustOptions function; preserve SDK trust algorithms."
+      "sha256": "d6a4aab61d0b21ec604679d97498e1d15aed7bc2a8e8583de90c3459f9ce3378",
+      "reason": "Export the existing SDK OAuth module, apply narrow lock cancellation policy and retire the redundant credentials Pick declaration."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "f0ce530a6c8b8231d84dd8dc5cf55bca515526149c171f7d48cbc5ad092519f6",
-      "reason": "Add only the existing trust choice root export in JavaScript and declarations; no trust algorithm changes."
+      "sha256": "dd5c763874bb6fc1ca66053b6a147a4f09e88d2f2af78568bc7427f2927402ae",
+      "reason": "Add existing OAuth root exports and optional cancellation around SDK lock acquisition; preserve active refresh completion and restore the original MCP credentials declaration."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4627,6 +4619,14 @@
     "packages/pi-durable-coding/src/compat/rpc-client.ts": {
       "sha256": "298548dcf0f460a4d7557cd0ed4246a2df6fa97e168024a9d2d1b238cbd3736b",
       "reason": "Forward nine SDK RPC types beside the existing explicit CLI policy without adding runtime behavior."
+    },
+    "packages/pi-durable-coding/scripts/coding-mcp-oauth-policy.ts": {
+      "sha256": "d853647a56aa1a6ac30bb24a0ac6e59cb53472c202e5cc82cc68409efaf261d7",
+      "reason": "Patch only SDK lock acquisition with optional cancellation and preserve its acquisition options, active mutation, error and release behavior."
+    },
+    "packages/pi-durable-coding/test/mcp-oauth-sdk.test.ts": {
+      "sha256": "03d13a4a92d38f5ad403d8d5f93ee200bfd4cedb91aec747cad8edf910047af4",
+      "reason": "Verify SDK facade identity, legacy grant migration and isolation, pre-aborted mutation rejection and active write completion."
     }
   },
   "deleted": {
