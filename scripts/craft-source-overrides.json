@@ -3401,8 +3401,8 @@
       "reason": "Use SDK MCP logging at the host agent directory while retaining plugin registration, namespace priority and live credential callbacks."
     },
     "packages/pi-agent-server/src/mcp/mcp-servers.ts": {
-      "sha256": "d96737cdb414da6d9c251bbc06d6955ac79e14dc380a78e961fd11fc0c446833",
-      "reason": "Vendor pi-coding-agent 1.1.0 core/mcp-servers.js validation, exposure matching, namespaces and extension registration types."
+      "sha256": "912602bfbb841e0e61713bae2e1bb6682ded2ff311a5c38e0e63d50606a3ff18",
+      "reason": "Use SDK validation, exposure matching, namespaces and resource constants; retain host own-property exposure policy, OAuth destination limits and partial configuration types."
     },
     "packages/pi-agent-server/src/mcp/resources.ts": {
       "sha256": "882755663ed8c85c150f89ec437f15cecf0b95c2cfd5ab289e2fb53b076a3ba7",
@@ -3681,8 +3681,8 @@
       "reason": "Route the shared shell compatibility entry to the active SDK and durable binding."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "be304a55a371a5817aecaeaf51202b1e3c1e469c90dbbda52d12308d1b3a70e2",
-      "reason": "Expose the MCP log facade through the existing Coding SDK dependency."
+      "sha256": "e5bb895beeb448b3f543ea8fd7de26fd416594b9c3499410e82f653c4ad7a8f6",
+      "reason": "Expose the MCP server configuration facade through the existing Coding SDK dependency."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -4635,6 +4635,14 @@
     "packages/pi-agent-server/src/mcp/log-sdk.test.ts": {
       "sha256": "ac3b7a9da483e9ed757647a228df1dd4ff6b1dc874b144395f33d17b4fd80b33",
       "reason": "Verify SDK MCP formatting, synchronous append, byte limits, external rotation and filesystem failure recovery at task-owned paths."
+    },
+    "packages/pi-durable-coding/src/mcp-servers.ts": {
+      "sha256": "944f870433db7b256b705ad462a760614b0d64b231fd8ee6c1f18b90d46fd806",
+      "reason": "Forward existing public SDK MCP configuration algorithms, resource constants and types without a local implementation copy."
+    },
+    "packages/pi-agent-server/src/mcp/servers-sdk.test.ts": {
+      "sha256": "3ce0fd55e0a97c895cad47a99ce1d1637df8a3f6013a3d0761ee22016fa9a6f3",
+      "reason": "Verify SDK configuration reuse, alias normalization, host exposure boundaries and OAuth destination policy with deterministic fixtures."
     }
   },
   "deleted": {

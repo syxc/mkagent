@@ -337,6 +337,8 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `61734e9` 后的 MCP 日志切片删除 server 的 71 行完整副本，两行手写门面直接转出 Coding SDK 的 McpServerLog 与 formatMcpLogMessage。extension 仍传入 agentDir/mcp.log，runtime 继续把通知交给同一日志实例；格式化、同步追加与轮转算法全部使用 SDK。补丁只增加两个根出口，两个布局的日志 JS/声明保持 pristine，Coding 仍为 82 份输出、总数 119 份。两布局各 47 项 MCP 测试和实际门面、声明、新测试及两个生产调用点的严格类型检查通过，使用 skipLibCheck。来源更新 6 项、退役 1 项、新增 2 项，受限 Craft 审计通过 2019 个允许文件；生成清单仍为 13 份，手写门面另计。独立复核及限制见[MCP 日志验证](coding-validation.md#public-sdk-mcp-logging-after-61734e9)，其余源码与 F0 至 F6 继续开放。
 
+`70d5848` 后的 MCP server 配置切片将 297 行本地模块缩为 57 行宿主绑定，净减少 240 行；八行门面直接转出 SDK 已公开的校验、曝光匹配、命名空间、资源常量和类型，未调用的本地 registry 等算法删除。宿主保留自有属性曝光防护、无效值 hidden、OAuth 目的地址限制和部分配置类型，不增加 SDK 补丁。两布局各 72 项测试及定向严格类型检查通过，使用 skipLibCheck；独立差分各比较 14520 个曝光和 1316 个配置场景，接受结果和成功对象一致，报错标点与多错误优先级差异已登记。来源更新 2 项、新增 2 项，受限 Craft 审计通过 2021 个允许文件；82 份 Coding 输出、119 份总输出及 13 份生成清单保持，手写门面另计。配置加载器、资源、运行时及整体验收继续开放，见[MCP server 配置验证](coding-validation.md#public-sdk-mcp-server-configuration-after-70d5848)。
+
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |

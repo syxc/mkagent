@@ -26,6 +26,79 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK MCP server configuration after 70d5848
+
+Replace the server's 297-line configuration module with a 57-line host binding.
+The eight-line handwritten facade forwards existing public Coding SDK validation,
+exposure matching, namespaces, resource constants and types. Remove the unused
+local matcher, registry and callback helpers. No complete algorithm is moved to
+a wrapper or patch template. The host retains own-property exposure checks,
+hidden fallback for invalid values, OAuth credential destination limits, partial
+configuration inputs, optional source and required scope.
+
+Exact own exposure keys still win, including non-enumerable keys. Inherited keys
+are ignored. Wildcard order and literal regular-expression characters use the
+SDK algorithm. OAuth on remote plaintext HTTP remains rejected; HTTPS and
+loopback HTTP keep the existing policy. Stdio entries with extra URL or OAuth
+fields do not acquire an HTTP transport restriction. SDK validation preserves
+extra host fields and normalizes the legacy exposure alias without changing the
+input object.
+
+No SDK module, patch, dependency, lockfile or persistence version changes. All
+82 Coding output hashes match both existing layouts. Core has four outputs and
+durable has 33, for 119 total. The generated runtime list stays at 13 TypeScript
+files, with nine src/pi files and four facades, and no resources. The new
+handwritten facade is outside that list. Both layouts receive its actual
+transpiled declaration with zero diagnostics; this is not a full declaration
+build. The apply runner corrects a hoisted package path and physical line-count
+assumptions before its first write.
+
+Each existing layout passes 72 tests across ten MCP files, with zero failures and
+410 assertions. Eight new tests cover SDK identity and host policy boundaries;
+config-sdk, log-sdk, tools-sdk, visibility, registrations, provider, oauth,
+authorization and project-trust cover related behavior. Guarded preflights inspect
+2146 root and 2607 hoisted loads with zero protected loads. The actual facade,
+emitted declaration consumer, new test, host binding, config, runtime and
+extension compile with zero diagnostics under strict mode and skipLibCheck.
+The initial runner expects 69 after all 72 root tests pass. It stops before root
+types or hoisted checks. A separate resume runner verifies and preserves that
+successful root run, then completes only root types and hoisted checks. The
+original failed runner and its output remain; no product change addresses this
+counting error, and the successful root behavior run is not repeated.
+
+Independent read-only review finds no verified defect. The parent verifies four
+frozen source files, 15 evidence files, two generated declarations and 23 review
+artifacts. Root and hoisted pure-module probes each compare 14,520 exposure cases
+and 1316 configuration cases with zero acceptance or successful-object differences.
+Each has 79 diagnostic differences from serial-comma punctuation or the first
+reported error when multiple fields are invalid. Current production callers treat
+all returned error strings as rejection. The eligible-source scan checks 1707
+files and finds no host caller of the removed local exports. Both installed SDK
+core modules and declarations match the specified pristine release.
+
+The first independent harness attempt stops before reading an unexpected SDK
+root entry. Later scratch copies redirect only facade imports to the unchanged
+installed pure core. Public-root integration and strict targeted compilation rely
+on verified parent evidence; the reviewer does not repeat those groups. Finite
+matrices do not prove equivalence for every JavaScript object or proxy. Full
+Native, full build and declarations, fresh install, real services, cross-platform
+execution, full Craft and F0 through F6 remain open.
+
+Source registration updates two entries and adds two, with no retirement or
+unrelated entry changes. The fixed Craft v0.15.6 restricted audit passes 2021
+allowed files: 1454 common paths, 873 normalized matches, 581 modified files,
+567 MkAgent-only files and 858 reviewed Craft-only deletions. Whole-legacy,
+context-tokens.js and sensitive configuration exclusions remain. Behavioral
+children use task-owned HOME and temporary directories, PI_OFFLINE, no environment
+file, the loopback-only preload and OS sandbox. Real user configuration,
+external network access and port 9100 remain blocked.
+
+Evidence is under /tmp/mkagent-mcp-servers-sdk-2Ap9zz. Preserve applied.json,
+validation.json, validation-resumed.json, review-inputs.json, review-verified.json,
+the independent-review-dgz32b subdirectory, source-registration.json and
+restricted-craft-audit.json. Continue review of the configuration loader, resource
+and runtime responsibilities and other remaining source.
+
 ## Public SDK MCP logging after 61734e9
 
 Delete the server's 71-line MCP log copy. The two-line handwritten mcp-log

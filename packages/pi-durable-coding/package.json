@@ -12,6 +12,7 @@
     "./mcp-config": { "types": "./types/mcp-config.d.ts", "default": "./src/mcp-config.ts" },
     "./mcp-log": { "types": "./types/mcp-log.d.ts", "default": "./src/mcp-log.ts" },
     "./mcp-oauth": { "types": "./types/mcp-oauth.d.ts", "default": "./src/mcp-oauth.ts" },
+    "./mcp-servers": { "types": "./types/mcp-servers.d.ts", "default": "./src/mcp-servers.ts" },
     "./mcp-tools": { "types": "./types/mcp-tools.d.ts", "default": "./src/mcp-tools.ts" },
     "./agent": { "types": "./types/agent-runtime.d.ts", "default": "./src/agent-runtime.ts" },
     "./durable": { "types": "./types/durable-coding/index.d.ts", "default": "./src/durable-coding/index.ts" }
