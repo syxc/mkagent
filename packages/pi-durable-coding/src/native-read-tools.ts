@@ -8,7 +8,6 @@ import {
   type ReadToolOptions,
 } from '@earendil-works/pi-coding-agent';
 import { detectSupportedImageMimeTypeFromFile } from './compat/image-mime.ts';
-import { getReadmePath } from './pi/config.ts';
 import { processImage } from './native-image-process.ts';
 
 export { type ReadOperations, type ReadToolDetails, type ReadToolInput, type ReadToolOptions } from '@earendil-works/pi-coding-agent';
@@ -25,7 +24,7 @@ function readOptions(options?: ReadToolOptions): ReadToolOptions {
     resizeOptions: options?.resizeOptions,
     operations: options?.operations ?? operations,
     processImage: options?.processImage ?? processImage,
-    getReadmePath: options?.getReadmePath ?? getReadmePath,
+    getReadmePath: options?.getReadmePath,
   };
 }
 

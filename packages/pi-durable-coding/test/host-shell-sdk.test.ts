@@ -7,7 +7,7 @@ import {
   createBashToolDefinition as sdkBashDefinition, getThemeByName, initTheme,
   type BashOperations, type BashToolOptions, type ExtensionContext, type ToolRenderContext,
 } from '@earendil-works/pi-coding-agent';
-import { getBinDir } from '../src/pi/config.ts';
+import { getBinDir } from '../src/native-config.ts';
 import {
   createBashTool, createBashToolDefinition, createLocalBashOperations, createLocalPowerShellOperations,
   createPowerShellTool, createPowerShellToolDefinition,

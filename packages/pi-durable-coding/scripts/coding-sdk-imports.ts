@@ -27,6 +27,9 @@ export const CODING_SDK_MODULES = new Set([
   'core/resource-loader.ts',
   'core/settings-manager.ts',
   'core/settings-defaults.ts',
+  'core/skills.ts',
+  'core/prompt-templates.ts',
+  'core/system-prompt.ts',
   'core/slash-commands.ts',
   'core/source-info.ts',
   'core/timings.ts',
@@ -59,15 +62,13 @@ export const CODING_SDK_MODULES = new Set([
 export function codingHostImport(importer: string, specifier: string): string | undefined {
   if (!specifier.startsWith('.')) return undefined;
   const module = posix.normalize(posix.join(posix.dirname(importer), specifier));
-  const host = module === 'core/extensions/loader.ts' ? 'native-extension-loader.ts'
+  const host = module === 'config.ts' ? 'native-config.ts'
+    : module === 'core/extensions/loader.ts' ? 'native-extension-loader.ts'
     : module === 'core/agent-session-services.ts' ? 'native-session-services.ts'
     : module === 'core/agent-session-runtime.ts' ? 'native-session-runtime.ts'
     : module === 'core/sdk.ts' ? 'native-sdk.ts'
     : module === 'core/messages.ts' ? 'native-messages.ts'
     : module === 'core/agent-session.ts' ? 'native-agent-session.ts'
-    : module === 'core/skills.ts' ? 'native-skills.ts'
-    : module === 'core/prompt-templates.ts' ? 'native-prompt-templates.ts'
-    : module === 'core/system-prompt.ts' ? 'native-system-prompt.ts'
     : module === 'core/tools/grep.ts' || module === 'core/tools/find.ts' ? 'native-search-tools.ts'
     : module === 'core/tools/read.ts' ? 'native-read-tools.ts'
     : module === 'core/tools/edit.ts' || module === 'core/tools/edit-diff.ts' ? 'native-edit-tools.ts'

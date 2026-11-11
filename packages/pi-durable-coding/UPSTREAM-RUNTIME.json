@@ -9,7 +9,6 @@
     "@earendil-works/pi-coding-agent": "1.5.0",
     "@earendil-works/pi-durable": "1.5.0",
     "@earendil-works/pi-tui": "1.5.0",
-    "quickjs-wasi": "3.6.2",
     "typebox": "1.3.27"
   },
   "coreImports": [
@@ -36,19 +35,6 @@
       "portSha256": "7380c823e485933b08fc791eaab1fc8f88e5da85face6377e7d9540c1206dfec",
       "changes": [
         "public-core-operations-with-native-identity"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/config.ts",
-      "target": "src/pi/config.ts",
-      "sha256": "b226dccdba72d5438ec6facadd4f3c5f3ff0d4fe66ee591078c486712dbe915a",
-      "portSha256": "00a7edb8e7270b144baa00d913e3770ef2d9424b85a3d39df8e3cfd5705d6dea",
-      "changes": [
-        "host-extension-module-import",
-        "public-coding-sdk",
-        "pinned-coding-version-with-host-install-detection",
-        "source-asset-location",
-        "installed-native-bundle-assets"
       ]
     },
     {
@@ -120,7 +106,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "cbb3794a39ab9334071b3cf019b674d49ab90c528c6113b38f839c50bf1f8cf9",
+      "portSha256": "e3fc3f0214b46762d8951634bba6ac873b596e4be82e8eca57291fae9dbb7a24",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",

@@ -129,7 +129,7 @@ test('bundled native factory keeps the Coding version and dynamic attribution wi
   const entry = join(directory, 'identity.ts'), artifact = join(directory, 'artifact');
   writeFileSync(entry, `
     import { createAgentSession } from ${JSON.stringify(resolve(import.meta.dir, '../src/native-sdk.ts'))};
-    import { VERSION } from ${JSON.stringify(resolve(import.meta.dir, '../src/pi/config.ts'))};
+    import { VERSION } from ${JSON.stringify(resolve(import.meta.dir, '../src/native-config.ts'))};
     import { ModelRuntime, SettingsManager, SessionManager, DefaultResourceLoader } from ${JSON.stringify(Bun.resolveSync('@earendil-works/pi-coding-agent', import.meta.dir))};
     import { InMemoryCredentialStore } from ${JSON.stringify(Bun.resolveSync('@earendil-works/pi-ai', import.meta.dir))};
     const cwd = process.cwd(), agentDir = cwd + '/agent', model = ${JSON.stringify(model)};

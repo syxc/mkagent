@@ -1,6 +1,6 @@
 /** Bind the native Coding module table without loading its circular barrel at startup. */
 import { createHostExtensionLoader } from './host-extension-loader.ts';
-import { CONFIG_DIR_NAME, getAgentDir } from './pi/config.ts';
+import { CONFIG_DIR_NAME, getAgentDir } from './native-config.ts';
 
 let modules: Promise<Record<string, unknown>> | undefined;
 export const {

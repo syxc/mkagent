@@ -5,7 +5,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { createShellHelpers } from '@earendil-works/pi-coding-agent';
-import { getBinDir } from '../src/pi/config.ts';
+import { getBinDir } from '../src/native-config.ts';
 import {
   getShellConfig, getShellEnv, killProcessTree, killTrackedDetachedChildren, trackDetachedChildPid, untrackDetachedChildPid,
 } from '../src/compat/shell.ts';

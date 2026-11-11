@@ -1,6 +1,6 @@
 import { createShellHelpers, type ShellHelpers } from '@earendil-works/pi-coding-agent';
 import { getBashShellConfig, killProcessTree as killTree } from '@earendil-works/pi-durable/env/node';
-import { getBinDir } from '../pi/config.ts';
+import { getBinDir } from '../native-config.ts';
 
 export { getBashShellConfig };
 export type { ShellConfig } from '@earendil-works/pi-coding-agent';

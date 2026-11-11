@@ -54,7 +54,7 @@ const adapter = evaluate(await readFile(adapterPath, 'utf8'), adapterPath, {
     ...sdk,
     createFindTool: (_cwd: string, options: unknown) => options,
   },
-  './pi/config.ts': { getBinDir: () => installDir, VERSION: 'fixture' },
+  './native-config.ts': { getBinDir: () => installDir, VERSION: 'fixture' },
   './compat/archive.ts': { extractZipArchive },
   './compat/download.ts': { writeDownload },
 });

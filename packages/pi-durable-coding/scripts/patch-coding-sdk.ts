@@ -105,7 +105,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export { createImageConverters } from "./utils/image-convert.${extension}";`,
     `export * from "./utils/image-process.${extension}";`,
     `export * from "./utils/image-resize.${extension}";`,
-    `export { getThemesDir, getExportTemplateDir } from "./config.${extension}";`,
+    `export { ENV_AGENT_DIR, getBinDir, getCodemodeWorkerSpecifier, getThemesDir, getExportTemplateDir } from "./config.${extension}";`,
   ].join('\n') + '\n';
   const marker = '//# sourceMappingURL=';
   const position = original.indexOf(marker);

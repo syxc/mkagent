@@ -84,7 +84,7 @@
     },
     {
       "target": "src/upstream/core/skills.ts",
-      "implementation": "src/native-skills.ts",
+      "implementation": "@earendil-works/pi-coding-agent",
       "changes": [
         "explicit-host-agent-directory",
         "explicit-host-project-resource-directory"
@@ -92,14 +92,14 @@
     },
     {
       "target": "src/upstream/core/prompt-templates.ts",
-      "implementation": "src/native-prompt-templates.ts",
+      "implementation": "@earendil-works/pi-coding-agent",
       "changes": [
         "explicit-host-project-resource-directory"
       ]
     },
     {
       "target": "src/upstream/core/system-prompt.ts",
-      "implementation": "src/native-system-prompt.ts",
+      "implementation": "@earendil-works/pi-coding-agent",
       "changes": [
         "host-documentation-paths"
       ]

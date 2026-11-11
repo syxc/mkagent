@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, win32 } from 'node:path';
 import { createLsToolDefinition, type ExtensionContext } from '@earendil-works/pi-coding-agent';
-import { ENV_AGENT_DIR } from '../src/pi/config.ts';
+import { ENV_AGENT_DIR } from '../src/native-config.ts';
 import {
   createFindTool, createFindToolDefinition, createGrepTool, createGrepToolDefinition, relativizeFindResultPath,
 } from '../src/native-search-tools.ts';

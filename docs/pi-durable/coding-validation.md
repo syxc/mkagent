@@ -26,6 +26,88 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK configuration after f7d4b4f
+
+The complete local configuration module, 687 lines, is deleted. Coding SDK
+configuration now provides agent, binary, package and documentation paths,
+metadata options and worker selection. A six-line Native binding forwards
+nine existing exports and fixes the Coding version at 1.5.0. This version
+must remain stable when a bundle reads host package metadata, such as 0.2.6.
+The default Native package and README paths now point to the installed
+Coding SDK package. This path change is intentional; PI_PACKAGE_DIR and
+custom piConfig remain SDK options.
+
+The patch adds only three existing root exports: ENV_AGENT_DIR, getBinDir
+and getCodemodeWorkerSpecifier. Only dist/index.js and dist/index.d.ts
+change among the 90 Coding outputs; the other 88 hashes remain unchanged.
+No configuration algorithm moves into a patch template. Core has four
+outputs and durable 33, for a total of 127. Remove the added exports when
+an equivalent public SDK root provides them.
+
+Native QuickJS lookup now uses the durable codemode/node public entry.
+The Coding workspace direct quickjs-wasi dependency and its lock declaration
+are removed. The official SDK transitive dependency remains. Sandbox leases,
+admission, cancellation and worker release keep their existing implementation.
+The three redundant Native skills, prompt-template and system-prompt wrappers,
+25 lines in total, are deleted. Native uses SDK defaults. Shared legacy
+forwards retain `.pi`, required explicit agentDir and fixed Pi v1.5.0 document
+URLs. Explicit read-tool document overrides remain supported; the default
+renderer now uses SDK documentation paths.
+
+The obsolete 13-line asset conversion script is also deleted. Complete
+runtime generation and check pass with 12 TypeScript files: eight in src/pi
+and four generated facades, with no resources. The hand-written six-line
+configuration binding is counted separately. Three shared resource forwards
+and their manifest entries are generated in a restricted projection. The
+full vendor-upstream command is not run because it reaches protected legacy
+sources. This is not a complete auxiliary-source generation check.
+
+The following checks pass in the two existing installation layouts:
+
+- Root retains the earlier 83 passing search, shell and sandbox tests. A final
+  run of all six configuration tests passes with 31 assertions. Hoisted runs
+  all five related test files together: 89 tests and 385 assertions pass.
+- Configuration tests cover SDK metadata, custom directories, home expansion,
+  fixed bundled versions with PI_BUNDLED_NODE false and true, worker selection,
+  SDK and legacy resource policy, and a real durable QuickJS Unicode worker.
+  The worker-selection fixture is not a complete release worker build.
+- Read entry projections each pass 19 tests and 50 assertions. The original
+  test bodies call the real Native read factories and configuration binding
+  through a narrow facade. Full Native import remains excluded.
+- Final strict checks of actual declaration consumers, configuration,
+  sandbox and new tests report zero diagnostics in both layouts, with
+  skipLibCheck enabled. Guarded compiler reads total 1675 and 1604.
+- All 90 installed Coding output hashes match the manifest in each layout.
+  Five current declarations are present and four retired declarations are
+  absent in each layout. Neither layout is reinstalled for this slice.
+
+The initial application completed correct patch and runtime generation, then
+stopped before installation writes because it assumed all hoisted fixture
+files matched HEAD. A continuation checked both prior installations, backed
+up existing unmanaged targets and completed 58 writes. Early fixture failures
+included an incorrect sandbox method, invalid build-plugin results, cleanup
+assertions and a credentials-path rule that also rejected SDK code. These
+were corrected within the restricted test setup. Two consecutive Bun builds
+in one test process caused Unseekable on the second build; each mode now
+builds in a separate child process, as the release scripts do. The final
+strict check first reported TS2769 for the untyped child JSON result; an
+explicit result type fixed it. Failed logs remain in the evidence record.
+
+Independent review confirms no findings within the frozen slice. It checks
+36 source entries, 200 installed-artifact entries and 26 support files at
+both ends. Each layout passes 28 independent assertions, including a real
+QuickJS worker. The parent verifies all frozen hashes, 292 reviewer input
+records and 23 reviewer outputs. Source registration updates 29 entries,
+adds two and retires five, with unrelated entries unchanged. The restricted
+Craft v0.15.6 audit passes for 2024 allowed files. Protected legacy sources
+and sensitive configuration remain excluded from all these checks.
+
+Full Native entry, full types and declarations, a fresh frozen install,
+complete auxiliary generation, recovery integration, compiled Bun and real
+Windows release behavior, complete release worker integration, full Craft
+and F0 through F6 remain open. This slice changes configuration and resource
+bindings; its narrow checks do not establish overall migration completion.
+
 ## SDK MCP runtime after 8add2cc
 
 The server MCP runtime shrinks from 497 to 182 lines, a reduction of 315.

@@ -8,12 +8,12 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "58df43862579accf0e3be6e97d21f6973614999d386202d550c9b27cee088e20"
+      "sha256": "573ea1645eda9b4752dca83e679f69cc8a6a88061980dc485e9219bd52472e1c"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "9845cd9578c4a0cb065c06b2f55be6e6615e0fb35e8fc76b29b84a432031f6cc"
+      "sha256": "6516e254eba9edda8ac7239ceecd288d00e1a123274bc47d32dfcc42a3402d12"
     },
     {
       "path": "dist/extensions/mcp/resources.js",

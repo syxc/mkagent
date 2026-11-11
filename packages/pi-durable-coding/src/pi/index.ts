@@ -11,7 +11,7 @@ export {
 	getPackageDir,
 	getReadmePath,
 	VERSION,
-} from "./config.ts";
+} from "../native-config.ts";
 export {
 	AgentSession,
 	type AgentSessionConfig,
@@ -331,7 +331,7 @@ export {
 	loadSkillsFromDir,
 	type Skill,
 	type SkillFrontmatter,
-} from "../native-skills.ts";
+} from "@earendil-works/pi-coding-agent";
 export { createSyntheticSourceInfo } from "@earendil-works/pi-coding-agent";
 export { type EditDiffResult, generateDiffString, generateUnifiedPatch } from "../native-edit-tools.ts";
 // Tools

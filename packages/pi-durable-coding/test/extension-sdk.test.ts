@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path';
 import * as sdk from '@earendil-works/pi-coding-agent';
 import * as native from '../src/native-extension-loader.ts';
 import * as legacy from '../src/legacy/extension-loader.ts';
-import { CONFIG_DIR_NAME } from '../src/pi/config.ts';
+import { CONFIG_DIR_NAME } from '../src/native-config.ts';
 import { createHostExtensionLoader } from '../src/host-extension-loader.ts';
 
 let root: string;

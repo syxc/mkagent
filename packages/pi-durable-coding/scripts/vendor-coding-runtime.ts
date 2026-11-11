@@ -5,7 +5,6 @@ import { isBuiltin } from 'node:module';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
-import { portBundledAssets } from './asset-runtime-port.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
 import { applySharedHelperPort, excludeRunModeEntries } from './shared-helper-port.ts';
 
@@ -163,20 +162,6 @@ while (queue.length) {
   };
   visit(parsed);
   for (const edit of replacements.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.body + body.slice(edit.end);
-  if (path === 'config.ts') {
-    body = body.replace('export const VERSION: string = pkg.version || "0.0.0";',
-      `export const VERSION: string = ${JSON.stringify(packageInfo.version)};`);
-    body = body.replace('installed.version !== VERSION', 'installed.version !== pkg.version');
-    changes.add('pinned-coding-version-with-host-install-detection');
-    for (const segment of ['"modes", "interactive", "theme"', '"core", "export-html"', '"modes", "interactive", "assets"']) {
-      const before = `join(packageDir, srcOrDist, ${segment})`;
-      if (!body.includes(before)) throw new Error('Package asset resolver changed: ' + segment);
-      body = body.replace(before, `join(packageDir, srcOrDist, "pi", ${segment})`);
-    }
-    changes.add('source-asset-location');
-    body = portBundledAssets(body);
-    changes.add('installed-native-bundle-assets');
-  }
   const helper = applySharedHelperPort(path, body);
   if (helper) {
     body = helper.body;

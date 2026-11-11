@@ -9,7 +9,6 @@ import type { AgentActivityOutcome,NormalizedBuildSystemPromptOptions } from '@e
 import { runToolCall,type Agent,type AgentMessage } from './agent-runtime.ts';
 import { convertToLlm } from './native-messages.ts';
 import { processImage } from './native-image-process.ts';
-import { buildSystemPrompt,buildSystemPromptSections } from './native-system-prompt.ts';
 import { createToolDefinitionFromAgentTool } from '@earendil-works/pi-coding-agent';
 import type { AgentTool } from './agent-runtime.ts';
 
@@ -52,7 +51,7 @@ export class AgentSession extends SDKAgentSession {
   private _durableQueueAdmissions=new Set<Promise<void>>();
 
   constructor(config: AgentSessionConfig) {
-    super({ ...config,runToolCall,convertToLlm,processImage,promptDependencies: { buildSystemPrompt,buildSystemPromptSections } });
+    super({ ...config,runToolCall,convertToLlm,processImage });
     this.agent.durable.bindSessionState(() => this.exportDurableState(),state =>
       this.restoreDurableState(state as ReturnType<AgentSession["exportDurableState"]>));
     this.agent.durable.bindInputQueues((inputs,cancelled) => {

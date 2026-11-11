@@ -1,6 +1,6 @@
-import { CodemodeSandbox, loadQuickJSWasm } from '@earendil-works/pi-durable/codemode/node';
+import { CodemodeSandbox, getQuickJSWasmPath, loadQuickJSWasm } from '@earendil-works/pi-durable/codemode/node';
 import type { CodemodeSandboxLease } from '@earendil-works/pi-durable/codemode';
-import { getCodemodeWorkerSpecifier, getQuickJSWasmPath } from '../pi/config.ts';
+import { getCodemodeWorkerSpecifier } from '../native-config.ts';
 
 const MEMORY_LIMIT_BYTES = 256 * 1024 * 1024;
 const WORKER_WAIT_MS = 60_000;
