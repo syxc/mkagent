@@ -3408,10 +3408,6 @@
       "sha256": "d96737cdb414da6d9c251bbc06d6955ac79e14dc380a78e961fd11fc0c446833",
       "reason": "Vendor pi-coding-agent 1.1.0 core/mcp-servers.js validation, exposure matching, namespaces and extension registration types."
     },
-    "packages/pi-agent-server/src/mcp/output-files.ts": {
-      "sha256": "caafbe3e0102eeab9215ed4f33c17e87ccbdb79cfab6798e811e6847cd28a626",
-      "reason": "Vendor pi-coding-agent 1.1.0 utils/output-files.js helpers for private temporary MCP output files."
-    },
     "packages/pi-agent-server/src/mcp/resolve-config-value.ts": {
       "sha256": "931ad2799563076208ebfb8da8574ace101fdff715bff6d9216cbbdca690fca7",
       "reason": "Port pi-coding-agent 1.1.0 core/resolve-config-value.js environment, template and command resolution using the platform default shell."
@@ -3425,8 +3421,8 @@
       "reason": "Preserve host MCP retry and OAuth rotation behavior while reading provider tokens per request and rejecting retired or unsafe credential dispatch."
     },
     "packages/pi-agent-server/src/mcp/tools.ts": {
-      "sha256": "664d87b1785584dcf1ebb2bf6ce0eb66ca8c703c5b17424b182be1a3822d6feb",
-      "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/tools.js naming, content conversion and truncation to durable registrations without TUI renderers."
+      "sha256": "f5ece4f39e8fddb68c75288832647bfb1e66ecd9ab2f1ce12d7568300115b61a",
+      "reason": "Bind Coding SDK MCP conversion and schemas to durable registrations, visibility, live connections and host progress."
     },
     "packages/pi-agent-server/src/migrate.test.ts": {
       "sha256": "7260ff31bd9484472b4cac746184d64614a1abd3d2f23caf8c0223ec30b46ba1",
@@ -3471,10 +3467,6 @@
     "packages/pi-agent-server/src/tools/local/tool-binaries-cancellation.isolated.ts": {
       "sha256": "2a432715797594a37f1d58c8d3804025e0ddd00f169c840509dd8f3ce3d4f5a9",
       "reason": "Verify per-call resolver signals and SDK find and grep acquisition cancellation across requests, streaming bodies and archive publication with isolated module spies and fake downloads."
-    },
-    "packages/pi-agent-server/src/tools/local/truncate.ts": {
-      "sha256": "b2645d95d4c3c78069ebb0609c3edb7263a3020d51a697a1a7982f8f318cb505",
-      "reason": "Vendor the required pi-coding-agent 1.1.0 core/tools/truncate.js size, head, line and middle truncation helpers."
     },
     "packages/pi-agent-server/src/tools/wrap.ts": {
       "sha256": "852cd36caeec3dac064a491655df3b9a0c56bc565af4cc1ea9f26e3889e83653",
@@ -3697,8 +3689,8 @@
       "reason": "Route the shared shell compatibility entry to the active SDK and durable binding."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "03c23daf882ce3e26b17e5ff2314536972fc923d5b229d23dbe8102c501471a3",
-      "reason": "Remove the unused direct chalk dependency after the CLI parser is replaced by the public SDK."
+      "sha256": "d2a3dbc2c22e165d20c3c833651afc332f99a7cf4e3595a1ad76a29d0043d495",
+      "reason": "Expose the MCP tools facade through the existing Coding SDK dependency without adding a runtime dependency."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -4377,16 +4369,16 @@
       "reason": "Check the OAuth module source route to the public SDK; retain existing SDK identity and trust boundary checks."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "af3738d6193c5d7d61bb393a33e0a5cb5b62387c437e0766178b7439623ecdc1",
-      "reason": "Record 79 Coding outputs after OAuth root exports and cancellable lock policy replace the retired credential Pick declaration patch."
+      "sha256": "ca62cc25c5bc9aff1466781faabfc41c60948f7f707d5ed165e58ba739d2e2ae",
+      "reason": "Record 80 Coding outputs, including root MCP exports and the narrow schema resource-reference fix."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "d6a4aab61d0b21ec604679d97498e1d15aed7bc2a8e8583de90c3459f9ce3378",
-      "reason": "Export the existing SDK OAuth module, apply narrow lock cancellation policy and retire the redundant credentials Pick declaration."
+      "sha256": "9acbbb4581482ced1b4cc218178df59c66566ce2dff25103d832896ddf11a9c4",
+      "reason": "Export existing MCP helpers and preserve local-reference bases at SDK schema resource boundaries."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "dd5c763874bb6fc1ca66053b6a147a4f09e88d2f2af78568bc7427f2927402ae",
-      "reason": "Add existing OAuth root exports and optional cancellation around SDK lock acquisition; preserve active refresh completion and restore the original MCP credentials declaration."
+      "sha256": "4cac4fc8770972cf2803aad4e622de1f4b2620c470b2aaad69779b94415de5a7",
+      "reason": "Export existing MCP helpers and stop local-reference relocation at string $id resources without copying algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4627,6 +4619,14 @@
     "packages/pi-durable-coding/test/mcp-oauth-sdk.test.ts": {
       "sha256": "03d13a4a92d38f5ad403d8d5f93ee200bfd4cedb91aec747cad8edf910047af4",
       "reason": "Verify SDK facade identity, legacy grant migration and isolation, pre-aborted mutation rejection and active write completion."
+    },
+    "packages/pi-agent-server/src/mcp/tools-sdk.test.ts": {
+      "sha256": "2a166837590728e7a65910a1f2e56d673f81ab4282a8137ecdd770914e03d47e",
+      "reason": "Verify SDK identity, output files, schema resource validation and durable live connection bindings."
+    },
+    "packages/pi-durable-coding/src/mcp-tools.ts": {
+      "sha256": "906824347c92d1c74864be5783e71a3f9751c8a861186cafb9945a1a82a4b2b1",
+      "reason": "Expose existing Coding SDK MCP presentation functions without a runtime wrapper."
     }
   },
   "deleted": {

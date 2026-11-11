@@ -331,6 +331,8 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `e927004` 后的 MCP OAuth 切片删除 592 行完整实现和 65 行旧源码转换，公开门面直接转出 SDK 同一组类、函数与类型，不加运行时包装。SDK 继续负责凭据、迁移、PKCE、回调校验、刷新和跨进程锁；局部补丁只补已有根出口及可选 signal 锁等待，进入写入后仍保存已收到的轮换结果。旧 credentials Pick 声明补丁已撤除。当前 runtime 为 13 份 TypeScript（src/pi 9、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个；core 4、Coding 79、durable 33 共 116 份输出。完整生成与 check 通过，两现有布局各 27 项测试及实际门面声明严格消费者通过，消费者使用 skipLibCheck。独立复核未确认缺陷，21 项探针通过，父线程已核验 13 项源码、30 项 SDK 输入和报告产物。来源更新 9 项、退役 2 项、新增 2 项；固定 Craft 受限审计通过 2017 个允许文件，另排除受保护文件名，范围较前收窄。依赖、lock 和持久化版本未变，无重新安装；proper-lockfile 直接依赖尚未清理，受保护闭包未核验。完整声明、Native 入口及 F0 至 F6 继续开放，失败修正与范围见[OAuth SDK 验证](coding-validation.md#public-sdk-mcp-oauth-after-e927004)。
 
+`6014226` 后的 server MCP tools 切片删除 180 行截断副本和 39 行输出文件副本，命名、内容转换、资源展示、截断、保存及输出 schema 使用 Coding SDK。五行手写门面只转出已有函数，server 保留 durable 注册和宿主执行绑定。除两个根出口外，独立复核确认的 `$id` 引用回归需要一处 SDK 局部修复：遇到 schema resource 时保留其局部引用基准，其余转换算法不复制。Coding 补丁增至 80 份，总补丁产物为 117 份；生成清单仍为 13 份 TypeScript，手写门面另计。四种 `$id` 回归修复前均失败，修复后两布局各 32 项测试及定向严格类型检查通过，使用 skipLibCheck；未做第二次独立复核。来源更新 5 项、退役 2 项、新增 2 项，受限 Craft 审计覆盖 2017 个允许文件；完整 Native、声明及 F0 至 F6 继续开放，见[MCP tools 验证](coding-validation.md#public-sdk-server-mcp-tools-after-6014226)。
+
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |

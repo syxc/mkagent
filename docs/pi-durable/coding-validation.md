@@ -26,6 +26,98 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK server MCP tools after 6014226
+
+Delete the server's 180-line truncation copy and 39-line output-file copy.
+Replace its MCP naming, result conversion, resource presentation, truncation,
+output saving and result schema algorithms with the existing Coding SDK.
+The five-line handwritten mcp-tools facade exports the SDK functions directly.
+Keep only durable registration, visibility, live connection lookup, signal,
+timeout, progress and JSON result binding in the server.
+
+Durable's public tools entry does not provide these MCP conversion contracts.
+The Coding SDK has complete implementations but lacks their root exports.
+Add seven existing names to the two root files and a narrow resource-boundary
+fix in the SDK MCP module. Stop local-reference relocation at a string $id,
+which establishes its own schema resource. Do not copy a conversion algorithm
+into the host or patch. Truncation and output-file modules stay pristine.
+AST comparison confirms that the deleted truncation declarations and output-file
+implementation match the corresponding pristine SDK code. The original scanner
+comparison failed on template literals before generation or installation writes;
+the AST comparison then passed.
+
+Coding patch generation and check pass for all 80 outputs. Compared with the
+base, only dist/index.js, dist/index.d.ts and dist/extensions/mcp/tools.js
+change in both existing layouts. The resource fix adds one output and leaves
+the preceding 79 outputs unchanged from the first candidate.
+The generated runtime inventory stays at 13 TypeScript files: nine src/pi files
+and four generated facades. The new handwritten facade is outside that list.
+Auxiliary sources remain eight items with 13 shared entries. Core has four
+outputs and durable has 33, for 117 patch outputs in total. Dependencies,
+lockfile, persistence versions and existing data are unchanged. No install ran.
+
+Each layout passes 32 tests across tools-sdk, visibility, registrations and
+provider after the resource fix. The eleven new tests cover SDK identity, naming collisions, complete
+script results, model truncation without broken Unicode, images, failed output
+saving, private 0600 files, local schema references, resource links, text blobs,
+empty errors and durable live connections with cancellation, timeout and
+progress. The SDK schema declares content block shapes and relocates local
+structuredContent references; the retired 1.1.0 server schema did neither.
+Literal reference data in const remains unchanged. Script results retain full
+content and remove _meta; model output may be truncated and saved separately.
+
+Guarded preflights inspect 2137 root and 2598 hoisted loads with zero protected
+loads. Behavioral children use task-owned HOME and temporary directories,
+PI_OFFLINE, no environment file, the loopback-only preload and OS sandbox.
+The sandbox denies whole-legacy reads, real user configuration and port 9100.
+Actual facade declarations and the new test compile with zero diagnostics under
+strict mode and skipLibCheck. The type host rejects excluded logical and real
+paths before reads. These consumers do not establish full declaration validity.
+
+Keep the first root 28/0 log and its four type diagnostics. Fix the SDK details
+interface boundary with an ordinary JSON object, add progressToken to both
+progress fixtures and load the existing Bun types in the task compiler. The
+second root run passes 28 tests but reports one typed JSON expectation error.
+Use explicit JSON content in that expectation, then pass both final v3 runs.
+A task-only shell edit failed to parse before execution; the dedicated file
+tool applied the change. No successful generation or application was repeated.
+
+Source registration updates five entries, retires two and adds two, with other
+entries unchanged. The fixed Craft v0.15.6 restricted audit passes 2017 allowed
+files: 1454 common paths, 873 normalized matches, 581 modified files, 563
+MkAgent-only files and 858 reviewed Craft-only deletions. It excludes the whole
+legacy subtree, the protected context-tokens.js basename and sensitive
+configuration. The audit has no network access and is not a full Craft audit.
+
+Evidence is under /tmp/mkagent-mcp-tools-sdk-d7lcZT. Preserve applied.json,
+validation.json and the original source and audit receipts. Final fix evidence
+uses schema-fix-applied.json, schema-red-validation.json,
+schema-green-validation.json, schema-fix-source-registration.json and
+schema-fix-restricted-audit.json.
+
+Independent review confirms one P2 regression: relocation prefixes local
+references inside a declared $id resource, so actual pi-schema validation rejects
+a legal structured result. Top-level and nested resources reproduce the defect.
+The parent verifies 15 frozen source hashes and 25 evidence hashes from
+/tmp/mkagent-mcp-tools-review-P2GBdRMd/result.json. The reviewer independently
+passes five checks, including defect reproducers, after a 993-module preflight
+with no protected loads. Its full-suite preflight is blocked by sandbox EPERM
+on the SDK code directory @anthropic-ai/sdk/lib/credentials; policies stay fixed.
+Its Skill unexpectedly starts a fork, which is a process deviation. The direct
+reproduction establishes the finding; fork output is not independent evidence.
+
+The parent adds actual compiler checks for top-level, nested, relative and empty
+$id resources. All four fail before the fix. The SDK now stops relocation at
+these resource boundaries. Both layouts then pass 32 tests and strict facade
+consumer and test checks with zero diagnostics under skipLibCheck. The no-$id
+relocation and literal-reference checks also pass. The fix has no second
+independent review. A task receipt path check initially rejects the /tmp alias;
+its explicit task path is corrected before a receipt write.
+
+Full Native, full declarations, skipLibCheck=false, fresh install, real
+platforms, full Craft and F0 through F6 remain open. Other server MCP and
+tool-manager copies still need review.
+
 ## Public SDK MCP OAuth after e927004
 
 Delete the 592-line OAuth source copy and the 65-line source conversion. The

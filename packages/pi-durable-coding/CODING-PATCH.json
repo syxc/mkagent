@@ -3,17 +3,17 @@
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "version": "1.5.0",
   "patch": "coding-sdk-host-boundaries-v1",
-  "policy": "Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization, an optional session factory and runtime session subtype declarations, and installed worker theme and HTML asset lookup, and protected RPC CLI selection with the published default.",
+  "policy": "Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization, an optional session factory and runtime session subtype declarations, and installed worker theme and HTML asset lookup, and protected RPC CLI selection with the published default, and MCP schema resource boundaries during local-reference relocation.",
   "files": [
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "595a129ea6d0a5dddf8039dde20a666d1cd6924fb615f451a366fd6694d77a38"
+      "sha256": "7092c11e26a4d0b4ef404e09649db5af8eee85335736d98e4ad9c5671b3a4dd7"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "8c401fb9dfea28b8d5b4be9b45f7f225fecfb95e0ddb992c38c26c8f603c46fa"
+      "sha256": "155eb2535ee7de10468076104fc75ebf3ca1b6566547f41b3c5a8703aaff686f"
     },
     {
       "path": "dist/core/agent-session-services.js",
@@ -399,6 +399,11 @@
       "path": "dist/utils/image-resize-worker.js",
       "originalSha256": "7c1ba9a50b0631bfc382ae3a705bba112350aedfbcf0a7e6becc4d57ca2e0768",
       "sha256": "2a5faa03a94acad3f9fc1641ed16a5d72b091ab6ea6eb0ec60a267383c4ff14d"
+    },
+    {
+      "path": "dist/extensions/mcp/tools.js",
+      "originalSha256": "93d4aae2090400c1565ba536f38cf373f022de2c6519e37c02493fbe420842f5",
+      "sha256": "130068f829612259647a54a633af3358092348d2057a56f26edbd218b6324f33"
     }
   ]
 }
