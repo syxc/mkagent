@@ -17,10 +17,34 @@ import { killProcessTree } from '../src/compat/shell.ts';
 
 const directories: string[] = [];
 const outputFiles: string[] = [];
+const processTrees = new Set<string>();
+const pidFiles = ['root.pid', 'child.pid', 'grandchild.pid'];
+const processTreeCommand = [
+  'printf "%s\\n" "$$" > root.pid',
+  '/bin/sh -c \'printf "%s\\n" "$$" > child.pid; /bin/sleep 30 & printf "%s\\n" "$!" > grandchild.pid; printf ready; wait; printf unexpected > child-after-wait\' &',
+  'wait "$!"',
+  'printf unexpected > after-wait',
+].join('\n');
 afterEach(async () => {
+  const failedTrees = [...processTrees];
+  processTrees.clear();
+  for (const cwd of failedTrees) {
+    const pids = (await Promise.all(pidFiles.map(async file => {
+      try { return Number(await readFile(join(cwd, file), 'utf8')); }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return 0;
+        throw error;
+      }
+    }))).filter(pid => Number.isInteger(pid) && pid > 1);
+    // Let the bounded fixture finish rather than signal a PID that could be reused.
+    if ((await waitForProcessExit(pids, 31_000)).length) {
+      directories.splice(directories.indexOf(cwd), 1);
+      throw new Error(`Shell fixture did not stop; retained ${cwd}`);
+    }
+  }
   for (const file of outputFiles.splice(0)) await rm(file, { force: true });
   for (const directory of directories.splice(0)) await rm(directory, { recursive: true, force: true });
-});
+}, 35_000);
 async function scratch() {
   const cwd = await mkdtemp(join(tmpdir(), 'host-shell-sdk-'));
   directories.push(cwd);
@@ -154,20 +178,52 @@ for (const timeout of [0, -1, Number.NaN, Infinity, 2_147_484]) {
     await expect(createLocalBashOperations().exec('true', '/', { timeout, onData: () => {} })).rejects.toThrow('Invalid timeout:');
   });
 }
+function isRunning(pid: number): boolean {
+  try { process.kill(pid, 0); return true; }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ESRCH') return false;
+    throw error;
+  }
+}
+async function waitForProcessExit(pids: number[], timeout: number): Promise<number[]> {
+  const deadline = Date.now() + timeout;
+  while (pids.some(isRunning) && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+  return pids.filter(isRunning);
+}
+async function expectProcessTreeStopped(cwd: string) {
+  const pids = await Promise.all(pidFiles.map(async file => Number(await readFile(join(cwd, file), 'utf8'))));
+  expect(new Set(pids).size).toBe(3);
+  for (const pid of pids) expect(Number.isInteger(pid) && pid > 1 && pid !== process.pid).toBe(true);
+  expect(await waitForProcessExit(pids, 2000)).toEqual([]);
+  for (const file of ['after-wait', 'child-after-wait']) {
+    await expect(stat(join(cwd, file))).rejects.toMatchObject({ code: 'ENOENT' });
+  }
+  processTrees.delete(cwd);
+}
 for (const [name, factory] of [['agent', createBashTool], ['definition', createBashToolDefinition]] as const) {
-  test(`${name} shell cancels a running process group`, async () => {
+  test(`${name} shell cancels a running process tree without a later command`, async () => {
     const cwd = await scratch();
+    processTrees.add(cwd);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 2000);
+    let ready = false;
     try {
-      await expect(factory(cwd).execute('shell', { command: 'printf ready; exec /bin/sleep 30' }, controller.signal, update => {
-        if (update.content.some(part => part.type === 'text' && part.text.includes('ready'))) controller.abort();
+      await expect(factory(cwd).execute('shell', { command: processTreeCommand }, controller.signal, update => {
+        if (update.content.some(part => part.type === 'text' && part.text.includes('ready'))) {
+          ready = true;
+          controller.abort();
+        }
       })).rejects.toThrow('Command aborted');
+      expect(ready).toBe(true);
+      await expectProcessTreeStopped(cwd);
     } finally { clearTimeout(timer); controller.abort(); }
   });
-  test(`${name} shell times out and keeps partial output`, async () => {
+  test(`${name} shell times out a process tree and keeps partial output`, async () => {
     const cwd = await scratch();
-    await expect(factory(cwd).execute('shell', { command: 'printf ready; exec /bin/sleep 30', timeout: 0.05 })).rejects.toThrow('ready\n\nCommand timed out after 0.05 seconds');
+    processTrees.add(cwd);
+    await expect(factory(cwd).execute('shell', { command: processTreeCommand, timeout: 1 }))
+      .rejects.toThrow('ready\n\nCommand timed out after 1 seconds');
+    await expectProcessTreeStopped(cwd);
   });
 }
 test('pre-cancelled local shell performs no command', async () => {

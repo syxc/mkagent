@@ -4453,8 +4453,8 @@
       "reason": "Use the active SDK shell binding and explicit public factory return types without runtime changes."
     },
     "packages/pi-durable-coding/test/host-shell-sdk.test.ts": {
-      "sha256": "25d09d73f91e000317ef63385ccadac1e2557183a4d5521ed6797d93f773adb6",
-      "reason": "Use the replacement Native configuration entry for the existing shell binding regression."
+      "sha256": "cef85b502e07046bec9b19986190b67e582aa62f4f25a78b1a45b5f131c9a188",
+      "reason": "Check real three-level process termination and parent and child post-wait sentinels through Coding SDK cancellation and timeout bindings."
     },
     "packages/pi-durable-coding/scripts/coding-codemode-policy.ts": {
       "sha256": "f3a056f6922bfef33cbe851d66ba435fe76f7b7c061b39b5f78fb06c57c0cb1c",

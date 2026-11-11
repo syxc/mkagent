@@ -433,6 +433,61 @@ v0.15.6 audit passes for 2034 allowed files. Full declarations with the
 repository libraries, public package loading, installation, protected
 legacy, remaining adapters, product recovery and F0 through F6 remain open.
 
+## SDK shell process tree after fef5da1
+
+The shell binding already delegates execution, output, cancellation and rendering
+to the Coding SDK. Its local dependencies keep the host bin directory, detached
+PID tracking, durable wait and the macOS stop-before-kill policy. This check does
+not change these runtime bindings or their SDK patches.
+
+The previous cancellation and timeout fixtures replaced the shell with one
+`sleep` process. They did not establish that child and grandchild processes had
+stopped. The four existing cases in `host-shell-sdk.test.ts` now start a shell,
+a child shell and a 30-second grandchild. The fixture records three distinct
+positive PIDs before it reports readiness. Each case checks that all three PIDs
+are absent within two seconds after execution rejects. It also checks that
+neither the parent nor the child shell created its post-`wait` output file.
+These assertions cover the recorded tree and two sentinels, not arbitrary
+side effects during cancellation or immediate process reaping.
+
+Failure cleanup sends no signals. It gives the 30-second fixture up to 31
+seconds to finish naturally. If a recorded PID still exists, the hook fails and
+retains the fixture directory. Successful cases remove their cleanup
+registration after all PIDs and both sentinel files are absent.
+
+Both the agent and definition factories pass cancellation and timeout checks on
+macOS. The full test file passes 36 tests and 268 assertions in the current
+repository installation layout. The first run passed cancellation but failed
+the two timeout cases because the new fixture emitted an extra newline. The
+fixture now preserves the previous output contract. No runtime change was
+needed.
+
+The runner uses Bun 1.3.14, a task-owned HOME and temporary directory, and the
+existing sandbox that denies network and protected paths. Evidence is under
+`/private/tmp/mkagent-native-acceptance-ALoFEM/shell-process-tree-HER4Hw`:
+
+- `shell-sdk.log` and `shell-sdk.json`: the initial 34-pass, two-failure run.
+- `shell-sdk-fixed.log` and `shell-sdk-fixed.json`: the first 36-pass run.
+- `shell-sdk-final.log` and `shell-sdk-final.json`: the 36-pass run before
+  independent review.
+- `shell-sdk-reviewed.log` and `shell-sdk-reviewed.json`: the final 36-pass,
+  268-assertion run after the review fixes.
+- `run-tests.py`: the explicit environment and sandbox invocation.
+- `reviewed-craft-audit.log` and `reviewed-craft-audit.json`: the passing restricted
+  audit of 2034 allowed files against the separate pinned Craft checkout.
+
+Independent static review identified the missing child-shell sentinel and the
+PID-only signal cleanup. The parent added the sentinel, removed cleanup signals
+and clarified the two-second assertion window. The final test run covers these
+changes. They have not received a second independent review. The retained-path
+branch for a process that stays alive beyond the cleanup deadline has not been
+forced.
+
+The source manifest updates only the existing test entry. Full product entry
+flows, real Windows and Linux process trees, and the broken isolated SDK package
+entry remain outside this result. The earlier install EPERM and complete
+installation acceptance remain open.
+
 ## SDK declaration libraries after 5a9d513
 
 The Coding package now explicitly includes the ESNext and DOM standard type
