@@ -51,6 +51,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export { CacheWarmer } from "./core/cache-warmer.${extension}";`,
     `export { ${suffix === 'd.ts' ? 'type AuthStorageBackend, ' : ''}FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.${extension}";`,
     `export * from "./core/settings-manager.${extension}";`,
+    `export { getProjectTrustOptions } from "./core/trust-manager.${extension}";`,
     `export { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";`,
     `export * from "./core/package-manager.${extension}";`,
     `export * from "./core/model-registry.${extension}";`,

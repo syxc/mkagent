@@ -33,6 +33,8 @@ describe('published Coding SDK boundary', () => {
     expect(native.CredentialSynchronizationError).toBe(sdk.CredentialSynchronizationError);
     expect(native.SessionManager).toBe(sdk.SessionManager);
     expect(native.DefaultResourceLoader).toBe(sdk.DefaultResourceLoader);
+    expect(native.ProjectTrustStore).toBe(sdk.ProjectTrustStore);
+    expect(native.hasTrustRequiringProjectResources).toBe(sdk.hasTrustRequiringProjectResources);
     expect(native.loadProjectContextFiles).toBe(sdk.loadProjectContextFiles);
     expect(native.createExtensionRuntime).toBe(sdk.createExtensionRuntime);
     expect(native.ExtensionRunner).toBe(sdk.ExtensionRunner);
@@ -63,7 +65,7 @@ describe('published Coding SDK boundary', () => {
     expect(codingSDKImport('index.ts', './core/footer-data-provider.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('index.ts', './utils/clipboard.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('config.ts', './utils/paths.ts')).toBe('@earendil-works/pi-coding-agent');
-    expect(codingSDKImport('core/trust-manager.ts', '../utils/text.ts')).toBe('@earendil-works/pi-coding-agent');
+    expect(codingSDKImport('index.ts', './core/trust-manager.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('core/extensions/index.ts', '../slash-commands.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('modes/index.ts', './json-event.ts')).toBe('@earendil-works/pi-coding-agent');
     expect(codingSDKImport('modes/rpc/rpc-client.ts', '../json-event.ts')).toBe('@earendil-works/pi-coding-agent');

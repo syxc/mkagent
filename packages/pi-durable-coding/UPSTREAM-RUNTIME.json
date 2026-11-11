@@ -110,15 +110,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/trust-manager.ts",
-      "target": "src/pi/core/trust-manager.ts",
-      "sha256": "ce480f9a1689e2da996609e9708443c391f9ab0cab5bcc047aebc1613b17e2f9",
-      "portSha256": "5a8f6cfa01a22273163e405854a4e6aad65dec6e45b75dba12fc6a02c518d0fb",
-      "changes": [
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/extensions/codemode/worker.ts",
       "target": "src/pi/extensions/codemode/worker.ts",
       "sha256": "eff1f57d225d054ec40aa6753631426a426528f2ef769c4e82020757cb055911",
@@ -141,7 +132,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "de73fbdbf9e2eca494edd527c1bfdf77e9e0490178489868be0d0f6351df7a44",
+      "portSha256": "cbb3794a39ab9334071b3cf019b674d49ab90c528c6113b38f839c50bf1f8cf9",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",

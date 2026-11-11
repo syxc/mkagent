@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, expect, spyOn, test } from 'bun:test';
 import * as childProcess from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { prepareHostResources } from '../src/host-project-resources.ts';
-import { ProjectTrustStore } from '../src/pi/core/trust-manager.ts';
+import { getProjectTrustOptions, hasTrustRequiringProjectResources, ProjectTrustStore } from '@earendil-works/pi-coding-agent';
 import type { ProjectTrustContext } from '@earendil-works/pi-coding-agent';
 
 let root: string;
@@ -12,7 +12,7 @@ let cwd: string;
 let agentDir: string;
 const errors: string[] = [];
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), 'host-project-resources-'));
+  root = realpathSync(mkdtempSync(join(tmpdir(), 'host-project-resources-')));
   cwd = join(root, 'project');
   agentDir = join(root, 'agent');
   mkdirSync(cwd);
@@ -30,6 +30,48 @@ function context(select: ProjectTrustContext['ui']['select'], hasUI = true): Pro
 }
 const options = () => ({ cwd, agentDir, globalSettings: { defaultProjectTrust: 'ask' as const } });
 const failed = (message: string) => errors.push(message);
+
+test('SDK trust choices persist parent decisions and keep session-only choices out of storage', () => {
+  const store = new ProjectTrustStore(agentDir);
+  const choices = getProjectTrustOptions(join(cwd, '.'), { includeSessionOnly: true });
+  expect(choices[0]?.updates).toEqual([{ path: cwd, decision: true }]);
+  const parent = choices.find(choice => choice.savedPath === root)!;
+  expect(parent.updates).toEqual([{ path: root, decision: true }, { path: cwd, decision: null }]);
+  expect(choices.filter(choice => !choice.updates.length).map(choice => choice.trusted)).toEqual([true, false]);
+  expect(existsSync(join(agentDir, 'trust.json'))).toBe(false);
+  store.set(cwd, false);
+  store.setMany(parent.updates);
+  expect(new ProjectTrustStore(agentDir).getEntry(cwd)).toEqual({ path: root, decision: true });
+  store.set(cwd, false);
+  expect(store.get(cwd)).toBe(false);
+  store.set(cwd, null);
+  expect(store.get(cwd)).toBe(true);
+  expect(readFileSync(join(agentDir, 'trust.json'), 'utf8')).toBe(JSON.stringify({ [root]: true }, null, 2) + '\n');
+});
+
+test('SDK trust storage accepts BOM and releases its lock after invalid data', () => {
+  const path = join(agentDir, 'trust.json');
+  const store = new ProjectTrustStore(agentDir);
+  put(path, '﻿' + JSON.stringify({ [cwd]: false }));
+  expect(store.get(cwd)).toBe(false);
+  put(path, JSON.stringify({ [cwd]: 'true' }));
+  expect(() => store.get(cwd)).toThrow('must be true, false, or null');
+  put(path, '{}');
+  store.set(cwd, true);
+  expect(store.get(cwd)).toBe(true);
+  expect(existsSync(path + '.lock')).toBe(false);
+});
+
+test('SDK resource detection gates Pi configuration and ancestor agent skills', () => {
+  expect(hasTrustRequiringProjectResources(cwd)).toBe(false);
+  put(join(cwd, '.pi', 'SYSTEM.md'), 'Project system prompt');
+  expect(hasTrustRequiringProjectResources(cwd)).toBe(true);
+  const sibling = join(root, 'sibling');
+  mkdirSync(sibling);
+  expect(hasTrustRequiringProjectResources(sibling)).toBe(false);
+  mkdirSync(join(root, '.agents', 'skills'), { recursive: true });
+  expect(hasTrustRequiringProjectResources(sibling)).toBe(true);
+});
 
 test('project code waits for the trust response, loads once and never installs missing packages', async () => {
   using cleanup = new DisposableStack();

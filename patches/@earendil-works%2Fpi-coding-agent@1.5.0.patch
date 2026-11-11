@@ -1,8 +1,8 @@
-# Content SHA-256: 8a7ee66186875c1b8346cf2b21aa570d96f69fb927b0f39932830c945d992fa3
+# Content SHA-256: 120588ee7132d49b08b33aed65b18fa5785f5fea975f01e216b3ad2779b81b12
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,60 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,61 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -11,6 +11,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export { CacheWarmer } from "./core/cache-warmer.js";
 +export { FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.js";
 +export * from "./core/settings-manager.js";
++export { getProjectTrustOptions } from "./core/trust-manager.js";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.js";
 +export * from "./core/package-manager.js";
 +export * from "./core/model-registry.js";
@@ -76,7 +77,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,62 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,63 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -85,6 +86,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { CacheWarmer } from "./core/cache-warmer.ts";
 +export { type AuthStorageBackend, FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.ts";
 +export * from "./core/settings-manager.ts";
++export { getProjectTrustOptions } from "./core/trust-manager.ts";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.ts";
 +export * from "./core/package-manager.ts";
 +export * from "./core/model-registry.ts";

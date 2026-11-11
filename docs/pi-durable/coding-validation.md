@@ -26,6 +26,65 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK project trust after f0a3fae
+
+Delete the 254-line trust-manager source copy. The fixed upstream file differs
+only in import routing. ProjectTrustStore and resource detection already have
+public SDK root exports. Add only the existing getProjectTrustOptions root
+export in JavaScript and declarations. Keep the internal trust algorithms
+unchanged. The host retains approval, headless rejection, session decisions
+and the additional `.mkagent/mcp.json` check. Add no runtime adapter.
+
+Full runtime, auxiliary and Coding patch generation and check pass. The runtime
+has 14 TypeScript files: ten under src/pi and four facades, with zero resources.
+Auxiliary sources remain eight items and 13 shared entries. Only the two shared
+root outputs change among the 78 Coding outputs. Core has four and durable has
+33, for 115 total outputs. Pristine replay and all 78 installed Coding hashes
+pass in both existing layouts. Dependencies, lockfile and persistence versions
+do not change. No install occurred.
+
+Each layout passes nine host trust tests. These cover parent decisions, child
+rejection and null removal, session-only choices, BOM input, invalid stored
+values and lock release, ancestor skills, project code loading after approval,
+headless and cancelled rejection, reload, extension trust hooks, remembered MCP
+rejection and host-only isolation. Guarded build preflights inspect 2285 root
+and 2761 hoisted source loads, with zero protected loads. Test children use
+task-owned HOME and temporary directories, OS network denial, the existing
+network preload and whole-legacy read denial.
+
+Refresh the actual root declaration in each layout and move the retired trust
+declaration to trash after saving its old bytes. The five root trust names
+route directly to the SDK. Strict consumers of this actual declaration branch
+pass with zero diagnostics and skipLibCheck. They do not load the complete
+Native declaration graph. The full published boundary suite remains unrun.
+
+Independent direct review found one P2 fixture defect and no product trust
+migration defect in its scope. Logical /tmp paths caused seven passes and two
+failures before the fix; canonical environment paths gave nine passes. The
+parent normalizes the newly created test root with realpathSync. Both layouts
+now pass nine tests with logical /tmp paths under OS network and outside-task
+write denial. Only the fixture changed. There was no second independent review.
+The parent verified 42 review artifacts, five parent evidence hashes and all
+ten initial and final frozen inputs. Review evidence is in
+/tmp/mkagent-trust-review-oStOpv, including review-result.json and the preserved
+failure and passing logs.
+
+The review skill auto-forked despite the instruction to start no child agents.
+Its result was excluded. The accepted findings use the reviewer's later direct
+checks. This process deviation remains recorded in the report.
+
+Parent evidence is under
+/tmp/mkagent-trust-sdk-guBkT0: generated.json, applied.json, validation.json,
+source-registration.json, review-fix.json, review-accepted.json and
+restricted-audit-fixed.log. The restricted audit was rerun after the fixture
+and its registered source hash changed. Source registration updates
+nine entries, retires one and adds none. The fixed Craft v0.15.6 restricted audit
+passes 2018 allowed files: 1454 share the relative path, 873 match after
+normalization, 581 are modified Craft-derived files, 564 are MkAgent-only files
+and 858 are reviewed Craft-only deletions. The whole legacy subtree and sensitive
+configuration remain excluded. Full Native, full types and declarations, fresh
+install, real platforms, full Craft and F0 through F6 remain open.
+
 ## RPC export cleanup after 45bb5c8
 
 Remove the redundant 13-line modes barrel. Route all ten RPC names from the

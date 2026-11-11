@@ -399,7 +399,7 @@ export {
 	ProjectTrustStore,
 	type ProjectTrustStoreEntry,
 	type ProjectTrustUpdate,
-} from "./core/trust-manager.ts";
+} from "@earendil-works/pi-coding-agent";
 export {
 	type ModelRoute,
 	type ModelRouteReason,

@@ -2597,12 +2597,12 @@
       "reason": "Exercise provider login through the real product, bundled worker and UI, including MCP restoration, reload, cancellation and history isolation."
     },
     "packages/pi-durable-coding/src/host-project-resources.ts": {
-      "sha256": "c1d19d429d53af5b18eb4b22c2bb5cf1883323c0dce235594656257e2c698acb",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
+      "sha256": "5e4063d43cccc9684e5c710f774dcf5193c428220f65fae1f57df98d1283c8cf",
+      "reason": "Use SDK trust storage, choices and resource detection while retaining host approval and MCP gating."
     },
     "packages/pi-durable-coding/test/host-project-resources.test.ts": {
-      "sha256": "953346673078533a5d1d81661cf6201d64a89df1a45b9927d0135ea7a8926b69",
-      "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
+      "sha256": "83a8d4df82095fc6c5ba6afc44bcb2bea4fe85502e1a669d0db5212b9e863c8d",
+      "reason": "Verify SDK parent decisions, session choices, invalid data recovery and resource gating with host trust integration."
     },
     "packages/pi-agent-server/src/mcp/project-trust.test.ts": {
       "sha256": "90143210b24c430fdec8e2df97ae59faf2268a97f7efa9aacbcf1f381dd1e5e8",
@@ -3945,8 +3945,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "bbc26a4f936f4ab682053abc201d5ed526b9b2399d91c1ec397ae9d67017ada6",
-      "reason": "Retire the redundant RPC barrel after routing the root entry to the existing host adapter."
+      "sha256": "2041ae251cd8dcedae447e63b701c0638853334a57719ea9f0c5e99d03f5f25a",
+      "reason": "Retire the complete trust-manager copy and stop source traversal at the published SDK."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4104,10 +4104,6 @@
       "sha256": "aefddf527ff36d2d24d8310114ff28527c3c62fda1a58603a7f0001396f9f262",
       "reason": "Forward the Native public truncation contracts to the Coding SDK."
     },
-    "packages/pi-durable-coding/src/pi/core/trust-manager.ts": {
-      "sha256": "5a8f6cfa01a22273163e405854a4e6aad65dec6e45b75dba12fc6a02c518d0fb",
-      "reason": "Use the SDK path and BOM functions while retaining current trust policy."
-    },
     "packages/pi-durable-coding/src/pi/extensions/codemode/worker.ts": {
       "sha256": "4542d37a9f75150b52fc393fcd757f08fb0d681d92bebee6a40171e09b4bec82",
       "reason": "Forward worker initialization to the public durable entry point rather than a direct sandbox dependency."
@@ -4117,8 +4113,8 @@
       "reason": "Use the public SDK auth backend while retaining the host cancellable refresh-lock extension."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "de73fbdbf9e2eca494edd527c1bfdf77e9e0490178489868be0d0f6351df7a44",
-      "reason": "Export all ten RPC names directly from the existing host adapter and exclude upstream run-mode hosts."
+      "sha256": "cbb3794a39ab9334071b3cf019b674d49ab90c528c6113b38f839c50bf1f8cf9",
+      "reason": "Forward the five public trust names directly from the published SDK."
     },
     "packages/pi-durable-coding/test/rpc-client.test.ts": {
       "sha256": "6c56532dbfc476f1f8009ab01d689e94903f95c080cc8736f54bb7dfdf2f55d4",
@@ -4381,24 +4377,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "9e6773ac7b514bcbf6215fb954020d58a7dc1c38fa2f29920e127627b4965201",
-      "reason": "Route both RPC entry paths to the host adapter before traversal and remove the unused BashResult module route."
+      "sha256": "a4b1c26b2785ad0c83da8e8ce99fcbb4acff1e795b4f43eac412ca7f8b2ab964",
+      "reason": "Route trust-manager imports to the public SDK before source traversal."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "a360454b0fcd97496541de99fa4526597c6f1ed2548dc4f539ce37b9a50bc298",
-      "reason": "Remove obsolete BashResult route expectations after deletion of local RPC implementations."
+      "sha256": "98bf267283c2e65e2929a02b93e78d8b791d7543e0d9f54b88a81d2d26341d0e",
+      "reason": "Check trust implementation identity and the direct SDK source route."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "35f833a7383d78efd2502de660797cbcb65668dc9536c4ccde54d6027423cbfe",
-      "reason": "Remove the unused SDK root BashResult type export; retain 78 physical Coding patch outputs."
+      "sha256": "24bbc490f812aba6e7bc4c4b94638929adad4ef4e77e7e98ae5b5a6ce1f47a4f",
+      "reason": "Export the existing SDK trust choices from the root without patching trust algorithms; retain 78 Coding outputs."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "acb3c8919615f3836edf81f89af64d6098ee065359302384627624688d179891",
-      "reason": "Remove the unused BashResult root type export without changing SDK execution code."
+      "sha256": "909a70fc679343662e5e7585016d727c00d66cacc522d34dc89cf34d27c276f7",
+      "reason": "Expose only the existing getProjectTrustOptions function; preserve SDK trust algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "80882d4d2e551f613fbf7eb88be55e559daad917d62ee43a004ec22e1ee18da5",
-      "reason": "Remove only the unused BashResult root declaration export; preserve all SDK runtime algorithms."
+      "sha256": "f0ce530a6c8b8231d84dd8dc5cf55bca515526149c171f7d48cbc5ad092519f6",
+      "reason": "Add only the existing trust choice root export in JavaScript and declarations; no trust algorithm changes."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",

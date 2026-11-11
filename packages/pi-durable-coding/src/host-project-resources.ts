@@ -6,7 +6,7 @@ import { emitProjectTrustEvent } from '@earendil-works/pi-coding-agent';
 import type { LoadExtensionsResult, ProjectTrustContext } from '@earendil-works/pi-coding-agent';
 import {
   getProjectTrustOptions, hasTrustRequiringProjectResources, ProjectTrustStore,
-} from './pi/core/trust-manager.ts';
+} from '@earendil-works/pi-coding-agent';
 
 /** Load trusted resources once and keep the same decision boundary on native reload. */
 export async function prepareHostResources(

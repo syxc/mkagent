@@ -30,6 +30,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/slash-commands.ts',
   'core/source-info.ts',
   'core/timings.ts',
+  'core/trust-manager.ts',
   'core/usage-totals.ts',
   'core/tools/file-mutation-queue.ts',
   'core/tools/ls.ts',
