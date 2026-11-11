@@ -3405,8 +3405,8 @@
       "reason": "Keep SDK validation and host exposure and OAuth policy; return the SDK and host configuration type intersection for loader callbacks and registrations."
     },
     "packages/pi-agent-server/src/mcp/resources.ts": {
-      "sha256": "882755663ed8c85c150f89ec437f15cecf0b95c2cfd5ab289e2fb53b076a3ba7",
-      "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/resources.js resource listing and reading to durable tool registration and visibility."
+      "sha256": "72b820e142b2118e63b569df805abd2345d401e6e02dc8dba6c332b9d7c6d7c5",
+      "reason": "Delegate resource schemas, paging, filtering, reads and conversion to SDK tools; keep only durable visibility, execution and result bindings."
     },
     "packages/pi-agent-server/src/mcp/runtime.ts": {
       "sha256": "b608830d9f5844d187a57453327a731d529d0b23585e8b2210040ab44f38401a",
@@ -4361,16 +4361,16 @@
       "reason": "Check the OAuth module source route to the public SDK; retain existing SDK identity and trust boundary checks."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "ba48587fc451bb933e50003166d4c902f81e132365ef748e8c1045fc63766fbe",
-      "reason": "Record 84 Coding outputs, including the MCP loader runtime and declaration policy hooks and shared root exports."
+      "sha256": "42bab8c494ffa86ed611de7b455f44412447f09d4e94b8f939fee280511ecff9",
+      "reason": "Record 86 Coding outputs, including resource helper exports, resource execution typing and shared root exports."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "c45acf44089c9b2ed61301e8555e19dec901a62d2638980fbb32343cd2689bb1",
-      "reason": "Export the existing MCP loader and add optional ordered files and validation before storing definitions or merged overrides; retain the SDK loading algorithm."
+      "sha256": "2d8833914f45e8e3b97e1c92af2edac79958e465ec3023a8d2cfa203c8511b10",
+      "reason": "Retain host policy patches; export existing MCP resource tools and app detection and declare their context-free execution overload without copying algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "83e9eeacaf2cb605e5b136a3b6e69ebad39afadc5b4b9fae5ea1ccef8eb60fec",
-      "reason": "Expose the existing MCP loader and add ordered file and validator options without copying the complete loading algorithm."
+      "sha256": "83a6f7cf2e7dc38eedf69de430362e70d510599804879043b1df84ff1a2f8cb7",
+      "reason": "Retain SDK host boundaries and expose existing resource tools and app detection with accurate three-argument execution typing; resource algorithms remain unchanged."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4617,8 +4617,8 @@
       "reason": "Verify SDK identity, output files, schema resource validation and durable live connection bindings."
     },
     "packages/pi-durable-coding/src/mcp-tools.ts": {
-      "sha256": "906824347c92d1c74864be5783e71a3f9751c8a861186cafb9945a1a82a4b2b1",
-      "reason": "Expose existing Coding SDK MCP presentation functions without a runtime wrapper."
+      "sha256": "6709b8a16580c4bed29a129453b1950460ef9a208a520cd1cedd5b0254cbbaf2",
+      "reason": "Forward existing SDK MCP presentation and resource tools and types without a runtime wrapper."
     },
     "packages/pi-durable-coding/src/mcp-config.ts": {
       "sha256": "3bb4d54124e50b06415ad836fae31ce1af0f481904d5cd7300e2218635fd7069",
@@ -4647,6 +4647,10 @@
     "packages/pi-agent-server/src/mcp/loader-sdk.test.ts": {
       "sha256": "e9d0aa8bbbc80a72e4624a81aa894c1bd69fa3205667665352ee8b92a80ec455",
       "reason": "Verify four-layer SDK loading, shared overrides, trust, credential routing, metadata, BOM support and default and injected loading contracts."
+    },
+    "packages/pi-agent-server/src/mcp/resources-sdk.test.ts": {
+      "sha256": "ded753435d7d12def48a6d6a81f6e0e396779d2d719b190c8bfc41faf9f81984",
+      "reason": "Verify SDK resource identity, durable visibility, dynamic servers, paging, errors, cancellation forwarding, full results and protected output files."
     }
   },
   "deleted": {

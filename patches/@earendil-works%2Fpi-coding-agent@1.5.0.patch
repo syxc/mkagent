@@ -1,8 +1,8 @@
-# Content SHA-256: 55b4ac283bf654836cf424bd0631297a69f945a86a40befea27f50361a4dfefe
+# Content SHA-256: 5dbaff1c5f3a3fa3af85f4f4ea5f4e0f52117ecb6f5ba4951928f4f84d634198
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,66 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,67 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -59,6 +59,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./extensions/mcp/oauth.js";
 +export { McpServerLog, formatMcpLogMessage } from "./extensions/mcp/log.js";
 +export { MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName, limitMcpContent, saveToTempFile, toModelContent } from "./extensions/mcp/tools.js";
++export { createMcpResourceToolDefinitions, isMcpAppResource } from "./extensions/mcp/resources.js";
 +export * from "./core/keybindings.js";
 +export { KeybindingsManager } from "./core/keybindings.js";
 +export * from "./modes/interactive/theme/theme.js";
@@ -82,7 +83,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,68 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,69 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -139,6 +140,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./extensions/mcp/oauth.ts";
 +export { McpServerLog, formatMcpLogMessage } from "./extensions/mcp/log.ts";
 +export { MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName, limitMcpContent, saveToTempFile, toModelContent } from "./extensions/mcp/tools.ts";
++export { createMcpResourceToolDefinitions, isMcpAppResource, type McpResourceServer } from "./extensions/mcp/resources.ts";
 +export * from "./core/keybindings.ts";
 +export { KeybindingsManager } from "./core/keybindings.ts";
 +export * from "./modes/interactive/theme/theme.ts";
@@ -151,6 +153,40 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export type { ShellDependencies } from "./core/tools/bash.ts";
 +export type { CreateAgentSessionDependencies } from "./core/sdk.ts";
  //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/extensions/mcp/resources.js b/dist/extensions/mcp/resources.js
+--- a/dist/extensions/mcp/resources.js
++++ b/dist/extensions/mcp/resources.js
+@@ -13,7 +13,7 @@ import { LIST_MCP_RESOURCE_TEMPLATES_TOOL, LIST_MCP_RESOURCES_TOOL, READ_MCP_RES
+ import { limitMcpContent, toModelContent, toToolExposure } from "./tools.js";
+ export { LIST_MCP_RESOURCE_TEMPLATES_TOOL, LIST_MCP_RESOURCES_TOOL, READ_MCP_RESOURCE_TOOL };
+ /** MCP App user interfaces, which only hosts that render them can use. */
+-function isMcpAppResource(item) {
++export function isMcpAppResource(item) {
+     const uri = item.uri ?? item.uriTemplate ?? "";
+     return uri.startsWith("ui://") || /;\s*profile\s*=\s*"?mcp-app"?/i.test(item.mimeType ?? "");
+ }
+diff --git a/dist/extensions/mcp/resources.d.ts b/dist/extensions/mcp/resources.d.ts
+--- a/dist/extensions/mcp/resources.d.ts
++++ b/dist/extensions/mcp/resources.d.ts
+@@ -16,6 +16,7 @@ import { LIST_MCP_RESOURCE_TEMPLATES_TOOL, LIST_MCP_RESOURCES_TOOL, READ_MCP_RES
+ import type { McpExposure } from "./config.ts";
+ import { type McpToolDetails } from "./tools.ts";
+ export { LIST_MCP_RESOURCE_TEMPLATES_TOOL, LIST_MCP_RESOURCES_TOOL, READ_MCP_RESOURCE_TOOL };
++export declare function isMcpAppResource(item: { uri?: string; uriTemplate?: string; mimeType?: string }): boolean;
+ /** A connected server that offers resources. */
+ export interface McpResourceServer {
+     name: string;
+@@ -32,5 +33,8 @@ export interface McpResourceServer {
+ export declare function createMcpResourceToolDefinitions(options: {
+     exposure: McpExposure;
+     servers: () => readonly McpResourceServer[];
+-}): ToolDefinition<TSchema, McpToolDetails>[];
++}): (ToolDefinition<TSchema, McpToolDetails> & {
++    /** Resource tools do not use updates or an extension context. */
++    execute(toolCallId: string, params: Record<string, unknown> | undefined, signal: AbortSignal | undefined): ReturnType<ToolDefinition<TSchema, McpToolDetails>["execute"]>;
++})[];
+ //# sourceMappingURL=resources.d.ts.map
 \ No newline at end of file
 diff --git a/dist/core/agent-session-services.js b/dist/core/agent-session-services.js
 --- a/dist/core/agent-session-services.js

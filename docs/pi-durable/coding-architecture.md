@@ -341,6 +341,8 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `8eb9a2f` 后的 MCP 配置加载器切片将 145 行模块缩为 44 行宿主绑定，净减少 101 行。SDK 以同一状态处理四层 JSON、覆盖及命名冲突，宿主只绑定路径、信任及凭据策略。补丁提供可选有序文件和插入前验证，未传时保留原 SDK 行为，不复制完整算法；BOM 支持是明确采用的变化。两布局各 84 项测试、457 个断言及定向严格类型检查通过，使用 skipLibCheck；独立 51 场景通过，未确认缺陷，父线程核验 26 项冻结输入和 144 项交付摘要。来源更新 7 项、新增 1 项，受限 Craft 审计通过 2022 个允许文件；Coding 输出为 84 份、总数 121 份，生成清单仍为 13 份。接点退出条件、失败修正及纯模块复核限制见[MCP 加载器验证](coding-validation.md#public-sdk-mcp-configuration-loader-after-8eb9a2f)；资源、运行时和整体验收继续开放。
 
+`bdf67f5` 后的 MCP 资源工具切片删除本地完整 schema、分页、过滤、读取和转换算法，330 行模块缩为 28 行绑定，净减少 302 行。SDK 提供三个资源工具；宿主只投影 durable 可见性，转发 callId 和 signal，再映射 output、details 与完整 structuredOutput。runtime 继续使用同一 SDK App 资源检测函数。根出口、已有 private helper 导出及准确执行重载属于本地补丁，资源 JS 正文除增加 export 外保持发布原文，没有伪造插件上下文或复制算法。两现有布局各 103 项测试、524 个断言及定向严格类型检查通过，使用 skipLibCheck；独立 42 项检查含 29 个差分场景通过，未确认缺陷。来源更新 5 项、新增 1 项，受限 Craft 审计通过 2023 个允许文件；Coding 86 份、总数 123 份输出，生成清单仍为 13 份。限制见[MCP 资源工具验证](coding-validation.md#public-sdk-mcp-resource-tools-after-bdf67f5)；transport、生命周期、凭据路由和其余源码仍须继续核对，整体验收保持开放。
+
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |

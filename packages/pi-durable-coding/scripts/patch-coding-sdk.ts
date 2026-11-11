@@ -92,6 +92,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./extensions/mcp/oauth.${extension}";`,
     `export { McpServerLog, formatMcpLogMessage } from "./extensions/mcp/log.${extension}";`,
     `export { MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName, limitMcpContent, saveToTempFile, toModelContent } from "./extensions/mcp/tools.${extension}";`,
+    `export { createMcpResourceToolDefinitions, isMcpAppResource${suffix === 'd.ts' ? ', type McpResourceServer' : ''} } from "./extensions/mcp/resources.${extension}";`,
     `export * from "./core/keybindings.${extension}";`,
     `export { KeybindingsManager } from "./core/keybindings.${extension}";`,
     `export * from "./modes/interactive/theme/theme.${extension}";`,
@@ -109,6 +110,21 @@ for (const suffix of ['js', 'd.ts']) {
   if (suffix === 'd.ts') outputs.set(path, outputs.get(path)!.replace(marker,
     'export type { ShellDependencies } from "./core/tools/bash.ts";\n'
     + 'export type { CreateAgentSessionDependencies } from "./core/sdk.ts";\n' + marker));
+}
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/extensions/mcp/resources.${suffix}`;
+  let body = readFileSync(join(baseline, path), 'utf8');
+  if (suffix === 'js') {
+    body = replace(body, 'function isMcpAppResource(item) {', 'export function isMcpAppResource(item) {');
+  } else {
+    body = replace(body, '/** A connected server that offers resources. */',
+      'export declare function isMcpAppResource(item: { uri?: string; uriTemplate?: string; mimeType?: string }): boolean;\n/** A connected server that offers resources. */');
+    body = replace(body, '}): ToolDefinition<TSchema, McpToolDetails>[];', `}): (ToolDefinition<TSchema, McpToolDetails> & {
+    /** Resource tools do not use updates or an extension context. */
+    execute(toolCallId: string, params: Record<string, unknown> | undefined, signal: AbortSignal | undefined): ReturnType<ToolDefinition<TSchema, McpToolDetails>["execute"]>;
+})[];`);
+  }
+  outputs.set(path, body);
 }
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/agent-session-services.${suffix}`;
@@ -469,7 +485,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization, an optional session factory and runtime session subtype declarations, and installed worker theme and HTML asset lookup, and protected RPC CLI selection with the published default, and MCP schema resource boundaries during local-reference relocation, and optional platform default shell resolution for host MCP configuration, and optional ordered MCP configuration files with trusted project loading and host validation before definitions and overrides are stored.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization, an optional session factory and runtime session subtype declarations, and installed worker theme and HTML asset lookup, and protected RPC CLI selection with the published default, and MCP schema resource boundaries during local-reference relocation, and optional platform default shell resolution for host MCP configuration, and optional ordered MCP configuration files with trusted project loading and host validation before definitions and overrides are stored, and existing MCP resource tools and app-resource detection with their context-free execution overload.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

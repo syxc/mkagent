@@ -26,6 +26,85 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK MCP resource tools after bdf67f5
+
+Replace the 330-line resource module with a 28-line durable binding, removing
+302 lines. The SDK supplies schemas, paging, server ordering, concurrent error
+aggregation, App resource filtering, reads, conversion, truncation and output
+files. The host maps exposure, callId, signal and full result fields. Existing
+runtime callers use the same SDK App detector. No resource algorithm moves to
+a patch template.
+
+The local SDK patch exports the existing factory and server type at the root,
+exports the existing private detector and adds a three-argument execute overload.
+The generic five-argument ToolDefinition remains compatible. The implementation
+uses no extension context; the host does not construct a false context. These
+exports and declarations are local patch APIs. Remove them when the published
+SDK supplies equivalent exports and accurate execution types. Resource JS differs
+from pristine only by the detector's export keyword.
+
+Generation and check pass for 86 Coding outputs, up from 84. Four SDK files
+change: the shared root JS and declaration and the resource JS and declaration.
+The other 82 prior outputs retain their hashes. Both existing layouts match all
+86 targets. Core has four outputs and durable has 33, for 123 total. Dependencies,
+lockfile and persistence versions do not change. The generated runtime list
+stays at 13 TypeScript files, with nine src/pi files, four facades and no resources;
+eight auxiliary sources and 13 shared entries remain. Handwritten facades are
+outside that list. Only the existing mcp-tools declaration is generated in each
+layout; there is no full declaration build or fresh install.
+
+Each layout passes 103 tests across twelve files, with zero failures and 524
+assertions. Nineteen new tests cover SDK identity, four exposure modes, dynamic
+servers, paging, validation, metadata, errors, signal and timeout forwarding,
+text, blobs, images, empty reads, UTF-8 truncation, full structured results and
+0600 output files. Guarded preflights inspect 2148 root and 2609 hoisted loads,
+with zero protected loads. Actual facade declarations, positive and negative
+consumers, the new test and production resources, runtime and extension compile
+with zero diagnostics under strict mode and skipLibCheck. Consumers accept both
+three- and five-argument execute calls and the host connection type.
+
+Preserve the failed attempts. Application completes before a wrong 331-line
+baseline assertion stops the receipt. The actual baseline has 330 lines; the
+continuation verifies completed writes without applying them again. The first
+root test run has 102 passes and one failure from template JSON property order
+in the expected fixture. Correcting that expectation yields 103 passes. Types
+then report four diagnostics from the consumer's details generic, fixture icons
+and two Bun assertion types. Type-only corrections retain every assertion and
+produce identical test JS, so the accepted root behavior run is retained. Final
+root types and hoisted behavior and types pass. No production fix is required
+for these test failures.
+
+Independent read-only review reports no verified defect. All 42 checks pass,
+including 29 differential scenarios across the base host, current host, both SDK
+layouts and pristine SDK. The parent verifies 24 frozen inputs, 264 delivered
+artifact hashes and eight byte comparisons from four pristine patch
+reconstructions. All 172 installed target comparisons pass. The probes verify
+15 saved files, failure propagation, mapping identity, both execution signatures
+and conversion failure output. Execution uses pure-module projections with
+changed imports and memory servers. Unrelated tool registration and TUI imports
+are excluded; conversion helpers come from the root layout. The reviewer checks
+parent test and type evidence without repeating the full suite or compiler.
+Timeout checks establish forwarding, and cancellation checks establish signal
+identity and fake-server rejection; neither proves real transport timing or a
+full runtime lifecycle. The other 82 outputs are hash-checked, not replayed.
+
+Source registration updates five entries and adds one, with no retirement or
+unrelated changes. The fixed Craft v0.15.6 restricted audit passes 2023 allowed
+files: 1454 common paths, 873 normalized matches, 581 modified files, 569
+MkAgent-only files and 858 reviewed Craft-only deletions. The whole legacy
+subtree, protected basename and sensitive configuration remain excluded.
+Behavior children use isolated HOME, USERPROFILE, TMPDIR and XDG paths,
+PI_OFFLINE, no environment file, loopback-only preload and OS sandbox. No real
+account, external service, network or port 9100 is accessed.
+
+Evidence is under /tmp/mkagent-mcp-resources-sdk-PLzABk. Keep applied.json,
+validation.json, fixture-fix.json, type-only-fix.json, review-inputs.json,
+review-verified.json, independent-review-fd9i2q8a/review-report.json,
+source-registration.json and restricted-craft-audit.json, with the failed logs.
+Full Native, full build and declarations, fresh install, real platforms and
+services, full Craft and F0 through F6 remain open. Continue runtime, product
+binary policy and remaining-source review.
+
 ## Public SDK MCP configuration loader after 8eb9a2f
 
 Replace the server's 145-line loader with a 44-line host binding, removing
