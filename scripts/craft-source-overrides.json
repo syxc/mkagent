@@ -3393,16 +3393,16 @@
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness. Verify copied native journals before Harness opening and reject conflicting legacy target history. Let CodingHost derive refreshed declarations from registry ownership."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
-      "sha256": "ac9ac73a7242d3ea9262b06a11e83f6a04877e2263e0427d8ff9ab6852eced7a",
-      "reason": "Adapt pi-coding-agent 1.1.0 MCP config loading to native coding paths and shared project trust while preserving host precedence and credential routing checks; omit CLI config writers."
+      "sha256": "5bc36d66cb2d5040b04adc63765b36eb69910b0cdb1f69e2dde6c9808fe354fb",
+      "reason": "Delegate JSON loading, overrides and namespace checks to the SDK; bind ordered native and host paths, project trust and credential policy."
     },
     "packages/pi-agent-server/src/mcp/extension.ts": {
       "sha256": "7c16bd944179e440e95b70923467fd048cfe9613cb14ce6f4f66a67520aad1e3",
       "reason": "Use SDK MCP logging at the host agent directory while retaining plugin registration, namespace priority and live credential callbacks."
     },
     "packages/pi-agent-server/src/mcp/mcp-servers.ts": {
-      "sha256": "912602bfbb841e0e61713bae2e1bb6682ded2ff311a5c38e0e63d50606a3ff18",
-      "reason": "Use SDK validation, exposure matching, namespaces and resource constants; retain host own-property exposure policy, OAuth destination limits and partial configuration types."
+      "sha256": "91c4a47aa9db97b6381b2dac91be89d049f943072bd32aba8647b529c5ab296c",
+      "reason": "Keep SDK validation and host exposure and OAuth policy; return the SDK and host configuration type intersection for loader callbacks and registrations."
     },
     "packages/pi-agent-server/src/mcp/resources.ts": {
       "sha256": "882755663ed8c85c150f89ec437f15cecf0b95c2cfd5ab289e2fb53b076a3ba7",
@@ -4361,16 +4361,16 @@
       "reason": "Check the OAuth module source route to the public SDK; retain existing SDK identity and trust boundary checks."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "4ed7253a8d8e107e6ec13a3bd6c7bb8fbfd1a1856f0b08d5f79cbd84db30c66b",
-      "reason": "Record 82 Coding outputs; existing MCP logging functions are added to the two shared root exports only."
+      "sha256": "ba48587fc451bb933e50003166d4c902f81e132365ef748e8c1045fc63766fbe",
+      "reason": "Record 84 Coding outputs, including the MCP loader runtime and declaration policy hooks and shared root exports."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "36d44166acc5ee0fd375f141b858209ae7a093d169d1855ef49319785df7f6f2",
-      "reason": "Export existing MCP logging contracts without changing the published formatter, synchronous append or rotation algorithms."
+      "sha256": "c45acf44089c9b2ed61301e8555e19dec901a62d2638980fbb32343cd2689bb1",
+      "reason": "Export the existing MCP loader and add optional ordered files and validation before storing definitions or merged overrides; retain the SDK loading algorithm."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "ce996bb9a0891d718c94ac7336c892c89043fb7f700a6e16559a62194797efa5",
-      "reason": "Add existing MCP log class and formatter root exports; preserve the published logging module and declarations."
+      "sha256": "83e9eeacaf2cb605e5b136a3b6e69ebad39afadc5b4b9fae5ea1ccef8eb60fec",
+      "reason": "Expose the existing MCP loader and add ordered file and validator options without copying the complete loading algorithm."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4621,12 +4621,12 @@
       "reason": "Expose existing Coding SDK MCP presentation functions without a runtime wrapper."
     },
     "packages/pi-durable-coding/src/mcp-config.ts": {
-      "sha256": "baaaa90aa7adc7a9314cd43f68c1bffe04ba4807c064dc63dd779476ea2d5e5c",
-      "reason": "Bind the SDK strict configuration resolvers to the platform default shell for existing MCP commands."
+      "sha256": "3bb4d54124e50b06415ad836fae31ce1af0f481904d5cd7300e2218635fd7069",
+      "reason": "Forward the SDK configuration loader and retain the platform default shell policy for strict MCP value and header resolvers."
     },
     "packages/pi-agent-server/src/mcp/config-sdk.test.ts": {
-      "sha256": "f236ea5c9b2301faccaf3d56f78064deff0ae3a6bb287fc59fe4c342d34032f3",
-      "reason": "Verify SDK templates, strict errors, uncached commands, MCP transport and OAuth boundaries, and modeled Windows shell selection."
+      "sha256": "fe8a400df7377395e24c89839bec0aa8c78fbe634521dc9fd89d2498d19515f1",
+      "reason": "Retain configuration and modeled Windows shell checks; remove the new loader re-export before evaluating the existing shell binding fixture."
     },
     "packages/pi-durable-coding/src/mcp-log.ts": {
       "sha256": "49942588f28074fa9749f2427c5f62b61f66b98bc43787233b82e9c6c7000a1d",
@@ -4643,6 +4643,10 @@
     "packages/pi-agent-server/src/mcp/servers-sdk.test.ts": {
       "sha256": "3ce0fd55e0a97c895cad47a99ce1d1637df8a3f6013a3d0761ee22016fa9a6f3",
       "reason": "Verify SDK configuration reuse, alias normalization, host exposure boundaries and OAuth destination policy with deterministic fixtures."
+    },
+    "packages/pi-agent-server/src/mcp/loader-sdk.test.ts": {
+      "sha256": "e9d0aa8bbbc80a72e4624a81aa894c1bd69fa3205667665352ee8b92a80ec455",
+      "reason": "Verify four-layer SDK loading, shared overrides, trust, credential routing, metadata, BOM support and default and injected loading contracts."
     }
   },
   "deleted": {

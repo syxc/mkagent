@@ -1,8 +1,8 @@
-# Content SHA-256: 93ed9251b4347e8de52046acb3b4276aac8b4d577f15d0c163b6682e5cd828e2
+# Content SHA-256: 55b4ac283bf654836cf424bd0631297a69f945a86a40befea27f50361a4dfefe
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,65 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,66 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -55,6 +55,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./utils/sleep.js";
 +export * from "./utils/zip.js";
 +export * from "./core/mcp-servers.js";
++export { loadMcpConfig } from "./extensions/mcp/config.js";
 +export * from "./extensions/mcp/oauth.js";
 +export { McpServerLog, formatMcpLogMessage } from "./extensions/mcp/log.js";
 +export { MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName, limitMcpContent, saveToTempFile, toModelContent } from "./extensions/mcp/tools.js";
@@ -81,7 +82,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,67 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,68 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -134,6 +135,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./utils/sleep.ts";
 +export * from "./utils/zip.ts";
 +export * from "./core/mcp-servers.ts";
++export { loadMcpConfig } from "./extensions/mcp/config.ts";
 +export * from "./extensions/mcp/oauth.ts";
 +export { McpServerLog, formatMcpLogMessage } from "./extensions/mcp/log.ts";
 +export { MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName, limitMcpContent, saveToTempFile, toModelContent } from "./extensions/mcp/tools.ts";
@@ -4252,3 +4254,70 @@ diff --git a/dist/core/resolve-config-value.d.ts b/dist/core/resolve-config-valu
  export declare function clearConfigValueCache(): void;
  //# sourceMappingURL=resolve-config-value.d.ts.map
 \ No newline at end of file
+diff --git a/dist/extensions/mcp/config.js b/dist/extensions/mcp/config.js
+--- a/dist/extensions/mcp/config.js
++++ b/dist/extensions/mcp/config.js
+@@ -42,7 +42,7 @@ function isOverride(value) {
+ function isRecord(value) {
+     return typeof value === "object" && value !== null && !Array.isArray(value);
+ }
+-function readConfigFile(path, scope, state) {
++function readConfigFile(path, scope, state, validateConfig = validateMcpServerConfig) {
+     const { servers, errors } = state;
+     if (!existsSync(path))
+         return;
+@@ -73,7 +73,7 @@ function readConfigFile(path, scope, state) {
+                 errors.push(`${path}: server "${name}": an override can only set ${OVERRIDE_KEYS.join(", ")}`);
+             }
+             else {
+-                const config = validateMcpServerConfig(name, { ...base.config, ...value });
++                const config = validateConfig(name, { ...base.config, ...value });
+                 if (typeof config === "string")
+                     errors.push(`${path}: ${config}`);
+                 else
+@@ -81,7 +81,7 @@ function readConfigFile(path, scope, state) {
+             }
+             continue;
+         }
+-        const config = validateMcpServerConfig(name, value);
++        const config = validateConfig(name, value);
+         if (typeof config === "string") {
+             errors.push(`${path}: ${config}`);
+             continue;
+@@ -105,10 +105,18 @@ function readConfigFile(path, scope, state) {
+  */
+ export function loadMcpConfig(options) {
+     const state = { servers: new Map(), errors: [] };
+-    readConfigFile(join(options.agentDir, "mcp.json"), "global", state);
+-    const projectConfig = options.projectTrusted ? join(options.cwd, CONFIG_DIR_NAME, "mcp.json") : undefined;
+-    if (projectConfig)
+-        readConfigFile(projectConfig, "project", state);
++    const projectConfig = options.projectTrusted
++        ? options.configFiles ? options.configFiles.findLast(file => file.scope === "project")?.path
++            : join(options.cwd, CONFIG_DIR_NAME, "mcp.json")
++        : undefined;
++    const files = options.configFiles ?? [
++        { path: join(options.agentDir, "mcp.json"), scope: "global" },
++        ...(projectConfig ? [{ path: projectConfig, scope: "project" }] : []),
++    ];
++    for (const { path, scope } of files) {
++        if (scope === "project" && !options.projectTrusted) continue;
++        readConfigFile(path, scope, state, options.validateServerConfig);
++    }
+     return {
+         servers: [...state.servers.values()],
+         ...(state.autoEnableCodemode === undefined ? {} : { autoEnableCodemode: state.autoEnableCodemode }),
+diff --git a/dist/extensions/mcp/config.d.ts b/dist/extensions/mcp/config.d.ts
+--- a/dist/extensions/mcp/config.d.ts
++++ b/dist/extensions/mcp/config.d.ts
+@@ -57,6 +57,10 @@ export interface LoadedMcpConfig {
+  * `enabled: false`, so they can be enabled again.
+  */
+ export declare function loadMcpConfig(options: {
++    /** Read these files in order; project files still require projectTrusted. */
++    configFiles?: readonly { path: string; scope: "global" | "project" }[];
++    /** Apply host policy to definitions and merged overrides before storing them. */
++    validateServerConfig?: (name: string, raw: unknown) => McpServerConfig | string;
+     agentDir: string;
+     cwd: string;
+     projectTrusted: boolean;

@@ -26,6 +26,84 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK MCP configuration loader after 8eb9a2f
+
+Replace the server's 145-line loader with a 44-line host binding, removing
+101 lines. The SDK now reads JSON, merges overrides and checks namespace
+collisions in one shared map. The host selects native global, host global,
+trusted `.pi` project and trusted host project paths, in that order. It also
+supplies its credential validator. No complete algorithm moves to a template.
+The existing handwritten mcp-config facade grows from ten to eleven lines.
+
+The SDK patch exports the existing loader and adds two optional inputs:
+configFiles and validateServerConfig. These are local patch APIs. Ordered files
+share the original SDK state; project files still require projectTrusted.
+Validation runs before definitions and merged overrides replace an entry.
+Rejected entries keep the earlier valid value. Safe project overrides retain
+the original source, scope and provider; project definitions cannot choose host
+provider credentials. The final project path, custom directory, deduplication,
+flags and host-only behavior remain. Without either new input, the SDK keeps its
+published default discovery and validator. Remove these hooks when an equivalent
+published API covers the host contract.
+
+BOM acceptance is an intentional change: the old host JSON.parse rejected a
+leading UTF-8 BOM, while the SDK uses stripBom. A new regression and the independent
+probe verify the new behavior. Do not claim exact host equivalence for this input.
+
+Generation and check pass for 84 Coding outputs, up from 82. Only the two shared
+root exports and config.js/config.d.ts change; the other 80 prior outputs keep
+their hashes. Both existing dependency layouts match all 84 hashes. Core has four
+outputs and durable has 33, for 121 total. Dependencies, lockfile and persistence
+versions do not change. The generated runtime list stays at 13 TypeScript files,
+with nine src/pi files, four facades and no resources; eight auxiliary sources
+and 13 shared entries remain. Handwritten facades are outside that list. Both
+layouts receive the targeted mcp-config declaration; no full declaration build
+or fresh install is performed.
+
+Each layout passes 84 tests across eleven MCP files, with zero failures and
+457 assertions. Twelve new loader tests cover ordered merging, namespaces,
+rejection, trust, provider routing, metadata, BOM and default and injected options.
+Guarded preflights inspect 2147 root and 2608 hoisted loads, with zero protected
+loads. Actual facade declarations, positive and negative consumers, four SDK tests
+and host config, runtime and extension compile with zero diagnostics under strict
+mode and skipLibCheck.
+
+Preserve the failed attempts. A one-second background limit kills the first run
+before completion. The next run has 83 passes and one failure because the old
+Windows VM fixture cannot strip the new re-export. Correcting that fixture keeps
+all shell assertions and yields 84 passes, then types expose TS2322 at extension.ts.
+The validator now returns the SDK and host type intersection. Its emitted JS is
+identical, so the accepted root behavior run is retained. A continuation marker
+then raises EEXIST before checks; only that write path is corrected. The final
+runner completes root types and hoisted behavior and types without repeating
+successful application or root behavior steps.
+
+Independent read-only review reports no verified defect. The parent verifies
+26 frozen inputs and 144 delivered artifact hashes. All 51 independent scenarios
+pass: 31 exact host comparisons, 18 pristine-default comparisons, intentional BOM
+adoption and a compound injection contract. Four changed SDK outputs reconstruct
+from pristine and match both layouts byte-for-byte. Independent execution uses
+allowed pure-module copies with import paths changed; public-root integration
+relies on the verified parent evidence. The finite probe does not establish
+arbitrary JSON or filesystem-race equivalence.
+
+Source registration updates seven entries and adds one, with no retirement or
+unrelated entry changes. The fixed Craft v0.15.6 restricted audit passes 2022
+allowed files: 1454 common paths, 873 normalized matches, 581 modified files,
+568 MkAgent-only files and 858 reviewed Craft-only deletions. The whole legacy
+subtree, protected basename and sensitive configuration remain excluded. Test
+children use isolated HOME, USERPROFILE, TMPDIR and XDG paths, PI_OFFLINE, no
+environment file, loopback-only preload and OS sandbox. No real account, service,
+external network or port 9100 is accessed.
+
+Evidence is under /tmp/mkagent-mcp-loader-sdk-fP3Pur. Keep applied.json,
+validation.json, type-only-fix.json, review-inputs.json, review-verified.json,
+review-k3j4dv2z/review-report.json, source-registration.json and
+restricted-craft-audit.json, together with the original failed logs. Full Native,
+full build and declarations, fresh install, real Windows or services, full Craft
+and F0 through F6 remain open. Continue resource, runtime and remaining-source
+review.
+
 ## Public SDK MCP server configuration after 70d5848
 
 Replace the server's 297-line configuration module with a 57-line host binding.

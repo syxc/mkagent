@@ -32,7 +32,7 @@ test('MCP commands keep the default shell in modeled Windows dispatch', () => {
   });
   const facade = readFileSync(new URL('../../../pi-durable-coding/src/mcp-config.ts', import.meta.url), 'utf8');
   const binding = new Bun.Transpiler({ loader: 'ts' }).transformSync(facade);
-  const host = runInNewContext(binding.replace(/^import .*;\n/gm, '').replace(/^export /gm, '') + '\n({ resolveConfigValueOrThrow, resolveHeadersOrThrow });', {
+  const host = runInNewContext(binding.replace(/^export \{.*\} from .*;\n/gm, '').replace(/^import .*;\n/gm, '').replace(/^export /gm, '') + '\n({ resolveConfigValueOrThrow, resolveHeadersOrThrow });', {
     resolveValue: model.resolveConfigValueOrThrow, resolveHeaders: model.resolveHeadersOrThrow,
   });
   const command = '!echo %MKAGENT_CONFIG_SDK_FIXTURE%';

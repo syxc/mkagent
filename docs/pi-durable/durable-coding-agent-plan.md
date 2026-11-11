@@ -104,6 +104,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `70d5848` 后的 MCP server 配置切片将 297 行本地模块缩为 57 行宿主绑定，净减少 240 行；八行门面复用 SDK 已公开校验、匹配、命名空间、常量和类型，删除无调用本地 registry，不新增 SDK 补丁。曝光防护、OAuth 目的地址限制和宿主部分配置类型保留。两布局各 72 项测试及定向严格类型检查通过，使用 skipLibCheck；独立复核未确认缺陷，报错差异和范围见[MCP server 配置验证](coding-validation.md#public-sdk-mcp-server-configuration-after-70d5848)。来源更新 2 项、新增 2 项，受限 Craft 审计通过 2021 个允许文件；82/119 份输出与 13 份生成清单保持，手写门面另计。配置加载器、资源、运行时及 F0 至 F6 继续开放。
 
+`8eb9a2f` 后的 MCP 配置加载器切片将 145 行模块缩为 44 行宿主绑定，净减少 101 行；SDK 以同一 Map 承担 JSON、覆盖和命名冲突，宿主保留四层路径、信任和插入前凭据策略。有序文件和验证器属于本地补丁接点，SDK 默认路径保持，BOM 支持为有意变化。两布局各 84 项测试、457 个断言及定向严格类型检查通过，使用 skipLibCheck；独立 51 场景通过，未确认缺陷，26 项冻结输入及 144 项交付摘要已接纳。来源更新 7 项、新增 1 项，受限 Craft 审计通过 2022 个允许文件；Coding 84 份、总数 121 份输出，13 份生成清单保持。失败历史与纯模块复核限制见[MCP 加载器验证](coding-validation.md#public-sdk-mcp-configuration-loader-after-8eb9a2f)。资源、运行时、完整 Native 与声明及 F0 至 F6 继续开放。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

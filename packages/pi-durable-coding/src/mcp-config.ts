@@ -1,4 +1,5 @@
-/** Keep existing MCP commands on the platform default shell. */
+/** Reuse SDK configuration loading and keep MCP commands on the platform default shell. */
+export { loadMcpConfig } from '@earendil-works/pi-coding-agent';
 import { resolveConfigValueOrThrow as resolveValue, resolveHeadersOrThrow as resolveHeaders } from '@earendil-works/pi-coding-agent';
 
 export function resolveConfigValueOrThrow(config: string, description: string, env?: Record<string, string>): string {

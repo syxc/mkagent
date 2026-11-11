@@ -88,6 +88,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./utils/sleep.${extension}";`,
     `export * from "./utils/zip.${extension}";`,
     `export * from "./core/mcp-servers.${extension}";`,
+    `export { loadMcpConfig } from "./extensions/mcp/config.${extension}";`,
     `export * from "./extensions/mcp/oauth.${extension}";`,
     `export { McpServerLog, formatMcpLogMessage } from "./extensions/mcp/log.${extension}";`,
     `export { MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName, limitMcpContent, saveToTempFile, toModelContent } from "./extensions/mcp/tools.${extension}";`,
@@ -417,6 +418,39 @@ for (const suffix of ['js', 'd.ts']) {
   }
   outputs.set(path, body);
 }
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/extensions/mcp/config.${suffix}`;
+  let body = readFileSync(join(baseline, path), 'utf8');
+  if (suffix === 'js') {
+    body = replace(body, 'function readConfigFile(path, scope, state) {',
+      'function readConfigFile(path, scope, state, validateConfig = validateMcpServerConfig) {');
+    body = replace(body, 'const config = validateMcpServerConfig(name, { ...base.config, ...value });',
+      'const config = validateConfig(name, { ...base.config, ...value });');
+    body = replace(body, 'const config = validateMcpServerConfig(name, value);', 'const config = validateConfig(name, value);');
+    body = replace(body, `    readConfigFile(join(options.agentDir, "mcp.json"), "global", state);
+    const projectConfig = options.projectTrusted ? join(options.cwd, CONFIG_DIR_NAME, "mcp.json") : undefined;
+    if (projectConfig)
+        readConfigFile(projectConfig, "project", state);`, `    const projectConfig = options.projectTrusted
+        ? options.configFiles ? options.configFiles.findLast(file => file.scope === "project")?.path
+            : join(options.cwd, CONFIG_DIR_NAME, "mcp.json")
+        : undefined;
+    const files = options.configFiles ?? [
+        { path: join(options.agentDir, "mcp.json"), scope: "global" },
+        ...(projectConfig ? [{ path: projectConfig, scope: "project" }] : []),
+    ];
+    for (const { path, scope } of files) {
+        if (scope === "project" && !options.projectTrusted) continue;
+        readConfigFile(path, scope, state, options.validateServerConfig);
+    }`);
+  } else {
+    body = replace(body, 'export declare function loadMcpConfig(options: {', `export declare function loadMcpConfig(options: {
+    /** Read these files in order; project files still require projectTrusted. */
+    configFiles?: readonly { path: string; scope: "global" | "project" }[];
+    /** Apply host policy to definitions and merged overrides before storing them. */
+    validateServerConfig?: (name: string, raw: unknown) => McpServerConfig | string;`);
+  }
+  outputs.set(path, body);
+}
 const staging = mkdtempSync(join(tmpdir(), 'coding-sdk-exports-'));
 let patch = '';
 for (const [path, output] of outputs) {
@@ -435,7 +469,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization, an optional session factory and runtime session subtype declarations, and installed worker theme and HTML asset lookup, and protected RPC CLI selection with the published default, and MCP schema resource boundaries during local-reference relocation, and optional platform default shell resolution for host MCP configuration.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization, an optional session factory and runtime session subtype declarations, and installed worker theme and HTML asset lookup, and protected RPC CLI selection with the published default, and MCP schema resource boundaries during local-reference relocation, and optional platform default shell resolution for host MCP configuration, and optional ordered MCP configuration files with trusted project loading and host validation before definitions and overrides are stored.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),

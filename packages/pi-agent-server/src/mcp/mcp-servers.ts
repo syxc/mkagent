@@ -44,7 +44,7 @@ export function getMcpToolExposure(config: McpServerConfig, toolName: string): M
   return safeExposure(exposure);
 }
 
-export function validateMcpServerConfig(name: string, raw: unknown): McpServerConfig | string {
+export function validateMcpServerConfig(name: string, raw: unknown): (SdkMcpServerConfig & McpServerConfig) | string {
   const value = sdkValidate(name, raw);
   if (typeof value === 'string') return value;
   const config = value as McpServerConfig;
@@ -53,5 +53,5 @@ export function validateMcpServerConfig(name: string, raw: unknown): McpServerCo
     && config.oauth !== undefined && !isSecureMcpUrl(config.url)) {
     return `server "${name}": oauth requires an https URL, or http on localhost, 127.0.0.1, or [::1]`;
   }
-  return config;
+  return value as SdkMcpServerConfig & McpServerConfig;
 }
