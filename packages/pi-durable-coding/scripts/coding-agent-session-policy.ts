@@ -12,7 +12,8 @@ export function codingAgentSessionPolicy(source: string, declarations: boolean):
       + 'import type { createAllToolDefinitions } from "./tools/index.ts";\n'
       + 'import type { createLocalBashOperations } from "./tools/bash.ts";\n'
       + 'import type { AssistantMessage } from "@earendil-works/pi-ai/compat";\n'
-      + 'import type { AgentActivityOutcome, BeforeAgentStartTrigger } from "./extensions/types.ts";\n'
+      + 'import type { AgentActivityOutcome } from "./extensions/types.ts";\n'
+      + 'import type { BeforeAgentStartTrigger } from "./extensions/runner.ts";\n'
       + 'import type { BashExecutionMessage } from "./messages.ts";\n'
       + 'import type { BuildSystemPromptOptions, NormalizedBuildSystemPromptOptions, SystemPromptSections } from "./system-prompt.ts";\n'
       + 'import type { SourceInfo } from "./source-info.ts";\n' + body;

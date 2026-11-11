@@ -136,6 +136,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `c612ed9` 后第三次全新冻结安装通过，16 个输入保持，11 个 workspace 的 20 条内部依赖链接及 Coding 94、durable 33、core 4 共 131 份补丁输出摘要均核验通过。两现有布局的包装声明已定向刷新，旧 wrapper.d.ts 已移除，所选声明分支的严格消费者通过。该结果不包含 fresh 工程完整 Native、构建、声明或恢复，也无新增独立复核；F0 至 F6 继续开放，见[安装与声明验证](coding-validation.md#fresh-frozen-installation-and-wrapper-declarations-after-c612ed9)。
 
+`d42d459` 后修正 AgentSession 声明补丁的类型导入，直接引用 SDK 已有 runner 触发类型。两布局回归、定向源码类型与完整补丁 check 通过，独立复核未确认缺陷；Coding 94 份输出中仅一份 d.ts 改变。既有 fresh 工程冻结刷新及 131 份输出摘要核验通过，受限 Craft 审计通过 2033 个允许文件。关闭 skipLibCheck、未投影声明的完整 SDK 消费者由四条诊断降为三条，仍未通过；具体剩余诊断与验证边界见[会话触发类型验证](coding-validation.md#sdk-session-trigger-declaration-after-d42d459)。完整入口、构建、恢复及 F0 至 F6 继续开放。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

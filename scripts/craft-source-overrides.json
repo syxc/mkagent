@@ -4337,16 +4337,16 @@
       "reason": "Assert that generated tool aggregation imports resolve to the Native SDK factory binding."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "951aa66bbe9b8828a41d7539fc04ae53ed877c80cfcae23e0affcbb7a3a7d0ed",
-      "reason": "Select one existing SDK root HTML renderer contract without changing runtime algorithms."
+      "sha256": "6bcdd984ec1ee85b1d9b03a6f95cbb8a99e44593617b2d971f909aa49a2a3f62",
+      "reason": "Regenerate AgentSession declarations with the published runner trigger type; leave runtime algorithms and the other 93 Coding outputs unchanged."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
       "sha256": "789a1d2d4f467dbebd164d350519f4f383e1f804bd1cdba8c20f088c8e81bfa8",
       "reason": "Select one existing SDK root HTML renderer contract without changing runtime algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "d55987a29926db06d8fc1399af62535584c15780ae6041204f4be5049f4b1412",
-      "reason": "Select one existing SDK root HTML renderer contract without changing runtime algorithms."
+      "sha256": "8b69ab867f8c6bf79956bc030e44e8b20cbc715aa7e5d2ff60f10b1a550ec504",
+      "reason": "Regenerate AgentSession declarations with the published runner trigger type; leave runtime algorithms and the other 93 Coding outputs unchanged."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4393,8 +4393,8 @@
       "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
     },
     "packages/pi-durable-coding/scripts/coding-agent-session-policy.ts": {
-      "sha256": "62ffe3bcdc4e930f0068be107f29fa132b878c81b8d850e8be0bc3a760b306a1",
-      "reason": "Expose optional host tool and Bash operation factories alongside durable hooks while the SDK retains session, runtime and Bash lifecycle algorithms."
+      "sha256": "89655f741128047e90e07453bd41a7022be3c68410abc5fee8bd621a1b8f108a",
+      "reason": "Expose optional host tool and Bash operation factories alongside durable hooks; import the existing runner trigger type while retaining SDK lifecycle algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-tool-policy.ts": {
       "sha256": "3c14154a6efed065be389dfb5a5e8803364ca9bb3989bdb75af1a249ed6c9c5f",
@@ -4683,6 +4683,10 @@
     "packages/pi-durable-coding/test/sdk-html-types.test.ts": {
       "sha256": "3178bacc24b863abab534dce17859bd6418cb42e3032a71c6c6761c0db1df189",
       "reason": "Check the SDK root declaration without skipLibCheck and verify HTML renderer factory and export option compatibility."
+    },
+    "packages/pi-durable-coding/test/sdk-session-trigger-types.test.ts": {
+      "sha256": "475de26fd6bb611230d97c848e0a9eb4a6e4917ab9f3b0f742984fec8d9b7ec6",
+      "reason": "Check the actual SDK session declaration without skipLibCheck and verify user and custom preparation triggers through the published runner type."
     },
     "packages/pi-durable-coding/test/sdk-extension-wrapper.test.ts": {
       "sha256": "e7e2cca3f2de89ee4de3e233eb373acb0451226c3088c2c9850b8bd891626f6c",

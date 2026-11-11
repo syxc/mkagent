@@ -104,6 +104,48 @@ project. The declaration projection does not establish that the full barrel
 passes. No new independent review is performed for these checks. Full Native,
 complete declarations, recovery and F0 through F6 remain open.
 
+## SDK session trigger declaration after d42d459
+
+A full consumer check of the installed public SDK declarations uses strict mode,
+TypeScript 5.9.3 and skipLibCheck=false, with no declaration projection. It finds
+four diagnostics. One is a local patch error: AgentSession imports
+BeforeAgentStartTrigger from extensions/types, but the published type belongs
+to extensions/runner. The policy now imports that existing type from runner.
+No type definition, runtime adapter or algorithm is added.
+
+The new regression first reproduces TS2305. Both existing layouts then pass one
+test and three assertions each. The compiler checks the actual session declaration
+and consumer without skipLibCheck or declaration projection. It verifies legal
+user and custom triggers, the preparation return type and two negative cases.
+It does not collect all dependent declaration diagnostics. A separate strict
+check of the changed policy and test passes with skipLibCheck enabled.
+An independent review finds no confirmed defect. It runs the test, restores the
+old import in memory to reproduce TS2305 and removes the negative-case markers
+to confirm both invalid calls produce TS2353.
+
+The complete Coding patch check passes for 94 outputs. Only agent-session.d.ts
+changes; the other 93 output hashes remain unchanged. Source registration updates
+three entries and adds the test. The restricted Craft v0.15.6 audit passes for
+2033 allowed files, with protected legacy and sensitive paths excluded.
+
+The existing fresh project receives the new patch and passes a frozen install
+refresh in 3.98 seconds. This is not another fresh installation. All 16 refreshed
+inputs remain unchanged during installation. The installed Coding 94, durable 33
+and core four output hashes pass again, for 131 outputs in total.
+
+The full public SDK consumer check now reports three diagnostics. The local
+trigger error is gone; the other diagnostic messages are unchanged:
+
+| Code | Declaration | Remaining error |
+|---|---|---|
+| TS2694 | Coding tools/find.d.ts | The published path.PlatformPath type is not exported by the installed Node path declarations. This reference also exists in the pristine SDK. |
+| TS2307 | @google/genai 2.21.0 | The MCP client declaration cannot be resolved. |
+| TS2416 | gaxios 7.1.3 | The fetch method lacks the preconnect member required by Bun's fetch type. |
+
+These remaining declarations are not changed or hidden by this fix. The full
+public SDK declaration check does not pass. Complete Native, build, recovery
+and F0 through F6 remain open.
+
 ## Resource result declaration after c2ddabe
 
 The exported discoverCodingSkills function had no return annotation. In both

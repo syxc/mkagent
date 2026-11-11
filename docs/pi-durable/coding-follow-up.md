@@ -194,6 +194,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `c612ed9` 后第三次全新冻结安装通过，使用新的任务 HOME、目录及空缓存，禁用安装 scripts 并保留 integrity 检查。16 个输入保持，12 份 manifest、11 个 workspace 的 20 条内部依赖链接及 Coding 94、durable 33、core 4 共 131 份补丁输出摘要核验通过。两现有布局的包装声明已按真实源码定向刷新，旧 wrapper.d.ts 已移除；所选声明分支的 strict/skipLibCheck 消费者各验证两个出口和两个负例，零诊断。本次未执行 fresh 工程完整 Native、构建、声明或恢复，也未新增独立复核；F0 至 F6 继续开放，失败修正与范围见[安装与声明验证](coding-validation.md#fresh-frozen-installation-and-wrapper-declarations-after-c612ed9)。
 
+`d42d459` 后补验未投影、关闭 skipLibCheck 的完整公开 SDK 声明，发现四条诊断；其中本地 AgentSession 补丁误从 extensions/types 导入 BeforeAgentStartTrigger，现改为引用 SDK 已有 runner 类型。两布局新增回归、定向源码类型检查和 94 份补丁 check 通过，仅一份 d.ts 输出变化；独立复核通过旧导入和负例探针，未确认缺陷。来源更新 3 项、新增 1 项，受限 Craft 审计通过 2033 个允许文件。既有 fresh 工程冻结刷新通过，131 份安装输出摘要重新核验；这不是再次全新安装。完整 SDK 声明仍有 TS2694、TS2307、TS2416 三条诊断，完整入口、构建、恢复及 F0 至 F6 继续开放，见[会话触发类型验证](coding-validation.md#sdk-session-trigger-declaration-after-d42d459)。
+
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 
 | 优先范围 | 下一步与保留条件 |

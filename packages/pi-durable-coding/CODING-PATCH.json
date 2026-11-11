@@ -318,7 +318,7 @@
     {
       "path": "dist/core/agent-session.d.ts",
       "originalSha256": "e5015c005e6bcac65471b2f6e4fb634763896935482b61c47a9f90eeab30a128",
-      "sha256": "d02385a856d3ffd1c8b8ec3a9d01b7ddc4728785739f465d244975a93c420bc9"
+      "sha256": "0a491af3d01542d8e89111c529a75a48ca9942c6f5c9fc6323007ca6aee27992"
     },
     {
       "path": "dist/core/extensions/runner.d.ts",
