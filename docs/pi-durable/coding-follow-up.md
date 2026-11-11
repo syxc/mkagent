@@ -182,6 +182,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `fc80602` 后为 ModelRuntime.create 和 bind 增加可选 AuthContext，直接传入 SDK 内部 createModels，不复制认证、凭据或请求算法。两布局各 3 项新增测试、12 项既有模型测试及实际声明定向 strict/skipLibCheck 检查通过，独立静态复核未确认缺陷。来源更新 3 项、新增 1 项，受限 Craft 审计通过 2028 个允许文件；仅两份 ModelRuntime 输出改变，总数保持。公开 Models 不提供内部上下文，绑定时须由调用方显式再次传入，不能自动继承。完整入口、全量声明、安装与恢复仍未验证，见[认证上下文验证](coding-validation.md#explicit-model-auth-context-after-fc80602)。F0 至 F6 继续开放。
 
+`8e50091` 后修复 SDK 会话 Bash 输出文件提前返回及异步文件错误：创建流时即观察 finished，返回结果前等待完成；执行本身失败时保留原错误对象。执行、截断与会话算法仍由 SDK 提供，不恢复本地副本。两布局各 4 项新增场景、41 项既有回归及实际声明定向 strict/skipLibCheck 检查通过，独立静态复核未确认缺陷。仅新增修改 bash-executor.js，原 92 份 Coding 输出摘要保持，Coding 增至 93 份；core/durable 本次未重验，按原数量合计为 130 份。来源更新 4 项、新增 2 项，受限 Craft 审计通过 2030 个允许文件。失败夹具修正及未验边界见[Bash 输出验证](coding-validation.md#sdk-bash-output-completion-after-8e50091)。长 OSC、ToolHtmlRenderer、完整入口与恢复及 F0 至 F6 继续开放。
+
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 
 | 优先范围 | 下一步与保留条件 |

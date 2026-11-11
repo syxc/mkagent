@@ -4341,16 +4341,16 @@
       "reason": "Assert that generated tool aggregation imports resolve to the Native SDK factory binding."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "c99d811a9664ca4b5fbafc81c3d28392ae481d7eae647ade5b474590948f2176",
-      "reason": "Record explicit authentication context options in the two ModelRuntime outputs; retain the other 90 Coding output hashes."
+      "sha256": "6ab234f762bf0f63b5a8f859d76bc14a288d3fc5ce9856d198d869935dcbb468",
+      "reason": "Record the SDK Bash output completion fix as the 93rd Coding output; retain the other 92 output hashes."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "bcaefc507e0d812ce521a8131adbfe8174d2cd38cead90c9d27b783807dfb727",
-      "reason": "Expose existing tool contracts and generate an optional factory binding from the published SDK algorithm."
+      "sha256": "4c9afc2636a5d48c16e827f1054710f2f53cbe9575c2b621da7b941e73528209",
+      "reason": "Apply a bounded stream completion fix to the published Bash executor without copying its execution algorithm."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "e58a3e12ee13b6f4b02b9bdf653cbdba1f57159f7ed0b4d43b6d2ee14ffc57ed",
-      "reason": "Add optional per-runtime AuthContext forwarding to the existing model runtime binding without changing default auth policy."
+      "sha256": "1c3aa35a3d86d00be68893be76df3bfd90623f6642e3263278ccaa1434bd8404",
+      "reason": "Wait for private Bash output files before returning or rejecting; retain original execution failures and all prior SDK bindings."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4445,8 +4445,8 @@
       "reason": "Verify SDK edit bytes, inherited operations, receivers, errors, staged cancellation and queue settlement, renderer previews and component reuse."
     },
     "packages/pi-durable-coding/scripts/coding-shell-policy.ts": {
-      "sha256": "5332c174a103957751152045faf0806b4b21b38ee9d0f44dfcf8d0c8ac72bdb4",
-      "reason": "Bind existing SDK shell algorithms and one PID set per instance through three optional host dependencies."
+      "sha256": "044b6e15b80825216614dcec50fdb7e6252ffbfb6bee41f430e75b2154570248",
+      "reason": "Keep SDK shell algorithms with optional host dependencies and wait for Bash output stream completion and errors."
     },
     "packages/pi-durable-coding/src/native-shell-tools.ts": {
       "sha256": "b902fe438a356cd5f81cd9200173be0c9d10a3764d8e2d56c57b5216bab215d9",
@@ -4671,6 +4671,14 @@
     "packages/pi-durable-coding/test/model-runtime-auth-context.test.ts": {
       "sha256": "de9840cf8d0f763cbe92979981b19c91c28311d13f74aae95195ecd705833eb5",
       "reason": "Verify explicit authentication context identity for availability, auth, requests, independent runtimes and runtime key changes using synthetic providers."
+    },
+    "packages/pi-durable-coding/test/session-bash-output.test.ts": {
+      "sha256": "05c5001ae690f9320fd9798f864359a8161ea2586efe557238108cb35d2c79c3",
+      "reason": "Isolate four SDK session Bash output scenarios in child processes so asynchronous stream errors cannot affect other cases."
+    },
+    "packages/pi-durable-coding/test/fixtures/session-bash-output.ts": {
+      "sha256": "50dea672ae3e9a33963b4d3d07627aa4c75e77f36a052a08d10bf5da4488d16b",
+      "reason": "Verify complete and cancelled output, file errors, original execution failures, private modes and session cleanup without model calls."
     }
   },
   "deleted": {

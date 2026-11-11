@@ -123,3 +123,23 @@ export interface ShellDependencies {
   }
   return body;
 }
+
+export function codingBashOutputPolicy(source: string): string {
+  let body = source;
+  const edit = (before: string, after: string) => {
+    if (body.split(before).length !== 2) throw new Error('Published bash output boundary changed: ' + before);
+    body = body.replace(before, after);
+  };
+  edit('import { splitIncompleteAnsiSuffix, stripAnsi }', 'import { finished } from "node:stream/promises";\nimport { splitIncompleteAnsiSuffix, stripAnsi }');
+  edit('    let tempFileStream;', '    let tempFileStream;\n    let tempFileDone;');
+  edit('        ({ path: tempFilePath, stream: tempFileStream } = createOutputFileStream("pi-bash", ".log"));',
+    '        ({ path: tempFilePath, stream: tempFileStream } = createOutputFileStream("pi-bash", ".log"));\n'
+    + '        tempFileDone = finished(tempFileStream, { cleanup: true });\n'
+    + '        // Observe errors immediately while command execution is still pending.\n'
+    + '        tempFileDone.catch(() => {});');
+  edit('            tempFileStream?.end();\n            throw err;',
+    '            tempFileStream?.end();\n            await tempFileDone?.catch(() => {});\n            throw err;');
+  edit('    tempFileStream?.end();\n    const cancelled',
+    '    tempFileStream?.end();\n    await tempFileDone;\n    const cancelled');
+  return body;
+}

@@ -12,7 +12,7 @@ import { codingRunnerPolicy } from './coding-runner-policy.ts';
 import { codingAgentSessionPolicy } from './coding-agent-session-policy.ts';
 import { codingToolPolicy } from './coding-tool-policy.ts';
 import { codingToolFactoriesPolicy } from './coding-tool-factories-policy.ts';
-import { codingShellHelpersPolicy, codingShellPolicy } from './coding-shell-policy.ts';
+import { codingBashOutputPolicy, codingShellHelpersPolicy, codingShellPolicy } from './coding-shell-policy.ts';
 import { codingCodemodePolicy } from './coding-codemode-policy.ts';
 import { codingUIPolicy } from './coding-ui-policy.ts';
 import { codingImagePolicy } from './coding-image-policy.ts';
@@ -236,6 +236,8 @@ for (const name of ['bash', 'powershell']) for (const suffix of ['js', 'd.ts']) 
   const path = `dist/core/tools/${name}.${suffix}`;
   outputs.set(path, codingShellPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts', name === 'powershell'));
 }
+const bashExecutor = 'dist/core/bash-executor.js';
+outputs.set(bashExecutor, codingBashOutputPolicy(readFileSync(join(baseline, bashExecutor), 'utf8')));
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/utils/shell.${suffix}`;
   outputs.set(path, codingShellHelpersPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));

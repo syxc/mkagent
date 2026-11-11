@@ -26,6 +26,53 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK Bash output completion after 8e50091
+
+AgentSession.executeBash uses the SDK executor and its private output-file helper.
+The executor called end() but returned before the file stream completed. A caller
+could receive a path that did not exist yet. An asynchronous file error could
+also escape the execution promise. The existing shell policy now uses Node's
+finished promise, observes errors when the stream is created, and waits before
+returning a result. If execution itself fails, its original error takes priority
+while the file error is handled. The SDK retains execution, output capture,
+truncation, cancellation and history algorithms. File creation retains random
+paths, mode 0600 and exclusive wx. No executor copy or public API is added.
+Remove this fix when upstream provides the same completion and error behavior.
+
+Four isolated child-process cases failed against the previous output. With the
+fix, root and hoisted layouts each pass all four cases and 41 existing session
+and shell tests. Cases check immediate full-file reads after success and cancel,
+nonzero exit status, permissions, history, file-error rejection, original error
+identity and session cleanup. Synthetic operations use in-memory resources and
+a provider-call guard. No model or account is used. The initial fixture changed
+TMPDIR in the parent runner; a late stream error affected its next case, so that
+failure is not evidence for execution-error priority. The isolated rerun supplies
+that evidence. Strict checks exposed missing Agent options, then a required
+streamFn; the final fixture provides an explicit failure guard. Both layouts
+pass scoped strict checks with skipLibCheck against actual SDK declarations.
+The hoisted validation copy needed two existing generator inputs before its
+check could pass. Failed attempts and their logs remain in the task evidence.
+
+Generation, check and pristine replay pass for all 93 Coding outputs. Only
+bash-executor.js is newly changed; the previous 92 output hashes remain the same.
+Both installed layouts match the Coding manifest. Core and durable outputs are
+unchanged and were not revalidated here. Their prior counts give 130 total
+physical outputs. Runtime and helper generation were not repeated; their
+inventories are unchanged. There was no new installation. Source registration
+updates four entries and adds the parent test and child fixture. The restricted
+Craft v0.15.6 audit passes for 2030 allowed files, with legacy and sensitive
+paths excluded.
+
+Independent static review found no defects or blockers in its bounded input set.
+Parent verification matched the report hash, 21 frozen inputs and six source
+hashes. Review inspected bounded diffs, the executor and helper, session source
+and recorded checks. It did not rerun tests or independently regenerate the
+complete patch. Long-running execution after a file error, concurrent cancellation
+and file failure, slow or mid-write failures, deferred history during streaming,
+Node execution and other platforms were not directly tested. Full Native, full
+declarations, fresh installation, durable recovery and product acceptance remain
+unverified. Long OSC, ToolHtmlRenderer and F0 through F6 stay open.
+
 ## Explicit model auth context after fc80602
 
 ModelRuntime.create and bind now accept an optional pi-ai AuthContext and pass

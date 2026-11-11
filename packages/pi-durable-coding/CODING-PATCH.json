@@ -181,6 +181,11 @@
       "sha256": "5ac2400451c020fd2da0ec6c651456f4d00c8533914b7f296fe8c040194c2cde"
     },
     {
+      "path": "dist/core/bash-executor.js",
+      "originalSha256": "6732b7e5f8a1f45c09fcda9c34da9248a55d54eddf0d3b2cb6798e192773c58d",
+      "sha256": "bdbb3228e17be77f73a090d6f2ba3917abba3aca0ceaf418d0c3bb617ed4a351"
+    },
+    {
       "path": "dist/utils/shell.js",
       "originalSha256": "57dd12450505faaf713b7cfeddff43ce8bd6238b3cfb755f87bdc83ee6134fc2",
       "sha256": "8882469819306de7b74d1d1a6775aaec66e57e77f672a729e94216658c4e1dd2"

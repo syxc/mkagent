@@ -1,6 +1,6 @@
 # Coding SDK 维护边界与升级清单
 
-更新日期：2026-11-11。本文按当前能力和调用链登记维护责任，供 F1、F3、F6 核对。原始接入参照为 `b77c4a2645d3`，SDK 候选固定 Pi 1.5.0。需求见[能力规格](coding-capabilities-spec.md)，具体实现和候选 API 对照见[架构记录](coding-architecture.md)，检查结果见[验证记录](coding-validation.md)。
+更新日期：2026-11-12。本文按当前能力和调用链登记维护责任，供 F1、F3、F6 核对。原始接入参照为 `b77c4a2645d3`，SDK 候选固定 Pi 1.5.0。需求见[能力规格](coding-capabilities-spec.md)，具体实现和候选 API 对照见[架构记录](coding-architecture.md)，检查结果见[验证记录](coding-validation.md)。
 
 MkAgent 保留 Pi Coding 层和公开插件契约，执行、事务、存储和恢复优先交给 durable。评估顺序是 durable 发布能力、其他 Pi 官方 SDK 的公开 API、必要的外部适配。用户于 2026-11-09 明确允许生产使用完整 `pi-coding-agent` 包的公开 SDK，不启动原版 CLI。SDK 覆盖后必须删除对应源码和多余直接依赖，不保留并行实现，也不将完整复制实现移入补丁。补丁新增的导出或执行接点均属于本地修改。
 
@@ -66,7 +66,7 @@ F1、F3、F6 已重新打开。此前维护登记和来源检查不能证明保�
 | Coding 工具渲染与输出文件 | MCP 参数、文本和图片占位渲染、Native 行范围格式及 MCP/codemode 输出文件直接用公开 SDK，删除两份模块共 214 行，无包装；会话 bash 的输出流由 SDK 内部提供，已撤除无外部消费者的 createOutputFileStream 根导出 | ANSI、控制字符、Unicode、参数错误、终端图片占位、行范围、随机临时路径、0600、wx、流式内容和文件错误及公开声明 |
 | Coding 工具搜索 | SDK 工厂承担注册、校验、暴露过滤、会话激活和结果组装，26 行 Native 绑定只注入 durable 元数据与排名并组装 namespace 文本；两份本地实现、181 行及专用生成转换已删除，codemode discovery 直接调用 durable 排名 | 默认 SDK 与实例级注入、namespace 权重、动态目录、deferred/active/model-only、重复激活、错误及公开声明；durable 完整工具的 control.addTools 不等于 Coding 会话启用契约 |
 | Coding MCP 工厂 | createMcpExtension、配置和 transport 类型直接使用已公开 SDK 根入口，删除八份 MCP 模块及 open-browser 共 3140 行，无运行时包装；OAuth 门面现已直接转出 SDK，同一类身份使旧 credentials Pick 补丁退役；完整 OAuth 副本和旧转换已删除 | 配置可信边界、凭据注入、插件动态注册与撤销、工具与资源暴露、durable codemode 转发、transport 关闭、取消锁及公开类型；server 自有副本仍须单独收敛 |
-| Coding ANSI 与会话 bash | SDK AgentSession 内部承担执行与清理；删除完整本地执行器 146 行及无调用 sanitizer 11 行。RPC client 与协议现已全部使用 SDK，其原本地 BashResult 类型消费者已退役，多余根类型补丁已撤除；ANSI 与流文件无用根导出已撤除；此前 ANSI 模块及适配、转换和直接依赖已删除 | 实际会话的 UTF-8/ANSI 字节切分、输出清理与记录、取消及错误；原 3860 组结果摘要仅作历史证据，旧私有算法测试已退出 |
+| Coding ANSI 与会话 bash | SDK AgentSession 内部承担执行与清理，局部补丁在返回前等待输出流完成并处理异步错误；删除完整本地执行器 146 行及无调用 sanitizer 11 行。RPC client 与协议现已全部使用 SDK，其原本地 BashResult 类型消费者已退役，多余根类型补丁已撤除；ANSI 与流文件无用根导出已撤除；此前 ANSI 模块及适配、转换和直接依赖已删除 | 实际会话的 UTF-8/ANSI 字节切分、输出清理与记录、取消及错误；原 3860 组结果摘要仅作历史证据，旧私有算法测试已退出 |
 | Coding 工具 effect | `host-tool-task.ts` 在真实 `pi.coding.tool` owner 下委托公开 ToolTask phases/abort；`wrapAgentTool` 和普通 AgentTool 入口共用该桥 | SDK replay、嵌套任务及会话清理、进度、取消、完整结果、最终参数回执和 journal 同事务提交 |
 | 生产文件和 shell 工具 | worker `tools/builtin.ts` 使用 durable read/write/edit/bash、PowerShell 和 images 工厂 | 临时文件读写、审批拒绝零副作用、改参、取消、长输出与图片 |
 | 插件 edit 参数准备 | 薄绑定以 durable 的公开 createEditTool().prepareArguments 替换 Coding SDK 默认 callback，保留 SDK 工厂及 renderer 对象 | 新旧参数形状、混合输入、原始参数不变及权限后的最终参数 |
@@ -79,10 +79,11 @@ Server 二进制管理器从 449 行缩为 126 行，删除 75 行重试副本�
 
 ## 本地 SDK 补丁
 
-根 `patchedDependencies` 登记 core、Coding 和 durable 三份补丁。物理文件数为 core 4 个、Coding 92 个、durable 33 个，共 129 个，JS 与声明分别计数。MCP runtime 切片新增 runtime 两份输出，改变两个共用根入口，其余 86 份摘要保持。后续配置切片只改变两个共用根输出，其他 88 份摘要保持；工具聚合切片新增工具 index 的 JS 与声明两份输出并改变两个共用根入口，其他 88 份摘要保持，runtime 生成清单降为 11 份；手写配置、工具绑定、writer 和 MCP runtime 门面另计。逻辑职责可能共用文件，不能将逻辑组重复相加。
+根 `patchedDependencies` 登记 core、Coding 和 durable 三份补丁。物理文件数为 core 4 个、Coding 93 个、durable 33 个，共 130 个，JS 与声明分别计数。Bash 输出切片新增修改一份 bash-executor.js，原 92 份 Coding 摘要保持；本切片核验全部 Coding 输出，未重验 core/durable。MCP runtime 切片新增 runtime 两份输出，改变两个共用根入口，其余 86 份摘要保持。后续配置切片只改变两个共用根输出，其他 88 份摘要保持；工具聚合切片新增工具 index 的 JS 与声明两份输出并改变两个共用根入口，其他 88 份摘要保持，runtime 生成清单降为 11 份；手写配置、工具绑定、writer 和 MCP runtime 门面另计。逻辑职责可能共用文件，不能将逻辑组重复相加。
 
 | 补丁组 | 产品或插件契约、发布 API 缺口 | 当前最小接点及退出条件 | 恢复与升级检查 |
 |---|---|---|---|
+| Coding Bash output completion：新增 bash-executor.js 一份输出 | 发布执行器在 end() 后即返回路径，未等文件完成，也未受控处理流的异步错误 | 现有 shell policy 仅增加标准 finished promise、即时错误观察和结果前等待；执行本身失败时保留原错误，0600 与 wx 不变。上游提供等效完成和错误处理后撤除此修复 | 正常、取消、文件错误与原执行错误优先级两布局各 4 项，既有回归各 41 项及定向类型检查通过；独立静态复核未确认缺陷。长时间执行中的文件错误、并发取消、慢写及其他平台未直接验证，见[Bash 输出验证](coding-validation.md#sdk-bash-output-completion-after-8e50091) |
 | Coding tool factories：共用根 JS/d.ts，另改 tools/index 的 JS/d.ts | SDK 已有工具选择与组装算法，但没有实例级 Native 工厂接点，根也缺少部分聚合与类型出口 | createToolFactories 只为原八个函数增加十六个可选工厂，47 行 Native 门面绑定十二个既有工厂；AST 从发布产物提取算法，不复制到模板。上游提供等效公开接点后撤除补丁 | 新增两份物理输出；核对工具顺序、options 身份、每个工厂只调用一次、默认与部分绑定、undefined、继承依赖、错误及实际声明。SDK 内部 AgentSession 与 executeBash 已通过两个可选实例工厂接线，两布局各 5 项测试、36 个断言及定向类型检查通过；完整集成与真实进程树取消仍未验证，见[会话工具接线验证](coding-validation.md#sdk-session-tool-bindings-after-965df73)。聚合验证见[工具聚合验证](coding-validation.md#sdk-tool-factories-after-7cae8c6) |
 | Coding configuration exports：共用根 JS/d.ts | SDK 已有普通配置与 worker 选择算法，但根缺少 ENV_AGENT_DIR、getBinDir 和 getCodemodeWorkerSpecifier | 只转出三个已有符号，不复制配置算法；六行 Native 绑定只固定 Coding 版本，默认路径直接用 SDK。公开根提供等效导出后撤除此补丁 | 不新增物理输出；核对 PI_PACKAGE_DIR、piConfig、HOME 展开、agent/bin、SDK 文档和 legacy URL、打包固定版本与 worker 选择，QuickJS 路径优先用 durable。两布局定向验证与独立复核通过，完整发布 worker 及其他限制见[配置验证](coding-validation.md#sdk-configuration-after-f7d4b4f) |
 | Coding trust choices：共用根 JS/d.ts | 发布根已提供存储和检测，但未导出宿主审批所用 getProjectTrustOptions | 只转出现有函数，不改内部算法；上游提供相同根出口后撤除补丁 | 核对 includeSessionOnly、父目录更新、拒绝优先级、存储锁及宿主加载边界；不新增物理输出 |
