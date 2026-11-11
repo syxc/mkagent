@@ -26,6 +26,45 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Explicit model auth context after fc80602
+
+ModelRuntime.create and bind now accept an optional pi-ai AuthContext and pass
+it to the SDK-owned createModels collection. Authentication, availability,
+credentials and request algorithms stay in the SDK. Each runtime receives its
+own context reference. Omitting the option preserves the SDK default.
+
+The public Models interface does not expose its internal AuthContext. A caller
+that binds an existing collection must also pass its context explicitly; this
+change does not extract private fields or automatically inherit that context.
+The production CodingHost bind call is unchanged and does not pass a custom
+context. Remove this patch when the public runtime supports the same option.
+
+The three new regressions first failed against the previous output. After the
+fix, root and hoisted layouts each pass all three new tests and all twelve
+existing host-runtime tests. The new cases cover initial availability, auth
+checks, resolved request keys, create, and isolation across runtime-key changes.
+Providers and credentials are synthetic, with no network or real account use.
+Both layouts pass scoped strict checks with skipLibCheck against actual SDK
+declarations, the new tests and the policy. Consumers check valid contexts and
+reject missing fileExists and synchronous env callbacks. Guarded builds report
+zero protected loads.
+
+Patch generation, check and pristine replay pass for all 92 Coding outputs.
+Only model-runtime.js and its declaration change; the other 90 output hashes
+remain unchanged. The runtime inventory and total 129 physical patch outputs
+stay unchanged. Source registration updates three entries and adds one test.
+The restricted Craft v0.15.6 audit passes for 2028 allowed files, with legacy
+and sensitive paths excluded.
+
+Independent static review found no confirmed introduced defects or blockers.
+Parent verification matched the report hash, all seventeen frozen inputs and
+four source hashes. The review used bounded generated diffs and constructor
+source, without rereading the complete SDK or independently replaying the
+whole patch. Its type review had the root consumer and both diagnostic records;
+the hoisted consumer source was outside its input set. Full Native, full types,
+fresh installation, recovery and live authentication remain unverified. The
+recorded stream, long OSC and ToolHtmlRenderer issues and F0 through F6 stay open.
+
 ## Image orientation failure cleanup after b124a40
 
 The SDK decoded a Photon image before calling applyExifOrientation, but did not

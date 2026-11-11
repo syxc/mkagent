@@ -4341,16 +4341,16 @@
       "reason": "Assert that generated tool aggregation imports resolve to the Native SDK factory binding."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "32f632c7bf9d2ca6ce4bbd7c0d93a7eaea8e9a78d2a5b86172513ab51399d765",
-      "reason": "Record the image conversion cleanup fix in one output; retain all other 91 Coding output hashes."
+      "sha256": "c99d811a9664ca4b5fbafc81c3d28392ae481d7eae647ade5b474590948f2176",
+      "reason": "Record explicit authentication context options in the two ModelRuntime outputs; retain the other 90 Coding output hashes."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
       "sha256": "bcaefc507e0d812ce521a8131adbfe8174d2cd38cead90c9d27b783807dfb727",
       "reason": "Expose existing tool contracts and generate an optional factory binding from the published SDK algorithm."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "a5ebdd6d8881e46b86c28922cf459e42670ff942d67d23060aac1bd97357c261",
-      "reason": "Release the decoded image on orientation failure without changing the SDK success path or null fallback."
+      "sha256": "e58a3e12ee13b6f4b02b9bdf653cbdba1f57159f7ed0b4d43b6d2ee14ffc57ed",
+      "reason": "Add optional per-runtime AuthContext forwarding to the existing model runtime binding without changing default auth policy."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4385,8 +4385,8 @@
       "reason": "Use the replacement Native configuration entry for the existing extension contract regression."
     },
     "packages/pi-durable-coding/scripts/coding-model-runtime-policy.ts": {
-      "sha256": "e6d92e9dc66ab1afa532c489ac0691a31eddcc0fdff979f7d5b4bc9b4d45dc65",
-      "reason": "Use the published Coding ModelRuntime and composer with host model and shared credential binding; remove covered implementations and obsolete conversion rules."
+      "sha256": "b248b1f28f7ed9c76f6b30aaaf6361fb24b2852e2f5e3155c6ba235e29fd8691",
+      "reason": "Forward an optional AuthContext from create and bind to the SDK-owned Models collection while retaining SDK auth, credentials and request algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-runner-policy.ts": {
       "sha256": "c7d7ae1f377942d0fc9d53d43ecaa4021e4894014d02975ae2edee0baea712f8",
@@ -4667,6 +4667,10 @@
     "packages/pi-durable-coding/test/session-tool-bindings.test.ts": {
       "sha256": "0aedafb71ff6b0547dce4a0d076d771ab3f6bddf38fe6ffc0f538fcaaba0c47b",
       "reason": "Verify instance factories, reload, explicit overrides, shell settings, output, cancellation, history and Native defaults without provider access."
+    },
+    "packages/pi-durable-coding/test/model-runtime-auth-context.test.ts": {
+      "sha256": "de9840cf8d0f763cbe92979981b19c91c28311d13f74aae95195ecd705833eb5",
+      "reason": "Verify explicit authentication context identity for availability, auth, requests, independent runtimes and runtime key changes using synthetic providers."
     }
   },
   "deleted": {

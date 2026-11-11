@@ -1,4 +1,4 @@
-# Content SHA-256: 43362a58fd2f36cc058bcae4b2f0ae7ed45d08aaadf83fbcef77a7e4053bab64
+# Content SHA-256: 8a7c86f05ce91c1c0e8bacaafc2ebdf766d51421f52818113f9b44480820c505
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -2923,7 +2923,7 @@ diff --git a/dist/core/model-runtime.js b/dist/core/model-runtime.js
      availabilityError;
      credentialOperations = new Map();
 -    constructor(credentials, config, modelsPath, modelsStore, providers, modelNetworkEnabled) {
-+    constructor(credentials, config, modelsPath, modelsStore, providers, modelNetworkEnabled, hostSource) {
++    constructor(credentials, config, modelsPath, modelsStore, providers, modelNetworkEnabled, hostSource, authContext) {
 +        this.hostSource = hostSource;
          this.credentials = credentials;
          this.config = config;
@@ -2933,7 +2933,7 @@ diff --git a/dist/core/model-runtime.js b/dist/core/model-runtime.js
          for (const [providerId, provider] of this.defaultBuiltins)
              this.builtins.set(providerId, provider);
 -        this.models = createModels({ credentials, modelsStore });
-+        this.ownedModels = createModels({ credentials, modelsStore });
++        this.ownedModels = createModels({ credentials, modelsStore, authContext });
          this.rebuildProviders();
      }
 +    static createCredentials(store) {
@@ -2942,7 +2942,7 @@ diff --git a/dist/core/model-runtime.js b/dist/core/model-runtime.js
 +    static async bind(options) {
 +        const runtime = new ModelRuntime(
 +            options.credentials, await ModelConfig.load(undefined), undefined,
-+            new InMemoryCodingAgentModelsStore(), [], options.allowModelNetwork === true, options.models,
++            new InMemoryCodingAgentModelsStore(), [], options.allowModelNetwork === true, options.models, options.authContext,
 +        );
 +        if (options.refreshOnCreate !== false) {
 +            await runtime.refresh({ allowNetwork: false, signal: options.signal });
@@ -2952,6 +2952,15 @@ diff --git a/dist/core/model-runtime.js b/dist/core/model-runtime.js
      static async create(options = {}) {
          const credentials = new RuntimeCredentials(options.credentials ?? DefaultAuthStorage.create(options.authPath));
          const modelsPath = options.modelsPath === null ? undefined : (options.modelsPath ?? join(getAgentDir(), "models.json"));
+@@ -94,7 +145,7 @@ export class ModelRuntime {
+             }
+             return withRemoteCatalog(provider, options.catalogBaseUrl, builtinModelDataGeneratedAt);
+         });
+-        const runtime = new ModelRuntime(credentials, config, modelsPath, modelsStore, providers, process.env.PI_OFFLINE === undefined);
++        const runtime = new ModelRuntime(credentials, config, modelsPath, modelsStore, providers, process.env.PI_OFFLINE === undefined, undefined, options.authContext);
+         runtime.configureRadiusProviders();
+         runtime.rebuildProviders();
+         const refreshFromNetwork = runtime.modelNetworkEnabled && options.allowModelNetwork === true;
 @@ -118,7 +169,7 @@ export class ModelRuntime {
      }
      configureRadiusProviders() {
@@ -3926,7 +3935,15 @@ diff --git a/dist/core/extensions/loader.d.ts b/dist/core/extensions/loader.d.ts
 diff --git a/dist/core/model-runtime.d.ts b/dist/core/model-runtime.d.ts
 --- a/dist/core/model-runtime.d.ts
 +++ b/dist/core/model-runtime.d.ts
-@@ -18,6 +18,20 @@ export interface CreateModelRuntimeOptions {
+@@ -2,6 +2,7 @@ import { type AnyModel, type Api, type AssistantImages, type AssistantMessage, t
+ import { type AuthStatus, type CompatibilityRequestConfig, type ProviderConfigInput } from "./provider-composer.ts";
+ import { type ModelRoute, type ModelRouteReason, type VirtualModelDefinition } from "./virtual-models.ts";
+ export interface CreateModelRuntimeOptions {
++    authContext?: import("@earendil-works/pi-ai").AuthContext;
+     /** Credential storage. Defaults to the file at authPath. */
+     credentials?: CredentialStore;
+     authPath?: string;
+@@ -18,6 +19,21 @@ export interface CreateModelRuntimeOptions {
      /** Skip initial catalog and availability refresh. Static models remain available. */
      refreshOnCreate?: boolean;
  }
@@ -3940,6 +3957,7 @@ diff --git a/dist/core/model-runtime.d.ts b/dist/core/model-runtime.d.ts
 +    /** The host can replace its collection or providers while the runtime is open. */
 +    models: () => Models;
 +    credentials: ModelRuntimeCredentials;
++    authContext?: import("@earendil-works/pi-ai").AuthContext;
 +    allowModelNetwork?: boolean;
 +    signal?: AbortSignal;
 +    refreshOnCreate?: boolean;
@@ -3947,7 +3965,7 @@ diff --git a/dist/core/model-runtime.d.ts b/dist/core/model-runtime.d.ts
  export interface ModelRuntimeAuthOverrides extends AuthOperationOptions {
      apiKey?: string;
      env?: Record<string, string>;
-@@ -34,7 +48,13 @@ export declare class CredentialSynchronizationError extends Error {
+@@ -34,7 +50,13 @@ export declare class CredentialSynchronizationError extends Error {
  }
  /** Configured pi-ai Models collection used by coding-agent and SDK consumers. */
  export declare class ModelRuntime implements Models {
@@ -3962,7 +3980,7 @@ diff --git a/dist/core/model-runtime.d.ts b/dist/core/model-runtime.d.ts
      private readonly credentials;
      private readonly defaultBuiltins;
      private readonly builtins;
-@@ -53,6 +73,9 @@ export declare class ModelRuntime implements Models {
+@@ -53,6 +75,9 @@ export declare class ModelRuntime implements Models {
      private availabilityError;
      private readonly credentialOperations;
      private constructor();

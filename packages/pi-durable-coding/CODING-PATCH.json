@@ -258,7 +258,7 @@
     {
       "path": "dist/core/model-runtime.js",
       "originalSha256": "44d8017928eff6721d5a56b4e71f98bcafb124f5aa6e7d3f016491e11fcf6461",
-      "sha256": "c40df92bf2e667392bd124ddd3128ec95062600e2103bcb5b36bd03ff4a297eb"
+      "sha256": "1271cd9dbd705a88e0b8ccb3317bc24cb19c96ef7cf1d2726a22dea269a3dff8"
     },
     {
       "path": "dist/core/agent-session.js",
@@ -303,7 +303,7 @@
     {
       "path": "dist/core/model-runtime.d.ts",
       "originalSha256": "5a7aac47a83c20316f593c74798f60ec4e521a0fddff03a0608dbc5514012bf5",
-      "sha256": "567c9cb7f36b00b3c78bf5cee0cd26c869d2a995fc0976b78a1f7ecf2dfb29e4"
+      "sha256": "bb3cbcff9b1abdd3af91907ec8182f8f724e6413c30273d11c6661d42bfe4459"
     },
     {
       "path": "dist/core/agent-session.d.ts",

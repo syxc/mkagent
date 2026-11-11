@@ -395,6 +395,8 @@ Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只�
 
 `b124a40` 后，现有 image policy 仅补齐 SDK 在 EXIF 回调抛错时的原图释放，再进入原 null 回退；成功转换、编码释放和注册仍用 SDK。两布局各 6 项测试通过，见[图像释放验证](coding-validation.md#image-orientation-failure-cleanup-after-b124a40)。上游修复相同失败路径后撤除此修复，实例依赖工厂另按公开 API 缺口判断。
 
+`fc80602` 后，ModelRuntime.create 和 bind 可显式接收 AuthContext，并将其传给实例内的 SDK createModels；认证、凭据和请求算法不另行实现。省略选项保持 SDK 默认，绑定现有 Models 时须由调用方再次提供上下文，不能读取其私有字段。两布局各 3 项新增测试、12 项既有模型测试及定向类型检查通过，独立静态复核未确认缺陷，见[认证上下文验证](coding-validation.md#explicit-model-auth-context-after-fc80602)。上游支持等效公开选项后撤除此传递补丁。
+
 ## 复现与升级
 
 已确认可共享的包管理、消息、模型、设置、会话、runner、token 及资源算法均已收敛。兼容策略维护在普通源码中；生成接点检查锚点和出现次数，上游结构变化时直接失败。共用类型从原生公开方法派生旧 JavaScript 输入边界，保留数组、基本类型和异步返回推断，不复制方法声明清单。严格消费者回归覆盖宿主消息字段、开放设置、结构化包设置及会话声明。此前 F1/F3 的维护登记未达到删除大规模源码的目标，整体验收现已重新打开。未修改源码的生成检查不证明其必要性；按公开 SDK 的真实覆盖继续替换并删除。

@@ -6,6 +6,8 @@ export function codingModelRuntimePolicy(source: string, declarations: boolean):
     body = body.replaceAll(before, after);
   };
   if (declarations) {
+    replace('export interface CreateModelRuntimeOptions {', `export interface CreateModelRuntimeOptions {
+    authContext?: import("@earendil-works/pi-ai").AuthContext;`);
     replace('export interface ModelRuntimeAuthOverrides', `/** Shared memory-only key overlay over the host credential store. */
 export interface ModelRuntimeCredentials extends CredentialStore {
     setRuntimeApiKey(providerId: string, apiKey: string): void;
@@ -16,6 +18,7 @@ export interface BindModelRuntimeOptions {
     /** The host can replace its collection or providers while the runtime is open. */
     models: () => Models;
     credentials: ModelRuntimeCredentials;
+    authContext?: import("@earendil-works/pi-ai").AuthContext;
     allowModelNetwork?: boolean;
     signal?: AbortSignal;
     refreshOnCreate?: boolean;
@@ -73,15 +76,15 @@ export interface ModelRuntimeAuthOverrides`);
         if (replacingHost) void this.queueAvailabilityRefresh().catch(() => {});
     }`);
   replace('constructor(credentials, config, modelsPath, modelsStore, providers, modelNetworkEnabled) {',
-    'constructor(credentials, config, modelsPath, modelsStore, providers, modelNetworkEnabled, hostSource) {\n        this.hostSource = hostSource;');
-  replace('this.models = createModels({ credentials, modelsStore });', 'this.ownedModels = createModels({ credentials, modelsStore });');
+    'constructor(credentials, config, modelsPath, modelsStore, providers, modelNetworkEnabled, hostSource, authContext) {\n        this.hostSource = hostSource;');
+  replace('this.models = createModels({ credentials, modelsStore });', 'this.ownedModels = createModels({ credentials, modelsStore, authContext });');
   replace('    static async create(options = {}) {', `    static createCredentials(store) {
         return new RuntimeCredentials(store);
     }
     static async bind(options) {
         const runtime = new ModelRuntime(
             options.credentials, await ModelConfig.load(undefined), undefined,
-            new InMemoryCodingAgentModelsStore(), [], options.allowModelNetwork === true, options.models,
+            new InMemoryCodingAgentModelsStore(), [], options.allowModelNetwork === true, options.models, options.authContext,
         );
         if (options.refreshOnCreate !== false) {
             await runtime.refresh({ allowNetwork: false, signal: options.signal });
@@ -89,6 +92,8 @@ export interface ModelRuntimeAuthOverrides`);
         return runtime;
     }
     static async create(options = {}) {`);
+  replace('new ModelRuntime(credentials, config, modelsPath, modelsStore, providers, process.env.PI_OFFLINE === undefined)',
+    'new ModelRuntime(credentials, config, modelsPath, modelsStore, providers, process.env.PI_OFFLINE === undefined, undefined, options.authContext)');
   replace('        for (const [providerId, provider] of this.defaultBuiltins)\n            this.builtins.set(providerId, provider);\n        for (const providerId',
     '        for (const [providerId, provider] of this.hostSource ? this.hostProviders : this.defaultBuiltins)\n            this.builtins.set(providerId, provider);\n        for (const providerId');
   replace('        if (seq !== this.availabilityRefreshSeq)', '        this.synchronizeHostModels();\n        if (seq !== this.availabilityRefreshSeq)');

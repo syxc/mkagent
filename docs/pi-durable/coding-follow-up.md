@@ -180,6 +180,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `b124a40` 后修复已记录的 Photon 释放缺口：方向回调抛错时释放已解码原图，再进入 SDK 原有 null 回退。新增回归先复现失败，修复后两布局各 6 项转换测试通过，覆盖普通转换与同步 Kitty transcoder；92 份 Coding 输出中仅 image-convert.js 改变。没有恢复本地转换算法，其他限制和 F0 至 F6 继续开放，见[图像释放验证](coding-validation.md#image-orientation-failure-cleanup-after-b124a40)。
 
+`fc80602` 后为 ModelRuntime.create 和 bind 增加可选 AuthContext，直接传入 SDK 内部 createModels，不复制认证、凭据或请求算法。两布局各 3 项新增测试、12 项既有模型测试及实际声明定向 strict/skipLibCheck 检查通过，独立静态复核未确认缺陷。来源更新 3 项、新增 1 项，受限 Craft 审计通过 2028 个允许文件；仅两份 ModelRuntime 输出改变，总数保持。公开 Models 不提供内部上下文，绑定时须由调用方显式再次传入，不能自动继承。完整入口、全量声明、安装与恢复仍未验证，见[认证上下文验证](coding-validation.md#explicit-model-auth-context-after-fc80602)。F0 至 F6 继续开放。
+
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 
 | 优先范围 | 下一步与保留条件 |

@@ -122,6 +122,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `b124a40` 后补齐方向回调抛错时的 Photon 原图释放。两布局各 6 项转换测试通过，普通转换和同步 Kitty transcoder 均覆盖；只改变一份既有 SDK 输出，未复制转换算法。其他已记录问题与整体验收继续开放，见[图像释放验证](coding-validation.md#image-orientation-failure-cleanup-after-b124a40)。
 
+`fc80602` 后补齐 ModelRuntime.create/bind 的显式 AuthContext 传递。两布局各 3 项新增测试、12 项既有模型测试及定向严格类型检查通过，独立静态复核未确认缺陷。绑定既有 Models 时须由调用方再次传入其上下文，公开接口无法自动提取。来源更新 3 项、新增 1 项，受限 Craft 审计通过 2028 个允许文件；仅两份既有 SDK 输出改变，见[认证上下文验证](coding-validation.md#explicit-model-auth-context-after-fc80602)。其他已记录问题及 F0 至 F6 继续开放。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。
