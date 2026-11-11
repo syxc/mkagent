@@ -6,6 +6,8 @@
 
 功能状态使用“已实现且验证”“已实现待验证”“待实现”“外部环境受阻”；其中“已实现且验证”仅限注明的版本和路径。本次架构纠偏另记待核对、待实施及验证状态，不能用历史功能通过来关闭架构问题。详细命令、失败修正和证据版本见[验证记录](coding-validation.md)，顺序见[纠偏跟进](coding-follow-up.md)。
 
+`c2ddabe` 后的资源声明修复直接使用 SDK 公开的 LoadSkillsResult。两布局隔离声明和提取原函数的类型检查通过，JavaScript 输出保持；完整资源模块因受保护 legacy 转发未通过类型检查。该局部结果不关闭完整声明、恢复或整体验收，见[资源返回类型验证](coding-validation.md#resource-result-declaration-after-c2ddabe)。
+
 ## 架构与交付约束
 
 | 要求 | 本次纠偏状态 | 实际依据及剩余工作 |

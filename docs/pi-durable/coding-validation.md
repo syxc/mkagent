@@ -26,6 +26,34 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Resource result declaration after c2ddabe
+
+The exported discoverCodingSkills function had no return annotation. In both
+existing layouts, TypeScript 5.9.3 reports exactly one TS9007 diagnostic with
+isolatedDeclarations. The function now uses the SDK's published LoadSkillsResult
+type. No duplicate interface, runtime wrapper or SDK patch is added.
+
+Both layouts pass the same isolated declaration check after the change. The
+emitted declaration names LoadSkillsResult. The emitted JavaScript SHA256 is
+unchanged from the failing source in each layout. Strict checks with skipLibCheck
+also pass for the exact function extracted from the source, its existing shared
+loadSkills binding and a virtual consumer against actual SDK declarations.
+These checks verify the return contract, skill and diagnostic fields, and a
+negative assignment. They do not check the complete resources module.
+
+The attempted complete-module strict check stops at the excluded legacy package
+manager. Its failed log and five diagnostics are retained. The read guard blocks
+both logical and resolved protected paths before loading their contents. The
+extracted-function check does not replace this failed check or establish that
+the complete module passes. Commands, options, source hashes and raw output are
+recorded in the resource-types task evidence.
+
+Source registration updates one entry, with no additions or retirements. The
+restricted Craft v0.15.6 audit passes for 2032 allowed files. No new permanent
+test is needed for this type annotation. Full Native, complete declarations,
+protected legacy, recovery and F0 through F6 remain open. No installation,
+SDK generation or independent review is repeated for this change.
+
 ## SDK root HTML renderer typing after 0b74761
 
 The patched root exported two distinct ToolHtmlRenderer declarations through

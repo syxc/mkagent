@@ -3741,8 +3741,8 @@
       "reason": "Verify SDK resource defaults directly after deleting redundant Native wrappers; retain legacy directory and documentation assertions."
     },
     "packages/pi-durable-coding/src/resources.ts": {
-      "sha256": "38cc3b2e08c0d8515ab46133463b75d2cfa7a9c8b549b6db836f8b2c164dba20",
-      "reason": "Use SDK canonicalization, containment, equality and BOM functions for resource discovery."
+      "sha256": "5db0d125129807ed7ddde9f8f4118839bd675f505e84c71cf0393843592cbe36",
+      "reason": "Use SDK resource helpers and the published LoadSkillsResult contract for isolated declarations."
     },
     "packages/pi-durable-coding/src/session-view.ts": {
       "sha256": "f975b8a58655badf561eb24a76035a354213e5c27112cd904f9f608d03550b83",

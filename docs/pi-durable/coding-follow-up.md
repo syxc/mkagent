@@ -188,6 +188,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `0b74761` 后消除 SDK 根声明的 ToolHtmlRenderer TS2308：仅显式选择已有 ExportOptions 接口，不复制类型或修改 renderer 算法。两布局同一回归先复现冲突，修复后各 1 项根声明回归与 3 项既有 HTML 测试通过；根声明及消费者定向检查关闭 skipLibCheck，新测试与生成器定向严格检查使用 skipLibCheck。Coding 仍为 94 份输出，仅 index.d.ts 摘要变化，其余 93 份保持，四份内部 HTML JS/声明保持 pristine。来源更新 3 项、新增 1 项，受限 Craft 审计通过 2032 个允许文件，见[HTML 根声明验证](coding-validation.md#sdk-root-html-renderer-typing-after-0b74761)。完整声明、受保护 legacy、恢复及 F0 至 F6 仍开放。
 
+`c2ddabe` 后，discoverCodingSkills 使用 SDK 公开的 LoadSkillsResult，修复两布局复现的隔离声明 TS9007。隔离声明及提取原函数的定向类型检查通过，JavaScript 摘要与修改前相同；完整资源模块检查因受保护 legacy 包管理转发未通过，保留失败证据。来源更新一项，受限 Craft 审计通过 2032 个允许文件，见[资源返回类型验证](coding-validation.md#resource-result-declaration-after-c2ddabe)。完整声明、受保护路径、恢复及 F0 至 F6 仍开放。
+
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 
 | 优先范围 | 下一步与保留条件 |

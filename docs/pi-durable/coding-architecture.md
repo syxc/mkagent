@@ -403,6 +403,8 @@ Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只�
 
 `0b74761` 后，SDK 根声明显式选择 HTML 导出选项已有的 ToolHtmlRenderer，消除两个结构相同接口经星号导出产生的 TS2308。工厂、依赖类型及运行时出口保持，只有 index.d.ts 输出变化，不引入包装或算法副本。两布局各 1 项根声明回归及 3 项既有 HTML 测试通过，根声明和消费者未跳过库检查；新测试与生成器的定向类型检查另使用 skipLibCheck，见[HTML 根声明验证](coding-validation.md#sdk-root-html-renderer-typing-after-0b74761)。上游提供无冲突的等效根契约后撤除此选择；完整声明、受保护 legacy 与恢复仍待验收。
 
+`c2ddabe` 后，discoverCodingSkills 直接引用 SDK 已公开的 LoadSkillsResult 返回类型，消除两布局复现的隔离声明 TS9007，不新增类型副本、包装或 SDK 补丁。两布局隔离声明与提取原函数的定向类型检查通过，生成的 JavaScript 摘要保持；完整资源模块检查仍被受保护 legacy 包管理路径阻断，见[资源返回类型验证](coding-validation.md#resource-result-declaration-after-c2ddabe)。
+
 ## 复现与升级
 
 已确认可共享的包管理、消息、模型、设置、会话、runner、token 及资源算法均已收敛。兼容策略维护在普通源码中；生成接点检查锚点和出现次数，上游结构变化时直接失败。共用类型从原生公开方法派生旧 JavaScript 输入边界，保留数组、基本类型和异步返回推断，不复制方法声明清单。严格消费者回归覆盖宿主消息字段、开放设置、结构化包设置及会话声明。此前 F1/F3 的维护登记未达到删除大规模源码的目标，整体验收现已重新打开。未修改源码的生成检查不证明其必要性；按公开 SDK 的真实覆盖继续替换并删除。

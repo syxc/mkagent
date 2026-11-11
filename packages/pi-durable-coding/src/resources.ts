@@ -2,7 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolveCodingPackages, type CodingPackageOptions } from './packages.ts';
-import { loadProjectContextFiles, dedupePrompts } from '@earendil-works/pi-coding-agent';
+import { loadProjectContextFiles, dedupePrompts, type LoadSkillsResult } from '@earendil-works/pi-coding-agent';
 import { loadSkills, formatSkillsForPrompt, type Skill } from './upstream/core/skills.ts';
 import { loadPromptTemplates, type PromptTemplate } from './upstream/core/prompt-templates.ts';
 import { createSourceInfo, type SourceInfo } from '@earendil-works/pi-coding-agent';
@@ -30,7 +30,7 @@ export interface CodingResources {
 
 export function discoverCodingSkills(options: {
   cwd: string; agentDir: string; skillPaths?: string[]; includeDefaults?: boolean;
-}) {
+}): LoadSkillsResult {
   return loadSkills({ ...options, skillPaths: options.skillPaths ?? [], includeDefaults: options.includeDefaults ?? true });
 }
 
