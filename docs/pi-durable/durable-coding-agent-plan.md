@@ -132,7 +132,9 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `c2ddabe` 后，discoverCodingSkills 使用 SDK 公开的 LoadSkillsResult，修复隔离声明 TS9007。两布局声明输出及原函数的定向类型检查通过，JavaScript 摘要保持；完整资源模块检查因受保护 legacy 转发未通过。来源仅更新一项，受限 Craft 审计通过 2032 个允许文件，见[资源返回类型验证](coding-validation.md#resource-result-declaration-after-c2ddabe)。完整入口、声明、恢复及 F0 至 F6 继续开放。
 
-`3058b9e` 后直接使用 SDK 已公开的两个插件工具包装函数，删除 29 行本地副本，生成器不再带回该实现。两布局各 5 项测试、定向严格类型与完整 runtime 生成检查通过；运行时清单为 10 份 TypeScript，其中 src/pi 为 6 份，四份生成门面另计，资源为 0。来源更新 3 项、退役 1 项、新增 1 项，受限 Craft 审计通过 2032 个允许文件。全新冻结安装两次失败，完整入口、声明、恢复及 F0 至 F6 保持开放，见[插件工具包装验证](coding-validation.md#sdk-extension-tool-wrappers-after-3058b9e)。
+`3058b9e` 后直接使用 SDK 已公开的两个插件工具包装函数，删除 29 行本地副本，生成器不再带回该实现。两布局各 5 项测试、定向严格类型与完整 runtime 生成检查通过；运行时清单为 10 份 TypeScript，其中 src/pi 为 6 份，四份生成门面另计，资源为 0。来源更新 3 项、退役 1 项、新增 1 项，受限 Craft 审计通过 2032 个允许文件。该切片时全新冻结安装两次失败，完整入口、声明、恢复及 F0 至 F6 保持开放，见[插件工具包装验证](coding-validation.md#sdk-extension-tool-wrappers-after-3058b9e)。
+
+`c612ed9` 后第三次全新冻结安装通过，16 个输入保持，11 个 workspace 的 20 条内部依赖链接及 Coding 94、durable 33、core 4 共 131 份补丁输出摘要均核验通过。两现有布局的包装声明已定向刷新，旧 wrapper.d.ts 已移除，所选声明分支的严格消费者通过。该结果不包含 fresh 工程完整 Native、构建、声明或恢复，也无新增独立复核；F0 至 F6 继续开放，见[安装与声明验证](coding-validation.md#fresh-frozen-installation-and-wrapper-declarations-after-c612ed9)。
 
 ## 目标与名称
 

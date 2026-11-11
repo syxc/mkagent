@@ -407,6 +407,8 @@ Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只�
 
 `3058b9e` 后，插件工具包装直接使用 SDK 已公开的 wrapRegisteredTool 和 wrapRegisteredTools。生成器在遍历依赖前路由至 SDK，29 行本地副本已删除，不增加运行时适配或 SDK 补丁。运行时生成清单为 10 份 TypeScript，其中 src/pi 为 6 份，四份生成门面另计；两布局完整 runtime 生成检查、各 5 项测试与定向严格类型检查通过，见[插件工具包装验证](coding-validation.md#sdk-extension-tool-wrappers-after-3058b9e)。完整 Native、声明和恢复仍开放。
 
+`c612ed9` 后第三次全新冻结安装通过，16 个输入保持，11 个 workspace 的 20 条内部依赖链接和三包共 131 份补丁输出摘要均核验通过。两现有布局的包装声明已按真实源码定向刷新，旧 wrapper.d.ts 已移除，所选声明分支的严格消费者通过。本次未运行 fresh 工程完整 Native、构建、完整声明或恢复，也无新增独立复核；范围与失败修正见[安装与声明验证](coding-validation.md#fresh-frozen-installation-and-wrapper-declarations-after-c612ed9)。
+
 ## 复现与升级
 
 已确认可共享的包管理、消息、模型、设置、会话、runner、token 及资源算法均已收敛。兼容策略维护在普通源码中；生成接点检查锚点和出现次数，上游结构变化时直接失败。共用类型从原生公开方法派生旧 JavaScript 输入边界，保留数组、基本类型和异步返回推断，不复制方法声明清单。严格消费者回归覆盖宿主消息字段、开放设置、结构化包设置及会话声明。此前 F1/F3 的维护登记未达到删除大规模源码的目标，整体验收现已重新打开。未修改源码的生成检查不证明其必要性；按公开 SDK 的真实覆盖继续替换并删除。

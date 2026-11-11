@@ -61,6 +61,49 @@ with ConnectionRefused and FailedToOpenSocket. All 16 manifest, lock and patch
 inputs remain unchanged. These attempts do not verify a fresh installation.
 Full Native, complete declarations, recovery and F0 through F6 remain open.
 
+## Fresh frozen installation and wrapper declarations after c612ed9
+
+The third installation attempt passes with Bun 1.3.14. A curl probe in the
+second sandbox had failed to resolve registry.npmjs.org. The third sandbox adds
+the system resolver socket at /private/var/run/mDNSResponder. Public HTTPS
+probes then pass. Network access is limited by port, not by a domain allowlist.
+The retry uses a new project directory, HOME, cache and temporary directory.
+It inherits no real proxy or authentication environment. Installation uses
+--frozen-lockfile, --ignore-scripts and --linker=isolated, with integrity checks
+retained. It exits with code 0 after 59.92 seconds and installs 2824 packages.
+
+All 16 manifest, lock and patch inputs match both the recorded inputs at
+3058b9e and the source tree at c612ed9. They include 12 manifests for the root
+and 11 workspaces. The verifier initially requires every workspace link under
+root node_modules and fails. Bun's isolated layout places workspace dependency
+links under each importing workspace. After correcting only that verifier,
+all 20 declared workspace dependency links resolve to their expected targets.
+The installation is not repeated. The installed Coding, durable and core
+packages are version 1.5.0. Their 94, 33 and four patched output hashes all
+match the expected records, for 131 outputs in total.
+
+The root and existing hoisted layouts also receive a targeted declaration
+refresh from their actual extension barrel sources. TypeScript 5.9.3 reports
+no isolated declaration diagnostics. Each index.d.ts changes only the wrapper
+export from the deleted local module to the public Coding SDK. Both obsolete
+wrapper.d.ts files are moved to Trash after their hashes are checked; copies
+of these pre-existing generated files are retained in the task evidence.
+
+Consumers check the two wrapper exports selected from each actual updated
+index.d.ts. The compiler host projects only that export declaration, while
+other reads use real declarations with protected-path checks. Each layout
+passes strict checks with skipLibCheck, two exports and two negative cases,
+with zero diagnostics. The first consumer attempt completes the root check
+but stops at an incorrect workspace-local SDK path in the hoisted layout.
+After selecting its root node_modules SDK path, both consumers pass.
+
+The install and declaration task records preserve commands, options, input
+hashes, output hashes and verification results. These checks do not run the
+complete Native entry point, build, declaration build or recovery in the fresh
+project. The declaration projection does not establish that the full barrel
+passes. No new independent review is performed for these checks. Full Native,
+complete declarations, recovery and F0 through F6 remain open.
+
 ## Resource result declaration after c2ddabe
 
 The exported discoverCodingSkills function had no return annotation. In both
