@@ -17,7 +17,8 @@ export async function loadPhoton(): Promise<Photon | null> {
       try {
         wasmPath = createRequire(import.meta.url).resolve('@silvia-odwyer/photon/photon_rs_bg.wasm');
       } catch (error) {
-        if (!(error instanceof Error) || !('code' in error) || error.code !== 'MODULE_NOT_FOUND') throw error;
+        // Bun's ResolveMessage carries a code without extending Error.
+        if (typeof error !== 'object' || error === null || !('code' in error) || error.code !== 'MODULE_NOT_FOUND') throw error;
       }
     }
     // Installed assets and relocated bundles never search the caller's project.

@@ -975,8 +975,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "6bb15cd6226ad0f35658f989bced087e714dda92833223a49690f464b52d8003",
-      "reason": "Remove only the Coding workspace direct quickjs-wasi dependency; retain the official SDK transitive runtime dependency."
+      "sha256": "3a715fc0d8a4dfa22bd33a4b59a4bf6328ef1a7c184d6e6cd8229d1f0b7b4adb",
+      "reason": "Declare the server build's existing Coding SDK 1.5.0 dependency; retain all resolved package versions and the SDK transitive QuickJS dependency."
     },
     "package.json": {
       "sha256": "868c3042d38e0ec2084d6bc0926a4966c4ec2c5ad02c2f43e0e371c05f01bfed",
@@ -1015,8 +1015,8 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "packages/pi-agent-server/package.json": {
-      "sha256": "4ba6be11994befdeb78636cff0674c04055117a2e5f854bab04c23f41ca1c4f9",
-      "reason": "Declare the shared workspace already imported by the kernel; retain existing external dependency versions."
+      "sha256": "9c7d2a8ebece5b9ee74856f3fbd5945525aa22ec970473090fe2b37eebff9422",
+      "reason": "Declare the Coding SDK used directly by the build script as a pinned development dependency; keep the existing shared workspace and runtime dependencies."
     },
     "packages/pi-agent-server/src/adapt-credential.test.ts": {
       "sha256": "d1333c4dba8dc86ef234d5f0a69cc0b47d79d5242f6a50671d008f2023b64216",
@@ -2337,16 +2337,16 @@
       "reason": "Allow Read for the specific theme color source in project settings; higher-priority deny rules remain effective."
     },
     "packages/pi-durable-coding/src/compat/photon.ts": {
-      "sha256": "c67028622c6735c78fc9f4dcc3b39c4b44168a6de0df7bc077096f16cff67e44",
-      "reason": "Initialize the shared public Photon module from installed or adjacent assets without replacing global file reads or searching the project directory."
+      "sha256": "faaaabcc0f49e06072e0c3a4673415fd4f1c274c7bb97a9cb2dd97339af3bf5d",
+      "reason": "Initialize the shared public Photon module from installed or adjacent assets; recognize Bun ResolveMessage without relying on Error inheritance and never search the caller's project."
     },
     "packages/pi-durable-coding/test/shared-photon.test.ts": {
       "sha256": "d50202e48ca3db8f2c87996497967abb94173aa16a16f4177eb142f8a9651052",
       "reason": "Verify shared Photon conversion without the retired generated Photon forward."
     },
     "packages/pi-durable-coding/test/shared-photon-bundle.test.ts": {
-      "sha256": "2fa554cd7dfc4b1ba304cbea0d58c0725227534dab2abc0328539e44f6c095b8",
-      "reason": "Exercise relocated Node and Bun compiled image entry points with one WASM, invalid project assets and missing adjacent resources."
+      "sha256": "aba572d7e4e1c47458baf47bc03aca185ef87030bdb4326d2a1adb2e61f471e6",
+      "reason": "Exercise relocated Node ESM, Bun ESM and Bun compiled image entry points with one WASM, invalid project assets and missing adjacent resources."
     },
     "packages/pi-durable-coding/test/fixtures/shared-photon-probe.ts": {
       "sha256": "01e9af81186322cf017f2d001a6b6f4de77d475648a4791b00ecb2dbfc3dd340",

@@ -261,6 +261,58 @@ generation are not repeated. The fresh source snapshot does not yet contain
 this repair. Full declarations, protected legacy, the isolated worker failure,
 remaining source replacement and F0 through F6 remain open.
 
+## Isolated worker and relocated Photon after 6ab2055
+
+The server now declares its direct build import of
+@earendil-works/pi-coding-agent@1.5.0 as a development dependency. The lock file
+adds the same workspace dependency without changing resolved package versions.
+The build script continues to use the public SDK. No manual alias is added.
+
+The existing isolated project and cache receive a frozen refresh with install
+scripts disabled. Two fully offline attempts fail because Bun still requests
+package metadata. The third attempt uses the public HTTPS registry and passes
+in 3.08 seconds. All 16 installation inputs and 131 existing SDK patch outputs
+remain unchanged during the refresh. This is not another fresh installation.
+The source snapshot receives engine.ts and tool-task.ts from 6ab2055; it does
+not receive or rerun that commit's complete seven-file regression suite.
+
+The first bundle run builds successfully but reaches the 180-second process
+limit. Its network-denying sandbox prevents local server startup. A revised
+test sandbox permits random loopback ports while it still denies external
+network access and the real port 9100. A local probe passes. The bundle suite
+then completes with 25 passes and one Native image relocation failure.
+
+That image failure is a host adapter defect. Bun 1.3.14 throws a ResolveMessage
+with code MODULE_NOT_FOUND that does not extend Error. The Photon loader
+previously rejected this value instead of trying the adjacent WASM file. The
+loader now checks the error object's code and keeps other errors on the existing
+failure path. It still uses one shared Photon module and never searches the
+caller's project for assets. No SDK algorithm, patch output or task version
+changes.
+
+The existing relocation regression now covers Node ESM, Bun ESM and a compiled
+Bun binary, including invalid project assets and a missing adjacent WASM file.
+The new Bun ESM case fails against the unchanged loader. After the repair, the
+isolated project passes 55 tests across five files, with 151 Bun assertions and
+zero failures in 25.88 seconds: shared-photon-bundle.test.ts,
+shared-photon.test.ts, host-image-convert-sdk.test.ts,
+native-image-resize.test.ts and bundle-smoke.test.ts. All 26 worker bundle cases
+pass, including Native prompt images, read images, relocated HTML, cancellation
+and runtime updates. The source snapshot also receives the corrected Photon
+loader and the required image tests and fixtures. Tests use task-owned
+configuration, synthetic
+credentials and deterministic local providers. No real account or paid model
+is used.
+
+Independent static review of the manifest, lock, loader and regression, with
+the build script and image probe, finds no confirmed introduced defect. It does
+not rerun tests or inspect the rest of the repository. Source registration
+updates four entries. The restricted Craft v0.15.6 audit passes for 2033 allowed
+files and excludes protected legacy and sensitive paths. This is not a complete
+source audit or full type check. No type check is rerun for this slice. Full
+declarations, protected legacy, remaining adapters, product recovery acceptance
+and F0 through F6 remain open.
+
 ## Resource result declaration after c2ddabe
 
 The exported discoverCodingSkills function had no return annotation. In both

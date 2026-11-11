@@ -22,14 +22,14 @@ test('relocated Node and Bun binaries use one installed image asset', { timeout:
     mkdirSync(bundle);
     writeFileSync(join(project, 'photon_rs_bg.wasm'), 'Project assets must never load');
     copyFileSync(wasm, join(bundle, 'photon_rs_bg.wasm'));
-    for (const mode of ['node', 'bun'] as const) {
-      const output = join(bundle, mode === 'node' ? 'probe.mjs' : 'probe');
+    for (const mode of ['node', 'bun-script', 'bun'] as const) {
+      const output = join(bundle, mode === 'bun' ? 'probe' : `probe-${mode}.mjs`);
       execFileSync('bun', [
         'build', '--no-env-file', fixture, '--outfile=' + output,
-        ...(mode === 'node' ? ['--target=node', '--format=esm'] : ['--compile']),
+        ...(mode === 'bun' ? ['--compile'] : [`--target=${mode === 'node' ? 'node' : 'bun'}`, '--format=esm']),
       ], { cwd: root, timeout: 30_000, stdio: 'pipe' });
-      const command = mode === 'node' ? 'node' : output;
-      const args = mode === 'node' ? [output] : [];
+      const command = mode === 'node' ? 'node' : mode === 'bun-script' ? 'bun' : output;
+      const args = mode === 'bun' ? [] : [output];
       const result = execFileSync(command, args, { cwd: project, timeout: 10_000, encoding: 'utf8' });
       assert.deepEqual(JSON.parse(result), expected, mode);
       rmSync(join(bundle, 'photon_rs_bg.wasm'));
