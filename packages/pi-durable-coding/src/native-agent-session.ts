@@ -138,19 +138,10 @@ export class AgentSession extends SDKAgentSession {
   }
 
   setBaseTools(tools: Record<string,AgentTool>): void {
-    const previous=new Set(this._baseToolDefinitions.keys());
-    const active=this.getActiveToolNames();
     this._baseToolsOverride=tools;
     this._baseToolDefinitions=new Map(Object.values(tools).map(tool =>
       [tool.name,createToolDefinitionFromAgentTool(tool)]));
-    const added=[...this._baseToolDefinitions].filter(([name,definition]) =>
-      !previous.has(name)&&definition.defaultActive!==false&&
-      (definition.exposure===undefined||definition.exposure==="direct"||definition.exposure==="model-only"))
-      .map(([name]) => name);
-    this._refreshToolRegistry({
-      activeToolNames: [...new Set([...active,
-      ...added])]
-    });
+    this._refreshToolRegistry();
   }
 
   exportDurableState(): DurableSessionState {

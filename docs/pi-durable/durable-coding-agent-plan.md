@@ -144,6 +144,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `6ab2055` 后补齐 server 构建的 Coding SDK 开发依赖，并修正 Bun MODULE_NOT_FOUND 异常不继承 Error 时的 Photon 邻接 WASM 回退。既有 isolated 工程冻结刷新通过，16 个安装输入和 131 份补丁输出保持，不是再次全新安装。搬迁回归新增普通 Bun bundle 模式，修复前失败；修复后五文件 55 项、151 个 Bun 断言通过，包含全部 26 项 worker bundle 用例。独立静态复核未确认新增缺陷，四项来源及受限 Craft 2033 文件审计通过；未改 SDK 补丁或持久版本，未重跑类型检查。完整声明、受保护 legacy、剩余适配、产品恢复及 F0 至 F6 继续开放，见[isolated worker 与图片验证](coding-validation.md#isolated-worker-and-relocated-photon-after-6ab2055)。
 
+`5f2f1e0` 后，setBaseTools() 删除净九行重复激活逻辑，宿主工具定义更新后交由 SDK 维护激活规则。新增产品回归在修复前失败；catalog、AgentSession 和 host 三文件共 23 项通过。认证覆写经反事实核验，仅有普通插件选择通过不能证明可删；宿主集合替换后现有产品回归返回 false，故保留异步补查并明确 SDK 退出条件。生产源码定向 strict 检查零诊断，使用 skipLibCheck；独立静态复核未确认新增缺陷，两项来源及受限 Craft 2033 文件审计通过。未改依赖、SDK 补丁或持久版本，未重新安装或构建 worker；完整声明、受保护 legacy、其余适配及 F0 至 F6 继续开放，见[工具激活与认证边界验证](coding-validation.md#sdk-tool-activation-and-host-auth-boundary-after-5f2f1e0)。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

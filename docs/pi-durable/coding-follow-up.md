@@ -36,6 +36,8 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 `6ab2055` 后补齐 server 构建直接使用的 Coding SDK 开发依赖，固定 1.5.0，不改已解析版本。既有 isolated 工程冻结刷新用时 3.08 秒，16 个安装输入及 131 份 SDK 补丁输出保持；这不是再次全新安装。实际 bundle 运行发现 Bun 的 MODULE_NOT_FOUND 异常不继承 Error，现修正 Photon 邻接资源回退，并把普通 Bun bundle 加入既有搬迁回归。修复前新用例失败，修复后五文件 55 项、151 个 Bun 断言通过，包含全部 26 项 worker bundle 用例。独立静态复核未确认新增缺陷，四项来源及受限 Craft 2033 文件审计通过。本批未重跑类型检查，完整声明、受保护 legacy、剩余适配、产品恢复及 F0 至 F6 继续开放，见[isolated worker 与图片验证](coding-validation.md#isolated-worker-and-relocated-photon-after-6ab2055)。
 
+`5f2f1e0` 后，setBaseTools() 删除净九行重复激活逻辑，宿主定义更新后直接调用 SDK 刷新。新增产品回归先复现隐藏工具转为直接工具后未激活，再验证修复；catalog、AgentSession 和 host 三文件共 23 项通过。认证覆写的反事实检查表明，普通插件选择无需补查，但宿主模型集合替换后现有回归仍需异步认证检查，故保留该窄适配并明确退出条件。生产源码定向 strict 检查零诊断，使用 skipLibCheck；独立静态复核未确认新增缺陷，两项来源及受限 Craft 2033 文件审计通过。无安装、SDK 补丁或持久版本变化，未重建 worker；其余适配、完整声明和 F0 至 F6 继续开放，失败及范围见[工具激活与认证边界验证](coding-validation.md#sdk-tool-activation-and-host-auth-boundary-after-5f2f1e0)。
+
 ## F1 架构与依赖清点
 
 先核对切换前 MkAgent 如何使用 Coding SDK 及必须保留的行为，再检查当前生产调用和 SDK 能力。记录所需行为、实际调用方、发布 API、仓内补丁、缺口及下一步；SDK 执行器接入是否可行须有证据，不能从当前源码目录反推需求。原始 `b77c4a2645d3` 的 1.1.0 依赖仅供行为和接入对照，当前 SDK 候选继续用固定 Pi 1.5.0。

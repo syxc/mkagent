@@ -3861,8 +3861,8 @@
       "reason": "Preserve prior durable compatibility exports and expose its existing codemode source, declarations, Node sandbox and worker dependency without copying implementation."
     },
     "packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts": {
-      "sha256": "ee864d6fee7ac95fc1ce126e0784733ce1891e600b47481ddcb5d73bc3fa0ce4",
-      "reason": "Verify host catalog updates retain independent and Native-owned tools, preserve exposure policies and hide internal dispatch from both session and plugin catalogs before updates, after updates and after reload."
+      "sha256": "d9ea0e76e240c1e4f6a2665705274b8e420261c7c20f5525076b050a81470525",
+      "reason": "Verify host catalog updates retain independent and Native-owned tools, preserve exposure policies and hide internal dispatch; cover SDK activation after exposure changes while retaining explicit deselection and verify actual provider tool declarations."
     },
     "packages/pi-agent-server/src/coding-host-handoff.e2e.test.ts": {
       "sha256": "9a4491e102171f84b710c141ebd8f88399bad860e392c1acaebd1198c466204c",
@@ -4401,8 +4401,8 @@
       "reason": "Preserve tool execution ownership symbol descriptors and declaration metadata through the published SDK tool conversions without a product module dependency."
     },
     "packages/pi-durable-coding/src/native-agent-session.ts": {
-      "sha256": "16709dd34a4a8c46ebad2c47b0f99462344bf2908dfcebefc14ffb2f71cacd38",
-      "reason": "Bind existing Native tool and shell factories to SDK session defaults; retain durable state, input, conversion, image and persistence bindings."
+      "sha256": "831cde190e1818a6134175598583dcfc0b701d2406b82c6f08aff6db74c63fff",
+      "reason": "Bind Native factories, durable state, inputs, conversion, images and persistence to the SDK lifecycle; delegate base-tool activation to SDK refresh and retain the host-auth fallback after model collection replacement."
     },
     "packages/pi-durable-coding/test/host-agent-session.test.ts": {
       "sha256": "e2ff7e7cdd572f61074b1b76e38e77ae1b7cf55f8cfda833416487e7408cd903",

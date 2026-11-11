@@ -313,6 +313,48 @@ source audit or full type check. No type check is rerun for this slice. Full
 declarations, protected legacy, remaining adapters, product recovery acceptance
 and F0 through F6 remain open.
 
+## SDK tool activation and host auth boundary after 5f2f1e0
+
+The Native setBaseTools adapter now replaces the host definitions and calls the
+SDK's existing tool registry refresh without an explicit active-name list. It
+removes nine net lines of repeated activation policy. The SDK keeps explicit
+deselection and applies its registration rules when a hidden tool becomes
+direct. The new host regression checks both the session's active names and the
+next provider request. It fails against the previous adapter because the
+promoted tool is absent, then passes after delegation to the SDK.
+
+The existing isolated project passes all seven catalog tests, including tool
+search and extension and virtual model restoration. Ten AgentSession tests
+also pass. The first combined host run has two failures because its snapshot
+lacks the official hello.ts plugin fixture. After adding only that fixture,
+all six host tests pass, including real host approval and model collection
+replacement. The three files provide 23 passing tests. The initial failures
+remain in the receipts. An earlier attempt to run another session test stops
+before execution because that test file is absent; it adds no test result.
+
+A separate experiment removes only the Native _canSelectModel override in the
+task snapshot. Ordinary extension model selection, reload and reopen still
+pass. The existing host replacement test fails: after replacement, pi.setModel
+returns false. The SDK invalidates its auth snapshot and refreshes it
+asynchronously, so this host path still needs the existing asynchronous auth
+check. The experiment restores the source. The override and its SDK hook
+remain unchanged. Its removal condition is an equivalent SDK auth refresh
+before selection. A published base-tool update API would remove the other
+adapter's protected-field dependency.
+
+The changed production source passes a strict TypeScript check with zero
+diagnostics across 1792 source files. It uses skipLibCheck and rejects protected
+logical and real paths; no protected path is requested. This is not full
+declaration acceptance. Independent static review of the two changed files,
+the host caller and relevant SDK refresh logic finds no confirmed introduced
+defect. It does not run tests or inspect unrelated code.
+
+Source registration updates two entries. The restricted Craft v0.15.6 audit
+passes for 2033 allowed files. No dependency, lock file, SDK patch, generated
+output or persisted task version changes. No installation or worker rebuild
+is repeated. Full declarations, protected legacy, remaining adapters, product
+recovery acceptance and F0 through F6 remain open.
+
 ## Resource result declaration after c2ddabe
 
 The exported discoverCodingSkills function had no return annotation. In both

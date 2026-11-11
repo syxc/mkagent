@@ -120,6 +120,23 @@ test('new host tools use their exposure and default-active policy after a catalo
     .toEqual(['deferred', 'direct', 'hidden', 'inactive', 'model_deferred', 'model_only', 'scripts']);
 });
 
+test('host catalog updates use SDK activation rules and retain explicit deselection', async () => {
+  const state = await fixture();
+  state.options.toolsExtension = defineExtension({ name: 'host', tools: [
+    tool('kept'), tool('disabled'), tool('promoted', { callers: [] }),
+  ] });
+  const kernel = await state.open();
+  coding(kernel).session.setActiveToolsByName(['kept']);
+  kernel.updateTools(defineExtension({ name: 'host', tools: [
+    tool('kept'), tool('disabled'), tool('promoted'), tool('new_tool'),
+  ] }));
+  expect(coding(kernel).session.getActiveToolNames().sort()).toEqual(['kept', 'new_tool', 'promoted']);
+  await kernel.submitPrompt('after');
+  await kernel.waitForIdle();
+  expect(getCurrentTools(state.calls[0].messages).map(tool => tool.name).sort())
+    .toEqual(['kept', 'new_tool', 'promoted']);
+});
+
 test('official durable tool search activates deferred tools on the next request and after reopen', async () => {
   const state = await fixture('', [{
     ...response(''), stopReason: 'toolUse',
