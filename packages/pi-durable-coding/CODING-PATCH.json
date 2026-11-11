@@ -103,7 +103,7 @@
     {
       "path": "dist/utils/image-convert.js",
       "originalSha256": "12387e0f5d6575e8037556b9703cdac7eee61584d7e1788bc6e24310612b8799",
-      "sha256": "3341161b840c185f848ef633d98d2dbcbd935435434ffaa8028dea7bd62426bf"
+      "sha256": "fcb76b5fd4af1c06cb9515a983cb8c994b1942ec2c853e494f2669f0d99d91b8"
     },
     {
       "path": "dist/utils/image-convert.d.ts",

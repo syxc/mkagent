@@ -56,6 +56,25 @@ test('SDK encoders retain the host orientation result and release both image own
   assert.deepEqual(freed, ['raw', 'upright']);
 });
 
+test('SDK encoders release the decoded image when orientation fails', async () => {
+  let decoded = 0, freed = 0;
+  const images = createImageConverters({
+    loadPhoton: async () => ({ PhotonImage: { new_from_byteslice() {
+      decoded++;
+      return { free() { freed++; } };
+    } } }) as any,
+    applyExifOrientation() { throw new Error('orientation failed'); },
+  });
+  assert.equal(await images.convertImageBytesToPng(new Uint8Array([1])), null);
+  assert.equal(decoded, 1);
+  assert.equal(freed, 1);
+  const transcode = await images.loadPngTranscoder();
+  assert.ok(transcode);
+  assert.equal(transcode('AQ=='), null);
+  assert.equal(decoded, 2);
+  assert.equal(freed, 2);
+});
+
 test('SDK registration coalesces per instance and skips later callbacks', async () => {
   setCapabilities({ images: 'kitty', trueColor: true, hyperlinks: false });
   setImageTranscoder(undefined);

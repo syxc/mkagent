@@ -120,6 +120,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `965df73` 后补齐 SDK AgentSession 默认工具与交互 Bash 的 Native 工厂接线。两个可选实例工厂保留 SDK 默认行为、显式覆盖优先级和原生命周期算法，不复制会话或执行算法。两现有布局各 5 项测试、36 个断言及实际声明定向 strict/skipLibCheck 检查通过，独立静态复核未确认缺陷。来源更新 4 项、新增 1 项，受限 Craft 审计通过 2027 个允许文件；92 份 Coding 输出中仅两份 AgentSession 输出改变。没有重新安装，完整 Native、全量声明、恢复集成及真实进程树取消仍未验证，见[会话工具接线验证](coding-validation.md#sdk-session-tool-bindings-after-965df73)。剩余职责核对及 F0 至 F6 继续开放，全部完成后再统一推送。
 
+`b124a40` 后补齐方向回调抛错时的 Photon 原图释放。两布局各 6 项转换测试通过，普通转换和同步 Kitty transcoder 均覆盖；只改变一份既有 SDK 输出，未复制转换算法。其他已记录问题与整体验收继续开放，见[图像释放验证](coding-validation.md#image-orientation-failure-cleanup-after-b124a40)。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

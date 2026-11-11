@@ -1,4 +1,4 @@
-# Content SHA-256: 9ef658c9637d0e95bfa5b21016e3f3be698b5d3ec06f7fa8bf084539bef72911
+# Content SHA-256: 43362a58fd2f36cc058bcae4b2f0ae7ed45d08aaadf83fbcef77a7e4053bab64
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -944,7 +944,7 @@ diff --git a/dist/core/prompt-templates.d.ts b/dist/core/prompt-templates.d.ts
 diff --git a/dist/utils/image-convert.js b/dist/utils/image-convert.js
 --- a/dist/utils/image-convert.js
 +++ b/dist/utils/image-convert.js
-@@ -1,6 +1,7 @@
+@@ -1,10 +1,18 @@
  import { getCapabilities, setImageTranscoder } from "@earendil-works/pi-tui";
 -import { applyExifOrientation } from "./exif-orientation.js";
 -import { loadPhoton } from "./photon.js";
@@ -954,7 +954,19 @@ diff --git a/dist/utils/image-convert.js b/dist/utils/image-convert.js
  function encodePng(photon, bytes) {
      try {
          const rawImage = photon.PhotonImage.new_from_byteslice(bytes);
-@@ -19,7 +20,7 @@ function encodePng(photon, bytes) {
+-        const image = applyExifOrientation(photon, rawImage, bytes);
++        let image;
++        try {
++            image = applyExifOrientation(photon, rawImage, bytes);
++        }
++        catch (error) {
++            rawImage.free();
++            throw error;
++        }
+         if (image !== rawImage)
+             rawImage.free();
+         try {
+@@ -19,7 +27,7 @@ function encodePng(photon, bytes) {
          return null;
      }
  }
@@ -963,7 +975,7 @@ diff --git a/dist/utils/image-convert.js b/dist/utils/image-convert.js
      const photon = await loadPhoton();
      if (!photon) {
          // Photon not available, can't convert
-@@ -31,7 +32,7 @@ export async function convertImageBytesToPng(bytes) {
+@@ -31,7 +39,7 @@ export async function convertImageBytesToPng(bytes) {
   * Convert image to PNG format for terminal display.
   * Kitty graphics protocol requires PNG format (f=100).
   */
@@ -972,7 +984,7 @@ diff --git a/dist/utils/image-convert.js b/dist/utils/image-convert.js
      // Already PNG, no conversion needed
      if (mimeType === "image/png") {
          return { data: base64Data, mimeType };
-@@ -50,7 +51,7 @@ export async function convertToPng(base64Data, mimeType) {
+@@ -50,7 +58,7 @@ export async function convertToPng(base64Data, mimeType) {
   * Load photon and return a synchronous PNG transcoder for pi-tui's Kitty image rendering.
   * Returns undefined if photon cannot be loaded.
   */
@@ -981,7 +993,7 @@ diff --git a/dist/utils/image-convert.js b/dist/utils/image-convert.js
      const photon = await loadPhoton();
      if (!photon)
          return undefined;
-@@ -66,7 +67,7 @@ let pngTranscoderRegistered = false;
+@@ -66,7 +74,7 @@ let pngTranscoderRegistered = false;
   * Loads photon once. `onRegistered` runs after registration so callers can re-render images that
   * showed text fallbacks; it is not called if the transcoder was already registered or cannot load.
   */
@@ -990,7 +1002,7 @@ diff --git a/dist/utils/image-convert.js b/dist/utils/image-convert.js
      if (pngTranscoderRegistered || getCapabilities().images !== "kitty")
          return;
      pngTranscoderLoad ??= loadPngTranscoder().then((transcoder) => {
-@@ -81,4 +82,7 @@ export function ensurePngTranscoder(onRegistered) {
+@@ -81,4 +89,7 @@ export function ensurePngTranscoder(onRegistered) {
              onRegistered();
      });
  }

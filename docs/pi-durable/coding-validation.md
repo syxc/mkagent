@@ -26,6 +26,37 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Image orientation failure cleanup after b124a40
+
+The SDK decoded a Photon image before calling applyExifOrientation, but did not
+release that image if the callback threw. The existing image policy now releases
+the decoded image on this failure path and rethrows into the SDK's existing null
+fallback. The successful conversion, encoding cleanup and registration paths
+stay unchanged. Remove this fix when upstream releases the decoded image on an
+orientation failure.
+
+The added regression first failed against the previous output: five tests
+passed and the new cleanup test failed. After the fix, both existing root and
+hoisted layouts pass all six image-converter tests. The regression checks exact
+release counts through asynchronous byte conversion and the synchronous Kitty
+transcoder. Existing tests retain successful conversion, dual-image release,
+encoding failure, loader errors and registration behavior. Guarded build checks
+report zero protected loads in both layouts.
+
+Patch generation, check and pristine replay pass for all 92 Coding outputs.
+Only image-convert.js changes; the other 91 output hashes remain unchanged.
+No declaration changes, fresh install, full Native import or recovery checks
+are included. The runtime inventory and the total 129 physical patch outputs
+remain unchanged. The other recorded stream, long OSC, AuthContext and
+ToolHtmlRenderer issues and F0 through F6 remain open. Source registration
+updates four entries without additions or removals. The restricted Craft
+v0.15.6 audit passes for 2027 allowed files; legacy and sensitive paths are
+excluded. Independent static review verified all seventeen frozen inputs and
+found no confirmed introduced defect. It replayed the changed patch section
+in memory against the baseline and matched both installed outputs. The
+exception regression uses mocks; real Photon/EXIF exception ownership was not
+exercised.
+
 ## SDK session tool bindings after 965df73
 
 AgentSession now accepts two optional instance factories: createAllToolDefinitions

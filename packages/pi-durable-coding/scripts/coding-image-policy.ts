@@ -18,6 +18,15 @@ export function codingImagePolicy(source: string, declarations: boolean): string
   }
   edit('import { loadPhoton }', 'import { loadPhoton as defaultLoadPhoton }');
   edit('import { applyExifOrientation }', 'import { applyExifOrientation as defaultApplyExifOrientation }');
+  edit('        const image = applyExifOrientation(photon, rawImage, bytes);',
+    '        let image;\n'
+    + '        try {\n'
+    + '            image = applyExifOrientation(photon, rawImage, bytes);\n'
+    + '        }\n'
+    + '        catch (error) {\n'
+    + '            rawImage.free();\n'
+    + '            throw error;\n'
+    + '        }');
   edit('function encodePng(photon, bytes) {',
     'export function createImageConverters({ loadPhoton = defaultLoadPhoton, applyExifOrientation = defaultApplyExifOrientation } = {}) {\n'
     + 'function encodePng(photon, bytes) {');

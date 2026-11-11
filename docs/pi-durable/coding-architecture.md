@@ -393,6 +393,8 @@ Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只�
 
 `965df73` 后，SDK AgentSession 通过可选 createAllToolDefinitions 和 createLocalBashOperations 实例接点调用 Native 已有工厂。构造期间先绑定依赖，再进入 SDK 原 _buildRuntime；reload 使用同一绑定。baseToolsOverride 和逐次 operations 继续优先。CodingHost 原本已注入基本工具，这次补齐默认会话和交互 executeBash 的宿主工厂路径，不复制工具装配、进程执行或会话生命周期算法。上游公开等效实例接点后撤除这两个补丁。两布局各 5 项测试、36 个断言及实际声明定向类型检查通过，独立静态复核未确认缺陷；完整入口、声明、恢复及真实进程树取消仍未验证，见[会话工具接线验证](coding-validation.md#sdk-session-tool-bindings-after-965df73)。Coding 92 份、总数 129 份输出及 runtime 11 份清单保持，来源更新 4 项、新增 1 项，受限 Craft 审计通过 2027 个允许文件。剩余职责及 F0 至 F6 继续开放。
 
+`b124a40` 后，现有 image policy 仅补齐 SDK 在 EXIF 回调抛错时的原图释放，再进入原 null 回退；成功转换、编码释放和注册仍用 SDK。两布局各 6 项测试通过，见[图像释放验证](coding-validation.md#image-orientation-failure-cleanup-after-b124a40)。上游修复相同失败路径后撤除此修复，实例依赖工厂另按公开 API 缺口判断。
+
 ## 复现与升级
 
 已确认可共享的包管理、消息、模型、设置、会话、runner、token 及资源算法均已收敛。兼容策略维护在普通源码中；生成接点检查锚点和出现次数，上游结构变化时直接失败。共用类型从原生公开方法派生旧 JavaScript 输入边界，保留数组、基本类型和异步返回推断，不复制方法声明清单。严格消费者回归覆盖宿主消息字段、开放设置、结构化包设置及会话声明。此前 F1/F3 的维护登记未达到删除大规模源码的目标，整体验收现已重新打开。未修改源码的生成检查不证明其必要性；按公开 SDK 的真实覆盖继续替换并删除。

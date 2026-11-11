@@ -4341,16 +4341,16 @@
       "reason": "Assert that generated tool aggregation imports resolve to the Native SDK factory binding."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "1e51521cce1a960729ad2a4dd120096ed353151ccef363ead4dd0a3c0da87266",
-      "reason": "Record optional AgentSession tool and Bash operation factories; only the two AgentSession outputs change among 92 Coding outputs."
+      "sha256": "32f632c7bf9d2ca6ce4bbd7c0d93a7eaea8e9a78d2a5b86172513ab51399d765",
+      "reason": "Record the image conversion cleanup fix in one output; retain all other 91 Coding output hashes."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
       "sha256": "bcaefc507e0d812ce521a8131adbfe8174d2cd38cead90c9d27b783807dfb727",
       "reason": "Expose existing tool contracts and generate an optional factory binding from the published SDK algorithm."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "d594178f9e3b6272937299bdddf82c71d13abb98b91f82f6efaa6f22f9f9b383",
-      "reason": "Add two optional per-session factory hooks while preserving SDK tool assembly, explicit overrides and Bash execution lifecycle."
+      "sha256": "a5ebdd6d8881e46b86c28922cf459e42670ff942d67d23060aac1bd97357c261",
+      "reason": "Release the decoded image on orientation failure without changing the SDK success path or null fallback."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4489,16 +4489,16 @@
       "reason": "Verify default SDK and Native image conversion, PNG output, cache and visibility in fresh processes."
     },
     "packages/pi-durable-coding/scripts/coding-image-policy.ts": {
-      "sha256": "636e8517a4479d3da7733d23afbe4ac102161c6670b44fbd99372516c797e18f",
-      "reason": "Add only an image dependency factory scope around existing SDK functions and state, with unchanged default dependencies."
+      "sha256": "9cbb8f28c095f9c551cf3abc23d8acbbe42ecc9c2fe29b495d551122ee720ba0",
+      "reason": "Bind image dependencies and release the decoded Photon image if orientation throws; retain SDK conversion and registration algorithms."
     },
     "packages/pi-durable-coding/src/native-image-convert.ts": {
       "sha256": "7892db67cda86a4b4c4c2fd5001e54537d29d73efc6844d044bfded3aca19607",
       "reason": "Bind public SDK image algorithms to shared Photon and the existing durable EXIF policy in twelve lines."
     },
     "packages/pi-durable-coding/test/host-image-convert-sdk.test.ts": {
-      "sha256": "349a48c4b0074e090a5624bd445a1646aaa157072749c940c66d1385caaed1de",
-      "reason": "Verify PNG passthrough, failed and unavailable loaders, image ownership, per-instance registration and callback coalescing."
+      "sha256": "57365a790d0e4aa75a3a8fe2aef397d8ccd1421a5ebbb6efc22e52d5b4861834",
+      "reason": "Verify image conversion, registration and exact resource release when orientation fails through both encoder entry points."
     },
     "packages/pi-durable-coding/scripts/coding-image-processing-policy.ts": {
       "sha256": "fc25127ae6cbebf9633be01364a38b101e3e4205b82fe030f99765a039793806",
