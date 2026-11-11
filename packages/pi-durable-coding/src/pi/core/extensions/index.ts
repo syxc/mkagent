@@ -223,4 +223,4 @@ export {
 	isToolCallEventType,
 	isWriteToolResult,
 } from "@earendil-works/pi-coding-agent";
-export { wrapRegisteredTool, wrapRegisteredTools } from "./wrapper.ts";
+export { wrapRegisteredTool, wrapRegisteredTools } from "@earendil-works/pi-coding-agent";

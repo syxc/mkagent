@@ -26,6 +26,41 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK extension tool wrappers after 3058b9e
+
+The SDK already exports wrapRegisteredTool and wrapRegisteredTools with the same
+signatures and behavior as the local module. Source generation now routes that
+module to the public SDK before traversing its imports. The 29-line local copy
+is deleted. No new SDK patch, dependency or runtime adapter is added.
+
+Both existing layouts pass complete runtime generation checks: 10 TypeScript
+files, including six under src/pi and four generated facades, with no assets.
+Only the extension barrel and runtime inventory change among generated outputs.
+Both layouts pass five focused tests and 24 assertions each. The tests check
+SDK routing and source removal, tool-call ID, signal, context, progress, result
+identity, batch order, cancellation, original errors and Symbol metadata.
+The context factory is a fixture; the SDK wrappers and declarations are real.
+The complete Native entry point and runner lifecycle are not loaded.
+
+The initial boundary test fails on the absent SDK route. An initial strict check
+then finds an incorrect RegisteredTool field in the test fixture. After using
+the published sourceInfo field, both layouts pass the tests and strict checks
+with skipLibCheck. Source registration updates three entries, retires one and
+adds one. The restricted Craft v0.15.6 audit passes for 2032 allowed files.
+Protected legacy paths and sensitive basenames remain excluded before reads.
+An independent review finds no implementation defect. It runs the five tests
+and confirms two assertions accept equal-content replacements. The parent then
+checks metadata value and synchronous error identity with toBe and reruns both
+layouts. These assertion fixes receive no second independent review. The review
+does not rerun complete generation or types; those results are parent checks.
+
+A separate fresh frozen-install attempt at the parent revision did not pass.
+The first attempt stops before Bun starts because the sandbox address syntax is
+invalid. After correcting that syntax, Bun starts but dependency downloads fail
+with ConnectionRefused and FailedToOpenSocket. All 16 manifest, lock and patch
+inputs remain unchanged. These attempts do not verify a fresh installation.
+Full Native, complete declarations, recovery and F0 through F6 remain open.
+
 ## Resource result declaration after c2ddabe
 
 The exported discoverCodingSkills function had no return annotation. In both

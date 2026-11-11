@@ -190,6 +190,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `c2ddabe` 后，discoverCodingSkills 使用 SDK 公开的 LoadSkillsResult，修复两布局复现的隔离声明 TS9007。隔离声明及提取原函数的定向类型检查通过，JavaScript 摘要与修改前相同；完整资源模块检查因受保护 legacy 包管理转发未通过，保留失败证据。来源更新一项，受限 Craft 审计通过 2032 个允许文件，见[资源返回类型验证](coding-validation.md#resource-result-declaration-after-c2ddabe)。完整声明、受保护路径、恢复及 F0 至 F6 仍开放。
 
+`3058b9e` 后将 wrapRegisteredTool 和 wrapRegisteredTools 直接路由至 SDK 已公开函数，删除 29 行本地副本，不增加包装或补丁。运行时清单降为 10 份 TypeScript，其中 src/pi 为 6 份，四份生成门面另计，资源为 0。两现有布局完整 runtime 生成检查、各 5 项测试及定向 strict/skipLibCheck 检查通过，来源更新 3 项、退役 1 项、新增 1 项，受限 Craft 审计通过 2032 个允许文件。全新冻结安装的两次失败及验证边界见[插件工具包装验证](coding-validation.md#sdk-extension-tool-wrappers-after-3058b9e)。完整入口、声明、恢复及 F0 至 F6 继续开放。
+
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 
 | 优先范围 | 下一步与保留条件 |

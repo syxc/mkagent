@@ -13,6 +13,7 @@ export const CODING_SDK_MODULES = new Set([
   'core/exec.ts',
   'core/extensions/runner.ts',
   'core/extensions/types.ts',
+  'core/extensions/wrapper.ts',
   'core/footer-data-provider.ts',
   'core/keybindings.ts',
   'core/mcp-servers.ts',

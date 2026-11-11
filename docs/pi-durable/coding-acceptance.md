@@ -8,6 +8,8 @@
 
 `c2ddabe` 后的资源声明修复直接使用 SDK 公开的 LoadSkillsResult。两布局隔离声明和提取原函数的类型检查通过，JavaScript 输出保持；完整资源模块因受保护 legacy 转发未通过类型检查。该局部结果不关闭完整声明、恢复或整体验收，见[资源返回类型验证](coding-validation.md#resource-result-declaration-after-c2ddabe)。
 
+`3058b9e` 后的插件工具包装直接使用 SDK 已公开函数，删除 29 行本地副本。两布局各 5 项测试、定向严格类型与完整 runtime 生成检查通过，生成清单降为 10 份 TypeScript。全新安装仍未通过，完整 Native、声明和恢复验收继续开放，见[插件工具包装验证](coding-validation.md#sdk-extension-tool-wrappers-after-3058b9e)。
+
 ## 架构与交付约束
 
 | 要求 | 本次纠偏状态 | 实际依据及剩余工作 |

@@ -132,6 +132,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `c2ddabe` 后，discoverCodingSkills 使用 SDK 公开的 LoadSkillsResult，修复隔离声明 TS9007。两布局声明输出及原函数的定向类型检查通过，JavaScript 摘要保持；完整资源模块检查因受保护 legacy 转发未通过。来源仅更新一项，受限 Craft 审计通过 2032 个允许文件，见[资源返回类型验证](coding-validation.md#resource-result-declaration-after-c2ddabe)。完整入口、声明、恢复及 F0 至 F6 继续开放。
 
+`3058b9e` 后直接使用 SDK 已公开的两个插件工具包装函数，删除 29 行本地副本，生成器不再带回该实现。两布局各 5 项测试、定向严格类型与完整 runtime 生成检查通过；运行时清单为 10 份 TypeScript，其中 src/pi 为 6 份，四份生成门面另计，资源为 0。来源更新 3 项、退役 1 项、新增 1 项，受限 Craft 审计通过 2032 个允许文件。全新冻结安装两次失败，完整入口、声明、恢复及 F0 至 F6 保持开放，见[插件工具包装验证](coding-validation.md#sdk-extension-tool-wrappers-after-3058b9e)。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

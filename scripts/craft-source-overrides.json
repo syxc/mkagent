@@ -3921,8 +3921,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "2c26be5f1f12d3da09b5f196acec94438779d54f44829ef4551652105476e89c",
-      "reason": "Retire the complete copied tool aggregation module; retain eleven generated TypeScript files and no assets."
+      "sha256": "0d39583d99f3d26ec83b30039ec65ad6319ad95cab34bdcd95d4eda087ee8938",
+      "reason": "Retire copied tool aggregation and extension wrappers; retain ten generated TypeScript files and no assets."
     },
     "packages/pi-durable-coding/test/native-theme.test.ts": {
       "sha256": "87d1b7c2b1eef13404fc67085c20bd32d55b821aba7ab56a6de594a973530239",
@@ -4053,8 +4053,8 @@
       "reason": "Verify published Markdown rendering and offline asset selection; protect both Native browser asset reads from missing or repeated boundaries."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/index.ts": {
-      "sha256": "eed9b6ddb1b321d2e60cafc0c512cd16178cd47f23fe9ede34cf236ba563b813",
-      "reason": "Expose slash-command types directly from the public Coding SDK."
+      "sha256": "ce113d5882c90806a813a23fae93fba96348d82f274a9a531e1d9198dc921f47",
+      "reason": "Expose slash-command types and registered-tool wrappers directly from the public Coding SDK."
     },
     "packages/pi-durable-coding/src/pi/core/extensions/pi-ai-extension-view.ts": {
       "sha256": "35769c1446400219e554e31712e5bc8da0c90bbdf1c0f41df39c151abb5bc8d4",
@@ -4063,10 +4063,6 @@
     "packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts": {
       "sha256": "ef6d49a54f2ed2b0f3486bfc3bf8aec7086c735304317bc86477c041c529ee2f",
       "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/virtual-modules.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/core/extensions/wrapper.ts": {
-      "sha256": "4bb0675d11e68a5bdbe8de0e4efafb44dd67ebac35363f4cfeb8274278a9c30a",
-      "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/worker.ts": {
       "sha256": "4542d37a9f75150b52fc393fcd757f08fb0d681d92bebee6a40171e09b4bec82",
@@ -4333,8 +4329,8 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "a568e484ec1a8819088a9bb31ee418c6738ca42756790c253ff6f5722ad12b22",
-      "reason": "Route tool aggregation to Native factory bindings while the SDK owns selection and assembly."
+      "sha256": "ec6e1e9cf91b2d1a82b7ddebc9e3ea0b20c0e12c25b2e689947d6a369761a89a",
+      "reason": "Route tool aggregation to Native factory bindings and registered-tool wrappers to the public SDK without copying implementations."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
       "sha256": "86d1c1e6a6236c3d2183d3bc6a5f4c619dadb5cf9f6d08f4e0cfa5370efe0175",
@@ -4687,6 +4683,10 @@
     "packages/pi-durable-coding/test/sdk-html-types.test.ts": {
       "sha256": "3178bacc24b863abab534dce17859bd6418cb42e3032a71c6c6761c0db1df189",
       "reason": "Check the SDK root declaration without skipLibCheck and verify HTML renderer factory and export option compatibility."
+    },
+    "packages/pi-durable-coding/test/sdk-extension-wrapper.test.ts": {
+      "sha256": "e7e2cca3f2de89ee4de3e233eb373acb0451226c3088c2c9850b8bd891626f6c",
+      "reason": "Verify published extension wrapper routing, source removal, context, cancellation, result and metadata identity."
     }
   },
   "deleted": {
