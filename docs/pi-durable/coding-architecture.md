@@ -343,6 +343,8 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `bdf67f5` 后的 MCP 资源工具切片删除本地完整 schema、分页、过滤、读取和转换算法，330 行模块缩为 28 行绑定，净减少 302 行。SDK 提供三个资源工具；宿主只投影 durable 可见性，转发 callId 和 signal，再映射 output、details 与完整 structuredOutput。runtime 继续使用同一 SDK App 资源检测函数。根出口、已有 private helper 导出及准确执行重载属于本地补丁，资源 JS 正文除增加 export 外保持发布原文，没有伪造插件上下文或复制算法。两现有布局各 103 项测试、524 个断言及定向严格类型检查通过，使用 skipLibCheck；独立 42 项检查含 29 个差分场景通过，未确认缺陷。来源更新 5 项、新增 1 项，受限 Craft 审计通过 2023 个允许文件；Coding 86 份、总数 123 份输出，生成清单仍为 13 份。限制见[MCP 资源工具验证](coding-validation.md#public-sdk-mcp-resource-tools-after-bdf67f5)；transport、生命周期、凭据路由和其余源码仍须继续核对，整体验收保持开放。
 
+`6827615` 后的 server 路径切片删除 95 行完整路径副本，生产 wrapper 通过既有 compat 门面直接使用 SDK 的 resolveReadPath 和 resolveToCwd。durable 发布根和 tools 入口未提供这两个 helper 契约；Coding 内部已有完整实现，只缺根出口，因而仅补两个导出，不复制算法或添加包装。权限检查前规范化、read 文件名回退及批准后的路径冲突检查与执行继续保持；四份路径 helper 文件与发布版一致。两现有布局各 11 项测试、362 个断言及定向严格类型检查通过，使用 skipLibCheck；独立 48 项静态检查、456 个探针场景和 1996 次断言通过，未确认缺陷。来源更新 5 项、新增 1 项、退役 1 项，受限 Craft 审计通过 2023 个允许文件；86/123 份输出及 13 份生成清单保持。上游公开等效根出口后撤除本项导出补丁。源模块投影及平台模拟限制见[Server 路径验证](coding-validation.md#sdk-server-path-helpers-after-6827615)，二进制、MCP runtime 和整体验收继续开放。
+
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |

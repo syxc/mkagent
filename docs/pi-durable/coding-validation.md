@@ -26,6 +26,77 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK server path helpers after 6827615
+
+The server file wrapper now imports resolveReadPath and resolveToCwd through
+its existing compat facade. The complete local path-utils module, 95 lines,
+is deleted. The SDK owns Unicode space normalization, single `@` removal,
+home expansion, file URLs, Windows shell drive paths and macOS read filename
+fallbacks. Approval, approved path selection, conflict rejection and argument
+memo logic in the wrapper are unchanged.
+
+The durable public root and tools entry do not export these helper contracts.
+Coding already implements them. A local patch adds only their existing root
+exports, not new algorithms or wrappers. Remove this patch when equivalent
+public root exports become available. Only dist/index.js and dist/index.d.ts
+change in this slice; the other 84 Coding patch outputs keep their hashes.
+The four path helper JavaScript and declaration files stay pristine in both
+existing layouts. Coding remains 86 physical outputs, core four and durable
+33, for a total of 123. Runtime generation remains 13 TypeScript outputs,
+nine under src/pi and four facades, with no assets. Eight auxiliary sources
+and 13 shared forwards remain. Handwritten runtime code is counted separately.
+
+| Check | Result and scope |
+|---|---|
+| Behavior | Both existing layouts pass 11 tests, zero failures and 362 expect calls; new path tests run with the existing wrapper suite |
+| Read and approval | Unicode spaces, `@`, relative paths, home, file URLs, missing targets, macOS variants, exact-name priority, approved aliases and denial are covered |
+| Static preflight | Root loads 2156 modules and hoisted loads 2232; both have zero protected-source loads |
+| Types | Both layouts report zero diagnostics with strict and skipLibCheck; checks include the actual compat declaration, positive and negative consumers, facade source, new tests and production wrapper |
+| Workspace types | Three exact mappings point to existing core/types, shared/config and shared/docs source entries; no type stubs or repository aliases are added |
+| Independent review | No findings; 48 static checks, 456 probe scenarios and 1996 assertions pass; includes 128 read-priority combinations and 72 approval-contract scenarios |
+| Review acceptance | Parent verifies six frozen sources, 206 artifacts, 35 supporting files, the retired baseline hash, deletion in both layouts, report and manifest hashes |
+| Source registration | Five entries updated, one test added and one retired module entry removed; unrelated entries stay unchanged |
+| Restricted Craft | Fixed v0.15.6 audit passes for 2023 permitted files; full Craft coverage stays open |
+
+The initial static preflight rejects a test fixture import of Type, which
+pi-schema does not export. No behavior test starts in that attempt. The
+fixture then uses public obj and str builders. Root behavior passes before
+types reveal an unknown args annotation and three missing workspace type
+links. An intermediate data-type annotation still does not match the schema
+contract. The final fixture uses Schema<{ path: string }>, and the scoped
+compiler maps the three actual source entries. Transpiled fixture JavaScript
+is unchanged by the type edits, so passing root behavior is retained. Root
+types and hoisted behavior and types then pass.
+
+The independent review uses exact source modules with named-export projections,
+modeled filesystem existence, injected Windows path APIs and stubs for unrelated
+wrapper dependencies. It does not load the complete SDK graph or run native
+Windows. Its first probe has two wrong expected UNC trailing separators, and
+its first static check assumes a different but equivalent generator expression.
+Only those review expectations change. A system Python cache write outside the
+task directory is denied; later probes use installed Homebrew Python without
+widening the sandbox. Failure records remain. The reviewer verifies parent
+logs and empty diagnostics, but does not rerun the production tests or compiler,
+inspect the three mapping definitions, search the whole repository for imports,
+or examine durable candidate declarations.
+
+Validation uses task-owned child HOME, USERPROFILE, TMPDIR and XDG paths,
+PI_OFFLINE=1, disabled env files and an OS sandbox with all network access
+blocked. Writes stay inside the task directory except /dev/null. Both logical
+and real paths are checked before reads. Legacy source, context-tokens.js,
+real user configuration and credentials remain excluded. Dependencies, lock,
+task versions and persistence schemas do not change. Only the two existing
+compat declarations are regenerated. No fresh install or full type build runs.
+
+Evidence is under `/private/tmp/mkagent-server-paths-sdk-NSbOTB`:
+review-inputs.json, review-verified.json, validation.json, behavior logs,
+preflight and diagnostic files, source-registration.json and
+restricted-craft-audit.json. The independent report and support manifest are
+under its review-independent-61ddgf8s directory. Full Native, complete types,
+fresh installation, native platform checks, filesystem races, real services,
+full Craft and F0 through F6 remain open. Binary policy and MCP runtime are
+separate pending work.
+
 ## Public SDK MCP resource tools after bdf67f5
 
 Replace the 330-line resource module with a 28-line durable binding, removing

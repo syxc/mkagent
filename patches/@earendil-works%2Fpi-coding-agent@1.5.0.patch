@@ -1,8 +1,8 @@
-# Content SHA-256: 5dbaff1c5f3a3fa3af85f4f4ea5f4e0f52117ecb6f5ba4951928f4f84d634198
+# Content SHA-256: 14c5058bb9e052772ad39ac3d6135165a62aab92f35d3575fa90782236ff3a81
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,67 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,68 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -40,6 +40,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export { spawnProcess, spawnProcessSync } from "./utils/child-process.js";
 +export { writeOutputFile } from "./utils/output-files.js";
 +export { canonicalizePath, isPathWithin, normalizePath, pathsEqual, resolvePath } from "./utils/paths.js";
++export { resolveReadPath, resolveToCwd } from "./core/tools/path-utils.js";
 +export { stripBom } from "./utils/text.js";
 +export { createShellHelpers } from "./utils/shell.js";
 +export { createToolManager } from "./utils/tools-manager.js";
@@ -83,7 +84,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,69 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,70 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -121,6 +122,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { spawnProcess, spawnProcessSync } from "./utils/child-process.ts";
 +export { writeOutputFile } from "./utils/output-files.ts";
 +export { type PathInputOptions, canonicalizePath, isPathWithin, normalizePath, pathsEqual, resolvePath } from "./utils/paths.ts";
++export { resolveReadPath, resolveToCwd } from "./core/tools/path-utils.ts";
 +export { stripBom } from "./utils/text.ts";
 +export { createShellHelpers, type ShellConfig, type ShellHelperDependencies, type ShellHelpers } from "./utils/shell.ts";
 +export { createToolManager, type ToolManagerDependencies } from "./utils/tools-manager.ts";

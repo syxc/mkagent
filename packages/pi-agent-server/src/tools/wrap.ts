@@ -18,7 +18,7 @@ import { PI_TOOL_NAME_MAP } from '../../../shared/src/agent/backend/pi/constants
 import type { PiWorkerScope } from '../../../shared/src/agent/backend/pi/protocol.ts';
 import { allowMkAgentMetadataProperties, stripMkAgentMetadata } from '../mkagent-metadata-schema.ts';
 import type { BackgroundShells } from '../background-shell.ts';
-import { resolveReadPath, resolveToCwd } from './local/path-utils.ts';
+import { resolveReadPath, resolveToCwd } from '@mkagent/pi-durable-coding/compat';
 
 export interface ToolWrapDeps {
   /** Main-process permission check; resolves the (possibly modified) input, throws on block. */

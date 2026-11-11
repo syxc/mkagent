@@ -3448,10 +3448,6 @@
       "sha256": "bbce9815d492ad8dded29bd1ce90519ef91ad57e8de5196367feff6626594626",
       "reason": "Bridge public Coding SDK search factories to durable registrations, bind the product binary resolver and abort signal per call, and retain CR-only context line splitting without copying search algorithms."
     },
-    "packages/pi-agent-server/src/tools/local/path-utils.ts": {
-      "sha256": "6a876a57bccd018d276857f6dded4a786ca32b8af45221fdf931719e0d7be9a2",
-      "reason": "Port the required pi-coding-agent 1.1.0 core/tools/path-utils.js and utils/paths.js normalization and read-path compatibility branches."
-    },
     "packages/pi-agent-server/src/tools/local/tool-binaries.ts": {
       "sha256": "9f4e8445cb342c1d9066fe00a8c5481a0cf528b4a6e4f9e6a6aecef40be3e1ce",
       "reason": "Adapt pi-coding-agent 1.1.0 utils/tools-manager.js fd and ripgrep resolution and downloads, adding bundled ripgrep lookup and isolated temporary downloads. Propagate cancellation through version and archive requests, bound body reads, and prevent publication after cancellation."
@@ -3461,8 +3457,8 @@
       "reason": "Verify per-call resolver signals and SDK find and grep acquisition cancellation across requests, streaming bodies and archive publication with isolated module spies and fake downloads."
     },
     "packages/pi-agent-server/src/tools/wrap.ts": {
-      "sha256": "852cd36caeec3dac064a491655df3b9a0c56bc565af4cc1ea9f26e3889e83653",
-      "reason": "Adapt local main tool wrappers for durable registration, host approval and approved argument changes, metadata stripping, summarization and native observers. Capture the kernel ownership scope when launching independent background Bash tasks."
+      "sha256": "35ec72a44d558ac60c32540ce7f6d2ee71d2528c5c5ab0fc04547ea5ca95bdd8",
+      "reason": "Retain durable approval, approved path changes, metadata, background tasks and summarization; use SDK path helpers through the existing compat facade instead of a copied local algorithm."
     },
     "packages/shared/src/agent/backend/pi/agent-session-events.ts": {
       "sha256": "14fb3d9372d96d613db473cb98f66b662ed5a304e0d2262fb3ccd4ab631cb8ef",
@@ -3697,8 +3693,8 @@
       "reason": "Generate the shared shell entry against the active authored adapter."
     },
     "packages/pi-durable-coding/src/compat.ts": {
-      "sha256": "a91cfacbb8925a898ecda49deb5070501c01621d74e6334ba4e6a4072ea3e670",
-      "reason": "Preserve normalizePath and resolvePath through the patched SDK root."
+      "sha256": "e1bfb7a88bd3781928e5b3100381ba1d889b516d00534ceb280cd349333e6e58",
+      "reason": "Forward required SDK path helpers and existing compatibility contracts without a new runtime wrapper."
     },
     "packages/pi-durable-coding/src/durable-projection.ts": {
       "sha256": "7e01de10a83aff31ca44fc550a266b6c97da6537500decf30c58d403c8d1dedb",
@@ -4361,16 +4357,16 @@
       "reason": "Check the OAuth module source route to the public SDK; retain existing SDK identity and trust boundary checks."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "42bab8c494ffa86ed611de7b455f44412447f09d4e94b8f939fee280511ecff9",
-      "reason": "Record 86 Coding outputs, including resource helper exports, resource execution typing and shared root exports."
+      "sha256": "3c4d4603c5ad8c9aa9bc828e8f9e3610538435efdbf7e8fb0128aff046fa5500",
+      "reason": "Record 86 Coding outputs; the server path slice changes only two shared root exports and leaves internal path helper files pristine."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "2d8833914f45e8e3b97e1c92af2edac79958e465ec3023a8d2cfa203c8511b10",
-      "reason": "Retain host policy patches; export existing MCP resource tools and app detection and declare their context-free execution overload without copying algorithms."
+      "sha256": "d3438186bb45e6fd2e581f30248b62e39fa59136670e86437c64e0e3c629aa4d",
+      "reason": "Retain host boundary patches and add root exports for existing resolveReadPath and resolveToCwd; do not copy or change path algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "83a6f7cf2e7dc38eedf69de430362e70d510599804879043b1df84ff1a2f8cb7",
-      "reason": "Retain SDK host boundaries and expose existing resource tools and app detection with accurate three-argument execution typing; resource algorithms remain unchanged."
+      "sha256": "bdbf6669f9f8da0289c094225ea78e00033852e0c0235711ce2d0293de0beb99",
+      "reason": "Retain host boundaries and expose existing resolveReadPath and resolveToCwd through shared SDK roots; path algorithms remain unchanged."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4651,6 +4647,10 @@
     "packages/pi-agent-server/src/mcp/resources-sdk.test.ts": {
       "sha256": "ded753435d7d12def48a6d6a81f6e0e396779d2d719b190c8bfc41faf9f81984",
       "reason": "Verify SDK resource identity, durable visibility, dynamic servers, paging, errors, cancellation forwarding, full results and protected output files."
+    },
+    "packages/pi-agent-server/src/tools/paths-sdk.test.ts": {
+      "sha256": "1d6846e5e9124851c846ca283c0044a37879b18456579401bdafbd136eb0d3b6",
+      "reason": "Verify SDK path normalization before approval, read filename fallback priority, approved path aliases and denial without execution or memo."
     }
   },
   "deleted": {

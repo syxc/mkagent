@@ -7,4 +7,4 @@ export { loadPromptTemplates, expandPromptTemplate, parseCommandArgs, substitute
 export { parseFrontmatter, stripFrontmatter } from "@earendil-works/pi-coding-agent";
 export { buildSystemPrompt, buildSystemPromptSections, normalizeBuildSystemPromptOptions } from './upstream/core/system-prompt.ts';
 export type { BuildSystemPromptOptions } from './upstream/core/system-prompt.ts';
-export { resolvePath, normalizePath } from '@earendil-works/pi-coding-agent';
+export { resolvePath, normalizePath, resolveReadPath, resolveToCwd } from '@earendil-works/pi-coding-agent';

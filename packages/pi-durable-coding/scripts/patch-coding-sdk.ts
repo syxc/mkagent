@@ -75,6 +75,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export { spawnProcess, spawnProcessSync } from "./utils/child-process.${extension}";`,
     `export { writeOutputFile } from "./utils/output-files.${extension}";`,
     `export { ${suffix === 'd.ts' ? 'type PathInputOptions, ' : ''}canonicalizePath, isPathWithin, normalizePath, pathsEqual, resolvePath } from "./utils/paths.${extension}";`,
+    `export { resolveReadPath, resolveToCwd } from "./core/tools/path-utils.${extension}";`,
     `export { stripBom } from "./utils/text.${extension}";`,
     `export { createShellHelpers${suffix === 'd.ts' ? ', type ShellConfig, type ShellHelperDependencies, type ShellHelpers' : ''} } from "./utils/shell.${extension}";`,
     `export { createToolManager${suffix === 'd.ts' ? ', type ToolManagerDependencies' : ''} } from "./utils/tools-manager.${extension}";`,
