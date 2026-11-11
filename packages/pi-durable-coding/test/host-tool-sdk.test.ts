@@ -10,7 +10,7 @@ import { createModels } from '@earendil-works/pi-ai';
 import { createRegistry, defineDoc, defineExtension, defineTask, Harness, LiveDoc, MemoryStorage, ToolTask,
   type ConversationHandle, type Task, type TaskId, type ToolExecutionApi, type ToolRegistration } from '@earendil-works/pi-durable';
 import type { AgentTool } from '../src/agent-runtime.ts';
-import { DurableLoopBinding } from '../src/durable-coding/engine.ts';
+import { currentCodingToolInvocation, DurableLoopBinding } from '../src/durable-coding/engine.ts';
 import { hostToolToAgent } from '../src/host-tools.ts';
 import { response } from './fixtures/durable-harness.ts';
 
@@ -105,6 +105,24 @@ test('delegates plain AgentTool effects and preserves prepared args, updates, an
     expect((await fixture.harness.snapshot(LiveDoc, fixture.conversation.id, context))?.nestedTools).toBeUndefined();
     expect(fixture.reports).toEqual([]);
   } finally { phase.mockRestore(); }
+});
+
+test('a failed after-hook stops the caller while retaining its completed tool receipt', async () => {
+  const fixture = await open();
+  const result = { content: [{ type: 'text' as const, text: 'committed effect' }], details: { complete: true },
+    structuredContent: { value: 7 }, usage: response('').usage };
+  let owner!: TaskId;
+  const target: AgentTool = {
+    name: 'fixture', label: 'Fixture', description: 'Local fixture', parameters: { type: 'object' },
+    execute: async () => { owner = currentCodingToolInvocation().runtime.taskId; return result; },
+  };
+  await expect(fixture.binding.runTool({ type: 'toolCall', id: 'hook-failure', name: target.name, arguments: {} }, {
+    tools: [target], context: { messages: [], tools: [target] }, assistantMessage: response('context'),
+    afterToolCall: async () => { throw new Error('after failed'); },
+  })).rejects.toThrow('after failed');
+  expect((await fixture.harness.getTask(owner, context))?.state).toMatchObject({
+    status: 'terminal', outcome: { status: 'failed', error: { message: 'after failed' }, result: { result, isError: false } },
+  });
 });
 
 test('delegates execution to the public ToolTask phase and rejects conflicting host calls', async () => {
@@ -442,6 +460,36 @@ for (const boundary of ['completed', 'removed', 'plain-completed', 'plain-remove
         { type: 'image', data: 'aW1hZ2U=', mimeType: 'image/png' },
       ]);
       expect(result.details).toEqual({ source: 'native' });
+      expect(restored.reports).toEqual([]);
+    } finally { await rm(directory, { recursive: true, force: true }); }
+  }, 20_000);
+}
+
+for (const boundary of ['abort-completed', 'plain-abort-completed']) {
+  test(`cold cancellation retains a completed SDK receipt at ${boundary}`, async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'host-sdk-abort-receipt-'));
+    try {
+      await run(directory, 'begin', 'never', boundary);
+      const restored = JSON.parse(await run(directory, 'resume', 'never', boundary));
+      expect(restored.checkpoint).toMatchObject({ status: 'pending', checkpoint: { phase: 'execute', replay: 'never' } });
+      expect(restored.owner.state).toMatchObject({ status: 'terminal', outcome: { status: 'aborted' } });
+      const outcome = restored.owner.state.outcome.result;
+      const { durableHostControl: control, ...result } = restored.execution.execution.result.result;
+      expect(outcome.result).toEqual(result);
+      expect(outcome.control).toEqual(control);
+      expect(outcome.hostUsageAccounted === true).toBe(restored.execution.execution.result.usageAccounted === true);
+      expect(outcome.isError).toBe(false);
+      expect(outcome.result.usage).toEqual(response('').usage);
+      expect(outcome.result.terminate).toBe(true);
+      expect(outcome.executionArguments).toEqual(boundary.startsWith('plain-') ? { prepared: true, changed: true } : {});
+      if (boundary.startsWith('plain-')) {
+        expect(JSON.parse(await readFile(join(directory, 'final-arguments.json'), 'utf8'))).toEqual(outcome.executionArguments);
+      }
+      expect(await readFile(join(directory, 'effects.txt'), 'utf8')).toBe('begin\n');
+      expect(restored.events).toEqual([expect.objectContaining({ type: 'tool_execution_end', result, isError: false })]);
+      const message = restored.messages.find((message: { role: string }) => message.role === 'toolResult');
+      expect(message.content).toEqual(outcome.result.content);
+      expect(message.details).toEqual(outcome.result.details);
       expect(restored.reports).toEqual([]);
     } finally { await rm(directory, { recursive: true, force: true }); }
   }, 20_000);

@@ -1,7 +1,7 @@
 /** Public Agent operations must run through the durable task graph. */
 import { expect, test } from 'bun:test';
 import { Agent } from '../src/agent-runtime.ts';
-import { DurableLoopBinding } from '../src/durable-coding/engine.ts';
+import { currentCodingToolInvocation, DurableLoopBinding } from '../src/durable-coding/engine.ts';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import { builtinModels } from '@earendil-works/pi-ai/providers/all';
@@ -84,6 +84,58 @@ test('shared registry routes each Agent task to its own conversation', async () 
     await harness.close(BACKGROUND_CONTEXT);
   }
 });
+
+test('an after-hook failure releases parallel delivery and retains the completed effect', async () => {
+  let release!: () => void;
+  const failed = new Promise<void>(resolve => { release = resolve; });
+  let owner: ReturnType<typeof currentCodingToolInvocation>['runtime']['taskId'] | undefined;
+  let siblingCompleted = false;
+  let requests = 0;
+  const result = { content: [{ type: 'text' as const, text: 'committed effect' }], details: { complete: true } };
+  const tools = ['broken', 'sibling'].map(name => ({
+    name, label: name, description: 'Local concurrent fixture', parameters: s.obj({}),
+    execute: async () => {
+      if (name === 'broken') owner = currentCodingToolInvocation().runtime.taskId;
+      else { await failed; siblingCompleted = true; }
+      return result;
+    },
+  }));
+  const agent = new Agent({
+    initialState: { model, tools },
+    afterToolCall: async call => {
+      if (call.toolCall.name === 'broken') { release(); throw new Error('after failed'); }
+      return undefined;
+    },
+    streamFn: () => {
+      requests++;
+      const stream = createAssistantMessageEventStream();
+      const message = response('done');
+      message.content = tools.map(tool => ({ type: 'toolCall', id: tool.name, name: tool.name, arguments: {} }));
+      message.stopReason = 'toolUse';
+      queueMicrotask(() => stream.push({ type: 'done', reason: 'toolUse', message }));
+      return stream;
+    },
+  });
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      agent.prompt('run parallel tools'),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Parallel tool batch stalled')), 500); }),
+    ]);
+    expect(siblingCompleted).toBe(true);
+    expect(requests).toBe(1);
+    expect(agent.state.errorMessage).toContain('after failed');
+    const backend = await agent.durable.backend();
+    expect(owner).toBeDefined();
+    expect((await backend.harness.getTask(owner!, backend.context))?.state).toMatchObject({
+      status: 'terminal', outcome: { status: 'failed', error: { message: 'after failed' }, result: { result, isError: false } },
+    });
+  } finally {
+    clearTimeout(timer);
+    agent.abort();
+    await agent.durable.close();
+  }
+}, 3000);
 
 test('a fault before one parallel tool starts does not strand its sibling', async () => {
   let executed = false;

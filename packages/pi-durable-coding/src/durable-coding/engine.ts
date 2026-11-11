@@ -628,6 +628,9 @@ export class DurableLoopBinding {
             throw error;
           }
         },
+        onFailure: () => {
+          if (input.parentTaskId !== undefined) this.batchStarts.release(input.parentTaskId);
+        },
         commit: host.commit,
         finalArguments: this.options.finalArguments,
       };

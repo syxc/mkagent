@@ -140,6 +140,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `65a1eb7` 后，根工程与既有 fresh isolated 安装均通过真实 `./native` 入口加载、四项 SDK 身份、durable 会话子类和排除宿主检查；相同会话与 JSONL 恢复回归各 23 项、386 个断言通过。隔离工程的 119 份允许源码快照、16 个安装输入及 131 份补丁输出摘要保持，没有再次安装依赖。本次区分已通过的运行时入口与仍开放的完整类型闭包；完整声明、worker 构建、SQLite 与产品恢复及 F0 至 F6 尚未整体完成，未新增独立复核，见[Native 入口与会话恢复验证](coding-validation.md#native-entry-and-session-recovery-after-65a1eb7)。
 
+`11c130b` 后补验 fresh 冷恢复 18 项、173 个断言及根工程 SQLite/JSONL 分支恢复 18 项、132 个断言，均通过；fresh isolated worker 构建因 server 缺少直接 Coding SDK 依赖而失败，主体未执行。随后修复完整工具回执在 hook 失败、不确定恢复及冷取消时丢失的问题，沿用 SDK failed.result 保留结果并传播错误；同时释放失败工具的并行交付等待，不新增状态机或持久版本。根工程七文件 110 项、831 个断言通过，定向生产源码零类型诊断，测试与基线均为既有 14 条。最终独立静态复核未确认新增缺陷，六项来源及受限 Craft 2033 文件审计通过；无重新安装或 SDK 补丁变化。完整声明、worker、受保护 legacy、剩余适配及 F0 至 F6 继续开放，见[恢复与 worker 补验](coding-validation.md#additional-recovery-and-isolated-worker-checks-after-11c130b)和[工具回执验证](coding-validation.md#completed-tool-receipts-after-11c130b)。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

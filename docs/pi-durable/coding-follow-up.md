@@ -28,7 +28,7 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 | 1 | F1 | 按需求核对官方能力与实际执行链 | 进行中。公开 SDK 组合已实测插件命令、input hook 和 durable Agent 的单次确定性执行；SDK AgentSession 已接入 durable 子类，生产持久化、输入身份及冷恢复定向验证通过，其他职责继续核对 |
 | 2 | F2 | 优先复用官方内核和 SDK | 进行中。保留已有 ToolTask 和请求复用结果；将 Coding 主链接入公开 SDK，durable 已有能力优先使用 durable |
 | 3 | F3 | 收窄兼容代码和源码范围 | 未完成。以实际删除被 SDK 覆盖的运行时源码和生成转换为验收条件，只保留具有具体缺口依据的适配 |
-| 4 | F4 | 修正测试并验证实际行为 | 进行中。新接线的会话、输入接纳、工具取消、持久化、旧会话恢复及 worker 打包定向验证通过，其余受影响路径随源码替换验证；历史测试结果不替代新路径结果 |
+| 4 | F4 | 修正测试并验证实际行为 | 进行中。新接线的会话、输入接纳、工具取消、持久化及旧会话恢复定向验证通过；最新 fresh isolated worker 构建因 server 未声明直接使用的 Coding SDK 依赖而失败，测试主体未执行。其余受影响路径随源码替换验证，历史结果不替代新路径结果 |
 | 5 | F5 | 同步来源、依赖和可复现产物 | 进行中。同步生产依赖、lock、声明和 worker 资源，删除已替代源码及登记，禁止生成器重新带回副本 |
 | 6 | F6 | 汇总架构、升级及功能验收 | 未完成。新接线、实际源码删除、必要验证和独立复核完成后再验收，全部完成后统一普通推送 |
 
@@ -197,6 +197,10 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 `d42d459` 后补验未投影、关闭 skipLibCheck 的完整公开 SDK 声明，发现四条诊断；其中本地 AgentSession 补丁误从 extensions/types 导入 BeforeAgentStartTrigger，现改为引用 SDK 已有 runner 类型。两布局新增回归、定向源码类型检查和 94 份补丁 check 通过，仅一份 d.ts 输出变化；独立复核通过旧导入和负例探针，未确认缺陷。来源更新 3 项、新增 1 项，受限 Craft 审计通过 2033 个允许文件。既有 fresh 工程冻结刷新通过，131 份安装输出摘要重新核验；这不是再次全新安装。完整 SDK 声明仍有 TS2694、TS2307、TS2416 三条诊断，完整入口、构建、恢复及 F0 至 F6 继续开放，见[会话触发类型验证](coding-validation.md#sdk-session-trigger-declaration-after-d42d459)。
 
 `65a1eb7` 后，根工程与既有 fresh isolated 安装工程的真实 `./native` 入口加载通过，四项 SDK 函数身份、durable 会话子类及四个已排除宿主导出核验通过。两工程运行相同会话与 JSONL 恢复用例，各 23 项、386 个断言通过，覆盖默认工具、嵌套归属、输入接纳、取消及不确定回调不重复执行。隔离工程加入 119 份允许源码与夹具，未覆盖已有文件或复制 legacy；验证后快照、16 个安装输入和 131 份补丁输出保持。此次没有再次安装依赖，也未新增独立复核，见[Native 入口与会话恢复验证](coding-validation.md#native-entry-and-session-recovery-after-65a1eb7)。实际运行时入口已验证，完整类型闭包、声明、worker 构建、SQLite 与产品恢复仍按各自范围开放，F0 至 F6 未整体完成。
+
+`11c130b` 后，既有 fresh isolated 工程的冷恢复回归通过 18 项、173 个断言，根工程 SQLite/JSONL 分支恢复通过 18 项、132 个断言。fresh worker 构建在 beforeAll 因 server 未声明直接导入的 Coding SDK 依赖而失败，主体未执行，依赖和构建验证继续开放，见[恢复与 worker 补验](coding-validation.md#additional-recovery-and-isolated-worker-checks-after-11c130b)。
+
+本轮修复已完成工具结果在 after-hook 失败、不确定恢复及冷启动取消时被错误文本覆盖的问题。沿用 failed.result 保存完整回执，error 记录 hook 错误并停止调用者；不确定 hook 不重放。独立复核发现并行交付等待不能退出，真实 Agent 回归复现后，已用 onFailure 释放既有等待。七文件 110 项测试、831 个断言通过；定向 strict/skipLibCheck 检查的生产源码零诊断，测试与基线均为 14 条，未新增诊断。最终独立静态复核未确认新增缺陷，六项来源更新及受限 Craft 2033 文件审计通过，无依赖、SDK 补丁或持久化版本变化。完整声明、worker、受保护 legacy、剩余源码替换及 F0 至 F6 仍开放，见[工具回执验证](coding-validation.md#completed-tool-receipts-after-11c130b)。
 
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 

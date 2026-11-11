@@ -254,21 +254,28 @@ describe('durable native tool task', () => {
     });
   });
 
-  test('turns tool and after-hook exceptions into error results with end events', async () => {
-    for (const stage of ['execute', 'after'] as const) {
-      const opened = await open(tool(async () => {
-        if (stage === 'execute') throw new Error('execute failed');
-        return textResult('ok');
-      }), {
-        ...(stage === 'after' ? { afterToolCall: async () => { throw new Error('after failed'); } } : {}),
-      });
-      const id = await opened.start();
-      opened.harness.resume();
-      const outcome = completed(await opened.harness.waitForTask(id, context));
-      expect(outcome.isError).toBe(true);
-      expect(outcome.result.content).toEqual([{ type: 'text', text: `${stage} failed` }]);
-      expect(opened.events.at(-1)).toMatchObject({ type: 'tool_execution_end', isError: true });
-    }
+  test('turns tool exceptions into error results with end events', async () => {
+    const opened = await open(tool(async () => { throw new Error('execute failed'); }));
+    const id = await opened.start();
+    opened.harness.resume();
+    const outcome = completed(await opened.harness.waitForTask(id, context));
+    expect(outcome.isError).toBe(true);
+    expect(outcome.result.content).toEqual([{ type: 'text', text: 'execute failed' }]);
+    expect(opened.events.at(-1)).toMatchObject({ type: 'tool_execution_end', isError: true });
+  });
+
+  test('retains completed output when its after-hook fails', async () => {
+    const result = { ...textResult('completed effect'), details: { committed: true }, structuredContent: { value: 7 }, usage };
+    const opened = await open(tool(async () => result), {
+      afterToolCall: async () => { throw new Error('after failed'); },
+    });
+    const id = await opened.start();
+    opened.harness.resume();
+    const receipt = await opened.harness.waitForTask(id, context);
+    expect(receipt.state.outcome).toMatchObject({
+      status: 'failed', error: { message: 'after failed' }, result: { result, isError: false },
+    });
+    expect(opened.events.some(event => event.type === 'tool_execution_end')).toBe(false);
   });
 
   test('preserves explicit error output and all its metadata', async () => {
@@ -419,6 +426,31 @@ describe('durable native tool task', () => {
     });
   });
 
+  test('retains a completed after-hook decision when cancellation prevents its checkpoint', async () => {
+    const entered = gate();
+    let hooks = 0;
+    const result = { ...textResult('committed effect'), structuredContent: { complete: true }, usage };
+    const opened = await open(tool(async () => result), {
+      afterToolCall: async (_call, signal) => {
+        hooks++;
+        entered.resolve();
+        try { await untilAbort(signal); } catch {}
+        return { details: { finalized: true }, terminate: true };
+      },
+    });
+    const id = await opened.start();
+    opened.harness.resume();
+    await entered.promise;
+    await opened.harness.abortTask(id, context);
+    expect((await opened.harness.waitForTask(id, context)).state.outcome).toMatchObject({
+      status: 'aborted', result: {
+        result: { ...result, details: { finalized: true }, terminate: true }, isError: false,
+      },
+    });
+    expect(hooks).toBe(1);
+    expect(opened.events.filter(event => event.type === 'tool_execution_end')).toHaveLength(1);
+  });
+
   test('parallel children emit end events in completion order', async () => {
     const first = gate();
     const firstStarted = gate();
@@ -507,19 +539,24 @@ describe('durable native tool task', () => {
     const id = await first.start();
     first.harness.resume();
     await entered.promise;
-    expect((await first.harness.getTask(id, context))?.state).toMatchObject({
+    const executed = (await first.harness.getTask(id, context))?.state;
+    expect(executed).toMatchObject({
       status: 'running', checkpoint: { phase: 'after', outcome: { result: { structuredContent: { effect: true }, usage } } },
     });
+    if (!executed || executed.status !== 'running') throw new Error('Expected an after-hook checkpoint');
     await first.harness.close(context);
     const second = await open(target, { afterToolCall }, await openNodeJsonlStorage(path, context));
     second.harness.resume();
-    const outcome = completed(await second.harness.waitForTask(id, context));
+    const receipt = await second.harness.waitForTask(id, context);
+    expect(receipt.state.outcome).toEqual({
+      status: 'failed',
+      error: { message: 'afterToolCall for fixture was interrupted; the hook was not invoked again' },
+      result: expect.anything(),
+    });
+    expect<unknown>(executed.checkpoint).toEqual({ phase: 'after', outcome: receipt.state.outcome.result });
     expect(calls).toBe(1);
     expect(hooks).toBe(1);
-    expect(outcome.isError).toBe(true);
-    expect(outcome.result.content).toEqual([{
-      type: 'text', text: 'afterToolCall for fixture was interrupted; the hook was not invoked again',
-    }]);
+    expect(second.events).toEqual([]);
   });
 
   test('restores complete finalized output and reports uncertain end delivery without repeating hooks or effects', async () => {
@@ -717,7 +754,7 @@ describe('durable native tool task', () => {
       opened.harness.resume();
       const receipt = await opened.harness.waitForTask(id, context);
       expect(phases[0]).toBe(initial.phase);
-      expect(receipt.state.outcome.status).toBe(initial.phase === 'emit' ? 'failed' : 'completed');
+      expect(receipt.state.outcome.status).toBe(['after', 'emit'].includes(initial.phase) ? 'failed' : 'completed');
       expect(scope.getStore()).toBeUndefined();
     }
 

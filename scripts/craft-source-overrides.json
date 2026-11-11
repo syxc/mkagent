@@ -3945,8 +3945,8 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse core Agent state, lifecycle and default message conversion; retain durable queue identity, recovery and two separate mutable defaults."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
-      "sha256": "8bd276db3bac9fabbed79840ab4f5761e040f87aab6ee9375e4dbfe0390236bb",
-      "reason": "Bind real Native and SDK tool owners, callback scopes and journal transactions; delegate plain public Agent/runToolCall effects through the existing ToolTask bridge without rewrapping bridged tools."
+      "sha256": "fcb3ce232551a065d2d358bb48e81211171857a8d5a490ef506f99e9e738b37d",
+      "reason": "Bind Native and SDK tool owners, scopes and journal transactions; delegate plain tools through ToolTask and release sibling delivery gates when a Native receipt fails."
     },
     "packages/pi-durable-coding/src/durable-coding/index.ts": {
       "sha256": "32898b73b64f687a315137b0f0c33c25961be8b5c825f13437f08a48b7038f71",
@@ -3997,8 +3997,8 @@
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in tool-batch.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/tool-task.ts": {
-      "sha256": "9c76986f4b5e6f6970a609c3dcf6ec91a46f1562a8314dfc9cb78581d6635700",
-      "reason": "Preserve Native hooks, events, replay limits and failure cleanup; deliver final execution arguments from completed SDK receipts, with fallback for old receipts."
+      "sha256": "950dd6e01d62f829fa0e30db2b2b83701b97887d1b151597c11ba090b91fbcf0",
+      "reason": "Preserve Native hooks, events and replay limits; retain complete tool results on hook failure or cold cancellation, including final arguments, controls and usage receipt metadata."
     },
     "packages/pi-durable-coding/src/durable-loop.ts": {
       "sha256": "2cd9b678430beb0e83b08e56aa36071bbfdeae1832f611bc9ce149e92c012de3",
@@ -4085,12 +4085,12 @@
       "reason": "Use the public core proxy transport without maintaining another source copy or invoking its Agent loop."
     },
     "packages/pi-durable-coding/test/durable-agent.test.ts": {
-      "sha256": "a66f16e7d8139ccb4c0ea5c8af5914ebf196b5e9173ab5a31bbd1fb2c3379d3a",
-      "reason": "Exercise durable native coding behavior and isolated recovery through the durable-agent.test.ts fixture."
+      "sha256": "210f4d8022ad136f014a027f1ddc9b72a0186f6ca76a56b47e8e3f9db8e32d25",
+      "reason": "Verify durable Agent ownership and events; ensure a failed after-hook retains the completed receipt and releases parallel sibling delivery."
     },
     "packages/pi-durable-coding/test/durable-coding-tool-task.test.ts": {
-      "sha256": "740b0bb2ea17e35a0acb9da33676e7e183b5e2f199085b46160f90f2dfba0a55",
-      "reason": "Exercise durable native coding behavior and isolated recovery through the durable-coding-tool-task.test.ts fixture."
+      "sha256": "6ef969787b0f063668df9f9e9a9ffcadf3521cf7b72e16d68540558be104020b",
+      "reason": "Verify Native tool checkpoints, complete results on failed or interrupted hooks, cancellation handoff, event delivery and JSONL recovery without repeated effects."
     },
     "packages/pi-durable-coding/test/fixtures/native-recovery-worker.ts": {
       "sha256": "1327923c2cbf01cb7298026cd6758facf87cd7e2f33f34ec433a9e4e00172bb8",
@@ -4105,12 +4105,12 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/test/fixtures/host-tool-recovery-process.ts": {
-      "sha256": "9ecfdb70d950dea604553c3db5da91db36260ac67f439c25e723a2036195fc1a",
-      "reason": "Run isolated JSONL SIGKILL recovery for replay policy, failure cleanup and completed results, including final argument snapshots, removed plain tools and old receipts without snapshots."
+      "sha256": "b73c92deb251153116116b95f719c97b384890514242acb56b8da83e8836e677",
+      "reason": "Run isolated JSONL SIGKILL recovery and cold cancellation for plain and bridged tools; preserve completed output, final arguments, control, usage and old receipt fallback."
     },
     "packages/pi-durable-coding/test/host-tool-sdk.test.ts": {
-      "sha256": "7da4af4d9d09249f0dc55c5ad4270a1ed18e3c5ef1f79430ab5786091cdbc1f1",
-      "reason": "Verify plain and bridged ToolTask execution, complete results and arguments, owner cleanup, cancellation and fifteen SIGKILL scenarios including old and new completed receipts."
+      "sha256": "57a0d290bff693eee8c4bc39035610dcd16a179198ea81153f721f084ec3c188",
+      "reason": "Verify ToolTask ownership, cleanup and caller failures; cover completed receipts and final arguments through replay, SIGKILL recovery and cold cancellation of plain and bridged tools."
     },
     "packages/pi-durable-coding/test/plain-tool-sdk.test.ts": {
       "sha256": "d9daf6bf59d647c19027cc17c6d9ee3ac8f7cd7136e2bb9934c3b358b807eed2",

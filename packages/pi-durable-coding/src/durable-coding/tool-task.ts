@@ -65,6 +65,8 @@ export interface CodingToolTaskBindings {
   /** Flush staged native metadata through this transaction; never run tools or user hooks here. */
   commit?(tx: Tx): Promise<void>;
   finalArguments?(scope: CodingToolInvocation): Promise<unknown>;
+  /** Release volatile sibling gates when this task fails without an end event. */
+  onFailure?(): void;
 }
 
 export type ResolveCodingToolBindings = (
@@ -145,13 +147,11 @@ export function createCodingToolTask(
       }),
       finalize: scoped<'finalize'>(async (task, runtime, bindings, context) => {
         const outcome = await finalize(task.input, task.state.checkpoint.outcome, bindings, runtime, context);
-        await persistOutcome(runtime, bindings, { phase: 'deliver', outcome }, cancelling, context);
+        if (outcome) await persistOutcome(runtime, bindings, { phase: 'deliver', outcome }, cancelling, context);
       }),
       after: scoped<'after'>(async (task, runtime, bindings, context) => {
-        await checkpoint(runtime, bindings, {
-          phase: 'deliver',
-          outcome: failure(task.input, `afterToolCall for ${task.input.toolCall.name} was interrupted; the hook was not invoked again`, task.state.checkpoint.outcome.durationMs),
-        }, context);
+        await failWithResult(runtime, bindings, task.state.checkpoint.outcome,
+          new Error(`afterToolCall for ${task.input.toolCall.name} was interrupted; the hook was not invoked again`), context);
       }),
       deliver: scoped<'deliver'>(async (task, runtime, bindings, context) => {
         const outcome = task.state.checkpoint.outcome;
@@ -159,7 +159,7 @@ export function createCodingToolTask(
         try {
           await emitEnd(bindings, outcome);
         } catch (error) {
-          await failDelivery(runtime, bindings, outcome, error, context);
+          await failWithResult(runtime, bindings, outcome, error, context);
           return;
         }
         const hostFailure = await failedHostToolExecution(runtime, context);
@@ -169,7 +169,7 @@ export function createCodingToolTask(
       }),
       emit: scoped<'emit'>(async (task, runtime, bindings, context) => {
         // An arbitrary event sink cannot be atomically committed with durable state.
-        await failDelivery(runtime, bindings, task.state.checkpoint.outcome,
+        await failWithResult(runtime, bindings, task.state.checkpoint.outcome,
           new Error(`tool_execution_end delivery for ${task.input.toolCall.name} was interrupted; delivery is uncertain`), context);
       }),
     },
@@ -179,13 +179,28 @@ export function createCodingToolTask(
       const settled = cancelling.get(task.id);
       cancelling.delete(task.id);
       // The scheduler joins execute() and its pending progress before this handler starts.
-      let outcome = settled?.outcome ?? (
-        state.phase === 'deliver' || state.phase === 'emit'
-          ? state.outcome
-          : failure(task.input, 'Operation aborted', 'outcome' in state ? state.outcome.durationMs : undefined)
-      );
+      let outcome = settled?.outcome ?? ('outcome' in state ? state.outcome : undefined);
+      if (!outcome && state.phase === 'execute') {
+        const completed = await completedHostToolResult(runtime, context);
+        if (completed) {
+          const { durableHostControl: control, ...result } = completed.result;
+          outcome = durableOutcome({
+            toolCall: task.input.toolCall, result, isError: result.isError === true,
+            executionArguments: completed.executionArguments ?? task.input.args,
+            ...(control === undefined ? {} : { control }),
+          });
+        }
+      }
+      outcome ??= failure(task.input, 'Operation aborted');
+      if (state.phase === 'after' && settled?.phase !== 'deliver') {
+        await failWithResult(runtime, bindings, outcome,
+          new Error(`afterToolCall for ${task.input.toolCall.name} was interrupted; the hook was not invoked again`), context);
+        return;
+      }
       if (settled?.phase !== 'deliver' && (state.phase === 'execute' || state.phase === 'finalize')) {
-        outcome = await finalize(task.input, state.phase === 'finalize' ? state.outcome : outcome, bindings, runtime, context);
+        const finalized = await finalize(task.input, outcome, bindings, runtime, context);
+        if (!finalized) return;
+        outcome = finalized;
       }
       if (state.phase !== 'emit') {
         await checkpoint(runtime, bindings, { phase: 'deliver', outcome }, context);
@@ -193,7 +208,7 @@ export function createCodingToolTask(
         try {
           await emitEnd(bindings, outcome);
         } catch (error) {
-          await failDelivery(runtime, bindings, outcome, error, context);
+          await failWithResult(runtime, bindings, outcome, error, context);
           return;
         }
       }
@@ -288,16 +303,17 @@ async function execute(
   await updates;
   // Keep the native effect's output, but fail the task if its required event delivery failed.
   if (deliveryFailure) {
-    await failDelivery(runtime, bindings, outcome, deliveryFailure.error, context);
+    await failWithResult(runtime, bindings, outcome, deliveryFailure.error, context);
     return;
   }
   await persistOutcome(runtime, bindings, { phase: 'finalize', outcome }, cancelling, context);
 }
 
-async function failDelivery(
+async function failWithResult(
   runtime: CodingToolTaskRuntime, bindings: CodingToolTaskBindings,
   result: CodingToolTaskResult, error: unknown, context: Context,
 ): Promise<void> {
+  bindings.onFailure?.();
   await commitState(runtime, bindings, {
     status: 'terminal', outcome: { status: 'failed', error: { message: errorMessage(error) }, result },
   }, context);
@@ -306,7 +322,7 @@ async function failDelivery(
 async function finalize(
   input: CodingToolTaskInput, executed: CodingToolTaskResult, bindings: CodingToolTaskBindings,
   runtime: CodingToolTaskRuntime, context: Context,
-): Promise<CodingToolTaskResult> {
+): Promise<CodingToolTaskResult | undefined> {
   const hook = bindings.afterToolCall;
   if (!hook) return executed;
   // A hook can itself mutate external state. Its uncertain invocation is never replayed.
@@ -322,7 +338,7 @@ async function finalize(
     }, runtime.signal);
     return durableOutcome(mergeAfter(executed, override));
   } catch (error) {
-    return failure(input, errorMessage(error), executed.durationMs);
+    await failWithResult(runtime, bindings, executed, error, context);
   }
 }
 

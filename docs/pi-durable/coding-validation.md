@@ -189,6 +189,78 @@ complete declaration build, worker build, SQLite recovery combinations or
 product recovery flows. No new independent review is performed for this
 validation-only slice. F0 through F6 remain open.
 
+## Additional recovery and isolated worker checks after 11c130b
+
+The existing fresh isolated project passes native-session-recovery.test.ts:
+18 tests, 173 assertions and zero failures in 23.03 seconds. The root project
+passes coding-fork-recovery.test.ts with SQLite and JSONL: 18 tests,
+132 assertions and zero failures in 5.42 seconds. These results extend the
+recorded session checks. They do not complete product recovery acceptance.
+
+The fresh isolated worker bundle check fails in beforeAll. The server build
+script imports @earendil-works/pi-coding-agent directly, but the server manifest
+does not declare that dependency. Bun cannot resolve the package from
+packages/pi-agent-server/scripts/build.ts. The result is zero passes and one
+failure; the test body does not run. Earlier worker results do not establish
+that this installation layout works. The manifest and lock correction, frozen
+refresh and bundle smoke test remain open. No alias or symlink is added.
+
+## Completed tool receipts after 11c130b
+
+A failed or interrupted afterToolCall previously replaced completed tool output
+with an error result. The Native task now uses the existing failed outcome:
+error.message records the hook failure, and result retains the complete tool
+receipt. An uncertain hook is not called again. Direct tool calls reject, and
+the Agent run stops with the hook error. No tool_execution_end event is emitted
+for that failed hook.
+
+Cold cancellation at the execute checkpoint first joins SDK cleanup. It then
+uses the completed SDK receipt if the Native outcome is not yet saved. The
+adapter preserves content, images, details, structured content, usage, terminate,
+final execution arguments and control metadata. It separates durableHostControl
+from the public result and keeps the existing usage receipt conversion. Old
+receipts without execution arguments fall back to the accepted input. A saved
+Native outcome or completed same-process handoff takes priority. No new task
+version, persistent field, SDK patch or scheduling algorithm is added.
+
+Independent review found a parallel delivery failure in the first repair. A
+failed after-hook had marked its tool as finalized, but would never submit an
+end event. A sibling could wait forever for that event. A real Agent regression
+reproduced the stall before the fix. The new onFailure binding releases the
+existing sibling delivery gates when a task saves a failed receipt.
+
+The four original result-loss regressions fail before the repair. The final
+root run passes 110 tests and 831 assertions across seven files in 36.36 seconds:
+durable-agent.test.ts, durable-coding-tool-task.test.ts, host-tool-sdk.test.ts,
+plain-tool-sdk.test.ts, host-tools.test.ts, native-session-task.test.ts and
+native-session-recovery.test.ts. Coverage includes plain and bridged tools,
+real SIGKILL recovery followed by cancellation, completed hook handoff, direct
+caller failure and the parallel delivery regression. Local effects run once.
+Tests use the existing network-denying sandbox, task-owned configuration and
+local deterministic providers. No real credentials or paid model are used.
+
+The final targeted type check uses strict and skipLibCheck. Production source
+has zero diagnostics. The six-file test/source check has 14 diagnostics in both
+the 11c130b baseline and the current tree, with identical diagnostic signatures.
+No protected path is read. These existing test diagnostics are not a passing
+full type check. The initial checkpoint assertion adds a type error; the final
+assertion keeps the full value comparison and corrects its generic type. Its
+focused regression then passes one test and six assertions. The seven-file
+runtime suite is not repeated for that assertion-only change.
+
+A final independent static review of the six changed source and test files and
+the relevant callers finds no confirmed new defect. It does not rerun tests or
+inspect the SDK execution implementation, single-tool task or usage helper. It
+does not add runtime evidence for nonempty controls or accounted-usage markers.
+
+Source registration updates the six existing entries. The restricted Craft
+v0.15.6 audit passes for 2033 allowed files and excludes protected legacy and
+sensitive paths. This is not a complete source audit. Dependencies, lock,
+SDK outputs and generation rules do not change, so installation and SDK
+generation are not repeated. The fresh source snapshot does not yet contain
+this repair. Full declarations, protected legacy, the isolated worker failure,
+remaining source replacement and F0 through F6 remain open.
+
 ## Resource result declaration after c2ddabe
 
 The exported discoverCodingSkills function had no return annotation. In both

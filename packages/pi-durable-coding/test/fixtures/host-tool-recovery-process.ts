@@ -16,8 +16,9 @@ assert(directory && (phase === 'begin' || phase === 'resume'));
 assert(replay === 'safe' || replay === 'never');
 assert(nativeReplay === 'safe' || nativeReplay === 'never');
 assert(['intent', 'completed', 'removed', 'legacy-policy', 'failed', 'failed-removed',
-  'plain-completed', 'plain-removed', 'plain-legacy'].includes(boundary!));
+  'plain-completed', 'plain-removed', 'plain-legacy', 'abort-completed', 'plain-abort-completed'].includes(boundary!));
 const plain = boundary!.startsWith('plain-');
+const aborting = boundary!.includes('abort-completed');
 const failed = boundary === 'failed' || boundary === 'failed-removed';
 const removed = boundary === 'removed' || boundary === 'failed-removed' || boundary === 'plain-removed';
 const Child = defineTask<{}, { phase: 'sleep' }, null>({
@@ -76,7 +77,8 @@ const native: AgentTool = {
       }, BACKGROUND_CONTEXT);
     }
     if (phase === 'begin' && (boundary === 'intent' || boundary === 'legacy-policy')) await block();
-    return { content, details: { source: 'native' }, structuredContent: { complete: true } };
+    return { content, details: { source: 'native' }, structuredContent: { complete: true },
+      ...(aborting ? { usage: response('').usage, terminate: true } : {}) };
   },
 };
 const wrapped = hostToolToAgent(agentToolToHost(native));
@@ -112,6 +114,8 @@ const agent = new Agent({
     return stream;
   },
 });
+const events: unknown[] = [];
+agent.subscribe(event => { if (event.type === 'tool_execution_end') events.push(event); });
 const backend = await agent.durable.backend();
 backend.registry.install(defineExtension({ name: 'host-sdk-recovery', tasks: [Child] }));
 if (phase === 'begin') {
@@ -138,12 +142,13 @@ try {
   const id = JSON.parse(readFileSync(join(directory, 'tool-id.txt'), 'utf8')) as TaskId;
   const checkpoint = (await backend.harness.getTask(id, backend.context))?.state;
   const execution = await backend.harness.snapshot(ExecutionDoc, id, backend.context);
+  if (aborting) await backend.harness.abortTask(id, backend.context);
   const resumed = await agent.resumeDurable(() => backend.harness.resume());
   const children = failed ? await Promise.all((JSON.parse(readFileSync(join(directory, 'children.txt'), 'utf8')) as TaskId[])
     .map(id => backend.harness.getTask(id, backend.context))) : [];
   console.log(JSON.stringify({ resumed, checkpoint, execution, children,
     owner: await backend.harness.getTask(id, backend.context),
-    messages: agent.state.messages, reports: backend.reports }));
+    messages: agent.state.messages, events, reports: backend.reports }));
 } finally {
   await agent.durable.close();
 }
