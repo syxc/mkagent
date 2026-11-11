@@ -3408,17 +3408,13 @@
       "sha256": "d96737cdb414da6d9c251bbc06d6955ac79e14dc380a78e961fd11fc0c446833",
       "reason": "Vendor pi-coding-agent 1.1.0 core/mcp-servers.js validation, exposure matching, namespaces and extension registration types."
     },
-    "packages/pi-agent-server/src/mcp/resolve-config-value.ts": {
-      "sha256": "931ad2799563076208ebfb8da8574ace101fdff715bff6d9216cbbdca690fca7",
-      "reason": "Port pi-coding-agent 1.1.0 core/resolve-config-value.js environment, template and command resolution using the platform default shell."
-    },
     "packages/pi-agent-server/src/mcp/resources.ts": {
       "sha256": "882755663ed8c85c150f89ec437f15cecf0b95c2cfd5ab289e2fb53b076a3ba7",
       "reason": "Adapt pi-coding-agent 1.1.0 extensions/mcp/resources.js resource listing and reading to durable tool registration and visibility."
     },
     "packages/pi-agent-server/src/mcp/runtime.ts": {
-      "sha256": "356581071d8acd986773fc7acff5e8f729b22dafff3422b88da5798205c9bed6",
-      "reason": "Preserve host MCP retry and OAuth rotation behavior while reading provider tokens per request and rejecting retired or unsafe credential dispatch."
+      "sha256": "4353bc2991a1809f0a9d2abeff7b1a85ee5f002e53975dbd0a6d7e5cae81dbef",
+      "reason": "Resolve MCP headers, process environment and OAuth client secrets through the Coding SDK with the existing platform default shell policy."
     },
     "packages/pi-agent-server/src/mcp/tools.ts": {
       "sha256": "f5ece4f39e8fddb68c75288832647bfb1e66ecd9ab2f1ce12d7568300115b61a",
@@ -3689,8 +3685,8 @@
       "reason": "Route the shared shell compatibility entry to the active SDK and durable binding."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "d2a3dbc2c22e165d20c3c833651afc332f99a7cf4e3595a1ad76a29d0043d495",
-      "reason": "Expose the MCP tools facade through the existing Coding SDK dependency without adding a runtime dependency."
+      "sha256": "4d0b14c25ac88c2dc4cd5755f6d33ba531703b81f1dc6072c1f6eacf6ad7ab4e",
+      "reason": "Expose the MCP configuration binding through the existing Coding SDK dependency."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -4369,16 +4365,16 @@
       "reason": "Check the OAuth module source route to the public SDK; retain existing SDK identity and trust boundary checks."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "ca62cc25c5bc9aff1466781faabfc41c60948f7f707d5ed165e58ba739d2e2ae",
-      "reason": "Record 80 Coding outputs, including root MCP exports and the narrow schema resource-reference fix."
+      "sha256": "fa741f7834eab77370ca328f2289cad91cb48e2555a3cafb9c080200693d5dbc",
+      "reason": "Record 82 Coding outputs, including existing configuration root exports and optional platform default shell selection."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "9acbbb4581482ced1b4cc218178df59c66566ce2dff25103d832896ddf11a9c4",
-      "reason": "Export existing MCP helpers and preserve local-reference bases at SDK schema resource boundaries."
+      "sha256": "d2ac6b11eb4d58465fb61e408db8c5705a4bdc0f1a47ad82618c8a520a0e4edb",
+      "reason": "Export existing strict configuration resolvers and add an optional default shell policy without copying the parser or command algorithm."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "4cac4fc8770972cf2803aad4e622de1f4b2620c470b2aaad69779b94415de5a7",
-      "reason": "Export existing MCP helpers and stop local-reference relocation at string $id resources without copying algorithms."
+      "sha256": "73d59a3effc66dab532e593088123873617888f5e156a9aea786809e1ce21599",
+      "reason": "Export existing strict configuration resolvers and preserve host MCP shell semantics with an optional policy parameter."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4627,6 +4623,14 @@
     "packages/pi-durable-coding/src/mcp-tools.ts": {
       "sha256": "906824347c92d1c74864be5783e71a3f9751c8a861186cafb9945a1a82a4b2b1",
       "reason": "Expose existing Coding SDK MCP presentation functions without a runtime wrapper."
+    },
+    "packages/pi-durable-coding/src/mcp-config.ts": {
+      "sha256": "baaaa90aa7adc7a9314cd43f68c1bffe04ba4807c064dc63dd779476ea2d5e5c",
+      "reason": "Bind the SDK strict configuration resolvers to the platform default shell for existing MCP commands."
+    },
+    "packages/pi-agent-server/src/mcp/config-sdk.test.ts": {
+      "sha256": "f236ea5c9b2301faccaf3d56f78064deff0ae3a6bb287fc59fe4c342d34032f3",
+      "reason": "Verify SDK templates, strict errors, uncached commands, MCP transport and OAuth boundaries, and modeled Windows shell selection."
     }
   },
   "deleted": {

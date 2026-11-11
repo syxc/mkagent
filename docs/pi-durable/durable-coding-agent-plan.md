@@ -98,6 +98,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `6014226` 后的 server MCP tools 切片删除 180 行截断副本和 39 行输出文件副本；SDK 承担命名、结果转换、资源展示、截断、保存与 schema，server 只绑定 durable 注册、可见性和宿主执行。五行门面直接转出已有函数，生成清单仍为 13 份 TypeScript。补丁除两个根出口外，增加独立复核确认的 `$id` resource 引用修复，Coding 为 80 份输出，总数为 117 份；未搬入完整算法。四种 `$id` 回归修复前均失败，父线程修复后两布局各 32 项测试及定向严格类型检查通过，使用 skipLibCheck，未再独立复核。来源更新 5 项、退役 2 项、新增 2 项，受限 Craft 审计覆盖 2017 个允许文件。其他 server 副本、完整 Native 与声明及 F0 至 F6 继续开放，见[MCP tools 验证](coding-validation.md#public-sdk-server-mcp-tools-after-6014226)。
 
+`b728360` 后的 MCP 配置切片删除 224 行完整解析副本，SDK 承担模板、环境回退、严格错误及不缓存命令执行；10 行绑定只为 MCP 保留平台默认 shell。独立复核确认初版 Windows shell 语义回归，父线程补可选策略参数，模型回归先失败后通过，未再独立复核，没有真实 Windows 验证。修复后两布局各 41 项测试、实际绑定与声明的严格消费者通过，使用 skipLibCheck。Coding 补丁为 82 份，总数 119 份；生成清单仍为 13 份，手写绑定另计。来源更新 5 项、退役 1 项、新增 2 项，受限 Craft 审计通过 2018 个允许文件；其他源码、完整 Native 与声明及 F0 至 F6 继续开放，见[MCP 配置验证](coding-validation.md#public-sdk-mcp-configuration-after-b728360)。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

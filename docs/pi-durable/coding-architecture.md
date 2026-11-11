@@ -333,6 +333,8 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `6014226` 后的 server MCP tools 切片删除 180 行截断副本和 39 行输出文件副本，命名、内容转换、资源展示、截断、保存及输出 schema 使用 Coding SDK。五行手写门面只转出已有函数，server 保留 durable 注册和宿主执行绑定。除两个根出口外，独立复核确认的 `$id` 引用回归需要一处 SDK 局部修复：遇到 schema resource 时保留其局部引用基准，其余转换算法不复制。Coding 补丁增至 80 份，总补丁产物为 117 份；生成清单仍为 13 份 TypeScript，手写门面另计。四种 `$id` 回归修复前均失败，修复后两布局各 32 项测试及定向严格类型检查通过，使用 skipLibCheck；未做第二次独立复核。来源更新 5 项、退役 2 项、新增 2 项，受限 Craft 审计覆盖 2017 个允许文件；完整 Native、声明及 F0 至 F6 继续开放，见[MCP tools 验证](coding-validation.md#public-sdk-server-mcp-tools-after-6014226)。
 
+`b728360` 后的 MCP 配置切片删除 server 的 224 行解析副本，模板、环境回退、严格错误和不缓存命令执行均交给 Coding SDK。两个已有严格函数只补根出口；10 行手写绑定为 MCP 选择平台默认 shell，runtime 的 headers、stdio env 和 OAuth clientSecret 三处调用共用此绑定。独立复核确认初版在 Windows 优先选择 Git Bash，改变 `%VAR%` 语义；SDK 因此增加可选默认 shell 策略，未传选项仍保持原行为。模型回归修复前失败，修复后两布局各 41 项测试及实际绑定、声明消费者严格类型检查通过，使用 skipLibCheck；未再独立复核，没有真实 Windows 验证。Coding 补丁为 82 份，总数 119 份，生成清单仍为 13 份，手写绑定另计；来源更新 5 项、退役 1 项、新增 2 项，受限 Craft 审计通过 2018 个允许文件。完整 Native、声明及 F0 至 F6 继续开放，见[MCP 配置验证](coding-validation.md#public-sdk-mcp-configuration-after-b728360)。
+
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |

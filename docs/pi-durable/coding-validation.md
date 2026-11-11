@@ -26,6 +26,89 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public SDK MCP configuration after b728360
+
+Delete the server's 224-line configuration resolver copy. The Coding SDK now
+provides template parsing, environment fallback, strict contextual errors and
+uncached command resolution for HTTP headers, stdio environment and OAuth client
+secrets. Durable's public entries do not provide this contract. Export the two
+existing strict functions from the Coding root; keep transport ownership in the
+server. The ten-line handwritten mcp-config binding selects the platform default
+shell. It contains no parser, command runner or header algorithm.
+
+Independent review confirms one P2 regression in the first direct-export
+candidate. On Windows, the old server uses the platform default shell, while the
+SDK prefers its configured shell. With Git Bash selected, a successful command
+such as `!echo %MKAGENT_REVIEW_FIXTURE%` returns the literal variable reference
+instead of the cmd.exe environment value. This can change headers, stdio values
+and OAuth secrets. The reviewer runs actual Bash and models the old cmd.exe
+result; no Windows binary runs.
+
+Add an optional { shell: "default" } parameter to the SDK's uncached and strict
+resolution paths. Forward it through strict header resolution. The MCP binding
+selects this policy; SDK callers without it retain the configured-shell behavior.
+Cached calls and their keys stay unchanged. The parent adds a test that executes
+the installed SDK module and transpiled binding with modeled Windows shell
+dependencies. It fails before the SDK fix with the literal reference, then passes
+for SDK default dispatch and both MCP value and header dispatch after the fix.
+There is no second independent review of this small correction.
+
+Generation and check pass for 82 Coding outputs. The first candidate changes
+only the two shared roots among the preceding 80 outputs. The shell fix keeps
+all those 80 hashes and adds resolve-config-value.js and its declaration.
+Both existing layouts match all 82 hashes. Core has four outputs and durable
+has 33, for 119 total. The generated runtime list stays at 13 TypeScript files:
+nine src/pi files and four facades, with eight auxiliary sources and 13 shared
+entries. The new handwritten binding is outside that generated list. Dependencies,
+lockfile and persistence versions are unchanged. No install runs.
+
+After the shell fix, each layout passes all 41 tests across config-sdk, tools-sdk,
+visibility, registrations and provider. The nine configuration tests cover
+modeled Windows dispatch, templates and escapes, empty-value environment fallback,
+deduplicated missing variables, strict headers, repeated actual POSIX commands,
+failed and empty command output, pre-transport rejection and fresh OAuth settings.
+Guarded preflights inspect 2138 root and 2599 hoisted loads with zero protected
+loads. Actual binding implementations, emitted facade declarations, tests and
+SDK shell-option consumers compile with zero diagnostics under strict mode and
+skipLibCheck. These checks do not establish full declaration validity.
+
+Keep the initial root 40/1 and second 1/1 logs. The first shell failure comes
+from the task sandbox denying /dev/null writes needed for ignored child stdio.
+The corrected policy permits only that device write and preserves read and
+network restrictions. The second failure exposes a Bun 1.3.14 test assumption:
+process.env mutations in the test do not reach execSync children. Replace that
+fixture with a task-owned file whose content changes between two identical
+commands. The initial root then retains 39 passes and adds two shell passes;
+hoisted passes 41. Those results precede the shell-policy fix and are separate
+from the final full 41/0 runs in both layouts.
+
+Independent review checks eight frozen source and 15 evidence hashes, 160 SDK
+output hashes and four pristine configuration modules from the first candidate.
+Seventeen common declarations and the POSIX command body match, 8247 template and
+header comparisons pass, and repeated, failed and empty commands are checked.
+Its full entry probe fails with sandbox EPERM on @anthropic-ai/sdk/lib/credentials;
+read protection is not relaxed. The parent verifies the report and frozen inputs
+before fixing the confirmed Windows regression. Parent and reviewer also report
+mistaken reads of a different task's loopback preload; neither executes that file.
+Behavioral commands use the specified aoprmue preload. Repeated reads add no
+verification evidence.
+
+Source registration updates five entries, retires one and adds two. Other
+entries stay unchanged. The fixed Craft v0.15.6 restricted audit passes 2018
+allowed files: 1454 common paths, 873 normalized matches, 581 modified files,
+564 MkAgent-only files and 858 reviewed Craft-only deletions. Whole-legacy,
+context-tokens.js and sensitive configuration exclusions remain. Behavioral
+children use task-owned HOME and temporary directories, PI_OFFLINE, no environment
+file, the loopback-only preload and OS sandbox. Real user configuration, external
+network access and port 9100 remain blocked.
+
+Evidence is under /tmp/mkagent-mcp-config-sdk-OVtqQY. Preserve applied.json,
+validation.json, review-inputs.json, review-verified.json and the independent
+review directory. The final fix uses shell-policy-red.json, shell-fix-applied.json,
+shell-policy-green.json, source-registration.json and restricted-craft-audit.json.
+Full Native, full declarations, skipLibCheck=false, fresh install, real Windows,
+full Craft and F0 through F6 remain open. Other server copies still need review.
+
 ## Public SDK server MCP tools after 6014226
 
 Delete the server's 180-line truncation copy and 39-line output-file copy.

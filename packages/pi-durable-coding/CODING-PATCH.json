@@ -3,17 +3,17 @@
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "version": "1.5.0",
   "patch": "coding-sdk-host-boundaries-v1",
-  "policy": "Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization, an optional session factory and runtime session subtype declarations, and installed worker theme and HTML asset lookup, and protected RPC CLI selection with the published default, and MCP schema resource boundaries during local-reference relocation.",
+  "policy": "Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization, an optional session factory and runtime session subtype declarations, and installed worker theme and HTML asset lookup, and protected RPC CLI selection with the published default, and MCP schema resource boundaries during local-reference relocation, and optional platform default shell resolution for host MCP configuration.",
   "files": [
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "7092c11e26a4d0b4ef404e09649db5af8eee85335736d98e4ad9c5671b3a4dd7"
+      "sha256": "6e4ed4985c0946dc5d648e23bf1ba6e425e7ca24ef023fcdb7bebddee196b222"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "155eb2535ee7de10468076104fc75ebf3ca1b6566547f41b3c5a8703aaff686f"
+      "sha256": "5e35d01e5dd44429d4410a9ab93821e92b06345fd80c4d68e26815895cd2612a"
     },
     {
       "path": "dist/core/agent-session-services.js",
@@ -404,6 +404,16 @@
       "path": "dist/extensions/mcp/tools.js",
       "originalSha256": "93d4aae2090400c1565ba536f38cf373f022de2c6519e37c02493fbe420842f5",
       "sha256": "130068f829612259647a54a633af3358092348d2057a56f26edbd218b6324f33"
+    },
+    {
+      "path": "dist/core/resolve-config-value.js",
+      "originalSha256": "01fdb1673990635bb419c7418eefa298b6a1c6fbb3c6193d3b05a4902e51992d",
+      "sha256": "46b2a57f44b65e6ed81e626fcb8ad08a92f83b14551034651e0a1a6b7fa39b70"
+    },
+    {
+      "path": "dist/core/resolve-config-value.d.ts",
+      "originalSha256": "4cfbc127ab697ad63496c3c6b092b810c30a445af5894d9a16ff0e170860a6eb",
+      "sha256": "32b9fe0f1ec2471cebdb9358e23f82f0b7bbfa20d7fde8c63e9f053a302e220c"
     }
   ]
 }

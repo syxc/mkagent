@@ -1,8 +1,8 @@
-# Content SHA-256: 092b327bc40e5e47173feb20b022d1041e920d2690d261ab7fad49b7516fef4c
+# Content SHA-256: 6f595946bb10e07b3e556ea3922c14d476117c686dab51c181e506caf68f75c3
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,63 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,64 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -13,6 +13,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/settings-manager.js";
 +export { getProjectTrustOptions } from "./core/trust-manager.js";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.js";
++export { resolveConfigValueOrThrow, resolveHeadersOrThrow } from "./core/resolve-config-value.js";
 +export * from "./core/package-manager.js";
 +export * from "./core/model-registry.js";
 +export * from "./core/model-runtime.js";
@@ -79,7 +80,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,65 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,66 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -90,6 +91,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/settings-manager.ts";
 +export { getProjectTrustOptions } from "./core/trust-manager.ts";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.ts";
++export { resolveConfigValueOrThrow, resolveHeadersOrThrow } from "./core/resolve-config-value.ts";
 +export * from "./core/package-manager.ts";
 +export * from "./core/model-registry.ts";
 +export * from "./core/model-runtime.ts";
@@ -4177,3 +4179,74 @@ diff --git a/dist/extensions/mcp/tools.js b/dist/extensions/mcp/tools.js
      const relocated = {};
      for (const [key, value] of Object.entries(schema)) {
          if (key === "$ref" && typeof value === "string" && (value === "#" || value.startsWith("#/"))) {
+diff --git a/dist/core/resolve-config-value.js b/dist/core/resolve-config-value.js
+--- a/dist/core/resolve-config-value.js
++++ b/dist/core/resolve-config-value.js
+@@ -169,9 +169,9 @@ function executeWithDefaultShell(command) {
+         return undefined;
+     }
+ }
+-function executeCommandUncached(commandConfig) {
++function executeCommandUncached(commandConfig, options) {
+     const command = commandConfig.slice(1);
+-    return process.platform === "win32"
++    return options?.shell !== "default" && process.platform === "win32"
+         ? (() => {
+             const configuredResult = executeWithConfiguredShell(command);
+             return configuredResult.executed ? configuredResult.value : executeWithDefaultShell(command);
+@@ -189,15 +189,15 @@ function executeCommand(commandConfig) {
+ /**
+  * Resolve all header values using the same resolution logic as API keys.
+  */
+-export function resolveConfigValueUncached(config, env) {
++export function resolveConfigValueUncached(config, env, options) {
+     const reference = parseConfigValueReference(config);
+     if (reference.type === "command") {
+-        return executeCommandUncached(reference.config);
++        return executeCommandUncached(reference.config, options);
+     }
+     return resolveTemplate(reference.parts, env);
+ }
+-export function resolveConfigValueOrThrow(config, description, env) {
+-    const resolvedValue = resolveConfigValueUncached(config, env);
++export function resolveConfigValueOrThrow(config, description, env, options) {
++    const resolvedValue = resolveConfigValueUncached(config, env, options);
+     if (resolvedValue !== undefined) {
+         return resolvedValue;
+     }
+@@ -231,12 +231,12 @@ export function resolveHeaders(headers, env) {
+     }
+     return Object.keys(resolved).length > 0 ? resolved : undefined;
+ }
+-export function resolveHeadersOrThrow(headers, description, env) {
++export function resolveHeadersOrThrow(headers, description, env, options) {
+     if (!headers)
+         return undefined;
+     const resolved = {};
+     for (const [key, value] of Object.entries(headers)) {
+-        resolved[key] = resolveConfigValueOrThrow(value, `${description} header "${key}"`, env);
++        resolved[key] = resolveConfigValueOrThrow(value, `${description} header "${key}"`, env, options);
+     }
+     return Object.keys(resolved).length > 0 ? resolved : undefined;
+ }
+diff --git a/dist/core/resolve-config-value.d.ts b/dist/core/resolve-config-value.d.ts
+--- a/dist/core/resolve-config-value.d.ts
++++ b/dist/core/resolve-config-value.d.ts
+@@ -18,13 +18,13 @@ export declare function resolveConfigValue(config: string, env?: Record<string,
+ /**
+  * Resolve all header values using the same resolution logic as API keys.
+  */
+-export declare function resolveConfigValueUncached(config: string, env?: Record<string, string>): string | undefined;
+-export declare function resolveConfigValueOrThrow(config: string, description: string, env?: Record<string, string>): string;
++export declare function resolveConfigValueUncached(config: string, env?: Record<string, string>, options?: { shell?: "default" }): string | undefined;
++export declare function resolveConfigValueOrThrow(config: string, description: string, env?: Record<string, string>, options?: { shell?: "default" }): string;
+ /**
+  * Resolve all header values using the same resolution logic as API keys.
+  */
+ export declare function resolveHeaders(headers: Record<string, string> | undefined, env?: Record<string, string>): Record<string, string> | undefined;
+-export declare function resolveHeadersOrThrow(headers: Record<string, string> | undefined, description: string, env?: Record<string, string>): Record<string, string> | undefined;
++export declare function resolveHeadersOrThrow(headers: Record<string, string> | undefined, description: string, env?: Record<string, string>, options?: { shell?: "default" }): Record<string, string> | undefined;
+ /** Clear the config value command cache. Exported for testing. */
+ export declare function clearConfigValueCache(): void;
+ //# sourceMappingURL=resolve-config-value.d.ts.map
+\ No newline at end of file

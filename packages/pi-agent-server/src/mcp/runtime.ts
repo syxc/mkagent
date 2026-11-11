@@ -28,7 +28,7 @@ import {
   McpOAuthAuthorizationRequiredError, createMcpAuthProvider,
   type McpAuthProvider, type McpOAuthCredentialStore, type McpOAuthSettings, type OAuthChallenge,
 } from '@mkagent/pi-durable-coding/mcp-oauth';
-import { resolveConfigValueOrThrow, resolveHeadersOrThrow } from './resolve-config-value.ts';
+import { resolveConfigValueOrThrow, resolveHeadersOrThrow } from '@mkagent/pi-durable-coding/mcp-config';
 import { isMcpAppResource } from './resources.ts';
 import { McpServerLog } from './log.ts';
 import { isSecureMcpUrl, type McpServerEntry } from './mcp-servers.ts';

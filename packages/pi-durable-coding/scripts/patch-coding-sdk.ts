@@ -54,6 +54,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/settings-manager.${extension}";`,
     `export { getProjectTrustOptions } from "./core/trust-manager.${extension}";`,
     `export { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";`,
+    `export { resolveConfigValueOrThrow, resolveHeadersOrThrow } from "./core/resolve-config-value.${extension}";`,
     `export * from "./core/package-manager.${extension}";`,
     `export * from "./core/model-registry.${extension}";`,
     `export * from "./core/model-runtime.${extension}";`,
@@ -394,6 +395,27 @@ outputs.set(mcpToolsPath, replace(readFileSync(join(baseline, mcpToolsPath), 'ut
     if (typeof schema.$id === "string")
         return schema;
     const relocated = {};`));
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/core/resolve-config-value.${suffix}`;
+  let body = readFileSync(join(baseline, path), 'utf8');
+  if (suffix === 'js') {
+    body = replace(body, 'function executeCommandUncached(commandConfig) {', 'function executeCommandUncached(commandConfig, options) {');
+    body = replace(body, 'return process.platform === "win32"', 'return options?.shell !== "default" && process.platform === "win32"');
+    body = replace(body, 'resolveConfigValueUncached(config, env) {', 'resolveConfigValueUncached(config, env, options) {');
+    body = replace(body, 'return executeCommandUncached(reference.config);', 'return executeCommandUncached(reference.config, options);');
+    body = replace(body, 'resolveConfigValueOrThrow(config, description, env) {', 'resolveConfigValueOrThrow(config, description, env, options) {');
+    body = replace(body, 'resolveConfigValueUncached(config, env);', 'resolveConfigValueUncached(config, env, options);');
+    body = replace(body, 'resolveHeadersOrThrow(headers, description, env) {', 'resolveHeadersOrThrow(headers, description, env, options) {');
+    body = replace(body, 'resolveConfigValueOrThrow(value, `${description} header "${key}"`, env);', 'resolveConfigValueOrThrow(value, `${description} header "${key}"`, env, options);');
+  } else {
+    for (const signature of [
+      'resolveConfigValueUncached(config: string, env?: Record<string, string>',
+      'resolveConfigValueOrThrow(config: string, description: string, env?: Record<string, string>',
+      'resolveHeadersOrThrow(headers: Record<string, string> | undefined, description: string, env?: Record<string, string>',
+    ]) body = replace(body, signature + ')', signature + ', options?: { shell?: "default" })');
+  }
+  outputs.set(path, body);
+}
 const staging = mkdtempSync(join(tmpdir(), 'coding-sdk-exports-'));
 let patch = '';
 for (const [path, output] of outputs) {
@@ -412,7 +434,7 @@ const manifest = JSON.stringify({
   revision: 'f9a26365568127461c47a07a37dcb42c140a3ac5',
   version: '1.5.0',
   patch: 'coding-sdk-host-boundaries-v1',
-  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization, an optional session factory and runtime session subtype declarations, and installed worker theme and HTML asset lookup, and protected RPC CLI selection with the published default, and MCP schema resource boundaries during local-reference relocation.',
+  policy: 'Export existing settings, package, keybinding, theme, registry, session and resource contracts. Preserve published algorithms; add host package policies, structural runtime constructor typing, context projection callbacks, legacy session factories, resource trust and extension bindings, per-importer plugin caches and module import hooks, host discovery paths, live host model and shared credential binding with memory-only overlays, structural provider config typing, per-runner theme and prompt bindings, session tool and action callbacks, protected durable execution and input admission hooks, optional nested tool executor, internal model message projection and prompt and read-tool image processing bindings and host read-renderer documentation paths, host input metadata and summary stream bindings, optional durable tool replay typing and tool conversion metadata with symbol descriptors, module-relative executable image workers, default full theme validation, existing HTML, sleep and ZIP module exports, optional host search binary resolution, post-await grep cancellation checks and existing search tool exports, optional codemode executor binding and existing codemode presentation exports, optional host shell configuration, environment, process waiting, termination and tracking dependencies, sleep listener cleanup, shared extension model initialization, an optional session factory and runtime session subtype declarations, and installed worker theme and HTML asset lookup, and protected RPC CLI selection with the published default, and MCP schema resource boundaries during local-reference relocation, and optional platform default shell resolution for host MCP configuration.',
   files: [...outputs].map(([path, output]) => ({
     path, originalSha256: hash(readFileSync(join(baseline, path), 'utf8')), sha256: hash(output),
   })),
