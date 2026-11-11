@@ -41,6 +41,7 @@ export const CODING_SDK_MODULES = new Set([
   'extensions/mcp/config.ts',
   'extensions/mcp/index.ts',
   'modes/json-event.ts',
+  'modes/rpc/rpc-types.ts',
   'modes/interactive/components/auth-url.ts',
   'modes/interactive/components/dynamic-border.ts',
   'modes/interactive/components/keybinding-hints.ts',
@@ -72,6 +73,7 @@ export function codingHostImport(importer: string, specifier: string): string | 
     : module === 'core/tools/bash.ts' || module === 'core/tools/powershell.ts' ? 'native-shell-tools.ts'
     : module === 'extensions/codemode/index.ts' || module === 'extensions/codemode/tool.ts' ? 'native-codemode.ts'
     : module === 'extensions/tool-search/index.ts' || module === 'extensions/tool-search/tool.ts' ? 'native-tool-search.ts'
+    : module === 'modes/rpc/rpc-client.ts' ? 'compat/rpc-client.ts'
     : module === 'utils/shell.ts' ? 'compat/shell.ts'
     : module === 'utils/child-process.ts' ? 'compat/child-process.ts'
     : module === 'utils/mime.ts' ? 'compat/image-mime.ts'

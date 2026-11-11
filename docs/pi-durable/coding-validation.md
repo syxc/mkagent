@@ -26,6 +26,86 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK RPC client policy after 7ed106f
+
+Delete the 620-line RPC client, 58-line JSONL reader and 303-line protocol
+source, plus the old source-level CLI path transformation. The SDK root already
+exports RpcClient and the required protocol types. The three deleted modules
+match fixed SDK source-map AST statements after import removal and reversal of
+the old host CLI policy and its option comment. JSONL also matches byte for byte.
+The first parity attempt missed that comment and failed; the corrected comparison
+passed before any repository state change.
+
+The 13-line host subclass only rejects a missing or empty CLI path through
+protected resolveCliPath. This method is a local SDK patch API. The SDK default
+still selects dist/cli.js. The resolver runs at the original selection point,
+after the duplicate-start check and before spawn. The host inherits the SDK
+constructor, lifecycle, commands, event handling and JSONL. It does not copy
+options or add state. Object identity, inherited options, getter receivers,
+read counts and changes before start or restart stay intact. Remove this patch
+when the upstream SDK supplies an equivalent policy hook.
+
+Full runtime and auxiliary generation and check pass. The runtime has 16
+TypeScript files: 12 under src/pi and four facade files, with zero resources.
+The auxiliary inventory remains eight source items and 13 shared entries.
+The Coding patch adds only rpc-client.js and rpc-client.d.ts, for 78 physical
+outputs. Core has four and durable has 33, for 115 outputs in total. Both RPC
+outputs replay from pristine and match the manifest. All 78 Coding output
+hashes match in both existing layouts; SDK JSONL remains pristine. No dependency,
+lockfile or persistence version changed. No install ran. Before behavior tests,
+the resolver insertion was corrected to preserve the start method JSDoc, and
+fixture-only cwd access changed to Reflect.get rather than an SDK type change.
+
+Both layouts initially passed 16 tests: nine RPC tests and seven generation
+guards. Tests use node:assert/strict; assertion calls were not counted. The
+independent root-layout review then passed 14 of 15 tests: eight repository
+RPC tests and all six independent semantic probes. It found one P2 test defect,
+RPC-REVIEW-1, and no production migration defect in its scope. A fixture sends
+agent_settled after the response; a later waitForIdle call can receive that event
+and resolve before its timeout. The same assertion failed in all three isolated
+rechecks. These results came from the same frozen source as the initial passing
+parent runs. Preserve the failures; the initial green runs do not close this issue.
+
+The parent removed the timeout assertion from the event-producing fixture and
+added a separate fixture with no events. Both waitForIdle and collectEvents must
+then time out. Each existing layout passed all 10 final RPC tests. Production
+inputs did not change. The seven generation guards and scoped type checks remain
+valid. Both layouts emit the same adapter declaration with zero diagnostics;
+strict, non-executed consumers pass with skipLibCheck. They check SDK assignment,
+barrel identity, public RPC types and the protected access restriction. These
+checks do not establish that all SDK declarations are clean. The repair was
+checked by the parent, without a second independent review.
+
+The independent review also verified three-module AST parity, two pristine patch
+replays, the RPC generator block, mode generation and the static Native export
+chain for all ten RPC exports. Its guarded caller search found no remaining
+source imports of the removed modules. It did not execute the full Native barrel
+or the hoisted layout. Its first guarded caller enumeration stopped before a
+sensitive-name candidate was read, then skipped excluded candidates. No protected
+source was read or changed. Initial and final review input hashes match. The
+parent verified the report and all recorded artifact hashes before accepting
+the evidence. The original report and failure logs remain unchanged.
+
+Source registration updates eight entries, retires three and adds the host
+adapter. Other entries are unchanged. The fixed Craft v0.15.6 restricted audit
+passes 2020 allowed files: 1454 have the same relative path, 873 match after
+normalization, 581 are modified Craft-derived files, 566 are MkAgent-only files
+and 858 are reviewed Craft-only deletions. The audit keeps the whole legacy
+subtree and sensitive configuration excluded. Its count falls by two from the
+shell slice in the same scope. This is not a full Craft audit. The old local
+BashResult consumers are gone; its earlier root type export needs removal review.
+The UI type with the same name is a separate contract.
+
+Evidence is under /tmp/mkagent-rpc-sdk-TBcEAn: parity.json, repaired.json,
+validation.json, post-review-validation.json, review-accepted.json,
+source-registration.json and restricted-audit.log. The independent report is
+/tmp/mkagent-rpc-review-ewgee3_a/report.json. Behavior tests use a task-owned HOME,
+local CLI fixtures and an OS network deny rule, with a build preflight that finds
+zero protected dependencies. The audit uses its own path guards; it does not
+claim the behavior test sandbox. No original CLI, real model, account or UI ran.
+Fresh install, full types and declarations, full Native execution, real platforms,
+full Craft and F0 through F6 remain open.
+
 ## SDK shell helper policy after 7cc6045
 
 The SDK already contains the local shell discovery, environment and detached

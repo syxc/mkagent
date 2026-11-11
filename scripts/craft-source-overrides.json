@@ -3945,8 +3945,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "2af3098e3cb6deb92fd88ec8689c6064cc22883e4bcb627441aecc9ab167b152",
-      "reason": "Retire the shell source port after direct routing to the authored SDK binding."
+      "sha256": "eb3fbf7286efaa89b440df1148aedbc13782a5986fb99b0555a281b55de9d65a",
+      "reason": "Retire the RPC client, JSONL reader and protocol source ports after SDK routing."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -3957,8 +3957,8 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "37caff24f3f66c157afba6e34164c12ba59a5f516f5d3ae8a2530661c75b280b",
-      "reason": "Stop selecting the complete tool manager as an explicit local source root."
+      "sha256": "6dc52ece394528eb4543218cc592459f0996c8f8b55003d400711c65932b99ec",
+      "reason": "Remove the retired source-level RPC CLI policy transform."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
       "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
@@ -4121,24 +4121,12 @@
       "reason": "Export the shell compatibility contract through the authored SDK binding."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
-      "sha256": "a17cd07031fbd589086c4df3f8d82b51c77524ac54f7f8c33b581cb458a639ce",
-      "reason": "Expose the JSON event type from the SDK while retaining the explicit RPC client boundary."
-    },
-    "packages/pi-durable-coding/src/pi/modes/rpc/jsonl.ts": {
-      "sha256": "95723d349fcebad1f1da7ce103d02ba7d5e2c876b7d178d41d8b56beedbd93e0",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/modes/rpc/jsonl.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
-    },
-    "packages/pi-durable-coding/src/pi/modes/rpc/rpc-client.ts": {
-      "sha256": "f0fe98194cec8636b5cf223b269b602f8923d7de5de450ba1fd7512d2d39fc30",
-      "reason": "Use the SDK JSON event type while preserving the caller-provided CLI path requirement."
+      "sha256": "451018d0d86b9eeb446c58d7cfd82eb1bef493015b4a38a72d945a7a3ba5278c",
+      "reason": "Export the host RPC client policy and SDK protocol types without local RPC source files."
     },
     "packages/pi-durable-coding/test/rpc-client.test.ts": {
-      "sha256": "d8844d22330d6197f94bd2088b38352307567065b7629a986d88b9fb52d9da9f",
-      "reason": "Verify missing-entry rejection before spawn, explicit JSONL requests and options, shutdown, startup errors and outstanding-request rejection using local child-process fixtures."
-    },
-    "packages/pi-durable-coding/src/pi/modes/rpc/rpc-types.ts": {
-      "sha256": "72368768a995682e5ba00009933a24be407d231e76090ecd145a596591773c09",
-      "reason": "Use the SDK BashResult declaration for the existing RPC wire response."
+      "sha256": "17f748e376a2ef715c3200433c76fdfa5e9809ff51850bf21772689c58315613",
+      "reason": "Test SDK lifecycle, live options, CLI ownership, events and fragmented Unicode JSONL; isolate timeouts from event-producing fixtures."
     },
     "packages/pi-durable-coding/src/stream-fn.ts": {
       "sha256": "a6b2cce7515e43411f9b3469225d39712508542d86bc3e806a9f39b57808454f",
@@ -4397,24 +4385,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "d6cf9ea8218fbf2e9de8c40f4d944990d20f5e62c40be19ce2da529e14f84a73",
-      "reason": "Route shell imports to the authored SDK binding before source traversal."
+      "sha256": "1ba9517873dfa92330aa8005094229d0051522c97d97784084ee196059d832b8",
+      "reason": "Route the RPC client to the authored CLI policy and public protocol types to the SDK before source traversal."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
       "sha256": "ab86fb78ea8d57b9adb32592edefe1f495727adcc66b433481765ecdeb663637",
       "reason": "Guard compat path identity and source traversal at the SDK path and BOM boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "d2c7771fb6acfbcda2797a9875db3ebf402dad10a3e6b5e1c2d0060ec7b3e775",
-      "reason": "Record the SDK shell helper factory and root types; track 76 physical Coding patch outputs."
+      "sha256": "7ce81df1b565284b94c2821b6cdc04c85f67dfe0427dd8ddf563bec29470a3b9",
+      "reason": "Record the protected SDK RPC CLI resolver and 78 physical Coding patch outputs."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "231c7c9cff12d9230ed35b108012452cd11cc91d510bc59dd2138a5df17f2837",
-      "reason": "Export the shell helper factory and types, preserving SDK algorithms and default module APIs."
+      "sha256": "4b8880c9c83a64a42e4eddeab9249e44c8d4d04a84bca585789b4189775f8255",
+      "reason": "Add a protected RPC CLI resolver with the published default; keep lifecycle and JSONL algorithms in the SDK."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "49e6d4be8a06686343f6fa663397442c4b5e99426a14e566b7a8c51fe3ae8fbf",
-      "reason": "Expose an SDK shell helper factory with three host dependencies and independent PID sets; preserve default module APIs and SDK algorithms."
+      "sha256": "0a3ed146d65868d0a2e834c6414c4ce15fba04d104a88d9fb08da16ac41cf41f",
+      "reason": "Expose a protected RPC CLI resolver while preserving the SDK default and all lifecycle and JSONL algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4643,6 +4631,10 @@
     "packages/pi-durable-coding/src/native-messages.ts": {
       "sha256": "e2f1f2e6cec5c6d30ca31c3df7e58fea608fd9c22afbf706ab1e267436425354",
       "reason": "Delegate all message conversion, summaries and helpers to the SDK; strip host correlation only from native model context."
+    },
+    "packages/pi-durable-coding/src/compat/rpc-client.ts": {
+      "sha256": "e22939439bb50b1a452b68ae29c335f2ed0d41ef4b0ea7131b02b87eb187b0a0",
+      "reason": "Require a caller CLI through the protected SDK resolver; inherit client state, methods and JSONL without copies."
     }
   },
   "deleted": {

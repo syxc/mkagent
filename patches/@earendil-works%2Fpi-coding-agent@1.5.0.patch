@@ -1,4 +1,4 @@
-# Content SHA-256: 27151c9d55f4dff2afb896375bc28a26854a1d08982d8953f7111ac1b2eaa943
+# Content SHA-256: f4d82268449b90e4a54c7c9aaf990804010aa6be7c56973185f804c1d2720849
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -1450,6 +1450,39 @@ diff --git a/dist/utils/tools-manager.d.ts b/dist/utils/tools-manager.d.ts
 +};
  //# sourceMappingURL=tools-manager.d.ts.map
 \ No newline at end of file
+diff --git a/dist/modes/rpc/rpc-client.js b/dist/modes/rpc/rpc-client.js
+--- a/dist/modes/rpc/rpc-client.js
++++ b/dist/modes/rpc/rpc-client.js
+@@ -20,6 +20,9 @@ export class RpcClient {
+     constructor(options = {}) {
+         this.options = options;
+     }
++    resolveCliPath(cliPath) {
++        return cliPath ?? "dist/cli.js";
++    }
+     /**
+      * Start the RPC agent process.
+      */
+@@ -28,7 +31,7 @@ export class RpcClient {
+             throw new Error("Client already started");
+         }
+         this.exitError = null;
+-        const cliPath = this.options.cliPath ?? "dist/cli.js";
++        const cliPath = this.resolveCliPath(this.options.cliPath);
+         const args = ["--mode", "rpc"];
+         if (this.options.provider) {
+             args.push("--provider", this.options.provider);
+diff --git a/dist/modes/rpc/rpc-client.d.ts b/dist/modes/rpc/rpc-client.d.ts
+--- a/dist/modes/rpc/rpc-client.d.ts
++++ b/dist/modes/rpc/rpc-client.d.ts
+@@ -42,6 +42,7 @@ export declare class RpcClient {
+     private exitError;
+     private options;
+     constructor(options?: RpcClientOptions);
++    protected resolveCliPath(cliPath: string | undefined): string;
+     /**
+      * Start the RPC agent process.
+      */
 diff --git a/dist/core/settings-manager.js b/dist/core/settings-manager.js
 --- a/dist/core/settings-manager.js
 +++ b/dist/core/settings-manager.js
