@@ -3405,8 +3405,8 @@
       "reason": "Delegate resource schemas, paging, filtering, reads and conversion to SDK tools; keep only durable visibility, execution and result bindings."
     },
     "packages/pi-agent-server/src/mcp/runtime.ts": {
-      "sha256": "b608830d9f5844d187a57453327a731d529d0b23585e8b2210040ab44f38401a",
-      "reason": "Use the SDK MCP log type for server notifications; keep host transport, lifecycle and default-shell configuration bindings."
+      "sha256": "4dea9feeefa48d98fe31b1e5922e34c54f4eb704f4afc26546de1f78e05c5be2",
+      "reason": "Bind SDK connections to product credential destination and scope policies, explicit authorization, resource counts, cancellation and logout settlement; remove local transport, connection, retry and request algorithms."
     },
     "packages/pi-agent-server/src/mcp/tools.ts": {
       "sha256": "f5ece4f39e8fddb68c75288832647bfb1e66ecd9ab2f1ce12d7568300115b61a",
@@ -3673,8 +3673,8 @@
       "reason": "Route the shared shell compatibility entry to the active SDK and durable binding."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "e5bb895beeb448b3f543ea8fd7de26fd416594b9c3499410e82f653c4ad7a8f6",
-      "reason": "Expose the MCP server configuration facade through the existing Coding SDK dependency."
+      "sha256": "b8d3d7abcf289d27d0c45bd10bcd9e541bc12dd5c2c62b147edc56979cb7d373",
+      "reason": "Expose the handwritten MCP runtime facade and its actual declaration through a package subpath; retain the fixed official SDK dependencies."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
       "sha256": "d6769482f3e6a0193960338aa34b3dcf3719d3139f9eaf8b62a851ba7ef7204c",
@@ -4193,8 +4193,8 @@
       "reason": "Emit independent package declarations for the native coding API and durable host bindings."
     },
     "packages/pi-agent-server/src/mcp/authorization.ts": {
-      "sha256": "3d225c7be2d0c5a932ae0011a23c2c981d18546fb3a7f8407ded9c010fc2c40d",
-      "reason": "Provide owner-scoped MCP commands and drain cancellable authorization before registered servers are removed."
+      "sha256": "015a2b4d068cfd7a173edd072d11924108541aef2940239bfdd45723cb144ba7",
+      "reason": "Declare optional command selections as string or undefined; keep explicit login, logout, refresh settlement, cancellation and ownership policies unchanged."
     },
     "packages/pi-agent-server/src/mcp/oauth.test.ts": {
       "sha256": "940b768d44c925be3c900a7a147447ef31bf54a2d1699e0221bfae27432f5b54",
@@ -4353,16 +4353,16 @@
       "reason": "Check the OAuth module source route to the public SDK; retain existing SDK identity and trust boundary checks."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "4be22727ab5aac587b1c547a6bda090c8d907219777d56c04b44f71cde9a425a",
-      "reason": "Record 88 Coding outputs: add two HTTP dependency outputs, change three existing outputs and preserve the other 83 hashes for this server binary slice."
+      "sha256": "84c0a5842bb2c4983ad6b71843e38ededa0f5d8ddc55b269c4548c709c033c3e",
+      "reason": "Record 90 Coding outputs: add MCP runtime JS and declarations, change the two shared root outputs, and preserve the other 86 hashes for this connection migration."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "b704c76ced289139b334e866d6470b03a6b8c453ad07b86ca4a8f3b942bdc8c2",
-      "reason": "Apply focused tool manager and HTTP boundary policies to pristine SDK modules while retaining existing host contract patches and root exports."
+      "sha256": "029fb306bdd461ede5ef0d9cb144ce7170a289ba691b56fea2d6dc6d43be4dbc",
+      "reason": "Export existing SDK MCP runtime contracts and apply the focused connection policy while retaining other host contract patches."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "5d2d1711f52cf32f8ae2bdae526793009c977e9709b49504746a31cf413edd79",
-      "reason": "Retain necessary host boundaries and extend SDK manager dependencies, cancellation and cleanup; SDK algorithms replace the server installer and HTTP retry copies."
+      "sha256": "a5f4e3dd4ffde5749b491258d74bedc864c36427264ac8034cd4dca5fc4a8155",
+      "reason": "Keep required host interfaces and add MCP runtime binding, cancellation and discovery hooks; retain the SDK connection, retry, session and request algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4655,6 +4655,18 @@
     "packages/pi-durable-coding/src/compat/download.ts": {
       "sha256": "b63335f0419bad7aa13d05d5e149297229084c7da65461dc8068c3691788d963",
       "reason": "Retain only Web reader and file handle I/O because Bun Node stream bridges do not reliably cancel a pending producer; share this 25-line adapter across server and Native SDK managers."
+    },
+    "packages/pi-agent-server/src/mcp/runtime-sdk.test.ts": {
+      "sha256": "89d3f3c785cf205d90ef9c37603044ff00fede27d38b4359749671639c8dd9e0",
+      "reason": "Verify actual SDK connection ownership, request dispatch, product identity, filtered resource discovery, dynamic notifications, cancellation, close, default SDK behavior and partial host transport configuration with an in-memory protocol fixture."
+    },
+    "packages/pi-durable-coding/scripts/coding-mcp-runtime-policy.ts": {
+      "sha256": "643c28f58512591c87a035c919ca4e6619ed9b775b3d4c5998ae93783e927168",
+      "reason": "Add narrow optional transport resolvers, credential and client identity binding, setup cancellation and discovery commit hooks to the existing SDK connection algorithm; reject changed upstream boundaries instead of copying the class."
+    },
+    "packages/pi-durable-coding/src/mcp-runtime.ts": {
+      "sha256": "b10873b6b2cf265cccd735962805e30fea73b7be41bed40c9d3929ebd916cf4d",
+      "reason": "Forward the SDK connection class and transport factory without a local algorithm or runtime wrapper."
     }
   },
   "deleted": {

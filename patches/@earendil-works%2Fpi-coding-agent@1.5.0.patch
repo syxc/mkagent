@@ -1,8 +1,8 @@
-# Content SHA-256: 0c87312bef5b4f3fc2c4fc16731cd71ab1fd9f8f82193b1e8df4d11d7aa2c4c4
+# Content SHA-256: 8c5c731abdea703b7f4cd431053acebc79159f3fe85f0eecd1e7b835f1ebb07d
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,68 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,69 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -59,6 +59,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export { loadMcpConfig } from "./extensions/mcp/config.js";
 +export * from "./extensions/mcp/oauth.js";
 +export { McpServerLog, formatMcpLogMessage } from "./extensions/mcp/log.js";
++export { McpServerConnection, createDefaultTransport } from "./extensions/mcp/runtime.js";
 +export { MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName, limitMcpContent, saveToTempFile, toModelContent } from "./extensions/mcp/tools.js";
 +export { createMcpResourceToolDefinitions, isMcpAppResource } from "./extensions/mcp/resources.js";
 +export * from "./core/keybindings.js";
@@ -84,7 +85,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,70 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,71 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -141,6 +142,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { loadMcpConfig } from "./extensions/mcp/config.ts";
 +export * from "./extensions/mcp/oauth.ts";
 +export { McpServerLog, formatMcpLogMessage } from "./extensions/mcp/log.ts";
++export { McpServerConnection, createDefaultTransport } from "./extensions/mcp/runtime.ts";
 +export { MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName, limitMcpContent, saveToTempFile, toModelContent } from "./extensions/mcp/tools.ts";
 +export { createMcpResourceToolDefinitions, isMcpAppResource, type McpResourceServer } from "./extensions/mcp/resources.ts";
 +export * from "./core/keybindings.ts";
@@ -508,6 +510,226 @@ diff --git a/dist/core/agent-session-runtime.d.ts b/dist/core/agent-session-runt
  export { type AgentSessionRuntimeDiagnostic, type AgentSessionServices, type CreateAgentSessionFromServicesOptions, type CreateAgentSessionServicesOptions, createAgentSessionFromServices, createAgentSessionServices, } from "./agent-session-services.ts";
  //# sourceMappingURL=agent-session-runtime.d.ts.map
 \ No newline at end of file
+diff --git a/dist/extensions/mcp/runtime.js b/dist/extensions/mcp/runtime.js
+--- a/dist/extensions/mcp/runtime.js
++++ b/dist/extensions/mcp/runtime.js
+@@ -48,18 +48,18 @@ function expandHome(value) {
+     }
+     return value;
+ }
+-export function createDefaultTransport(entry, cwd, authProvider) {
++export function createDefaultTransport(entry, cwd, authProvider, dependencies = {}) {
+     const { config, name } = entry;
+-    if ("url" in config) {
++    if (typeof config.url === "string") {
+         return new StreamableHttpTransport({
+             url: config.url,
+-            headers: resolveHeadersOrThrow(config.headers, `MCP server "${name}"`),
++            headers: (dependencies.resolveHeadersOrThrow ?? resolveHeadersOrThrow)(config.headers, `MCP server "${name}"`),
+             authProvider,
+         });
+     }
+     const env = {};
+     for (const [key, value] of Object.entries(config.env ?? {})) {
+-        env[key] = resolveConfigValueOrThrow(value, `MCP server "${name}" env "${key}"`);
++        env[key] = (dependencies.resolveConfigValueOrThrow ?? resolveConfigValueOrThrow)(value, `MCP server "${name}" env "${key}"`);
+     }
+     return new StdioTransport({
+         command: expandHome(config.command),
+@@ -107,6 +107,7 @@ export class McpServerConnection {
+     cwd;
+     createTransport;
+     authProvider;
++    clientInfo;
+     onTools;
+     onChange;
+     log;
+@@ -117,9 +118,14 @@ export class McpServerConnection {
+         this.onTools = options.onTools;
+         this.onChange = options.onChange;
+         this.log = options.log;
++        this.clientInfo = options.clientInfo ?? { name: "pi", version: VERSION };
++        if (Object.hasOwn(options, "authProvider")) {
++            this.authProvider = options.authProvider;
++            return;
++        }
+         const url = this.oauthUrl;
+         const provider = "url" in this.entry.config ? this.entry.config.auth?.provider : undefined;
+-        this.authProvider = url
++        this.authProvider = url && options.credentials
+             ? createMcpAuthProvider({
+                 serverUrl: url,
+                 store: options.credentials.forServer(this.entry.name, url),
+@@ -133,6 +139,9 @@ export class McpServerConnection {
+                     { token: async () => options.providerToken?.(provider), settled: async () => { } }
+                 : undefined;
+     }
++    get connectSignal() { return this.shutdown.signal; }
++    signInRequiredMessage() { return signInRequiredMessage(this.entry); }
++    async prepareConnection(_client) { return () => {}; }
+     get name() {
+         return this.entry.name;
+     }
+@@ -218,7 +227,7 @@ export class McpServerConnection {
+                     throw error;
+                 await this.dropClient(client);
+                 this.markNeedsAuth();
+-                throw new Error(signInRequiredMessage(this.entry));
++                throw new Error(this.signInRequiredMessage());
+             }
+         }
+     }
+@@ -258,6 +267,7 @@ export class McpServerConnection {
+     async open() {
+         this.state = "connecting";
+         this.changed();
++        const signal = this.connectSignal;
+         const retries = "url" in this.entry.config ? CONNECT_RETRY_DELAYS_MS : [];
+         for (let attempt = 0;; attempt++) {
+             this.stderrTail = undefined;
+@@ -266,19 +276,19 @@ export class McpServerConnection {
+             }
+             catch (error) {
+                 const delay = retries[attempt];
+-                if (this.closed || delay === undefined || !isTransientError(error)) {
++                if (signal.aborted || delay === undefined || !isTransientError(error)) {
+                     throw this.connectFailed(error);
+                 }
+-                await sleep(delay, undefined, { signal: this.shutdown.signal }).catch(() => undefined);
+-                if (this.closed)
++                await sleep(delay, undefined, { signal }).catch(() => undefined);
++                if (signal.aborted)
+                     throw this.connectFailed(error);
+             }
+         }
+     }
+     async connectOnce() {
++        const signal = this.connectSignal;
+         const client = new McpClient({
+-            name: "pi",
+-            version: VERSION,
++            ...this.clientInfo,
+             requestTimeoutMs: this.timeoutMs,
+             roots: [{ uri: pathToFileURL(this.cwd).href, name: basename(this.cwd) }],
+         });
+@@ -292,7 +302,7 @@ export class McpServerConnection {
+             closing ??= client.close().catch(() => undefined);
+             return closing;
+         };
+-        this.shutdown.signal.addEventListener("abort", closeClient, { once: true });
++        signal.addEventListener("abort", closeClient, { once: true });
+         let transport;
+         try {
+             transport = this.createTransport(this.entry, this.cwd, this.authProvider);
+@@ -303,11 +313,15 @@ export class McpServerConnection {
+             const stdio = transport instanceof StdioTransport ? transport : undefined;
+             client.onClose(() => this.handleClientClose(client, stdio));
+             // Servers without the tools capability (prompts or resources only) do not answer tools/list.
+-            const tools = client.serverCapabilities?.tools ? await client.listTools() : [];
+-            if (this.closed)
++            const [tools, commit] = await Promise.all([
++                client.serverCapabilities?.tools ? client.listTools() : [],
++                this.prepareConnection(client),
++            ]);
++            if (signal.aborted)
+                 throw new Error("shut down while connecting");
+             if (client.connectionState !== "connected")
+                 throw new Error("connection closed during setup");
++            commit();
+             this.client = client;
+             this.tools = tools;
+             this.hasResources = client.serverCapabilities?.resources !== undefined;
+@@ -326,13 +340,13 @@ export class McpServerConnection {
+             throw error;
+         }
+         finally {
+-            this.shutdown.signal.removeEventListener("abort", closeClient);
++            signal.removeEventListener("abort", closeClient);
+         }
+     }
+     connectFailed(error) {
+         if (this.needsSignIn(error) && !this.closed) {
+             this.markNeedsAuth();
+-            return new Error(signInRequiredMessage(this.entry));
++            return new Error(this.signInRequiredMessage());
+         }
+         this.state = this.closed ? "closed" : "failed";
+         this.error = this.stderrTail ? `${errorMessage(error)}\n${this.stderrTail}` : errorMessage(error);
+diff --git a/dist/extensions/mcp/runtime.d.ts b/dist/extensions/mcp/runtime.d.ts
+--- a/dist/extensions/mcp/runtime.d.ts
++++ b/dist/extensions/mcp/runtime.d.ts
+@@ -18,7 +18,10 @@ export { McpOAuthCredentialStore, McpSignInCancelledError, signInMcpServer } fro
+  */
+ type ServerState = "connecting" | "connected" | "disconnected" | "needs-auth" | "failed" | "closed";
+ export type McpTransportFactory = (entry: McpServerEntry, cwd: string, authProvider: AuthProvider | undefined) => McpTransport;
+-export declare function createDefaultTransport(entry: McpServerEntry, cwd: string, authProvider: AuthProvider | undefined): McpTransport;
++export declare function createDefaultTransport(entry: McpServerEntry, cwd: string, authProvider: AuthProvider | undefined, dependencies?: {
++    resolveConfigValueOrThrow?: typeof import("../../core/resolve-config-value.ts").resolveConfigValueOrThrow;
++    resolveHeadersOrThrow?: typeof import("../../core/resolve-config-value.ts").resolveHeadersOrThrow;
++}): McpTransport;
+ /** One configured server. Reconnects lazily when a call finds the connection gone. */
+ export declare class McpServerConnection implements McpToolCaller, McpResourceServer {
+     readonly entry: McpServerEntry;
+@@ -34,23 +37,26 @@ export declare class McpServerConnection implements McpToolCaller, McpResourceSe
+     instructions: string | undefined;
+     /** Last OAuth challenge from the server; sign-in uses its resource metadata URL and scope. */
+     challenge: OAuthChallenge | undefined;
+-    private client;
+-    private opening;
++    client: McpClient | undefined;
++    protected opening: Promise<McpClient> | undefined;
+     /** Aborted by `close()`; cancels a connect in progress, including the wait between retries. */
+     private readonly shutdown;
+     /** Stderr of the last stdio server that failed to connect. */
+     private stderrTail;
+     private readonly cwd;
+     private readonly createTransport;
+-    private readonly authProvider;
+-    private readonly onTools;
++    authProvider: import("./oauth.ts").McpAuthProvider | undefined;
++    protected readonly onTools: (connection: McpServerConnection) => void;
+     private readonly onChange;
+     private readonly log;
+     constructor(options: {
+         entry: McpServerEntry;
+         cwd: string;
+         createTransport: McpTransportFactory;
+-        credentials: McpOAuthCredentialStore;
++        credentials?: McpOAuthCredentialStore;
++        /** An own property overrides the default credential binding, including undefined. */
++        authProvider?: import("./oauth.ts").McpAuthProvider;
++        clientInfo?: { name: string; version: string };
+         /** The current token of a pi provider, for servers with `auth.provider`. */
+         providerToken?: (provider: string) => Promise<string | undefined>;
+         onTools: (connection: McpServerConnection) => void;
+@@ -59,8 +65,13 @@ export declare class McpServerConnection implements McpToolCaller, McpResourceSe
+         /** Receives the server's log messages (`notifications/message`). */
+         log?: McpServerLog;
+     });
++    private readonly clientInfo;
++    protected get connectSignal(): AbortSignal;
++    protected signInRequiredMessage(): string;
++    /** Prepare discovery and return a synchronous commit, run only after setup remains valid. */
++    protected prepareConnection(client: McpClient): Promise<() => void>;
+     get name(): string;
+-    private get closed();
++    get closed(): boolean;
+     get timeoutMs(): number;
+     /** Server URL when the server authenticates with OAuth. */
+     get oauthUrl(): string | undefined;
+@@ -83,9 +94,9 @@ export declare class McpServerConnection implements McpToolCaller, McpResourceSe
+     signOut(): Promise<void>;
+     /** OAuth servers that still reject the request after a refresh need the user to sign in again. */
+     private needsSignIn;
+-    private markNeedsAuth;
+-    private changed;
+-    private dropClient;
++    protected markNeedsAuth(): void;
++    protected changed(): void;
++    protected dropClient(client: McpClient): Promise<void>;
+     private open;
+     private connectOnce;
+     private connectFailed;
 diff --git a/dist/extensions/mcp/oauth.js b/dist/extensions/mcp/oauth.js
 --- a/dist/extensions/mcp/oauth.js
 +++ b/dist/extensions/mcp/oauth.js

@@ -112,6 +112,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `dadd11a` 后的 server 二进制管理器切片将 449 行模块缩为 126 行，删除 75 行 HTTP 重试副本，完整安装算法交给 SDK。宿主目录、查找与优先级保留；server 和 Native 共用 25 行必要 Web body writer，避免 Bun 标准流桥在挂起读取时不能可靠取消。SDK 工厂通过本地窄补丁接收可选依赖与每调用信号，保留 SDK 默认 API，下载期限覆盖 body，独占目录统一清理。两现有布局各 75 项测试、291 个断言及定向严格类型检查通过，使用 skipLibCheck；独立 37 项静态检查、14 组场景和 120 个断言通过，未确认缺陷。来源更新 8 项、新增 2 项、退役 1 项，受限 Craft 审计通过 2024 个允许文件；Coding 88 份、总数 125 份输出，13 份生成清单不变。默认 Node bridge 限制、失败探针及复核范围见[Server 二进制验证](coding-validation.md#sdk-server-binary-manager-after-dadd11a)。MCP runtime、其余源码、完整 Native 与声明及 F0 至 F6 继续开放。
 
+`8add2cc` 后的 MCP runtime 切片将 497 行模块缩为 182 行，净减少 315 行，SDK 承担完整连接、传输、重试与请求算法。宿主只绑定凭据安全、显式授权、资源状态和取消与退出策略；66 行补丁转换增加必要接点，两行门面转出 SDK，不复制连接类。两现有布局各 109 项测试、575 个断言及定向严格类型检查通过，使用 skipLibCheck；独立复核未确认缺陷，两布局共 28 组场景、256 个断言通过。失败修正和完整验证限制见[MCP runtime 验证](coding-validation.md#sdk-mcp-runtime-after-8add2cc)。来源更新 6 项、新增 3 项，受限 Craft 审计通过 2027 个允许文件；Coding 90 份、总数 127 份输出，13 份生成清单保持。其余源码、完整 Native 与声明及 F0 至 F6 继续开放。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

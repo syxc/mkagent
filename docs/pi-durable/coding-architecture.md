@@ -347,6 +347,8 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `dadd11a` 后的 server 二进制管理器切片将 449 行模块缩为 126 行，删除 75 行完整 HTTP 重试副本；SDK 承担 release、asset、版本、重试、下载、解压、发布及清理算法。宿主只保留 PATH、缓存、fdfind、bundled ripgrep 和目录策略，server 与 Native 共用 25 行 Web body writer。该 writer 的必要性由 Bun 挂起读取取消探针确认；SDK 默认 Node bridge 的及时取消仍未保证。工厂、可选依赖、每调用信号、覆盖 body 的期限与独占目录均为本地窄补丁，上游提供等效公开契约及修复后撤除，不复制完整算法。两现有布局各 75 项测试、291 个断言及定向严格类型检查通过，使用 skipLibCheck；独立 37 项静态检查、14 组场景和 120 个断言通过，未确认缺陷。来源更新 8 项、新增 2 项、退役 1 项，受限 Craft 审计通过 2024 个允许文件；Coding 88 份、总数 125 份输出，13 份生成清单保持。失败历史与完整入口限制见[Server 二进制验证](coding-validation.md#sdk-server-binary-manager-after-dadd11a)；MCP runtime、其余源码和整体验收继续开放。
 
+`8add2cc` 后的 MCP runtime 切片将 497 行本地模块缩为 182 行宿主绑定，净减少 315 行。durable 根未提供 MCP 连接管理器；Coding SDK 已有完整算法，补丁只补根出口及身份、凭据、严格 resolver、取消信号和 discovery 提交接点。66 行转换不包含连接类模板；SDK 承担连接共享、HTTP backoff、session 重建、只读重试、工具通知和关闭。宿主保留安全地址与 scope、迟到 token 防护、显式授权、资源计数、App 过滤及 logout 等待。未注入时保留 SDK 的 Pi 身份和惰性资源发现；上游提供等效公开接点后撤除对应补丁。两现有布局各 109 项测试、575 个断言及定向严格类型检查通过，使用 skipLibCheck；独立复核未确认缺陷，两布局共 28 组场景、256 个断言通过。投影夹具和声明依赖缩减等限制见[MCP runtime 验证](coding-validation.md#sdk-mcp-runtime-after-8add2cc)。来源更新 6 项、新增 3 项，受限 Craft 审计通过 2027 个允许文件；Coding 90 份、总数 127 份输出，13 份生成清单保持。其余源码和整体验收继续开放。
+
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |

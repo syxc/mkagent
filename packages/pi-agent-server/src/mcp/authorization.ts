@@ -41,7 +41,7 @@ export class McpAuthorization {
   private async command(args: string, ctx: ExtensionCommandContext): Promise<void> {
     try {
       this.options.assertOwner();
-      let [action, name, ...rest] = args.trim().split(/\s+/);
+      let [action, name, ...rest]: (string | undefined)[] = args.trim().split(/\s+/);
       if (!action && ctx.hasUI) {
         const chosen = await ctx.ui.select('MCP', ['Status', 'Sign in', 'Sign out', 'Reconnect']);
         if (!chosen) return;

@@ -22,6 +22,7 @@ import { codingSessionRuntimePolicy } from './coding-session-runtime-policy.ts';
 import { codingSessionFactoryPolicy } from './coding-session-factory-policy.ts';
 import { codingMcpOAuthPolicy } from './coding-mcp-oauth-policy.ts';
 import { codingManagementHttpPolicy, codingToolsManagerPolicy } from './coding-tools-manager-policy.ts';
+import { codingMcpRuntimePolicy } from './coding-mcp-runtime-policy.ts';
 
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
@@ -93,6 +94,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export { loadMcpConfig } from "./extensions/mcp/config.${extension}";`,
     `export * from "./extensions/mcp/oauth.${extension}";`,
     `export { McpServerLog, formatMcpLogMessage } from "./extensions/mcp/log.${extension}";`,
+    `export { McpServerConnection, createDefaultTransport } from "./extensions/mcp/runtime.${extension}";`,
     `export { MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName, limitMcpContent, saveToTempFile, toModelContent } from "./extensions/mcp/tools.${extension}";`,
     `export { createMcpResourceToolDefinitions, isMcpAppResource${suffix === 'd.ts' ? ', type McpResourceServer' : ''} } from "./extensions/mcp/resources.${extension}";`,
     `export * from "./core/keybindings.${extension}";`,
@@ -138,6 +140,10 @@ for (const suffix of ['js', 'd.ts']) {
 }
 const runtimeDeclaration = 'dist/core/agent-session-runtime.d.ts';
 outputs.set(runtimeDeclaration, codingSessionRuntimePolicy(readFileSync(join(baseline, runtimeDeclaration), 'utf8')));
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/extensions/mcp/runtime.${suffix}`;
+  outputs.set(path, codingMcpRuntimePolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
+}
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/extensions/mcp/oauth.${suffix}`;
   outputs.set(path, codingMcpOAuthPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));

@@ -26,6 +26,90 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK MCP runtime after 8add2cc
+
+The server MCP runtime shrinks from 497 to 182 lines, a reduction of 315.
+The SDK owns transports, connection sharing, HTTP retry and backoff, session
+recovery, safe request retry, tool discovery, logging and close. The host
+retains credential scope and destination policy, live provider tokens,
+explicit login commands, resource counts, App filtering, cancellable
+reconnect and logout settlement. The durable public root has no equivalent
+MCP connection manager. A two-line facade forwards the Coding SDK class
+and transport factory through added root exports.
+
+The 66-line patch policy changes checked boundaries in the published
+runtime. It adds optional transport resolvers, client identity and explicit
+auth provider binding, a setup signal, an authorization message hook and
+a discovery preparation hook. Preparation returns a synchronous commit.
+The SDK calls it only after setup remains valid, before publishing the
+client. The patch does not contain a connection class template. Defaults
+retain Pi identity, the SDK credential binding and lazy resource discovery.
+Remove each local hook when an equivalent public SDK contract is available.
+
+Coding now has 90 physical outputs, core four and durable 33, totaling 127.
+The two runtime outputs are new; the shared root JS and declarations change.
+The other 86 hashes stay unchanged. The generated runtime list remains
+13 TypeScript outputs, nine under src/pi and four facades, without assets.
+Eight auxiliary sources and 13 shared forwards remain. The new handwritten
+runtime facade and its declaration are separate. Dependencies, lock and
+persisted task formats do not change.
+
+| Check | Result and scope |
+|---|---|
+| Behavior | Each existing layout passes 109 tests, zero failures and 575 expect calls across 14 MCP test entries |
+| New protocol fixture | Five in-memory tests cover SDK dispatch and identity, shared opening, filtered and dynamic discovery, close during discovery, reconnect cancellation, SDK defaults and partial host config |
+| Static preflight | Root scans 2151 loads and hoisted 2612; both report zero protected loads |
+| Types | Both layouts have zero diagnostics with strict and skipLibCheck; actual facade declarations, positive and negative consumers, host callers, new tests and three real workspace source mappings are checked |
+| Independent review | No verified defects; both layouts together pass 28 independent boundary groups and 256 assertions; focused declaration contracts and pristine patch replay pass |
+| Review acceptance | Parent verifies nine frozen sources, 210 artifacts, 24 support files, and report and manifest hashes |
+| Source registration | Six entries updated, three added, none retired; unrelated entries are unchanged |
+| Restricted Craft | Fixed v0.15.6 audit passes for 2027 permitted files; protected sources remain excluded |
+
+The first behavior attempt terminates with exit 143 after its 55-second
+limit. A new fixture waits for a rejection matcher before it triggers close
+or abort; it instead records the outcome, triggers the action and then
+checks the error. A shell resolution test also fails because the sandbox
+omits writes to /dev/null. The corrected sandbox permits that device and
+keeps the remaining restrictions. Both layouts then pass the formal run.
+The initial attempt has no complete test totals and is not a passing run.
+
+The first type check reports eight diagnostics. Corrections restore the
+McpAuthProvider settlement contract, use AuthProvider for transport input,
+add the SDK entry source, fix a consumer binding and type optional command
+selections. A baseline runtime projection reproduces the two authorization
+selection errors; the one-line annotation changes no command behavior.
+The second check fails only because its consumer supplies the strict SDK
+transport to the partial host entry factory. The corrected consumer uses
+the host transport, and both layouts pass the third check. No production
+change follows the successful behavior run.
+
+Independent review preserves failed loader attempts: an invalid onLoad
+return, CommonJS default-export resolution, recursive resolution and two
+file-URL normalization failures. The final probes use guarded Bun.build
+and a reviewer-owned bundle of the real MCP client, transports and errors.
+The type guard also stops before reading an unrelated credentials-named
+declaration. The final contract check uses actual runtime and OAuth
+declarations, verbatim caller/resource interfaces and an opaque unused
+backend type. These corrections change review fixtures only.
+
+Each layout passes 14 independent groups and 128 assertions. The probes
+cover cancellation during retry, initialization and discovery, close and
+signOut draining, late tokens, commit order, stale resource notifications,
+non-replayed tool errors, read-only and session retries, SDK defaults and
+credential boundaries. Runtime imports and metadata are explicit projection
+bindings. HTTP cancellation uses an in-memory transport; OAuth rotation is
+modeled in memory before the real provider resumes. Real network requests,
+disk persistence, cross-process locking and complete module initialization
+are outside this independent evidence. Parent broad suites are not rerun.
+
+All formal behavior runs use task-owned child HOME and configuration,
+offline mode and an OS sandbox. External network, the real application,
+real credentials and protected legacy sources remain excluded. Existing
+OAuth fixtures use random loopback ports; localhost:9100 is denied. These
+are two existing layouts, not fresh installs. Full Native entry, full
+types and declarations, process-login and worker lifecycle suites, real
+platforms and services, full Craft and F0 through F6 remain open.
+
 ## SDK server binary manager after dadd11a
 
 The server binary module shrinks from 449 to 126 lines. Its complete local
