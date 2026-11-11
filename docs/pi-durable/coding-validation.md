@@ -26,6 +26,77 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK server binary manager after dadd11a
+
+The server binary module shrinks from 449 to 126 lines. Its complete local
+HTTP retry module, 75 lines, is deleted. The SDK owns release and asset
+selection, version lookup, retries, download deadlines, extraction, binary
+selection, publish and work directory cleanup. The server retains product
+PATH lookup, cache priority, fdfind, bundled ripgrep and Pi cache directories.
+Native and server bind the same 25-line Web body writer.
+
+The durable public root and tools declarations do not provide this manager
+contract. Coding already provides the algorithms. The local SDK factory
+patch adds optional discovery, platform, architecture, offline, fetch,
+command and writer dependencies, plus per-call AbortSignal parameters.
+It preserves the default module API and existing asynchronous ZIP hook.
+The download deadline covers headers and body. Each call owns its archive
+and an empty contents directory under one work directory. Cancellation is
+checked after version body disposal, download and extraction, before publish.
+Remove these interfaces and fixes when equivalent public SDK contracts exist.
+
+Coding has 88 physical patch outputs, core four and durable 33, totaling 125.
+Two management-http outputs are new, three existing outputs change, and the
+other 83 keep their hashes. Root index.js is unchanged; index.d.ts also
+exports ToolStatus. The generated runtime list stays at 13 TypeScript
+outputs, nine under src/pi and four facades, with no assets. Eight auxiliary
+sources and 13 shared forwards remain. The handwritten writer is separate.
+Dependencies, lock and persisted task formats do not change.
+
+| Check | Result and scope |
+|---|---|
+| Server behavior | Each existing layout passes 49 tests, zero failures and 204 expect calls, including 22 cancellation tests through explicit `.test.ts` import entries |
+| Native and search | Each layout passes 26 tests and 87 expect calls; actual ZIP extraction and installer bytes use explicit module stubs, not the complete SDK import graph |
+| Total behavior | Each layout passes 75 tests and 291 expect calls |
+| Static preflight | Root scans 2089 loads and hoisted 2123, with zero protected loads; this v2 preflight covers the binary test entry, while cancellation runs as an additional sandboxed test entry |
+| Types | Both layouts have zero diagnostics with strict and skipLibCheck; actual compat/writer declarations, positive and negative consumers, server callers and three real workspace source mappings are checked |
+| Independent review | No findings; 37 static checks and 14 scenario groups with 120 assertions pass; parent test and type results are evidence checks only |
+| Review acceptance | Parent verifies ten frozen sources, 216 artifacts, 60 support files, the retired baseline hash, deletion in both layouts, and report and manifest hashes |
+| Source registration | Eight entries updated, two added, one retired; unrelated entries are unchanged |
+| Restricted Craft | Fixed v0.15.6 audit passes for 2024 permitted files; protected sources remain excluded |
+
+The first behavior run has 26 passes and one failure: Bun reports an
+unhandled body error from the SDK Readable.fromWeb pipeline. It also skips
+the `.isolated.ts` cancellation file, so that run provides no cancellation
+coverage. Two alternative bridges pass body error probes, but neither
+finishes the original held-body cancellation probe within 300ms. The shared
+writer therefore retains only Web reader and file handle I/O. It cancels
+the reader and closes the file on success, abort, open, write or body failure.
+Explicit `.test.ts` entries then execute all existing cancellation tests.
+The original failure logs and unsuccessful bridge probes are preserved.
+
+Independent review preserves five failed probe runs. Its evaluator first
+matches generated export text incorrectly; later fixtures assume different
+timeout wording, expect cancel on an already closed source, or assume the
+two standard bridges settle and cancel identically. Corrections affect only
+review fixtures and observations. The 120 unique passed assertions combine
+12 SDK/layout groups from run three, writer cleanup from run four and bridge
+observations from run six. They are not six complete passing reruns.
+
+The independent Bun comparison finds that fromWeb can remain pending after
+the producer is released. The iterable bridge can reject promptly without
+cancelling its underlying Web source. Only the host writer demonstrates both
+prompt settlement and source cancellation. The default SDK Node bridge is
+retained, and its timely cancellation on Bun is not established.
+
+All formal behavior checks use task-owned child configuration and HOME,
+offline mode and an OS sandbox that denies network and protects legacy and
+real configuration. Native ZIP cases do not load the complete SDK graph.
+There is no fresh install, full declaration build, full Native entry check,
+real Windows extraction, network download or application/service validation.
+Full Craft and F0 through F6 remain open. MCP runtime and remaining source
+responsibilities still need review.
+
 ## SDK server path helpers after 6827615
 
 The server file wrapper now imports resolveReadPath and resolveToCwd through

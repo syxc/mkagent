@@ -1,4 +1,4 @@
-# Content SHA-256: 14c5058bb9e052772ad39ac3d6135165a62aab92f35d3575fa90782236ff3a81
+# Content SHA-256: 0c87312bef5b4f3fc2c4fc16731cd71ab1fd9f8f82193b1e8df4d11d7aa2c4c4
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -125,7 +125,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { resolveReadPath, resolveToCwd } from "./core/tools/path-utils.ts";
 +export { stripBom } from "./utils/text.ts";
 +export { createShellHelpers, type ShellConfig, type ShellHelperDependencies, type ShellHelpers } from "./utils/shell.ts";
-+export { createToolManager, type ToolManagerDependencies } from "./utils/tools-manager.ts";
++export { createToolManager, type ToolManagerDependencies, type ToolStatus } from "./utils/tools-manager.ts";
 +export { type MiddleTruncationResult, GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.ts";
 +export * from "./extensions/codemode/tool.ts";
 +export { createToolSearchToolDefinition, type ToolSearchDependencies, type ToolSearchToolOptions } from "./extensions/tool-search/tool.ts";
@@ -1488,38 +1488,168 @@ diff --git a/dist/utils/shell.d.ts b/dist/utils/shell.d.ts
 diff --git a/dist/utils/tools-manager.js b/dist/utils/tools-manager.js
 --- a/dist/utils/tools-manager.js
 +++ b/dist/utils/tools-manager.js
-@@ -7,7 +7,8 @@ import { pipeline } from "stream/promises";
+@@ -7,10 +7,14 @@ import { pipeline } from "stream/promises";
  import { getBinDir, VERSION } from "../config.js";
  import { fetchWithRetry } from "./management-http.js";
  import { getPiUserAgent } from "./pi-user-agent.js";
 -const TOOLS_DIR = getBinDir();
 +export function createToolManager(dependencies = {}) {
 +const TOOLS_DIR = (dependencies.getBinDir ?? getBinDir)();
++const runtimePlatform = dependencies.platform ?? platform;
++const runtimeArch = dependencies.arch ?? arch;
  const NETWORK_TIMEOUT_MS = 10_000;
  const DOWNLOAD_TIMEOUT_MS = 120_000;
  function isOfflineModeEnabled() {
-@@ -60,7 +61,7 @@ function commandExists(cmd) {
++    if (dependencies.isOfflineModeEnabled) return dependencies.isOfflineModeEnabled();
+     const value = process.env.PI_OFFLINE;
+     if (!value)
+         return false;
+@@ -51,7 +55,7 @@ const TOOLS = {
+ // Check if a command exists in PATH by trying to run it
+ function commandExists(cmd) {
+     try {
+-        const result = spawnSync(cmd, ["--version"], { stdio: "pipe" });
++        const result = (dependencies.runCommand ?? spawnSync)(cmd, ["--version"], { stdio: "pipe" });
+         // Check for ENOENT error (command not found)
+         return result.error === undefined || result.error === null;
+     }
+@@ -60,12 +64,13 @@ function commandExists(cmd) {
      }
  }
  // Get the path to a tool (system-wide or in our tools dir)
 -export function getToolPath(tool) {
 +function getToolPath(tool) {
++    if (dependencies.getToolPath) return dependencies.getToolPath(tool);
      const config = TOOLS[tool];
      if (!config)
          return null;
-@@ -84,9 +85,9 @@ export function getToolPath(tool) {
+     // Check our tools directory first
+-    const localPath = join(TOOLS_DIR, config.binaryName + (platform() === "win32" ? ".exe" : ""));
++    const localPath = join(TOOLS_DIR, config.binaryName + (runtimePlatform() === "win32" ? ".exe" : ""));
+     if (existsSync(localPath)) {
+         return localPath;
+     }
+@@ -84,11 +89,12 @@ export function getToolPath(tool) {
  // shared egress IPs such as corporate proxies and CI runners. The web
  // endpoint answers with a redirect to the tagged release at no quota cost
  // and lives on the same origin as the binary download itself.
 -export async function getLatestVersion(repo) {
-+async function getLatestVersion(repo) {
++async function getLatestVersion(repo, signal) {
      const response = await fetchWithRetry(`https://github.com/${repo}/releases/latest`, {
 -        headers: { "User-Agent": getPiUserAgent(VERSION) },
 +        headers: { "User-Agent": getPiUserAgent(dependencies.version ?? VERSION) },
          redirect: "manual",
-     }, { timeoutMs: NETWORK_TIMEOUT_MS });
+-    }, { timeoutMs: NETWORK_TIMEOUT_MS });
++        signal,
++    }, { timeoutMs: NETWORK_TIMEOUT_MS, fetch: dependencies.fetch });
      // Only the status and headers matter here. Discard the body so the
-@@ -243,7 +244,7 @@ async function downloadTool(tool) {
+     // connection can be reused.
+     try {
+@@ -97,6 +103,7 @@ export async function getLatestVersion(repo) {
+     catch {
+         // Discarding the body is best-effort.
+     }
++    signal?.throwIfAborted();
+     const location = response.status >= 300 && response.status < 400 ? response.headers.get("location") : null;
+     if (!location) {
+         throw new Error(`Failed to resolve latest ${repo} release: HTTP ${response.status} without redirect`);
+@@ -108,16 +115,24 @@ export async function getLatestVersion(repo) {
+     return decodeURIComponent(tag).replace(/^v/, "");
+ }
+ // Download a file from URL
+-async function downloadFile(url, dest) {
+-    const response = await fetchWithRetry(url, undefined, { timeoutMs: DOWNLOAD_TIMEOUT_MS });
++async function downloadFile(url, dest, signal) {
++    const timeout = AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS);
++    const lifetime = signal ? AbortSignal.any([signal, timeout]) : timeout;
++    const response = await fetchWithRetry(url, { signal: lifetime }, { timeoutMs: DOWNLOAD_TIMEOUT_MS, fetch: dependencies.fetch });
+     if (!response.ok) {
++        await response.body?.cancel().catch(() => {});
+         throw new Error(`Download failed with HTTP ${response.status}: ${url}`);
+     }
+     if (!response.body) {
+         throw new Error("No response body");
+     }
+-    const fileStream = createWriteStream(dest);
+-    await pipeline(Readable.fromWeb(response.body), fileStream);
++    if (dependencies.writeDownload) {
++        await dependencies.writeDownload(response.body, dest, lifetime);
++    } else {
++        const fileStream = createWriteStream(dest);
++        await pipeline(Readable.fromWeb(response.body), fileStream, { signal: lifetime }).catch(error => { lifetime.throwIfAborted(); throw error; });
++    }
++    lifetime.throwIfAborted();
+ }
+ function findBinaryRecursively(rootDir, binaryFileName) {
+     const stack = [rootDir];
+@@ -153,7 +168,7 @@ function formatSpawnFailure(result) {
+     return `exit status ${result.status ?? "unknown"}`;
+ }
+ function runExtractionCommand(command, args) {
+-    const result = spawnSync(command, args, { stdio: "pipe" });
++    const result = (dependencies.runCommand ?? spawnSync)(command, args, { stdio: "pipe" });
+     if (!result.error && result.status === 0) {
+         return null;
+     }
+@@ -166,7 +181,7 @@ function extractTarGzArchive(archivePath, extractDir, assetName) {
+     }
+ }
+ function getWindowsTarCommand() {
+-    const systemRoot = process.env.SystemRoot;
++    const systemRoot = process.env.SystemRoot ?? process.env.WINDIR;
+     if (systemRoot) {
+         const systemTar = join(systemRoot, "System32", "tar.exe");
+         if (existsSync(systemTar)) {
+@@ -177,7 +192,7 @@ function getWindowsTarCommand() {
+ }
+ function extractZipArchive(archivePath, extractDir, assetName) {
+     const failures = [];
+-    if (platform() === "win32") {
++    if (runtimePlatform() === "win32") {
+         // Windows ships bsdtar as tar.exe, which supports zip files. Prefer the
+         // System32 binary over Git Bash's GNU tar, which does not handle zip archives.
+         const tarFailure = runExtractionCommand(getWindowsTarCommand(), ["xf", archivePath, "-C", extractDir]);
+@@ -213,37 +228,39 @@ function extractZipArchive(archivePath, extractDir, assetName) {
+     throw new Error(`Failed to extract ${assetName}: ${failures.join("; ")}`);
+ }
+ // Download and install a tool
+-async function downloadTool(tool) {
++async function downloadTool(tool, signal) {
+     const config = TOOLS[tool];
+     if (!config)
+         throw new Error(`Unknown tool: ${tool}`);
+-    const plat = platform();
+-    const architecture = arch();
++    const plat = runtimePlatform();
++    const architecture = runtimeArch();
+     const target = getReleaseTarget(plat, architecture);
+     if (!target) {
+         throw new Error(`Unsupported platform: ${plat}/${architecture}`);
+     }
+     // fd is pinned on darwin/x64, so skip the version lookup there.
+-    const version = tool === "fd" && plat === "darwin" && architecture === "x64" ? "10.3.0" : await getLatestVersion(config.repo);
++    const version = tool === "fd" && plat === "darwin" && architecture === "x64" ? "10.3.0" : await getLatestVersion(config.repo, signal);
++    signal?.throwIfAborted();
+     const assetName = config.getAssetName(version, target);
+     // Create tools directory
+     mkdirSync(TOOLS_DIR, { recursive: true });
+     const downloadUrl = `https://github.com/${config.repo}/releases/download/${config.tagPrefix}${version}/${assetName}`;
+-    const archivePath = join(TOOLS_DIR, assetName);
+     const binaryExt = plat === "win32" ? ".exe" : "";
+     const binaryPath = join(TOOLS_DIR, config.binaryName + binaryExt);
+-    // Download
+-    await downloadFile(downloadUrl, archivePath);
+     // Extract into a unique temp directory. fd and rg downloads can run concurrently
+     // during startup, so sharing a fixed directory causes races.
+-    const extractDir = join(TOOLS_DIR, `extract_tmp_${config.binaryName}_${process.pid}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
++    const workDir = join(TOOLS_DIR, `extract_tmp_${config.binaryName}_${process.pid}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
++    const archivePath = join(workDir, assetName);
++    const extractDir = join(workDir, "contents");
+     mkdirSync(extractDir, { recursive: true });
+     try {
++        await downloadFile(downloadUrl, archivePath, signal);
++        signal?.throwIfAborted();
+         if (assetName.endsWith(".tar.gz")) {
              extractTarGzArchive(archivePath, extractDir, assetName);
          }
          else if (assetName.endsWith(".zip")) {
@@ -1528,16 +1658,69 @@ diff --git a/dist/utils/tools-manager.js b/dist/utils/tools-manager.js
          }
          else {
              throw new Error(`Unsupported archive format: ${assetName}`);
-@@ -285,7 +286,7 @@ const TERMUX_PACKAGES = {
+@@ -258,6 +275,7 @@ async function downloadTool(tool) {
+             extractedBinary = findBinaryRecursively(extractDir, binaryFileName) ?? undefined;
+         }
+         if (extractedBinary) {
++            signal?.throwIfAborted();
+             renameSync(extractedBinary, binaryPath);
+         }
+         else {
+@@ -270,8 +288,7 @@ async function downloadTool(tool) {
+     }
+     finally {
+         // Cleanup
+-        rmSync(archivePath, { force: true });
+-        rmSync(extractDir, { recursive: true, force: true });
++        rmSync(workDir, { recursive: true, force: true });
+     }
+     return binaryPath;
+ }
+@@ -285,7 +302,8 @@ const TERMUX_PACKAGES = {
   * Reports progress through `onStatus`; status messages are otherwise silent.
   * Returns the tool path, or undefined if unavailable.
   */
 -export async function ensureTool(tool, onStatus) {
-+async function ensureTool(tool, onStatus) {
++async function ensureTool(tool, onStatus, signal) {
++    signal?.throwIfAborted();
      const existingPath = getToolPath(tool);
      if (existingPath) {
          return existingPath;
-@@ -336,4 +337,7 @@ export async function ensureTool(tool, onStatus) {
+@@ -299,27 +317,29 @@ export async function ensureTool(tool, onStatus) {
+     }
+     // On Android/Termux, Linux binaries don't work due to Bionic libc incompatibility.
+     // Users must install via pkg.
+-    if (platform() === "android") {
++    if (runtimePlatform() === "android") {
+         const pkgName = TERMUX_PACKAGES[tool] ?? tool;
+         onStatus?.({ type: "warning", message: `${config.name} not found. Install with: pkg install ${pkgName}` });
+         return undefined;
+     }
+     // Prebuilt downloads only exist for the targets mapped in getReleaseTarget.
+-    if (!getReleaseTarget(platform(), arch())) {
++    if (!getReleaseTarget(runtimePlatform(), runtimeArch())) {
+         onStatus?.({
+             type: "warning",
+-            message: `${config.name} not found. Automatic download is not supported on ${platform()}/${arch()}. Install ${config.name} with your system package manager.`,
++            message: `${config.name} not found. Automatic download is not supported on ${runtimePlatform()}/${runtimeArch()}. Install ${config.name} with your system package manager.`,
+         });
+         return undefined;
+     }
+     // Tool not found - download it
+     onStatus?.({ type: "info", message: `${config.name} not found. Downloading...` });
+     try {
+-        const path = await downloadTool(tool);
++        const path = await downloadTool(tool, signal);
++        signal?.throwIfAborted();
+         onStatus?.({ type: "info", message: `${config.name} installed to ${path}` });
+         return path;
+     }
+     catch (e) {
++        signal?.throwIfAborted();
+         // Include the error cause chain: fetch failures surface as a bare
+         // "fetch failed" TypeError with the actionable detail (DNS, TLS,
+         // timeout) hidden in the cause. Depth-capped to guard against
+@@ -336,4 +356,7 @@ export async function ensureTool(tool, onStatus) {
          return undefined;
      }
  }
@@ -1546,17 +1729,45 @@ diff --git a/dist/utils/tools-manager.js b/dist/utils/tools-manager.js
 +export const { getToolPath, getLatestVersion, ensureTool } = createToolManager();
  //# sourceMappingURL=tools-manager.js.map
 \ No newline at end of file
+diff --git a/dist/utils/management-http.js b/dist/utils/management-http.js
+--- a/dist/utils/management-http.js
++++ b/dist/utils/management-http.js
+@@ -25,7 +25,7 @@ export async function fetchWithRetry(input, init = undefined, options = {}) {
+         const signals = [parentSignal, timeoutSignal, attemptTimeoutSignal].filter((signal) => signal !== undefined);
+         const signal = signals.length > 1 ? AbortSignal.any(signals) : signals[0];
+         try {
+-            const response = await fetch(input, signal ? { ...init, signal } : init);
++            const response = await (options.fetch ?? fetch)(input, signal ? { ...init, signal } : init);
+             const shouldRetry = retryOnStatus && RETRYABLE_STATUS_CODES.has(response.status) && attempt < maxRetries;
+             if (!shouldRetry)
+                 return response;
 diff --git a/dist/utils/tools-manager.d.ts b/dist/utils/tools-manager.d.ts
 --- a/dist/utils/tools-manager.d.ts
 +++ b/dist/utils/tools-manager.d.ts
-@@ -10,4 +10,15 @@ export interface ToolStatus {
+@@ -1,5 +1,5 @@
+ export declare function getToolPath(tool: "fd" | "rg"): string | null;
+-export declare function getLatestVersion(repo: string): Promise<string>;
++export declare function getLatestVersion(repo: string, signal?: AbortSignal): Promise<string>;
+ export interface ToolStatus {
+     type: "info" | "warning";
+     message: string;
+@@ -9,5 +9,23 @@ export interface ToolStatus {
+  * Reports progress through `onStatus`; status messages are otherwise silent.
   * Returns the tool path, or undefined if unavailable.
   */
- export declare function ensureTool(tool: "fd" | "rg", onStatus?: (status: ToolStatus) => void): Promise<string | undefined>;
-+/** Host installation policy; binary discovery, download and cleanup remain in the SDK. */
+-export declare function ensureTool(tool: "fd" | "rg", onStatus?: (status: ToolStatus) => void): Promise<string | undefined>;
++export declare function ensureTool(tool: "fd" | "rg", onStatus?: (status: ToolStatus) => void, signal?: AbortSignal): Promise<string | undefined>;
++/** Host installation policy; release selection, extraction and cleanup stay in the SDK. */
 +export interface ToolManagerDependencies {
 +    getBinDir?: () => string;
 +    version?: string;
++    getToolPath?: (tool: "fd" | "rg") => string | null;
++    platform?: () => NodeJS.Platform;
++    arch?: () => string;
++    isOfflineModeEnabled?: () => boolean;
++    fetch?: typeof fetch;
++    writeDownload?: (body: ReadableStream<Uint8Array>, destination: string, signal: AbortSignal) => Promise<void>;
++    runCommand?: (command: string, args: string[]) => { status: number | null; error?: Error | null; stderr?: { toString(): string } | null; stdout?: { toString(): string } | null };
 +    extractZipArchive?: (archivePath: string, extractDir: string, assetName: string) => void | Promise<void>;
 +}
 +export declare function createToolManager(dependencies?: ToolManagerDependencies): {
@@ -1566,6 +1777,16 @@ diff --git a/dist/utils/tools-manager.d.ts b/dist/utils/tools-manager.d.ts
 +};
  //# sourceMappingURL=tools-manager.d.ts.map
 \ No newline at end of file
+diff --git a/dist/utils/management-http.d.ts b/dist/utils/management-http.d.ts
+--- a/dist/utils/management-http.d.ts
++++ b/dist/utils/management-http.d.ts
+@@ -1,5 +1,6 @@
+ type FetchInput = Parameters<typeof fetch>[0];
+ export interface FetchRetryOptions {
++    fetch?: typeof fetch;
+     /** Number of additional attempts after the initial request. Defaults to two. */
+     maxRetries?: number;
+     /** Retry transient HTTP responses as well as transport failures. Defaults to true. */
 diff --git a/dist/modes/rpc/rpc-client.js b/dist/modes/rpc/rpc-client.js
 --- a/dist/modes/rpc/rpc-client.js
 +++ b/dist/modes/rpc/rpc-client.js

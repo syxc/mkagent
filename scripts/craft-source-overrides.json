@@ -2425,8 +2425,8 @@
       "reason": "Verify the host version reaches the shared SDK installer without losing safe ZIP checks."
     },
     "packages/pi-durable-coding/test/native-tool-archive.fixture.ts": {
-      "sha256": "cd40de5291342aa2f34d57fb30cf3b9f33899deb2d7053f1f7fe8c46fb18ce6a",
-      "reason": "Exercise actual SDK installer bytes and host binding in an isolated module fixture with ESM package resolution."
+      "sha256": "0536a647e1b198f8a83220039f3d8c4af0a8e83b4d1d1e993b92b74cf4d1c27b",
+      "reason": "Exercise actual SDK installer bytes and Native binding with explicit module dependencies, real ZIP extraction and the shared Web body writer in an isolated fixture."
     },
     "packages/pi-durable-coding/src/compat/codemode-calls.ts": {
       "sha256": "921c4e2b0c197a8daeb840e467d00e512abdc6f9c46a2124e8147728e3b152ab",
@@ -3356,13 +3356,9 @@
       "sha256": "f8ebe2bfd64867d1cc65e1bed86bfee51e7e71d31819318598b2aa41ae3bea82",
       "reason": "Initialize the codemode worker through the public durable worker entry point."
     },
-    "packages/pi-agent-server/src/tools/local/management-http.ts": {
-      "sha256": "53a9ddb9b1abf1d000a7955f793ef27c102e6ab2a33158b8b3cffc9ed97bd8aa",
-      "reason": "Port pi-coding-agent 1.1.0 utils/management-http.js retry and cancellation behavior for binary management requests."
-    },
     "packages/pi-agent-server/src/tools/local/tool-binaries.test.ts": {
-      "sha256": "6e61784be685cedc2fb678803ffb4426a50080e2156023c7e558a609cc7e51d5",
-      "reason": "Verify Pi-compatible fd and ripgrep cache, PATH, offline, download, extraction and cleanup behavior with injected dependencies."
+      "sha256": "c5c9226708d3df66145a1c493cc394a072f317da286293a838a3da37a3fa4708",
+      "reason": "Verify actual SDK installation through product bindings, including cache and PATH priority, offline behavior, platform assets, retry, failures, cleanup and concurrent downloads."
     },
     "packages/pi-agent-server/src/tools/wrap.test.ts": {
       "sha256": "b94832dc34fe8fbf15f6c12153c1fc274d15d75ed1dbe44ab025b1b1c8757d36",
@@ -3449,8 +3445,8 @@
       "reason": "Bridge public Coding SDK search factories to durable registrations, bind the product binary resolver and abort signal per call, and retain CR-only context line splitting without copying search algorithms."
     },
     "packages/pi-agent-server/src/tools/local/tool-binaries.ts": {
-      "sha256": "9f4e8445cb342c1d9066fe00a8c5481a0cf528b4a6e4f9e6a6aecef40be3e1ce",
-      "reason": "Adapt pi-coding-agent 1.1.0 utils/tools-manager.js fd and ripgrep resolution and downloads, adding bundled ripgrep lookup and isolated temporary downloads. Propagate cancellation through version and archive requests, bound body reads, and prevent publication after cancellation."
+      "sha256": "7b37938d707c828715865eaaedb27a85e4ff5fae9594081e6a7945638522ee58",
+      "reason": "Bind SDK binary installation to product absolute PATH lookup, cache priority, fdfind, bundled ripgrep and Pi cache directory; release, retry, download, extraction and publish algorithms remain in the SDK."
     },
     "packages/pi-agent-server/src/tools/local/tool-binaries-cancellation.isolated.ts": {
       "sha256": "2a432715797594a37f1d58c8d3804025e0ddd00f169c840509dd8f3ce3d4f5a9",
@@ -3693,8 +3689,8 @@
       "reason": "Generate the shared shell entry against the active authored adapter."
     },
     "packages/pi-durable-coding/src/compat.ts": {
-      "sha256": "e1bfb7a88bd3781928e5b3100381ba1d889b516d00534ceb280cd349333e6e58",
-      "reason": "Forward required SDK path helpers and existing compatibility contracts without a new runtime wrapper."
+      "sha256": "d60c019530a2a7bd4e9ff72f5eeb914570991bc7a2da39844b16bb398d42cb7d",
+      "reason": "Forward SDK contracts and bind the shared Web body writer required for Bun cancellation without adding installer algorithms."
     },
     "packages/pi-durable-coding/src/durable-projection.ts": {
       "sha256": "7e01de10a83aff31ca44fc550a266b6c97da6537500decf30c58d403c8d1dedb",
@@ -4357,16 +4353,16 @@
       "reason": "Check the OAuth module source route to the public SDK; retain existing SDK identity and trust boundary checks."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "3c4d4603c5ad8c9aa9bc828e8f9e3610538435efdbf7e8fb0128aff046fa5500",
-      "reason": "Record 86 Coding outputs; the server path slice changes only two shared root exports and leaves internal path helper files pristine."
+      "sha256": "4be22727ab5aac587b1c547a6bda090c8d907219777d56c04b44f71cde9a425a",
+      "reason": "Record 88 Coding outputs: add two HTTP dependency outputs, change three existing outputs and preserve the other 83 hashes for this server binary slice."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "d3438186bb45e6fd2e581f30248b62e39fa59136670e86437c64e0e3c629aa4d",
-      "reason": "Retain host boundary patches and add root exports for existing resolveReadPath and resolveToCwd; do not copy or change path algorithms."
+      "sha256": "b704c76ced289139b334e866d6470b03a6b8c453ad07b86ca4a8f3b942bdc8c2",
+      "reason": "Apply focused tool manager and HTTP boundary policies to pristine SDK modules while retaining existing host contract patches and root exports."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "bdbf6669f9f8da0289c094225ea78e00033852e0c0235711ce2d0293de0beb99",
-      "reason": "Retain host boundaries and expose existing resolveReadPath and resolveToCwd through shared SDK roots; path algorithms remain unchanged."
+      "sha256": "5d2d1711f52cf32f8ae2bdae526793009c977e9709b49504746a31cf413edd79",
+      "reason": "Retain necessary host boundaries and extend SDK manager dependencies, cancellation and cleanup; SDK algorithms replace the server installer and HTTP retry copies."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4429,8 +4425,8 @@
       "reason": "Exercise durable ownership and metadata boundaries through the public SDK factory binding."
     },
     "packages/pi-durable-coding/src/native-search-tools.ts": {
-      "sha256": "78861ccedb3c9daf6d2564a0bcefb69f0d205db228d99775d70614d22b14ff99",
-      "reason": "Bind the existing host directory, version and safe ZIP policy to the SDK installer."
+      "sha256": "a60dc317a82054449eb1ad6d425838ca7e3e6bcaf9d69d8409703e9528726dfc",
+      "reason": "Bind published search factories and the patched SDK manager to Native directories, version, safe ZIP extraction and the shared cancellable Web body writer."
     },
     "packages/pi-durable-coding/test/fixtures/host-search-runner.ts": {
       "sha256": "4d14badcd11c3db28b2076a7a1323c597cf969905d26e607151d96eb6562edfb",
@@ -4651,6 +4647,14 @@
     "packages/pi-agent-server/src/tools/paths-sdk.test.ts": {
       "sha256": "1d6846e5e9124851c846ca283c0044a37879b18456579401bdafbd136eb0d3b6",
       "reason": "Verify SDK path normalization before approval, read filename fallback priority, approved path aliases and denial without execution or memo."
+    },
+    "packages/pi-durable-coding/scripts/coding-tools-manager-policy.ts": {
+      "sha256": "7bf2ec7118895507496f5cb4df4991d68555c5952fd657bd361602034e7ebf7f",
+      "reason": "Add optional host dependencies and AbortSignal boundaries to existing SDK algorithms; keep total body deadline and isolated archive cleanup without copying installer or retry implementations."
+    },
+    "packages/pi-durable-coding/src/compat/download.ts": {
+      "sha256": "b63335f0419bad7aa13d05d5e149297229084c7da65461dc8068c3691788d963",
+      "reason": "Retain only Web reader and file handle I/O because Bun Node stream bridges do not reliably cancel a pending producer; share this 25-line adapter across server and Native SDK managers."
     }
   },
   "deleted": {

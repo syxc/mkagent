@@ -9,9 +9,10 @@ import {
   type GrepToolOptions,
 } from '@earendil-works/pi-coding-agent';
 import { extractZipArchive } from './compat/archive.ts';
+import { writeDownload } from './compat/download.ts';
 import { getBinDir, VERSION } from './pi/config.ts';
 
-const { ensureTool } = createToolManager({ getBinDir, version: VERSION, extractZipArchive });
+const { ensureTool } = createToolManager({ getBinDir, version: VERSION, extractZipArchive, writeDownload });
 
 export {
   type FindOperations, type FindToolDetails, type FindToolInput, type FindToolOptions,

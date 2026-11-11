@@ -7,6 +7,7 @@ import * as streamPromises from 'node:stream/promises';
 import { compileFunction } from 'node:vm';
 import ts from 'typescript';
 import { extractZipArchive } from '../src/compat/archive.ts';
+import { writeDownload } from '../src/compat/download.ts';
 
 const [tool, archivePath, installDir] = process.argv.slice(2);
 if ((tool !== 'fd' && tool !== 'rg') || !archivePath || !installDir) throw new Error('Missing fixture arguments');
@@ -55,6 +56,7 @@ const adapter = evaluate(await readFile(adapterPath, 'utf8'), adapterPath, {
   },
   './pi/config.ts': { getBinDir: () => installDir, VERSION: 'fixture' },
   './compat/archive.ts': { extractZipArchive },
+  './compat/download.ts': { writeDownload },
 });
 const statuses: Array<{ type: string; message: string }> = [];
 process.env.PI_OFFLINE = '0';

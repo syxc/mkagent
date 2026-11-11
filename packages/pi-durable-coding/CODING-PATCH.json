@@ -13,7 +13,7 @@
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "cd67db98a8776c3515277993a7fa9a133f29bcb8904e07ec285c74670f9e44c9"
+      "sha256": "3a7609f51c48f01660ecec140d6eadc672307480638f87bc3b364592d7926c4e"
     },
     {
       "path": "dist/extensions/mcp/resources.js",
@@ -183,12 +183,22 @@
     {
       "path": "dist/utils/tools-manager.js",
       "originalSha256": "969ef1a6018c1e773b3c0a4be42642c7cf10cb07687f74004f458fb2262d9595",
-      "sha256": "138e3073d3499c8a808db7bc156bd3c906ce9522681d94cd7827d9e2ed1d9570"
+      "sha256": "8aaaad81faa3d25c20c5c97e0c16e4d37e8696f55532bad76df2dec8dcde7e43"
+    },
+    {
+      "path": "dist/utils/management-http.js",
+      "originalSha256": "7c25b3d8d0f6069cfa9324bc9937a43849821dc4ab45e97c2988d85118832726",
+      "sha256": "24140ca8c6810657feb6b4856040f1fec3b4de9ecaf4f421cf2866fafb654494"
     },
     {
       "path": "dist/utils/tools-manager.d.ts",
       "originalSha256": "67aabbf3d0a69ca1a97b94b97384a0ce4a54e2efbad0a11666e59dafd31ed128",
-      "sha256": "bb5b934295023dbd46c253b03fe74aea8c091cbe45553901682a961076535ab2"
+      "sha256": "9c1099e541fe5537dadb79758fbf79def3f7bb2d2ad70baf4703cf6620f5ec47"
+    },
+    {
+      "path": "dist/utils/management-http.d.ts",
+      "originalSha256": "12c9424ed53ecf2f9fec1c1f64b9e053612d3e3284632e00107784e3aac7fbef",
+      "sha256": "a24f9d803921ce8cba75b2228ce22d787ed726673a976e988638051da1596091"
     },
     {
       "path": "dist/modes/rpc/rpc-client.js",

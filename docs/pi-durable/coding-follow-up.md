@@ -168,6 +168,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `6827615` 后的 server 路径切片删除 95 行本地 path-utils，wrapper 通过既有 compat 门面使用 SDK 的 resolveReadPath 和 resolveToCwd。补丁只增加两个已有根出口，四份路径 helper 文件保持 pristine，不新增运行时包装；权限检查、批准后路径和参数持久化逻辑未改。两现有布局各 11 项测试、362 个断言及定向严格类型检查通过，使用 skipLibCheck，三个 workspace 类型映射指向实际源码。独立 48 项静态检查、456 个探针场景和 1996 次断言通过，未确认缺陷；6 项源码、206 项产物和 35 项支持文件摘要已核验。来源更新 5 项、新增 1 项、退役 1 项，受限 Craft 审计通过 2023 个允许文件；86/123 份输出及 13 份生成清单保持。失败修正和平台模拟限制见[Server 路径验证](coding-validation.md#sdk-server-path-helpers-after-6827615)。产品二进制策略、MCP runtime、其余源码及 F0 至 F6 继续开放。
 
+`dadd11a` 后的 server 二进制管理器切片将 449 行模块缩为 126 行宿主绑定，删除 75 行 HTTP 重试副本；SDK 承担版本、资源选择、重试、下载、解压、发布和清理。25 行共享 writer 仅保留经 Bun 探针确认必要的 Web reader 与文件 I/O，server 和 Native 共用；本地 SDK 补丁增加可选依赖、每调用取消、完整下载期限及独占工作目录。两现有布局各 75 项测试、291 个断言及定向严格类型检查通过，使用 skipLibCheck；独立 37 项静态检查、14 组场景和 120 个断言通过，未确认缺陷，10 项源码、216 项产物和 60 项支持文件摘要已核验。来源更新 8 项、新增 2 项、退役 1 项，受限 Craft 审计通过 2024 个允许文件；Coding 88 份、总数 125 份输出，13 份生成清单不变。失败探针、独立结果组合及默认 Node bridge 的 Bun 取消限制见[Server 二进制验证](coding-validation.md#sdk-server-binary-manager-after-dadd11a)。MCP runtime、其余源码、完整 Native 与声明及 F0 至 F6 继续开放。
+
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 
 | 优先范围 | 下一步与保留条件 |

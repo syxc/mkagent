@@ -345,6 +345,8 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `6827615` 后的 server 路径切片删除 95 行完整路径副本，生产 wrapper 通过既有 compat 门面直接使用 SDK 的 resolveReadPath 和 resolveToCwd。durable 发布根和 tools 入口未提供这两个 helper 契约；Coding 内部已有完整实现，只缺根出口，因而仅补两个导出，不复制算法或添加包装。权限检查前规范化、read 文件名回退及批准后的路径冲突检查与执行继续保持；四份路径 helper 文件与发布版一致。两现有布局各 11 项测试、362 个断言及定向严格类型检查通过，使用 skipLibCheck；独立 48 项静态检查、456 个探针场景和 1996 次断言通过，未确认缺陷。来源更新 5 项、新增 1 项、退役 1 项，受限 Craft 审计通过 2023 个允许文件；86/123 份输出及 13 份生成清单保持。上游公开等效根出口后撤除本项导出补丁。源模块投影及平台模拟限制见[Server 路径验证](coding-validation.md#sdk-server-path-helpers-after-6827615)，二进制、MCP runtime 和整体验收继续开放。
 
+`dadd11a` 后的 server 二进制管理器切片将 449 行模块缩为 126 行，删除 75 行完整 HTTP 重试副本；SDK 承担 release、asset、版本、重试、下载、解压、发布及清理算法。宿主只保留 PATH、缓存、fdfind、bundled ripgrep 和目录策略，server 与 Native 共用 25 行 Web body writer。该 writer 的必要性由 Bun 挂起读取取消探针确认；SDK 默认 Node bridge 的及时取消仍未保证。工厂、可选依赖、每调用信号、覆盖 body 的期限与独占目录均为本地窄补丁，上游提供等效公开契约及修复后撤除，不复制完整算法。两现有布局各 75 项测试、291 个断言及定向严格类型检查通过，使用 skipLibCheck；独立 37 项静态检查、14 组场景和 120 个断言通过，未确认缺陷。来源更新 8 项、新增 2 项、退役 1 项，受限 Craft 审计通过 2024 个允许文件；Coding 88 份、总数 125 份输出，13 份生成清单保持。失败历史与完整入口限制见[Server 二进制验证](coding-validation.md#sdk-server-binary-manager-after-dadd11a)；MCP runtime、其余源码和整体验收继续开放。
+
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
 | 协议类型与传输 | 使用 core 公开导出和 `streamProxy`。28 份类型导入在 `f2b90d5` 恢复时验证 JavaScript 未变。AgentSession、虚拟模块表和 SDK 的 durable 接线已可核对；完整 SDK 声明及全仓类型检查通过。 | 公开类型、消息声明合并、执行入口及 SDK 接线 |
