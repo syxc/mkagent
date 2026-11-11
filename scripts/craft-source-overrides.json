@@ -4341,16 +4341,16 @@
       "reason": "Assert that generated tool aggregation imports resolve to the Native SDK factory binding."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "35f6e49aeb9b06eed3ea624f4f233b62dd510e9693c1336faa6a28e733bc5cd4",
-      "reason": "Keep SDK OSC stream state bounded and prevent OSC metadata from entering Bash callbacks, history and spill files."
+      "sha256": "951aa66bbe9b8828a41d7539fc04ae53ed877c80cfcae23e0affcbb7a3a7d0ed",
+      "reason": "Select one existing SDK root HTML renderer contract without changing runtime algorithms."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "6dcdef91025e4c8bd56ae9f33e92bf8aae8b727dbd72147b7745a0dbbb0fa090",
-      "reason": "Keep SDK OSC stream state bounded and prevent OSC metadata from entering Bash callbacks, history and spill files."
+      "sha256": "789a1d2d4f467dbebd164d350519f4f383e1f804bd1cdba8c20f088c8e81bfa8",
+      "reason": "Select one existing SDK root HTML renderer contract without changing runtime algorithms."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "455834538d1e29396824b7ddf150eeea5ab3fe76c7e76daeaa168139f7beebcc",
-      "reason": "Keep SDK OSC stream state bounded and prevent OSC metadata from entering Bash callbacks, history and spill files."
+      "sha256": "d55987a29926db06d8fc1399af62535584c15780ae6041204f4be5049f4b1412",
+      "reason": "Select one existing SDK root HTML renderer contract without changing runtime algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4683,6 +4683,10 @@
     "packages/pi-durable-coding/test/session-bash-ansi.test.ts": {
       "sha256": "a028663c24a4ee1471515df2600f9d9c76a849bdf04c9a9b557ef669bdee7229",
       "reason": "Verify SDK Bash OSC chunk boundaries, terminators, bounded pending state, spill output and cancellation."
+    },
+    "packages/pi-durable-coding/test/sdk-html-types.test.ts": {
+      "sha256": "3178bacc24b863abab534dce17859bd6418cb42e3032a71c6c6761c0db1df189",
+      "reason": "Check the SDK root declaration without skipLibCheck and verify HTML renderer factory and export option compatibility."
     }
   },
   "deleted": {

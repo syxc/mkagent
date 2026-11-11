@@ -113,8 +113,10 @@ for (const suffix of ['js', 'd.ts']) {
   const position = original.indexOf(marker);
   if (position < 0) throw new Error('Published index source map marker changed');
   outputs.set(path, original.slice(0, position) + exports + original.slice(position));
+  // Select the export-options contract when both HTML modules expose the same type name.
   if (suffix === 'd.ts') outputs.set(path, outputs.get(path)!.replace(marker,
-    'export type { ShellDependencies } from "./core/tools/bash.ts";\n'
+    'export type { ToolHtmlRenderer } from "./core/export-html/index.ts";\n'
+    + 'export type { ShellDependencies } from "./core/tools/bash.ts";\n'
     + 'export type { CreateAgentSessionDependencies } from "./core/sdk.ts";\n' + marker));
 }
 for (const suffix of ['js', 'd.ts']) {

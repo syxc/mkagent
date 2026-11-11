@@ -26,6 +26,47 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK root HTML renderer typing after 0b74761
+
+The patched root exported two distinct ToolHtmlRenderer declarations through
+star exports. Both describe the same methods, but TypeScript reports TS2308
+when it checks the root declaration. The generator now selects the existing
+export-options interface with an explicit type export. It keeps the renderer
+factory, dependency type and existing HTML exports. No interface copy, runtime
+wrapper or renderer algorithm is added. Remove this selection when upstream
+provides an equivalent root contract without the ambiguity.
+
+The same regression source fails with TS2308 in both layouts before the fix.
+After the fix, each layout passes that case and three existing HTML cases.
+The new case checks semantic diagnostics for the actual SDK root and a virtual
+consumer with strict enabled and skipLibCheck disabled. It verifies the root
+type against the factory return and export option, checks factory dependencies
+and rejects a renderer that returns numbers. It does not check semantic
+diagnostics for all dependency declarations. The existing cases cover 635 ANSI
+samples, custom tool call and result colors, and session HTML export. Tests use
+temporary files, task-owned configuration and a network-blocking sandbox.
+
+Both layouts also pass scoped strict checks for the new test and generator
+against actual declarations, with skipLibCheck enabled and zero diagnostics.
+Commands, compiler roots, options and raw output are recorded. Generation,
+check and pristine replay pass for all 94 Coding outputs. Only index.d.ts
+changes; the other 93 hashes stay fixed. Both installed layouts match the
+manifest. Four internal HTML JS and declaration files remain pristine. Core
+four and durable 33 remain inherited counts; their outputs are not revalidated
+here. The total remains 131. Runtime and helper generation are not repeated.
+
+Source registration updates three entries and adds one test, with no retired
+entry. The restricted Craft v0.15.6 audit passes for 2032 allowed files and
+excludes legacy and sensitive paths. Independent static review finds no
+confirmed defects or blockers and verifies 23 inputs and five source hashes.
+It checks the recorded evidence without rerunning project checks. Complete
+patch, inventory and registry contents remain outside review; the audit
+summary does not independently verify those contents or exclusions. Green
+logs do not capture each layout's test hash at execution time. This is not a
+fresh installation, complete declaration build, full Native check or recovery
+acceptance. The protected legacy blocker, resources declaration errors and F0
+through F6 remain open.
+
 ## Bounded SDK OSC streaming after 41040a6
 
 The SDK searches only the last 256 UTF-16 units for unfinished ANSI sequences.
