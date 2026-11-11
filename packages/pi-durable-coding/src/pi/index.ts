@@ -391,7 +391,7 @@ export {
 	type WriteToolInput,
 	type WriteToolOptions,
 	withFileMutationQueue,
-} from "./core/tools/index.ts";
+} from "../native-tools.ts";
 export { formatReadLineRange } from "@earendil-works/pi-coding-agent";
 export {
 	hasTrustRequiringProjectResources,

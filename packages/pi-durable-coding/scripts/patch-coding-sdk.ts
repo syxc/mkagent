@@ -11,6 +11,7 @@ import { codingModelRuntimePolicy } from './coding-model-runtime-policy.ts';
 import { codingRunnerPolicy } from './coding-runner-policy.ts';
 import { codingAgentSessionPolicy } from './coding-agent-session-policy.ts';
 import { codingToolPolicy } from './coding-tool-policy.ts';
+import { codingToolFactoriesPolicy } from './coding-tool-factories-policy.ts';
 import { codingShellHelpersPolicy, codingShellPolicy } from './coding-shell-policy.ts';
 import { codingCodemodePolicy } from './coding-codemode-policy.ts';
 import { codingUIPolicy } from './coding-ui-policy.ts';
@@ -72,6 +73,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/extensions/runner.${extension}";`,
     `export * from "./core/extensions/types.${extension}";`,
     `export * from "./core/exec.${extension}";`,
+    `export { allToolNames, createToolFactories, createToolDefinition, createTool, createCodingToolDefinitions, createReadOnlyToolDefinitions, createAllToolDefinitions, createAllTools${suffix === 'd.ts' ? ', type Tool, type ToolDef, type ToolName, type ToolFactoryDependencies, type ToolFactories' : ''} } from "./core/tools/index.${extension}";`,
     `export * from "./core/tools/tool-definition-wrapper.${extension}";`,
     `export { formatToolCallWithArgs, getTextOutput, replaceTabs } from "./core/tools/render-utils.${extension}";`,
     `export { spawnProcess, spawnProcessSync } from "./utils/child-process.${extension}";`,
@@ -453,6 +455,10 @@ for (const suffix of ['js', 'd.ts']) {
     validateServerConfig?: (name: string, raw: unknown) => McpServerConfig | string;`);
   }
   outputs.set(path, body);
+}
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/core/tools/index.${suffix}`;
+  outputs.set(path, codingToolFactoriesPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
 }
 const staging = mkdtempSync(join(tmpdir(), 'coding-sdk-exports-'));
 let patch = '';

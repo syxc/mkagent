@@ -84,16 +84,6 @@
       ]
     },
     {
-      "source": "packages/coding-agent/src/core/tools/index.ts",
-      "target": "src/pi/core/tools/index.ts",
-      "sha256": "3c66ea1e03530fb85436ee639f35add8bf72718ac6e76b738a1f41be58a2b472",
-      "portSha256": "aefddf527ff36d2d24d8310114ff28527c3c62fda1a58603a7f0001396f9f262",
-      "changes": [
-        "host-extension-module-import",
-        "public-coding-sdk"
-      ]
-    },
-    {
       "source": "packages/coding-agent/src/extensions/codemode/worker.ts",
       "target": "src/pi/extensions/codemode/worker.ts",
       "sha256": "eff1f57d225d054ec40aa6753631426a426528f2ef769c4e82020757cb055911",
@@ -106,7 +96,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "e3fc3f0214b46762d8951634bba6ac873b596e4be82e8eca57291fae9dbb7a24",
+      "portSha256": "33d5368466be94ac983c7f95d32552d16ed598b03a7c5525fc0cefdf93d80352",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",

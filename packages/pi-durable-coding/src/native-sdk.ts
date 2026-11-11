@@ -41,9 +41,9 @@ export type {
   InlineExtension, SlashCommandInfo, SlashCommandSource, ToolDefinition,
   PromptTemplate, Skill,
 } from '@earendil-works/pi-coding-agent';
-export type { Tool } from './pi/core/tools/index.ts';
+export type { Tool } from './native-tools.ts';
 export {
   withFileMutationQueue, createCodingTools, createReadOnlyTools, createReadTool,
   createBashTool, createEditTool, createWriteTool, createGrepTool, createFindTool,
   createLsTool, createPowerShellTool,
-} from './pi/core/tools/index.ts';
+} from './native-tools.ts';

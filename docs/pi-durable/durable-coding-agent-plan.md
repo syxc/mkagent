@@ -116,6 +116,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `f7d4b4f` 后的配置切片删除 687 行完整配置、25 行重复 Native 资源与提示词包装及 13 行转换脚本，六行绑定仅转出 SDK 配置并固定 Native Coding 版本 1.5.0。Coding SDK 承担普通目录、文档、metadata 与 worker 选择，durable 公开入口承担 QuickJS 定位；quickjs-wasi 直接依赖及 lock 对应声明移除，传递依赖保留。Native 默认文档有意改为 SDK 安装目录，legacy 的 `.pi`、显式 agentDir 和固定文档 URL 保留。只补三个已有配置根导出，两个共用输出改变，其余 88 份不变；Coding 90 份、总数 127 份保持，runtime 为 12 份 TypeScript、0 项资源，其中 src/pi 为 8 份，手写绑定另计。根布局原 83 项结果保留，配置六项补验通过；hoisted 五文件组合 89 项、两布局 read 投影各 19 项及定向 strict/skipLibCheck 检查通过。独立复核无已确认缺陷，两布局各 28 个断言通过，冻结输入和证据摘要已接纳。来源更新 29 项、新增 2 项、退役 5 项，受限 Craft 审计通过 2024 个允许文件。完整 runtime 生成与 check 通过，三份共享资源转发只做限定生成，没有重新安装。失败记录、完整 Native、声明、恢复与发布 worker 限制见[配置验证](coding-validation.md#sdk-configuration-after-f7d4b4f)。其余源码收敛及 F0 至 F6 继续开放。
 
+`7cae8c6` 后的工具聚合切片删除 224 行完整副本，47 行 Native 门面保留 75 个具名导出并绑定十二个既有工厂；SDK 保留八个选择与组装算法，只增加十六个可选工厂接点。两现有布局各 5 项测试、232 个断言及实际声明定向 strict/skipLibCheck 检查通过，含真实文件写入、编辑和读取。独立复核未确认缺陷，12 个源码路径、192 个产物路径、25 个支持输入及复核输入和产物摘要已接纳。来源更新 8 项、新增 3 项、退役 1 项，受限 Craft 审计通过 2026 个允许文件。Coding 92 份、总数 129 份输出，runtime 完整生成与 check 后为 11 份 TypeScript、0 项资源，其中 src/pi 为 7 份，手写绑定另计。失败修正及完整 Native、声明、恢复、SDK 内部默认工具与 executeBash 策略限制见[工具聚合验证](coding-validation.md#sdk-tool-factories-after-7cae8c6)。其余源码收敛及 F0 至 F6 继续开放。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

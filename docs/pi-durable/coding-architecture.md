@@ -166,14 +166,14 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 | 本地位置 | 上游来源与移植方式 |
 |---|---|
-| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，UI、图片、用量、来源、计时、资源发现、系统提示词、compaction、截断、工具渲染与输出文件及 ANSI SDK 替换、无调用 bash 执行器退役及 MCP 工厂、工具搜索、模型解析、缓存预热、凭据存储、参数与协议类型、会话服务、运行时、工厂、消息、footer、clipboard、路径与 BOM 及工具管理器 SDK 替换、MIME 多余转发退役、子进程、shell helper、RPC client/协议、信任管理及 OAuth SDK 替换、冗余 RPC barrel 退役及完整配置 SDK 替换后为 8 份 TypeScript、0 项资源，剩余源码继续按职责核对。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留待核对的工具、扩展等源码；RPC client 与协议已用 SDK，宿主仅保留显式 CLI 路径策略；插件 UI 组件和 CustomEditor 改用公开 SDK，AgentSession 使用公开 SDK 和自有 durable 子类。 |
+| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，UI、图片、用量、来源、计时、资源发现、系统提示词、compaction、截断、工具渲染与输出文件及 ANSI SDK 替换、无调用 bash 执行器退役及 MCP 工厂、工具搜索、模型解析、缓存预热、凭据存储、参数与协议类型、会话服务、运行时、工厂、消息、footer、clipboard、路径与 BOM 及工具管理器 SDK 替换、MIME 多余转发退役、子进程、shell helper、RPC client/协议、信任管理及 OAuth SDK 替换、冗余 RPC barrel 退役、完整配置及工具聚合 SDK 替换后为 7 份 TypeScript、0 项资源，剩余源码继续按职责核对。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留待核对的扩展源码与公开出口；工具聚合已改用 SDK 工厂绑定，SDK 内部默认会话及 executeBash 的宿主策略仍待核对；RPC client 与协议已用 SDK，宿主仅保留显式 CLI 路径策略；插件 UI 组件和 CustomEditor 改用公开 SDK，AgentSession 使用公开 SDK 和自有 durable 子类。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 105 行 core 子类，保留 durable 队列身份、恢复和独立的可变默认对象。默认消息转换直接使用发布版 core；模型和 usage 两个默认对象仍从锁定上游提取，stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
 | `src/native-operations.ts` | 22 行门面，调用仓内 core 补丁导出的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 仅用 2 行类型转导出引用公开 SDK 的扩展 UI 请求和响应，保留宿主独立协议入口，转译后不加载 SDK 运行时。 |
 | `src/upstream/**` | 2 项选取源码：boundary drafts 和同步 durable context；另有 13 个共享入口。旧完整 loader 和 manifest 转发已删除；插件 runtime、注册、factory、缓存及发现现由公开 SDK 承担，context 与 prompt 去重也已删除本地副本。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
 
-前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 12 份 TypeScript 和 0 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 8 项来源产物及 13 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
+前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 11 份 TypeScript 和 0 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 8 项来源产物及 13 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
 `461e7c9` 后的入口核对确认，MkAgent 通过 `CodingHost/createAgentSession` 装配，仓内产品没有 `main`/`MainOptions` 调用。先前切片排除原版 Pi 启动器及其独占的 24 份源码，包含 CLI 认证、配置向导、自更新、旧 Pi 配置迁移和 CLI 内置扩展集合；Llama 管理扩展仅由该集合进入。`5662422` 后的限定复核另确认，原始 MkAgent 和当前宿主均自行管理会话、UI 与传输，不依赖上游终端、stdout 或 stdin/stdout RPC 模式宿主。当时从根入口和 modes barrel 排除 `InteractiveMode`、`InteractiveModeOptions`、`runPrintMode`、`PrintModeOptions`、`runRpcMode`，并删除三个实现文件。现行生成规则在遍历根入口的依赖前完成排除，RPC 直接路由至既有适配器，冗余 modes barrel 已退役。`RpcClient` 及其 options、RPC 协议、`JsonAgentSessionEvent`、Theme、CustomEditor、renderer/UI、`ExtensionMode`、AgentSessionRuntime 和插件生命周期保留；MCP/codemode/tool-search 的公开工厂保留。直接使用被排除模式的外部消费者须迁移到自有宿主，这项导出变化不承诺任意外部消费者零影响。此处删除不需要的模式宿主，不计作官方 SDK 完整覆盖，也没有证明其余辅助闭包全部必要。
 
@@ -388,6 +388,8 @@ Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只�
 `f2b90d5` 的 14 份 helper 归一净减少 3029 行实现，辅助源码由 27 项降为 13 项，共享入口由 7 个增至 21 个。该提交还将类型导入内部改写从 31 份降为 3 份。
 
 前次辅助层收敛相对 `f2b90d5` 将辅助源码从 13 项降为 6 项，共享入口增至 28 个，并统一原生资源模块中的重复算法。当时按 `git diff --numstat`，23 个生产源码文件新增 342 行、删除 6379 行，净减 6037 行，已计入新增薄适配和共用类型。测试和生成规则另计。后续工具及图像算法共享的变化分别记录在上文和验证记录中，不计入这份历史统计。当时排除启动器后的 224 份运行时源码尚未完成必要性核实；该数量及状态只属于该批证据，当前范围和验收状态见前文及纠偏跟进。
+
+`7cae8c6` 后的工具聚合切片删除 224 行完整副本，47 行 Native 门面保留全部 75 个具名导出并绑定十二个既有工厂。SDK 的八个原聚合函数继续承担选择、顺序、options 读取和组装，补丁只增加十六个可选工厂与根出口，算法不复制进模板。两现有布局各 5 项测试、232 个断言及实际声明定向 strict/skipLibCheck 检查通过，含真实文件写入、编辑和读取；独立复核未确认缺陷，冻结输入及复核证据摘要已接纳。Coding 为 92 份补丁输出，总数 129 份；runtime 完整生成与 check 后为 11 份 TypeScript，其中 src/pi 为 7 份，手写绑定另计。来源更新 8 项、新增 3 项、退役 1 项，受限 Craft 审计通过 2026 个允许文件。SDK 内部 AgentSession 默认工具与 executeBash 的宿主策略、完整 Native、声明和恢复仍待核对，失败修正与限制见[工具聚合验证](coding-validation.md#sdk-tool-factories-after-7cae8c6)。
 
 ## 复现与升级
 

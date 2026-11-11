@@ -3921,8 +3921,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "eacbdcc7b7b8f90ab2f4e4220282bd6a822972747d77f91d4748658715ec1c24",
-      "reason": "Retire the complete local configuration module from the generated runtime; retain twelve generated TypeScript files."
+      "sha256": "2c26be5f1f12d3da09b5f196acec94438779d54f44829ef4551652105476e89c",
+      "reason": "Retire the complete copied tool aggregation module; retain eleven generated TypeScript files and no assets."
     },
     "packages/pi-durable-coding/test/native-theme.test.ts": {
       "sha256": "87d1b7c2b1eef13404fc67085c20bd32d55b821aba7ab56a6de594a973530239",
@@ -4068,17 +4068,13 @@
       "sha256": "4bb0675d11e68a5bdbe8de0e4efafb44dd67ebac35363f4cfeb8274278a9c30a",
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
-    "packages/pi-durable-coding/src/pi/core/tools/index.ts": {
-      "sha256": "aefddf527ff36d2d24d8310114ff28527c3c62fda1a58603a7f0001396f9f262",
-      "reason": "Forward the Native public truncation contracts to the Coding SDK."
-    },
     "packages/pi-durable-coding/src/pi/extensions/codemode/worker.ts": {
       "sha256": "4542d37a9f75150b52fc393fcd757f08fb0d681d92bebee6a40171e09b4bec82",
       "reason": "Forward worker initialization to the public durable entry point rather than a direct sandbox dependency."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "e3fc3f0214b46762d8951634bba6ac873b596e4be82e8eca57291fae9dbb7a24",
-      "reason": "Forward configuration through native-config and resources directly through the public SDK; remove obsolete Native wrapper exports."
+      "sha256": "33d5368466be94ac983c7f95d32552d16ed598b03a7c5525fc0cefdf93d80352",
+      "reason": "Forward the curated public tool exports through the Native factory binding."
     },
     "packages/pi-durable-coding/test/rpc-client.test.ts": {
       "sha256": "6c56532dbfc476f1f8009ab01d689e94903f95c080cc8736f54bb7dfdf2f55d4",
@@ -4337,24 +4333,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "80584dbf9c73959f632deca1846661b9e1bf0c2d88b9a00afa751c36f5047754",
-      "reason": "Route configuration to the six-line Native version binding and complete resource modules directly to the SDK."
+      "sha256": "a568e484ec1a8819088a9bb31ee418c6738ca42756790c253ff6f5722ad12b22",
+      "reason": "Route tool aggregation to Native factory bindings while the SDK owns selection and assembly."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
-      "sha256": "ce632d9c8940f122194b8fb9bfb8271ee926ab05857b4265101dcbb088d302d4",
-      "reason": "Check the OAuth module source route to the public SDK; retain existing SDK identity and trust boundary checks."
+      "sha256": "86d1c1e6a6236c3d2183d3bc6a5f4c619dadb5cf9f6d08f4e0cfa5370efe0175",
+      "reason": "Assert that generated tool aggregation imports resolve to the Native SDK factory binding."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "ac861eff909302cad423a48c307f63e25b0695a89fa26adcc2377e8fe130e2d8",
-      "reason": "Record three existing configuration root exports in the two shared outputs; preserve all other 88 Coding output hashes."
+      "sha256": "76b91b865621405c3c0a506d14262d5188f9f970b59901abdbd511bbccab1936",
+      "reason": "Record the optional SDK tool-factory binding and root exports in 92 physical outputs; retain the other 88 existing output hashes."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "72a202350229d0500609580e340a8107a3f838a8bb15b7bec7d189f0dd26ae74",
-      "reason": "Forward existing ENV_AGENT_DIR, getBinDir and getCodemodeWorkerSpecifier symbols without adding configuration algorithms."
+      "sha256": "bcaefc507e0d812ce521a8131adbfe8174d2cd38cead90c9d27b783807dfb727",
+      "reason": "Expose existing tool contracts and generate an optional factory binding from the published SDK algorithm."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "0d6d8f5a6742e4474ad4ff6ae214bd3e33e4aa9c0cf45bf7ad3e4b366b88db91",
-      "reason": "Add only three existing configuration root exports; keep configuration algorithms and existing host interface patches unchanged."
+      "sha256": "62d0881cb14d168078393a9d3e43e709869ea5402f27737c43b749daec770bfd",
+      "reason": "Add an instance tool-factory binding and root exports without copying the published aggregation algorithms into a template."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4561,8 +4557,8 @@
       "reason": "Guard narrow public SDK constructor, loader, conversion, action, pinned identity version and restore policy injection."
     },
     "packages/pi-durable-coding/src/native-sdk.ts": {
-      "sha256": "7d21e0f6ebb49aa06c3fffbec8667416e5e20aff94899c08b18e6058f9b3d05a",
-      "reason": "Keep the fixed Native Coding identity version through native-config when a bundle reads host package metadata."
+      "sha256": "b6503be8b0d988209baad8d8c9b50ab5a6b38d3aea5b3c070d5565837afa7c05",
+      "reason": "Forward tool types and factories through Native bindings that retain SDK aggregation."
     },
     "packages/pi-durable-coding/test/session-factory.test.ts": {
       "sha256": "d3ab1091979b03e8c9c2a099b1943d6c2c6fdb4a912457405858b220daaa9092",
@@ -4655,6 +4651,18 @@
     "packages/pi-durable-coding/test/config-sdk.test.ts": {
       "sha256": "873b7559a38ccf6e7415504a7ce491a5bdf09edbbb0d13189b72dbe3c3d68fac",
       "reason": "Verify SDK directories, legacy policy, pinned bundled versions and worker selection, and actual durable QuickJS worker execution."
+    },
+    "packages/pi-durable-coding/scripts/coding-tool-factories-policy.ts": {
+      "sha256": "8b499537ff107cc55e042e2876bda35a96f7f9f233f88240b9ca54dba0f68d93",
+      "reason": "Extract eight original SDK aggregation functions and bind sixteen optional factories without replacing their algorithms."
+    },
+    "packages/pi-durable-coding/src/native-tools.ts": {
+      "sha256": "8272264fc3c9c86a24f4a9298bdf689b7fe9a35b28ed4d5473a202638d091133",
+      "reason": "Bind twelve existing Native factories and preserve all original named exports through SDK aggregation."
+    },
+    "packages/pi-durable-coding/test/tool-factories-sdk.test.ts": {
+      "sha256": "3b0518e3a5d736b384c2e61fb1cf3ae15be015cad10f81fa0a5cf079f1dcf2be",
+      "reason": "Verify SDK and Native tool order, factory selection, option identity, fallback, failures, and real file write/edit/read."
     }
   },
   "deleted": {

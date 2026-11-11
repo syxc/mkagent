@@ -8,12 +8,12 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "573ea1645eda9b4752dca83e679f69cc8a6a88061980dc485e9219bd52472e1c"
+      "sha256": "ec81edb1a49a4c9b4b7082d1e8133ce700bfb066bee0c856f95582e0d51803e1"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "6516e254eba9edda8ac7239ceecd288d00e1a123274bc47d32dfcc42a3402d12"
+      "sha256": "cddcbffb28602b3d45dc5522b1632fe0a292a4187a3ef6ee3aee883ea518b924"
     },
     {
       "path": "dist/extensions/mcp/resources.js",
@@ -454,6 +454,16 @@
       "path": "dist/extensions/mcp/config.d.ts",
       "originalSha256": "22bbfc12fe3e35714399a38231382c569d165c697c15da646eddb0ede726616a",
       "sha256": "eb63c04cddc417bbdb7c218e3c0d9090d6021639dc5f2f2999a7cf30a48c1d35"
+    },
+    {
+      "path": "dist/core/tools/index.js",
+      "originalSha256": "16a517a54e2aa1386fada22cbef63205ca11463394f95fd20d74bee6fb2898a3",
+      "sha256": "4ca46a6746c6d58923897593865505e5c90b67aa872d906a4a0a06115699f12a"
+    },
+    {
+      "path": "dist/core/tools/index.d.ts",
+      "originalSha256": "523a167ddca88f8501b1656b7165503c03853264755c3da26ddb8d98f090614e",
+      "sha256": "81b0c4bd4b075e6b6935ade537ac105d6540d3990ba30c4f74fb9235820d232e"
     }
   ]
 }

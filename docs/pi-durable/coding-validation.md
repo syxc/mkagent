@@ -26,6 +26,63 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK tool factories after 7cae8c6
+
+The 224-line copied tool aggregation module is deleted. A 47-line Native
+binding keeps its 75 named exports and binds twelve existing Native tool
+and definition factories. Write and ls keep the SDK factories. Tool selection,
+order, options access, collection shape and unknown-tool errors stay in the SDK.
+
+The published SDK has no instance binding for these host factories. The local
+patch adds createToolFactories with sixteen optional dependencies. The policy
+selects eight existing published functions with the TypeScript AST and changes
+only direct factory callees. It does not copy the algorithms into a template.
+Partial, undefined and inherited dependencies keep ordinary property access
+and nullish fallback. No default tools are built before factory selection.
+Remove this patch when the public SDK provides an equivalent binding.
+
+The two shared root outputs change and two tool-index outputs are added. The
+other 88 output hashes and patch sections stay unchanged. Coding has 92 physical
+outputs; core has four and durable 33, for a total of 129. Complete runtime
+generation and check pass with eleven TypeScript files, seven in src/pi and
+four generated facades, and no assets. Hand-written bindings are counted
+separately. The inherited auxiliary inventory remains eight source items and
+thirteen shared entries; no complete auxiliary check was run in this slice.
+
+The first apply stopped before installation with eight TS9019 declaration
+errors for exported binding elements. Explicit indexed public types fixed the
+exports. A separate sync completed 28 writes in the two existing layouts,
+including actual Native declarations and removal of both old tool declarations.
+There was no fresh install. The first root behavior run had three passes and
+two failures: the fixture called edit without prepareArguments and incorrectly
+expected the SDK edit factory to have no preparation callback. Both assumptions
+were corrected against the installed SDK. The original failure log is retained.
+
+The final root and hoisted runs each pass five tests and 232 assertions,
+including real file write, edit and read. Guarded build checks report zero
+protected loads. Strict noEmit checks against actual declarations and scoped
+source consumers report zero diagnostics in both layouts, with skipLibCheck.
+These are scoped checks, not a full declaration build. Task-owned file fixtures
+were retained when trash cleanup failed inside the behavior sandbox.
+
+Independent review found no confirmed defects or slice blockers. It verified
+12 source paths, 192 artifact paths and 25 support inputs before and after the
+review. Its 54559 mechanical line and contract assertions are not runtime test
+cases. It checked original SDK reconstruction, patch replay, eight algorithm
+bodies, exports and adapter types, and inspected the existing behavior and type
+evidence without rerunning those suites. Parent verification accepted all 243
+review inputs and nine review outputs. Source registration updates eight
+entries, adds three and retires one; unrelated entries stay unchanged. The
+restricted Craft v0.15.6 audit passes for 2026 allowed files, excluding the
+legacy subtree and sensitive configuration.
+
+Evidence is in the task directory mkagent-tool-factories-sdk-NhuH3l, including
+validation-v2.json, review-tools/review-report.json, review-accepted.json,
+source-registration.json and restricted-craft-audit.json. Full Native imports,
+a full type build, a fresh install, recovery integration and SDK AgentSession
+default tool construction and executeBash process policy remain unverified in
+this slice. F0 through F6 and the remaining source review stay open.
+
 ## SDK configuration after f7d4b4f
 
 The complete local configuration module, 687 lines, is deleted. Coding SDK

@@ -69,6 +69,7 @@ export function codingHostImport(importer: string, specifier: string): string | 
     : module === 'core/sdk.ts' ? 'native-sdk.ts'
     : module === 'core/messages.ts' ? 'native-messages.ts'
     : module === 'core/agent-session.ts' ? 'native-agent-session.ts'
+    : module === 'core/tools/index.ts' ? 'native-tools.ts'
     : module === 'core/tools/grep.ts' || module === 'core/tools/find.ts' ? 'native-search-tools.ts'
     : module === 'core/tools/read.ts' ? 'native-read-tools.ts'
     : module === 'core/tools/edit.ts' || module === 'core/tools/edit-diff.ts' ? 'native-edit-tools.ts'
