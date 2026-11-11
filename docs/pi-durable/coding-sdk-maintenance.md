@@ -281,3 +281,5 @@ ResourceLoader 切片的全新 hoisted 冻结安装覆盖 11 个 workspace，loc
 5. 按影响验证产品、插件、权限、取消、文件、恢复、声明、独立消费者和 worker/搬迁资源，完成项目要求的仓库检查。记录实际失败和平台缺口，再更新架构与验收状态。
 
 此前独立验收只覆盖既有切片和维护登记，不能作为大规模源码删除目标的整体验收。现在以公开 Coding SDK 的真实组合接线、对应源码删除、必要行为与恢复验证为完成条件。AgentSession 主链接线已通过定向验证，其余源码替换和整体验收未完成，未确认的缺口不构成保留整个目录的理由。
+
+`65a1eb7` 后，根工程与既有 fresh isolated 工程的真实 Native 入口及相同会话、JSONL 恢复回归均通过，每个布局为 23 项、386 个断言。四项 SDK 身份、durable 会话子类和排除宿主核验通过，16 个安装输入及 131 份补丁输出保持。运行时加载与完整类型闭包分开记账；本次没有再次安装依赖或新增独立复核，完整声明、worker、SQLite 与产品恢复仍开放，见[Native 入口与会话恢复验证](coding-validation.md#native-entry-and-session-recovery-after-65a1eb7)。

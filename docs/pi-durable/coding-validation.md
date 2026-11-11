@@ -146,6 +146,49 @@ These remaining declarations are not changed or hidden by this fix. The full
 public SDK declaration check does not pass. Complete Native, build, recovery
 and F0 through F6 remain open.
 
+## Native entry and session recovery after 65a1eb7
+
+The root project and the existing fresh isolated installation both load the
+actual public `./native` entry. Each probe resolves the entry and Coding SDK
+inside its own project. Four exports retain SDK identity: wrapRegisteredTool,
+wrapRegisteredTools, DefaultResourceLoader and SettingsManager. The exported
+AgentSession extends the SDK class. The entry excludes main, InteractiveMode,
+runPrintMode and runRpcMode. These are runtime imports of the full entry, with
+no declaration projection.
+
+The first root probe uses a CommonJS resolver for the Coding SDK and fails.
+The SDK package exports only an import condition. Switching the probe to Bun's
+ESM resolver fixes that failure; product code and installation paths are not
+changed. The successful root and fresh entry probes take 0.56 and 0.66 seconds.
+
+Both projects run the same existing host-agent-session.test.ts and
+native-session-task.test.ts files. Each passes 23 tests and 386 assertions,
+with zero failures. The command takes 1.18 seconds in the root project and
+1.36 seconds in the fresh project. Coverage includes SDK default tools and
+Bash operations, nested durable tool ownership, host input projection,
+steer/follow-up admission, cancellation and JSONL reopen. Committed child
+results are reused, and uncertain post, before-settle and finalize callbacks
+are not repeated.
+
+The fresh project receives a snapshot of 119 allowed source and fixture files;
+no existing file is overwritten. Protected legacy paths, sensitive basenames
+and symlinks are excluded before copying. Both runs deny network access and
+legacy reads, use a task-owned HOME and temporary directory, and deny reads
+of real private configuration. Tests use local deterministic providers,
+in-memory credentials and temporary storage. They make no paid model request.
+
+After the runs, all 119 snapshot hashes still match the source tree. The
+16 manifest, lock and patch inputs match their recorded values in both
+projects. All 131 installed Coding, durable and core patch outputs remain
+unchanged. Dependencies are not installed again.
+
+Runtime entry loading is therefore verified separately from complete type
+checking. The protected resource type closure and the three full SDK
+declaration diagnostics remain unresolved. These checks do not cover the
+complete declaration build, worker build, SQLite recovery combinations or
+product recovery flows. No new independent review is performed for this
+validation-only slice. F0 through F6 remain open.
+
 ## Resource result declaration after c2ddabe
 
 The exported discoverCodingSkills function had no return annotation. In both

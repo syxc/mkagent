@@ -196,6 +196,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `d42d459` 后补验未投影、关闭 skipLibCheck 的完整公开 SDK 声明，发现四条诊断；其中本地 AgentSession 补丁误从 extensions/types 导入 BeforeAgentStartTrigger，现改为引用 SDK 已有 runner 类型。两布局新增回归、定向源码类型检查和 94 份补丁 check 通过，仅一份 d.ts 输出变化；独立复核通过旧导入和负例探针，未确认缺陷。来源更新 3 项、新增 1 项，受限 Craft 审计通过 2033 个允许文件。既有 fresh 工程冻结刷新通过，131 份安装输出摘要重新核验；这不是再次全新安装。完整 SDK 声明仍有 TS2694、TS2307、TS2416 三条诊断，完整入口、构建、恢复及 F0 至 F6 继续开放，见[会话触发类型验证](coding-validation.md#sdk-session-trigger-declaration-after-d42d459)。
 
+`65a1eb7` 后，根工程与既有 fresh isolated 安装工程的真实 `./native` 入口加载通过，四项 SDK 函数身份、durable 会话子类及四个已排除宿主导出核验通过。两工程运行相同会话与 JSONL 恢复用例，各 23 项、386 个断言通过，覆盖默认工具、嵌套归属、输入接纳、取消及不确定回调不重复执行。隔离工程加入 119 份允许源码与夹具，未覆盖已有文件或复制 legacy；验证后快照、16 个安装输入和 131 份补丁输出保持。此次没有再次安装依赖，也未新增独立复核，见[Native 入口与会话恢复验证](coding-validation.md#native-entry-and-session-recovery-after-65a1eb7)。实际运行时入口已验证，完整类型闭包、声明、worker 构建、SQLite 与产品恢复仍按各自范围开放，F0 至 F6 未整体完成。
+
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 
 | 优先范围 | 下一步与保留条件 |
