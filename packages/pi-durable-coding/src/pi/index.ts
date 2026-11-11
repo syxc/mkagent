@@ -489,4 +489,4 @@ export { convertToPng } from "../native-image-convert.ts";
 export { formatDimensionNote, type ResizedImage, resizeImage } from "../native-image-process.ts";
 export { detectSupportedImageMimeTypeFromFile } from "../compat/image-mime.ts";
 // Shell utilities
-export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
+export { getPowerShellConfig, getShellConfig } from "../compat/shell.ts";

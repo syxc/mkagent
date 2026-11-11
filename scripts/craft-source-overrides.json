@@ -2357,12 +2357,12 @@
       "reason": "Prevent replacement of any existing SDK patch, cover read-only scope checks, and preserve a patch created after preflight."
     },
     "packages/pi-durable-coding/src/compat/shell.ts": {
-      "sha256": "d571f33ef9cc91f76a83a70a3c8836fb54fede2256412af9b22923c3660bf6b0",
-      "reason": "Share durable Bash arguments and process tree cleanup while retaining Native macOS group stopping."
+      "sha256": "9b402585a3a19fa5655c3b1210c7388b0687cfb392444dd1b617c3819f7b092c",
+      "reason": "Bind SDK shell helpers to host bin paths and durable Bash and process cleanup, retaining the macOS stop policy."
     },
     "packages/pi-durable-coding/test/native-shell.test.ts": {
-      "sha256": "d75a692a479b4847631deefc0a4a7e6d6659869a5dcd6a05744be73d6f91e5b3",
-      "reason": "Pin Native WSL transport, synchronous errors, cleanup signals and detached tracking with verified process substitutes."
+      "sha256": "926511fbe19ab8a5b236128c86a424b0300811bfb0465e76681358b2136dcb2d",
+      "reason": "Verify SDK instance isolation, explicit path validation and host PATH behavior through the active binding."
     },
     "packages/pi-durable-coding/src/compat/child-process.ts": {
       "sha256": "f20ef1950d0f840b7b192d5c4077cdc12f943645b15b9ecb82db2a867c1eb393",
@@ -2501,20 +2501,16 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "9aa0f1388b3d6dfcb092602c2815a7cce6935b166c7d3aa3ef8ce6bbb5ada8ae",
-      "reason": "Retire the child-process source transformation rule after direct host routing."
+      "sha256": "1b8d6fbde7b43420137ec656c6224f3845ba72245fe44bdc570e94beab12fcfe",
+      "reason": "Remove the retired shell source transformation rule and its import."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
       "sha256": "f668dd26530e8cf673bc11ce23758c1db94ed9f779a34a2a2b69f5cb7a703640",
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
-    "packages/pi-durable-coding/scripts/shared-runtime-port.ts": {
-      "sha256": "ca2592d30d50af7769716216f4e22b0c4fa986ecce5555ea3451be6befa22e01",
-      "reason": "Remove the obsolete child-process wait source transformation and signature parser."
-    },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "24411942d71e2f55e417bf2816b926f902929a1d6b9f0d73adb75e78a8037e05",
-      "reason": "Retain active shell and declaration transformation guards; remove retired child-process transformation fixtures."
+      "sha256": "c281abc710b94561feddc08d96fabab35787a6f718b23d6c14956b874a4e13e5",
+      "reason": "Remove retired shell source transformation fixtures and retain active declaration guards."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
       "sha256": "2a5f3e6c3407cab0eaf5c0058358b84ff0df2a1777b9f13d21039d938b2fd1bd",
@@ -3697,8 +3693,8 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "fb496a28291c2640a3345576ab04528774d5d23e5d970a6e374fc903abfd89ee",
-      "reason": "Remove the two obsolete path and BOM forwarding modules."
+      "sha256": "2c1f9bae0ff89bd248354f919e0dc0d42e1421c13c9bf25b8a9666217f50bdb9",
+      "reason": "Route the shared shell compatibility entry to the active SDK and durable binding."
     },
     "packages/pi-durable-coding/package.json": {
       "sha256": "03c23daf882ce3e26b17e5ff2314536972fc923d5b229d23dbe8102c501471a3",
@@ -3713,8 +3709,8 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "0c010b7d3d103a74e157378210fc650c29b53f8b671dc9f68dba7e81511b6116",
-      "reason": "Stop generating path and BOM forwards after all callers use the SDK."
+      "sha256": "b2f623b73f33930d854df5bddf5a893a875b88c22f9613730fdc15a71ebde5d1",
+      "reason": "Generate the shared shell entry against the active authored adapter."
     },
     "packages/pi-durable-coding/src/compat.ts": {
       "sha256": "a91cfacbb8925a898ecda49deb5070501c01621d74e6334ba4e6a4072ea3e670",
@@ -3841,8 +3837,8 @@
       "reason": "Forward legacy helper imports to the canonical native Pi implementation without another source copy."
     },
     "packages/pi-durable-coding/src/upstream/utils/shell.ts": {
-      "sha256": "812b78b6d02f04583f9d62baf17ca1a773356a17654ec375540ac0c9a3b00fc2",
-      "reason": "Port Pi v1.5.0 packages/coding-agent/src/utils/shell.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
+      "sha256": "178f46d09b62a3edf82e6cf05c2a2a53668173d89e312ea07c9889d0b368a51a",
+      "reason": "Forward the existing compatibility contract to the active shell binding."
     },
     "packages/pi-durable-coding/test/durable-boundaries.test.ts": {
       "sha256": "349eb0443c4f10a351cfa113d9a8fdbf14459cdc24d3897780fac8a1a84c567e",
@@ -3949,8 +3945,8 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "e08219304482b64e66d243d5842705078066d239506a9a394a3370a830303cd5",
-      "reason": "Retire the child-process source port after direct routing to the existing durable wait adapter and SDK spawn exports."
+      "sha256": "2af3098e3cb6deb92fd88ec8689c6064cc22883e4bcb627441aecc9ab167b152",
+      "reason": "Retire the shell source port after direct routing to the authored SDK binding."
     },
     "packages/pi-durable-coding/scripts/asset-runtime-port.ts": {
       "sha256": "870e7a6bd8776736a6e2a1457dee690bcaccf4f4227b8ecfae0272fae1ca0c17",
@@ -4121,8 +4117,8 @@
       "reason": "Use the public SDK auth backend while retaining the host cancellable refresh-lock extension."
     },
     "packages/pi-durable-coding/src/pi/index.ts": {
-      "sha256": "4aff128f6b4886f25f04ae81b1b8d2f3935b2eb4a96f77651955dbbd7fb11901",
-      "reason": "Export the same MIME file detector directly from the durable policy adapter without an intermediate source port."
+      "sha256": "7ea819453d3680f1ae8e9579708c96d096c69a886be519ccb483e0e59c919dd8",
+      "reason": "Export the shell compatibility contract through the authored SDK binding."
     },
     "packages/pi-durable-coding/src/pi/modes/index.ts": {
       "sha256": "a17cd07031fbd589086c4df3f8d82b51c77524ac54f7f8c33b581cb458a639ce",
@@ -4143,10 +4139,6 @@
     "packages/pi-durable-coding/src/pi/modes/rpc/rpc-types.ts": {
       "sha256": "72368768a995682e5ba00009933a24be407d231e76090ecd145a596591773c09",
       "reason": "Use the SDK BashResult declaration for the existing RPC wire response."
-    },
-    "packages/pi-durable-coding/src/pi/utils/shell.ts": {
-      "sha256": "ae1fd3d6a210850e4466926ca3be1d080fde1a4b36726f78650fc15be693af36",
-      "reason": "Remove the output sanitizer with no remaining local execution caller while retaining durable shell policies."
     },
     "packages/pi-durable-coding/src/stream-fn.ts": {
       "sha256": "a6b2cce7515e43411f9b3469225d39712508542d86bc3e806a9f39b57808454f",
@@ -4405,24 +4397,24 @@
       "reason": "Run deterministic JSONL crash recovery at request, message_end and accepted-response boundaries without repeating uncertain requests or events."
     },
     "packages/pi-durable-coding/scripts/coding-sdk-imports.ts": {
-      "sha256": "3cab72fd83f16056ca2735a5d3eb9126be173efe3a4559683142c7295548ccb7",
-      "reason": "Route child-process imports to the authored adapter before source traversal."
+      "sha256": "d6cf9ea8218fbf2e9de8c40f4d944990d20f5e62c40be19ce2da529e14f84a73",
+      "reason": "Route shell imports to the authored SDK binding before source traversal."
     },
     "packages/pi-durable-coding/test/published-sdk-boundary.test.ts": {
       "sha256": "ab86fb78ea8d57b9adb32592edefe1f495727adcc66b433481765ecdeb663637",
       "reason": "Guard compat path identity and source traversal at the SDK path and BOM boundary."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "76969b5ae277cd46a4ebb26e255cfe8031922ffab44dba3604e776006a28de02",
-      "reason": "Record existing SDK spawn function reexports at the root; retain 74 physical Coding patch outputs."
+      "sha256": "d2c7771fb6acfbcda2797a9875db3ebf402dad10a3e6b5e1c2d0060ec7b3e775",
+      "reason": "Record the SDK shell helper factory and root types; track 76 physical Coding patch outputs."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "29b481816550457c70bf2373979ee51118b6678942790a9280eb4c1a7fb72d7d",
-      "reason": "Export existing spawnProcess and spawnProcessSync from the SDK root without changing their algorithms or overloads."
+      "sha256": "231c7c9cff12d9230ed35b108012452cd11cc91d510bc59dd2138a5df17f2837",
+      "reason": "Export the shell helper factory and types, preserving SDK algorithms and default module APIs."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "6532e7b4ae0384e54c0de24c80c39e7725ac23232f46a5013ac85ed98d065bc5",
-      "reason": "Add only existing SDK spawn function root reexports; preserve internal child-process implementation and declarations."
+      "sha256": "49e6d4be8a06686343f6fa663397442c4b5e99426a14e566b7a8c51fe3ae8fbf",
+      "reason": "Expose an SDK shell helper factory with three host dependencies and independent PID sets; preserve default module APIs and SDK algorithms."
     },
     "packages/pi-durable-coding/scripts/coding-package-policy.ts": {
       "sha256": "977a1d86c03e7cf393ae65d90d18dc4418f753daa9322cac29cabc6f28b5122b",
@@ -4517,16 +4509,16 @@
       "reason": "Verify SDK edit bytes, inherited operations, receivers, errors, staged cancellation and queue settlement, renderer previews and component reuse."
     },
     "packages/pi-durable-coding/scripts/coding-shell-policy.ts": {
-      "sha256": "c8171b57044f7d23a18cfecf2dd45184df6e686e12ee37950d05f1a9943b7bfa",
-      "reason": "Inject optional host shell policies into the SDK without copying execution, accumulation, spill or renderer algorithms; preserve original options and SDK defaults."
+      "sha256": "5332c174a103957751152045faf0806b4b21b38ee9d0f44dfcf8d0c8ac72bdb4",
+      "reason": "Bind existing SDK shell algorithms and one PID set per instance through three optional host dependencies."
     },
     "packages/pi-durable-coding/src/native-shell-tools.ts": {
-      "sha256": "0d20397c563cc36c5bed6893d6e9e4a928aef3bcfb8979957fe0006bf2a30228",
-      "reason": "Bind public Coding SDK Bash and PowerShell factories to existing host shell and durable process policies; keep public declaration return types."
+      "sha256": "b902fe438a356cd5f81cd9200173be0c9d10a3764d8e2d56c57b5216bab215d9",
+      "reason": "Use the active SDK shell binding and explicit public factory return types without runtime changes."
     },
     "packages/pi-durable-coding/test/host-shell-sdk.test.ts": {
-      "sha256": "deebc5aa59823ce646d1e61e30cdb15c38dd28349609025044aa514f4029150b",
-      "reason": "Verify public shell options and receivers, session environment, UTF-8 and private spill bytes, cancellation, timeout, process policy injection and renderer lifecycle."
+      "sha256": "7452f6a1e9a4c11da6be56f403785d5565c5e7f515fabbbf9776958df9a28830",
+      "reason": "Test active shell factory bindings without importing the full Native barrel."
     },
     "packages/pi-durable-coding/scripts/coding-codemode-policy.ts": {
       "sha256": "f3a056f6922bfef33cbe851d66ba435fe76f7b7c061b39b5f78fb06c57c0cb1c",

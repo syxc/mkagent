@@ -128,7 +128,7 @@ Native 图像 MIME 识别通过[类型适配](../../packages/pi-durable-coding/s
 
 Native 子进程启动通过[薄适配](../../packages/pi-durable-coding/src/compat/child-process.ts)直接转出 Coding SDK 已有的 spawnProcess 和 spawnProcessSync。仓内补丁只补两个根导出，内部 Node 与 Windows cross-spawn 实现及重载声明保持 pristine，47 行本地模块及专用生成转换已删除。等待继续使用 durable 的既有算法，通过 `env/node` 补丁公开，正文保持原样。适配只返回退出码，并保留 Native 无写盘队列等待策略；100ms 输出空闲期限、持续输出续期、继承管道释放及监听器清理由 durable 负责，见[子进程验证](coding-validation.md#public-sdk-child-process-after-d855405)。
 
-Native shell 的 Bash 传参选择和进程树清理也通过[薄适配](../../packages/pi-durable-coding/src/compat/shell.ts)共用 durable 的既有函数。Native 保留同步查找、错误、PowerShell、环境和 detached 子进程集合；macOS 的组 `SIGSTOP` 策略在适配中保留，后续清理由内核执行。`env/node.js` 相对原包仅增加三个函数的公开导出，全部算法正文不变。局部生成检查和冻结消费证据见[验证记录](coding-validation.md)。
+Native shell 的同步查找、错误、PowerShell 回退、环境和 detached 子进程集合现由 Coding SDK 工厂承担，188 行本地模块和 36 行旧转换模块已删除。[薄适配](../../packages/pi-durable-coding/src/compat/shell.ts)只绑定宿主 getBinDir、durable 的 Bash 传参与进程树清理，并保留 macOS 组 SIGSTOP 在清理前执行。仓内补丁新增 createShellHelpers 及类型根导出，不是上游已发布 API；默认 SDK 与 Native 实例各有独立 PID 集合，算法不复制进生成模板。durable 的 env/node.js 仍只公开三个已有函数，正文不变。两现有布局各 85 项测试、定向声明及独立复核范围见[shell helper 验证](coding-validation.md#sdk-shell-helper-policy-after-7cc6045)。
 
 早期 Native 同步与异步读取路径曾通过薄适配共用 durable 候选生成器。read 和 edit 工厂改用公开 Coding SDK 后，该路径 helper 和适配已无运行时调用，现已删除，对应生成转换也已移除。两种公开 read 工厂通过真实文件验证截图空格、NFD 和弯引号回退、缺失文件及错误 URL。后续 helper 收窄已撤回 durable 的 readPathVariants 导出和两个路径补丁文件，恢复发布包的原始候选处理；只服务于已退役适配的三个私有归一化测试一并删除。
 
@@ -166,14 +166,14 @@ Native store 首次读取和最终写回分别进入 `run.start` 与 `run.result
 
 | 本地位置 | 上游来源与移植方式 |
 |---|---|
-| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，UI、图片、用量、来源、计时、资源发现、系统提示词、compaction、截断、工具渲染与输出文件及 ANSI SDK 替换、无调用 bash 执行器退役及 MCP 工厂、工具搜索、模型解析、缓存预热、凭据存储、参数与协议类型、会话服务、运行时、工厂、消息、footer、clipboard、路径与 BOM 及工具管理器 SDK 替换、MIME 多余转发退役和子进程 SDK 替换后为 16 份 TypeScript、0 项资源，剩余源码继续按职责核对。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留待核对的工具、扩展、RPC client/协议等源码；插件 UI 组件和 CustomEditor 改用公开 SDK，AgentSession 使用公开 SDK 和自有 durable 子类。 |
+| `src/pi/**` | 从 `packages/coding-agent/src/**` 保留的 Coding SDK 源码，UI、图片、用量、来源、计时、资源发现、系统提示词、compaction、截断、工具渲染与输出文件及 ANSI SDK 替换、无调用 bash 执行器退役及 MCP 工厂、工具搜索、模型解析、缓存预热、凭据存储、参数与协议类型、会话服务、运行时、工厂、消息、footer、clipboard、路径与 BOM 及工具管理器 SDK 替换、MIME 多余转发退役、子进程及 shell helper SDK 替换后为 15 份 TypeScript、0 项资源，剩余源码继续按职责核对。排除原版 CLI、三种 run mode 宿主及已核实的私有残留；保留待核对的工具、扩展、RPC client/协议等源码；插件 UI 组件和 CustomEditor 改用公开 SDK，AgentSession 使用公开 SDK 和自有 durable 子类。 |
 | `src/durable-agent.ts`、`src/stream-fn.ts` | Agent 由 662 行移植实现改为 105 行 core 子类，保留 durable 队列身份、恢复和独立的可变默认对象。默认消息转换直接使用发布版 core；模型和 usage 两个默认对象仍从锁定上游提取，stream 模块保留独立注册状态。`src/agent-runtime.ts` 和 `src/stream-proxy.ts` 使用公开包适配。 |
 | `src/native-operations.ts` | 22 行门面，调用仓内 core 补丁导出的 8 个请求、工具参数准备及结果处理函数。保留 Native 默认身份对象，调度循环由本地任务实现。 |
 | `src/rpc-ui.ts` | 仅用 2 行类型转导出引用公开 SDK 的扩展 UI 请求和响应，保留宿主独立协议入口，转译后不加载 SDK 运行时。 |
 | `src/upstream/**` | 2 项选取源码：boundary drafts 和同步 durable context；另有 13 个共享入口。旧完整 loader 和 manifest 转发已删除；插件 runtime、注册、factory、缓存及发现现由公开 SDK 承担，context 与 prompt 去重也已删除本地副本。 |
 | `test/fixtures/upstream/**` | 6 个原样测试夹具：5 个公开示例插件和 1 个 MCP OAuth 测试服务。 |
 
-前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 20 份 TypeScript 和 0 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 8 项来源产物及 13 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
+前四行合计为 [UPSTREAM-RUNTIME.json](../../packages/pi-durable-coding/UPSTREAM-RUNTIME.json) 的 19 份 TypeScript 和 0 项资源，转换规则由 [vendor-coding-runtime.ts](../../packages/pi-durable-coding/scripts/vendor-coding-runtime.ts)管理。权限修正后已正常读取完整主题表，完成固定上游的完整生成、门面生成、闭包重算和 check。检查还会拒绝 src/pi 中未登记的残留 TypeScript，定向模式不执行该全量检查。后两行合计为 [UPSTREAM.json](../../packages/pi-durable-coding/UPSTREAM.json) 的 8 项来源产物及 13 个共享入口，由 [vendor-upstream.ts](../../packages/pi-durable-coding/scripts/vendor-upstream.ts)生成。两套清单可能引用相同上游文件，计数代表本地产物。
 
 `461e7c9` 后的入口核对确认，MkAgent 通过 `CodingHost/createAgentSession` 装配，仓内产品没有 `main`/`MainOptions` 调用。先前切片排除原版 Pi 启动器及其独占的 24 份源码，包含 CLI 认证、配置向导、自更新、旧 Pi 配置迁移和 CLI 内置扩展集合；Llama 管理扩展仅由该集合进入。`5662422` 后的限定复核另确认，原始 MkAgent 和当前宿主均自行管理会话、UI 与传输，不依赖上游终端、stdout 或 stdin/stdout RPC 模式宿主。现从根入口和 modes barrel 排除 `InteractiveMode`、`InteractiveModeOptions`、`runPrintMode`、`PrintModeOptions`、`runRpcMode`，并删除三个实现文件。生成规则在遍历任一入口的依赖前完成排除。`RpcClient` 及其 options、RPC 协议、`JsonAgentSessionEvent`、Theme、CustomEditor、renderer/UI、`ExtensionMode`、AgentSessionRuntime 和插件生命周期保留；MCP/codemode/tool-search 的公开工厂保留。直接使用被排除模式的外部消费者须迁移到自有宿主，这项导出变化不承诺任意外部消费者零影响。此处删除不需要的模式宿主，不计作官方 SDK 完整覆盖，也没有证明其余辅助闭包全部必要。
 
@@ -319,7 +319,9 @@ SDK grep 在二进制解析及目录检查后原来没有复查取消，两项�
 
 `4051994` 后的 MIME 切片删除两行多余转发、25 行专用转换函数及旧规则和生成断言。生成器在依赖遍历前直接路由至既有 durable 类型适配；该适配正文未改，继续保留未知格式 `null`、4100 字节文件窗口和句柄清理。该 MIME 切片时 runtime 为 21 份 TypeScript（src/pi 17、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个，补丁仍为 111 份输出，依赖及 lock 未变。完整生成与 check、现有两布局各 40 项图片测试和 185 个断言、定向声明生成通过。独立复核确认 0 项问题，7 组探针和 6 项故障注入通过，输入及证据摘要已核验；来源更新 7 项、移除 1 项、无新增，固定 Craft 受限审计通过 2033 个允许文件。失败尝试及验证限制见[MIME 验证](coding-validation.md#mime-forwarding-retirement-after-4051994)。其余源码、fresh 完整类型与声明、完整 Craft 审计及 F0 至 F6 继续开放。
 
-`d855405` 后的子进程切片删除 47 行完整模块、28 行专用转换函数及旧规则和生成测试。SDK 根补丁仅转出已有 spawnProcess 和 spawnProcessSync，内部实现和声明保持 pristine；既有适配继续用 durable 等待并只返回退出码。当前 runtime 为 20 份 TypeScript（src/pi 16、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个，补丁仍为 111 份输出，依赖及 lock 未变。完整生成与 check、现有两布局各 41 项测试和 155 个断言、定向声明和使用 skipLibCheck 的严格消费者通过；独立复核在限定源码投影内确认 0 项问题，8 项测试和 73 个断言通过，12 项冻结输入及 98 条输入和证据记录已核验。来源更新 11 项、移除 1 项、无新增，固定 Craft 受限审计通过 2032 个允许文件。失败尝试、接纳修正和过程限制见[子进程验证](coding-validation.md#public-sdk-child-process-after-d855405)。下一项核对 shell 的 SDK 实现与必要宿主策略；fresh 完整类型与声明、Windows、完整根入口集成、完整 Craft 审计及 F0 至 F6 仍开放。
+`d855405` 后的子进程切片删除 47 行完整模块、28 行专用转换函数及旧规则和生成测试。SDK 根补丁仅转出已有 spawnProcess 和 spawnProcessSync，内部实现和声明保持 pristine；既有适配继续用 durable 等待并只返回退出码。该子进程切片时 runtime 为 20 份 TypeScript（src/pi 16、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个，补丁仍为 111 份输出，依赖及 lock 未变。完整生成与 check、现有两布局各 41 项测试和 155 个断言、定向声明和使用 skipLibCheck 的严格消费者通过；独立复核在限定源码投影内确认 0 项问题，8 项测试和 73 个断言通过，12 项冻结输入及 98 条输入和证据记录已核验。来源更新 11 项、移除 1 项、无新增，固定 Craft 受限审计通过 2032 个允许文件。失败尝试、接纳修正和过程限制见[子进程验证](coding-validation.md#public-sdk-child-process-after-d855405)。fresh 完整类型与声明、Windows、完整根入口集成、完整 Craft 审计及 F0 至 F6 仍开放。
+
+`7cc6045` 后的 shell helper 切片删除 188 行完整模块和 36 行旧转换模块。SDK 工厂承担同步查找、PowerShell 回退、环境及每实例 PID 集合；Native 只绑定宿主目录、durable Bash 与清理，并保留 macOS 停止顺序。createShellHelpers 及类型是本地补丁 API，原 SDK 默认实例保留，算法不复制进生成模板。当前 runtime 为 19 份 TypeScript（src/pi 15、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个；core 4、Coding 76、durable 33 共 113 份补丁输出，依赖及 lock 未变。完整生成与 check、两现有布局各 85 项测试和 440 个断言、定向声明和使用 skipLibCheck 的严格消费者通过。首次四项 TS9007 在基线同样存在，补公开返回类型后仅续跑剩余检查，运行时输出未变。独立复核确认 0 项问题，13 项结构检查、14 项运行时测试和四项重放通过，18 项冻结输入及证据摘要已接纳。来源更新 16 项、移除 2 项、无新增；固定 Craft 受限审计通过 2022 个允许文件，本轮排除整个 legacy 子树，计数不与旧范围直接比较。替身及完整入口限制见[shell helper 验证](coding-validation.md#sdk-shell-helper-policy-after-7cc6045)。其余源码、fresh 完整类型与声明、真实平台、完整 Craft 审计及 F0 至 F6 继续开放。
 
 | 范围 | 决定与依据 | 升级时核对 |
 |---|---|---|
@@ -363,7 +365,7 @@ Provider 组合原来要求完整 `ModelConfig` 类，宿主现有调用方只�
 
 已确认可共享的包管理、消息、模型、设置、会话、runner、token 及资源算法均已收敛。兼容策略维护在普通源码中；生成接点检查锚点和出现次数，上游结构变化时直接失败。共用类型从原生公开方法派生旧 JavaScript 输入边界，保留数组、基本类型和异步返回推断，不复制方法声明清单。严格消费者回归覆盖宿主消息字段、开放设置、结构化包设置及会话声明。此前 F1/F3 的维护登记未达到删除大规模源码的目标，整体验收现已重新打开。未修改源码的生成检查不证明其必要性；按公开 SDK 的真实覆盖继续替换并删除。
 
-共享替换的适用路径、转换、来源标签及新增依赖统一登记在[共享规则](../../packages/pi-durable-coding/scripts/shared-helper-port.ts)。运行时生成器直接消费规则结果，新增共享替换不再同步维护筛选条件、标签选择和依赖条件。整模块转发的结构防护位于[转发转换](../../packages/pi-durable-coding/scripts/shared-runtime-port.ts)，声明替换按规则检查签名或原摘要；原有字符串接口继续可用。前次登记归一没有改变运行时产物或来源清单。本次 HTML 颜色替换同步更新两者，只检查仍保留的声明边界，不为已替换的算法正文增加摘要约束。子进程等待、shell 和读取路径的九个已替换正文也不再绑定哈希；等待保留 AST 签名及 100 ms 常量校验，其余八项用可读声明头保留参数、返回类型、导出及重复检查。Bun、Node 各通过 37 项生成检查，两套完整复现确认未改变这些生产产物，56 项现有 Native 行为测试通过。辅助生成器也已删除旧凭据路径排除，受控脏源码检查和两套完整复现均通过。
+共享替换的适用路径、转换、来源标签及新增依赖统一登记在[共享规则](../../packages/pi-durable-coding/scripts/shared-helper-port.ts)。运行时生成器直接消费规则结果，新增共享替换不再同步维护筛选条件、标签选择和依赖条件。早期整模块转发的结构防护位于 shared-runtime-port.ts，该模块现随子进程和 shell helper 的 SDK 替换退役并删除；当前 shell 工厂补丁由[SDK 策略转换](../../packages/pi-durable-coding/scripts/coding-shell-policy.ts)检查边界。以下声明替换和测试数量保留该历史切片的范围：前次登记归一没有改变运行时产物或来源清单。本次 HTML 颜色替换同步更新两者，只检查仍保留的声明边界，不为已替换的算法正文增加摘要约束。子进程等待、shell 和读取路径的九个已替换正文也不再绑定哈希；等待保留 AST 签名及 100 ms 常量校验，其余八项用可读声明头保留参数、返回类型、导出及重复检查。Bun、Node 各通过 37 项生成检查，两套完整复现确认未改变这些生产产物，56 项现有 Native 行为测试通过。辅助生成器也已删除旧凭据路径排除，受控脏源码检查和两套完整复现均通过。
 
 追加独立复核发现，颜色改动曾把变量替换分支扩展到其他带摘要的声明规则，允许同名 `const` 绕过函数或类检查。三项回归先失败，再将变量分支限定为 tool-search 和 HTML 两条规则后通过；原有三条规则仍拒绝声明种类和摘要变化。同一审阅器已复核关闭该 P2，未发现新的问题。`a2c5fe6` 中的生成规则为 219 行，与 222 行颜色源码合计净减 6 行；两套完整复现及来源审计在修正后通过。
 

@@ -11,7 +11,7 @@ import { getBinDir } from '../src/pi/config.ts';
 import {
   createBashTool, createBashToolDefinition, createLocalBashOperations, createLocalPowerShellOperations,
   createPowerShellTool, createPowerShellToolDefinition,
-} from '../src/native.ts';
+} from '../src/native-shell-tools.ts';
 import { waitForChildProcess } from '../src/compat/child-process.ts';
 import { killProcessTree } from '../src/compat/shell.ts';
 

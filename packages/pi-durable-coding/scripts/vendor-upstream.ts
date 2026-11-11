@@ -97,6 +97,7 @@ const legacyPolicies: Record<string, string> = {
   'core/context-tokens.js': 'src/legacy/context-tokens.js',
   'core/extensions/runner.js': 'src/legacy/extension-runner.js',
   'core/session-manager.js': 'src/legacy/session-manager.js',
+  'utils/shell.ts': 'src/compat/shell.ts',
   'core/skills.ts': 'src/native-skills.ts',
   'core/prompt-templates.ts': 'src/native-prompt-templates.ts',
   'core/system-prompt.ts': 'src/native-system-prompt.ts',

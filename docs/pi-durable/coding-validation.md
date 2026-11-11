@@ -26,6 +26,72 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK shell helper policy after 7cc6045
+
+The SDK already contains the local shell discovery, environment and detached
+PID tracking algorithms. Eight local function bodies match the fixed SDK
+source map exactly. Delete the 188-line shell source and the remaining 36-line
+source transformation module. The earlier 189-line estimate was incorrect.
+
+The local SDK patch adds createShellHelpers with three optional dependencies:
+getBinDir, getBashShellConfig and killProcessTree. The factory owns six existing
+functions and one PID set per instance. Original module exports use a default
+instance. The Native binding uses its own instance, host bin directory and
+durable Bash and process cleanup. It retains the macOS SIGSTOP before cleanup.
+The factory and its root types are local patch API, not published upstream API.
+Discovery and cleanup algorithms stay in the SDK, not in generator templates.
+
+| Check | Result and scope |
+|---|---|
+| Generation | Complete runtime, auxiliary and Coding patch generation and checks pass: 19 runtime TypeScript files, 15 src/pi files, four facades, zero resources, eight auxiliary sources and 13 shared forwards |
+| Patch replay | Four outputs replay from pristine: two shared root outputs and two new shell JS/declaration outputs; all 76 Coding output hashes match in two existing layouts; internal spawn JS and declarations remain pristine |
+| Parent behavior | In each layout, native-shell, host-shell-sdk, native-child-process, durable-child-process and shared-runtime-port pass: 85 tests, zero failures and 440 expect calls |
+| Types | Scoped shell binding and Native shell factory declarations match across layouts; strict non-executed consumers report zero diagnostics with skipLibCheck |
+| Isolation | Task-owned child HOME and temporary paths, disabled env-file loading, network-denying sandbox and network-blocking preload; five build preflights pass in each layout without a protected legacy dependency |
+| Independent review | Zero findings; 13 structural checks, 14 runtime tests and four patch replays pass; three validation commands each succeed on their first attempt |
+| Review acceptance | Parent verifies 18 frozen inputs, six task evidence records, four installed output hashes and 13 review artifact hashes; deleted paths remain absent |
+| Source registration | Update 16 entries, retire two and add none; all other entries stay unchanged |
+| Restricted Craft audit | Fixed v0.15.6 baseline 8df01c5d0ac73c35add5954e6f190ce038d35845: 2022 allowed files, 1454 common, 873 normalized-identical, 581 modified, 568 MkAgent-only and 858 reviewed deletions |
+| Dependencies and patches | No install, dependency, lock or persistent-schema change; core four, Coding 76 and durable 33 physical outputs total 113 |
+
+The first parent command passes root behavior and the shell declaration, then
+stops at four TS9007 diagnostics in native-shell-tools. The same four missing
+return annotations exist at HEAD. Add public SDK ReturnType annotations and
+confirm identical runtime output. Preserve the root behavior result and resume
+only the remaining declarations, consumers and hoisted checks. The final
+validation receipt lists the five hoisted preflights; the first command already
+completed the five root preflights. No failed behavior check was discarded.
+
+Independent probes load the actual shell module, not the complete SDK root.
+They replace filesystem access, executable lookup, spawning, process signals
+and the SDK bin-directory getter with controlled substitutes. Windows is
+simulated. The durable probe executes two unchanged function source fragments;
+Native bindings are transpiled with explicit require mappings. The probes do
+not kill real processes or read real user configuration. They use node:assert,
+so no Bun expect count is claimed for these 14 tests.
+
+The probes cover shell fallbacks, synchronous errors, explicit paths, WSL stdin
+transport, PATH key case and deduplication, four isolated trackers, untracking,
+clearing, trusted taskkill and macOS stop, kill and fallback order. They also
+check original options identity and dependency forwarding for six Native
+factories. Two nonexistent package-path probes read no content. The review
+sandbox returns Git status successfully with protected legacy metadata warnings;
+the report preserves stderr. No permission refusal was bypassed.
+
+This restricted Craft audit excludes the entire legacy source subtree,
+environment files, settings JSON and auth.json before content reads. It filters
+only the in-memory audit manifest; the production auditor and protected source
+remain unchanged. Its scope is narrower than the preceding 2032-file audit,
+so the count difference does not measure source deletion alone. The first
+document link check finds an old link to the deleted transformation module.
+Replace it with the active SDK policy link and mark the earlier checks as
+historical before rerunning the document checks.
+
+Fresh installation, complete types and declarations, the full Native barrel,
+real Windows, PowerShell and WSL hosts, product integration, the complete Craft
+audit and F0 through F6 remain open. Earlier platform evidence retains its own
+version and scope. Fifteen src/pi files still need individual SDK assessment.
+
 ## Public SDK child process after d855405
 
 The SDK already contains the same spawnProcess and spawnProcessSync algorithms

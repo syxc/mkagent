@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import ts from 'typescript';
 import { applySharedHelperPort, excludeRunModeEntries } from '../scripts/shared-helper-port.ts';
-import { portShell } from '../scripts/shared-runtime-port.ts';
 
 const declarationFixtures = [
   {
@@ -24,21 +23,7 @@ export function StringEnum<T extends readonly string[]>(
   },
 ];
 
-const fixtures = [
-  {
-    name: 'shell', port: portShell,
-    source: `import { delimiter, join, win32 } from "node:path";
-import { spawn, spawnSync } from "child_process";
-function isLegacyWslBashPath(path: string): boolean { return false; }
-function getBashShellConfig(shell: string): ShellConfig { throw new Error("unused shell body"); }
-export function killProcessTree(pid: number): void { throw new Error("unused cleanup body"); }
-export function sanitizeBinaryOutput(str: string): string { throw new Error("unused sanitizer body"); }
-`,
-  },
-  ...declarationFixtures,
-];
-
-for (const { name, source, port } of fixtures) {
+for (const { name, source, port } of declarationFixtures) {
   const parsed = ts.createSourceFile(`${name}.ts`, source, ts.ScriptTarget.Latest, true);
   const functions = parsed.statements.filter(ts.isFunctionDeclaration);
   for (const fn of functions) {

@@ -143,7 +143,7 @@
       "source": "packages/coding-agent/src/index.ts",
       "target": "src/pi/index.ts",
       "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
-      "portSha256": "4aff128f6b4886f25f04ae81b1b8d2f3935b2eb4a96f77651955dbbd7fb11901",
+      "portSha256": "7ea819453d3680f1ae8e9579708c96d096c69a886be519ccb483e0e59c919dd8",
       "changes": [
         "exclude-upstream-cli-launcher",
         "exclude-upstream-run-modes",
@@ -187,15 +187,6 @@
       "changes": [
         "host-extension-module-import",
         "public-coding-sdk"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/utils/shell.ts",
-      "target": "src/pi/utils/shell.ts",
-      "sha256": "bacb0f871b92e38ac17221e0c1b00ac5211e0f5c0063675afd980513c7c79fb4",
-      "portSha256": "ae1fd3d6a210850e4466926ca3be1d080fde1a4b36726f78650fc15be693af36",
-      "changes": [
-        "shared-durable-shell-algorithms"
       ]
     },
     {

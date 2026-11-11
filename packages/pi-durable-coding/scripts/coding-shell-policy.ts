@@ -1,4 +1,52 @@
 /** Bind host process policies without copying shell execution or presentation. */
+import ts from 'typescript';
+
+/** Keep discovery and PID tracking in the SDK, with one tracker per host binding. */
+export function codingShellHelpersPolicy(source: string, declarations: boolean): string {
+  const names = ['getShellConfig', 'getPowerShellConfig', 'getShellEnv',
+    'trackDetachedChildPid', 'untrackDetachedChildPid', 'killTrackedDetachedChildren'];
+  if (declarations) {
+    const marker = '//# sourceMappingURL=';
+    if (source.split(marker).length !== 2) throw new Error('Published shell declaration boundary changed');
+    return source.replace(marker,
+      'export interface ShellHelperDependencies {\n    getBinDir?: () => string;\n'
+      + '    getBashShellConfig?: (shell: string) => ShellConfig;\n    killProcessTree?: typeof killProcessTree;\n}\n'
+      + 'export interface ShellHelpers {\n' + names.map(name => `    ${name}: typeof ${name};\n`).join('')
+      + '}\nexport declare function createShellHelpers(dependencies?: ShellHelperDependencies): ShellHelpers;\n' + marker);
+  }
+  const parsed = ts.createSourceFile('shell.js', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const remaining = new Set([...names, 'trackedDetachedChildPids']);
+  const selected: Array<{ start: number; end: number; body: string }> = [];
+  for (const node of parsed.statements) {
+    const name = ts.isFunctionDeclaration(node) ? node.name?.text
+      : ts.isVariableStatement(node) && node.declarationList.declarations.length === 1
+        && ts.isIdentifier(node.declarationList.declarations[0].name) ? node.declarationList.declarations[0].name.text : undefined;
+    if (!name || !remaining.has(name)) continue;
+    remaining.delete(name);
+    let body = source.slice(node.getFullStart(), node.end);
+    if (names.includes(name)) {
+      if (!body.includes(`export function ${name}(`)) throw new Error('Published shell helper changed: ' + name);
+      body = body.replace(`export function ${name}(`, `function ${name}(`);
+    }
+    const edit = (before: string, after: string, occurrences = 1) => {
+      if (body.split(before).length !== occurrences + 1) throw new Error('Published shell helper policy changed: ' + name);
+      body = body.replaceAll(before, after);
+    };
+    if (name === 'getShellConfig') edit('return getBashShellConfig(', 'return (dependencies.getBashShellConfig ?? getBashShellConfig)(', 5);
+    if (name === 'getShellEnv') edit('const binDir = getBinDir();', 'const binDir = (dependencies.getBinDir ?? getBinDir)();');
+    if (name === 'killTrackedDetachedChildren') edit('killProcessTree(pid);', '(dependencies.killProcessTree ?? killProcessTree)(pid);');
+    selected.push({ start: node.getFullStart(), end: node.end, body });
+  }
+  if (remaining.size) throw new Error('Published shell helper declarations changed: ' + [...remaining].join(', '));
+  let body = source;
+  for (const node of [...selected].reverse()) body = body.slice(0, node.start) + body.slice(node.end);
+  const marker = '//# sourceMappingURL=';
+  if (body.split(marker).length !== 2) throw new Error('Published shell implementation boundary changed');
+  return body.replace(marker, 'export function createShellHelpers(dependencies = {}) {'
+    + selected.map(node => node.body).join('') + '\nreturn { ' + names.join(', ') + ' };\n}\n'
+    + 'export const { ' + names.join(', ') + ' } = createShellHelpers();\n' + marker);
+}
+
 export function codingShellPolicy(source: string, declarations: boolean, powershell: boolean): string {
   let body = source;
   const edit = (before: string, after: string) => {

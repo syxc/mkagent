@@ -1,7 +1,6 @@
 /** Share selected coding algorithms without importing the complete SDK into light entry points. */
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
-import { portShell } from './shared-runtime-port.ts';
 
 export function excludeRunModeEntries(path: string, body: string): string | undefined {
   if (path !== 'index.ts' && path !== 'modes/index.ts') return undefined;
@@ -34,9 +33,6 @@ type SharedHelperPort = {
 } & (DeclarationPort | { apply(body: string): string });
 
 const sharedHelperPorts: Record<string, SharedHelperPort> = {
-  'utils/shell.ts': {
-    change: 'shared-durable-shell-algorithms', dependency: '@earendil-works/pi-durable', apply: portShell,
-  },
   'core/extensions/pi-ai-extension-view.ts': {
     change: 'public-pi-ai-typebox-string-enum',
     names: ['StringEnum'],

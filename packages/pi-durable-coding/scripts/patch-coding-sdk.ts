@@ -11,7 +11,7 @@ import { codingModelRuntimePolicy } from './coding-model-runtime-policy.ts';
 import { codingRunnerPolicy } from './coding-runner-policy.ts';
 import { codingAgentSessionPolicy } from './coding-agent-session-policy.ts';
 import { codingToolPolicy } from './coding-tool-policy.ts';
-import { codingShellPolicy } from './coding-shell-policy.ts';
+import { codingShellHelpersPolicy, codingShellPolicy } from './coding-shell-policy.ts';
 import { codingCodemodePolicy } from './coding-codemode-policy.ts';
 import { codingUIPolicy } from './coding-ui-policy.ts';
 import { codingImagePolicy } from './coding-image-policy.ts';
@@ -73,6 +73,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export { writeOutputFile } from "./utils/output-files.${extension}";`,
     `export { ${suffix === 'd.ts' ? 'type PathInputOptions, ' : ''}canonicalizePath, isPathWithin, normalizePath, pathsEqual, resolvePath } from "./utils/paths.${extension}";`,
     `export { stripBom } from "./utils/text.${extension}";`,
+    `export { createShellHelpers${suffix === 'd.ts' ? ', type ShellConfig, type ShellHelperDependencies, type ShellHelpers' : ''} } from "./utils/shell.${extension}";`,
     `export { createToolManager${suffix === 'd.ts' ? ', type ToolManagerDependencies' : ''} } from "./utils/tools-manager.${extension}";`,
     `export { ${suffix === 'd.ts' ? 'type MiddleTruncationResult, ' : ''}GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.${extension}";`,
     `export * from "./extensions/codemode/tool.${extension}";`,
@@ -202,6 +203,10 @@ for (const name of ['tool', 'index']) for (const suffix of ['js', 'd.ts']) {
 for (const name of ['bash', 'powershell']) for (const suffix of ['js', 'd.ts']) {
   const path = `dist/core/tools/${name}.${suffix}`;
   outputs.set(path, codingShellPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts', name === 'powershell'));
+}
+for (const suffix of ['js', 'd.ts']) {
+  const path = `dist/utils/shell.${suffix}`;
+  outputs.set(path, codingShellHelpersPolicy(readFileSync(join(baseline, path), 'utf8'), suffix === 'd.ts'));
 }
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/utils/tools-manager.${suffix}`;

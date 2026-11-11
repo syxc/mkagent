@@ -1,8 +1,8 @@
-# Content SHA-256: 7cc73e0c762f4ffe67d0d7b6a5506b19598588f80ed2e99d5bf8f8646a561da4
+# Content SHA-256: 27151c9d55f4dff2afb896375bc28a26854a1d08982d8953f7111ac1b2eaa943
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,59 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,60 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
@@ -39,6 +39,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export { writeOutputFile } from "./utils/output-files.js";
 +export { canonicalizePath, isPathWithin, normalizePath, pathsEqual, resolvePath } from "./utils/paths.js";
 +export { stripBom } from "./utils/text.js";
++export { createShellHelpers } from "./utils/shell.js";
 +export { createToolManager } from "./utils/tools-manager.js";
 +export { GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.js";
 +export * from "./extensions/codemode/tool.js";
@@ -75,7 +76,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,62 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,63 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
@@ -112,6 +113,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export { writeOutputFile } from "./utils/output-files.ts";
 +export { type PathInputOptions, canonicalizePath, isPathWithin, normalizePath, pathsEqual, resolvePath } from "./utils/paths.ts";
 +export { stripBom } from "./utils/text.ts";
++export { createShellHelpers, type ShellConfig, type ShellHelperDependencies, type ShellHelpers } from "./utils/shell.ts";
 +export { createToolManager, type ToolManagerDependencies } from "./utils/tools-manager.ts";
 +export { type MiddleTruncationResult, GREP_MAX_LINE_LENGTH, truncateMiddle } from "./core/tools/truncate.ts";
 +export * from "./extensions/codemode/tool.ts";
@@ -1122,6 +1124,250 @@ diff --git a/dist/core/tools/powershell.d.ts b/dist/core/tools/powershell.d.ts
 +export declare function createPowerShellToolDefinition(cwd: string, options?: PowerShellToolOptions, dependencies?: ShellDependencies): ReturnType<typeof createShellToolDefinition>;
 +export declare function createPowerShellTool(cwd: string, options?: PowerShellToolOptions, dependencies?: ShellDependencies): ReturnType<typeof createBashTool>;
  //# sourceMappingURL=powershell.d.ts.map
+\ No newline at end of file
+diff --git a/dist/utils/shell.js b/dist/utils/shell.js
+--- a/dist/utils/shell.js
++++ b/dist/utils/shell.js
+@@ -66,6 +66,67 @@ function findExecutableOnPath(executable) {
+     }
+     return null;
+ }
++export const POWERSHELL_ARGS = ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command"];
++/**
++ * Sanitize binary output for display/storage.
++ * Removes characters that crash string-width or cause display issues:
++ * - Control characters (except tab, newline, carriage return)
++ * - Unicode interlinear annotation characters U+FFF9..U+FFFB (crash string-width due to a bug)
++ */
++export function sanitizeBinaryOutput(str) {
++    // All removed characters are single UTF-16 code units, so surrogate pairs are never split.
++    return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFF9-\uFFFB]/g, "");
++}
++/**
++ * Kill a process and all its children (cross-platform)
++ */
++export function killProcessTree(pid) {
++    if (process.platform === "win32") {
++        // Use the trusted System32 executable so cleanup does not depend on PATH.
++        try {
++            const child = spawn(join(process.env.SystemRoot || "C:\\Windows", "System32", "taskkill.exe"), ["/F", "/T", "/PID", String(pid)], {
++                stdio: "ignore",
++                detached: true,
++                windowsHide: true,
++            });
++            // A failed spawn emits "error" asynchronously; consume it to avoid crashing Node.
++            child.once("error", () => { });
++        }
++        catch {
++            // Ignore errors if taskkill fails.
++        }
++    }
++    else {
++        if (process.platform === "darwin") {
++            // macOS signals group members individually after releasing the group lock. A killed
++            // child can wake its waiting shell before that shell is signalled, letting `a; b`
++            // start b during cancellation (#11252). Stop the group first to reduce this race;
++            // this is best-effort, not an atomic freeze. SIGKILL also kills stopped processes.
++            // Linux holds tasklist_lock across group signalling; child exit notification needs
++            // its write lock, so the shell is signalled before observing the killed child's exit.
++            try {
++                process.kill(-pid, "SIGSTOP");
++            }
++            catch {
++                // A failed stop must not prevent the kill attempt or its single-process fallback.
++            }
++        }
++        // Use SIGKILL on Unix/Linux/Mac
++        try {
++            process.kill(-pid, "SIGKILL");
++        }
++        catch {
++            // Fallback to killing just the child if process group kill fails
++            try {
++                process.kill(pid, "SIGKILL");
++            }
++            catch {
++                // Process already dead
++            }
++        }
++    }
++}
++export function createShellHelpers(dependencies = {}) {
+ /**
+  * Resolve shell configuration based on platform and an optional explicit shell path.
+  * Resolution order:
+@@ -73,11 +134,11 @@ function findExecutableOnPath(executable) {
+  * 2. On Windows: Git Bash in known locations, then bash on PATH
+  * 3. On Unix: /bin/bash, then bash on PATH, then fallback to sh
+  */
+-export function getShellConfig(customShellPath) {
++function getShellConfig(customShellPath) {
+     // 1. Check user-specified shell path
+     if (customShellPath) {
+         if (shellPathExists(customShellPath)) {
+-            return getBashShellConfig(customShellPath);
++            return (dependencies.getBashShellConfig ?? getBashShellConfig)(customShellPath);
+         }
+         throw new Error(`Custom shell path not found: ${customShellPath}`);
+     }
+@@ -94,13 +155,13 @@ export function getShellConfig(customShellPath) {
+         }
+         for (const path of paths) {
+             if (shellPathExists(path)) {
+-                return getBashShellConfig(path);
++                return (dependencies.getBashShellConfig ?? getBashShellConfig)(path);
+             }
+         }
+         // 3. Fallback: search bash.exe on PATH (Cygwin, MSYS2, WSL, etc.)
+         const bashOnPath = findExecutableOnPath("bash.exe");
+         if (bashOnPath) {
+-            return getBashShellConfig(bashOnPath);
++            return (dependencies.getBashShellConfig ?? getBashShellConfig)(bashOnPath);
+         }
+         throw new Error(`No bash shell found. Options:\n` +
+             `  1. Install Git for Windows: https://git-scm.com/download/win\n` +
+@@ -110,17 +171,16 @@ export function getShellConfig(customShellPath) {
+     }
+     // Unix: try /bin/bash, then bash on PATH, then fallback to sh
+     if (shellPathExists("/bin/bash")) {
+-        return getBashShellConfig("/bin/bash");
++        return (dependencies.getBashShellConfig ?? getBashShellConfig)("/bin/bash");
+     }
+     const bashOnPath = findExecutableOnPath("bash");
+     if (bashOnPath) {
+-        return getBashShellConfig(bashOnPath);
++        return (dependencies.getBashShellConfig ?? getBashShellConfig)(bashOnPath);
+     }
+     return { shell: "sh", args: ["-c"] };
+ }
+-export const POWERSHELL_ARGS = ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command"];
+ /** Resolve PowerShell on Windows, preferring PowerShell 7 when available. */
+-export function getPowerShellConfig() {
++function getPowerShellConfig() {
+     if (process.platform !== "win32") {
+         throw new Error("The powershell tool is only available on Windows.");
+     }
+@@ -144,8 +204,8 @@ export function getPowerShellConfig() {
+     }
+     return { shell, args: [...POWERSHELL_ARGS] };
+ }
+-export function getShellEnv() {
+-    const binDir = getBinDir();
++function getShellEnv() {
++    const binDir = (dependencies.getBinDir ?? getBinDir)();
+     const pathKey = Object.keys(process.env).find((key) => key.toLowerCase() === "path") ?? "PATH";
+     const currentPath = process.env[pathKey] ?? "";
+     const pathEntries = currentPath.split(delimiter).filter(Boolean);
+@@ -156,80 +216,24 @@ export function getShellEnv() {
+         [pathKey]: updatedPath,
+     };
+ }
+-/**
+- * Sanitize binary output for display/storage.
+- * Removes characters that crash string-width or cause display issues:
+- * - Control characters (except tab, newline, carriage return)
+- * - Unicode interlinear annotation characters U+FFF9..U+FFFB (crash string-width due to a bug)
+- */
+-export function sanitizeBinaryOutput(str) {
+-    // All removed characters are single UTF-16 code units, so surrogate pairs are never split.
+-    return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFF9-\uFFFB]/g, "");
+-}
+ /**
+  * Detached child processes must be tracked so they can be killed on parent
+  * shutdown signals (SIGHUP/SIGTERM).
+  */
+ const trackedDetachedChildPids = new Set();
+-export function trackDetachedChildPid(pid) {
++function trackDetachedChildPid(pid) {
+     trackedDetachedChildPids.add(pid);
+ }
+-export function untrackDetachedChildPid(pid) {
++function untrackDetachedChildPid(pid) {
+     trackedDetachedChildPids.delete(pid);
+ }
+-export function killTrackedDetachedChildren() {
++function killTrackedDetachedChildren() {
+     for (const pid of trackedDetachedChildPids) {
+-        killProcessTree(pid);
++        (dependencies.killProcessTree ?? killProcessTree)(pid);
+     }
+     trackedDetachedChildPids.clear();
+ }
+-/**
+- * Kill a process and all its children (cross-platform)
+- */
+-export function killProcessTree(pid) {
+-    if (process.platform === "win32") {
+-        // Use the trusted System32 executable so cleanup does not depend on PATH.
+-        try {
+-            const child = spawn(join(process.env.SystemRoot || "C:\\Windows", "System32", "taskkill.exe"), ["/F", "/T", "/PID", String(pid)], {
+-                stdio: "ignore",
+-                detached: true,
+-                windowsHide: true,
+-            });
+-            // A failed spawn emits "error" asynchronously; consume it to avoid crashing Node.
+-            child.once("error", () => { });
+-        }
+-        catch {
+-            // Ignore errors if taskkill fails.
+-        }
+-    }
+-    else {
+-        if (process.platform === "darwin") {
+-            // macOS signals group members individually after releasing the group lock. A killed
+-            // child can wake its waiting shell before that shell is signalled, letting `a; b`
+-            // start b during cancellation (#11252). Stop the group first to reduce this race;
+-            // this is best-effort, not an atomic freeze. SIGKILL also kills stopped processes.
+-            // Linux holds tasklist_lock across group signalling; child exit notification needs
+-            // its write lock, so the shell is signalled before observing the killed child's exit.
+-            try {
+-                process.kill(-pid, "SIGSTOP");
+-            }
+-            catch {
+-                // A failed stop must not prevent the kill attempt or its single-process fallback.
+-            }
+-        }
+-        // Use SIGKILL on Unix/Linux/Mac
+-        try {
+-            process.kill(-pid, "SIGKILL");
+-        }
+-        catch {
+-            // Fallback to killing just the child if process group kill fails
+-            try {
+-                process.kill(pid, "SIGKILL");
+-            }
+-            catch {
+-                // Process already dead
+-            }
+-        }
+-    }
++return { getShellConfig, getPowerShellConfig, getShellEnv, trackDetachedChildPid, untrackDetachedChildPid, killTrackedDetachedChildren };
+ }
++export const { getShellConfig, getPowerShellConfig, getShellEnv, trackDetachedChildPid, untrackDetachedChildPid, killTrackedDetachedChildren } = createShellHelpers();
+ //# sourceMappingURL=shell.js.map
+\ No newline at end of file
+diff --git a/dist/utils/shell.d.ts b/dist/utils/shell.d.ts
+--- a/dist/utils/shell.d.ts
++++ b/dist/utils/shell.d.ts
+@@ -29,4 +29,18 @@ export declare function killTrackedDetachedChildren(): void;
+  * Kill a process and all its children (cross-platform)
+  */
+ export declare function killProcessTree(pid: number): void;
++export interface ShellHelperDependencies {
++    getBinDir?: () => string;
++    getBashShellConfig?: (shell: string) => ShellConfig;
++    killProcessTree?: typeof killProcessTree;
++}
++export interface ShellHelpers {
++    getShellConfig: typeof getShellConfig;
++    getPowerShellConfig: typeof getPowerShellConfig;
++    getShellEnv: typeof getShellEnv;
++    trackDetachedChildPid: typeof trackDetachedChildPid;
++    untrackDetachedChildPid: typeof untrackDetachedChildPid;
++    killTrackedDetachedChildren: typeof killTrackedDetachedChildren;
++}
++export declare function createShellHelpers(dependencies?: ShellHelperDependencies): ShellHelpers;
+ //# sourceMappingURL=shell.d.ts.map
 \ No newline at end of file
 diff --git a/dist/utils/tools-manager.js b/dist/utils/tools-manager.js
 --- a/dist/utils/tools-manager.js

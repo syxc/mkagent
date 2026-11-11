@@ -110,7 +110,7 @@
     },
     {
       "target": "src/upstream/utils/shell.ts",
-      "implementation": "src/pi/utils/shell.ts",
+      "implementation": "src/compat/shell.ts",
       "changes": [
         "selected-public-shell-api"
       ]

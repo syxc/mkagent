@@ -9,7 +9,7 @@ import { waitForChildProcess } from './compat/child-process.ts';
 import {
   getShellConfig, getPowerShellConfig, getShellEnv, killProcessTree,
   trackDetachedChildPid, untrackDetachedChildPid,
-} from './pi/utils/shell.ts';
+} from './compat/shell.ts';
 
 export type {
   BashOperations, BashSpawnContext, BashSpawnHook, BashToolDetails, BashToolInput, BashToolOptions,
@@ -22,19 +22,19 @@ const dependencies: ShellDependencies = {
   trackDetachedChildPid, untrackDetachedChildPid, waitForChildProcess,
 };
 
-export function createLocalBashOperations(options?: { shellPath?: string }) {
+export function createLocalBashOperations(options?: { shellPath?: string }): ReturnType<typeof sdkBashOperations> {
   return sdkBashOperations(options, dependencies);
 }
-export function createLocalPowerShellOperations() {
+export function createLocalPowerShellOperations(): ReturnType<typeof sdkPowerShellOperations> {
   return sdkPowerShellOperations(dependencies);
 }
-export function createBashTool(cwd: string, options?: BashToolOptions) {
+export function createBashTool(cwd: string, options?: BashToolOptions): ReturnType<typeof sdkBashTool> {
   return sdkBashTool(cwd, options, dependencies);
 }
 export function createBashToolDefinition(cwd: string, options?: BashToolOptions): ReturnType<typeof sdkBashDefinition> {
   return sdkBashDefinition(cwd, options, dependencies);
 }
-export function createPowerShellTool(cwd: string, options?: PowerShellToolOptions) {
+export function createPowerShellTool(cwd: string, options?: PowerShellToolOptions): ReturnType<typeof sdkPowerShellTool> {
   return sdkPowerShellTool(cwd, options, dependencies);
 }
 export function createPowerShellToolDefinition(cwd: string, options?: PowerShellToolOptions): ReturnType<typeof sdkPowerShellDefinition> {

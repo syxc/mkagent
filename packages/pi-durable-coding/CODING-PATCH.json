@@ -8,12 +8,12 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "cf703f200892e5f18b3910bd546963cb89e4c3f821b6df3c4bdc9dd5f8d387ac"
+      "sha256": "cf7d6aab244fcc40028516184aac58cefca9c7c45f7372a59846f207de98514d"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "1964a51be01d1d5158250ad5b8a1691ca8d6dc3058f7cb20e34bb61861b20f70"
+      "sha256": "5a867846e47972866823525cfdaa5538ec5e31ec7c523a50796003d0dab419e1"
     },
     {
       "path": "dist/core/agent-session-services.js",
@@ -154,6 +154,16 @@
       "path": "dist/core/tools/powershell.d.ts",
       "originalSha256": "eb2bfa4574b0bdb02a95e4a3039ea585503d20ba608a3cdb6309bf8b63cc6a4c",
       "sha256": "5ac2400451c020fd2da0ec6c651456f4d00c8533914b7f296fe8c040194c2cde"
+    },
+    {
+      "path": "dist/utils/shell.js",
+      "originalSha256": "57dd12450505faaf713b7cfeddff43ce8bd6238b3cfb755f87bdc83ee6134fc2",
+      "sha256": "8882469819306de7b74d1d1a6775aaec66e57e77f672a729e94216658c4e1dd2"
+    },
+    {
+      "path": "dist/utils/shell.d.ts",
+      "originalSha256": "fd86335c16c21ad9d2aa1d553f977a2c0cce311335da5f95572feb094c691b4c",
+      "sha256": "2144bf6a80dba4987f8d030d5f76dc23cfd6955dddd7f995687e90da52f651c8"
     },
     {
       "path": "dist/utils/tools-manager.js",
