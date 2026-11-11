@@ -126,6 +126,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `8e50091` 后修复 SDK 会话 Bash 输出流完成与异步错误。两布局各 4 项新增场景、41 项既有回归及定向严格类型检查通过，独立静态复核未确认缺陷；原始执行错误、私有文件权限和会话清理保留，不恢复本地执行器。Coding 新增一份输出至 93 份，其他 92 份摘要不变；来源更新 4 项、新增 2 项，受限 Craft 审计通过 2030 个允许文件。失败修正、未验边界及补丁退出条件见[Bash 输出验证](coding-validation.md#sdk-bash-output-completion-after-8e50091)。长 OSC、ToolHtmlRenderer 及 F0 至 F6 仍开放。
 
+`41040a6` 后修复 SDK 长 OSC 跨块残留及结束、取消时的未闭合 metadata。两布局各 9 项新增回归、45 项既有测试与定向严格类型检查通过，独立静态与内存探针复核未确认缺陷；SDK 原清理器和 CSI 路径保留，不恢复完整本地算法。Coding 新增一份输出至 94 份，另改既有执行器，其他 92 份摘要不变；core/durable 沿用原数量，总数为 131 份。来源更新 4 项、新增 1 项，受限 Craft 审计通过 2031 个允许文件。证据补充、未验边界及上游退出条件见[OSC 流验证](coding-validation.md#bounded-sdk-osc-streaming-after-41040a6)。ToolHtmlRenderer、完整入口与恢复及 F0 至 F6 仍开放。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。

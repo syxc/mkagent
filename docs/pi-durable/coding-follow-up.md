@@ -184,6 +184,8 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `8e50091` 后修复 SDK 会话 Bash 输出文件提前返回及异步文件错误：创建流时即观察 finished，返回结果前等待完成；执行本身失败时保留原错误对象。执行、截断与会话算法仍由 SDK 提供，不恢复本地副本。两布局各 4 项新增场景、41 项既有回归及实际声明定向 strict/skipLibCheck 检查通过，独立静态复核未确认缺陷。仅新增修改 bash-executor.js，原 92 份 Coding 输出摘要保持，Coding 增至 93 份；core/durable 本次未重验，按原数量合计为 130 份。来源更新 4 项、新增 2 项，受限 Craft 审计通过 2030 个允许文件。失败夹具修正及未验边界见[Bash 输出验证](coding-validation.md#sdk-bash-output-completion-after-8e50091)。长 OSC、ToolHtmlRenderer、完整入口与恢复及 F0 至 F6 继续开放。
 
+`41040a6` 后修复长 OSC 跨块 payload 残留。SDK helper 继续使用既有终止符与清理器，仅补顺序扫描及有界状态；超过 256 字符的未闭合 OSC 只保留起始符和可能的尾部 ESC，结束或取消时丢弃未闭合 metadata。两布局各 9 项新增回归、45 项既有测试及定向 strict/skipLibCheck 检查通过，独立静态与内存探针复核未确认缺陷。Coding 新增 ansi.js 输出至 94 份，另改既有执行器，其余 92 份摘要保持；来源更新 4 项、新增 1 项，受限 Craft 审计通过 2031 个允许文件。父线程已补齐复现版本与类型检查证据，未再独立复核补证；具体限制见[OSC 流验证](coding-validation.md#bounded-sdk-osc-streaming-after-41040a6)。上游提供等效有界清理后撤除此修复，ToolHtmlRenderer、完整入口与恢复及 F0 至 F6 继续开放。
+
 必要例外至少说明：具体产品或公开插件行为、候选发布 API、实际缺口、薄适配结果、剩余源码或补丁、恢复兼容、退出条件及下一次 Coding/durable 升级所需检查。源码、生成转换和依赖补丁合计评估，不能靠改变代码所在位置减少账面数量。已有对照中的每一个行为差异先判定是否属于需求。
 
 | 优先范围 | 下一步与保留条件 |

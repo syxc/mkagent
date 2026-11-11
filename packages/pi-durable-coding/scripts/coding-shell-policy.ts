@@ -141,5 +141,36 @@ export function codingBashOutputPolicy(source: string): string {
     '            tempFileStream?.end();\n            await tempFileDone?.catch(() => {});\n            throw err;');
   edit('    tempFileStream?.end();\n    const cancelled',
     '    tempFileStream?.end();\n    await tempFileDone;\n    const cancelled');
+  edit('        appendText(rest);',
+    '        // An unfinished OSC contains metadata, never visible command output.\n'
+    + '        if (!rest.startsWith("\\u001B]")) appendText(rest);');
+  return body;
+}
+
+export function codingAnsiPolicy(source: string): string {
+  let body = source;
+  const edit = (before: string, after: string) => {
+    if (body.split(before).length !== 2) throw new Error('Published ANSI boundary changed: ' + before);
+    body = body.replace(before, after);
+  };
+  edit('// Longest unfinished sequence held back while streaming. Longer ones are processed as-is.',
+    '// Bound pending state by discarding long OSC payload, keeping its introducer and any trailing ESC.');
+  const marker = '    const windowStart = Math.max(0, value.length - MAX_PENDING_ANSI_LENGTH);';
+  edit(marker, `    // Track OSC before the bounded CSI suffix search so metadata never escapes across chunks.
+    let oscStart = value.indexOf("\\u001B]");
+    const terminator = new RegExp(ST, "g");
+    while (oscStart !== -1) {
+        terminator.lastIndex = oscStart + 2;
+        if (!terminator.exec(value)) {
+            const pending = value.slice(oscStart);
+            return {
+                complete: value.slice(0, oscStart),
+                pending: pending.length <= MAX_PENDING_ANSI_LENGTH ? pending
+                    : "\\u001B]" + (value.endsWith("\\u001B") ? "\\u001B" : ""),
+            };
+        }
+        oscStart = value.indexOf("\\u001B]", terminator.lastIndex);
+    }
+` + marker);
   return body;
 }

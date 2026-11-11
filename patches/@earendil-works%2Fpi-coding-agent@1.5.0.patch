@@ -1,4 +1,4 @@
-# Content SHA-256: 0aa980d0972c1d75fb21bbc8774ec1a04e054ab7ab97b67f630975ab492bee1a
+# Content SHA-256: cc8036bd0635a193c0f4faf7caadf9c25591e2c3d035aaefcda1d5edf06af95d
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -1505,7 +1505,17 @@ diff --git a/dist/core/bash-executor.js b/dist/core/bash-executor.js
          for (const chunk of outputChunks) {
              tempFileStream.write(chunk);
          }
-@@ -79,6 +84,7 @@ export async function executeBashWithOperations(command, cwd, operations, option
+@@ -69,7 +74,8 @@ export async function executeBashWithOperations(command, cwd, operations, option
+     const flushOutput = () => {
+         const rest = pendingAnsi + decoder.decode();
+         pendingAnsi = "";
+-        appendText(rest);
++        // An unfinished OSC contains metadata, never visible command output.
++        if (!rest.startsWith("\u001B]")) appendText(rest);
+     };
+     let exitCode = null;
+     try {
+@@ -79,6 +85,7 @@ export async function executeBashWithOperations(command, cwd, operations, option
          // An aborted command still returns the output it produced so far
          if (!options?.signal?.aborted) {
              tempFileStream?.end();
@@ -1513,7 +1523,7 @@ diff --git a/dist/core/bash-executor.js b/dist/core/bash-executor.js
              throw err;
          }
      }
-@@ -89,6 +95,7 @@ export async function executeBashWithOperations(command, cwd, operations, option
+@@ -89,6 +96,7 @@ export async function executeBashWithOperations(command, cwd, operations, option
          ensureTempFile();
      }
      tempFileStream?.end();
@@ -1521,6 +1531,40 @@ diff --git a/dist/core/bash-executor.js b/dist/core/bash-executor.js
      const cancelled = options?.signal?.aborted ?? false;
      return {
          output: truncationResult.truncated ? truncationResult.content : fullOutput,
+diff --git a/dist/utils/ansi.js b/dist/utils/ansi.js
+--- a/dist/utils/ansi.js
++++ b/dist/utils/ansi.js
+@@ -40,7 +40,7 @@ const ansiRegex = new RegExp(`(?:${OSC_START}[\\s\\S]*?${ST})|${CSI_START}${CSI_
+ // Unfinished sequence at the end of the text: OSC without its ST (a trailing ESC may start ESC\),
+ // or CSI without its final byte.
+ const unfinishedAnsiAtEndRegex = new RegExp(`(?:${OSC_START}(?:[^\\u0007\\u009C\\u001B]|\\u001B(?!\\\\))*|${CSI_START})$`);
+-// Longest unfinished sequence held back while streaming. Longer ones are processed as-is.
++// Bound pending state by discarding long OSC payload, keeping its introducer and any trailing ESC.
+ const MAX_PENDING_ANSI_LENGTH = 256;
+ /**
+  * Split streamed text into a part that is safe to pass to stripAnsi now and a trailing
+@@ -50,6 +50,21 @@ export function splitIncompleteAnsiSuffix(value) {
+     if (!value.includes("\u001B") && !value.includes("\u009B")) {
+         return { complete: value, pending: "" };
+     }
++    // Track OSC before the bounded CSI suffix search so metadata never escapes across chunks.
++    let oscStart = value.indexOf("\u001B]");
++    const terminator = new RegExp(ST, "g");
++    while (oscStart !== -1) {
++        terminator.lastIndex = oscStart + 2;
++        if (!terminator.exec(value)) {
++            const pending = value.slice(oscStart);
++            return {
++                complete: value.slice(0, oscStart),
++                pending: pending.length <= MAX_PENDING_ANSI_LENGTH ? pending
++                    : "\u001B]" + (value.endsWith("\u001B") ? "\u001B" : ""),
++            };
++        }
++        oscStart = value.indexOf("\u001B]", terminator.lastIndex);
++    }
+     const windowStart = Math.max(0, value.length - MAX_PENDING_ANSI_LENGTH);
+     const match = unfinishedAnsiAtEndRegex.exec(value.slice(windowStart));
+     if (!match) {
 diff --git a/dist/utils/shell.js b/dist/utils/shell.js
 --- a/dist/utils/shell.js
 +++ b/dist/utils/shell.js

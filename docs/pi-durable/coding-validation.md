@@ -26,6 +26,64 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Bounded SDK OSC streaming after 41040a6
+
+The SDK searches only the last 256 UTF-16 units for unfinished ANSI sequences.
+A valid OSC longer than that limit could enter Bash output if its terminator
+arrived in another chunk. The same bytes in one chunk were stripped correctly.
+The existing shell policy now adds a forward OSC scan to the SDK helper. It
+uses the SDK terminator pattern and stripper. An unfinished OSC keeps at most
+256 units; longer payload becomes its introducer and any trailing ESC, so a
+split ESC-backslash terminator still works. The scan advances after each
+complete OSC. The existing bounded CSI path stays in place. Bash final flush
+discards unfinished OSC on completion or cancellation. Metadata continues until
+BEL, ESC-backslash or C1 ST; a newline or nested introducer does not end it.
+No complete parser, executor copy, public export or declaration is added.
+Remove this fix when upstream provides the same bounded stream behavior.
+
+The eight-case reproduction fails all eight cases before the fix. The final
+suite adds a visible Unicode/CSI case and short unfinished OSC coverage. Root
+and hoisted layouts each pass nine new cases plus 45 existing Bash, session and
+shell tests, with 532 expectations per layout. Checks cover the 256/257 boundary,
+long payload, all three terminators, split ST, nested and adjacent sequences,
+callbacks, history, visible spill content, cancellation and a 1 MiB payload
+with bounded pending state. New cases use synthetic operations and a provider
+call guard; existing tests also use local processes in temporary directories.
+Network access is blocked and configuration is task-owned.
+
+The first two fixture attempts fail before functional assertions: absent root
+exports, then CommonJS resolution for an import-only SDK. The final fixture
+uses module-relative import resolution for its internal helper inspection.
+Those startup failures are not defect evidence. The red source has eight cases
+and a different hash from the final nine-case source. After review, the parent
+reconstructs the old source to its previously captured hash and registers the
+retained raw failure log. Both layouts pass scoped strict checks against actual
+SDK declarations with skipLibCheck. Only those type checks are repeated to
+record the command, three compiler roots, options and raw output.
+
+Generation, check and pristine replay pass for all 94 Coding outputs. This fix
+changes bash-executor.js and adds ansi.js to the patch; the other 92 outputs
+keep their hashes. Both installed layouts match the manifest. Core four and
+durable 33 are inherited counts and were not revalidated here; the total is
+131 physical outputs. Runtime and helper inventories are unchanged and were
+not regenerated. Source registration updates four entries and adds one test.
+The restricted Craft v0.15.6 audit passes for 2031 allowed files, excluding
+legacy and sensitive paths. There is no new installation.
+
+Independent review finds no confirmed defects or blockers. The parent verifies
+19 frozen inputs, six source hashes and the report hash. Independent in-memory
+probes pass 180 short stream partitions, 784 long OSC scenarios and 68 Bash
+flow scenarios, including 1 MiB of continuous metadata. These probes use
+injected sanitization, truncation and in-memory streams; they do not replace
+actual spill or history integration tests. The review does not inspect the
+complete patch, inventory or registry beyond hashes, or rerun project checks.
+Its original input set omits the old red source, raw failure log and type-check
+execution scope. The parent supplies eight evidence items after review; those
+supplements are not independently reviewed. Full Native, full declarations,
+fresh installation, recovery, other platforms and product acceptance remain
+unverified. ToolHtmlRenderer, the protected legacy blocker and F0 through F6
+stay open.
+
 ## SDK Bash output completion after 8e50091
 
 AgentSession.executeBash uses the SDK executor and its private output-file helper.
