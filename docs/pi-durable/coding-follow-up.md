@@ -42,6 +42,8 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 `7604411` 后补齐 GenAI 声明引用的 MCP 开发依赖，并为固定 Gaxios 增加两份仅约束 fetch 调用签名的声明补丁，未改运行时。补丁重放及 75 份 build 文件对比通过；现存 SDK 物理目录的默认库严格检查覆盖 1654 文件，保留 Bun、Node 类型并关闭 skipLibCheck，零诊断。ESNext-only 仍有 11 条 DOM 类型诊断。两次隔离安装均因 Coding SDK cache copy 的 EPERM 失败，当前隔离包入口断链；仅生成 lock 及其冻结检查通过，审阅后同步根 lock，不能记作完整安装通过。精确文件静态复核未确认声明缺陷，但完整来源 diff 未独立核验，首次索引复核的越界也保留记录。F0 至 F6 继续开放，见[依赖声明验证](coding-validation.md#sdk-dependency-declarations-after-7604411)。
 
+`5a9d513` 后仅在 Coding 包显式增加标准 DOM 类型库，满足 GenAI、MCP、Photon 的公开声明，不新增本地类型替身或运行时代码。采用该包实际配置的物理 SDK 严格检查覆盖 1649 文件，Bun、Node 类型保持启用，关闭 skipLibCheck，原先 11 条诊断全部消除。根编译配置、依赖和 SDK 补丁保持；公开包入口断链与安装失败仍未解决，没有新增独立复核，F0 至 F6 继续开放，见[声明标准库验证](coding-validation.md#sdk-declaration-libraries-after-5a9d513)。
+
 ## F1 架构与依赖清点
 
 先核对切换前 MkAgent 如何使用 Coding SDK 及必须保留的行为，再检查当前生产调用和 SDK 能力。记录所需行为、实际调用方、发布 API、仓内补丁、缺口及下一步；SDK 执行器接入是否可行须有证据，不能从当前源码目录反推需求。原始 `b77c4a2645d3` 的 1.1.0 依赖仅供行为和接入对照，当前 SDK 候选继续用固定 Pi 1.5.0。

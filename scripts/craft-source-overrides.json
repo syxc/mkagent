@@ -3853,8 +3853,8 @@
       "reason": "Verify synchronous state, previews, retryable writes and isolated stages."
     },
     "packages/pi-durable-coding/tsconfig.json": {
-      "sha256": "1bb253752545d0aa811ded6992e68ebd585bd2e72149d4ec909e0fdae3f9d618",
-      "reason": "Type-check coding adapters and typed source ports."
+      "sha256": "6a06903e94971dc4c6b1155e16b3172d891ada89bad3687b14d9a42c24ca2add",
+      "reason": "Include the standard DOM declarations required by the published GenAI, MCP and Photon types while retaining Bun and Node types."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
       "sha256": "13eb61c2e57b30cb2aa91b78725cf17a4942c4244a0c87f6ef30f03eb0372da3",

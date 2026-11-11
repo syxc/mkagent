@@ -433,6 +433,26 @@ v0.15.6 audit passes for 2034 allowed files. Full declarations with the
 repository libraries, public package loading, installation, protected
 legacy, remaining adapters, product recovery and F0 through F6 remain open.
 
+## SDK declaration libraries after 5a9d513
+
+The Coding package now explicitly includes the ESNext and DOM standard type
+libraries. GenAI and MCP declarations require RequestInfo and HeadersInit;
+Photon requires CanvasRenderingContext2D and ImageData. The standard DOM
+library supplies these types without local ambient substitutes. Bun and Node
+types remain enabled, and the root configuration is unchanged.
+
+Using the Coding package's actual library setting, the same physical SDK
+check now passes for all 1649 files with strict mode and skipLibCheck disabled.
+The eleven previous diagnostics are removed without a type projection or
+error filter. No protected path is requested. This one-line configuration
+change adds no runtime code, dependency or SDK patch. No runtime test or
+new independent review is repeated. One source record is updated.
+
+The check still imports the verified physical SDK directory. It does not
+validate the broken public package links or the failed installation. Full
+Native declarations, public package loading, installation, protected legacy,
+remaining adapters, product recovery and F0 through F6 remain open.
+
 ## Resource result declaration after c2ddabe
 
 The exported discoverCodingSkills function had no return annotation. In both

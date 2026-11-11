@@ -150,6 +150,8 @@ MkAgent 原先使用 Pi coding agent，第一次直接换成 pi-durable 后，�
 
 `7604411` 后增加 GenAI 所需的 MCP 声明开发依赖和固定 Gaxios 的两份类型补丁，不改其运行时。补丁重放及 75 份 build 文件对比通过；SDK 现存物理目录的默认库严格类型检查覆盖 1654 文件，零诊断，ESNext-only 仍有 11 条 DOM 类型诊断。两次隔离安装因 Coding SDK cache copy 的 EPERM 失败，包入口断链；仅生成 lock 及其冻结检查通过，经审阅后同步根 lock，不能算完整安装验收。精确文件静态复核未确认声明缺陷，完整来源 diff 尚未独立核验，首次索引复核发生越界。完整入口、声明、安装、受保护 legacy、其余适配、产品恢复及 F0 至 F6 继续开放，范围见[依赖声明验证](coding-validation.md#sdk-dependency-declarations-after-7604411)。
 
+`5a9d513` 后在 Coding 包显式增加 DOM 标准类型库，根配置及 Bun、Node 类型保持。采用实际包配置的物理 SDK 检查覆盖 1649 文件，strict 启用、skipLibCheck 关闭，原先 11 条缺失诊断全部消除；无运行时代码、依赖或 SDK 补丁变化。公开包入口及完整安装仍被当前失败阻塞，没有新增独立复核，完整 Native 声明、受保护 legacy、其余适配、产品恢复及 F0 至 F6 继续开放，见[声明标准库验证](coding-validation.md#sdk-declaration-libraries-after-5a9d513)。
+
 ## 目标与名称
 
 迁移以保留 Pi Coding 层、替换其执行基座为目标，本地名称为 `pi-durable coding agent`，简称 `durable coding agent`。原始行为与接入参照为 `b77c4a2645d3`：它是第一次运行时切换 `e4b75c2` 的父提交，worker 仍直接使用 `pi-coding-agent@1.1.0` SDK。当前 SDK 核查继续固定 Pi 1.5.0，产品保留范围包含 `cb0311f` 及后续有效改动；这些版本分别服务于行为对照、SDK 选型与防止回归，不要求退回旧代码或旧依赖。
