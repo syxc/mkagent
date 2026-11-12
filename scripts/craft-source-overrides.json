@@ -975,8 +975,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "04a29caabcac1eeaded8a1edfc2d4aead02e24046525ef147fb8e6e2539b0161",
-      "reason": "Preserve resolved versions, the GenAI MCP declaration peer and Gaxios patch; register the Photon numeric-array declaration correction."
+      "sha256": "a1f935fcc1712639d472f79bc391683bdc80579fefda4509c12d92e63bdcda71",
+      "reason": "Retain resolved dependency versions; register Photon numeric-array declarations and the existing session-tools-core dependency on shared."
     },
     "package.json": {
       "sha256": "0b39c6cdfbeb618d794cf930c9566aae2c64be0619c8be267bd64d3576e1f8cd",
@@ -1343,8 +1343,8 @@
       "reason": "Retain v0.15.4 shared transport/runtime/style/CLI lifecycle hunk with existing MkAgent Pi/Lite seams."
     },
     "packages/session-tools-core/package.json": {
-      "sha256": "68eca90af555b746deb78b6ac906880836d4ef73876f115c2ecbed6e8628f8af",
-      "reason": "MkAgent 0.2.6 versions/lock and shared pr-watch export; upstream only changes versions/exports, Pi remains pinned to 1.1.0."
+      "sha256": "5dab411489c4b24d9743fadc0768ffc0f0e89b3bf95e308f40569fa05240bfab",
+      "reason": "Retain package versions and declare the existing shared runtime dependency for isolated workspace installs."
     },
     "packages/session-tools-core/src/context.ts": {
       "sha256": "a585df1c4fb7aab88a32f525fc8ecf7eb30268be3349b3351ebc1e8bf70a3ad6",
@@ -3145,8 +3145,8 @@
       "reason": "Retained event regressions now assert owned-backend task cancellation rather than global process command matching"
     },
     "packages/server-core/src/sessions/session-branching.test.ts": {
-      "sha256": "9e1ecdcafa832667167a919ef3f32d791b25ca45deaa3aff0f26acc8bac2d1fe",
-      "reason": "Regression test for retained MkAgent behavior not covered at the same Craft path. Verify ordinary cutoff copies exclude source native display caches and inactive product rows."
+      "sha256": "7d28d485f48e309b8ef0d5c327f44fa82c4076d57d3487cf4122bb231faa87b6",
+      "reason": "Verify ordinary cutoff copies exclude source native display caches and inactive rows; resolve fixture imports from the owning package in isolated layouts."
     },
     "packages/server-core/src/utils/chat-starters.test.ts": {
       "sha256": "17c8bf494a50ec3becdc5182e1cced66c3d458a386839bdf143a2f1feb5da87a",
@@ -3497,8 +3497,8 @@
       "reason": "Verify redirect validation and request, stream, and save cancellation boundaries."
     },
     "packages/server-core/src/sessions/session-file-transport.test.ts": {
-      "sha256": "1291d1a08a1017a617bbfa8e3ae19f725d04b7dbc1942c14efbc47d73fc1bfe9",
-      "reason": "Verify file remapping, source independence, and rollback for branches and imports."
+      "sha256": "81e9c584dbf31d702a3db3657fdb7d6f6973bcab2d5cbafc242fc3d40506a812",
+      "reason": "Verify file remapping, source independence and rollback for branches and imports; resolve child imports from the owning package in isolated layouts."
     },
     "packages/server-core/src/sessions/session-file-watcher.isolated.ts": {
       "sha256": "b6c9e8368f410c203c18a309667b239f2e9a7df8b602d232126af97cd59ded67",

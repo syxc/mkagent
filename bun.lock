@@ -282,6 +282,7 @@
       "name": "@mkagent/session-tools-core",
       "version": "0.2.6",
       "dependencies": {
+        "@mkagent/shared": "workspace:*",
         "beautiful-mermaid": "*",
         "gray-matter": "^4.0.3",
         "zod": "^3.23.0",

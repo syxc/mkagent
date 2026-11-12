@@ -67,7 +67,7 @@ describe('SessionManager branching', () => {
         manager.cleanup();
       `
       const run = Bun.spawnSync([process.execPath, '--eval', script], {
-        cwd: join(import.meta.dir, '..', '..', '..'),
+        cwd: join(import.meta.dir, '..', '..'),
         env: { ...process.env, CONFIG_DIR: configDir },
         stdout: 'pipe',
         stderr: 'pipe',
