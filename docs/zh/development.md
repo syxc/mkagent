@@ -39,7 +39,7 @@ packages/
   server-core/         # Transport、RPC、SessionManager、运行时
   server/              # headless `MKAGENT_SERVER_TOKEN` server
   pi-agent-server/     # Pi-durable 子进程（Bun，JSONL on stdio）
-  pi-durable-coding/   # Coding 能力与 Pi 插件兼容
+  coding-runtime/   # Coding 能力与 Pi 插件兼容
   session-tools-core/  # Plan / Skill / mini LLM / browser / session info / list
 docs/                  # 英文文档
 docs/zh/               # 中文翻译

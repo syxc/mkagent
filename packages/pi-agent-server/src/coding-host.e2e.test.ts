@@ -8,7 +8,7 @@ import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
 import { defineExtension } from '@earendil-works/pi-durable';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import type { NativeSessionJournal } from '@mkagent/coding-runtime/durable';
-import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture, response } from '../../coding-runtime/test/fixtures/durable-harness.ts';
 import { DurableKernel } from './kernel.ts';
 import { BackgroundShells } from './background-shell.ts';
 import { createBuiltinTools } from './tools/builtin.ts';
@@ -40,7 +40,7 @@ describe('coding extensions on the production durable host', () => {
       toolsExtension: defineExtension({ name: 'empty' }),
       coding: {
         agentDir, projectTrusted: true, resourcePolicy: 'host-only',
-        extensionPaths: [resolve(import.meta.dir, '../../pi-durable-coding/test/fixtures/upstream/hello.ts')],
+        extensionPaths: [resolve(import.meta.dir, '../../coding-runtime/test/fixtures/upstream/hello.ts')],
       },
       wrapCodingTool: tool => ({
         ...tool, execute: (args, api, context) => {
@@ -346,7 +346,7 @@ describe('coding extensions on the production durable host', () => {
     const options = {
       sessionPath, cwd: root.directory, modelsSource: () => root.models,
       toolsExtension: defineExtension({ name: 'mkagent-tools', tools: createBuiltinTools(root.directory).map(wrap) }),
-      coding: { agentDir, extensionPaths: [resolve(import.meta.dir, '../../pi-durable-coding/test/fixtures/upstream/hello.ts'), plugin] },
+      coding: { agentDir, extensionPaths: [resolve(import.meta.dir, '../../coding-runtime/test/fixtures/upstream/hello.ts'), plugin] },
       wrapCodingTool: wrap,
       hooks: {
         emitEvent: event => { if (event.type === 'agent_settled') settled++; },

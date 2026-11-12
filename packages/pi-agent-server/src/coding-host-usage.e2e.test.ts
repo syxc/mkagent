@@ -5,7 +5,7 @@ import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { defineExtension, type Harness } from '@earendil-works/pi-durable';
 import type { AssistantMessage } from '@earendil-works/pi-ai';
 import { PiEventAdapter } from '../../shared/src/agent/backend/pi/event-adapter.ts';
-import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture, response } from '../../coding-runtime/test/fixtures/durable-harness.ts';
 import { DurableKernel, type DurableKernelOptions } from './kernel.ts';
 import type { CodingHost } from './coding-host.ts';
 import { readNativeSessionDescriptor } from './storage/native-session-projection.ts';

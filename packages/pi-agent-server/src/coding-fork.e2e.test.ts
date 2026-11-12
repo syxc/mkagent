@@ -6,7 +6,7 @@ import { createRegistry, defineExtension, Harness, type Conversation } from '@ea
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
 import type { NativeSessionJournal } from '@mkagent/coding-runtime/durable';
 import { remapSessionFileReferences } from '@mkagent/shared/sessions';
-import { durableFixture } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture } from '../../coding-runtime/test/fixtures/durable-harness.ts';
 import { DurableKernel } from './kernel.ts';
 import { nativeSessionPaths, readNativeSessionDescriptor } from './storage/native-session-projection.ts';
 

@@ -7,10 +7,55 @@ come from the [capability specification](coding-capabilities-spec.md); the
 [correction list](coding-follow-up.md) define current work. An older retention
 decision, source inventory or green test run does not override those documents.
 
+## Workspace directory rename
+
+Commit `7a59bca` saves the accepted SDK ownership change. The next change
+moves the workspace to `packages/coding-runtime` and updates the lock,
+script paths, relative fixture imports, build assets and documentation.
+The package identifier remains `@mkagent/coding-runtime`.
+
+All 301 tracked files move to the new directory. Of the 299 permitted files,
+297 keep their bytes; two test fixtures change only directory literals.
+Both protected files keep their inode, device, size, modification time,
+mode and Git blob. Their contents are not read. Registry keys move in their
+existing order, and permitted content hashes are updated.
+
+Fresh Task installations pass for 14 SDK nodes and 62 nodes across six
+product workspaces. All 137 patch outputs match. The candidate lock changes
+two workspace paths and Bun's canonical ordering. All 1785 package records
+and published versions remain the same. Its SHA-256 is
+`c4f08dd0f6c1f259d7c5a01e9e2e319e92f8ef3acb03982bb18225b01bd6db5d`.
+
+The new directory passes 95 tests and 695 assertions: 27 SDK cases, 42
+product cases and all 26 worker bundle cases. The build completes before
+the bundle cases run. SDK and plugin Core identities remain equal, with
+one installed Core context. Standard generation checks all 95 SDK outputs.
+Strict source and declaration emit check 117 roots and 1,984 files with
+zero diagnostics. All 116 standard declarations compile through the public
+package entries across 1,976 files: zero positive diagnostics, six expected
+negative diagnostics, no source fallback and no added declaration input.
+
+The permitted source audit passes for 2,041 MkAgent files. Thirteen current
+documents have valid local links and anchors. The independent path review
+passes: all 301 index paths map correctly, and the script, fixture, public
+entry and license targets exist.
+
+Evidence is under `directory-rename-9nhfeu7z` inside the ownership Task:
+`install/acceptance-summary.json`, `candidate-lock-independent-check.json`,
+`directory-move-receipt.json`, `standard-emit`, `standard-consumer`,
+`source-audit`, `doc-links.json` and `independent-review-pass.txt`.
+The earlier 453-test ownership result retains its original inputs.
+
+The optional archive fixture requires a TypeScript tool that the filtered
+Coding context cannot resolve, so that group is not run. The existing Root
+compiler supplies the strict source and standard declaration checks above.
+Root node_modules stays unchanged. Full-workspace cold installation, real
+models and other platforms remain outside this directory-only change.
+
 ## Coding runtime dependency ownership
 
 This correction names the package `@mkagent/coding-runtime`. The physical
-path remains `packages/pi-durable-coding`. The SDK stays at 1.5.0.
+path is now `packages/coding-runtime`. The SDK stays at 1.5.0.
 
 Runtime dependencies decrease from 18 to seven. Coding SDK owns its Core,
 AI, MCP, TUI, TypeBox and Jiti instances. The adapter uses a finite set of
@@ -5926,7 +5971,7 @@ Read token rule, in the same deny array:
 
 ```json
 "Read(*token*)",
-"Read(!packages/pi-durable-coding/src/pi/modes/interactive/theme/theme-tokens.ts)"
+"Read(!packages/coding-runtime/src/pi/modes/interactive/theme/theme-tokens.ts)"
 ```
 
 Normal Read calls then succeed for the local theme source and its pinned Pi
@@ -6069,7 +6114,7 @@ The new project `.claude/settings.json` contains only:
 {
   "permissions": {
     "allow": [
-      "Read(/packages/pi-durable-coding/src/pi/modes/interactive/theme/theme-tokens.ts)"
+      "Read(/packages/coding-runtime/src/pi/modes/interactive/theme/theme-tokens.ts)"
     ]
   }
 }
@@ -6526,10 +6571,10 @@ The focused rerun passed 39 tests with 253 assertions and 0 failures:
 
 ```sh
 bun --no-env-file --config=/dev/null test \
-  packages/pi-durable-coding/test/shared-sessions-runner.test.ts \
-  packages/pi-durable-coding/test/host-package-commands.test.ts \
-  packages/pi-durable-coding/test/extensions.test.ts \
-  packages/pi-durable-coding/test/plugin-transpiler.test.ts
+  packages/coding-runtime/test/shared-sessions-runner.test.ts \
+  packages/coding-runtime/test/host-package-commands.test.ts \
+  packages/coding-runtime/test/extensions.test.ts \
+  packages/coding-runtime/test/plugin-transpiler.test.ts
 ```
 
 The complete repository rerun passed 6864 tests with 11 skips and one failure
@@ -6582,14 +6627,14 @@ The affected behavior checks used two commands:
 
 ```sh
 bun --no-env-file --config=/dev/null test \
-  packages/pi-durable-coding/test/extensions.test.ts \
-  packages/pi-durable-coding/test/plugin-transpiler.test.ts
+  packages/coding-runtime/test/extensions.test.ts \
+  packages/coding-runtime/test/plugin-transpiler.test.ts
 
 bun --no-env-file --config=/dev/null test \
-  packages/pi-durable-coding/test/host-resources.test.ts \
-  packages/pi-durable-coding/test/host-package-commands.test.ts \
-  packages/pi-durable-coding/test/scoped-port-check.test.ts \
-  packages/pi-durable-coding/test/native-session-recovery.test.ts \
+  packages/coding-runtime/test/host-resources.test.ts \
+  packages/coding-runtime/test/host-package-commands.test.ts \
+  packages/coding-runtime/test/scoped-port-check.test.ts \
+  packages/coding-runtime/test/native-session-recovery.test.ts \
   packages/pi-agent-server/src/coding-host.e2e.test.ts \
   packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts \
   packages/pi-agent-server/src/coding-host-prompt.e2e.test.ts
@@ -6668,12 +6713,12 @@ The behavior run used:
 
 ```sh
 bun --no-env-file --config=/dev/null test \
-  packages/pi-durable-coding/test/plugin-transpiler.test.ts \
-  packages/pi-durable-coding/test/extensions.test.ts \
-  packages/pi-durable-coding/test/host-resources.test.ts \
-  packages/pi-durable-coding/test/host-package-commands.test.ts \
-  packages/pi-durable-coding/test/scoped-port-check.test.ts \
-  packages/pi-durable-coding/test/native-session-recovery.test.ts \
+  packages/coding-runtime/test/plugin-transpiler.test.ts \
+  packages/coding-runtime/test/extensions.test.ts \
+  packages/coding-runtime/test/host-resources.test.ts \
+  packages/coding-runtime/test/host-package-commands.test.ts \
+  packages/coding-runtime/test/scoped-port-check.test.ts \
+  packages/coding-runtime/test/native-session-recovery.test.ts \
   packages/pi-agent-server/src/coding-host.e2e.test.ts \
   packages/pi-agent-server/src/coding-host-catalog.e2e.test.ts \
   packages/pi-agent-server/src/coding-host-prompt.e2e.test.ts
@@ -6791,7 +6836,7 @@ historical decision about file execution, not a reason to retain this conversion
 
 Checks completed for this slice:
 
-- `bun --no-env-file test packages/pi-durable-coding/test/native-edit-arguments.test.ts packages/pi-durable-coding/test/native-edit-diff.test.ts`:
+- `bun --no-env-file test packages/coding-runtime/test/native-edit-arguments.test.ts packages/coding-runtime/test/native-edit-diff.test.ts`:
   324 pass, 0 fail, 649 assertions. The 12 new tests cover both Native factories,
   seven valid input forms, unchanged recorded inputs, actual BOM/CRLF file edits,
   result details and three invalid inputs rejected before file access.
@@ -7622,8 +7667,8 @@ synthetic, and these tests make no external model or login requests.
 
 | Check | Result and scope |
 |---|---|
-| Credential and model regression | `bun --no-env-file test packages/pi-durable-coding/test/host-model-runtime.test.ts packages/pi-agent-server/src/model-runtime.test.ts packages/pi-agent-server/src/runtime-models.test.ts` passes: 28 tests, 136 assertions, zero failures. |
-| Coding package and test types | `bun --no-env-file node_modules/typescript/bin/tsc --noEmit -p packages/pi-durable-coding/tsconfig.json` passes for production sources. A TypeScript program with the same resolved options and `test/host-model-runtime.test.ts` as its root also passes. |
+| Credential and model regression | `bun --no-env-file test packages/coding-runtime/test/host-model-runtime.test.ts packages/pi-agent-server/src/model-runtime.test.ts packages/pi-agent-server/src/runtime-models.test.ts` passes: 28 tests, 136 assertions, zero failures. |
+| Coding package and test types | `bun --no-env-file node_modules/typescript/bin/tsc --noEmit -p packages/coding-runtime/tsconfig.json` passes for production sources. A TypeScript program with the same resolved options and `test/host-model-runtime.test.ts` as its root also passes. |
 | Runtime reproduction | `vendor-coding-runtime.ts <pinned-checkout> --check` passes for 248 source files, nine assets, dependencies and core imports. The checkout is clean at `f9a26365568127461c47a07a37dcb42c140a3ac5`. |
 | Auxiliary reproduction | `vendor-upstream.ts <pinned-checkout> --check` passes for 12 source files and 28 shared forwards. |
 
@@ -9276,8 +9321,8 @@ Tests and port rules are counted separately. The runtime inventory still has
 
 The regression uses `bun test --timeout 20000` through the approved isolated
 HOME/config and environment allowlist. It includes the existing
-`packages/pi-durable-coding/src/resources.test.ts` and these files under
-`packages/pi-durable-coding/test/` are
+`packages/coding-runtime/src/resources.test.ts` and these files under
+`packages/coding-runtime/test/` are
 `{host-resources,host-project-resources,extensions,native-models,native-user-input,durable-agent,durable-runtime,durable-boundaries,durable-coding-tool-task,durable-session-store,host-tools,shared-packages,shared-models-messages,scoped-port-check,shared-sessions-runner,shared-context-tokens,session-view,shared-compat-types}.test.ts`.
 No actual model endpoint, live WebUI, real credentials or full SDK entry point
 was used.
@@ -9328,7 +9373,7 @@ At that revision the runtime inventory had 248 TypeScript files and nine assets.
 | Independent review | The initial 49-file diff and the added scope up to 57 files were reviewed. Directory and provider type regressions were reproduced and corrected. A final review of the three type-correction implementation files confirmed the fix with no new actionable issue. Final registry and document updates were checked by the main thread. |
 
 The regression command uses these files under
-`packages/pi-durable-coding/`: `src/resources.test.ts` and
+`packages/coding-runtime/`: `src/resources.test.ts` and
 `test/{extensions,durable-agent,native-models,durable-runtime,durable-boundaries,durable-coding-tool-task,durable-session-store,session-view,host-tools}.test.ts`.
 It runs through the task's isolated HOME/config and environment allowlist, with
 `bun test` and `--timeout 20000`. The declaration build uses 13 permitted
@@ -9610,8 +9655,8 @@ with the normal HOME. Runtime fixtures use their own temporary data and local
 providers. Results remain specific to the commands actually completed.
 
 ```sh
-bun test ./packages/pi-durable-coding ./packages/pi-agent-server
-bun packages/pi-durable-coding/test/reference/parity.ts \
+bun test ./packages/coding-runtime ./packages/pi-agent-server
+bun packages/coding-runtime/test/reference/parity.ts \
   <isolated-upstream-node-modules> <pinned-Pi-checkout>
 bun run validate:ci
 bun run lint

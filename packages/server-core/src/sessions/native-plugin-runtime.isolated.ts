@@ -27,7 +27,7 @@ test('unchanged upstream RPC, confirmation and naming plugins work through the p
   const extensions = join(root, 'home', '.pi', 'agent', 'extensions')
   mkdirSync(workspaceRoot); mkdirSync(cwd); mkdirSync(extensions, { recursive: true })
   writeFileSync(join(extensions, '..', 'settings.json'), '{"cacheWarming":"off","compaction":{"enabled":false}}')
-  const fixtures = join(appRoot, 'packages/pi-durable-coding/test/fixtures')
+  const fixtures = join(appRoot, 'packages/coding-runtime/test/fixtures')
   for (const name of ['rpc-demo.ts', 'confirm-destructive.ts', 'session-name.ts']) {
     writeFileSync(join(extensions, name), readFileSync(join(fixtures, 'upstream', name)))
   }

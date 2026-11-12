@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createAssistantMessageEventStream, createModels, createProvider, InMemoryCredentialStore, type Model } from '@earendil-works/pi-ai';
 import { createAgentSession, createHostResources, createReadTool, ModelRuntime, SessionManager } from '@mkagent/coding-runtime/native';
-import { response } from '../../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { response } from '../../../coding-runtime/test/fixtures/durable-harness.ts';
 
 const cwd = process.cwd();
 const agentDir = join(cwd, 'agent');

@@ -7,7 +7,7 @@ import { defineExtension, type ToolRegistration } from '@earendil-works/pi-durab
 import type { Message } from '@earendil-works/pi-ai';
 import type { CodingHost } from './coding-host.ts';
 import { DurableKernel, type DurableKernelOptions } from './kernel.ts';
-import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture, response } from '../../coding-runtime/test/fixtures/durable-harness.ts';
 
 function users(messages: Message[]): string[] {
   return messages.filter(message => message.role === 'user').map(message =>

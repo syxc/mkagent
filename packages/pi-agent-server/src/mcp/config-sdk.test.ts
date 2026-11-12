@@ -20,7 +20,7 @@ function withEnvironment(run: () => void): void {
 }
 
 test('MCP commands keep the default shell in modeled Windows dispatch', () => {
-  const entry = import.meta.resolve('@earendil-works/pi-coding-agent', new URL('../../../pi-durable-coding/package.json', import.meta.url).href);
+  const entry = import.meta.resolve('@earendil-works/pi-coding-agent', new URL('../../../coding-runtime/package.json', import.meta.url).href);
   const source = readFileSync(new URL('./core/resolve-config-value.js', entry), 'utf8');
   const calls: string[] = [];
   // Execute the installed SDK with modeled Windows shells; no Windows binary runs here.
@@ -30,7 +30,7 @@ test('MCP commands keep the default shell in modeled Windows dispatch', () => {
     execSync(command: string) { calls.push('default:' + command); return '  startup-fixture\n'; },
     spawnSync() { calls.push('configured'); return { status: 0, stdout: '%MKAGENT_CONFIG_SDK_FIXTURE%\n' }; },
   });
-  const facade = readFileSync(new URL('../../../pi-durable-coding/src/mcp-config.ts', import.meta.url), 'utf8');
+  const facade = readFileSync(new URL('../../../coding-runtime/src/mcp-config.ts', import.meta.url), 'utf8');
   const binding = new Bun.Transpiler({ loader: 'ts' }).transformSync(facade);
   const host = runInNewContext(binding.replace(/^export \{.*\} from .*;\n/gm, '').replace(/^import .*;\n/gm, '').replace(/^export /gm, '') + '\n({ resolveConfigValueOrThrow, resolveHeadersOrThrow });', {
     resolveValue: model.resolveConfigValueOrThrow, resolveHeaders: model.resolveHeadersOrThrow,

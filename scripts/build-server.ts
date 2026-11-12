@@ -53,7 +53,7 @@ run([
 cpSync(join(electron, 'dist', 'resources'), join(output, 'resources'), { recursive: true })
 cpSync(join(root, 'apps', 'webui', 'dist'), join(output, 'webui'), { recursive: true })
 for (const name of ['LICENSE', 'NOTICE']) copyFileSync(join(root, name), join(output, name))
-copyFileSync(join(root, 'packages', 'pi-durable-coding', 'LICENSE.pi'), join(output, 'LICENSE.pi'))
+copyFileSync(join(root, 'packages', 'coding-runtime', 'LICENSE.pi'), join(output, 'LICENSE.pi'))
 
 const runtimeName = process.platform === 'win32' ? 'bun.exe' : 'bun'
 const runtime = join(output, 'vendor', 'bun', runtimeName)

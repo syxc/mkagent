@@ -15,7 +15,7 @@ import {
   type Storage, type StorageWrite, type SubmissionId, type TaskId, type TaskRecord,
 } from '@earendil-works/pi-durable';
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
-import { NativeSessionJournal } from '../../../pi-durable-coding/src/durable-coding/session-journal.ts';
+import { NativeSessionJournal } from '../../../coding-runtime/src/durable-coding/session-journal.ts';
 import {
   adoptLegacyCodingWork, CodingMigrationDoc, CodingMigrationError, migrateLegacyCodingWork,
 } from './coding-migration.ts';

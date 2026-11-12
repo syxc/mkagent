@@ -10,7 +10,7 @@
 
 `3058b9e` 后的插件工具包装直接使用 SDK 已公开函数，删除 29 行本地副本。两布局各 5 项测试、定向严格类型与完整 runtime 生成检查通过，生成清单降为 10 份 TypeScript。该切片的两次全新安装失败保留于[插件工具包装验证](coding-validation.md#sdk-extension-tool-wrappers-after-3058b9e)。`c612ed9` 后第三次全新冻结安装通过，16 个输入保持，11 个 workspace 的 20 条内部依赖链接及三包共 131 份补丁输出摘要核验通过。两现有布局的包装声明已定向刷新，旧 wrapper.d.ts 已移除，所选声明分支的严格消费者检查通过；完整 Native、完整声明及恢复继续开放，见[安装与声明验证](coding-validation.md#fresh-frozen-installation-and-wrapper-declarations-after-c612ed9)。
 
-依赖边界后续纠偏已将包标识统一为 `@mkagent/coding-runtime`，物理目录保持。生产依赖由十八项收敛为七项；Core/AI 协议通过 SDK 所属实例的具名窄出口取得，SDK 管理插件默认模块表与 Jiti，宿主只提供执行视图、转译准备及目录策略。真实 SDK 与六产品 workspace 冻结安装覆盖 14 和 62 个正式声明节点，137 个补丁输出匹配。SDK 202 项、产品 225 项及完整 bundle 26 项共 453 个不同测试通过。严格源码与标准声明生成覆盖 117 个根、1,984 个文件；116 份标准声明由正式包入口严格消费，覆盖 1,976 个文件，零诊断、六个预期负例且无源码回落或额外声明增强。来源审计覆盖 2,041 个许可文件并通过。下表第三列的大段切片数量及未验项保留各自历史范围；当前结果以[依赖边界验收](coding-validation.md#coding-runtime-dependency-ownership)为准，前轮 F0 至 F6 回执保持原范围。
+依赖边界后续纠偏已将包标识统一为 `@mkagent/coding-runtime`，物理目录同步为 `packages/coding-runtime`。生产依赖由十八项收敛为七项；Core/AI 协议通过 SDK 所属实例的具名窄出口取得，SDK 管理插件默认模块表与 Jiti，宿主只提供执行视图、转译准备及目录策略。真实 SDK 与六产品 workspace 冻结安装覆盖 14 和 62 个正式声明节点，137 个补丁输出匹配。SDK 202 项、产品 225 项及完整 bundle 26 项共 453 个不同测试通过。严格源码与标准声明生成覆盖 117 个根、1,984 个文件；116 份标准声明由正式包入口严格消费，覆盖 1,976 个文件，零诊断、六个预期负例且无源码回落或额外声明增强。来源审计覆盖 2,041 个许可文件并通过。下表第三列的大段切片数量及未验项保留各自历史范围；当前结果以[依赖边界验收](coding-validation.md#coding-runtime-dependency-ownership)为准，前轮 F0 至 F6 回执保持原范围。
 
 ## 架构与交付约束
 

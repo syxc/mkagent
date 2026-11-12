@@ -8,7 +8,7 @@ import type { ExtensionAPI, ExtensionCommandContext } from '@mkagent/coding-runt
 import {
   InMemoryAuthStorageBackend, McpOAuthCredentialStore, signInMcpServer,
 } from '@mkagent/coding-runtime/mcp-oauth';
-import { startOAuthMcpServer } from '../../../pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts';
+import { startOAuthMcpServer } from '../../../coding-runtime/test/fixtures/upstream/mcp-oauth-server.ts';
 import { McpAuthorization } from './authorization.ts';
 import { McpServerConnection } from './runtime.ts';
 

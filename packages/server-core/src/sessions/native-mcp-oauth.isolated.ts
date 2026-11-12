@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import type { ExtensionUIUpdate } from '@mkagent/shared/protocol'
-import { startOAuthMcpServer } from '../../../pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts'
+import { startOAuthMcpServer } from '../../../coding-runtime/test/fixtures/upstream/mcp-oauth-server.ts'
 import { startProviderMcpServer } from '../../../pi-agent-server/src/test-fixtures/mcp-provider-server.ts'
 
 test('product MCP login supports callbacks and pasted redirects, and cancels on stop, disconnect, and reload', async () => {

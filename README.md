@@ -117,7 +117,7 @@ packages/
   server-core/           RPC transport, sessions, and runtime orchestration
   server/                Headless server
   pi-agent-server/       Pi-durable agent subprocess
-  pi-durable-coding/     Coding capabilities and Pi plugin compatibility
+  coding-runtime/        Coding capabilities and Pi plugin compatibility
   session-tools-core/    Plans, Skills, browser, and session tools
 ```
 

@@ -3,7 +3,7 @@ import { rmSync } from 'node:fs';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { defineExtension } from '@earendil-works/pi-durable';
 import type { NativeSessionJournal } from '@mkagent/coding-runtime/durable';
-import { durableFixture } from '../../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture } from '../../../coding-runtime/test/fixtures/durable-harness.ts';
 import { DurableKernel } from '../kernel.ts';
 
 const [sessionPath, cwd, agentDir, mode] = process.argv.slice(2);

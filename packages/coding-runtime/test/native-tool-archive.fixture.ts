@@ -48,7 +48,7 @@ function evaluate(source: string, filename: string, dependencies: Record<string,
 // Load the actual SDK installer and host binding without following either import closure.
 const sdk = evaluate(await readFile(sdkPath, 'utf8'), sdkPath, modules);
 const adapterPath = await realpath(new URL('../src/native-search-tools.ts', import.meta.url));
-if (!adapterPath.endsWith('/packages/pi-durable-coding/src/native-search-tools.ts')) throw new Error('Unexpected host alias');
+if (!adapterPath.endsWith('/packages/coding-runtime/src/native-search-tools.ts')) throw new Error('Unexpected host alias');
 const adapter = evaluate(await readFile(adapterPath, 'utf8'), adapterPath, {
   '@earendil-works/pi-coding-agent': {
     ...sdk,

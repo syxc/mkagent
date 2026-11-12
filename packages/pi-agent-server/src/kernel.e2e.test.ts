@@ -277,7 +277,7 @@ describe('DurableKernel end-to-end', () => {
     const codingDir = join(dir, 'pi-agent');
     mkdirSync(codingDir);
     writeFileSync(join(codingDir, 'settings.json'), JSON.stringify({
-      extensions: [join(import.meta.dir, '../../pi-durable-coding/test/fixtures/upstream/hello.ts')],
+      extensions: [join(import.meta.dir, '../../coding-runtime/test/fixtures/upstream/hello.ts')],
     }));
     const env: NodeJS.ProcessEnv = { HOME: dir, USERPROFILE: dir, CONFIG_DIR: dir, TMPDIR: dir, XDG_CONFIG_HOME: dir, PI_CODING_AGENT_DIR: codingDir, PI_OFFLINE: '1' };
     if (process.env.PATH) env.PATH = process.env.PATH;

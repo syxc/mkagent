@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { defineExtension } from '@earendil-works/pi-durable';
-import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture, response } from '../../coding-runtime/test/fixtures/durable-harness.ts';
 import { DurableKernel } from './kernel.ts';
 import { createBuiltinTools } from './tools/builtin.ts';
 

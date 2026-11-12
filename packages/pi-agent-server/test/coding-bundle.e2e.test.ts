@@ -8,7 +8,7 @@ test('runs a standalone bundled coding subprocess with an unchanged Pi extension
   const directory = mkdtempSync(join(tmpdir(), 'coding-bundle-'));
   const agentDir = join(directory, 'agent');
   mkdirSync(agentDir);
-  copyFileSync(resolve(import.meta.dir, '../../pi-durable-coding/test/fixtures/upstream/hello.ts'), join(agentDir, 'hello.ts'));
+  copyFileSync(resolve(import.meta.dir, '../../coding-runtime/test/fixtures/upstream/hello.ts'), join(agentDir, 'hello.ts'));
   writeFileSync(join(agentDir, 'settings.json'), JSON.stringify({ extensions: ['./hello.ts'] }));
   writeFileSync(join(agentDir, 'mcp.json'), '{}');
   const artifact = join(directory, 'artifact');

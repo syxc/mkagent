@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "bun run scripts/build.ts",
-    "typecheck": "bun run --cwd ../pi-durable-coding build:types && tsc --noEmit -p tsconfig.typecheck.json",
+    "typecheck": "bun run --cwd ../coding-runtime build:types && tsc --noEmit -p tsconfig.typecheck.json",
     "validate": "bun run typecheck && bun run build"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 # Durable coding agent 迁移纠偏跟进
 
-依赖边界后续纠偏采用 `@mkagent/coding-runtime`，保留物理目录；SDK 持有 Core/AI 协议与插件模块实例，生产依赖由十八项收敛为七项。当前 SDK、产品和 worker 共 453 个不同测试通过，标准声明严格消费及授权来源审计通过，见[依赖边界验收](coding-validation.md#coding-runtime-dependency-ownership)。下文 F0 至 F6 及各切片回执保留原输入和历史范围。
+依赖边界后续纠偏采用 `@mkagent/coding-runtime`，目录同步为 `packages/coding-runtime`；SDK 持有 Core/AI 协议与插件模块实例，生产依赖由十八项收敛为七项。当前 SDK、产品和 worker 共 453 个不同测试通过，标准声明严格消费及授权来源审计通过，见[依赖边界验收](coding-validation.md#coding-runtime-dependency-ownership)。下文 F0 至 F6 及各切片回执保留原输入和历史范围。
 
 更新日期：2026-11-12。纠偏代码起点：`cb0311f`；工具切片已提交于 `62ed325`，请求切片已提交于 `456241a`，后续 SDK 接线状态见下文。`f4f9f26`、`8b1c98f` 及后续各批检查保留各自的功能证据，不能替代本次纠偏验收。
 

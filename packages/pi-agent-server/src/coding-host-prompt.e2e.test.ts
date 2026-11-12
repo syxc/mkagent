@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
 import { defineExtension } from '@earendil-works/pi-durable';
-import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture, response } from '../../coding-runtime/test/fixtures/durable-harness.ts';
 import { DurableKernel } from './kernel.ts';
 import { getProjectContextFilesPrompt } from '../../shared/src/prompts/system.ts';
 

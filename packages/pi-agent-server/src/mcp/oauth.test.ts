@@ -7,7 +7,7 @@ import { StreamableHttpTransport } from '@earendil-works/pi-mcp';
 import {
   FileAuthStorageBackend, InMemoryAuthStorageBackend, McpOAuthCredentialStore, McpSignInCancelledError, signInMcpServer,
 } from '@mkagent/coding-runtime/mcp-oauth';
-import { startOAuthMcpServer } from '../../../pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts';
+import { startOAuthMcpServer } from '../../../coding-runtime/test/fixtures/upstream/mcp-oauth-server.ts';
 import { closeMcpConnections, loadMcpTools } from './extension.ts';
 import { McpServerConnection } from './runtime.ts';
 import { validateMcpServerConfig } from './mcp-servers.ts';

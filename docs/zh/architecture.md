@@ -10,7 +10,7 @@ MkAgent 是一个 Bun monorepo，三种客户端共用同一套经过鉴权的 W
 
 Pi 已发布公开 API 与仓内 SDK 扩展须分开记账。`pi-agent-core` 的八个操作导出和 Agent 执行注入来自四文件仓内补丁，durable 的 `codingPrepare`、`codingStream`、`codingBoundary` 也来自仓内补丁。这些接点不能记为 Pi 已发布公开 API，必要性和升级成本仍须审查。独立测试可使用固定版本的原版 `pi-coding-agent` 包作为行为 oracle。
 
-根目录和 `packages/shared` 使用 `pi-ai 1.1.0`。`packages/pi-durable-coding` 与 `packages/pi-agent-server` 中的 Pi 依赖使用 `1.5.0`。这些是不同的依赖边界。
+根目录和 `packages/shared` 使用 `pi-ai 1.1.0`。`packages/coding-runtime` 与 `packages/pi-agent-server` 中的 Pi 依赖使用 `1.5.0`。这些是不同的依赖边界。
 
 ## 分层拓扑
 

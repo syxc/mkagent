@@ -102,7 +102,7 @@ packages/
   server-core/           RPC 传输、会话和运行时编排
   server/                Headless server
   pi-agent-server/       Pi-durable Agent 子进程
-  pi-durable-coding/     Coding 能力与 Pi 插件兼容
+  coding-runtime/        Coding 能力与 Pi 插件兼容
   session-tools-core/    计划、Skills、浏览器和会话工具
 ```
 

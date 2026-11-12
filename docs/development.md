@@ -39,7 +39,7 @@ packages/
   server-core/         # Transport, RPC, SessionManager, runtime
   server/              # Headless MKAGENT_SERVER_TOKEN server
   pi-agent-server/     # Pi-durable subprocess (Bun, JSONL on stdio)
-  pi-durable-coding/   # Coding capabilities and Pi plugin compatibility
+  coding-runtime/   # Coding capabilities and Pi plugin compatibility
   session-tools-core/  # Plan / Skill / mini LLM / browser / session info / list
 docs/                  # English-language documentation
 docs/zh/               # Chinese translation

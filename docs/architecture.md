@@ -10,7 +10,7 @@ The current normal profile uses durable's `GenerationTask`. The coding profile f
 
 Published Pi APIs and local SDK extensions must be tracked separately. `pi-agent-core` uses a four-file repository patch for eight operation exports and Agent execution injection. The durable `codingPrepare`, `codingStream`, and `codingBoundary` hooks also come from repository patches. These interfaces are not published Pi APIs. Their need and upgrade cost still require review. Independent tests can use a fixed original `pi-coding-agent` package as a behavior oracle.
 
-The root and `packages/shared` use `pi-ai 1.1.0`. The Pi dependencies in `packages/pi-durable-coding` and `packages/pi-agent-server` use `1.5.0`. These are separate dependency boundaries.
+The root and `packages/shared` use `pi-ai 1.1.0`. The Pi dependencies in `packages/coding-runtime` and `packages/pi-agent-server` use `1.5.0`. These are separate dependency boundaries.
 
 ## Layered topology
 

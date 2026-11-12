@@ -6,7 +6,7 @@ import { defineExtension, type ToolRegistration } from '@earendil-works/pi-durab
 import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
 import type { AssistantMessage } from '@earendil-works/pi-ai';
 import { createToolSearchExtension } from '@earendil-works/pi-durable/tool-search';
-import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture, response } from '../../coding-runtime/test/fixtures/durable-harness.ts';
 import { DurableKernel, type DurableKernelOptions } from './kernel.ts';
 import type { CodingHost } from './coding-host.ts';
 

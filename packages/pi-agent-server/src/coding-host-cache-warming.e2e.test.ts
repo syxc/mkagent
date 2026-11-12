@@ -6,7 +6,7 @@ import { defineExtension, type Conversation, type Harness } from '@earendil-work
 import { createAssistantMessageEventStream } from '@earendil-works/pi-ai';
 import { NativeSessionJournal } from '@mkagent/coding-runtime/durable';
 import type { UsageEntry } from '@mkagent/coding-runtime/native';
-import { CacheWarmer, durableFixture, response, SessionManager } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { CacheWarmer, durableFixture, response, SessionManager } from '../../coding-runtime/test/fixtures/durable-harness.ts';
 import { DurableKernel } from './kernel.ts';
 import type { CodingHost } from './coding-host.ts';
 

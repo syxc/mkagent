@@ -8,7 +8,7 @@ import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import type { TaskId } from '@earendil-works/pi-durable';
 import { DurableLoopBinding, NativeSessionJournal } from '@mkagent/coding-runtime/durable';
 import { createAgentSession, createHostResources, ModelRuntime } from '@mkagent/coding-runtime/native';
-import { durableFixture } from '../../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture } from '../../../coding-runtime/test/fixtures/durable-harness.ts';
 import { CodingMigrationDoc } from './coding-migration.ts';
 import { LegacyCodingAdoption } from './coding-recovery.ts';
 

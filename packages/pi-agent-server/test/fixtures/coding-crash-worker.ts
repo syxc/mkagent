@@ -10,7 +10,7 @@ import { createRegistry, defineExtension, Harness, type Storage } from '@earendi
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
 import { convertToLlm, type AgentSession } from '@mkagent/coding-runtime/native';
 import type { DurableLoopBinding, NativeSessionJournal } from '@mkagent/coding-runtime/durable';
-import { response } from '../../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { response } from '../../../coding-runtime/test/fixtures/durable-harness.ts';
 import { openDurableStorage } from '../../src/storage/durable-storage.ts';
 
 const [mode, directory, backend, point, variant] = process.argv.slice(2);

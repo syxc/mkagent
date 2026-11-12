@@ -1,6 +1,6 @@
 /** Retiring a native worker owner closes pending OAuth callbacks and rejects late UI replies. */
 import { expect, test } from 'bun:test';
-import { startOAuthMcpServer } from '../../../pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts';
+import { startOAuthMcpServer } from '../../../coding-runtime/test/fixtures/upstream/mcp-oauth-server.ts';
 import { withOAuthWorker } from '../test-fixtures/mcp-oauth-worker.ts';
 
 for (const retirement of ['reinit', 'release', 'shutdown'] as const) {

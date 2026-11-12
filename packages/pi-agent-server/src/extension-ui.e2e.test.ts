@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { defineExtension } from '@earendil-works/pi-durable';
-import { durableFixture } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture } from '../../coding-runtime/test/fixtures/durable-harness.ts';
 import { ExtensionUIHost, type ExtensionUIEvent } from './extension-ui.ts';
 import { DurableKernel } from './kernel.ts';
 import { createHostResources } from '@mkagent/coding-runtime/native';

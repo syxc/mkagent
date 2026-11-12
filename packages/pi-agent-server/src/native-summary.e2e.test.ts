@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { BACKGROUND_CONTEXT as context } from '@earendil-works/chord/context';
 import { defineExtension, type Harness, type TaskId } from '@earendil-works/pi-durable';
 import { DurableKernel } from './kernel.ts';
-import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
+import { durableFixture, response } from '../../coding-runtime/test/fixtures/durable-harness.ts';
 import type { NativeSessionJournal } from '@mkagent/coding-runtime/durable';
 import type { AgentSession } from '@mkagent/coding-runtime/native';
 

@@ -1,6 +1,6 @@
 # Pi-durable coding agent 实施计划
 
-依赖边界后续纠偏采用 `@mkagent/coding-runtime`，保留物理目录；SDK 持有 Core/AI 协议与插件模块实例，生产依赖由十八项收敛为七项。当前 SDK、产品和 worker 共 453 个不同测试通过，标准声明严格消费及授权来源审计通过，见[依赖边界验收](coding-validation.md#coding-runtime-dependency-ownership)。下文 F0 至 F6 及各切片回执保留原输入和历史范围。
+依赖边界后续纠偏采用 `@mkagent/coding-runtime`，目录同步为 `packages/coding-runtime`；SDK 持有 Core/AI 协议与插件模块实例，生产依赖由十八项收敛为七项。当前 SDK、产品和 worker 共 453 个不同测试通过，标准声明严格消费及授权来源审计通过，见[依赖边界验收](coding-validation.md#coding-runtime-dependency-ownership)。下文 F0 至 F6 及各切片回执保留原输入和历史范围。
 
 状态：本轮已完成公开 SDK 主链接线、能力替代与授权范围内的源码删除核对。真实 SDK 与六个产品 workspace 的冻结依赖树、恢复和完整 bundle 验证已通过；标准完整声明消费及独立复核也已通过。默认资源隔离原用例在用户明确授权单份任务临时夹具后通过七个原断言，最终独立复核通过，本轮 F6 限定范围验收完成；统一普通推送按既有授权执行，具体状态以[纠偏跟进](coding-follow-up.md)为准。2026-11-09 重新打开 F0 至 F6 的决定纠正了此前仅凭维护登记关闭任务的问题；旧失败、未验证平台和完整 workspace/空缓存安装限制继续保留，不能由过滤验收代替。运行时代码起点为 `cb0311f`；本文的既有提交、D0 至 D6 及后续批次账本保留原适用时点。
 
@@ -543,7 +543,7 @@ provider 凭据提交未包含显式包管理，后续进展见下一节。OAuth
 | 原生包管理与资源回归 | 修正后包管理 10 项测试、59 项断言通过。实际 AgentSession 和本地假 npm/git 覆盖安装、更新、移除、scope、拒绝未信任项目、设置写入失败、手动重试、两个 owner 顺序写入、部分失败的关闭等待和独立 JSON 协议进程的 stdout/stderr。资源用例同时包含在下方完整 coding 包回归中。 |
 | 发现阶段的负向证据 | 新 git fixture 首次使用单段仓库路径，固定 parser 拒绝后未执行 clone；公开 parser 复现后改为有效 owner/repo。另三处旧 skip 用例也改用有效 URL，并加禁止 subprocess 的断言，确保缺包策略实际受到测试。 |
 | 真实产品入口 | 项目信任产品用例加入含空格本地 package 的安装、插件命令执行、移除卸载和未信任项目拒绝。真实 SessionManager、PiAgent 与重新构建的 bundled worker 共 1 项测试、32 项断言通过，模型请求为 0；移除后仍保留原本的本地源目录。 |
-| 完整 coding 包回归 | 修正后重新运行整个 `packages/pi-durable-coding`，229 项测试、1429 项断言通过。未运行全仓 `bun run test`。 |
+| 完整 coding 包回归 | 修正后重新运行整个 `packages/coding-runtime`，229 项测试、1429 项断言通过。未运行全仓 `bun run test`。 |
 | 既有产品回归 | MCP OAuth 和 provider 用例 1 项测试、42 项断言，以及原样上游插件用例 1 项测试、65 项断言，均重新运行并通过。 |
 | 必需检查 | 修正后 `validate:ci`、两套固定生成检查及隔离 Craft 来源审计均重新运行并通过；来源审计覆盖 2126 份文件，lint 为 0 错误、107 项既有警告，中英文标点及 diff 检查通过。 |
 | 独立复核与修正 | 只读复核提出两项：原生 `Promise.all` 提前拒绝会遗留正在运行的更新任务；旧 settings 快照会覆盖另一 owner 的顺序保存，或让失败写入的手动重试误报成功。四个用例均先在未修正实现上失败，再在修正后通过。宿主在每次操作前刷新快照，生成转换在两层并发入口等待所有已启动任务结束后再传播失败。 |

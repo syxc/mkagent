@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 test('legacy classes and SDK helpers keep structural consumers and declaration output', () => {
   const repo = resolve(import.meta.dir, '../../..');
-  const coding = join(repo, 'packages/pi-durable-coding');
+  const coding = join(repo, 'packages/coding-runtime');
   const directory = mkdtempSync(join(tmpdir(), 'shared-compat-types-'));
   const consumer = join(directory, 'consumer.ts');
   const originalRead = ts.sys.readFile;
