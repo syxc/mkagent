@@ -1,4 +1,4 @@
-# Content SHA-256: 0a6936186cef804c7624be839dc1ce17527bfc44964fae9e9a493b012130bb83
+# Content SHA-256: a4e975998b34173102e5f62ba1abbd8bc6686b3cad2b06f892304d935c12da48
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
@@ -3630,6 +3630,15 @@ diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
              retry: this.settingsManager.getRetrySettings(),
              sessionId: this.sessionId,
          });
+@@ -3651,4 +3705,7 @@ export class AgentSession {
+         return this._extensionRunner;
+     }
+ }
++export const applySessionBoundaryDrafts = AgentSession.prototype._applyBoundaryDrafts;
++export const buildSessionBoundaryContext = AgentSession.prototype._buildBoundaryContext;
++export const replaceSessionMessageInPlace = AgentSession.prototype._replaceMessageInPlace;
+ //# sourceMappingURL=agent-session.js.map
+\ No newline at end of file
 diff --git a/dist/core/extensions/runner.js b/dist/core/extensions/runner.js
 --- a/dist/core/extensions/runner.js
 +++ b/dist/core/extensions/runner.js
@@ -4089,7 +4098,7 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
 +import type { createAllToolDefinitions } from "./tools/index.ts";
 +import type { createLocalBashOperations } from "./tools/bash.ts";
 +import type { AssistantMessage } from "@earendil-works/pi-ai/compat";
-+import type { AgentActivityOutcome } from "./extensions/types.ts";
++import type { AgentActivityOutcome, SessionBoundaryDraft } from "./extensions/types.ts";
 +import type { BeforeAgentStartTrigger } from "./extensions/runner.ts";
 +import type { BashExecutionMessage } from "./messages.ts";
 +import type { BuildSystemPromptOptions, NormalizedBuildSystemPromptOptions, SystemPromptSections } from "./system-prompt.ts";
@@ -4292,6 +4301,45 @@ diff --git a/dist/core/agent-session.d.ts b/dist/core/agent-session.d.ts
      /**
       * Set a display name for the current session.
       */
+@@ -937,4 +972,37 @@ export declare class AgentSession {
+     get extensionRunner(): ExtensionRunner;
+ }
+ export {};
++
++/** The manager operations used by the original method; entries retain the host's own type. */
++export type SessionBoundaryDraftManager<Entry extends object> = Pick<SessionManager,
++    "appendCustomEntry" | "appendCustomMessageEntry" | "appendContextEdit" | "appendCompaction"
++    | "buildSessionProjection" | "getBranch"> & {
++    getEntry(id: string): Entry | undefined;
++};
++type SessionBoundaryProjection = Pick<ReturnType<SessionManager["buildSessionProjection"]>, "entries" | "messages">;
++/** Structural receiver for the patched method, including its configured conversion hook. */
++export interface SessionBoundaryContextHost<Projection extends SessionBoundaryProjection, Pending> {
++    _createBoundaryPreviewManager(drafts: SessionBoundaryDraft[]): {
++        buildSessionProjection(): Projection;
++    };
++    _getPendingBoundaryMessages(): Pending;
++    _pendingCustomMessages: { readonly length: number };
++    _convertToLlm: typeof convertToLlm;
++    agent: Pick<Agent, "hasQueuedMessages">;
++}
++export declare const applySessionBoundaryDrafts: <Entry extends object>(
++    manager: SessionBoundaryDraftManager<Entry>, drafts: SessionBoundaryDraft[],
++) => Entry[];
++export declare const buildSessionBoundaryContext: <Projection extends SessionBoundaryProjection, Pending>(
++    this: SessionBoundaryContextHost<Projection, Pending>, drafts: SessionBoundaryDraft[],
++    boundary: "turn_end" | "agent_before_settle",
++) => {
++    contextEntries: Projection["entries"];
++    contextMessages: Projection["messages"];
++    llmMessages: ReturnType<typeof convertToLlm>;
++    pendingMessages: Pending;
++    canContinue: boolean;
++};
++/** Preserve identity and the patched SDK's host-message metadata rules. */
++export declare const replaceSessionMessageInPlace: (target: object, replacement: object) => void;
+ //# sourceMappingURL=agent-session.d.ts.map
+\ No newline at end of file
 diff --git a/dist/core/extensions/runner.d.ts b/dist/core/extensions/runner.d.ts
 --- a/dist/core/extensions/runner.d.ts
 +++ b/dist/core/extensions/runner.d.ts

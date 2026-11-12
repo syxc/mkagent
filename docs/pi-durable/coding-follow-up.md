@@ -34,6 +34,8 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 每项改动完成必要验证后再处理下一项。历史未验证平台不自动扩展为本批工作，也不能用于豁免已经确认缺失的必需功能。
 
+`59ce159` 后，同步上下文与边界草稿改用 SDK 原函数和原 AgentSession 方法值，删除两份生产副本、171 行及生成 selection。durable 四个根出口和 Coding 三个根 alias 均属于仓内补丁；不复制算法，不改原 class 正文。标准生成与 pristine 重放覆盖 durable 35 项、Coding 94 项；结构声明、实际 durable 裸入口及 Coding 原方法值的纯数据验证通过。完整源码和两份新测试在三个候选 SDK 声明的只读 overlay 下零诊断；这不替代真实安装、新 Coding 根入口运行、完整声明及产品恢复验收。UPSTREAM 只登记六份官方 fixture，详见[上下文与边界委托验证](coding-validation.md#sdk-context-and-boundary-delegation-after-59ce159)。
+
 `781a106` 后，资源入口直接构造公开 SDK DefaultPackageManager，并保留 `.pi`、只读 settings、信任、默认 HOME skills 与主动跳过诊断策略；首版接线的两项回归均已先复现再修正，十五项、45 个断言通过。无覆盖的 legacy ModelRegistry 子类和构造函数也已删除，直接复用 SDK 同一值并保留结构类型；模型、声明消费八项、26 个断言及 122 根、2024 文件源码检查通过。未新增依赖或 SDK 补丁，见[资源与注册表接线验证](coding-validation.md#sdk-resource-and-registry-bindings-after-781a106)。
 
 `000b628` 后补齐 Native 模型桥的 SDK 返回契约：宿主刷新结束并更新扩展快照后，返回原 `ModelsRefreshResult`，保留取消标志、错误 Map 和 options。新回归先复现返回 undefined，再验证修复；模型组七项、22 个断言通过。SDK `ModelRuntime.bind` 的异步初始化、凭据依赖和独立集合与既有同步宿主桥不同，现有 facade 和 provider composition 已使用 SDK，保留该必要桥及公开导出，见[模型刷新返回验证](coding-validation.md#host-model-refresh-result-after-000b628)。

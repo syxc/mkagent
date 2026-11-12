@@ -273,7 +273,7 @@
     {
       "path": "dist/core/agent-session.js",
       "originalSha256": "1941d9608c98a3638825a8d10b5443ff7c06f96b3ae370bb37269f3a574ede65",
-      "sha256": "192c16b7bb526850cdd71411bf0274e44635f6e0553c6a0e5b9da230838c83c4"
+      "sha256": "01fe73684c4c776c8d96f4038b28697d9e6870a45b123419e4d5ac458b95f3e4"
     },
     {
       "path": "dist/core/extensions/runner.js",
@@ -318,7 +318,7 @@
     {
       "path": "dist/core/agent-session.d.ts",
       "originalSha256": "e5015c005e6bcac65471b2f6e4fb634763896935482b61c47a9f90eeab30a128",
-      "sha256": "0a491af3d01542d8e89111c529a75a48ca9942c6f5c9fc6323007ca6aee27992"
+      "sha256": "36005e633a1d1fb9a75cd410c77481360ed1a8a34a2c617ebdf907a0c65b157f"
     },
     {
       "path": "dist/core/extensions/runner.d.ts",

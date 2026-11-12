@@ -104,12 +104,12 @@
     {
       "path": "dist/index.d.ts",
       "originalSha256": "1f3ce1b8789b6257c6e50b9ac8db4f18c6bcc51461da2bb4d51350040cf9c5fa",
-      "sha256": "730a129fbb94bf1ea6c89ee18eafa6fc1a14d09e26285803f8eb2b84e39ad548"
+      "sha256": "df309e51d68d77951691098e6a3a25af6f66fb4a20360eb141a529b6f8d0d6e3"
     },
     {
       "path": "dist/index.js",
       "originalSha256": "5ca348ed464ecc7f1017f8a988bda277621d33b9591cf9c8f385a2fa3d331318",
-      "sha256": "e2beb7be6c99a3ab1ef9a235b564cc0a220f5fb5303958257ee68ad2e3d1be23"
+      "sha256": "11378752229a5d49c50137b297b54f2ab1a8c3a54dea5aebcb685b286631e2bf"
     },
     {
       "path": "dist/search.d.ts",
@@ -175,6 +175,16 @@
       "path": "codemode-worker.d.ts",
       "originalSha256": null,
       "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881"
+    },
+    {
+      "path": "dist/harness/context.js",
+      "originalSha256": "cf610240426976d92453f1c7aced3351a1a0b4469a4897acb1cdeb5f43890169",
+      "sha256": "a69ea2a084006c9952c6a51cc6d329c844f1736b64098961569744a7bad63db4"
+    },
+    {
+      "path": "dist/harness/context.d.ts",
+      "originalSha256": "2373ab9d2bba5476e886b6b024d1a5bfdd66f9cc91bd7a8cd0f25a7496b65716",
+      "sha256": "56c2bc1647e2c436f1c8fee15b807e251fcc9aa7790d6d40eddf8d5918fdea57"
     }
   ],
   "policy": "One durable scheduler. Native response delivery, SDK receipt, journal, and next checkpoint commit together. Interrupted requests are not repeated."

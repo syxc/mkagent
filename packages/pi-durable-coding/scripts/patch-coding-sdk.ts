@@ -25,6 +25,58 @@ import { codingMcpOAuthPolicy } from './coding-mcp-oauth-policy.ts';
 import { codingManagementHttpPolicy, codingToolsManagerPolicy } from './coding-tools-manager-policy.ts';
 import { codingMcpRuntimePolicy } from './coding-mcp-runtime-policy.ts';
 
+/** Export method values without wrapping or changing AgentSession's instance calls. */
+function codingBoundaryExports(source: string, declarations: boolean): string {
+  const marker = '//# sourceMappingURL=';
+  if (source.split(marker).length !== 2) throw new Error('Published AgentSession source map marker changed');
+  if (!declarations) {
+    return source.replace(marker,
+      'export const applySessionBoundaryDrafts = AgentSession.prototype._applyBoundaryDrafts;\n'
+      + 'export const buildSessionBoundaryContext = AgentSession.prototype._buildBoundaryContext;\n'
+      + 'export const replaceSessionMessageInPlace = AgentSession.prototype._replaceMessageInPlace;\n'
+      + marker);
+  }
+  const before = 'import type { AgentActivityOutcome } from "./extensions/types.ts";';
+  if (source.split(before).length !== 2) throw new Error('AgentSession boundary type import changed');
+  return source.replace(before, 'import type { AgentActivityOutcome, SessionBoundaryDraft } from "./extensions/types.ts";')
+    .replace(marker, boundaryDeclarations + marker);
+}
+
+const boundaryDeclarations = `
+/** The manager operations used by the original method; entries retain the host's own type. */
+export type SessionBoundaryDraftManager<Entry extends object> = Pick<SessionManager,
+    "appendCustomEntry" | "appendCustomMessageEntry" | "appendContextEdit" | "appendCompaction"
+    | "buildSessionProjection" | "getBranch"> & {
+    getEntry(id: string): Entry | undefined;
+};
+type SessionBoundaryProjection = Pick<ReturnType<SessionManager["buildSessionProjection"]>, "entries" | "messages">;
+/** Structural receiver for the patched method, including its configured conversion hook. */
+export interface SessionBoundaryContextHost<Projection extends SessionBoundaryProjection, Pending> {
+    _createBoundaryPreviewManager(drafts: SessionBoundaryDraft[]): {
+        buildSessionProjection(): Projection;
+    };
+    _getPendingBoundaryMessages(): Pending;
+    _pendingCustomMessages: { readonly length: number };
+    _convertToLlm: typeof convertToLlm;
+    agent: Pick<Agent, "hasQueuedMessages">;
+}
+export declare const applySessionBoundaryDrafts: <Entry extends object>(
+    manager: SessionBoundaryDraftManager<Entry>, drafts: SessionBoundaryDraft[],
+) => Entry[];
+export declare const buildSessionBoundaryContext: <Projection extends SessionBoundaryProjection, Pending>(
+    this: SessionBoundaryContextHost<Projection, Pending>, drafts: SessionBoundaryDraft[],
+    boundary: "turn_end" | "agent_before_settle",
+) => {
+    contextEntries: Projection["entries"];
+    contextMessages: Projection["messages"];
+    llmMessages: ReturnType<typeof convertToLlm>;
+    pendingMessages: Pending;
+    canContinue: boolean;
+};
+/** Preserve identity and the patched SDK's host-message metadata rules. */
+export declare const replaceSessionMessageInPlace: (target: object, replacement: object) => void;
+`;
+
 const [published, mode] = process.argv.slice(2);
 if (!published || !['--write', '--check'].includes(mode!)) {
   throw new Error('Usage: bun patch-coding-sdk.ts /pristine-coding-sdk --write|--check');
@@ -283,7 +335,7 @@ for (const suffix of ['js', 'd.ts']) {
   const runtimePath = `dist/core/model-runtime.${suffix}`;
   outputs.set(runtimePath, codingModelRuntimePolicy(readFileSync(join(baseline, runtimePath), 'utf8'), suffix === 'd.ts'));
   const agentSessionPath = `dist/core/agent-session.${suffix}`;
-  outputs.set(agentSessionPath, codingAgentSessionPolicy(readFileSync(join(baseline, agentSessionPath), 'utf8'), suffix === 'd.ts'));
+  outputs.set(agentSessionPath, codingBoundaryExports(codingAgentSessionPolicy(readFileSync(join(baseline, agentSessionPath), 'utf8'), suffix === 'd.ts'), suffix === 'd.ts'));
   const runnerPath = `dist/core/extensions/runner.${suffix}`;
   outputs.set(runnerPath, codingRunnerPolicy(readFileSync(join(baseline, runnerPath), 'utf8'), suffix === 'd.ts'));
   const toolPath = `dist/core/tools/tool-definition-wrapper.${suffix}`;

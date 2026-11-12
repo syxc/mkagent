@@ -26,6 +26,96 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK context and boundary delegation after 59ce159
+
+The working candidate removes the two remaining production selections from
+`UPSTREAM.json`: `src/upstream/durable/context.js` and
+`src/upstream/core/boundary-drafts.js`. Both files and their generation rules
+are deleted. `vendor-upstream.ts` now copies six official fixtures and writes
+compatibility forwards. It does not extract production algorithms.
+
+`durable-projection.ts` calls the durable root exports `findBaseline`,
+`leadWithSystem`, `contribute` and `orderToolResults`. The SDK patch only
+exports the existing functions. Their bodies remain unchanged. The public
+head parameter requires `id`; contribution requires `model` and retains a
+readonly result. The host still converts messages before SDK projection.
+
+The Coding SDK patch exports three values from the existing AgentSession
+prototype: `applySessionBoundaryDrafts`, `buildSessionBoundaryContext` and
+`replaceSessionMessageInPlace`. This change leaves the already patched class
+body unchanged. Structural declarations preserve manager entry metadata and
+Projection/Pending types. SessionView retains its existing JavaScript draft
+boundary. NativeRuntime supplies the host converter to the SDK preview.
+
+The SDK replacement method preserves the target's accepted `hostMessageId`
+and defined `hostUserInput`. Replacement-only identity fields are removed.
+The retired local helper did not provide this protection. The candidate uses
+the SDK rule to preserve accepted input identity.
+
+The standard durable generator now recovers `generation.ts` from the published
+`generation.js.map`. It checks the pinned source SHA and the original compiled
+JS before generation. The standard command accepts installed and pristine
+SDK directories; it needs no Pi checkout or separate context-only mode.
+
+| Check | Result and scope |
+|---|---|
+| Durable canonical generation | Standard full write and check cover 35 outputs; pristine replay and all hashes pass. |
+| Coding canonical generation | Standard full write and check cover 94 outputs; old/new pristine replay and all hashes pass. Only agent-session JS and d.ts change; the other 92 outputs remain identical. |
+| Durable declaration consumer | TypeScript 5.9.3, strict true and skipLibCheck false: 1,153 files, zero diagnostics, four rejected input or mutation cases. The compiler reads one candidate context declaration over the actual installed SDK declaration. No installed file changes. |
+| Durable runtime values | Actual bare root import from the partial official Bun installation: three tests, 19 assertions pass for baseline selection, excluded responses, message identity, tool-result order and deep freezing. |
+| Repository durable test | One test, six assertions pass against that same installed SDK component. It also receives source type checking below. |
+| Coding declaration consumer | Strict true, skipLibCheck true: structural and generic consumers pass. Removing expect-error comments produces six actual errors at the invalid inputs. |
+| Coding runtime method values | Three tests, ten assertions pass using the unchanged installed AgentSession prototype values: stored entry identity, accepted and forged host metadata, converter binding and pending identity. New root alias loading remains open. |
+| Source and new tests | All 120 source roots plus the two new test files compile: 2,025 files, zero diagnostics and zero protected read requests. The check retains project skipLibCheck true and reads three candidate SDK declarations through CompilerHost overlays. It does not update node_modules. |
+
+The first source check of the new tests found a missing system-message timestamp
+and an expect matcher whose expected value could be undefined. The fixture now
+includes the timestamp and compares the stored result with the returned entry.
+The corrected source and test check passes. These were test typing errors.
+
+Evidence is under
+`/private/tmp/mkagent-native-acceptance-ALoFEM/final-integration-ym34k041`
+and `/private/tmp/mkagent-native-acceptance-ALoFEM/boundary-sdk-qTVuDm`.
+The latter records full replay and consumer diagnostics. The former records
+standard durable generation, runtime checks and
+`source-sdk-and-tests-fixed-candidate`.
+
+Complete workspace installation, full Native declarations, the new Coding
+root exports at runtime and the affected product/recovery gates remain open.
+The separate SDK artifact cannot resolve all dependencies in its location;
+root loading reports chalk, AgentSession reports yaml, and complete library
+checking reports pi-codemode resolution and guarded provider JSON requests.
+No dependency, alias or package link was added to make those checks pass.
+
+The task sandbox also copied the specifically authorized published SDK 1.5.0
+schema into its versioned cache path: 20,473 bytes, SHA-256
+`14fc87e12965bfb86b7f447af67a15d44a15490200137db663e1ea8ea0c2591a`.
+This proves the cache-path exception works. It does not identify Bun's failed
+temporary extraction path. The one-file probe directory was moved out of the
+Bun install cache after the check. Access to the four other packages' settings
+files remains unapproved.
+
+Independent source review confirmed no production defect in this slice. After
+removing only the new exports, the two artifact JS files match the existing SDK
+bytes; the added declarations preserve the existing declarations. The reviewer
+also checked receiver fields, readonly types, input identity, manifest hashes
+and both protected-target skips. An initial finding concerned the old v2 test
+receipt. A separate final run records four tests and 16 assertions, with both
+source hashes matching the current repository tests. The reviewer checked the
+new receipt and closed that finding without changing the old evidence. The
+final standard durable check also confirms all 35 outputs. The overall verdict
+remains partial because the installation and entry/runtime gates above remain
+open.
+
+A separate static review checked all six remaining src/pi entries and their
+generation rules. They are SDK forwards, host loader/namespace combinations,
+the public pi-ai compat TypeBox binding, or the durable worker import. The
+Coding package exposes only root and rpc-entry paths; the relevant extension
+root/loader/runner/types declarations expose no VIRTUAL_MODULES or internal
+pi-ai view. The small host namespace table remains a routing adapter. This
+review did not run product or plugin tests. All six fixture hashes and ten
+runtime manifest hashes match; the three changed generators parse successfully.
+
 ## SDK resource and registry bindings after 781a106
 
 Resource package resolution now constructs the public SDK `DefaultPackageManager`

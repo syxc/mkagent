@@ -1,9 +1,8 @@
 /** Preserve durable context selection while Pi supplies synchronous entry previews. */
 import type { Message } from '@earendil-works/pi-ai';
-import type { EntryRecord } from '@earendil-works/pi-durable';
+import { contribute, findBaseline, leadWithSystem, orderToolResults, type EntryRecord } from '@earendil-works/pi-durable';
 import type { CodingEntry } from './session-view.ts';
 import { convertToLlm } from './upstream/core/messages.js';
-import { contribute, findBaseline, leadWithSystem, orderToolResults } from './upstream/durable/context.js';
 
 interface ProjectedEntry { sourceEntry: CodingEntry; messages: unknown[] }
 
@@ -40,7 +39,7 @@ export function finalizeDurableProjection(
     const kept: unknown[] = [];
     for (const message of entry.messages) {
       const converted: Message[] = convertToLlm([message]);
-      const visible: Message[] = contribute({ model: converted }, undefined);
+      const visible = contribute({ model: converted }, undefined);
       if (!visible.length) continue;
       kept.push(message);
       for (const llm of visible) {

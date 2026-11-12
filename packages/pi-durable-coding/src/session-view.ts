@@ -4,8 +4,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { copyJson } from '@earendil-works/chord';
 import type { EntryId } from '@earendil-works/pi-durable';
 import type { CodingEntryDraft } from './entry-batch.ts';
-import { _applyBoundaryDrafts } from './upstream/core/boundary-drafts.js';
-import { estimateProjectedContextTokens } from '@earendil-works/pi-coding-agent';
+import { applySessionBoundaryDrafts, estimateProjectedContextTokens } from '@earendil-works/pi-coding-agent';
 
 export interface CodingEntry {
   type: string;
@@ -108,7 +107,8 @@ export class CodingSessionView {
     const manager = SessionManager.inMemory(this.store.cwd, undefined, [
       this.current.getHeader(), ...this.current.getBranch(),
     ]);
-    const entries: CodingEntry[] = _applyBoundaryDrafts(manager, drafts);
+    // Keep the existing JavaScript draft boundary while sharing the SDK implementation.
+    const entries: CodingEntry[] = Reflect.apply(applySessionBoundaryDrafts, undefined, [manager, drafts]);
     return { manager, entries };
   }
 

@@ -1,4 +1,4 @@
-# Content SHA-256: c9bfcb49c10e04c68e18a078370bec558d0e45856b2feff9933fa99a71db6f95
+# Content SHA-256: 2dffe4b923a4b21f1ca90624d01a2b676a9fe2d569a220714191071b3b7094b2
 diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
 index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
 --- a/dist/codemode/codemode.d.ts
@@ -1680,9 +1680,11 @@ index 10964639c9ac7e6c74b4023185a6deb9846a50b4..105d0a655ee4cc068472952eb292381e
 diff --git a/dist/index.d.ts b/dist/index.d.ts
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
-@@ -5,7 +5,7 @@ export { ConversationBusy, ConversationIdle, ReadAfterWrite, ReadOnlySession, Se
+@@ -4,8 +4,9 @@
+ export { ConversationBusy, ConversationIdle, ReadAfterWrite, ReadOnlySession, SessionFailed, StorageRequestError, } from "./errors.ts";
  export { AgentDoc, configure, DEFAULT_COMPACTION_POLICY, DEFAULT_PROGRESS_POLICY, DEFAULT_RESTART_LIMIT, DEFAULT_RETRY_POLICY, } from "./harness/agent.ts";
  export { type CompactionCheckpoint, type CompactionInput, CompactionTask, type SummaryRequest, } from "./harness/compaction.ts";
++export { findBaseline, leadWithSystem, contribute, orderToolResults } from "./harness/context.ts";
  export { defineExtension, defineTool, hook, runEndTask, section, wrapSection, wrapTool } from "./harness/define.ts";
 -export { type GenerationCheckpoint, type GenerationInput, type GenerationResult, GenerationTask, } from "./harness/generation.ts";
 +export { type GenerationCheckpoint, type GenerationInput, type GenerationResult, GenerationTask, type GenerationResponseInput, type GenerationResponseCheckpoint, type GenerationResponseResult, GenerationResponseTask, } from "./harness/generation.ts";
@@ -1692,9 +1694,11 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -4,7 +4,7 @@ export { ConversationBusy, ConversationIdle, ReadAfterWrite, ReadOnlySession, Se
+@@ -3,8 +3,9 @@
+ export { ConversationBusy, ConversationIdle, ReadAfterWrite, ReadOnlySession, SessionFailed, StorageRequestError, } from "./errors.js";
  export { AgentDoc, configure, DEFAULT_COMPACTION_POLICY, DEFAULT_PROGRESS_POLICY, DEFAULT_RESTART_LIMIT, DEFAULT_RETRY_POLICY, } from "./harness/agent.js";
  export { CompactionTask, } from "./harness/compaction.js";
++export { findBaseline, leadWithSystem, contribute, orderToolResults } from "./harness/context.js";
  export { defineExtension, defineTool, hook, runEndTask, section, wrapSection, wrapTool } from "./harness/define.js";
 -export { GenerationTask, } from "./harness/generation.js";
 +export { GenerationTask, GenerationResponseTask, } from "./harness/generation.js";
@@ -1883,3 +1887,55 @@ index 0000000..cb0ff5c
 +++ b/codemode-worker.d.ts
 @@ -0,0 +1 @@
 +export {};
+diff --git a/dist/harness/context.js b/dist/harness/context.js
+--- a/dist/harness/context.js
++++ b/dist/harness/context.js
+@@ -172,7 +172,7 @@
+  * message before, which holds unless an earlier entry carries one, even if an edit omits it later. An edit that targets
+  * the baseline contributes other messages, or none, so none leads; a later entry does not take its place.
+  */
+-function findBaseline(head, entries) {
++export function findBaseline(head, entries) {
+     for (const entry of entries) {
+         if (head !== undefined && entry.id <= head.id)
+             continue;
+@@ -198,7 +198,7 @@
+  * system messages in order gives the same sections and tools. Any other system message, before an assistant message,
+  * stays where it was committed: moving it would change what it means to the model.
+  */
+-function leadWithSystem(messages, baseline) {
++export function leadWithSystem(messages, baseline) {
+     const index = messages.findIndex((message) => message.role === "system");
+     if (index <= 0)
+         return messages;
+@@ -209,7 +209,7 @@
+     return [system, ...messages.slice(0, index), ...messages.slice(index + 1)];
+ }
+ /** One active entry's model messages after its edit and excluded stop reasons, before tool result ordering. */
+-function contribute(entry, edit) {
++export function contribute(entry, edit) {
+     if (edit?.action === "omit")
+         return Object.freeze([]);
+     const contributed = edit?.action === "replace" ? edit.messages : (entry.model ?? []);
+diff --git a/dist/harness/context.d.ts b/dist/harness/context.d.ts
+--- a/dist/harness/context.d.ts
++++ b/dist/harness/context.d.ts
+@@ -1,7 +1,7 @@
+ import type { Context } from "@earendil-works/chord";
+ import type { Message } from "@earendil-works/pi-ai";
+ import type { SessionImpl } from "../session/session.ts";
+-import type { ConversationId, EntryId, EntryRecord, Storage } from "../types.ts";
++import type { ContextEdit, ConversationId, EntryId, EntryRecord, Storage } from "../types.ts";
+ import type { ContextView } from "./types.ts";
+ /** Head marker and newest visible entry that fix one committed context range. */
+ export type ContextBounds = {
+@@ -80,5 +80,8 @@
+  * the next assistant; a missing result is synthesized and unmatched results are dropped.
+  */
+ export declare function orderToolResults(messages: readonly Message[]): Message[];
++export declare function findBaseline(head: Pick<NonNullable<ContextBounds["head"]>, "id"> | undefined, entries: readonly EntryRecord[]): Baseline;
++export declare function leadWithSystem(messages: Message[], baseline: Baseline): Message[];
++export declare function contribute(entry: Pick<EntryRecord, "model">, edit: ContextEdit | undefined): readonly Message[];
+ export {};
+ //# sourceMappingURL=context.d.ts.map
+\ No newline at end of file

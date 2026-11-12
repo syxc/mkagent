@@ -120,7 +120,11 @@ Native 缩放核心保留在[缩放适配](../../packages/pi-durable-coding/src/
 
 Native Photon 入口直接使用[共享加载适配](../../packages/pi-durable-coding/src/compat/photon.ts)，通过公开 `initSync` 初始化同一包实例，不再替换全局 `fs.readFileSync`。生产清单统一为 `@silvia-odwyer/photon@0.3.3`，旧 Node 包仅用于开发测试中的原版对照。构建脚本只选择 `photon_rs_bg.wasm`，并清除旧构建留下的专用 WASM。旧 Photon 转发及其声明生成规则已退出闭包并删除。Node 搬迁包和 Bun 独立可执行文件已通过单资源及缺失资源检查，完整产品发布与终端注册仍未重验，具体范围见[验证记录](coding-validation.md)。
 
-规范 durable 补丁现在包含 33 个文件，首行记录后续正文按 LF 换行计算的完整 SHA-256。更新补丁时须同步摘要；回归用例检查两者一致，以免复用旧 Bun 缓存产物。[完整生成器](../../packages/pi-durable-coding/scripts/patch-generation-response.ts)重建 generation、根导出及 codemode 公开入口，保留其余补丁段，并对 pristine 副本执行完整 `git apply --check`、实际重放及全部 33 个输出核对。`DURABLE-PATCH.json` 记录全部文件的原始和目标哈希，新增文件的原始哈希为 null。helper 收窄后的两个既有安装经冻结刷新，28 份 durable 和 38 份 Coding 产物符合清单，4 份 core 产物在两处一致，lock 未变；此前 30 份输出的全新消费者证据保留原时点，见验证记录。
+同步上下文投影现从 durable 根入口使用 findBaseline、leadWithSystem、contribute 和 orderToolResults，原同步算法副本及生成 selection 已删除。仓内补丁只公开原函数，算法正文保持；head 与 contribution 的声明只要求原函数实际读取的 id、model 字段，并保留 readonly 返回值。Native 仍在外层转换消息，SDK 继续决定 baseline、排除响应、工具结果顺序及冻结语义。
+
+边界草稿和 preview 现使用 Coding SDK 的 applySessionBoundaryDrafts、buildSessionBoundaryContext，原位消息替换使用 replaceSessionMessageInPlace。这三个新增根 alias 直接引用 AgentSession 原 prototype 方法值，本次不改已登记的 class 正文。原本地边界副本及生成 selection 已删除；宿主只绑定 manager、pending 消息和 converter。SDK 原替换方法保留目标已有 hostMessageId、hostUserInput，并清理 replacement 伪造的身份字段，沿用已接受输入身份的目标。结构声明保留 getEntry 的附加 metadata 及 Projection、Pending 类型；Native 公开边界的未知 JavaScript drafts 沿既有路径交给 SDK。
+
+规范 durable 补丁现在包含 35 个文件，首行记录后续正文按 LF 换行计算的完整 SHA-256。更新补丁时须同步摘要；回归用例检查两者一致，以免复用旧 Bun 缓存产物。[完整生成器](../../packages/pi-durable-coding/scripts/patch-generation-response.ts)从固定发布包 generation.js.map 恢复原源码，校对固定 source SHA 和原编译 JS，重建 generation、同步上下文出口、根导出及 codemode 公开入口，保留其余补丁段；随后对 pristine 副本执行完整 `git apply --check`、实际重放及全部 35 个输出核对。`DURABLE-PATCH.json` 记录全部文件的原始和目标哈希，新增文件的原始哈希为 null。历史 helper 收窄时两个既有安装经冻结刷新，28 份 durable 和 38 份 Coding 产物符合当时清单，4 份 core 产物在两处一致，lock 未变；此前 30 份输出的全新消费者证据保留原时点，见验证记录。
 
 Native 图像 MIME 识别通过[类型适配](../../packages/pi-durable-coding/src/compat/image-mime.ts)共用 durable 的既有头部解析算法。适配仅保留未识别时的 `null` 和文件前 4100 字节的读取窗口，完整文件读取器的 APNG 扫描范围与原生入口不同，因此继续使用内核的字节检测函数。生成器现直接路由至此适配，删除两行多余转发、专用转换及其生成断言；适配正文和公开函数身份保持，见[MIME 验证](coding-validation.md#mime-forwarding-retirement-after-4051994)。私有剪贴板图片读取入口已在后续宿主残留清理中删除。
 

@@ -1,9 +1,8 @@
-/** Reproduce the pinned Pi source port without importing the upstream package. */
+/** Reproduce pinned Pi fixtures and host compatibility forwards. */
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
-import { codingSDKImport } from './coding-sdk-imports.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const checkout = process.argv[2];
@@ -16,7 +15,6 @@ if (git.exitCode || git.stdout.toString().trim() !== revision) {
 const dirty = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--', 'packages/coding-agent/src', 'packages/coding-agent/examples', 'packages/coding-agent/test/suite/mcp-oauth-server.ts', 'packages/durable/src/harness/context.ts', 'LICENSE']);
 if (dirty.exitCode || dirty.stdout.toString().trim()) throw new Error('Upstream sources must be clean');
 const destination = resolve(import.meta.dir, '..');
-const sourceRoot = join(upstream, 'packages/coding-agent/src');
 const checking = process.argv.includes('--check');
 // Preserve these existing compatibility files without reading, checking or writing them.
 const protectedTargets = new Set(['src/legacy/context-tokens.js', 'src/upstream/core/context-tokens.js']);
@@ -31,64 +29,6 @@ function save(path: string, content: string) {
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, content);
   }
-}
-
-function port(source: string, target = source, selection?: string[], imports = '', changes?: string[]) {
-  const original = readFileSync(join(sourceRoot, source), 'utf8');
-  let content = original;
-  if (selection) {
-    const parsed = ts.createSourceFile(source, original, ts.ScriptTarget.Latest, true);
-    const remaining = new Set(selection);
-    const statements: string[] = [];
-    for (const statement of parsed.statements) {
-      const declaration = ts.isVariableStatement(statement) && statement.declarationList.declarations.length === 1
-        ? statement.declarationList.declarations[0] : undefined;
-      const name = declaration && ts.isIdentifier(declaration.name) ? declaration.name.text
-        : 'name' in statement && statement.name && ts.isIdentifier(statement.name as ts.Node)
-        ? (statement.name as ts.Identifier).text : undefined;
-      if (name && remaining.has(name)) {
-        remaining.delete(name);
-        statements.push(statement.getFullText(parsed).trim());
-      }
-      if (name && ts.isClassDeclaration(statement)) {
-        for (const member of statement.members) {
-          if (!ts.isMethodDeclaration(member) || !ts.isIdentifier(member.name)) continue;
-          const selectionName = `${name}.${member.name.text}`;
-          if (!remaining.has(selectionName)) continue;
-          remaining.delete(selectionName);
-          const declaration = ts.factory.createFunctionDeclaration(
-            [ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)], member.asteriskToken, member.name,
-            member.typeParameters, member.parameters, member.type, member.body,
-          );
-          statements.push(ts.createPrinter().printNode(ts.EmitHint.Unspecified, declaration, parsed));
-        }
-      }
-    }
-    if (remaining.size) throw new Error(`Missing ${source}: ${[...remaining].join(', ')}`);
-    content = imports + statements.join('\n\n') + '\n';
-  }
-  const parsed = ts.createSourceFile(target, content, ts.ScriptTarget.Latest, true);
-  const replacements: Array<{ start: number; end: number; value: string }> = [];
-  for (const statement of parsed.statements) {
-    if ((!ts.isImportDeclaration(statement) && !ts.isExportDeclaration(statement))
-      || !statement.moduleSpecifier || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
-    const sdk = codingSDKImport(target, statement.moduleSpecifier.text);
-    if (sdk) replacements.push({ start: statement.moduleSpecifier.getStart(parsed), end: statement.moduleSpecifier.end, value: JSON.stringify(sdk) });
-  }
-  for (const replacement of replacements.reverse()) {
-    content = content.slice(0, replacement.start) + replacement.value + content.slice(replacement.end);
-  }
-  if (replacements.length) changes = [...(changes ?? []), 'public-coding-sdk'];
-  if (target.endsWith('.js')) {
-    content = ts.transpileModule(content, { compilerOptions: {
-      target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext,
-    } }).outputText;
-  }
-  content = `// Ported from Pi v1.5.0 (${revision}); MIT. See UPSTREAM.json and LICENSE.pi.\n` + content;
-  save('src/upstream/' + target, content);
-  const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
-  manifest.push({ source: join('packages/coding-agent/src', source), target: 'src/upstream/' + target,
-    sha256: sha256(original), portSha256: sha256(content), ...(selection ? { selection } : {}), ...(changes ? { changes } : {}) });
 }
 
 // Host policies are authored once; generated compatibility paths only forward.
@@ -157,17 +97,6 @@ for (const item of forwarded) {
   save(item.target, content);
 }
 
-port('core/agent-session.ts', 'core/boundary-drafts.js', [
-  'AgentSession._applyBoundaryDrafts', 'AgentSession._buildBoundaryContext', 'AgentSession._replaceMessageInPlace',
-], 'import { estimateProjectedContextTokens } from "@earendil-works/pi-coding-agent";\n'
-  + 'import { convertToLlm } from "./messages.js";\n\n', ['erase-types']);
-
-port('../../durable/src/harness/context.ts', 'durable/context.js', [
-  'EXCLUDED_STOP_REASONS', 'MISSING_RESULT_TEXT', 'findBaseline', 'carriesSystemMessage',
-  'leadWithSystem', 'contribute', 'orderToolResults', 'missingResult', 'deeplyFrozen', 'freezeJson',
-], 'import { SystemEntry } from "@earendil-works/pi-durable";\n'
-  + 'export { findBaseline, leadWithSystem, contribute };\n\n', ['erase-types']);
-
 // Keep official fixtures byte-for-byte so compatibility tests exercise real imports.
 for (const name of ['hello.ts', 'input-transform.ts', 'rpc-demo.ts', 'confirm-destructive.ts', 'session-name.ts']) {
   const source = `packages/coding-agent/examples/extensions/${name}`;
@@ -191,7 +120,7 @@ save('LICENSE.pi', readFileSync(join(upstream, 'LICENSE'), 'utf8'));
 save('UPSTREAM.json', JSON.stringify({
   repository: 'https://github.com/earendil-works/pi',
   version: '1.5.0', revision,
-  policy: 'Selected source adapters and forwards. Complete published Coding SDK contracts use @earendil-works/pi-coding-agent instead of local source. Reproduced by scripts/vendor-upstream.ts.',
+  policy: 'Pinned official fixtures and host compatibility forwards. Production algorithms use public Pi SDK APIs. Reproduced by scripts/vendor-upstream.ts.',
   typescript: ts.version,
   files: manifest,
   forwarded,

@@ -9,7 +9,7 @@ import type { CodingResources } from './resources.ts';
 import { createExtensionRuntime, loadExtensions } from './legacy/extension-loader.ts';
 import { ExtensionRunner } from './upstream/core/extensions/runner.js';
 import type { BuildSystemPromptOptions } from './upstream/core/system-prompt.ts';
-import { _buildBoundaryContext, _replaceMessageInPlace } from './upstream/core/boundary-drafts.js';
+import { buildSessionBoundaryContext, replaceSessionMessageInPlace } from '@earendil-works/pi-coding-agent';
 import { convertToLlm } from './upstream/core/messages.js';
 
 export interface NativeExtensionError {
@@ -118,7 +118,7 @@ export class NativeCodingRuntime {
             if (!this.startedMessages.has(api.taskId)) await this.runner.emit({ type: 'message_start', message });
             const replacement = await this.runner.emitMessageEnd({ type: 'message_end', message });
             // afterResponse receives the mutable terminal response before classification.
-            if (replacement) _replaceMessageInPlace(message, { ...replacement, content: replacement.content ?? [] });
+            if (replacement) replaceSessionMessageInPlace(message, { ...replacement, content: replacement.content ?? [] });
             this.startedMessages.delete(api.taskId);
           }),
         }),
@@ -245,7 +245,7 @@ export class NativeCodingRuntime {
             if (message.role !== 'user' && message.role !== 'custom') continue;
             await this.runner.emit({ type: 'message_start', message });
             const replacement = await this.runner.emitMessageEnd({ type: 'message_end', message });
-            if (replacement) _replaceMessageInPlace(message, { ...replacement, content: replacement.content ?? [] });
+            if (replacement) replaceSessionMessageInPlace(message, { ...replacement, content: replacement.content ?? [] });
           }
           const model = convertToLlm(messages);
           if (JSON.stringify(model) !== JSON.stringify(convertToLlm(original))) replacements.push({
@@ -285,12 +285,13 @@ export class NativeCodingRuntime {
       const message = (await api.entry(boundary.assistant, context))?.model?.[0];
       const results = await Promise.all(boundary.results.map(id => api.entry(id, context)));
       const host = {
+        _convertToLlm: convertToLlm,
         _createBoundaryPreviewManager: (drafts: unknown[]) => this.session.preview(drafts).manager,
         _getPendingBoundaryMessages: () => this.options.context.getPendingMessages?.() ?? [],
         _pendingCustomMessages: this.options.context.getPendingCustomMessages?.() ?? [],
         agent: { hasQueuedMessages: () => this.options.context.hasPendingMessages() },
       };
-      const preview = (drafts: unknown[]) => Reflect.apply(_buildBoundaryContext, host, [drafts, boundary.type]);
+      const preview = (drafts: unknown[]) => Reflect.apply(buildSessionBoundaryContext, host, [drafts, boundary.type]);
       const result = await this.runner.emitBoundary(boundary.type === 'turn_end' ? {
         type: 'turn_end', turnIndex: boundary.turnIndex, message, outcome: boundary.outcome,
         messageEntryId: store.nativeId!(boundary.assistant),

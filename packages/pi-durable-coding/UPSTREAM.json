@@ -2,44 +2,9 @@
   "repository": "https://github.com/earendil-works/pi",
   "version": "1.5.0",
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
-  "policy": "Selected source adapters and forwards. Complete published Coding SDK contracts use @earendil-works/pi-coding-agent instead of local source. Reproduced by scripts/vendor-upstream.ts.",
+  "policy": "Pinned official fixtures and host compatibility forwards. Production algorithms use public Pi SDK APIs. Reproduced by scripts/vendor-upstream.ts.",
   "typescript": "5.9.3",
   "files": [
-    {
-      "source": "packages/coding-agent/src/core/agent-session.ts",
-      "target": "src/upstream/core/boundary-drafts.js",
-      "sha256": "b7c24bf1c1366e931083100d921a80d390d66bacde4acf7472a7b57af1bb69aa",
-      "portSha256": "f852d6dfe2ea7731afcff4a346d7d2b8f1be7afc9fbe73d7a3b1340443037ae5",
-      "selection": [
-        "AgentSession._applyBoundaryDrafts",
-        "AgentSession._buildBoundaryContext",
-        "AgentSession._replaceMessageInPlace"
-      ],
-      "changes": [
-        "erase-types"
-      ]
-    },
-    {
-      "source": "packages/durable/src/harness/context.ts",
-      "target": "src/upstream/durable/context.js",
-      "sha256": "160a047b022725ec799f4581ef7e52798632015dcd908755c3df6cd1e9f35fc8",
-      "portSha256": "dff86bd68e278d638477068ece35108701c7a64005458f4c8862fadebc373abe",
-      "selection": [
-        "EXCLUDED_STOP_REASONS",
-        "MISSING_RESULT_TEXT",
-        "findBaseline",
-        "carriesSystemMessage",
-        "leadWithSystem",
-        "contribute",
-        "orderToolResults",
-        "missingResult",
-        "deeplyFrozen",
-        "freezeJson"
-      ],
-      "changes": [
-        "erase-types"
-      ]
-    },
     {
       "source": "packages/coding-agent/examples/extensions/hello.ts",
       "target": "test/fixtures/upstream/hello.ts",
