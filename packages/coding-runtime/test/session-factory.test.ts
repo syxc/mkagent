@@ -1,4 +1,5 @@
 import { afterEach, expect, test } from 'bun:test';
+import { trashFixture } from './fixtures/trash-fixture.ts';
 import { mkdirSync, mkdtempSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -13,7 +14,7 @@ import { convertToLlm } from '../src/native-messages.ts';
 const directories: string[] = [], sessions: sdk.AgentSession[] = [];
 afterEach(() => {
   for (const session of sessions.splice(0)) session.dispose();
-  for (const path of directories.splice(0)) expect(Bun.spawnSync(['/usr/bin/trash', path]).exitCode).toBe(0);
+  for (const path of directories.splice(0)) trashFixture(path);
 });
 const model: Model<'faux'> = { id: 'factory', name: 'Factory', api: 'faux', provider: 'local', baseUrl: 'http://unused.invalid',
   reasoning: false, input: ['text', 'image'], contextWindow: 10000, maxTokens: 100,

@@ -2332,6 +2332,14 @@
     }
   },
   "mkOnly": {
+    "packages/coding-runtime/test/fixtures/trash-fixture.ts": {
+      "sha256": "84a40e5ce93161a5acc8236838d85dfeeeb8d0dd62d6d31d82581b4c7ef212f7",
+      "reason": "Keep temporary fixture cleanup portable and preserve scenario assertions when the trash CLI is unavailable."
+    },
+    "packages/coding-runtime/test/trash-fixture.isolated.ts": {
+      "sha256": "1912ced9e3f2cd9f446cecd6606b7a7a42e0c2d05236f3e996360d639c93ef6c",
+      "reason": "Verify fixture cleanup success, missing CLI and nonzero exit in a separate process without changing shared Bun mocks."
+    },
     "packages/coding-runtime/scripts/coding-runtime-protocol.ts": {
       "sha256": "5831916026897dabba8df88b10fe7c9583e911aed53d5ae49da3575700f12245",
       "reason": "Use the Coding SDK host protocol and renamed runtime while preserving durable execution and plugin contracts."
@@ -2569,7 +2577,7 @@
       "reason": "Use SDK prompt builders directly after removing the redundant Native prompt wrapper."
     },
     "packages/coding-runtime/test/shared-compat-types.test.ts": {
-      "sha256": "10a0cedcf8eef8c51db74e2cf02751829f14048514cadd54a1b563861895d3bd",
+      "sha256": "8500518fd20fbf58c37c500a02b899383a7258762bf269c709379754fa7ff1d2",
       "reason": "Verify structural SDK registry construction, legacy consumers and real declaration output through the workspace public SDK dependency."
     },
     "packages/coding-runtime/src/host-system-prompt.ts": {
@@ -4521,7 +4529,7 @@
       "reason": "Create durable sessions through the thin public SDK factory binding."
     },
     "packages/coding-runtime/test/session-services.test.ts": {
-      "sha256": "f1a36884666c5a788775b99c4dbe162a4ffbb308e896e6baa3127b7637841911",
+      "sha256": "f9120d6f9b055af1163d1d7b1668f89110d390d926897ba10328fc406adaaa1b",
       "reason": "Verify registration, offline refresh, diagnostics, flags, inherited options, factory projection and default versus durable session identity."
     },
     "packages/coding-runtime/scripts/coding-session-runtime-policy.ts": {
@@ -4533,7 +4541,7 @@
       "reason": "Bind public runtime values and generic types to the durable session subtype without runtime wrappers."
     },
     "packages/coding-runtime/test/session-runtime.test.ts": {
-      "sha256": "1fd30c212d55ec5286c1acda32a678347fdbe807deb9f7ccb37e217ccab4de1e",
+      "sha256": "840eb3bc68c23b17b62f1c6f8a39ae7f3d01626d4e030878c2c44a86b73b8625",
       "reason": "Verify durable runtime lifecycle, callbacks, cancellation, failure, fork, import, stored cwd and in-memory behavior."
     },
     "packages/coding-runtime/scripts/coding-session-factory-policy.ts": {
@@ -4545,7 +4553,7 @@
       "reason": "Forward tool types and factories through Native bindings that retain SDK aggregation."
     },
     "packages/coding-runtime/test/session-factory.test.ts": {
-      "sha256": "d3ab1091979b03e8c9c2a099b1943d6c2c6fdb4a912457405858b220daaa9092",
+      "sha256": "7d71aaa392df28f88047a02a46b317ad6dd2a427ac13e04aae7bde0c59614bb8",
       "reason": "Keep the actual bundled factory version regression pointed at the replacement Native configuration entry."
     },
     "packages/coding-runtime/src/native-messages.ts": {
@@ -4633,7 +4641,7 @@
       "reason": "Forward public SDK configuration and retain only the fixed Coding version needed by bundled Native identity."
     },
     "packages/coding-runtime/test/config-sdk.test.ts": {
-      "sha256": "873b7559a38ccf6e7415504a7ce491a5bdf09edbbb0d13189b72dbe3c3d68fac",
+      "sha256": "575a5cbc1dc9ad90dbca0318cd8f11d6d229b0df1828abd0c4ef0fd07cc9f10e",
       "reason": "Verify SDK directories, legacy policy, pinned bundled versions and worker selection, and actual durable QuickJS worker execution."
     },
     "packages/coding-runtime/scripts/coding-tool-factories-policy.ts": {
@@ -4645,11 +4653,11 @@
       "reason": "Bind twelve existing Native factories and preserve all original named exports through SDK aggregation."
     },
     "packages/coding-runtime/test/tool-factories-sdk.test.ts": {
-      "sha256": "3b0518e3a5d736b384c2e61fb1cf3ae15be015cad10f81fa0a5cf079f1dcf2be",
+      "sha256": "2a75ceac7d017a626e49e0e94165500b2a0144cee4bb6418856496b5ee2561b6",
       "reason": "Verify SDK and Native tool order, factory selection, option identity, fallback, failures, and real file write/edit/read."
     },
     "packages/coding-runtime/test/session-tool-bindings.test.ts": {
-      "sha256": "0aedafb71ff6b0547dce4a0d076d771ab3f6bddf38fe6ffc0f538fcaaba0c47b",
+      "sha256": "bb5e9c4b7b7e406ef3a55dd8695202a5649cfb45a311df2aa480188fa3583499",
       "reason": "Verify instance factories, reload, explicit overrides, shell settings, output, cancellation, history and Native defaults without provider access."
     },
     "packages/coding-runtime/test/model-runtime-auth-context.test.ts": {

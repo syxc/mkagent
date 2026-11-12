@@ -1,5 +1,6 @@
 /** Session defaults must use host factories without replacing SDK lifecycle behavior. */
 import { afterEach, expect, test } from 'bun:test';
+import { trashFixture } from './fixtures/trash-fixture.ts';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -18,8 +19,7 @@ const fixtures: Array<{ session: SDKSession; cwd: string }> = [];
 afterEach(() => {
   for (const { session, cwd } of fixtures.splice(0)) {
     session.dispose();
-    const cleanup = Bun.spawnSync(['/usr/bin/trash', cwd]);
-    if (cleanup.exitCode !== 0) console.warn(`Temporary fixture retained: ${cwd}`);
+    trashFixture(cwd);
   }
 });
 

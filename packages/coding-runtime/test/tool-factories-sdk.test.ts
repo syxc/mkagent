@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import { trashFixture } from './fixtures/trash-fixture.ts';
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -99,8 +100,7 @@ test('Native assembled tools write, edit and read a real file', async () => {
     expect(readFileSync(join(cwd, 'note.txt'), 'utf8')).toBe('after\n');
     expect(result.content).toContainEqual({ type: 'text', text: 'after\n' });
   } finally {
-    const cleanup = Bun.spawnSync(['/usr/bin/trash', cwd]);
-    if (cleanup.exitCode !== 0) console.warn(`Temporary fixture retained: ${cwd}`);
+    trashFixture(cwd);
   }
 });
 

@@ -7,6 +7,55 @@ come from the [capability specification](coding-capabilities-spec.md); the
 [correction list](coding-follow-up.md) define current work. An older retention
 decision, source inventory or green test run does not override those documents.
 
+## Pull request CI portability
+
+PR #4 at `79ea0f7` passed dependency installation, lint, source lineage and
+validate:ci. Run `43322969689` then failed in the full test suite. The safe
+annotations identify two test portability errors: fixture cleanup used the
+macOS-specific `/usr/bin/trash` path, and a temporary type consumer assumed
+that the SDK was installed inside the Coding workspace's node_modules.
+
+Six test files now share a fixture-only cleanup helper. It finds trash
+through PATH, returns on success, and retains the fixture with a warning
+when the CLI is absent or fails. Functional assertions and session teardown
+remain in place. The helper cannot replace an earlier assertion failure.
+Its mock regression runs in a separate Bun process under the existing
+isolated-test runner.
+
+The type consumer now resolves the SDK's public entry with Bun.resolveSync
+and imports that actual JS entry. TypeScript finds its adjacent declaration
+naturally in both hoisted and isolated installations. The replay-policy
+negative case remains active.
+
+Local checks cover both causes:
+
+- The cleanup regression extracts the original cleanup expression from
+  `79ea0f7` unchanged: all three cases fail. The new helper passes all three,
+  with six assertions. A separate probe keeps the original assertion error
+  for missing, failed and successful cleanup.
+- Two fresh frozen SDK trees, one hoisted and one isolated, pass 14 declared
+  nodes and all 137 patch outputs. The six affected files pass 33 cases in
+  each layout, including the bundled factory case. The initial missing
+  preload fixture is preserved as a setup failure; a precise copy of the
+  existing block-network.ts supplies that asset for the focused rerun.
+- In the actual hoisted tree the old package-local path is absent and
+  produces TS2307 and the related unused-negative-case diagnostic. The
+  resolved entry has zero consumer or library diagnostics. The same resolved
+  entry also compiles strictly in the isolated tree. Neither check uses an
+  alias, source fallback or new compiler dependency.
+- The cleanup helper and isolated regression compile strictly across 239
+  files with zero diagnostics. Source lineage passes for 2,043 permitted
+  MkAgent files. An independent review of all nine test files passes.
+
+Evidence is under `ship-master-f9qk4tqg`: `failure-safe-annotations.json`,
+`fixture-regression`, `ci-layout-tests/acceptance-summary-with-preload.json`,
+`sdk-types-verified-hoisted`, `sdk-types-verified-isolated`,
+`cleanup-regression-typecheck.json` and `ci-fix-source-audit`.
+The initial compiler-probe timeout and logical-path package-ID collision
+are retained as probe failures; the final checks use the canonical entry.
+Production code, dependency declarations and the lock remain unchanged.
+The full GitHub suite must pass before merge.
+
 ## Workspace directory rename
 
 Commit `7a59bca` saves the accepted SDK ownership change. The next change

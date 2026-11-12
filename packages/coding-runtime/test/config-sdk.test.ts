@@ -1,4 +1,5 @@
 import { afterEach, expect, test } from 'bun:test';
+import { trashFixture } from './fixtures/trash-fixture.ts';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -8,8 +9,7 @@ import { leaseNativeCodemodeSandbox } from '../src/compat/codemode-sandbox.ts';
 const temporary: string[] = [];
 afterEach(() => {
   for (const directory of temporary.splice(0)) {
-    const cleanup = Bun.spawnSync(['/usr/bin/trash', directory]);
-    if (cleanup.exitCode !== 0) console.warn(`Temporary fixture retained: ${directory}`);
+    trashFixture(directory);
   }
 });
 function directory() {

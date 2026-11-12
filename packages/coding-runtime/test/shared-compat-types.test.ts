@@ -7,6 +7,7 @@ import ts from 'typescript';
 test('legacy classes and SDK helpers keep structural consumers and declaration output', () => {
   const repo = resolve(import.meta.dir, '../../..');
   const coding = join(repo, 'packages/coding-runtime');
+  const sdk = Bun.resolveSync('@earendil-works/pi-coding-agent', import.meta.dir);
   const directory = mkdtempSync(join(tmpdir(), 'shared-compat-types-'));
   const consumer = join(directory, 'consumer.ts');
   const originalRead = ts.sys.readFile;
@@ -27,7 +28,7 @@ import { mergeCodingSettings } from "${coding}/src/upstream/core/settings-merge.
 import { convertToLlm } from "${coding}/src/upstream/core/messages.js";
 import { SessionManager, buildSessionProjection } from "${coding}/src/upstream/core/session-manager.js";
 import { ModelRegistry } from "${coding}/src/upstream/core/model-registry.js";
-import { estimateTokens, calculateContextTokens, type ToolDefinition } from "${coding}/node_modules/@earendil-works/pi-coding-agent";
+import { estimateTokens, calculateContextTokens, type ToolDefinition } from ${JSON.stringify(sdk)};
 import type { BeforeAgentStartTrigger, NewSessionHandler } from "${coding}/src/legacy/extension-runner.js";
 const safeReplay: ToolDefinition["replay"] = "safe";
 const neverReplay: ToolDefinition["replay"] = "never";

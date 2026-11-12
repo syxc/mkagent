@@ -1,4 +1,5 @@
 import { afterEach, expect, test } from 'bun:test';
+import { trashFixture } from './fixtures/trash-fixture.ts';
 import { mkdtempSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,9 +10,7 @@ import { createAgentSessionFromServices, createAgentSessionServices } from '../s
 
 const directories: string[] = [];
 afterEach(() => {
-  for (const path of directories.splice(0)) {
-    expect(Bun.spawnSync(['/usr/bin/trash', path]).exitCode).toBe(0);
-  }
+  for (const path of directories.splice(0)) trashFixture(path);
 });
 const resourceOptions = { noExtensions: true, noSkills: true, noThemes: true, noPromptTemplates: true, noContextFiles: true };
 function directory() {
