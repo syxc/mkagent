@@ -9,7 +9,7 @@ import { APP_NAME, getAgentDir, getSessionsDir } from "../upstream/config.ts";
 import { buildDurableContextEntries, finalizeDurableProjection } from "../durable-projection.ts";
 
 // Host-owned entries intentionally cross the existing untyped JavaScript boundary.
-/** @type {import("./api-types.ts").LegacyConstructor<import("@earendil-works/pi-coding-agent").SessionManager>} */
+/** @type {import("./api-types.ts").LegacyConstructor<Omit<import("@earendil-works/pi-coding-agent").SessionManager, "usesDefaultSessionDir" | "buildContextEntries" | "buildSessionProjection" | "buildSessionContext">>} */
 const NativeSessionManager = shared.SessionManager;
 
 /** @returns {any[]} */
@@ -21,7 +21,11 @@ function selectContextEntries(path) {
     return path.some(entry => "durableEntryOrder" in entry) ? buildDurableContextEntries(path) : undefined;
 }
 
-/** @returns {any[]} */
+/**
+ * @param {any} [leafId]
+ * @param {any} [byId]
+ * @returns {any[]}
+ */
 export function buildContextEntries(entries, leafId, byId) {
     return native.buildContextEntries(entries, leafId, byId, selectContextEntries);
 }
@@ -38,7 +42,11 @@ export function projectContextEntry(entry, edit) {
 
 const projectionOptions = { selectContextEntries, projectContextEntry, finalizeProjection: finalizeDurableProjection };
 
-/** @returns {{entries: any[], messages: any[], thinkingLevel: string, model: any}} */
+/**
+ * @param {any} [leafId]
+ * @param {any} [byId]
+ * @returns {{entries: any[], messages: any[], thinkingLevel: string, model: any}}
+ */
 export function buildSessionProjection(entries, leafId, byId) {
     return native.buildSessionProjection(entries, leafId, byId, projectionOptions);
 }

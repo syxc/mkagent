@@ -2533,8 +2533,8 @@
       "reason": "Preserve legacy host and plugin contracts through thin policies over shared coding implementations."
     },
     "packages/pi-durable-coding/src/legacy/session-manager.js": {
-      "sha256": "94df62599fd6757a4d7e5b96d20d25d5e1cd0eed8709a455f15aacf4802447ff",
-      "reason": "Use the published Coding SDK SessionManager and session contracts while retaining the outer durable projection and host storage policies."
+      "sha256": "5c0e975e3e3b0c72d64bbabf9cf386af3e9cb15d52c488275aa8752b67dbd237",
+      "reason": "Use the published Coding SDK SessionManager while retaining durable projection and host storage policies; preserve optional helper inputs and consumable declarations without changing JavaScript behavior."
     },
     "packages/pi-durable-coding/src/legacy/extension-runner.js": {
       "sha256": "068302830a7827f38cdf0f3905a954916a52de2dbc4111121c509aa83425f73d",
