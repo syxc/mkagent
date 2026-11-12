@@ -26,13 +26,15 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
-## Remaining default-resource isolation gate
+## Default-resource isolation acceptance
 
 The original Kernel isolation case keeps seven product assertions for host
 system text, tools, installed extensions, two extension side-effect markers,
 compaction defaults and per-session settings. It creates one synthetic
-project `.pi/settings.json` fixture. The existing protected-name rule blocks
-that creation, so the original current-dependency case has not passed.
+project `.pi/settings.json` fixture. The original protected-name rule blocked
+that creation. After explicit authorization for the single synthetic fixture,
+the unmodified original case passes: one test, seven assertions, exit 0 after
+2.309 seconds. Current Repo and product-copy test hashes are identical.
 
 A task-only attempt to avoid that fixture fails its own observation control.
 On Bun 1.3.14, replacing Node fs object members and calling
@@ -42,19 +44,27 @@ hits, so no production canary runs. A zero hit count in that control is not a
 zero production-access result. The original case, seven assertions, production
 code, dependency nodes and sandbox permissions remain unchanged.
 
-The only proposed extra authorization is creation, possible reading and cleanup
-of that synthetic fixture under
+The user then explicitly authorizes creation, possible reading and cleanup
+of that synthetic fixture only under
 `d1-settings-fixture-approval/tmp/kernel-e2e-*/.pi/settings.json` inside final
-integration. The exact path rule, original test selection and payload are
-prepared in `d1-settings-fixture-approval/proposed.sb` and `proposal.json`.
-The proposed profile has not been executed. It grants no other settings,
-credential, account, context-token or package-resource access.
+integration. The precise two-rule profile diff is independently reviewed.
+`approved.sb` retains all other protected-name, account, network and package
+resource restrictions. The original test and all seven assertions run unchanged;
+the fixture is absent after normal test cleanup. This permission does not apply
+to the four excluded dependency packages or any real configuration.
 
-Evidence is `d1-resource-isolation-7lf79aqt/final-receipt.json` and
-`live-binding-selfcheck.json`. D1 and F6 remain blocked on the explicit fixture
-authorization and the original test. No push has occurred. The completed SDK,
-standard declaration, product-closure and source checks below retain their
-actual scope; none is an all-repository pass.
+The failed observation evidence remains in
+`d1-resource-isolation-7lf79aqt/final-receipt.json` and
+`live-binding-selfcheck.json`. The successful original test is separately
+recorded in `d1-settings-fixture-approval/receipt.json` with its authorization,
+profile hash, input hash and output. `final-product-acceptance.json` adds this
+one test to the earlier 103: 104 product tests and 531 assertions. Together
+with the 142 SDK tests, 246 distinct runtime tests and 1,529 assertions pass.
+D1 and the final F6 review now pass. The reviewer confirms the exact fixture
+authorization, original assertions, cleanup, source hashes and final document
+checks. Ordinary push follows the final documentation commit under the existing
+user authorization. These results retain their actual scope and are not an
+all-repository pass.
 
 ## Strict consumption of the complete generated declarations
 
@@ -106,7 +116,9 @@ remains in `source-audit-final`. Independent standard-consumer review also
 passes: 1,940 files, zero positive diagnostics, exactly six expected negative
 diagnostics, no augmentation or source fallback, and unchanged inputs. It exits
 0 after 29.684 seconds; receipts are in `independent-standard119-review`.
-The overall review remains partial pending D1 and the final documentation.
+The earlier partial review remains recorded. After the separately authorized
+original D1 case passes, final independent review confirms acceptance of this
+iteration; `7bb75368-56df-48ce-9161-dc47635c6491` reports PASS.
 
 ## Actual product dependency and host acceptance
 
@@ -135,7 +147,7 @@ new lock bytes separately.
 
 | Actual product test group | Tests | Assertions |
 |---|---:|---:|
-| Kernel prompt, tool round, resume and branch selection | 5 | 41 |
+| Kernel prompt, tool round, resume, branch and original resource isolation | 6 | 48 |
 | Coding handoff, accepted input identity, actions, output and summaries | 10 | 64 |
 | Selected host commands, model replacement, options and queue recovery | 4 | 20 |
 | Extension UI and prompt lifecycle | 22 | 128 |
@@ -145,7 +157,7 @@ new lock bytes separately.
 | Session branching and file transport | 6 | 43 |
 | Background stop | 3 | 4 |
 | Complete bundle suite | 26 | 105 |
-| Total | 103 | 524 |
+| Total | 104 | 531 |
 
 All selected groups exit 0, with unchanged test inputs and the real product
 workspace dependency tree. Bundle tests run after the other groups to avoid
@@ -158,11 +170,13 @@ blocked while writing protected settings fixtures. Four browser-input export
 cases also fail. The same four failures occur with the five context/boundary
 source files from 54f8f3c, before SDK delegation; current files are restored
 exactly after that control. Those results remain separate and are not counted
-as passes. This task does not change browser export/redaction or grant settings
-fixture access. The original two settings-dependent Coding-host exclusions
+as passes. This task does not change browser export/redaction. The original isolation
+case later passes under the single explicit fixture authorization above; the
+other settings fixtures remain outside that authorization. The original two settings-dependent Coding-host exclusions
 also remain in place.
 
-Evidence: `actual-product-acceptance.json`,
+Evidence: `final-product-acceptance.json` (the prior ten-group 103-test receipt
+remains in `actual-product-acceptance.json`),
 `product-gray-tar-refresh-j5z3axiu/final-receipt.json`,
 `product-source-snapshot-gray-tar.json`, individual `product-*-gray-tar` test
 receipts, `product-kernel-selected-actual`, `product-coding-product-gray`,
