@@ -975,8 +975,8 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "a1f935fcc1712639d472f79bc391683bdc80579fefda4509c12d92e63bdcda71",
-      "reason": "Retain resolved dependency versions; register Photon numeric-array declarations and the existing session-tools-core dependency on shared."
+      "sha256": "92fd2ca14985de6ac5ce1343da2b56dcbb621a8db74e102c691e81682318fc08",
+      "reason": "Retain resolved dependency versions, Photon numeric-array declarations and the session-tools-core workspace dependency; declare Shared runtime imports of the existing gray-matter and tar packages."
     },
     "package.json": {
       "sha256": "0b39c6cdfbeb618d794cf930c9566aae2c64be0619c8be267bd64d3576e1f8cd",
@@ -1447,8 +1447,8 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/package.json": {
-      "sha256": "d2da385ce17200cef6b6292afe3268f87ed5723b4643b16bc3611fed9e367977",
-      "reason": "Retain MkAgent versions, Lite exports and pr-watch; export the vendored Pi event contract at agent/pi-events and remove coding-agent while keeping pi-agent-core and pi-ai 1.1.0 for host event compatibility. Remove pi-agent-core; local wire types use the independent pi-ai definitions."
+      "sha256": "7877f5f3d6734e89f2bf230f25d9164b7e1b2978e798ac9e2d4de686c7f1f892",
+      "reason": "Retain MkAgent versions, Lite and pr-watch exports, agent/pi-events and independent pi-ai 1.1.0 host wire types; declare existing gray-matter and tar runtime imports for isolated workspace resolution."
     },
     "packages/shared/src/__tests__/feature-flags.test.ts": {
       "sha256": "68eeef24a8f1a3f32eec273ba35a72359d0fd9a1a4207d272195b0ef048312b0",
