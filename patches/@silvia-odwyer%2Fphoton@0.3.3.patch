@@ -1,0 +1,38 @@
+diff --git a/photon_rs.d.ts b/photon_rs.d.ts
+--- a/photon_rs.d.ts
++++ b/photon_rs.d.ts
+@@ -3375,12 +3375,12 @@
+   readonly photonimage_new_from_blob: (a: number) => number;
+   readonly photonimage_new_from_image: (a: number) => number;
+   readonly photonimage_get_width: (a: number) => number;
+-  readonly photonimage_get_raw_pixels: (a: number) => Array;
++  readonly photonimage_get_raw_pixels: (a: number) => Array<number>;
+   readonly photonimage_get_height: (a: number) => number;
+-  readonly photonimage_get_base64: (a: number) => Array;
+-  readonly photonimage_get_bytes: (a: number) => Array;
+-  readonly photonimage_get_bytes_jpeg: (a: number, b: number) => Array;
+-  readonly photonimage_get_bytes_webp: (a: number) => Array;
++  readonly photonimage_get_base64: (a: number) => Array<number>;
++  readonly photonimage_get_bytes: (a: number) => Array<number>;
++  readonly photonimage_get_bytes_jpeg: (a: number, b: number) => Array<number>;
++  readonly photonimage_get_bytes_webp: (a: number) => Array<number>;
+   readonly photonimage_get_image_data: (a: number) => number;
+   readonly photonimage_set_imgdata: (a: number, b: number) => void;
+   readonly photonimage_get_estimated_filesize: (a: number) => number;
+@@ -3396,13 +3396,13 @@
+   readonly rgba_new: (a: number, b: number, c: number, d: number) => number;
+   readonly rgba_set_alpha: (a: number, b: number) => void;
+   readonly rgba_get_alpha: (a: number) => number;
+-  readonly run: () => Array;
++  readonly run: () => Array<number>;
+   readonly get_image_data: (a: number, b: number) => number;
+   readonly putImageData: (a: number, b: number, c: number) => void;
+   readonly open_image: (a: number, b: number) => number;
+-  readonly to_raw_pixels: (a: number) => Array;
++  readonly to_raw_pixels: (a: number) => Array<number>;
+   readonly base64_to_image: (a: number, b: number) => number;
+-  readonly base64_to_vec: (a: number, b: number) => Array;
++  readonly base64_to_vec: (a: number, b: number) => Array<number>;
+   readonly to_image_data: (a: number) => number;
+   readonly rgba_set_green: (a: number, b: number) => void;
+   readonly rgba_set_blue: (a: number, b: number) => void;

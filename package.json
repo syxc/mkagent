@@ -193,6 +193,7 @@
     "@earendil-works/pi-agent-core@1.5.0": "patches/@earendil-works%2Fpi-agent-core@1.5.0.patch",
     "@earendil-works/pi-coding-agent@1.5.0": "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch",
     "@earendil-works/pi-durable@1.5.0": "patches/@earendil-works%2Fpi-durable@1.5.0.patch",
+    "@silvia-odwyer/photon@0.3.3": "patches/@silvia-odwyer%2Fphoton@0.3.3.patch",
     "gaxios@7.1.3": "patches/gaxios@7.1.3.patch"
   }
 }

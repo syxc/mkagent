@@ -975,12 +975,12 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "7049f6c8d95fc85d3173bf0d2b5ac89c988ea6b66608a705802179d374fc9405",
-      "reason": "Resolve GenAI's required MCP declaration peer and the Gaxios callable-fetch declaration patch; retain all previously resolved package versions."
+      "sha256": "04a29caabcac1eeaded8a1edfc2d4aead02e24046525ef147fb8e6e2539b0161",
+      "reason": "Preserve resolved versions, the GenAI MCP declaration peer and Gaxios patch; register the Photon numeric-array declaration correction."
     },
     "package.json": {
-      "sha256": "bcf30949042333bf4c26724b24634c3487ed0ba29c56153e0477e854bbea35a1",
-      "reason": "Declare GenAI's MCP type dependency for development and register a declaration-only Gaxios fetch compatibility patch."
+      "sha256": "0b39c6cdfbeb618d794cf930c9566aae2c64be0619c8be267bd64d3576e1f8cd",
+      "reason": "Register the Photon declaration correction and retain existing GenAI MCP and Gaxios declaration dependencies."
     },
     "packages/core/README.md": {
       "sha256": "cac1ded695383920e62457a566c3ececed3acc5568a733f7eff4ab78c69ba2cd",
@@ -4691,6 +4691,10 @@
     "packages/pi-durable-coding/test/sdk-extension-wrapper.test.ts": {
       "sha256": "e7e2cca3f2de89ee4de3e233eb373acb0451226c3088c2c9850b8bd891626f6c",
       "reason": "Verify published extension wrapper routing, source removal, context, cancellation, result and metadata identity."
+    },
+    "patches/@silvia-odwyer%2Fphoton@0.3.3.patch": {
+      "sha256": "4183275fe4f64cb4f04af430f354c32a0b8781d7e99b45d0a6c4755f63ac82f2",
+      "reason": "Give eight existing WASM numeric-array return declarations their element type; preserve JS and WASM bytes."
     }
   },
   "deleted": {
