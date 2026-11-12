@@ -5,8 +5,5 @@ import * as native from "@earendil-works/pi-coding-agent";
 /** @type {import("./api-types.ts").LegacyConstructor<import("@earendil-works/pi-coding-agent").ModelRegistry>} */
 const NativeModelRegistry = native.ModelRegistry;
 
-export class ModelRegistry extends NativeModelRegistry {
-    constructor(runtime) {
-        super(runtime);
-    }
-}
+/** @typedef {InstanceType<typeof NativeModelRegistry>} ModelRegistry */
+export const ModelRegistry = NativeModelRegistry;

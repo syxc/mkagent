@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 import * as childProcess from 'node:child_process';
+import { DefaultPackageManager } from '@earendil-works/pi-coding-agent';
 import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -183,6 +184,38 @@ describe('ported native resource behavior', () => {
     expect(existsSync(join(agentDir, 'git'))).toBe(false);
     expect(existsSync(join(cwd, '.pi', 'git'))).toBe(false);
     expect(spawn).not.toHaveBeenCalled();
+  });
+
+  test('keeps HOME skills discovery in the legacy resource entry', () => {
+    const home = join(root, 'home');
+    skill(join(home, '.agents', 'skills', 'home-skill', 'SKILL.md'), 'home-skill');
+    const code = `
+      import { loadCodingResources } from ${JSON.stringify(join(import.meta.dir, 'resources.ts'))};
+      const resources = await loadCodingResources(${JSON.stringify({ cwd, agentDir })});
+      console.log(JSON.stringify(resources.skills.map(item => item.name)));
+    `;
+    const child = Bun.spawnSync([process.execPath, '-e', code], {
+      env: { ...process.env, HOME: home, USERPROFILE: home }, stdout: 'pipe', stderr: 'pipe',
+    });
+    expect({ code: child.exitCode, error: child.stderr.toString() }).toEqual({ code: 0, error: '' });
+    expect(JSON.parse(child.stdout.toString())).toEqual(['home-skill']);
+  });
+
+  test('reports package failures while keeping deliberate skips silent', async () => {
+    using cleanup = new DisposableStack();
+    const manager = spyOn(DefaultPackageManager.prototype, 'resolve').mockResolvedValue({
+      skills: [], prompts: [], extensions: [], themes: [],
+      installFailures: [
+        { source: 'skipped-package', scope: 'user', skipped: true, message: 'Deliberately skipped' },
+        { source: 'failed-package', scope: 'user', message: 'Package resolution failed' },
+      ],
+    });
+    cleanup.defer(() => manager.mockRestore());
+    const resources = await loadCodingResources({ cwd, agentDir });
+    expect(resources.diagnostics).toEqual([
+      { type: 'warning', path: 'failed-package', message: 'Package resolution failed' },
+    ]);
+    expect(manager).toHaveBeenCalledTimes(1);
   });
 
   test('preserves global, ancestor, cwd and override precedence', () => {

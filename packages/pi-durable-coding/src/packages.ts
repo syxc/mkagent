@@ -1,6 +1,6 @@
 /** Resolve Pi's package/resource conventions without installing missing sources. */
 import { resolve } from 'node:path';
-import { DefaultPackageManager } from './upstream/core/package-manager.ts';
+import { DefaultPackageManager } from '@earendil-works/pi-coding-agent';
 import type { PackageSource, ResourceSettings, SettingsManager } from './upstream/core/settings-manager.ts';
 
 export type { PackageSource, ResourceSettings } from './upstream/core/settings-manager.ts';
@@ -35,6 +35,7 @@ export async function resolveCodingPackages(options: CodingPackageOptions) {
     isProjectTrusted: () => options.projectTrusted === true,
     getNpmCommand: () => undefined,
   };
-  const manager = new DefaultPackageManager({ cwd: options.cwd, agentDir: options.agentDir, settingsManager });
-  return manager.resolve(async () => 'skip');
+  const manager = new DefaultPackageManager({ cwd: options.cwd, agentDir: options.agentDir, settingsManager }, '.pi');
+  const result = await manager.resolve(async () => 'skip');
+  return { ...result, installFailures: result.installFailures?.filter(failure => !failure.skipped) };
 }

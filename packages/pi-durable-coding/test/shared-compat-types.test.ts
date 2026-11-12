@@ -26,6 +26,7 @@ import { resolveCodingPackages, type ResourceSettings } from "${coding}/src/pack
 import { mergeCodingSettings } from "${coding}/src/upstream/core/settings-merge.js";
 import { convertToLlm } from "${coding}/src/upstream/core/messages.js";
 import { SessionManager, buildSessionProjection } from "${coding}/src/upstream/core/session-manager.js";
+import { ModelRegistry } from "${coding}/src/upstream/core/model-registry.js";
 import { estimateTokens, calculateContextTokens, type ToolDefinition } from "${coding}/node_modules/@earendil-works/pi-coding-agent";
 import type { BeforeAgentStartTrigger, NewSessionHandler } from "${coding}/src/legacy/extension-runner.js";
 const safeReplay: ToolDefinition["replay"] = "safe";
@@ -34,6 +35,8 @@ const neverReplay: ToolDefinition["replay"] = "never";
 const invalidReplay: ToolDefinition["replay"] = "unsafe";
 const trigger: BeforeAgentStartTrigger = { messageType: "user", prompt: "fixture" };
 const newSession: NewSessionHandler = async () => ({ cancelled: false });
+const registry: ModelRegistry = new ModelRegistry({ getModels: () => [], getAvailableSnapshot: () => [] });
+const providerIds = registry.getAll().map(model => model.provider);
 const session = SessionManager.inMemory("/tmp/fixture", undefined, []);
 session.appendMessage({ role: "user", content: "fixture", timestamp: 1, hostMessageId: "fixture" });
 const projection = buildSessionProjection(session.getEntries());

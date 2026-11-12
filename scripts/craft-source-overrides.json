@@ -2521,8 +2521,8 @@
       "reason": "Delegate conversion directly to the SDK while retaining legacy metadata, object identity and open JS result types."
     },
     "packages/pi-durable-coding/src/legacy/model-registry.js": {
-      "sha256": "fe5c336576143c1fc13bda86a8367c624beec9245c0f334f8f98e3462b89dc74",
-      "reason": "Use published Coding SDK model and MCP registries while preserving host runtime ownership and the legacy structural constructor adapter."
+      "sha256": "bc5e378fd7e76a4bd59f7bdcea3c696f541f1eb4615550ab731b2090c17ea29a",
+      "reason": "Export the SDK registry constructor directly while retaining the legacy structural JavaScript instance type."
     },
     "packages/pi-durable-coding/src/legacy/settings-merge.js": {
       "sha256": "8ae72350f3ddee838b86d3fb9568dd072934d7e605e7fd85c0ee0df77d097a02",
@@ -2561,8 +2561,8 @@
       "reason": "Use SDK prompt builders directly after removing the redundant Native prompt wrapper."
     },
     "packages/pi-durable-coding/test/shared-compat-types.test.ts": {
-      "sha256": "cb979eb5c8c19676003bd8f4eacd0765b5263824d7a48e39ad71da9f01ba5dce",
-      "reason": "Verify structural legacy consumers, public workspace SDK helpers and declaration emit with standard Bun and Node types and protected input guards."
+      "sha256": "72d9262339f30a2a195e418a19b60d788c44ac8c7e67425d2aa02cb6dde5f8ee",
+      "reason": "Verify structural SDK registry construction, legacy consumers and real declaration output through the workspace public SDK dependency."
     },
     "packages/pi-durable-coding/src/host-system-prompt.ts": {
       "sha256": "94cabef5555ccbeccacd354a0335e7439b281a9df32ff0940f1f4ef93b688296",
@@ -3733,16 +3733,16 @@
       "reason": "Bind native and legacy module tables, Jiti transformation and directory policy to the published Coding SDK extension loader."
     },
     "packages/pi-durable-coding/src/packages.ts": {
-      "sha256": "7402750aaadd59d9ecc6c5778c64af9d6520d4ef295f6746439273e5b7c415dd",
-      "reason": "Resolve installed package resources offline and require explicit installation."
+      "sha256": "6a47088d23e0eb2cb341e175acea1b92aafcdc231dff6ee822de11b3c37f7458",
+      "reason": "Construct the public SDK package manager while preserving legacy directory, default resource discovery, read-only settings, trust and silent deliberate skips."
     },
     "packages/pi-durable-coding/src/resources.test.ts": {
-      "sha256": "40f89b79b9b28157d5ccd524653906b564f8dc76a18385ff3f113dbbaa106b65",
-      "reason": "Verify SDK resource defaults directly after deleting redundant Native wrappers; retain legacy directory and documentation assertions."
+      "sha256": "21a738b7d588c2cf560c8df2465617a1a6ee07425221cbb2c7d615e9539d9635",
+      "reason": "Verify resource discovery, host HOME skills and omission of deliberate package skips from failure diagnostics."
     },
     "packages/pi-durable-coding/src/resources.ts": {
-      "sha256": "5db0d125129807ed7ddde9f8f4118839bd675f505e84c71cf0393843592cbe36",
-      "reason": "Use SDK resource helpers and the published LoadSkillsResult contract for isolated declarations."
+      "sha256": "7e585b7cb8306e7e27538d9ec1bbbf2b24a9dd5b62b5178fbe79f365748bf1a2",
+      "reason": "Use the public SDK resource type while preserving local source precedence and host trust boundaries."
     },
     "packages/pi-durable-coding/src/session-view.ts": {
       "sha256": "705f620579dce565f21bbdad65cd7360d580908e7ee8894207947735c5086309",

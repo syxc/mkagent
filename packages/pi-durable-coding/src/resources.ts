@@ -8,7 +8,7 @@ import { loadPromptTemplates, type PromptTemplate } from './upstream/core/prompt
 import { createSourceInfo, type SourceInfo } from '@earendil-works/pi-coding-agent';
 import { canonicalizePath, isPathWithin, pathsEqual, stripBom } from '@earendil-works/pi-coding-agent';
 import type { ResourceDiagnostic } from "@earendil-works/pi-coding-agent";
-import type { ResolvedResource } from './upstream/core/package-manager.ts';
+import type { ResolvedResource } from '@earendil-works/pi-coding-agent';
 
 export { loadProjectContextFiles, formatSkillsForPrompt };
 export { parseFrontmatter, stripFrontmatter } from "@earendil-works/pi-coding-agent";

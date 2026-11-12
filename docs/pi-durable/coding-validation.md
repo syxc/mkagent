@@ -26,6 +26,35 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## SDK resource and registry bindings after 781a106
+
+Resource package resolution now constructs the public SDK `DefaultPackageManager`
+directly. It retains the explicit `.pi` directory, six-method settings adapter,
+read-only settings, project trust and missing-package skip policy. Deliberate
+skips remain absent from failure diagnostics. `ResolvedResource` also comes from
+the SDK root. No package resolution or installation algorithm is copied.
+
+Two new cases expose regressions in the first candidate: HOME skills disappear,
+and deliberate skips become warnings. The corrected binding keeps the previous
+SDK defaults and filters only skipped failures. All fifteen resource cases pass
+with 45 assertions.
+
+The legacy ModelRegistry binding now exports the same SDK constructor value,
+with its existing structural JavaScript type surface. The no-op subclass and
+constructor are removed. The typed fixture checks a structural runtime and model
+iteration. Seven model cases and one declaration consumer pass with 26
+assertions. The full package source check covers 122 roots and 2,024 files with
+zero diagnostics and protected read requests, using the package's existing
+`skipLibCheck=true` configuration.
+
+The resource red and green evidence is under
+`/private/tmp/mkagent-native-acceptance-ALoFEM/transport-permissions-tzygfkrm/resources-regression-red/`
+and `resources-regression-green/`. Constructor, declaration and source results
+are under the final integration directory in `models-sdk-identity/`,
+`compat-sdk-identity/` and `source-types-sdk-alias/`. The two SDK bindings need
+no new dependency or SDK patch; installation and strict dependency declaration
+acceptance remain separate gates.
+
 ## Host model refresh result after 000b628
 
 The public Native registry facade now returns the host `Models.refresh()` result
