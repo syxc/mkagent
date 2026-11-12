@@ -4684,22 +4684,6 @@
       "sha256": "e7e2cca3f2de89ee4de3e233eb373acb0451226c3088c2c9850b8bd891626f6c",
       "reason": "Verify published extension wrapper routing, source removal, context, cancellation, result and metadata identity."
     },
-    "docs/pi-durable/coding-architecture.md": {
-      "sha256": "8dfc7844eaf5392ba8821a23085f1271c9c31ded0a75a3dd52662b8a322af1e8",
-      "reason": "Record the SDK delegation change and its scoped verification."
-    },
-    "docs/pi-durable/coding-follow-up.md": {
-      "sha256": "4cf4bfbb3258cc65481b662636e21a89be521daf7b046a9358c95751cda3aaef",
-      "reason": "Record the SDK delegation change and its scoped verification."
-    },
-    "docs/pi-durable/coding-sdk-maintenance.md": {
-      "sha256": "f08f5bf60ea8c153b8001f589ed904df049f2a1d1737e585565899be2c748b3e",
-      "reason": "Record the SDK delegation change and its scoped verification."
-    },
-    "docs/pi-durable/coding-validation.md": {
-      "sha256": "14e6cf680d8e2ba2de11dee1c22a03e3f791da599967eb79259a5cf8bf21796f",
-      "reason": "Record the SDK delegation change and its scoped verification."
-    },
     "packages/pi-durable-coding/test/durable-context-primitives.test.ts": {
       "sha256": "a7c704b0c1f61e64a4c0da7786795a070624e9005671566ad909012e7b7b8aac",
       "reason": "Check public SDK context exports, readonly contributions and original message identity."

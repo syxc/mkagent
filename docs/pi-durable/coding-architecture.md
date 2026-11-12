@@ -4,9 +4,9 @@ MkAgent 第一次将 Pi coding agent 直接换成 pi-durable 后，发现 Coding
 
 2026-11-08 的纠偏先修正文档，再落实内核接入、Coding 兼容及相关代码和测试。此前大量复制并改造上游源码，带来 Coding 和 durable 每次更新时逐文件适配的维护风险。本次优先引用可复用 Pi 官方 SDK，减少长期维护的源码、生成转换和补丁；不能把本地算法移入 SDK 补丁就记作完成。MkAgent 既有整体架构、分层和宿主职责保持，调整限于必要内核接入。需求及 SDK 选择顺序以[能力规格](coding-capabilities-spec.md)为准，步骤见[纠偏跟进](coding-follow-up.md)。`pi-agent-core` 按需使用；用户已允许生产使用 `pi-coding-agent` 的公开 SDK，不启动原版 CLI。SDK 覆盖后删除对应源码和多余直接依赖，只保留有具体缺口依据的适配。
 
-本文记录 `cb0311f` 的实际装配及后续核查。当前按能力划分的发布 API、补丁、适配、恢复边界和退出条件见[SDK 维护清单](coding-sdk-maintenance.md)。AgentSession、自有任务状态机、剩余 Native SDK 源码及补丁均属实现现状，未核实的必要性继续开放。下文的历史“保留”决定限定于当时选取的契约，不为整个模块提供永久保留依据。Marked 和 Highlight.js 是第三方资源包，其替换不计为 Pi 官方 SDK 复用。
+本文记录 `cb0311f` 的装配及本轮纠偏后的实际接线。当前按能力划分的发布 API、补丁、适配、恢复边界和退出条件见[SDK 维护清单](coding-sdk-maintenance.md)。执行主链、Coding 能力和剩余六个 src/pi 入口已按调用方核对；下文的历史“保留”决定仅限当时时点。同步上下文和边界算法已交还 SDK，宿主仍承担权限、完整事件交付和 journal 事务等具体责任。Marked 和 Highlight.js 是第三方资源包，其替换不计为 Pi 官方 SDK 复用。
 
-## 目标职责与待纠正的实现选择
+## 目标职责与已核对的实现边界
 
 | 范围 | 目标与本次核对 |
 |---|---|
@@ -16,7 +16,7 @@ MkAgent 第一次将 Pi coding agent 直接换成 pi-durable 后，发现 Coding
 | 源码范围 | 从实际产品、公开插件和数据兼容需求推导；原版 Pi CLI、run modes 和插件组件分开核对，不由完整根导出反推需求 |
 | 测试与恢复 | 保留权限、取消、错误、消息/输入身份、数据和不确定副作用保证；原型布局、getter 顺序和私有阶段需有契约或调用依据 |
 
-官方执行器接入的未决差异包括插件事件时序、完整工具结果，以及 journal/host state 与 checkpoint 的事务关系。现有 `pi.coding.{session,run,call,tool,summary}` 五种 v1 任务有持久数据，迁移须处理各自的 kind、input、checkpoint 和 result，不能直接删除注册或假定官方 migration 能转换。summary 承接压缩、分支总结和 bug report，保留已完成响应及不确定请求禁止重发的语义。当前未有完成替代接线的证据，后续以实际契约和验证决定适配范围。
+核对确认，SDK 承担请求流和工具执行算法，宿主保留完整结果、插件事件交付，以及 journal/host state 与 checkpoint 的同事务提交。现有 `pi.coding.{session,run,call,tool,summary}` 五种 v1 任务有持久数据，替代接线继续注册旧 kind、input、checkpoint 和 result，保留旧阶段恢复路径。summary 承接压缩、分支总结和 bug report，保留已完成响应及不确定请求禁止重发的语义。真实 SDK 工程的会话与恢复测试、产品会话和 bundle 验证见[验证记录](coding-validation.md#actual-product-dependency-and-host-acceptance)；标准完整生成声明的严格消费也已通过，无源码回落、额外 augmentation 或 SDK 声明 overlay。
 
 ## 当前执行链路
 

@@ -26,6 +26,257 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Remaining default-resource isolation gate
+
+The original Kernel isolation case keeps seven product assertions for host
+system text, tools, installed extensions, two extension side-effect markers,
+compaction defaults and per-session settings. It creates one synthetic
+project `.pi/settings.json` fixture. The existing protected-name rule blocks
+that creation, so the original current-dependency case has not passed.
+
+A task-only attempt to avoid that fixture fails its own observation control.
+On Bun 1.3.14, replacing Node fs object members and calling
+syncBuiltinESMExports does not intercept six pre-imported named bindings. The
+SDK loader uses those bindings. All six negative controls report zero guard
+hits, so no production canary runs. A zero hit count in that control is not a
+zero production-access result. The original case, seven assertions, production
+code, dependency nodes and sandbox permissions remain unchanged.
+
+The only proposed extra authorization is creation, possible reading and cleanup
+of that synthetic fixture under
+`d1-settings-fixture-approval/tmp/kernel-e2e-*/.pi/settings.json` inside final
+integration. The exact path rule, original test selection and payload are
+prepared in `d1-settings-fixture-approval/proposed.sb` and `proposal.json`.
+The proposed profile has not been executed. It grants no other settings,
+credential, account, context-token or package-resource access.
+
+Evidence is `d1-resource-isolation-7lf79aqt/final-receipt.json` and
+`live-binding-selfcheck.json`. D1 and F6 remain blocked on the explicit fixture
+authorization and the original test. No push has occurred. The completed SDK,
+standard declaration, product-closure and source checks below retain their
+actual scope; none is an all-repository pass.
+
+## Strict consumption of the complete generated declarations
+
+A separate consumer check finds four TS2425 errors in the generated legacy
+SessionManager declaration. Source checking and declaration generation alone
+do not catch them: the structural LegacyConstructor maps base methods to
+properties, while the subclass declares the same four members as methods.
+The fix changes only JSDoc. Its base type omits the four members implemented
+by the subclass. The two exported projection helpers also retain optional
+leaf and lookup arguments in their generated signatures. The existing open
+JavaScript inputs and return shapes remain unchanged.
+
+Current source and complete declaration generation both pass with strict true,
+skipLibCheck false, 120 roots, 2,090 files and zero diagnostics. The standard
+build emits 119 declarations. A consumer includes all 119, imports the formal
+root, native and compat package exports, and checks 1,940 files with zero
+diagnostics. It does not load the checked-in node-process.d.ts augmentation,
+fall back to src, or request a protected file. The extra source augmentation
+is therefore not needed by these standard build consumers. A separate check
+also includes that input and all 120 self-owned declarations: 1,941 files,
+zero diagnostics.
+
+Removing the six negative-case pragmas produces exactly six diagnostics, all
+from the consumer fixture. They reject an unsupported replay value, an
+incomplete Native ModelRuntime, an invalid Native message role, a numeric cwd,
+a non-array resource package list and a non-boolean trust decision. Legacy
+model collections and settings merges retain their existing open JavaScript
+contract; invalid assumptions about those inputs in the first fixture are
+corrected without narrowing production APIs.
+
+All exports resolve naturally to the built package types and the actual frozen
+SDK 1.5.0 declarations. No dependency alias, declaration overlay, third-party package copy
+or dependency repair is used. Transpiling the changed JavaScript with comments
+removed gives the same runtime hash before and after the fix:
+`4b2028249d702b9983cc95d179bb8149571af0b1a8f619df221515bdc8c961dc`.
+The current source hash and three provenance rows are updated. Final source
+alignment verifies all 1,040 product files against the Repo; only this JSDoc
+file differs from the gray/tar checkpoint and the other 1,039 are unchanged.
+The 103 product runtime tests therefore retain the same executed JavaScript.
+
+Evidence is in `declaration-consumer-fix-ugB8lj/`: `final-report.json`,
+`119-only-consumer.json` and `119-only-execution.json`; final integration also
+contains `product-final-source-alignment.json` and
+`source-audit-final-reference/receipt.json`. The final
+source audit exits 0 and covers 2,042 permitted MkAgent files against the
+independent fixed Craft reference. Its first invocation omitted the explicit
+reference environment variable and failed before auditing; that failed receipt
+remains in `source-audit-final`. Independent standard-consumer review also
+passes: 1,940 files, zero positive diagnostics, exactly six expected negative
+diagnostics, no augmentation or source fallback, and unchanged inputs. It exits
+0 after 29.684 seconds; receipts are in `independent-standard119-review`.
+The overall review remains partial pending D1 and the final documentation.
+
+## Actual product dependency and host acceptance
+
+The product filter install succeeds for the six declared workspaces. It uses
+warm cache, frozen lock and the isolated linker, with install scripts disabled.
+The initial product install exits 0 after 8.412 seconds. Formal dependency nodes,
+SDK bare entries and all 136 patch outputs pass; the four restricted packages
+are absent.
+
+Actual source tests then expose two Shared imports previously supplied by the
+root layout: gray-matter in config/skill readers and tar in version installation.
+Shared now declares the same gray-matter ^4.0.3 and tar ^7.5.2 ranges already in
+the root declarations and lock. No new package version or resolution is added.
+After the gray-only refresh, the final gray/tar refresh exits 0 after 6.511
+seconds. All 18 inputs and lock bytes remain unchanged during that install.
+All 69 declared nodes are available. Shared/src resolves both packages through
+Bun's formal nodes; all 136 SDK hashes still match and the four restricted
+packages remain absent. No manual package copy, dependency alias or link is
+used.
+
+The six-workspace source snapshot contains 1,040 permitted files. Current Repo
+and installed-project copies match. Relative to the first snapshot, only the
+Shared manifest changes; the other 1,039 hashes remain unchanged. Both protected
+token targets are excluded before reads. The frozen install also captures the
+new lock bytes separately.
+
+| Actual product test group | Tests | Assertions |
+|---|---:|---:|
+| Kernel prompt, tool round, resume and branch selection | 5 | 41 |
+| Coding handoff, accepted input identity, actions, output and summaries | 10 | 64 |
+| Selected host commands, model replacement, options and queue recovery | 4 | 20 |
+| Extension UI and prompt lifecycle | 22 | 128 |
+| Background shell, owner and worker lifecycle | 12 | 70 |
+| Conversation and session-tool flow | 4 | 22 |
+| Permission synchronization | 11 | 27 |
+| Session branching and file transport | 6 | 43 |
+| Background stop | 3 | 4 |
+| Complete bundle suite | 26 | 105 |
+| Total | 103 | 524 |
+
+All selected groups exit 0, with unchanged test inputs and the real product
+workspace dependency tree. Bundle tests run after the other groups to avoid
+concurrent build-output selection. Deterministic or task-local model endpoints
+are used. This is product-closure acceptance, not an empty-cache whole-workspace
+installation or an all-repository test pass.
+
+An unintended broader Kernel run reaches the 45-second limit. Two cases are
+blocked while writing protected settings fixtures. Four browser-input export
+cases also fail. The same four failures occur with the five context/boundary
+source files from 54f8f3c, before SDK delegation; current files are restored
+exactly after that control. Those results remain separate and are not counted
+as passes. This task does not change browser export/redaction or grant settings
+fixture access. The original two settings-dependent Coding-host exclusions
+also remain in place.
+
+Evidence: `actual-product-acceptance.json`,
+`product-gray-tar-refresh-j5z3axiu/final-receipt.json`,
+`product-source-snapshot-gray-tar.json`, individual `product-*-gray-tar` test
+receipts, `product-kernel-selected-actual`, `product-coding-product-gray`,
+`product-host-selected-gray`, `product-background-worker-actual`,
+`product-bundle-actual` and `browser-export-before-sdk-routing` under the
+final-integration task. Strict generated-declaration consumption is now covered
+by the compatibility correction and actual consumer checks above.
+
+## Actual SDK source and recovery acceptance after 6bab7a9
+
+The third filtered attempt succeeded with the same 18 frozen inputs and the
+existing cache. Exit was 0 after 6.886 seconds. All 21 target workspace nodes
+are available. Coding 94, Durable 35, Core 4, Photon 1 and Gaxios 2 outputs all
+match: 136 of 136. The four restricted packages remain absent. New public
+aliases load through the real bare SDK entry and have the same identity as
+the original prototype methods. Four tests and 16 assertions passed using the
+unchanged repository tests and their original bare imports.
+
+The parent copied 262 permitted current source, test and compiler-config files
+to this project and verified both source and destination hashes. The two
+protected token targets were excluded before any content read or copy. All
+262 hashes still match after testing. No installed package, alias or link was
+added by hand.
+
+TypeScript 5.9.3 checked the actual dependency tree with strict true,
+skipLibCheck false, ESNext/DOM and the declared Bun/Node tooling types. All
+120 source roots and 2,090 files pass with zero diagnostics and zero protected
+read requests. SDK declaration overlays are not used. The first cold check
+exceeded its 45-second budget; that attempt remains recorded. A controlled
+240-second run completed in 17.031 seconds. Native entry declaration output
+also passes: 2,046 files and zero diagnostics. Full package declaration output
+then passes for all 120 roots and 2,090 files, in 17.456 seconds. Both declaration
+runs emit successfully. The compiler and Bun/Node tooling types come from the
+existing declared tool installation; application dependencies come from the
+actual filtered SDK tree.
+
+| Actual SDK test group | Tests | Assertions |
+|---|---:|---:|
+| Session projection and durable storage | 24 | 79 |
+| Model and resource contracts | 22 | 67 |
+| Session journal, read, snapshots and task state | 49 | 266 |
+| Native session process-death recovery | 18 | 173 |
+| Summary recovery | 3 | 15 |
+| Agent recovery and facade | 16 | 72 |
+| Host AgentSession contracts | 10 | 326 |
+| Total | 142 | 998 |
+
+All groups pass, with task HOME, temporary data, deterministic providers and
+network isolation. Existing source hashes remain unchanged. The SDK-only installation remains separate from complete workspace and product
+acceptance. The actual product-workspace result is recorded above.
+
+The permitted Craft source audit also passes against the independent fixed
+v0.15.6 reference: 2,042 files, including authorized Coding legacy code. It
+excludes protected basenames and other legacy paths before reads and uses no
+history-content fallback. Four independently maintained product documents had
+been added to the source registry in error; those entries are removed to retain
+the project's existing documentation boundary. The audit passes after that
+correction. The SDK algorithms and generated outputs are unchanged.
+
+Evidence under the final-integration task includes
+`install-sdk-1-5-0-ltbtbjgf`, `filtered-coding-acceptance.json`,
+`filtered-sdk-source-snapshot.json`, `filtered-native-source-extended`,
+`filtered-native-declarations-actual`, `filtered-package-declarations-actual`
+and `source-audit-sdk-delegation`. Independent SDK runtime acceptance also passes:
+24 projection tests and 79 assertions, with unchanged inputs. The reviewer checks
+all 262 source hashes and eight installed SDK files independently. That review
+covers the SDK slice and declaration generation; strict consumption of the
+complete generated compatibility declarations is a separate remaining gate.
+
+## Filtered SDK installation after 6bab7a9
+
+A real filtered installation used the existing 18 manifest, lock and patch
+inputs with `--filter @mkagent/pi-durable-coding`, frozen lock, ignored scripts
+and the isolated linker. Its cache was already partly populated. It excluded
+ripgrep, fluent-ffmpeg, pdf-parse and es-abstract in the resulting tree. Only
+the target workspace received dependency links: 20 of its 21 declared nodes
+were available. Bun reported 512 installed packages and one failure, the Coding
+SDK. Exit was 1 after 6.462 seconds. All 18 inputs and lock bytes stayed equal.
+Durable 35, Core 4, Photon 1 and Gaxios 2 outputs matched; Coding 94 outputs
+were unavailable. The existing four-package settings restrictions stayed closed.
+
+PID 39230's task-scoped deny log identified the SDK extraction target below the
+run TMPDIR: `.3de7cfd7fffeabdd-00000001.pi-coding-agent/schemas/settings.schema.json`.
+A new profile covered that authorized SDK file in this extraction shape. An
+actual copy probe and existing-file policy queries passed. The next single
+filtered attempt completed extraction into the SDK 1.5.0 cache but failed while
+copying `schemas/settings.schema.json`: exit 1 after 6.411 seconds. Again all
+18 inputs and lock bytes stayed equal. No alias, package link or cache package
+was created by hand; the specified SDK behavior tests did not run.
+
+The second failure is a distinct Bun patch stage. The CLI revision and public
+`bun-v1.3.14` tag both identify commit
+`0d9b296af33f2b851fcbf4df3e9ec89751734ba4`.
+[PatchTask.apply](https://github.com/oven-sh/bun/blob/0d9b296af33f2b851fcbf4df3e9ec89751734ba4/src/install/patch_install.zig#L272)
+creates an anonymous random `.tmp` directory, copies the original package into
+it with the fixed copyfile backend, then applies the patch and moves the result
+to cache. The global backend flag does not select this patch-stage backend.
+[PackageInstall](https://github.com/oven-sh/bun/blob/0d9b296af33f2b851fcbf4df3e9ec89751734ba4/src/install/PackageInstall.zig#L667)
+reports the relative filename when it cannot create the destination file.
+
+The remaining directory was
+`install-sdk-schema-3p_y9ur_/tmp/.99ff5d4def7fb679-00000002.tmp`.
+Its copied `dist/index.js` and `dist/core/agent-session.js` hashes match the
+original SDK 1.5.0 hashes in CODING-PATCH.json. This identifies the copied
+package even though package.json had not yet been copied. The task exception
+for the same authorized schema must also cover this SDK patch-copy stage.
+The task-only correction for that stage succeeded in the third filtered
+attempt recorded above. The earlier failed attempts remain separate evidence.
+
+Evidence directories under the final-integration task are
+`install-filtered-sdk-p1k_cqok`, `install-sdk-schema-3p_y9ur_` and
+`bun-copy-source`. They retain original receipts and source metadata. Full
+workspace installation and the new SDK entry/runtime gates remain open.
+
 ## SDK context and boundary delegation after 59ce159
 
 The working candidate removes the two remaining production selections from
