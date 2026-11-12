@@ -99,13 +99,17 @@ projection or a specific task layout is an implementation decision that must
 follow the required behavior. The target does not require a second locally
 maintained implementation of the Coding SDK.
 
-The current implementation uses `DurableKernel`, a ported `AgentSession`,
-`DurableLoopBinding` and the `pi.coding.*` tasks. These tasks use the official
-scheduler, but they also contain local request and tool state machines. Using
-one Harness establishes scheduler ownership; it does not prove that execution
-logic has been reused sufficiently. Review these state machines against
-published `GenerationTask`, `ToolTask` and hooks before smaller helper changes.
-Any replacement must preserve accepted work and supported stored task versions.
+The current implementation uses `DurableKernel`, a durable subclass of the
+public Coding SDK `AgentSession`, `DurableLoopBinding` and the `pi.coding.*`
+tasks. `native-sdk.ts` binds the durable Agent and session through optional
+construction hooks added by repository patches to the public SDK factory.
+The tool bridge uses the SDK `ToolTask` phases. The request bridge uses SDK
+streaming and partial output through `GenerationResponseTask`, which a repository
+patch adds. Local tasks retain Native event delivery, journaling and checkpoint
+transitions. Using one Harness establishes scheduler ownership; it does not prove
+that execution logic has been reused sufficiently. Review the remaining
+transitions against published `GenerationTask`, `ToolTask` and hooks. Any
+replacement must preserve accepted work and supported stored task versions.
 
 Normal and coding profiles retain their existing prompts, tool visibility,
 permissions and resource policies. Runtime selection and Pi resource loading
@@ -172,9 +176,10 @@ behavior checks because durable 1.5.0 does not publish those tool factories.
 Standalone Native tool factories exposed to plugins must be assessed separately
 from the production tool installation.
 
-The current generator starts from the full Pi coding public entry. Its closure
-includes CLI and run modes. That is a source inventory, not an acceptance target
-or proof of necessity. Derive the required export surface from Coding behavior,
+The current generator explicitly excludes the upstream Pi CLI and all three
+run-mode hosts. It retains selected Coding plugin entry points and bindings.
+That source inventory is not an acceptance target or proof of necessity.
+Derive the required export surface from Coding behavior,
 public plugin APIs and MkAgent entry points. Assess upstream CLI/run-mode code
 separately from reusable plugin UI components. Neither wholesale retention nor
 removal follows from the current export list alone.
@@ -183,8 +188,9 @@ removal follows from the current export list alone.
 transformations. Their checks establish reproducibility at the stated versions,
 not the necessity of each file. A compatibility export list describes implemented
 exports and requires corresponding behavior evidence. Resolve plugin imports
-of the coding SDK name to the supported local interface or independent official
-Pi packages without loading the prohibited complete package.
+of the coding SDK name to the supported local interface or official Pi SDKs.
+The public Coding SDK is permitted as a production dependency. Do not start
+the original Pi CLI or bypass durable execution.
 
 ## Durable boundary requirement
 
@@ -340,12 +346,15 @@ unsupported checkpoints require explicit reconciliation before migration.
 
 ## Validation isolation and evidence
 
-Run checks in the designated workspace with the normal HOME and network environment.
-Tests use temporary data/config directories, random loopback ports and deterministic
-local providers. Recovery and reference fixtures may set their child process HOME
-to their own temporary directory. Do not use the live WebUI on port 9100, closed
-browser tasks 7 or 8, real credentials or the real Craft checkout.
-Use an independent pinned Craft checkout for the source audit.
+Run checks in the designated workspace without changing the parent process HOME.
+Validation child processes must use a task-owned HOME, temporary data/config
+directories and an explicit environment variable allowlist. Use deterministic
+local providers. Block real network access; allow only the task's own randomly
+assigned loopback endpoints when required. Do not use the live WebUI on port 9100,
+closed browser tasks 7 or 8, real accounts or credentials, paid model requests
+or the real Craft checkout. Do not change existing permissions or expand the
+authorized access scope. Use an independent pinned Craft checkout for the source
+audit.
 
 The final validation report must separate unit/contract coverage, real Harness
 behavior, packaged subprocess behavior and platform checks. It must list every
