@@ -3725,8 +3725,8 @@
       "reason": "Use the public Coding SDK for event bus, diagnostics, file mutation queue and frontmatter instead of local copies."
     },
     "packages/pi-durable-coding/src/native-models.ts": {
-      "sha256": "4eb3614c94688071aeeef8038bc6a465ebb97fd4b5784bebdc866a616fcf68df",
-      "reason": "Use published Coding model runtime and composition contracts while preserving host model, credential and durable execution ownership."
+      "sha256": "8518ee7861b3559bb44437a37f47c91b72de6ddd52f678d39dc48e912efb168a",
+      "reason": "Preserve the host refresh result through the SDK registry facade after updating host model and auth snapshots."
     },
     "packages/pi-durable-coding/src/native-runtime.ts": {
       "sha256": "4794d520ef76eae31da10e5ff5656f110f62b79302cb79bf0f6543d6391d1dda",
@@ -3841,8 +3841,8 @@
       "reason": "Port Pi v1.5.0 packages/coding-agent/examples/extensions/input-transform.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
     },
     "packages/pi-durable-coding/test/native-models.test.ts": {
-      "sha256": "9345b640f251bcc4f9ec5b22d1ba821e1ec9156c95d1b6468eef41b4a9e5bb4c",
-      "reason": "Verify authentication, provider overrides and model collection replacement."
+      "sha256": "6a98f46396bf1b8783510a2ad48a04a032abd0a4fc4175a99bf58cc4380b6145",
+      "reason": "Verify host authentication, provider restoration, collection replacement and original refresh cancellation/error results."
     },
     "packages/pi-durable-coding/test/session-view.test.ts": {
       "sha256": "9220a6fa1fe55e4292979e69684bd863444ec76b1472f683ca52144d6ce27e96",

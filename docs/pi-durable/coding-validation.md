@@ -26,6 +26,33 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Host model refresh result after 000b628
+
+The public Native registry facade now returns the host `Models.refresh()` result
+after it updates the extension snapshot. The SDK facade already returns its
+runtime result. The host bridge previously discarded it, which hid the abort
+flag and provider errors from callers. The new case first receives `undefined`
+and fails. After the fix, it receives the same result object, passes the options
+unchanged and observes the updated availability snapshot. All seven model cases
+pass with 22 assertions.
+
+The source comparison also confirms the bounded purpose of this host bridge.
+SDK `ModelRuntime.bind()` accepts a live Models source, but it is asynchronous,
+requires a credentials interface and builds its own collection. The existing
+Native constructor is synchronous and accepts only the host Models source;
+its provider changes and restoration operate on that host collection. The
+facade and provider composition already use public SDK implementations. No
+source comparison finding establishes a direct replacement that preserves all
+of these contracts. The public Native export remains available.
+
+The tests use deterministic providers, in-memory credentials, a task-owned HOME
+and temporary durable data. The sandbox permits the approved legacy source
+and denies protected files, external network access and port 9100. The red and
+green runs are in
+`/private/tmp/mkagent-native-acceptance-ALoFEM/final-integration-ym34k041/models-refresh-red/`
+and `models-refresh-green/`. The seven-case result verifies this registry
+contract; complete installation and full declaration gates remain open.
+
 ## Public context estimates after 0feadcc
 
 The session view, durable session store and boundary draft adapter now import

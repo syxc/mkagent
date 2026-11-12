@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 import { rmSync } from 'node:fs';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
-import { InMemoryCredentialStore, createProvider } from '@earendil-works/pi-ai';
+import { InMemoryCredentialStore, createProvider, type ModelsRefreshResult } from '@earendil-works/pi-ai';
 import { builtinModels } from '@earendil-works/pi-ai/providers/all';
 import { NativeModelRegistry } from '../src/native-models.ts';
 import { durableFixture, response } from './fixtures/durable-harness.ts';
@@ -31,6 +31,22 @@ describe('native ModelRegistry over host pi-ai Models', () => {
     adapter.registry.unregisterProvider('faux');
     expect(adapter.registry.find('faux', 'registered')).toBeUndefined();
     expect(adapter.registry.find('faux', 'local')).toBe(original);
+  });
+
+  test('returns host refresh cancellation and errors after updating the extension snapshot', async () => {
+    const state = await setup();
+    const adapter = new NativeModelRegistry(() => state.models);
+    const result: ModelsRefreshResult = {
+      aborted: true, errors: new Map([['faux', new Error('Fixture refresh failed')]]),
+    };
+    const options = { allowNetwork: false, providers: ['faux'] };
+    using mocks = new DisposableStack();
+    const refresh = spyOn(state.models, 'refresh').mockResolvedValue(result);
+    mocks.defer(() => refresh.mockRestore());
+    expect(adapter.registry.getAvailable()).toEqual([]);
+    expect(await adapter.registry.refresh(options)).toBe(result);
+    expect(refresh).toHaveBeenCalledWith(options);
+    expect(adapter.registry.getAvailable().some(model => model.id === 'local')).toBe(true);
   });
 
   test('reapplies extension provider declarations after a host runtime replacement', async () => {

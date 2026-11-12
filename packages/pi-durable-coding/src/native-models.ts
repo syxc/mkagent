@@ -14,8 +14,9 @@ export class NativeModelRegistry {
     const actions = {
       getAvailableSnapshot: () => { this.collection; return this.available; },
       refresh: async (options?: Parameters<Models['refresh']>[0]) => {
-        await this.collection.refresh(options);
+        const result = await this.collection.refresh(options);
         await this.refreshSnapshot();
+        return result;
       },
       getError: () => undefined,
       hasConfiguredAuth: (provider: string) => this.authStatus(provider) !== undefined,

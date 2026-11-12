@@ -34,6 +34,8 @@ Pi 正式发布的公开 API 与仓内补丁分开记账。通过补丁新增导
 
 每项改动完成必要验证后再处理下一项。历史未验证平台不自动扩展为本批工作，也不能用于豁免已经确认缺失的必需功能。
 
+`000b628` 后补齐 Native 模型桥的 SDK 返回契约：宿主刷新结束并更新扩展快照后，返回原 `ModelsRefreshResult`，保留取消标志、错误 Map 和 options。新回归先复现返回 undefined，再验证修复；模型组七项、22 个断言通过。SDK `ModelRuntime.bind` 的异步初始化、凭据依赖和独立集合与既有同步宿主桥不同，现有 facade 和 provider composition 已使用 SDK，保留该必要桥及公开导出，见[模型刷新返回验证](coding-validation.md#host-model-refresh-result-after-000b628)。
+
 `0feadcc` 后，将 session view、durable store 和 boundary draft 的上下文估算改接公开 Coding SDK，保留原投影和分支输入；生成器同步接线，并在目标读写前跳过两份受保护 token 文件。编译和测试不再读取这两个私有入口。四项原行为测试、十个断言及一项结构消费与声明生成、四个断言通过；首次消费夹具缺少未声明的根 `bun-types` 入口，改用项目标准 Bun、Node 类型后通过。完整源码检查另清理一份指向已删文件的无调用转发及生成登记，122 个根、2024 文件零诊断、零受保护读取请求，保留项目 `skipLibCheck=true`。完整 Native 声明、安装和 F0 至 F6 仍开放，见[公开上下文估算验证](coding-validation.md#public-context-estimates-after-0feadcc)。
 
 `6ab2055` 后补齐 server 构建直接使用的 Coding SDK 开发依赖，固定 1.5.0，不改已解析版本。既有 isolated 工程冻结刷新用时 3.08 秒，16 个安装输入及 131 份 SDK 补丁输出保持；这不是再次全新安装。实际 bundle 运行发现 Bun 的 MODULE_NOT_FOUND 异常不继承 Error，现修正 Photon 邻接资源回退，并把普通 Bun bundle 加入既有搬迁回归。修复前新用例失败，修复后五文件 55 项、151 个 Bun 断言通过，包含全部 26 项 worker bundle 用例。独立静态复核未确认新增缺陷，四项来源及受限 Craft 2033 文件审计通过。本批未重跑类型检查，完整声明、受保护 legacy、剩余适配、产品恢复及 F0 至 F6 继续开放，见[isolated worker 与图片验证](coding-validation.md#isolated-worker-and-relocated-photon-after-6ab2055)。
