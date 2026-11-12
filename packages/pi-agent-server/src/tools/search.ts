@@ -1,7 +1,7 @@
 /** Use the Coding SDK for search and the existing bridge for durable registrations. */
 import { readFile, stat } from 'node:fs/promises';
 import type { ToolRegistration } from '@earendil-works/pi-durable';
-import { agentToolToHost, createFindTool, createGrepTool, createLsTool } from '@mkagent/pi-durable-coding/native';
+import { agentToolToHost, createFindTool, createGrepTool, createLsTool } from '@mkagent/coding-runtime/native';
 import { resolveFd, resolveRipgrep } from './local/tool-binaries.ts';
 
 export function createSearchTools(cwd: string): ToolRegistration[] {

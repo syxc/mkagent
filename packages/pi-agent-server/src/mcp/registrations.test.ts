@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import type { ToolExecutionApi } from '@earendil-works/pi-durable';
 import { loadMcpTools } from './extension.ts';
-import type { RegisteredMcpServer } from '@mkagent/pi-durable-coding/native';
+import type { RegisteredMcpServer } from '@mkagent/coding-runtime/native';
 
 const fixture = join(import.meta.dir, '..', 'test-fixtures', 'mcp-server-resources.ts');
 const config = { command: process.execPath, args: [fixture], exposure: 'direct' as const };

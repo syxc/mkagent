@@ -1,6 +1,6 @@
 /** Pi turn semantics expressed as durable phases and owned tool tasks. */
 import { copyJson, type Context } from '@earendil-works/chord';
-import type { AssistantMessage, Model, ToolResultMessage, UserMessage } from '@earendil-works/pi-ai';
+import type { AssistantMessage, Model, ToolResultMessage, UserMessage } from '@earendil-works/pi-coding-agent';
 import {
   defineTask, type ConversationId, type RunningTask,
   type TaskId, type TaskRuntime, type Tx, type ConversationStreamOptions,

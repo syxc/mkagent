@@ -1,7 +1,7 @@
 /** Synthetic native and compatibility providers. Never contacts a model or an auth service. */
 import { writeFileSync } from 'node:fs';
 import { createProvider, type Api, type Model } from '@earendil-works/pi-ai';
-import type { ExtensionFactory } from '@mkagent/pi-durable-coding/native';
+import type { ExtensionFactory } from '@mkagent/coding-runtime/native';
 
 export const syntheticAccess = 'synthetic-provider-login-access';
 

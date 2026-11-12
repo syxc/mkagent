@@ -3,7 +3,7 @@ import { readFile, stat, unlink } from 'node:fs/promises';
 import { basename } from 'node:path';
 import type { CallToolResult, McpRequestOptions } from '@earendil-works/pi-mcp';
 import { compile } from '@earendil-works/pi-schema';
-import * as sdk from '@mkagent/pi-durable-coding/mcp-tools';
+import * as sdk from '@mkagent/coding-runtime/mcp-tools';
 import * as host from './tools.ts';
 
 const image = { type: 'image' as const, data: 'fixture-image', mimeType: 'image/png' };

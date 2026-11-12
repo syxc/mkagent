@@ -5,4 +5,4 @@
  * reserve. Never below Pi's own reserve: a window at or beyond the model's limit
  * keeps Pi's default trigger.
  */
-export { compactionReserveFor } from '@mkagent/pi-durable-coding/native';
+export { compactionReserveFor } from '@mkagent/coding-runtime/native';

@@ -2,9 +2,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
 import { type Model } from '@earendil-works/pi-ai';
-import { InMemoryCodingAgentModelsStore } from '@earendil-works/pi-coding-agent';
+import { InMemoryCodingAgentModelsStore, StringEnum, Type } from '@earendil-works/pi-coding-agent';
 import type { Static, TUnsafe } from 'typebox';
-import { StringEnum, Type } from '../src/pi/core/extensions/pi-ai-extension-view.ts';
 import { calculateContextTokens } from '../src/pi/core/compaction/compaction.ts';
 
 test('Native model stores isolate providers and clone nested data on both boundaries', async () => {

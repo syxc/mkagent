@@ -4,7 +4,7 @@ import {
   createCodemodeToolDefinition as sdkDefinition, type CodemodeDependencies,
   type CodemodeExtensionOptions, type CodemodeToolOptions,
 } from '@earendil-works/pi-coding-agent';
-import type { AgentTool } from '@earendil-works/pi-agent-core';
+import type { AgentTool } from '@earendil-works/pi-coding-agent';
 
 export {
   CODEMODE_DOCS_PATH, CODEMODE_STORE_ENTRY_TYPE, CODEMODE_TOOL_NAME,

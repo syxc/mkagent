@@ -6,7 +6,7 @@ import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
 import { portAgentFacade } from './agent-facade-port.ts';
-import { applySharedHelperPort, excludeRunModeEntries } from './shared-helper-port.ts';
+import { excludeRunModeEntries } from './shared-helper-port.ts';
 
 const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
 const checkout = process.argv[2];
@@ -38,7 +38,7 @@ if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCo
 const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
 const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
 // Retain the legacy token adapter as an explicit root.
-const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/compaction/compaction.ts', 'extensions/codemode/worker.ts', 'core/extensions/virtual-modules.ts'];
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/compaction/compaction.ts', 'extensions/codemode/worker.ts'];
 const visited = new Set<string>();
 const dependencies = new Set<string>();
 const coreImports = new Set<string>();
@@ -162,12 +162,6 @@ while (queue.length) {
   };
   visit(parsed);
   for (const edit of replacements.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.body + body.slice(edit.end);
-  const helper = applySharedHelperPort(path, body);
-  if (helper) {
-    body = helper.body;
-    changes.add(helper.change);
-    if (helper.dependency) dependencies.add(helper.dependency);
-  }
   const target = 'src/pi/' + path;
   save(target, body);
   records.push({ source: 'packages/coding-agent/src/' + path, target, sha256: hash(original), portSha256: hash(body), changes: [...changes] });
@@ -212,15 +206,15 @@ const functions = helperAST.statements.filter((node): node is ts.FunctionDeclara
 if (functions.length !== helperNames.size) throw new Error('Pinned agent operation helpers changed');
 const helperBody = [
   '// Native Pi request and tool preparation operations; scheduling belongs to pi-durable tasks.',
-  'import { streamAssistantResponse as streamCoreResponse, type AgentEventSink } from "@earendil-works/pi-agent-core";',
-  'import { PI_ATTRIBUTION, type AssistantMessage } from "@earendil-works/pi-ai";',
+  'import { streamAssistantResponse as streamCoreResponse, type AgentEventSink } from "@earendil-works/pi-coding-agent";',
+  'import { PI_ATTRIBUTION, type AssistantMessage } from "@earendil-works/pi-coding-agent";',
   'import type { AgentContext, AgentLoopConfig, StreamFn } from "./agent-runtime.ts";',
-  'export type { AgentEventSink } from "@earendil-works/pi-agent-core";',
+  'export type { AgentEventSink } from "@earendil-works/pi-coding-agent";',
   '// Keep Native defaults separate from the mutable public core identity.',
-  'export const DEFAULT_AGENT_IDENTITY = { attribution: PI_ATTRIBUTION };',
+  'export const DEFAULT_AGENT_IDENTITY: { attribution: typeof PI_ATTRIBUTION } = { attribution: PI_ATTRIBUTION };',
   'export {',
   ...functions.filter(node => node.name!.text !== 'streamAssistantResponse').map(node => '  ' + node.name!.text + ','),
-  '} from "@earendil-works/pi-agent-core";',
+  '} from "@earendil-works/pi-coding-agent";',
   'export function streamAssistantResponse(',
   '  context: AgentContext, config: AgentLoopConfig, signal: AbortSignal | undefined,',
   '  emit: AgentEventSink, streamFunction: StreamFn,',

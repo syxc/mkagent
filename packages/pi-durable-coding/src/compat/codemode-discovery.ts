@@ -1,4 +1,4 @@
-import type { AgentTool } from "@earendil-works/pi-agent-core";
+import type { AgentTool } from "@earendil-works/pi-coding-agent";
 import { renderToolSample, toCodemodeIdentifier, type CodemodeTool, type CodemodeGlobal } from "@earendil-works/pi-durable/codemode";
 import type { ToolNamespace } from "@earendil-works/pi-coding-agent";
 import { rankToolSearchDocuments, DEFAULT_TOOL_SEARCH_LIMIT } from "@earendil-works/pi-durable/tool-search";

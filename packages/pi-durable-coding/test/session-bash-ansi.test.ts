@@ -3,7 +3,7 @@ import { afterAll, expect, test } from 'bun:test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Agent } from '@earendil-works/pi-agent-core';
+import { Agent } from '@earendil-works/pi-coding-agent';
 import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import {
   AgentSession, DefaultResourceLoader, ModelRuntime, SessionManager, SettingsManager,

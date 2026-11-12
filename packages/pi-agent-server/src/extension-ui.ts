@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type {
   ExtensionUIContext, ExtensionUIDialogOptions, ExtensionWidgetOptions,
   ProjectTrustContext, RpcExtensionUIRequest, RpcExtensionUIResponse,
-} from '@mkagent/pi-durable-coding/native';
+} from '@mkagent/coding-runtime/native';
 
 export type ExtensionUIEvent =
   | (RpcExtensionUIRequest & { uiEpoch: string; sensitive?: boolean })

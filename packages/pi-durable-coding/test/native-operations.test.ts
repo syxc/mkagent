@@ -1,12 +1,16 @@
 import { expect, test } from 'bun:test';
 import {
-  DEFAULT_AGENT_IDENTITY as coreIdentity, streamAssistantResponse as streamCoreResponse,
-} from '@earendil-works/pi-agent-core';
+  getExtensionModules, streamAssistantResponse as streamCoreResponse,
+} from '@earendil-works/pi-coding-agent';
 import { createAssistantMessageEventStream, type AssistantMessage, type Model } from '@earendil-works/pi-ai';
 import {
   DEFAULT_AGENT_IDENTITY, prepareToolCall, streamAssistantResponse,
 } from '../src/native-operations.ts';
 import type { AgentTool, StreamFn } from '../src/agent-runtime.ts';
+
+const { DEFAULT_AGENT_IDENTITY: coreIdentity } = (await getExtensionModules())['@earendil-works/pi-agent-core'] as {
+  DEFAULT_AGENT_IDENTITY: Record<string, unknown>;
+};
 
 const model: Model<any> = {
   id: 'fixture', name: 'Fixture', api: 'fixture', provider: 'fixture', baseUrl: '',

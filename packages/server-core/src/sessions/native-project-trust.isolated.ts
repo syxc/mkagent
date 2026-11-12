@@ -97,7 +97,7 @@ test('product startup gates native extensions and both project MCP files, and re
   const { SessionManager, setSessionPlatform } = await import('./SessionManager')
   const { createHeadlessPlatform } = await import('../runtime/platform-headless')
   const { RPC_CHANNELS } = await import('@mkagent/shared/protocol')
-  const { ProjectTrustStore } = await import('@mkagent/pi-durable-coding/native')
+  const { ProjectTrustStore } = await import('@mkagent/coding-runtime/native')
   const platform = createHeadlessPlatform()
   platform.appRootPath = appRoot
   setSessionPlatform(platform)

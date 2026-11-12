@@ -1,11 +1,11 @@
 /** Bind SDK resource tools to durable execution and visibility. */
-import { createMcpResourceToolDefinitions as sdkResources } from '@mkagent/pi-durable-coding/mcp-tools';
+import { createMcpResourceToolDefinitions as sdkResources } from '@mkagent/coding-runtime/mcp-tools';
 import type { ToolRegistration } from '@earendil-works/pi-durable';
 import type { JsonValue } from '@earendil-works/chord';
 import { toDurableVisibility } from './tools.ts';
 
 export { LIST_MCP_RESOURCE_TEMPLATES_TOOL, LIST_MCP_RESOURCES_TOOL, READ_MCP_RESOURCE_TOOL } from './mcp-servers.ts';
-export { isMcpAppResource } from '@mkagent/pi-durable-coding/mcp-tools';
+export { isMcpAppResource } from '@mkagent/coding-runtime/mcp-tools';
 export type McpResourceToolOptions = Parameters<typeof sdkResources>[0];
 
 export function createMcpResourceToolDefinitions(options: McpResourceToolOptions): ToolRegistration[] {

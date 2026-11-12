@@ -6,14 +6,14 @@
  * Server tool-list and authorization changes rebuild registrations for the owning kernel.
  */
 import { join } from 'node:path';
-import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/pi-durable-coding/mcp-oauth';
-import type { RegisteredMcpServer } from '@mkagent/pi-durable-coding/native';
+import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/coding-runtime/mcp-oauth';
+import type { RegisteredMcpServer } from '@mkagent/coding-runtime/native';
 import type { ToolRegistration } from '@earendil-works/pi-durable';
 import type { CodemodeNamespace } from '@earendil-works/pi-durable/codemode';
 import { loadMcpConfig } from './config.ts';
 import { getMcpToolExposure, mcpNamespace, validateMcpServerConfig, type McpServerEntry } from './mcp-servers.ts';
 import { McpServerConnection, createDefaultTransport } from './runtime.ts';
-import { McpServerLog } from '@mkagent/pi-durable-coding/mcp-log';
+import { McpServerLog } from '@mkagent/coding-runtime/mcp-log';
 import { createMcpResourceToolDefinitions } from './resources.ts';
 import { createMcpToolDefinition, createMcpToolName } from './tools.ts';
 

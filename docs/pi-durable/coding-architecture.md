@@ -4,7 +4,7 @@ MkAgent 第一次将 Pi coding agent 直接换成 pi-durable 后，发现 Coding
 
 2026-11-08 的纠偏先修正文档，再落实内核接入、Coding 兼容及相关代码和测试。此前大量复制并改造上游源码，带来 Coding 和 durable 每次更新时逐文件适配的维护风险。本次优先引用可复用 Pi 官方 SDK，减少长期维护的源码、生成转换和补丁；不能把本地算法移入 SDK 补丁就记作完成。MkAgent 既有整体架构、分层和宿主职责保持，调整限于必要内核接入。需求及 SDK 选择顺序以[能力规格](coding-capabilities-spec.md)为准，步骤见[纠偏跟进](coding-follow-up.md)。`pi-agent-core` 按需使用；用户已允许生产使用 `pi-coding-agent` 的公开 SDK，不启动原版 CLI。SDK 覆盖后删除对应源码和多余直接依赖，只保留有具体缺口依据的适配。
 
-本文记录 `cb0311f` 的装配及本轮纠偏后的实际接线。当前按能力划分的发布 API、补丁、适配、恢复边界和退出条件见[SDK 维护清单](coding-sdk-maintenance.md)。执行主链、Coding 能力和剩余六个 src/pi 入口已按调用方核对；下文的历史“保留”决定仅限当时时点。同步上下文和边界算法已交还 SDK，宿主仍承担权限、完整事件交付和 journal 事务等具体责任。Marked 和 Highlight.js 是第三方资源包，其替换不计为 Pi 官方 SDK 复用。
+本文记录 `cb0311f` 的装配及本轮纠偏后的实际接线。当前按能力划分的发布 API、补丁、适配、恢复边界和退出条件见[SDK 维护清单](coding-sdk-maintenance.md)。执行主链、Coding 能力和剩余四个 src/pi 入口已按调用方核对；下文的历史“保留”决定仅限当时时点。同步上下文和边界算法已交还 SDK，宿主仍承担权限、完整事件交付和 journal 事务等具体责任。Marked 和 Highlight.js 是第三方资源包，其替换不计为 Pi 官方 SDK 复用。
 
 ## 目标职责与已核对的实现边界
 
@@ -80,20 +80,20 @@ Native 先准备并验证参数，再运行权限 hook；内部 SDK effect 桥�
 
 ## 哪些直接引用上游包
 
-以下是 coding 包和 [worker 包](../../packages/pi-agent-server/package.json)声明的 Pi 系直接生产依赖，均固定为 `1.5.0`；具体归属以两个 `package.json` 为准。根项目通过 `patchedDependencies` 修改 durable 和 core；下表的包引用不等于全部能力均来自未修改发布包。新增导出和执行接点必须按本地 SDK 例外核对。
+以下列出 coding 包和 [worker 包](../../packages/pi-agent-server/package.json)使用的 Pi 包及依赖归属，均固定为 `1.5.0`；生产与测试声明以两个 `package.json` 为准。根项目通过 `patchedDependencies` 修改 durable 和 core；下表的包引用不等于全部能力均来自未修改发布包。新增导出和执行接点必须按本地 SDK 例外核对。
 
 | 包 | 用途 |
 |---|---|
 | `@earendil-works/pi-durable` | Harness、任务、事务、存储和恢复，以及生产宿主已安装的 `/codemode`、`/tool-search`、`/tools`、`/images` 内置模块 |
-| `@earendil-works/pi-agent-core` | 已发布协议类型、消息声明合并、`streamProxy` 和 Agent 实现。八个操作导出、Agent 执行器注入及相关接点由仓内四文件补丁增加，属于已登记缺口和退出条件的本地修改 |
-| `@earendil-works/pi-ai` | 模型目录、provider、消息、流式请求、用量、内存模型存储、枚举 schema 内容、usage 总数及公开取消和等待 helper；旧接口保留所需的类型、signal 与取消错误适配 |
+| `@earendil-works/pi-agent-core` | 由 Coding SDK 管理 Agent、协议及操作实现；本包经 SDK 的窄协议出口使用同一实例。既有四文件补丁仍承担执行注入等接点 |
+| `@earendil-works/pi-ai` | 由 Coding SDK 提供本包所需消息、模型和事件流协议；本包仅测试直接引用。worker、shared 和 server-core 的独立模型服务仍直接使用此包 |
 | `@earendil-works/pi-coding-agent` | Coding 包直接依赖其公开 SDK，复用基础、设置、包管理、主题、注册表、会话存储、资源与插件加载及模型运行时；必要补丁见维护清单，不启动原版 CLI |
-| `@earendil-works/pi-mcp` | MCP 客户端与协议支持 |
-| `@earendil-works/pi-tui` | Pi 交互组件、主题和终端接口 |
-| `@earendil-works/pi-schema` | schema 与类型支持 |
+| `@earendil-works/pi-mcp` | worker 的 MCP 协议调用；Coding 运行时的 OAuth 契约经 Coding SDK 取得，本包仅测试直接引用此包 |
+| `@earendil-works/pi-tui` | Coding SDK 提供组件及默认插件模块，本包仅测试直接引用此包 |
+| `@earendil-works/pi-schema` | worker 的 schema 支持，本包仅测试直接引用此包 |
 | `@earendil-works/chord` | 结构化数据、执行上下文等基础能力 |
 
-两个 workspace 已移除直接 pi-codemode 依赖；沙箱和 worker 经 durable 公开入口取得，Coding 和 durable 内部的传递依赖保留。根仓库、shared 和 server-core 仍声明 `pi-ai 1.1.0`，不在上表 Coding 版本范围内。任务版本也须区分发布包与仓内补丁：
+两个 workspace 已移除直接 pi-codemode 依赖；沙箱和 worker 经 durable 公开入口取得，Coding 和 durable 内部的传递依赖保留。根仓库、shared、server-core 与 Coding 运行时的 pi-ai 声明现统一为 `1.5.0`。`@mkagent/coding-runtime` 的七项生产依赖保留 Coding SDK、durable、chord 上下文基础能力及实际资源适配；Core 已无直接声明，AI、`pi-mcp`、`pi-tui`、`pi-schema`、Jiti 和 TypeBox 的直接声明用于测试。未再直接使用的 cross-spawn、diff、proper-lockfile、undici 及两个配套类型声明已删除，SDK 自身的传递依赖保持。任务版本也须区分发布包与仓内补丁：
 
 | 标识 | 未修改 Pi 1.5.0 | 当前本地安装 | 兼容核对 |
 |---|---|---|---|
@@ -142,7 +142,7 @@ Native 的头、尾、中间与单行截断、大小显示和常量现直接使�
 
 插件 edit 的两个工厂只绑定公开 durable createEditTool().prepareArguments，SDK 承担自定义 operations、ctx.cwd、BOM/CRLF、模糊匹配、队列、取消和展示。durable 参数准备保持冻结输入和原始 call 不变，原始 options 直接交给 SDK，保留继承属性和 getter。durable edit 注册的环境、schema 和结果契约不直接提供 Coding 插件 operations 与 renderer，因此生产 edit 继续用 durable，插件使用 Coding SDK。升级核对参数形状、真实文件、原始错误、在途取消结算、预览和组件复用；不新增 SDK 补丁。
 
-版本范围需要分开看：[根包](../../package.json)和 [shared](../../packages/shared/package.json)仍声明 `pi-ai@1.1.0`，不能把 coding 运行时的 `1.5.0` 写成全仓统一版本。
+版本声明现已统一：[根包](../../package.json)、[shared](../../packages/shared/package.json)、server-core 与 Coding 运行时均使用 `pi-ai@1.5.0`。历史 `1.1.0` 安装和对照回执保留原范围。
 
 宿主的 `tools/codemode.ts` 直接调用 durable 的 `createCodemodeExtension`，`index.ts` 安装内置 `createToolSearchExtension`；`tools/builtin.ts` 使用 durable 的编码工具、PowerShell 和图像工厂。`CodingHost` 将 registry 中的注册转换为原生工具，并通过 `baseToolsOverride` 注入 coding 会话。上述装配已有实现，本轮补充核实。
 
@@ -229,9 +229,11 @@ SDK terminal failed 也随结果持久化。Native hooks、事件和 journal 完
 
 宿主压缩窗口由 `host-settings.ts` 包装公开 `SettingsManager` 接口，在内存中合成实际模型的 reserve tokens；reload 和 flush 不把该策略写入 Pi 配置。设置切片已改用公开 Coding SDK 的实际 SettingsManager 和 storage，实现正文、schema 与 defaults 均由发布包提供，三份本地源码已删除。根入口缺少部分现有契约，通过四文件仅导出补丁接入；补丁和 `CODING-PATCH.json` 由 `patch-coding-sdk.ts` 重建，不复制或修改设置算法、锁和生命周期。宿主信任、profile 覆盖、自定义 storage 及严格错误交付仍在外层。包管理切片继续复用公开 DefaultPackageManager，删除本地 manager 及退出闭包的 output guard、Git helper 和两份转发。SDK 补丁仅增加宿主发现策略、项目目录、更新 scope、stderr 及已启动安装任务排空接点，解析和安装主体仍由发布包提供；legacy wrapper 保留 `.pi`、离线回调和 skip 诊断适配。包管理转换已从源码 port 移除，semver、hosted-git-info 及后者类型的直接依赖删除；Coding 补丁当前合计五十四个物理文件，新增会话、工具、helper、搜索、read、shell、codemode 及 UI 接点见下文。主题和快捷键已使用 SDK 的完整实现，删除本地九份 TypeScript、两份 JSON、旧主题转换脚本和 highlight.js 直接依赖。SDK 根导出现有契约，默认安装自身完整 validator，并优先定位 worker 的 coding-assets/theme；主题求解、高亮和键配置算法没有复制进补丁。worker 从 SDK 复制主题 JSON，HTML 模板与 CJK 资源由 SDK 提供，worker 另复制两项 browser vendor JavaScript，不保留本地模板副本。ModelRegistry 和 MCP server 全模块也已改用 SDK，删除两份本地实现及旧 MCP 转发。根入口转出现有契约，ModelRegistry 构造声明改为公共 runtime 的结构类型，执行 JS 不变；legacy 仅保留结构化构造薄适配。ModelRuntime 现也直接使用公开 SDK 类，九份本地运行时实现、旧转换脚本和 composer 转发已删除。SDK 窄补丁绑定实时宿主 Models 与共用临时凭据，扩展 overlay 使用独立内存集合，宿主刷新保留原目录存储；composition、virtual routing、认证串行化及请求仍用原 SDK 算法。legacy NativeModelRegistry 仍保留结构化宿主适配。SessionManager 现使用公开 SDK，2057 行本地存储实现及旧转换分支已删除。补丁只增加 context 选择、逐项投影及最终投影回调，开放 protected 构造、子类和 detached 工厂以及目录与 app name 钩子；解析、迁移、树和持久化算法仍由发布包提供。legacy 外层保留 durable 投影与显式目录约束，原生 journal 消费同一 SDK 类。SDK AgentSession 已管理生产生命周期，durable 子类绑定原子输入及恢复，定向行为和冷恢复通过。DefaultResourceLoader 的三个创建入口现统一使用 SDK 类，删除 1226 行本地资源类、104 行 context 和 31 行去重辅助实现及旧转换分支。SDK 只补 missing/package 策略、额外来源、trust 后 prompt 路径、context 信任约束及四个插件函数注入；发现、包解析、信任阶段、reload、metadata 和碰撞算法均由发布包提供。SDK 默认使用自己的 loader，宿主注入新的 SDK 薄绑定以保留模块映射与转译。插件 loader 已交给 SDK 并删除本地完整实现，runner/types/exec 也已使用 SDK，具体接点见下段。prompt 去重公开绑定复用现有无实例状态的方法，不复制算法。插件转译通过 Jiti 公开 transform 与 Babel 插件接口修正 Bun 的 `import.meta.dir/path/file`，按源文件提供元数据并隔离旧转译缓存；两个加载入口共用适配，保留宿主及插件的堆栈格式化。
 
-插件保留 Pi 包名导入，由[原生虚拟模块表](../../packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts)映射到宿主适配及 Pi 官方包，也提供旧 `@mariozechner/*` 名称映射。当前已生产依赖公开 Coding SDK 1.5.0，模块表须随替换同步，未替换实现仍待删除。MkAgent 通过 RPC 承接扩展 UI；使用 Pi 的 UI 组件不代表 MkAgent CLI 已采用原版 Pi TUI。插件兼容范围以需求对照中的实际验收为准。
+插件保留 Pi 包名导入，Coding SDK 的 `getExtensionModules` 负责默认 AI、TUI、TypeBox 模块及旧 `@mariozechner/*` 别名。[宿主 loader](../../packages/pi-durable-coding/src/host-extension-loader.ts)只提供 Coding/Core 的执行视图和转译准备回调。MkAgent 通过 RPC 承接扩展 UI；使用 Pi 的 UI 组件不代表 MkAgent CLI 已采用原版 Pi TUI。插件兼容范围以实际验收为准。
 
-插件 loader 已从本地同源去重推进为公开 SDK 接线。SDK 承担 runtime、注册 API 事务、factory 初始化和失败回滚、批量加载、发现及 factory cache。窄补丁增加可选 importModule 与 projectConfigDir，并按稳定 importer 身份隔离 cache，保留原有 cwd/generation 判断与迟到 import 保护、默认 SDK Jiti 分支；没有复制完整算法。host-extension-loader 只绑定两种模块表、Jiti/static、转译及目录。native 模块表延迟加载，legacy 仍映射 compat、拒绝旧 Agent 执行及私有 subpath 回退，并要求显式 agentDir。两个完整 loader、Jiti 和 manifest helper、无调用转发及旧资源包装共七文件、1179 行已删除，生成遍历在 loader 边界停止，virtual-modules 作为真实外部调用入口保留。无依赖或持久化版本变化。上游提供相同模块导入、缓存隔离和目录接点后撤除补丁；升级核对双包名及 TypeBox、import.meta、堆栈、clear/cwd/late import、stale/rollback 和 trust/reload。runner/types 的后续替换见下段。
+本包的 Agent、Core 工具操作、消息和事件流协议统一经 Coding SDK 的具名出口取得。该窄协议补丁公开 SDK 自己解析到的原实现，消除直接 Core 依赖形成的第二个 peer 上下文；未全量转出子包命名空间。Core 既有执行注入补丁、durable 队列与恢复适配仍需维护，上游提供同等宿主执行契约后撤除对应接点。默认内存模型使用 SDK ModelRuntime、AuthStorage 与模型存储创建器，显式关闭配置文件和网络刷新。
+
+插件 loader、Jiti 创建和默认模块表均由 Coding SDK 承担。窄补丁在原有 importModule/projectConfigDir 接点上增加 modules、prepareImporter 和 `getExtensionModules`，保留缓存的 cwd/generation、迟到 import、注册及回滚算法。Native 延迟提供 durable Agent 和 Coding 视图；legacy 继续提供 compat 与拒绝旧 Agent 执行的视图，SDK 阻止未知私有 runtime subpath 回退。宿主保留 Bun/Babel 堆栈及 import.meta 的准备回调，不创建 Jiti 或拼装 AI/TUI/TypeBox。两份本地模块表相关实现、旧 schema 包装及转发和生成根已删除；StringEnum 的 TypeBox 品牌、字面量和数组隔离由 SDK 插件视图共用公开 pi-ai schema 构造保持。上述新增接口仍属仓内补丁，上游提供同等模块覆盖、准备回调及缓存隔离契约后撤除；持久化任务和 checkpoint 版本不变。
 
 ModelRuntime 的 bind/createCredentials 属于本地 SDK 接点，未修改发布包没有相同宿主绑定入口。绑定默认 cache-only；同步集合及原地 provider 替换时使旧 availability/auth 检查失效，并把 host 与 extension provider 的 refresh 分给各自 Models。默认 create 路径保持；composer 的执行 JavaScript 不变，只将参数收窄为实际读取的 getProvider。模型目录、provider composition、virtual routing、凭据覆盖和请求算法没有移入补丁。十一文件共 2986 行已删除。升级检查动态替换、overlay、原 store、共享 runtime key、OAuth、迟到快照和默认 SDK；公开等效接点可用后撤除补丁。独立复核未确认新增回归，但复现替换前已有的 AuthContext 缺口：bound runtime 的内部集合没有继承宿主自定义上下文，依赖该上下文的认证可能失效。当前生产未见该自定义接线，本切片未修复这一既有问题；行为、冻结安装、来源及复核范围见验证记录。
 

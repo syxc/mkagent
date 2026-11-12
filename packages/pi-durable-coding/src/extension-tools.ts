@@ -1,6 +1,6 @@
 /** Native tool definitions execute as durable tasks, including their nested calls. */
 import type { Context, JsonValue } from '@earendil-works/chord';
-import type { TextContent, ImageContent } from '@earendil-works/pi-ai';
+import type { TextContent, ImageContent } from '@earendil-works/pi-coding-agent';
 import { LiveDoc, type TaskId, type ToolExecutionApi, type ToolExecutionResult, type ToolRegistration } from '@earendil-works/pi-durable';
 import { ExtensionRunner } from './upstream/core/extensions/runner.js';
 

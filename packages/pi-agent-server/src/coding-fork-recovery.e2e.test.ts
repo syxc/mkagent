@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { createRegistry, defineExtension, Harness, type JsonObject } from '@earendil-works/pi-durable';
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
-import type { NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
+import type { NativeSessionJournal } from '@mkagent/coding-runtime/durable';
 import { durableFixture } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
 import { DurableKernel } from './kernel.ts';
 import { CodingHost } from './coding-host.ts';

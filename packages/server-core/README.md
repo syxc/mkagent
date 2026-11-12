@@ -11,7 +11,7 @@ Shared server infrastructure for the MkAgent Desktop, WebUI, CLI and headless se
 - Domain services, model fetchers and WebUI hosting
 - Reusable headless bootstrap orchestration
 
-The agent kernel runs in `packages/pi-agent-server`, outside this package. Its normal profile uses durable's `GenerationTask`; the current coding profile connects `CodingHost` to `@mkagent/pi-durable-coding`. The [architecture guide](../../docs/architecture.md) describes the current boundary. The [Coding specification](../../docs/pi-durable/coding-capabilities-spec.md) defines the migration: durable built-ins first, then independent official Pi SDK APIs, with compatibility code only for confirmed gaps. Product sessions, permissions, credentials and transports remain host responsibilities.
+The agent kernel runs in `packages/pi-agent-server`, outside this package. Its normal profile uses durable's `GenerationTask`; the current coding profile connects `CodingHost` to `@mkagent/coding-runtime`. The [architecture guide](../../docs/architecture.md) describes the current boundary. The [Coding specification](../../docs/pi-durable/coding-capabilities-spec.md) defines the migration: durable built-ins first, then independent official Pi SDK APIs, with compatibility code only for confirmed gaps. Product sessions, permissions, credentials and transports remain host responsibilities.
 
 ## Out of scope
 

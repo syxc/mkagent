@@ -2,7 +2,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { lstat, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { NativeSessionJournal, NativeSessionSnapshot } from '@mkagent/pi-durable-coding/durable';
+import type { NativeSessionJournal, NativeSessionSnapshot } from '@mkagent/coding-runtime/durable';
 
 interface NativeSessionManifest {
   version: 1;

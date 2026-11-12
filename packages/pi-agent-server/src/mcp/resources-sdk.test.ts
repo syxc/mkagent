@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { readFile, stat, unlink } from 'node:fs/promises';
 import type { McpRequestOptions, Resource, ResourceTemplate } from '@earendil-works/pi-mcp';
-import * as sdk from '@mkagent/pi-durable-coding/mcp-tools';
+import * as sdk from '@mkagent/coding-runtime/mcp-tools';
 import * as host from './resources.ts';
 
 function server(name: string, overrides: Partial<sdk.McpResourceServer> = {}): sdk.McpResourceServer {

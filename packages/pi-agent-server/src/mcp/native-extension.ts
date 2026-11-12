@@ -1,5 +1,5 @@
 /** Connect the native plugin registry through the host MCP runtime. */
-import type { ExtensionContext, ExtensionFactory } from '@mkagent/pi-durable-coding/native';
+import type { ExtensionContext, ExtensionFactory } from '@mkagent/coding-runtime/native';
 import type { McpToolsLoadResult } from './extension.ts';
 
 export function createNativeMcpExtension(options: {

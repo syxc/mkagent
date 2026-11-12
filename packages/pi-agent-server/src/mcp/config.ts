@@ -1,6 +1,6 @@
 /** Bind host configuration paths and credential policy to the SDK loader. */
 import { join } from 'node:path';
-import { loadMcpConfig as loadSdkMcpConfig } from '@mkagent/pi-durable-coding/mcp-config';
+import { loadMcpConfig as loadSdkMcpConfig } from '@mkagent/coding-runtime/mcp-config';
 import { validateMcpServerConfig, type McpServerConfig, type McpServerScope } from './mcp-servers.ts';
 
 export { getMcpToolExposure } from './mcp-servers.ts';

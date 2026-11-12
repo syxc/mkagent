@@ -2,14 +2,14 @@
 import { type AuthProvider, type McpClient, type McpTransport, type Resource, type ResourceTemplate } from '@earendil-works/pi-mcp';
 import {
   McpServerConnection as SdkMcpServerConnection, createDefaultTransport as sdkTransport,
-} from '@mkagent/pi-durable-coding/mcp-runtime';
+} from '@mkagent/coding-runtime/mcp-runtime';
 import {
   McpOAuthAuthorizationRequiredError, createMcpAuthProvider,
   type McpAuthProvider, type McpOAuthCredentialStore, type McpOAuthSettings,
-} from '@mkagent/pi-durable-coding/mcp-oauth';
-import { resolveConfigValueOrThrow, resolveHeadersOrThrow } from '@mkagent/pi-durable-coding/mcp-config';
-import type { McpServerLog } from '@mkagent/pi-durable-coding/mcp-log';
-import type { McpServerEntry as SdkMcpServerEntry } from '@mkagent/pi-durable-coding/mcp-servers';
+} from '@mkagent/coding-runtime/mcp-oauth';
+import { resolveConfigValueOrThrow, resolveHeadersOrThrow } from '@mkagent/coding-runtime/mcp-config';
+import type { McpServerLog } from '@mkagent/coding-runtime/mcp-log';
+import type { McpServerEntry as SdkMcpServerEntry } from '@mkagent/coding-runtime/mcp-servers';
 import { isMcpAppResource } from './resources.ts';
 import { isSecureMcpUrl, type McpServerEntry } from './mcp-servers.ts';
 

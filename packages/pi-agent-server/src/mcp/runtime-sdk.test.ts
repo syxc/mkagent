@@ -2,7 +2,7 @@
 import { expect, test } from 'bun:test';
 import { tmpdir } from 'node:os';
 import { StdioTransport, type McpTransport } from '@earendil-works/pi-mcp';
-import { McpServerConnection as SdkConnection } from '@mkagent/pi-durable-coding/mcp-runtime';
+import { McpServerConnection as SdkConnection } from '@mkagent/coding-runtime/mcp-runtime';
 import { createDefaultTransport, McpServerConnection } from './runtime.ts';
 
 type Message = Parameters<McpTransport['send']>[0];

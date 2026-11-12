@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { createModels, fauxAssistantMessage } from '@earendil-works/pi-ai';
-import type { AgentTool } from '@earendil-works/pi-agent-core';
+import type { AgentTool } from '@earendil-works/pi-coding-agent';
 import { createRegistry, Harness, MemoryStorage, ToolTask, type TaskId } from '@earendil-works/pi-durable';
 import { executeNativeCodemode } from '../src/compat/codemode-native.ts';
 import {

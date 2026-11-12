@@ -6,7 +6,7 @@ import * as sdk from '@earendil-works/pi-coding-agent';
 import { CodemodeSandbox, getQuickJSWasmPath, loadQuickJSWasm } from '@earendil-works/pi-durable/codemode/node';
 import * as native from '../src/native.ts';
 import { createCodemodeTool, createCodemodeToolDefinition, type CodemodeToolOptions } from '../src/native-codemode.ts';
-import type { AgentTool } from '@earendil-works/pi-agent-core';
+import type { AgentTool } from '@earendil-works/pi-coding-agent';
 
 const echo: AgentTool = {
   name: 'echo', label: 'echo', description: 'Echo a value',

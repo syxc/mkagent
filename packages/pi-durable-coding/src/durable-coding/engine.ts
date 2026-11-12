@@ -6,8 +6,8 @@ import { wrapAgentTool } from '../host-tools.ts';
 import { hostToolExecution } from '../host-tool-task.ts';
 import { copyJson, type Context } from '@earendil-works/chord';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
-import { InMemoryCredentialStore, type Models } from '@earendil-works/pi-ai';
-import { builtinModels } from '@earendil-works/pi-ai/providers/all';
+import type { Models } from '@earendil-works/pi-coding-agent';
+import { AuthStorage, InMemoryCodingAgentModelsStore, ModelRuntime } from '@earendil-works/pi-coding-agent';
 import {
   Harness, MemoryStorage, createRegistry, type Conversation, type EntryDraft,
   type Registry, type Report, type Storage, type Tx, type TaskId, type TaskRuntime, type ToolExecutionApi,
@@ -547,7 +547,10 @@ export class DurableLoopBinding {
     this.runTask = definitions.run;
     this.singleTask = definitions.call;
     const harness = this.options.kernel?.harness ?? await Harness.open(this.options.storage ?? new MemoryStorage(), {
-      registry, models: this.options.models ?? builtinModels({ credentials: new InMemoryCredentialStore() }),
+      registry, models: this.options.models ?? await ModelRuntime.create({
+        credentials: AuthStorage.inMemory(), modelsStore: new InMemoryCodingAgentModelsStore(),
+        modelsPath: null, refreshOnCreate: false, allowModelNetwork: false,
+      }),
       settings: { retry: { enabled: false }, compaction: { enabled: false } },
       onReport: report => { reports.push(report); },
     }, context);

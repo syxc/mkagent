@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { accessSync, constants, existsSync } from 'node:fs';
 import { arch as osArch, homedir, platform as osPlatform } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
-import { createToolManager, writeDownload, type ToolManagerDependencies, type ToolStatus } from '@mkagent/pi-durable-coding/compat';
+import { createToolManager, writeDownload, type ToolManagerDependencies, type ToolStatus } from '@mkagent/coding-runtime/compat';
 
 export type FdStatus = ToolStatus;
 export type CommandResult = ReturnType<NonNullable<ToolManagerDependencies['runCommand']>>;

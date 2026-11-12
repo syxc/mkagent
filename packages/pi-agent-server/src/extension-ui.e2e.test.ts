@@ -7,7 +7,7 @@ import { defineExtension } from '@earendil-works/pi-durable';
 import { durableFixture } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
 import { ExtensionUIHost, type ExtensionUIEvent } from './extension-ui.ts';
 import { DurableKernel } from './kernel.ts';
-import { createHostResources } from '@mkagent/pi-durable-coding/native';
+import { createHostResources } from '@mkagent/coding-runtime/native';
 
 type Request = Extract<ExtensionUIEvent, { type: 'extension_ui_request' }>;
 const cleanup: Array<() => Promise<void> | void> = [];

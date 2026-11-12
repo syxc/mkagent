@@ -99,8 +99,10 @@ for (const path of ['../src/legacy/extension-loader.ts', '../src/native-extensio
     };
     const seed = Bun.spawnSync([process.execPath, '--eval', `
       const { createJiti } = await import(${JSON.stringify(import.meta.resolve('jiti/static'))});
-      await createJiti(${JSON.stringify(plugin)}, { tryNative: false, moduleCache: false })
-        .import(${JSON.stringify(plugin)});
+      const { readFileSync } = await import('node:fs');
+      const result = createJiti(${JSON.stringify(plugin)}, { tryNative: false, moduleCache: false })
+        .transform({ source: readFileSync(${JSON.stringify(plugin)}, 'utf8'), filename: ${JSON.stringify(plugin)}, ts: true });
+      if (result.error) throw result.error;
     `], { cwd: directory, env: process.env, stdout: 'pipe', stderr: 'pipe', timeout: 15_000 });
     expect({ code: seed.exitCode, error: seed.stderr.toString() }).toEqual({ code: 0, error: '' });
     const child = Bun.spawnSync([process.execPath, '--eval', `
@@ -129,12 +131,19 @@ for (const path of ['../src/legacy/extension-loader.ts', '../src/native-extensio
         .transform({ source: 'export {};', filename: 'pi-extension-bootstrap.ts', ts: true });
     `], { cwd: directory, env: process.env, stdout: 'pipe', stderr: 'pipe', timeout: 15_000 });
     expect({ code: seed.exitCode, error: seed.stderr.toString() }).toEqual({ code: 0, error: '' });
+    const dependency = join(directory, 'dependency.cjs');
+    writeFileSync(dependency, `
+      const target = {};
+      Error.captureStackTrace(target);
+      if (typeof target.stack !== 'string') throw new Error('Dependency stack unavailable');
+      module.exports = { request() {} };
+    `);
     const plugin = join(directory, 'extension.ts');
     writeFileSync(plugin, `
-      import redirects from ${JSON.stringify(import.meta.resolve('follow-redirects'))};
+      import dependency from ${JSON.stringify(dependency)};
       export default function(pi) {
         const transformed: number = 1;
-        if (transformed !== 1 || typeof redirects.http.request !== 'function') throw new Error('Dependency not initialized');
+        if (transformed !== 1 || typeof dependency.request !== 'function') throw new Error('Dependency not initialized');
         pi.registerFlag('loaded', { type: 'boolean', default: true });
         if (${mode === 'plugin'}) Error.prepareStackTrace = () => 'plugin-stack';
       }

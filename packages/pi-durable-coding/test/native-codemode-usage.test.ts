@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { createModels, fauxAssistantMessage, fauxProvider, type ClassifierModel } from '@earendil-works/pi-ai';
 import { createRegistry, Harness, MemoryStorage, UsageDoc } from '@earendil-works/pi-durable';
-import type { AgentTool } from '@earendil-works/pi-agent-core';
+import type { AgentTool } from '@earendil-works/pi-coding-agent';
 import { executeNativeCodemode } from '../src/compat/codemode-native.ts';
 import { DurableLoopBinding, currentCodingHostToolApi, currentCodingToolInvocation } from '../src/durable-coding/engine.ts';
 import { NATIVE_CODEMODE_FORWARD } from '../src/durable-coding/codemode-forward.ts';

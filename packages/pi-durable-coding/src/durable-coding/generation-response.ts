@@ -1,7 +1,7 @@
 /** Bind the SDK request executor to the real native run owner and its journal transaction. */
 import { copyJson, type Context, type JsonValue } from '@earendil-works/chord';
-import type { AssistantMessage, AssistantMessageEvent } from '@earendil-works/pi-ai';
-import { AssistantMessageEventStream } from '@earendil-works/pi-ai/utils/event-stream';
+import type { AssistantMessage, AssistantMessageEvent } from '@earendil-works/pi-coding-agent';
+import { AssistantMessageEventStream } from '@earendil-works/pi-coding-agent';
 import {
   defineDoc, GenerationResponseTask,
   type ConversationStreamOptions, type GenerationHooks, type GenerationResponseCheckpoint, type GenerationResponseInput, type GenerationResponseResult,

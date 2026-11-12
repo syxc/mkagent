@@ -7,6 +7,82 @@ come from the [capability specification](coding-capabilities-spec.md); the
 [correction list](coding-follow-up.md) define current work. An older retention
 decision, source inventory or green test run does not override those documents.
 
+## Coding runtime dependency ownership
+
+This correction names the package `@mkagent/coding-runtime`. The physical
+path remains `packages/pi-durable-coding`. The SDK stays at 1.5.0.
+
+Runtime dependencies decrease from 18 to seven. Coding SDK owns its Core,
+AI, MCP, TUI, TypeBox and Jiti instances. The adapter uses a finite set of
+named SDK exports for the durable host protocol. It does not export a whole
+child-package namespace. The Core execution patch remains a local contract.
+Core has no direct adapter dependency. AI is a test dependency. Root, shared
+and server-core use the existing locked AI 1.5.0 version.
+
+SDK loader owns the default plugin modules, importer creation and cache.
+The host provides Coding/Core execution views, transpiler preparation and
+resource policy. Default models use SDK ModelRuntime with in-memory stores,
+no model network and no implicit file defaults. The local module table,
+AI compatibility view and remaining forwarder are removed from source and generation.
+
+Fresh Task installations use Bun 1.3.14, isolated linking, a frozen lock and
+ignored lifecycle scripts. SDK and six-product-workspace checks cover 14 and
+62 direct declared nodes. All 137 installed patch outputs match: Coding 95,
+durable 35, Core four, Photon one and Gaxios two. Standard Coding generation
+also passes its 95-output check. The lock SHA-256 is
+`73c646e898946f1ae55bb1c8d7e71065b2beb1eef0ad7cb55c7ca4ff200001e1`.
+No new registry version or manual dependency link is introduced.
+
+| Check | Current result |
+|---|---|
+| SDK behavior and recovery | 142 tests, 998 assertions pass |
+| Module ownership, schema and transpiler | 16 tests, 66 assertions pass |
+| Host codemode, MCP, UI and durable pipeline | All 42 cases pass across the initial group and the UI cleanup rerun |
+| Native request identity and tool cancellation | Two tests, three assertions pass |
+| Product and AI migration | 225 tests, 831 assertions pass |
+| Complete worker bundle | 26 tests, 105 assertions pass, including construction and relocated assets |
+| Strict source and standard declaration emit | 117 roots and 1,984 files; zero diagnostics |
+| Standard declaration consumer | All 116 emitted declarations, 1,976 files; zero positive diagnostics and six expected negative diagnostics |
+| Declaration isolation | No source fallback, retained input augmentation, paths alias or declaration overlay |
+| Source lineage | 2,041 permitted MkAgent files against 2,312 pinned Craft files; exit 0 |
+
+The runtime groups cover 453 distinct tests. Repeated UI and independent
+review runs do not increase this count. Two public type annotations keep
+DEFAULT_AGENT_IDENTITY and queue modes attached to SDK names. Their
+transpiled runtime hashes stay unchanged. The standard consumer uses the
+normal package exports with strict checks and skipLibCheck disabled.
+
+The first independent review found a test that imported the Core default
+identity from an SDK root that did not export it. The test now obtains the
+original identity from the SDK-owned default extension module view. This
+fix adds no production export or dependency. The initial failure is kept.
+A separate read-only recheck passes 21 tests and 69 assertions. Identity,
+model and cancellation probes also pass: one Core instance, the same SDK
+Core/AI values, 42 providers, 1592 models, no fetch and an empty Task HOME.
+The final review verdict is PASS for those boundaries.
+
+The old Task Craft reference lacked working-tree files and Git metadata.
+A new Task reference is prepared from its pinned public object cache.
+Protected paths are excluded before checkout. The audit reads that complete
+working tree and rejects missing or dirty files. It has no history fallback.
+Trash cleanup failures retain temporary test fixtures and print a warning;
+they do not replace the functional assertions.
+
+Evidence is under `coding-runtime-correction-v_3uqjc2` in final integration:
+`sdk-generation-final-check.json`, the SDK suite receipts,
+`standard-emit-public-queues`, `standard-consumer-public-queues`,
+`final/product-current-test-summary.json`,
+`product-current-bundle-with-license`, `source-reference-preparation.json`
+and `source-audit-filtered-reference`. Earlier failed install, type,
+importer, cleanup and missing-license runs remain available.
+
+The earlier full-workspace cold installation has different inputs. This
+correction validates the SDK and six product workspaces; it does not claim
+a new full-workspace cold run. Root node_modules stays unchanged. Real paid
+models, real account state, other platforms and lifecycle-script execution
+are outside these checks. Existing browser-input baseline failures keep
+their earlier scope.
+
 MkAgent first replaced Pi coding agent directly with pi-durable. That exposed
 insufficient Coding capability and prevented reuse of the Pi plugin ecosystem.
 The clarified target keeps the Pi Coding layer from MkAgent's point of view and
@@ -249,7 +325,7 @@ complete generated compatibility declarations is a separate remaining gate.
 ## Filtered SDK installation after 6bab7a9
 
 A real filtered installation used the existing 18 manifest, lock and patch
-inputs with `--filter @mkagent/pi-durable-coding`, frozen lock, ignored scripts
+inputs with `--filter @mkagent/coding-runtime`, frozen lock, ignored scripts
 and the isolated linker. Its cache was already partly populated. It excluded
 ripgrep, fluent-ffmpeg, pdf-parse and es-abstract in the resulting tree. Only
 the target workspace received dependency links: 20 of its 21 declared nodes
@@ -9350,7 +9426,7 @@ phase layout. Packaging and source counts below are updated to `cb0311f`;
 behavior evidence remains limited to each check's stated version.
 
 The coding profile uses the existing `DurableKernel` and its Harness.
-`@mkagent/pi-durable-coding` currently contains the public Pi coding dependency
+`@mkagent/coding-runtime` currently contains the public Pi coding dependency
 closure from v1.5.0, commit `f9a26365568127461c47a07a37dcb42c140a3ac5`.
 `UPSTREAM-RUNTIME.json` records 248 TypeScript files and 7 Pi assets, source
 hashes and controlled transformations. Earlier stages had 9 and then 8 assets;

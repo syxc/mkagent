@@ -1,8 +1,8 @@
 import { extname } from 'node:path';
 import { copyJson } from '@earendil-works/chord';
 import { withAbortSignal } from '@earendil-works/chord/context';
-import type { AgentToolResult } from '@earendil-works/pi-agent-core';
-import type { AssistantMessage } from '@earendil-works/pi-ai';
+import type { AgentToolResult } from '@earendil-works/pi-coding-agent';
+import type { AssistantMessage } from '@earendil-works/pi-coding-agent';
 import { parseCodemodeSource } from '@earendil-works/pi-durable/codemode';
 import { NestedCallDoc, type ToolExecutionApi, type ToolExecutionResult, type ToolRegistration } from '@earendil-works/pi-durable';
 import { createCodemodeTool, createModelTools, formatCodemodeResult } from '@earendil-works/pi-durable/codemode';

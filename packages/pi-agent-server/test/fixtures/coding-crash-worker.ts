@@ -8,8 +8,8 @@ import {
 } from '@earendil-works/pi-ai';
 import { createRegistry, defineExtension, Harness, type Storage } from '@earendil-works/pi-durable';
 import { openNodeJsonlStorage } from '@earendil-works/pi-durable/storage/jsonl/node';
-import { convertToLlm, type AgentSession } from '@mkagent/pi-durable-coding/native';
-import type { DurableLoopBinding, NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
+import { convertToLlm, type AgentSession } from '@mkagent/coding-runtime/native';
+import type { DurableLoopBinding, NativeSessionJournal } from '@mkagent/coding-runtime/durable';
 import { response } from '../../../pi-durable-coding/test/fixtures/durable-harness.ts';
 import { openDurableStorage } from '../../src/storage/durable-storage.ts';
 

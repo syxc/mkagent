@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import type { Context } from '@earendil-works/chord';
 import { ROOT_CONVERSATION_ID, type ConversationId } from '@earendil-works/pi-durable';
-import { readNativeSessionSnapshot } from '@mkagent/pi-durable-coding/durable';
+import { readNativeSessionSnapshot } from '@mkagent/coding-runtime/durable';
 import {
   parseNativeSessionReference, type NativeSessionReference,
 } from '../../../shared/src/sessions/native-session-reference.ts';

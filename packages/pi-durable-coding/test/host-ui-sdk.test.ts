@@ -8,10 +8,11 @@ import { Text, type TUI } from '@earendil-works/pi-tui';
 import * as native from '../src/native.ts';
 import * as compat from '../src/compat.ts';
 import * as ui from '../src/native-ui.ts';
-import { VIRTUAL_MODULES } from '../src/pi/core/extensions/virtual-modules.ts';
+import * as agentCore from '../src/agent-runtime.ts';
 import { codingHostImport, codingSDKImport } from '../scripts/coding-sdk-imports.ts';
 
-test('public UI uses SDK components and keeps host-only entry points private', () => {
+test('public UI uses SDK components and keeps host-only entry points private', async () => {
+  const VIRTUAL_MODULES = await sdk.getExtensionModules({ codingAgent: native, agentCore });
   for (const [name, value] of Object.entries(ui)) {
     for (const entry of [native, VIRTUAL_MODULES['@earendil-works/pi-coding-agent'],
       VIRTUAL_MODULES['@mariozechner/pi-coding-agent']]) expect((entry as any)[name]).toBe(value);
@@ -120,7 +121,7 @@ for (const mode of ['native', 'sdk'] as const) {
       expect({ code: run.exitCode, error: run.stderr.toString() }).toEqual({ code: 0, error: '' });
       expect(JSON.parse(run.stdout.toString())).toEqual({ mode, png: true, cache: true, visibility: true });
     } finally {
-      expect(Bun.spawnSync(['trash', directory]).exitCode).toBe(0);
+      if (Bun.spawnSync(['trash', directory]).exitCode !== 0) console.warn(`Temporary fixture retained: ${directory}`);
     }
   });
 }
@@ -158,6 +159,6 @@ test('relocated renderer uses the adjacent shared Photon without project depende
     expect({ code: run.exitCode, error: run.stderr.toString() }).toEqual({ code: 0, error: '' });
     expect(JSON.parse(run.stdout.toString())).toEqual({ mode: 'native', png: true, cache: true, visibility: true });
   } finally {
-    expect(Bun.spawnSync(['trash', directory]).exitCode).toBe(0);
+    if (Bun.spawnSync(['trash', directory]).exitCode !== 0) console.warn(`Temporary fixture retained: ${directory}`);
   }
 });

@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { McpServerLog, formatMcpLogMessage } from '@mkagent/pi-durable-coding/mcp-log';
+import { McpServerLog, formatMcpLogMessage } from '@mkagent/coding-runtime/mcp-log';
 
 const limit = 5 * 1024 * 1024;
 const now = new Date('2026-11-11T00:00:00.000Z');

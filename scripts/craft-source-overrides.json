@@ -39,7 +39,7 @@
       "reason": "Document the authorized public Coding SDK dependency, durable execution priority and removal of source copies covered by the SDK."
     },
     "packages/server-core/README.md": {
-      "sha256": "a3d0d541dc43558c6d40538f44035bba6089797225d644dd0f0bed3e69945780",
+      "sha256": "c8dc818ea682de1670a87e4ed32db2fa5b91c34fae87cb8f27a6f001ad80abbf",
       "reason": "Describe server-core session and domain services; distinguish the Pi worker, normal GenerationTask and CodingHost responsibilities."
     },
     "apps/cli/package.json": {
@@ -975,11 +975,11 @@
       "reason": "Craft WebUI adapted to the retained authenticated headless transport"
     },
     "bun.lock": {
-      "sha256": "92fd2ca14985de6ac5ce1343da2b56dcbb621a8db74e102c691e81682318fc08",
+      "sha256": "73c646e898946f1ae55bb1c8d7e71065b2beb1eef0ad7cb55c7ca4ff200001e1",
       "reason": "Retain resolved dependency versions, Photon numeric-array declarations and the session-tools-core workspace dependency; declare Shared runtime imports of the existing gray-matter and tar packages."
     },
     "package.json": {
-      "sha256": "0b39c6cdfbeb618d794cf930c9566aae2c64be0619c8be267bd64d3576e1f8cd",
+      "sha256": "f852f8828fcd2f989d1fdb9bab88a91c3b775f6c3f08862922a1822d68e9710e",
       "reason": "Register the Photon declaration correction and retain existing GenAI MCP and Gaxios declaration dependencies."
     },
     "packages/core/README.md": {
@@ -1015,7 +1015,7 @@
       "reason": "Craft file reviewed and adapted for the locked MkAgent Lite product boundary"
     },
     "packages/pi-agent-server/package.json": {
-      "sha256": "9c7d2a8ebece5b9ee74856f3fbd5945525aa22ec970473090fe2b37eebff9422",
+      "sha256": "667a0f9a46aab7bc397070daf6365295cede0a1ec71b235147b79205ff38272f",
       "reason": "Declare the Coding SDK used directly by the build script as a pinned development dependency; keep the existing shared workspace and runtime dependencies."
     },
     "packages/pi-agent-server/src/adapt-credential.test.ts": {
@@ -1035,7 +1035,7 @@
       "reason": "Extend Craft custom-endpoint model definitions with explicit api, provider and baseUrl fields required by pi-ai 1.5.0 createProvider; retain image opt-in, context and output limits, and OpenAI store compatibility."
     },
     "packages/pi-agent-server/src/index.ts": {
-      "sha256": "72e00c0dab3313118859f16cf504ae600bddbaf576cb75b86fcff14576c4a8b5",
+      "sha256": "56c70cffec72c518fa6d2cbb4e74ebb0a273a33f9ee934562d9c3e02789286eb",
       "reason": "Preserve native resource, UI and session ownership; coordinate explicit provider and MCP authentication through current model credentials and owner-scoped cancellation."
     },
     "packages/pi-agent-server/src/model-resolution.test.ts": {
@@ -1067,7 +1067,7 @@
       "reason": "Craft Pi subprocess adapted to the retained provider and session-tool contract"
     },
     "packages/server-core/package.json": {
-      "sha256": "fafd15b3f1328091710987571e1cb6d250d9ce67fe5f7883bc3c5b5ab1c6b003",
+      "sha256": "2e3ff9a4e90312634db8f14d34341d94d8e6cd48f465184cab349c10987f0534",
       "reason": "MkAgent 0.2.6 versions/lock and shared pr-watch export; upstream only changes versions/exports, Pi remains pinned to 1.1.0."
     },
     "packages/server-core/src/bootstrap/headless-start.ts": {
@@ -1447,7 +1447,7 @@
       "reason": "Craft shared module reduced to retained Pi, session, configuration, Skill, and UI behavior"
     },
     "packages/shared/package.json": {
-      "sha256": "7877f5f3d6734e89f2bf230f25d9164b7e1b2978e798ac9e2d4de686c7f1f892",
+      "sha256": "a86cae2d7e994d6b95c3e0e89f8b2a032a7518a354dd65533afa2fe433dbb9c8",
       "reason": "Retain MkAgent versions, Lite and pr-watch exports, agent/pi-events and independent pi-ai 1.1.0 host wire types; declare existing gray-matter and tar runtime imports for isolated workspace resolution."
     },
     "packages/shared/src/__tests__/feature-flags.test.ts": {
@@ -2332,6 +2332,14 @@
     }
   },
   "mkOnly": {
+    "packages/pi-durable-coding/scripts/coding-runtime-protocol.ts": {
+      "sha256": "5831916026897dabba8df88b10fe7c9583e911aed53d5ae49da3575700f12245",
+      "reason": "Use the Coding SDK host protocol and renamed runtime while preserving durable execution and plugin contracts."
+    },
+    "packages/pi-durable-coding/test/sdk-extension-boundary.test.ts": {
+      "sha256": "f7b17c6a994963932dce692dd565ce61cae1a925e355947bc36ce4b5ede40923",
+      "reason": "Use the Coding SDK host protocol and renamed runtime while preserving durable execution and plugin contracts."
+    },
     ".claude/settings.json": {
       "sha256": "cd37d93ad05fa4a35ddc647091062e57834a44a9fc375b7f2ce7a26af232931a",
       "reason": "Allow Read for the specific theme color source in project settings; higher-priority deny rules remain effective."
@@ -2429,15 +2437,15 @@
       "reason": "Inject native-config into the existing isolated tool-manager fixture without changing archive handling."
     },
     "packages/pi-durable-coding/src/compat/codemode-calls.ts": {
-      "sha256": "921c4e2b0c197a8daeb840e467d00e512abdc6f9c46a2124e8147728e3b152ab",
+      "sha256": "8f1c755a75ac25760f887a19252acdd605ce51856d4df6458435d8e606d7cbac",
       "reason": "Use the SDK usage combiner for Native model-call presentation while durable retains receipt and ledger accounting."
     },
     "packages/pi-durable-coding/src/compat/codemode-discovery.ts": {
-      "sha256": "65f2a8619a6aafc7954ffffeee65dc80906130508d8cd477f397b42bf0d880c4",
+      "sha256": "6e253a09689eb91e13c648e0c9a9b1017d13709ef2ba1b38eb2a3333f2f0a5c9",
       "reason": "Use durable ranking directly and the shared namespace document adapter while preserving discovery policy."
     },
     "packages/pi-durable-coding/src/compat/codemode-native.ts": {
-      "sha256": "eb543453fe89bc2e8e13be60247de7de2a008f4963004d675f20ba1bebdd5044",
+      "sha256": "9ce84af1b63b7dd722cb6578b0e268a0d72c4db573521cb3033c72a61a045d5d",
       "reason": "Use the public Coding SDK private output writer for the retained Native codemode binding."
     },
     "packages/pi-durable-coding/src/compat/codemode-sandbox.ts": {
@@ -2453,7 +2461,7 @@
       "reason": "Preserve usage overrides and persist accounting metadata across wrappers and strict JSON receipts."
     },
     "packages/pi-durable-coding/test/native-codemode-durable.test.ts": {
-      "sha256": "1db52a09ae1d9f64d65d9e3cd860f9723159cb7917f07dd6ee2e527ea0fca9a0",
+      "sha256": "e507f8940576cc392a5a390a4b549b339d552835bc8a3e158abaf94c84f40e15",
       "reason": "Verify Native durable execution through the SDK factory binding and public durable result contracts."
     },
     "packages/pi-durable-coding/test/native-codemode-forward.test.ts": {
@@ -2461,7 +2469,7 @@
       "reason": "Verify Native codemode contracts through actual durable tasks in native-codemode-forward.test.ts."
     },
     "packages/pi-durable-coding/test/native-codemode-pipeline.test.ts": {
-      "sha256": "4e558037d3ac81ee959adf57a20082d8ebbf19afc4338536ac9222b020944ece",
+      "sha256": "61d5bc0a735861a6b2bf02a4d4ad7ba3c1c0b3680115b42ff7aae1bd8e4f2e83",
       "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
     },
     "packages/pi-durable-coding/test/native-codemode-sandbox.test.ts": {
@@ -2469,7 +2477,7 @@
       "reason": "Verify Native codemode contracts through actual durable tasks in native-codemode-sandbox.test.ts."
     },
     "packages/pi-durable-coding/test/native-codemode-usage.test.ts": {
-      "sha256": "05746f232a4553ac2faffd12a3c109a55b4bb883ee697748e3a3064f3e8f41d9",
+      "sha256": "1524eb98992e77c7981c21ba281eda104a0038d3c33aba1d415bac1fb80897b3",
       "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
     },
     "packages/pi-durable-coding/test/durable-codemode-models.test.ts": {
@@ -2501,7 +2509,7 @@
       "reason": "Preserve legacy structural method inputs and scalar or array inference through types derived from the native public surface."
     },
     "packages/pi-durable-coding/scripts/shared-helper-port.ts": {
-      "sha256": "ed623ff9cd77d3bf103ab8d6d8caffaa373f3f3bdc10d08765a391a67199303d",
+      "sha256": "b55de54e26b0b8671db8d84ade36f0943b8ca795489d156831e58fac1b47cc38",
       "reason": "Keep root run-mode exclusion and remove the retired mode barrel transformation."
     },
     "packages/pi-durable-coding/test/native-edit-arguments.test.ts": {
@@ -2509,7 +2517,7 @@
       "reason": "Verify public edit factories retain durable preparation identity, frozen input, legacy shapes, invalid inputs and actual file edits."
     },
     "packages/pi-durable-coding/test/shared-runtime-port.test.ts": {
-      "sha256": "391a95ae43f6a86ac4bec378f35b92b05cbc5a11f15fe186d27653c9ec10a66f",
+      "sha256": "9f52e172ec680552912d18d3e78be1e20f0d4885d5ff9fa4ac6dfda41726da61",
       "reason": "Guard root-only run-mode exclusion and confirm that the retired barrel no longer has a transformation."
     },
     "packages/pi-durable-coding/src/legacy/package-manager.ts": {
@@ -2581,15 +2589,15 @@
       "reason": "Run real default and coding workers with local models to verify successful reads and reject missing, masked-failure and denied reads."
     },
     "packages/pi-agent-server/src/provider-authorization.ts": {
-      "sha256": "d7c175cdce8a1a342677e63df212534ce798da65bde86e0440d2c58b4ef9862f",
+      "sha256": "34a398a1bbf7d94804f77ec63c776b364a64bae999ae2449574270585cf0fd5f",
       "reason": "Expose explicit native provider login and logout through active Models, cancellable auth prompts and coordinated MCP credential changes."
     },
     "packages/pi-agent-server/src/provider-authorization.e2e.test.ts": {
-      "sha256": "e53e72a657c50d24f4118fa600722d6513287eda70026e106710ec71b4b139c9",
+      "sha256": "e9a2b526a42b57c7b8c69f4f4555c875ce7ca834a564881ad710b090b650fe95",
       "reason": "Verify native and compatibility provider login, stable registration identity, credential reuse, secret errors and prompt or callback cancellation."
     },
     "packages/pi-agent-server/src/test-fixtures/provider-login.ts": {
-      "sha256": "46fc860928b687aa783567db7917013a7925f30fe72753fa5f4f759ec5fdafc5",
+      "sha256": "8e29b998b9e631e4bad9094b034f11494fe722888fb8fb400c25b70b5e399fd3",
       "reason": "Provide deterministic native and compatibility authentication providers with synthetic credentials and no external requests."
     },
     "packages/server-core/src/sessions/native-provider-auth.isolated.ts": {
@@ -2609,7 +2617,7 @@
       "reason": "Verify shared native and host MCP trust, host configuration precedence and project credential routing rejection."
     },
     "packages/server-core/src/sessions/native-project-trust.isolated.ts": {
-      "sha256": "7182404f7b4da1f3812f8e95f11d4918c1ab18d09b7b4be7f03c48556e342c74",
+      "sha256": "1ee073a11d110f4479b75bac80324d96faa844afa94fce2ebd85771a457266d0",
       "reason": "Exercise project resource trust, native MCP revocation and explicit local package install and remove through the actual product owner."
     },
     "packages/pi-durable-coding/test/native-user-input.test.ts": {
@@ -2657,11 +2665,11 @@
       "reason": "Persist native tree navigation through the durable journal and wait for scoped product history receipts."
     },
     "packages/pi-durable-coding/src/durable-coding/summary-binding.ts": {
-      "sha256": "e83cbe9caa2134c67d00b2e8692e6594c867bc37245577da4f904785ce8066b5",
+      "sha256": "f28145b4f1ec35343cc1a0a077e79d70ba70f5cf4fc923bf6052ba3be9ced9ea",
       "reason": "Admit native summaries under their durable owner while keeping original request routing, options and credentials in live bindings."
     },
     "packages/pi-durable-coding/src/durable-coding/summary-task.ts": {
-      "sha256": "ebb999cbec83c0c69f36caa37941115f865c2ec556992db7d0fd9430581ae813",
+      "sha256": "9ee34b41152105183d07b7287217f3121bbad65efa11eec5f6474eb724ab4b14",
       "reason": "Persist native summary responses and usage as durable tasks; reject uncertain requests after interrupted execution."
     },
     "packages/pi-durable-coding/test/native-summary-task.test.ts": {
@@ -2677,7 +2685,7 @@
       "reason": "Verify interrupted native summary requests are not replayed and committed responses survive process death."
     },
     "packages/pi-agent-server/src/native-summary.e2e.test.ts": {
-      "sha256": "dbc2adbad7505a18afb5078ecf95431d9282e2525c174f5a65175d5561d2bc5a",
+      "sha256": "ad7670a914ca2c6c0f69b16dfb46fc2c27b45eb0c570538ec16060c70e6f9cef",
       "reason": "Exercise real native compaction, bug-report and branch summaries through the host durable task registry."
     },
     "packages/server-core/src/sessions/native-session-switch.ts": {
@@ -2709,7 +2717,7 @@
       "reason": "Verify that JSONL owner frames retain valid references and reject malformed references."
     },
     "packages/pi-agent-server/src/storage/native-fork-source.ts": {
-      "sha256": "8bfd20b4cf8d6b78d89f8d14786ec4e1cfab2ca336bef3ff8f0a40c1306277b7",
+      "sha256": "61d64981577276b204deecedf8d8f4b84eb8497598aad1efdeb2b9c17612a945",
       "reason": "Verify copied native journals against approved closed source references before Harness opening and path rewriting."
     },
     "packages/pi-durable-coding/src/durable-coding/session-journal-read.ts": {
@@ -2721,15 +2729,15 @@
       "reason": "Verify read-only journal parsing rejects invalid states and accepts remapped native content with retained envelope data."
     },
     "packages/pi-agent-server/src/coding-fork.e2e.test.ts": {
-      "sha256": "d4b9c4bbd0938ae418d4d864b8e4d4ac28edc664b1c921669a845332799a3e48",
+      "sha256": "67d367f9d2efc619ceba25e6ea09281bd491925cd66209aa7f5c4ce2ee03ef0b",
       "reason": "Verify complete native trees, precise leaves, original identities, all-branch attachments and consecutive verified forks through real SQLite and JSONL kernels."
     },
     "packages/pi-agent-server/src/coding-fork-recovery.e2e.test.ts": {
-      "sha256": "52c7a5d0c2ffc5fe0b6b2b5fba4094f3fdf2fc3115624f5555893a86548c2630",
+      "sha256": "67a445487592fdd8bfe21831b7c38d684d3d8480bd1d56f9b458691c6e1a3fb6",
       "reason": "Verify closed source references, conversation selection, conflicting legacy target rejection before startup, and empty-tree recovery across isolated processes and SIGKILL."
     },
     "packages/pi-agent-server/src/fixtures/native-fork-reopen.ts": {
-      "sha256": "eee7bc1ee649e7ff23b6573b0ab092eb52a6881fea06445ecb6d4f2ec77000f8",
+      "sha256": "4b4e5cbd4848cd9115268d4a0bc92e3aae3413ffeedefcd174a7bbae0c896e2a",
       "reason": "Open native fork stores in a cold process using deterministic models and test-owned paths."
     },
     "packages/shared/src/sessions/native-product-history.ts": {
@@ -2773,11 +2781,11 @@
       "reason": "Project committed native journals and verify stable product input identities without a second writer."
     },
     "packages/pi-agent-server/src/storage/native-session-projection.test.ts": {
-      "sha256": "44967c752cef7610f88c3995e20107c1ece30bb1f78357b1cb5d9436a01cb5f9",
+      "sha256": "38e0c93ea4b4ebae922f54c7c096c2a914b017e8d17e920af5276e995a8fe3dc",
       "reason": "Project committed native journals and verify stable product input identities without a second writer."
     },
     "packages/pi-agent-server/src/storage/native-session-projection.ts": {
-      "sha256": "c6154485566781654662f205c8501ef2478426e8e8445ccab87b34906a52844d",
+      "sha256": "73aa141b23c507b92b0fd9651e2dcadb58d3e77a1632c49623856d9f475cf7f7",
       "reason": "Share native JSONL and manifest encoding between committed projection and closed fork source verification."
     },
     "packages/pi-agent-server/src/native-owner-actions.e2e.test.ts": {
@@ -2785,11 +2793,11 @@
       "reason": "Verify native setup, startup, source closure and cancellation across the durable ownership barrier."
     },
     "packages/pi-agent-server/src/native-owner-actions.ts": {
-      "sha256": "8f44d7c98d537afd638f9cbd37b871d22766ad4cfbb44cc9037d3362b20ce42b",
+      "sha256": "31cf85c137132054ed17402492a65326786d6c4d8e8985eb785565e4aa9977e2",
       "reason": "Run native session actions through product ownership, capture setup user messages before append and await product persistence before target hooks."
     },
     "packages/pi-agent-server/src/native-user-input.ts": {
-      "sha256": "583c1346f1d63c61eee8680283bbab840d347dc7503624cdd22553361126373b",
+      "sha256": "3b63400f3c18e330fc77ec5f20c8d8f5a23f04e34b3b7d16cc28ab18eb63cbc9",
       "reason": "Capture stable product identities and original input for plugin messages and NEW setup writes without starting another turn."
     },
     "packages/pi-agent-server/src/native-owner.test.ts": {
@@ -2881,11 +2889,11 @@
       "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
     },
     "packages/pi-agent-server/src/extension-ui.e2e.test.ts": {
-      "sha256": "96014fbf938c1a2a1f4d16b575be3730cd0f5a31a8c2c863621148e8c26848cc",
+      "sha256": "40f1a808cbe3015db3baf6bf9130b3e472c286f92b016cb1c14a4d686d5c929d",
       "reason": "Verify native extension UI ownership, input completion, keyboard handling and lifecycle boundaries."
     },
     "packages/pi-agent-server/src/extension-ui.ts": {
-      "sha256": "68f6ae5deadd05e1761d518c833ac554b1c4b034fa5223db1297a520b388b14a",
+      "sha256": "a12535be40621f8eb40bb8eaf85ec6830e18a51bd2e3ee0beb218a3bd3f30159",
       "reason": "Scope native RPC dialogs to the active owner and expose a cancellable host secret-input contract for provider authentication."
     },
     "packages/pi-durable-coding/src/rpc-ui.ts": {
@@ -2917,7 +2925,7 @@
       "reason": "Integrate native extension UI with owned product RPC, worker lifecycle and shared renderer behavior."
     },
     "packages/shared/src/protocol/extension-ui.ts": {
-      "sha256": "a49c6a8d316a4d575779da8b5bf274a6c92664df6d73ff263c9eb024ffc83ccb",
+      "sha256": "8537deba270108160e6459c8754426096c29a34be2d66a470dfd2fb15d9a2d77",
       "reason": "Validate and carry native UI ownership and the host sensitive-input flag across product RPC."
     },
     "packages/pi-agent-server/src/background-shell-owner.test.ts": {
@@ -2937,7 +2945,7 @@
       "reason": "Own Pi worker I/O and immutable generation-checked foreground bindings; retain restricted source background leases until known tasks and pending stop replies finish, and notify all live owners on process exit."
     },
     "packages/pi-agent-server/src/coding-host-cache-warming.e2e.test.ts": {
-      "sha256": "2f7c9f04120385c8f435d54c3349972cadfbbb13f40674f03c6fd0ac38a06959",
+      "sha256": "a1249d6587182454ed6518dfffce0b7d8325a23b7fe90d13dfd736d0f620412c",
       "reason": "Check public SDK default best-effort failures and host commit, notification, cancellation and close contracts without an undeclared server import."
     },
     "packages/pi-agent-server/src/coding-host-prompt.e2e.test.ts": {
@@ -2957,11 +2965,11 @@
       "reason": "Resolve Bun import metadata aliases through a Babel AST plugin using each source filename."
     },
     "packages/pi-durable-coding/src/plugin-transpiler.ts": {
-      "sha256": "13f84e5268c7d8d5a3c1eae5b3f2af63259028f55e57c9bc31031660bc7acc79",
+      "sha256": "c7e32071ff4b04c74a8bfeca51b112f5a70030b4d054fc4204c58b88a16b298d",
       "reason": "Compose public Jiti transforms with source metadata and a versioned cache while preserving Bun host stack hooks."
     },
     "packages/pi-durable-coding/test/plugin-transpiler.test.ts": {
-      "sha256": "ec69ba4f9e8e0773f535abb8af860404b9cb6e6112c391b711d81cfbe5f76c59",
+      "sha256": "13681c6ba7b8aebf558a8223cfe097f131aaa169590bc02cf4ec9c6f1e99b378",
       "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
     },
     ".github/workflows/ci.yml": {
@@ -3369,7 +3377,7 @@
       "reason": "Extend Craft-derived session bundles with validated SQLite and JSONL snapshots; associate browser classifications and nested results with their durable task, conversation and call, remove secrets only from matching browser arguments, reject unresolved inputs and retained copies, and preserve branch metadata."
     },
     "packages/pi-agent-server/src/compaction-reserve.ts": {
-      "sha256": "b139b5e27c875351b6b82dbf38f491df1134b978aef779ebe325563bd3b6febb",
+      "sha256": "a915897f68a5c7a3c47403b692c4c853b4fb9d30ddd18198db6aaaca59ff40d3",
       "reason": "Extract compactionReserveFor from local main session-settings.ts to preserve the host autoCompactWindow threshold in the durable kernel."
     },
     "packages/pi-agent-server/src/durable-storage.test.ts": {
@@ -3385,31 +3393,31 @@
       "reason": "Test retained Pi contracts through a real durable Harness, including storage, tools, branches, warming, compaction and shutdown. Add real host adapter/queue regressions for successor runs, late or in-flight inputs and abort; verify MiniMax identity and missing models across init, switching, runtime replacement and ephemeral protocol calls. Exercise the coding profile and official hello plugin through real JSONL approvals."
     },
     "packages/pi-agent-server/src/kernel.ts": {
-      "sha256": "42f5b7c1e469f530e03ea2a91946f2933f270af67875750999a941fd83e3d8c3",
+      "sha256": "26ceaae26b989a2895a12f14b2039005577ed0f4c09ef027bfa23b86a293650a",
       "reason": "Replace AgentSession with a durable Harness while retaining host events, prompts, tools, context, branches, compaction and warming cleanup. Complete host interactions only after successor runs and submitted inputs settle, using committed watch frames and tracked input promises. Validate model catalog availability before input or model changes. Bind native input, sessions and provider-aware model selection to the existing Harness. Verify copied native journals before Harness opening and reject conflicting legacy target history. Let CodingHost derive refreshed declarations from registry ownership."
     },
     "packages/pi-agent-server/src/mcp/config.ts": {
-      "sha256": "5bc36d66cb2d5040b04adc63765b36eb69910b0cdb1f69e2dde6c9808fe354fb",
+      "sha256": "0a7f069f4da69a67234eea5532e6be6d4dfd8ef309cde24bc67aa0814ab7506e",
       "reason": "Delegate JSON loading, overrides and namespace checks to the SDK; bind ordered native and host paths, project trust and credential policy."
     },
     "packages/pi-agent-server/src/mcp/extension.ts": {
-      "sha256": "7c16bd944179e440e95b70923467fd048cfe9613cb14ce6f4f66a67520aad1e3",
+      "sha256": "9265985b770dbe07161d65d7b0b4d62a76e8aa804985cff5f1a8682c1363112b",
       "reason": "Use SDK MCP logging at the host agent directory while retaining plugin registration, namespace priority and live credential callbacks."
     },
     "packages/pi-agent-server/src/mcp/mcp-servers.ts": {
-      "sha256": "91c4a47aa9db97b6381b2dac91be89d049f943072bd32aba8647b529c5ab296c",
+      "sha256": "5bcba29ead78fa31ef2208bd561684024be57ec2462e5d10b7f9f8d3be572db6",
       "reason": "Keep SDK validation and host exposure and OAuth policy; return the SDK and host configuration type intersection for loader callbacks and registrations."
     },
     "packages/pi-agent-server/src/mcp/resources.ts": {
-      "sha256": "72b820e142b2118e63b569df805abd2345d401e6e02dc8dba6c332b9d7c6d7c5",
+      "sha256": "f4f8d7b4216b24b4b2a0889a7ac1f15f93e9db4f7e01f98043f710286ec1567c",
       "reason": "Delegate resource schemas, paging, filtering, reads and conversion to SDK tools; keep only durable visibility, execution and result bindings."
     },
     "packages/pi-agent-server/src/mcp/runtime.ts": {
-      "sha256": "4dea9feeefa48d98fe31b1e5922e34c54f4eb704f4afc26546de1f78e05c5be2",
+      "sha256": "9f6153da2b673a4665367dc759e29b0755c2b5a5dd8b891a271fba09b1c8ad6e",
       "reason": "Bind SDK connections to product credential destination and scope policies, explicit authorization, resource counts, cancellation and logout settlement; remove local transport, connection, retry and request algorithms."
     },
     "packages/pi-agent-server/src/mcp/tools.ts": {
-      "sha256": "f5ece4f39e8fddb68c75288832647bfb1e66ecd9ab2f1ce12d7568300115b61a",
+      "sha256": "6f2b6ac32bedfc4b3d9a8925da14dad30b62b3b3aa72cc43f50ec7e48ba91999",
       "reason": "Bind Coding SDK MCP conversion and schemas to durable registrations, visibility, live connections and host progress."
     },
     "packages/pi-agent-server/src/migrate.test.ts": {
@@ -3421,7 +3429,7 @@
       "reason": "Convert legacy pi-coding-agent 1.1.0 JSONL histories to durable conversations and persist recoverable entry and branch anchor mappings; skip existing parent backends without opening them, migrate only legacy-only parents in place, and complete deferred migration in the child copy."
     },
     "packages/pi-agent-server/src/model-runtime.ts": {
-      "sha256": "d48bfae22f98bd913ee7fa30a02120f767c0aec46f4d9fc6774e34395852f685",
+      "sha256": "f19064655bdbeabf48e3e5204ea1a2c9df85f2cbfdbab50aa4459277070ce720",
       "reason": "Retain credential synchronization and custom endpoint registration in MutableModels. Apply MiniMax CN bare request IDs only at stream and streamSimple dispatch, preserving canonical model metadata across runtime replacement and ephemeral queries."
     },
     "packages/pi-agent-server/src/storage/durable-storage.ts": {
@@ -3441,11 +3449,11 @@
       "reason": "Use the public durable Node sandbox and loader while retaining host tool approval and model binding."
     },
     "packages/pi-agent-server/src/tools/search.ts": {
-      "sha256": "bbce9815d492ad8dded29bd1ce90519ef91ad57e8de5196367feff6626594626",
+      "sha256": "b4bdbddfb638d760b454159fa5d73bc2ba681ec8669cb8afe3307ff27b730d78",
       "reason": "Bridge public Coding SDK search factories to durable registrations, bind the product binary resolver and abort signal per call, and retain CR-only context line splitting without copying search algorithms."
     },
     "packages/pi-agent-server/src/tools/local/tool-binaries.ts": {
-      "sha256": "7b37938d707c828715865eaaedb27a85e4ff5fae9594081e6a7945638522ee58",
+      "sha256": "d1233b82cf2f924af5328ec8680d436a69148d3774386480f4048980963ffe43",
       "reason": "Bind SDK binary installation to product absolute PATH lookup, cache priority, fdfind, bundled ripgrep and Pi cache directory; release, retry, download, extraction and publish algorithms remain in the SDK."
     },
     "packages/pi-agent-server/src/tools/local/tool-binaries-cancellation.isolated.ts": {
@@ -3453,7 +3461,7 @@
       "reason": "Verify per-call resolver signals and SDK find and grep acquisition cancellation across requests, streaming bodies and archive publication with isolated module spies and fake downloads."
     },
     "packages/pi-agent-server/src/tools/wrap.ts": {
-      "sha256": "35ec72a44d558ac60c32540ce7f6d2ee71d2528c5c5ab0fc04547ea5ca95bdd8",
+      "sha256": "16fe38e37094cf8fe1c797b7251f09e1617d75be243c62bfdb8caf37e3a3673e",
       "reason": "Retain durable approval, approved path changes, metadata, background tasks and summarization; use SDK path helpers through the existing compat facade instead of a copied local algorithm."
     },
     "packages/shared/src/agent/backend/pi/agent-session-events.ts": {
@@ -3649,11 +3657,11 @@
       "reason": "Synthetic sessions generated with the released pi-durable 1.4.0 SDK to verify SQLite and JSONL upgrades, task and document migrations, branches and continued writes."
     },
     "packages/pi-agent-server/src/coding-host.e2e.test.ts": {
-      "sha256": "b925b11e975882b936a4c656f04e0131d00e8b553bb8d780a186ecede5b1d245",
+      "sha256": "659e6f7881640efb0709bdb2f40bf98f273883cb4dab1813dff59e36d3b3d0e2",
       "reason": "Verify resource composition, provider replacement, rejected session options, pending recovery, approved file writes and native plugin execution with host-only resources across restart."
     },
     "packages/pi-agent-server/src/coding-host.ts": {
-      "sha256": "2b3e7a18068a1ca4933e02e336af15486e69a761824658cf5ff136232c8ce619",
+      "sha256": "c1c14b3245da91d4a1239e54a23d84a59b4e32d640cdee3333c3393ab79fc352",
       "reason": "Adapt native resources and actions to durable boundaries, share host input capture and commit setup projections before deferred target activation. Exclude internal pi.coding dispatch and Native-owned registrations from host declarations at initial load, update and reload."
     },
     "packages/pi-agent-server/test/coding-bundle.e2e.test.ts": {
@@ -3669,11 +3677,11 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "48b3a2e348e507c4ab4d963700b8da17e4741c658e4999a3efdee3786a8e2a89",
+      "sha256": "7a83181e1ab28e790834eac5ed2e0dc09e620ce3e34d2c1c7d5963f23931d54c",
       "reason": "Record only six official fixtures and host compatibility forwards; retire both production algorithm selections."
     },
     "packages/pi-durable-coding/package.json": {
-      "sha256": "31f319b098e0bdfa381d726e3c647cb991c891e63e3a0976fc142cd9b4863814",
+      "sha256": "2621291838594ca1d52290c03ff5162cb96b1d2d6ab4897a96f3a9078259cd0a",
       "reason": "Use the durable SDK QuickJS path contract and remove the redundant direct quickjs-wasi dependency."
     },
     "packages/pi-durable-coding/scripts/durable-boundary-source.ts": {
@@ -3685,7 +3693,7 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "66d771a2393676202c3d18d1fccf433ada5baeeeff3a4887c2099412067ff471",
+      "sha256": "2e7635a5b4d1a76109d4e87e9067d5e3f022336e73fe93b18ea63a595c7e514d",
       "reason": "Copy official fixtures and write compatibility forwards; never read or write either protected token target."
     },
     "packages/pi-durable-coding/src/compat.ts": {
@@ -3693,11 +3701,11 @@
       "reason": "Forward SDK contracts and bind the shared Web body writer required for Bun cancellation without adding installer algorithms."
     },
     "packages/pi-durable-coding/src/durable-projection.ts": {
-      "sha256": "6fcf9eaadf13c04d1b7530e33d66e7ccfe1482136f6afa14c149db5ff926e86b",
+      "sha256": "a986922aaedaaab5b8458e3d073476f263d68e935ef8888c837e22c593011445",
       "reason": "Preserve durable heads, edits, provenance and tool-result ordering."
     },
     "packages/pi-durable-coding/src/durable-session-store.ts": {
-      "sha256": "a8dbe4dcded620f3c5001ea4dfc4bc5353d6bc0dc9d0fbb9ecab9c41db22bceb",
+      "sha256": "b631f7a3ea88f4d312dea9e8364ffe211f4629301307ccea0c6b765bb2d293ef",
       "reason": "Use the public SDK context estimator while preserving durable identities, native metadata and pending messages."
     },
     "packages/pi-durable-coding/src/entry-batch.ts": {
@@ -3705,11 +3713,11 @@
       "reason": "Resolve local draft references and commit event batches atomically."
     },
     "packages/pi-durable-coding/src/extension-modules.ts": {
-      "sha256": "dd2d007ea7102d14e1421b2553fa781b2894ec505767dbe4a46ee246ab647822",
+      "sha256": "8dc92875b83889090bca668e2eaba5a3f36315f7d1d6900eeb941ec4698e9479",
       "reason": "Resolve imports to verified local exports and reject legacy engine subpaths."
     },
     "packages/pi-durable-coding/src/extension-tools.ts": {
-      "sha256": "c4a6a2f7d6aa51da9e8638b790aa1c85764e4c41a16599fbc53e1cdc4df8d8ea",
+      "sha256": "617a0698f7ea7442ac1c928dad4844b524fa81d0bdf95955f3ce127b4033990c",
       "reason": "Execute plugin tools through durable tasks with nested calls and cancellation."
     },
     "packages/pi-durable-coding/src/headless-ui.ts": {
@@ -3725,11 +3733,11 @@
       "reason": "Use the public Coding SDK for event bus, diagnostics, file mutation queue and frontmatter instead of local copies."
     },
     "packages/pi-durable-coding/src/native-models.ts": {
-      "sha256": "8518ee7861b3559bb44437a37f47c91b72de6ddd52f678d39dc48e912efb168a",
+      "sha256": "fbb031377f7cf1b929d9f4fafd5ab1ff2a87cc335e38c5e47d4072540b9d921a",
       "reason": "Preserve the host refresh result through the SDK registry facade after updating host model and auth snapshots."
     },
     "packages/pi-durable-coding/src/native-runtime.ts": {
-      "sha256": "bc3b9f7cc5c3b42c6daa636b7b3a1b5dfcd89023b6be756f58b8fa6f18c2f9e8",
+      "sha256": "f616c2fd04a99c8d791844556784e49a9c06afd3a7e8aade7f4b5167b3f94d14",
       "reason": "Bind native and legacy module tables, Jiti transformation and directory policy to the published Coding SDK extension loader."
     },
     "packages/pi-durable-coding/src/packages.ts": {
@@ -3755,10 +3763,6 @@
     "packages/pi-durable-coding/src/upstream/core/context-tokens.js": {
       "sha256": "849b0b3f91caa22247216b030390f23772408e7eb6afaffba96533d362c5070c",
       "reason": "Forward the legacy entry point to its authored shared host policy; retain pinned provenance in UPSTREAM.json and the canonical runtime manifest."
-    },
-    "packages/pi-durable-coding/src/upstream/core/extensions/pi-ai-extension-view.ts": {
-      "sha256": "a77b9deea2655dd6385ece0a2261657be048387f8c44ab40ac11aeaa6e0a5cb7",
-      "reason": "Port Pi v1.5.0 packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
     },
     "packages/pi-durable-coding/src/upstream/core/extensions/runner.js": {
       "sha256": "6dc02a191b5a17d2eb045b1117c19ca604c795afa546ff21ad7892f4acf8b577",
@@ -3873,7 +3877,7 @@
       "reason": "Implement atomic legacy checkpoint adoption and original submission recovery in coding-migration.ts."
     },
     "packages/pi-agent-server/src/storage/coding-recovery-atomicity.test.ts": {
-      "sha256": "6023077a9d00d547409e2cbfa566e92833d4d752de493e1e6e43342a4cfc2f9b",
+      "sha256": "08a508e3ff8b2fe0f90ad98e344e7e5c740944eb908dd2c4f2716902844f13dd",
       "reason": "Exercise durable native coding behavior and isolated recovery through the coding-recovery-atomicity.test.ts fixture."
     },
     "packages/pi-agent-server/src/storage/coding-recovery.e2e.test.ts": {
@@ -3881,15 +3885,15 @@
       "reason": "Exercise durable native coding behavior and isolated recovery through the coding-recovery.e2e.test.ts fixture."
     },
     "packages/pi-agent-server/src/storage/coding-recovery.ts": {
-      "sha256": "3e49273b28c4fbb1e4e641579a8b03e73abb3ac351f700eea13ba2f7a822bdbb",
+      "sha256": "c9ac38c1f14b5313b3970bb9cda0e78d3171eff966adb5186939a77f567e8ec9",
       "reason": "Implement atomic legacy checkpoint adoption and original submission recovery in coding-recovery.ts."
     },
     "packages/pi-agent-server/src/test-fixtures/native-image.ts": {
-      "sha256": "f8a7b1451de2de05cf8ee7cd557afa5633271928eae841713a2c6f404408b2c5",
+      "sha256": "422031fa86a8895224eb3c9b98f1f5290af24ee44fa64a3a300a17ac1f7a1a65",
       "reason": "Exercise native prompt and plugin read image processing and HTML export with a deterministic local provider from source and relocated bundles."
     },
     "packages/pi-agent-server/test/fixtures/coding-crash-worker.ts": {
-      "sha256": "aa7ba553a711b8cb8f720eb15832a80932929211a2b6f9c62ef1d3855322c519",
+      "sha256": "f39c7e1833cdd0a60a0dcdd001fc315b33ef68bea4f42f449b005810da75d2a2",
       "reason": "Exercise durable native coding behavior and isolated recovery through the coding-crash-worker.ts fixture."
     },
     "packages/pi-durable-coding/.gitignore": {
@@ -3905,11 +3909,11 @@
       "reason": "Run each side of the isolated Agent JSONL crash and reopen contract in a separate process."
     },
     "packages/pi-durable-coding/test/shared-public-leaves.test.ts": {
-      "sha256": "f51f8fd4a0b3595edc1e3b83742c4e5721a4a4fd3c8cb1f253ae0f2206445f10",
+      "sha256": "954e72a7b0de8798331d14a862f84468e45ba607f6784c3cd21c595b0dce3a43",
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/pi-durable-coding/UPSTREAM-RUNTIME.json": {
-      "sha256": "0d39583d99f3d26ec83b30039ec65ad6319ad95cab34bdcd95d4eda087ee8938",
+      "sha256": "26bf9adc355623742b4f393d8aba0449d259fbd38a36b0e98a139025b0e2ed78",
       "reason": "Retire copied tool aggregation and extension wrappers; retain ten generated TypeScript files and no assets."
     },
     "packages/pi-durable-coding/test/native-theme.test.ts": {
@@ -3917,11 +3921,11 @@
       "reason": "Verify public SDK theme identity, complete validation, plugin input, keybindings and HTML colors with SDK theme fixtures."
     },
     "packages/pi-durable-coding/scripts/vendor-coding-runtime.ts": {
-      "sha256": "3661d15fece70c0306cf9ce2fb2bb439a5992908e596b250542c58bf86ce2606",
+      "sha256": "27519b836bf375669c87346e745dc588239173d29b658f9d0372cc95b8794f7d",
       "reason": "Remove configuration copying, fixed-version rewriting and the obsolete bundled-assets conversion."
     },
     "packages/pi-durable-coding/src/agent-runtime.ts": {
-      "sha256": "254c95e0ce1f644ad8c6a24c2b52a2cce830180e5b757589b7915a25533d0c40",
+      "sha256": "a4b9b7eb965d7133db169dd03b1727667f55c07c05aab2733d0a4f6f514a9af8",
       "reason": "Reuse public core protocol types while exporting only the local durable Agent and execution boundary."
     },
     "packages/pi-durable-coding/src/compaction-reserve.ts": {
@@ -3929,11 +3933,11 @@
       "reason": "Provide the independent native coding host adapter and public contracts in compaction-reserve.ts."
     },
     "packages/pi-durable-coding/src/durable-agent.ts": {
-      "sha256": "ee8ffa86172f5fd78edf51060e0b678bcbd08435f9908ad630d68f59ef9774d4",
+      "sha256": "ed419eef24f0666e12d1cb3e7412c28faa3c4c145577f4b1261d20faea821cab",
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/agent.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse core Agent state, lifecycle and default message conversion; retain durable queue identity, recovery and two separate mutable defaults."
     },
     "packages/pi-durable-coding/src/durable-coding/engine.ts": {
-      "sha256": "fcb3ce232551a065d2d358bb48e81211171857a8d5a490ef506f99e9e738b37d",
+      "sha256": "540c6d44cc2cf7f9810f7e89f8b18f0f2b29968fb32b1d83e64ebca3399ecbff",
       "reason": "Bind Native and SDK tool owners, scopes and journal transactions; delegate plain tools through ToolTask and release sibling delivery gates when a Native receipt fails."
     },
     "packages/pi-durable-coding/src/durable-coding/index.ts": {
@@ -3953,7 +3957,7 @@
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in message-identities.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/run-task.ts": {
-      "sha256": "d6b5e9b3cfb8ee81303ad7d0f52cbebe632b3772abc4efeba3b5c47c53e7455a",
+      "sha256": "cd93138183e056f0bcfba16838c7aed722032beb226bad33b0be2ddbf5b6feb2",
       "reason": "Delegate request streaming to GenerationResponseTask; atomically commit the Native journal and next checkpoint, settle interrupted SDK intent and preserve uncertain-event failures and ToolTask failure delivery."
     },
     "packages/pi-durable-coding/src/durable-coding/session-binding.ts": {
@@ -3985,11 +3989,11 @@
       "reason": "Bind native coding lifecycle, journal and task ownership to the sole durable scheduler in tool-batch.ts."
     },
     "packages/pi-durable-coding/src/durable-coding/tool-task.ts": {
-      "sha256": "950dd6e01d62f829fa0e30db2b2b83701b97887d1b151597c11ba090b91fbcf0",
+      "sha256": "023f32aed2a48ee74239f817807143735b2278cb503c568b7c3ea07a6fbf9821",
       "reason": "Preserve Native hooks, events and replay limits; retain complete tool results on hook failure or cold cancellation, including final arguments, controls and usage receipt metadata."
     },
     "packages/pi-durable-coding/src/durable-loop.ts": {
-      "sha256": "2cd9b678430beb0e83b08e56aa36071bbfdeae1832f611bc9ce149e92c012de3",
+      "sha256": "be9520b38575d2ba37bba7d2e5cf482acd4bd08be7390fb6246e07d3f216303d",
       "reason": "Provide the independent native coding host adapter and public contracts in durable-loop.ts."
     },
     "packages/pi-durable-coding/src/host-resources.ts": {
@@ -3997,7 +4001,7 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/host-settings.ts": {
-      "sha256": "1877562419f2354bf30cde3aff0ba819ca48a2a8d7b7347d23877b2a1e8f8e8c",
+      "sha256": "5bb279055929e3b0d0adc146c7e62787bd30c9cb17e39d9210c97cd7e5cf1f7e",
       "reason": "Use the published Coding SDK settings implementation while preserving existing host policy adapters."
     },
     "packages/pi-durable-coding/src/host-tool-controls.ts": {
@@ -4013,7 +4017,7 @@
       "reason": "Use public Coding plugin contracts while preserving host prompt, UI, trust and durable tool ownership."
     },
     "packages/pi-durable-coding/src/native-operations.ts": {
-      "sha256": "7380c823e485933b08fc791eaab1fc8f88e5da85face6377e7d9540c1206dfec",
+      "sha256": "95bc25cec996508da828c1a103af1f60c30ddbe5e05e156ba678101ea6290b18",
       "reason": "Forward the eight consumed core request and tool operations while preserving Native mutable identity defaults and durable scheduling; omit unused helper re-exports."
     },
     "packages/pi-durable-coding/src/native.ts": {
@@ -4029,7 +4033,7 @@
       "reason": "Temporarily forward four SDK estimators for the unchanged legacy import blocked by a Read deny rule; the complete local algorithm has been removed."
     },
     "packages/pi-durable-coding/test/native-html-colors.test.ts": {
-      "sha256": "0d40f4137f3ca6c79a7bbb17bb837bf72eb6473364f77269864465c1a162ae73",
+      "sha256": "49b236aa291a96f93d6cf8a7538ad5d95f3f07af65f72a63f3c612814733dbac",
       "reason": "Remove only the obsolete compaction declaration fixture while retaining HTML color and runtime generation coverage."
     },
     "packages/pi-durable-coding/src/compat/html-assets.ts": {
@@ -4043,14 +4047,6 @@
     "packages/pi-durable-coding/src/pi/core/extensions/index.ts": {
       "sha256": "ce113d5882c90806a813a23fae93fba96348d82f274a9a531e1d9198dc921f47",
       "reason": "Expose slash-command types and registered-tool wrappers directly from the public Coding SDK."
-    },
-    "packages/pi-durable-coding/src/pi/core/extensions/pi-ai-extension-view.ts": {
-      "sha256": "35769c1446400219e554e31712e5bc8da0c90bbdf1c0f41df39c151abb5bc8d4",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json. Reuse the public enum builder while retaining Native TypeBox branding and literal inference."
-    },
-    "packages/pi-durable-coding/src/pi/core/extensions/virtual-modules.ts": {
-      "sha256": "ef6d49a54f2ed2b0f3486bfc3bf8aec7086c735304317bc86477c041c529ee2f",
-      "reason": "Pinned Pi v1.5.0 source port from packages/coding-agent/src/core/extensions/virtual-modules.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/pi/extensions/codemode/worker.ts": {
       "sha256": "4542d37a9f75150b52fc393fcd757f08fb0d681d92bebee6a40171e09b4bec82",
@@ -4069,7 +4065,7 @@
       "reason": "Pinned Pi v1.5.0 source port from packages/agent/src/stream-fn.ts; provenance, hashes and transforms are recorded in packages/pi-durable-coding/UPSTREAM-RUNTIME.json."
     },
     "packages/pi-durable-coding/src/stream-proxy.ts": {
-      "sha256": "ddb67671598acc3d797cd4b3aa4d4945fadbd5b0ca358aae9747915573730bdd",
+      "sha256": "6c2dd4a86648e1b9d0c816d08c031ec5fd3c02368b0658a3b141fb704a254d48",
       "reason": "Use the public core proxy transport without maintaining another source copy or invoking its Agent loop."
     },
     "packages/pi-durable-coding/test/durable-agent.test.ts": {
@@ -4165,15 +4161,15 @@
       "reason": "Emit independent package declarations for the native coding API and durable host bindings."
     },
     "packages/pi-agent-server/src/mcp/authorization.ts": {
-      "sha256": "015a2b4d068cfd7a173edd072d11924108541aef2940239bfdd45723cb144ba7",
+      "sha256": "449e9819bff6de0d631b7c3c520ec632b434430678d9f034a2edd7c52468addc",
       "reason": "Declare optional command selections as string or undefined; keep explicit login, logout, refresh settlement, cancellation and ownership policies unchanged."
     },
     "packages/pi-agent-server/src/mcp/oauth.test.ts": {
-      "sha256": "940b768d44c925be3c900a7a147447ef31bf54a2d1699e0221bfae27432f5b54",
+      "sha256": "063c3c5e70e951ca69c3b89fd52a192304239ea8b486665c8eb0816d07a3d8c2",
       "reason": "Verify pinned OAuth flow, redirect validation, cancellation and rotation, while keeping explicit headers and provider credentials outside the OAuth store."
     },
     "packages/pi-durable-coding/src/mcp-oauth.ts": {
-      "sha256": "614028778fdde58200683b0b9b0d3dbdd06984691bc56bf409c8f1c8cf05eee4",
+      "sha256": "3e6316c22d3c98e1e02db074c507bc96c5054dce4fc0e7d1ae913cb66ea90d9a",
       "reason": "Expose the SDK OAuth classes and functions directly through the existing host facade."
     },
     "packages/pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts": {
@@ -4185,19 +4181,19 @@
       "reason": "Exercise native MCP registration, OAuth and live plugin provider credentials through the isolated product owner and freshly bundled worker."
     },
     "packages/pi-agent-server/src/mcp/authorization.test.ts": {
-      "sha256": "69ddb65871e7cac7fc6cf52de1145a98d28106e584c58ded788c3e416ad27cc8",
+      "sha256": "93ed5512ee346c6c411038efc2aac1667d2af0d080638f54786a3ad395b6117e",
       "reason": "Resolve workspace dependencies from the server package in both eval subprocesses; retain OAuth rotation, cancellation and logout checks."
     },
     "packages/pi-agent-server/src/mcp/native-extension.ts": {
-      "sha256": "bde4328bd0ce641e831b69260a16d489fedaf4c8f9df969fe0938f852f1fd877",
+      "sha256": "5bff62b664ca030beb9f000f0d8c0ad9ec7cc03946130fad636403be0e92a012",
       "reason": "Bind native model credentials and plugin MCP declarations at startup, then clear the binding during shutdown and reload."
     },
     "packages/pi-agent-server/src/mcp/registrations.test.ts": {
-      "sha256": "6d0e8b4c9a1ff812d4a92b7a3dacc223b175acc2091a42b292fef61f2593baf5",
+      "sha256": "356a71040d045ec1f9001a1d25d52ebb31ec465a10aba6c04258859be48954ed",
       "reason": "Verify native MCP namespace priority, failure recovery, immediate tool revocation and rejection of plaintext credentials."
     },
     "packages/pi-agent-server/src/mcp/provider.test.ts": {
-      "sha256": "20a4ae8fe198383a67c6f6f27cf147f35864c1b801aea7b8dd9459a0ed5f7924",
+      "sha256": "a20772e9027bfc73f4b55eb6d98841b6cb53f70fd56e8eb868e6bc69bd9496f2",
       "reason": "Exercise live provider tokens, header precedence, rejection without tool replay, close during token resolution and project or URL credential boundaries."
     },
     "packages/pi-agent-server/src/test-fixtures/mcp-provider-server.ts": {
@@ -4217,11 +4213,11 @@
       "reason": "Verify native npm/git commands, scope and streams, fresh shared settings, manual write-failure recovery and partial update shutdown draining."
     },
     "packages/pi-agent-server/src/mcp/oauth-step-up.test.ts": {
-      "sha256": "c872131ca03e9c9e94458c6746961b95f32228604762b1689721b0353430c22c",
+      "sha256": "19a7022ae6f39281c40b1b5109378f90d4037ec0083a212945953f7d392934fc",
       "reason": "Verify insufficient-scope challenges withdraw tools, preserve explicit login scopes and never replay the rejected tool call."
     },
     "packages/pi-agent-server/src/mcp/oauth-process-login.test.ts": {
-      "sha256": "98407708172a532a09e6db34596af82886a12d8118bf70e7ad2f7be982948da3",
+      "sha256": "acf9e2ff28c488e2eb3b056a7d01ff773a350fcbe2a1d36e603737d7f87a2bc3",
       "reason": "Verify two independent login processes serialize shared grants and allow a waiting process to cancel without mutation."
     },
     "packages/pi-agent-server/src/mcp/oauth-worker-lifecycle.e2e.test.ts": {
@@ -4229,11 +4225,11 @@
       "reason": "Exercise native worker reinitialization, owner release and shutdown with pending OAuth callbacks and late RPC replies."
     },
     "packages/pi-agent-server/src/test-fixtures/mcp-login-process.ts": {
-      "sha256": "218a4a4f2be587dd2bcb2240e354f736d4652a2039600075edf18e0b58d26a7b",
+      "sha256": "822a473615fc79809233402685639b9f75fd90a71ec0b3f43c3b8167f219982f",
       "reason": "Run isolated explicit MCP login commands with cancellable stdin control and structured process evidence."
     },
     "packages/pi-agent-server/src/test-fixtures/mcp-oauth-worker.ts": {
-      "sha256": "9c8fb50d1b47c94399fdc6712e47dcdfed0c7c7302cd1c4fd372800e87963101",
+      "sha256": "d55c1f0573443cd89dd7b926b924f1eb5ef580b3718ce384ed8ce6ad0a5a40ee",
       "reason": "Supply isolated native worker protocol receipts, temporary credentials and a model endpoint that rejects every request."
     },
     "packages/pi-durable-coding/test/host-builtins.test.ts": {
@@ -4277,7 +4273,7 @@
       "reason": "Pin result and error digests captured from unchanged Pi 1.5.0 Native edit code under both Bun and Node before sharing."
     },
     "packages/pi-durable-coding/test/native-operations.test.ts": {
-      "sha256": "2a30dce32d769725425a15d915d7c94dbcdaa51735b8651dec42a2d199f0704b",
+      "sha256": "e27f80738c7e948362d7f363ba4c46d00a76409d72094e601d18875c95c42189",
       "reason": "Verify Native identity isolation, existing core defaults, tool preparation and hook cancellation across the public core operation boundary."
     },
     "patches/@earendil-works%2Fpi-agent-core@1.5.0.patch": {
@@ -4286,11 +4282,11 @@
     },
     "packages/pi-durable-coding/scripts/agent-facade-port.ts": {
       "reason": "Generate the durable Agent subclass with published core message conversion and two mutable defaults extracted from pinned source.",
-      "sha256": "7371a1201c5b39008c6213f8f7d5c6d18b1f39abf86fb1ccdbb44dff730f1417"
+      "sha256": "b28968e1a9ae2263ef5f3b955e09b4a06b27bb3dd4d186e796fc577a9668e79c"
     },
     "packages/pi-durable-coding/test/agent-facade.test.ts": {
       "reason": "Verify published default and explicit asynchronous message conversion, mutable defaults, durable queue snapshots and awaited event settlement; retain historical reflection checks without treating them as product requirements.",
-      "sha256": "e8785d1334b6fd18fe595b5310150c45076bc79ea2c976397a18e9969d3576b6"
+      "sha256": "5344a967bb7fbe730141fb5aa12f7d15a282981accd2215c23c0553f0e44775c"
     },
     "packages/pi-durable-coding/test/native-html-highlight.test.ts": {
       "sha256": "e94c4bf38caae97f74d5d8588352048b7269327472886d345afdb09528378335",
@@ -4305,7 +4301,7 @@
       "reason": "Verify pinned published generation source-map content and compiled JS, then generate and replay all 35 SDK outputs."
     },
     "packages/pi-durable-coding/src/durable-coding/generation-response.ts": {
-      "sha256": "3e38328e0be8825f6ca97efea5ad0906a1a85fef5ff0af81b60276ff8332f3a8",
+      "sha256": "af5d58a46ec3c97b0375b4be3deb620eb5c95a82d3484ba1878a0a1c62e2df0c",
       "reason": "Bind SDK request and abort phases to the real Native owner; retain event backpressure, transient credentials, atomic journal receipts and interruption cleanup."
     },
     "packages/pi-durable-coding/test/generation-response-sdk.test.ts": {
@@ -4325,15 +4321,15 @@
       "reason": "Assert that generated tool aggregation imports resolve to the Native SDK factory binding."
     },
     "packages/pi-durable-coding/CODING-PATCH.json": {
-      "sha256": "508b8cbc2a40a7f15efa0cfd9a71868cf27866a7656a8394304bdae9fe8fe173",
+      "sha256": "ffd5fd2f6368d016ae131fa312768b081237457e7dac396b075898703cff941b",
       "reason": "Use the existing Node path implementation type in find declarations; preserve runtime algorithms and the other 93 Coding outputs."
     },
     "packages/pi-durable-coding/scripts/patch-coding-sdk.ts": {
-      "sha256": "941fb1491efc06f6c33d27d050052c549c44105194a56096c3f65d274eacc5be",
+      "sha256": "89abd27f04d963ed1073b63bc47cb918f348ccda6b24112c50c5ca7924acf4af",
       "reason": "Regenerate find declarations with the existing Node path implementation type instead of the removed PlatformPath name."
     },
     "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch": {
-      "sha256": "8628868a35b2ad28c6fb1cae3e452dba947c15edef1e6fed50b1a1af89e0393f",
+      "sha256": "4000a12ced123d20abbef4c340369f84a6ac4993e6f6a37f9e178aed449f1762",
       "reason": "Use the existing Node path implementation type in find declarations; preserve runtime algorithms and the other 93 Coding outputs."
     },
     "patches/gaxios@7.1.3.patch": {
@@ -4353,15 +4349,15 @@
       "reason": "Use the published resource loader and context/prompt algorithms with narrow host trust, package policy and extension binding hooks; remove covered source and obsolete conversion rules."
     },
     "packages/pi-durable-coding/scripts/coding-extension-policy.ts": {
-      "sha256": "11a8ecbd1a41f6e56f72fed8f2e02ea0a36a05f15affd241f4f73f9a7b702f95",
+      "sha256": "7ce2e4690b4998aa55ed554346cd96361cc24e4971e44a60bb2977bce2703947",
       "reason": "Use SDK extension lifecycle and discovery with narrow importer, cache isolation and host directory hooks; remove covered loader source and conversion rules."
     },
     "packages/pi-durable-coding/src/host-extension-loader.ts": {
-      "sha256": "ffdeac06ce853ab362a2b3515fd05ff6aca79281df0461cda85cc976d869fd70",
+      "sha256": "f680db8ea04d29a8c78aab5804afe494fed27c418b2b2c1385f5e79e44184e73",
       "reason": "Bind native and legacy module tables, Jiti transformation and directory policy to the published Coding SDK extension loader."
     },
     "packages/pi-durable-coding/src/native-extension-loader.ts": {
-      "sha256": "129a728151d00d601284d912daf95224801509d48772e74227c03b8423570ea7",
+      "sha256": "8b136c44465bcad18a937767d11ec6eade96e7421b857e5deff72dd83e16295e",
       "reason": "Use the public SDK configuration binding for existing extension import and directory policies."
     },
     "packages/pi-durable-coding/src/legacy/extension-loader.ts": {
@@ -4393,11 +4389,11 @@
       "reason": "Preserve tool execution ownership symbol descriptors and declaration metadata through the published SDK tool conversions without a product module dependency."
     },
     "packages/pi-durable-coding/src/native-agent-session.ts": {
-      "sha256": "831cde190e1818a6134175598583dcfc0b701d2406b82c6f08aff6db74c63fff",
+      "sha256": "062dab3bb9dee054d6d82e2cc26ecda4001bad69c5ae10d01dc1f52b107bd8d3",
       "reason": "Bind Native factories, durable state, inputs, conversion, images and persistence to the SDK lifecycle; delegate base-tool activation to SDK refresh and retain the host-auth fallback after model collection replacement."
     },
     "packages/pi-durable-coding/test/host-agent-session.test.ts": {
-      "sha256": "e2ff7e7cdd572f61074b1b76e38e77ae1b7cf55f8cfda833416487e7408cd903",
+      "sha256": "224d5135f39f9f5b5aead1cad69b82cb8431ce25fd6ecca0e930882b0d857f31",
       "reason": "Exercise durable ownership and metadata boundaries through the public SDK factory binding."
     },
     "packages/pi-durable-coding/src/native-search-tools.ts": {
@@ -4453,11 +4449,11 @@
       "reason": "Expose the existing durable sandbox dependency, worker and helpers while preserving prior public exports; flat modules avoid the Bun 1.3.14 new-file parent-directory defect."
     },
     "packages/pi-durable-coding/src/native-codemode.ts": {
-      "sha256": "12912b125b867dba9a985abe109aeb1c15e312edadd29c3f23e4ebf8da663843",
+      "sha256": "dd54adece03084bf84fce642ed8e6e37b176ac76cdc3d3e06448712d7b4720ca",
       "reason": "Bind three public Coding codemode factories to the existing durable executor and re-export SDK presentation contracts using public return types."
     },
     "packages/pi-durable-coding/test/host-codemode-sdk.test.ts": {
-      "sha256": "5d8008d36ef96ae7facda6bad414695c16cce3c8310b5a67003209b3da4f28eb",
+      "sha256": "78169779b0f3792649924c04e49489e98806798fe6cbcda0a8ad81676c8c4bab",
       "reason": "Verify three SDK factory bindings, inherited options and receivers, nested calls, branch store, default executor and a bundled worker without project dependencies."
     },
     "packages/pi-durable-coding/scripts/coding-ui-policy.ts": {
@@ -4469,7 +4465,7 @@
       "reason": "Use the shared SDK image converter instance for protected PNG registration."
     },
     "packages/pi-durable-coding/test/host-ui-sdk.test.ts": {
-      "sha256": "4358980d63ac3842db575e99297e3f7d7445c353f1561a8c4372af01e9a8266f",
+      "sha256": "990d651ecb531393bd2696e896e11129f017f366f238606aa18594c090aef902",
       "reason": "Verify public component identities, renderer lifecycle, argument batching, fallback, image caching and a relocated shared-WASM bundle."
     },
     "packages/pi-durable-coding/test/fixtures/ui-image.ts": {
@@ -4505,7 +4501,7 @@
       "reason": "Verify SDK MIME handling, conversion and resize hints, omission and error contracts, instance isolation, worker injection and fallback."
     },
     "packages/pi-durable-coding/test/host-mcp-sdk.test.ts": {
-      "sha256": "52879ca797fb662420bda11fe40fea3eaa0a5da850069de9a7500ba8b3058318",
+      "sha256": "b22853cb5f822aac8b95dd00f777b212ad3d5073ecd1d16c363d789b5159124d",
       "reason": "Verify the public MCP factory with official in-memory transports, durable codemode forwarding, resources, exposure and shutdown."
     },
     "packages/pi-durable-coding/src/native-tool-search.ts": {
@@ -4545,7 +4541,7 @@
       "reason": "Guard narrow public SDK constructor, loader, conversion, action, pinned identity version and restore policy injection."
     },
     "packages/pi-durable-coding/src/native-sdk.ts": {
-      "sha256": "b6503be8b0d988209baad8d8c9b50ab5a6b38d3aea5b3c070d5565837afa7c05",
+      "sha256": "d8031e729dbbab56597da6ea6606174b6bb1709ab79b3c006d6ef1efb51c52f7",
       "reason": "Forward tool types and factories through Native bindings that retain SDK aggregation."
     },
     "packages/pi-durable-coding/test/session-factory.test.ts": {
@@ -4553,7 +4549,7 @@
       "reason": "Keep the actual bundled factory version regression pointed at the replacement Native configuration entry."
     },
     "packages/pi-durable-coding/src/native-messages.ts": {
-      "sha256": "e2f1f2e6cec5c6d30ca31c3df7e58fea608fd9c22afbf706ab1e267436425354",
+      "sha256": "e8f9ba13c69de0792ac404fe05d8122506a5707a56cd773d2176905c55ad70ed",
       "reason": "Delegate all message conversion, summaries and helpers to the SDK; strip host correlation only from native model context."
     },
     "packages/pi-durable-coding/src/compat/rpc-client.ts": {
@@ -4561,7 +4557,7 @@
       "reason": "Forward nine SDK RPC types beside the existing explicit CLI policy without adding runtime behavior."
     },
     "packages/pi-durable-coding/scripts/coding-mcp-oauth-policy.ts": {
-      "sha256": "d853647a56aa1a6ac30bb24a0ac6e59cb53472c202e5cc82cc68409efaf261d7",
+      "sha256": "c756ee19c56ef601f1028b3dad15c1781e13a366a8fb01c02b2f7f3184904998",
       "reason": "Patch only SDK lock acquisition with optional cancellation and preserve its acquisition options, active mutation, error and release behavior."
     },
     "packages/pi-durable-coding/test/mcp-oauth-sdk.test.ts": {
@@ -4569,7 +4565,7 @@
       "reason": "Verify SDK facade identity, legacy grant migration and isolation, pre-aborted mutation rejection and active write completion."
     },
     "packages/pi-agent-server/src/mcp/tools-sdk.test.ts": {
-      "sha256": "2a166837590728e7a65910a1f2e56d673f81ab4282a8137ecdd770914e03d47e",
+      "sha256": "d50f9005122dd5a758824390394527321cbab5bba9b21ce0fa63a47e0e9afab3",
       "reason": "Verify SDK identity, output files, schema resource validation and durable live connection bindings."
     },
     "packages/pi-durable-coding/src/mcp-tools.ts": {
@@ -4581,7 +4577,7 @@
       "reason": "Forward the SDK configuration loader and retain the platform default shell policy for strict MCP value and header resolvers."
     },
     "packages/pi-agent-server/src/mcp/config-sdk.test.ts": {
-      "sha256": "fe8a400df7377395e24c89839bec0aa8c78fbe634521dc9fd89d2498d19515f1",
+      "sha256": "06727fb7cc559282e440ca3471f9f085779d5b25d4d2b86b326265c8676f6123",
       "reason": "Retain configuration and modeled Windows shell checks; remove the new loader re-export before evaluating the existing shell binding fixture."
     },
     "packages/pi-durable-coding/src/mcp-log.ts": {
@@ -4589,7 +4585,7 @@
       "reason": "Forward the SDK MCP log class and formatter; the host supplies its existing log path."
     },
     "packages/pi-agent-server/src/mcp/log-sdk.test.ts": {
-      "sha256": "ac3b7a9da483e9ed757647a228df1dd4ff6b1dc874b144395f33d17b4fd80b33",
+      "sha256": "5b4acbf9e62f59121cab4e2254d1c230bbf72f57d6eebc2439e8029092fa760a",
       "reason": "Verify SDK MCP formatting, synchronous append, byte limits, external rotation and filesystem failure recovery at task-owned paths."
     },
     "packages/pi-durable-coding/src/mcp-servers.ts": {
@@ -4597,19 +4593,19 @@
       "reason": "Forward existing public SDK MCP configuration algorithms, resource constants and types without a local implementation copy."
     },
     "packages/pi-agent-server/src/mcp/servers-sdk.test.ts": {
-      "sha256": "3ce0fd55e0a97c895cad47a99ce1d1637df8a3f6013a3d0761ee22016fa9a6f3",
+      "sha256": "a40b0a5d0a57a5295761fffdc8caffce57dfdcc8e9bbf3bc8f029aeb7b78ebdc",
       "reason": "Verify SDK configuration reuse, alias normalization, host exposure boundaries and OAuth destination policy with deterministic fixtures."
     },
     "packages/pi-agent-server/src/mcp/loader-sdk.test.ts": {
-      "sha256": "e9d0aa8bbbc80a72e4624a81aa894c1bd69fa3205667665352ee8b92a80ec455",
+      "sha256": "001348a7545c67371727aa126adbc2e95c1b6052f9f5e052f75cf76cee9246b3",
       "reason": "Verify four-layer SDK loading, shared overrides, trust, credential routing, metadata, BOM support and default and injected loading contracts."
     },
     "packages/pi-agent-server/src/mcp/resources-sdk.test.ts": {
-      "sha256": "ded753435d7d12def48a6d6a81f6e0e396779d2d719b190c8bfc41faf9f81984",
+      "sha256": "89641501d9acfe8efe3393882170635f71ae0258c4279048345c9765352e571c",
       "reason": "Verify SDK resource identity, durable visibility, dynamic servers, paging, errors, cancellation forwarding, full results and protected output files."
     },
     "packages/pi-agent-server/src/tools/paths-sdk.test.ts": {
-      "sha256": "1d6846e5e9124851c846ca283c0044a37879b18456579401bdafbd136eb0d3b6",
+      "sha256": "370786368e487526760d7ce9afde1cd087d07aa0a240f98a9e65826a4750c937",
       "reason": "Verify SDK path normalization before approval, read filename fallback priority, approved path aliases and denial without execution or memo."
     },
     "packages/pi-durable-coding/scripts/coding-tools-manager-policy.ts": {
@@ -4621,7 +4617,7 @@
       "reason": "Retain only Web reader and file handle I/O because Bun Node stream bridges do not reliably cancel a pending producer; share this 25-line adapter across server and Native SDK managers."
     },
     "packages/pi-agent-server/src/mcp/runtime-sdk.test.ts": {
-      "sha256": "89d3f3c785cf205d90ef9c37603044ff00fede27d38b4359749671639c8dd9e0",
+      "sha256": "1bc03f8bc3b99b86a40113b51bd95f6eef154d742334005b07de1baab8c82e6d",
       "reason": "Verify actual SDK connection ownership, request dispatch, product identity, filtered resource discovery, dynamic notifications, cancellation, close, default SDK behavior and partial host transport configuration with an in-memory protocol fixture."
     },
     "packages/pi-durable-coding/scripts/coding-mcp-runtime-policy.ts": {
@@ -4665,11 +4661,11 @@
       "reason": "Isolate four SDK session Bash output scenarios in child processes so asynchronous stream errors cannot affect other cases."
     },
     "packages/pi-durable-coding/test/fixtures/session-bash-output.ts": {
-      "sha256": "50dea672ae3e9a33963b4d3d07627aa4c75e77f36a052a08d10bf5da4488d16b",
+      "sha256": "ed91cfa5de0cec8f94d19563081840e1cfae1026972fb959931529a841cc64a2",
       "reason": "Verify complete and cancelled output, file errors, original execution failures, private modes and session cleanup without model calls."
     },
     "packages/pi-durable-coding/test/session-bash-ansi.test.ts": {
-      "sha256": "a028663c24a4ee1471515df2600f9d9c76a849bdf04c9a9b557ef669bdee7229",
+      "sha256": "fa13f4c34eb4ef918bef72549061e652bd67e3c08c3aeac1b526630b072b0562",
       "reason": "Verify SDK Bash OSC chunk boundaries, terminators, bounded pending state, spill output and cancellation."
     },
     "packages/pi-durable-coding/test/sdk-html-types.test.ts": {

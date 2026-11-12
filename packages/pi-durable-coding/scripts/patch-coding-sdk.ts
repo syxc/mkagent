@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 import { codingPackagePolicy } from './coding-package-policy.ts';
 import { codingSessionPolicy } from './coding-session-policy.ts';
 import { codingResourcePolicy } from './coding-resource-policy.ts';
-import { codingExtensionPolicy } from './coding-extension-policy.ts';
+import { codingExtensionPolicy, codingExtensionViewPolicy } from './coding-extension-policy.ts';
 import { codingModelRuntimePolicy } from './coding-model-runtime-policy.ts';
 import { codingRunnerPolicy } from './coding-runner-policy.ts';
 import { codingAgentSessionPolicy } from './coding-agent-session-policy.ts';
@@ -24,6 +24,7 @@ import { codingSessionFactoryPolicy } from './coding-session-factory-policy.ts';
 import { codingMcpOAuthPolicy } from './coding-mcp-oauth-policy.ts';
 import { codingManagementHttpPolicy, codingToolsManagerPolicy } from './coding-tools-manager-policy.ts';
 import { codingMcpRuntimePolicy } from './coding-mcp-runtime-policy.ts';
+import { codingRuntimeProtocolExports } from './coding-runtime-protocol.ts';
 
 /** Export method values without wrapping or changing AgentSession's instance calls. */
 function codingBoundaryExports(source: string, declarations: boolean): string {
@@ -102,10 +103,11 @@ for (const suffix of ['js', 'd.ts']) {
   if (original.includes('export * from "./core/settings-manager.')) throw new Error('Expected unpatched SDK');
   const extension = suffix === 'js' ? 'js' : 'ts';
   const exports = [
+    ...codingRuntimeProtocolExports(suffix === 'd.ts'),
     `export * from "./core/agent-session.${extension}";`,
     `export { initializeExtensionModels } from "./core/agent-session-services.${extension}";`,
     `export { CacheWarmer } from "./core/cache-warmer.${extension}";`,
-    `export { ${suffix === 'd.ts' ? 'type AuthStorageBackend, ' : ''}FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.${extension}";`,
+    `export { ${suffix === 'd.ts' ? 'type AuthStorageBackend, ' : ''}AuthStorage, FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.${extension}";`,
     `export * from "./core/settings-manager.${extension}";`,
     `export { getProjectTrustOptions } from "./core/trust-manager.${extension}";`,
     `export { SETTINGS_DEFAULTS } from "./core/settings-defaults.${extension}";`,
@@ -124,6 +126,7 @@ for (const suffix of ['js', 'd.ts']) {
     `export * from "./core/extensions/loader.${extension}";`,
     `export * from "./core/extensions/runner.${extension}";`,
     `export * from "./core/extensions/types.${extension}";`,
+    `export { StringEnum, Type } from "./core/extensions/pi-ai-extension-view.${extension}";`,
     `export * from "./core/exec.${extension}";`,
     `export { allToolNames, createToolFactories, createToolDefinition, createTool, createCodingToolDefinitions, createReadOnlyToolDefinitions, createAllToolDefinitions, createAllTools${suffix === 'd.ts' ? ', type Tool, type ToolDef, type ToolName, type ToolFactoryDependencies, type ToolFactories' : ''} } from "./core/tools/index.${extension}";`,
     `export * from "./core/tools/tool-definition-wrapper.${extension}";`,
@@ -171,6 +174,8 @@ for (const suffix of ['js', 'd.ts']) {
     + 'export type { ShellDependencies } from "./core/tools/bash.ts";\n'
     + 'export type { CreateAgentSessionDependencies } from "./core/sdk.ts";\n' + marker));
 }
+const extensionView = 'dist/core/extensions/pi-ai-extension-view.js';
+outputs.set(extensionView, codingExtensionViewPolicy(readFileSync(join(baseline, extensionView), 'utf8')));
 for (const suffix of ['js', 'd.ts']) {
   const path = `dist/extensions/mcp/resources.${suffix}`;
   let body = readFileSync(join(baseline, path), 'utf8');

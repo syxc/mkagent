@@ -5,7 +5,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
-import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/pi-durable-coding/mcp-oauth';
+import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/coding-runtime/mcp-oauth';
 import { startOAuthMcpServer } from '../../../pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts';
 
 for (const secondAction of ['finish', 'cancel'] as const) {

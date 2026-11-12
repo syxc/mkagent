@@ -1,7 +1,7 @@
 // Executes one preflighted native tool without changing the model transcript.
 import { isDeepStrictEqual } from 'node:util';
 import { copyJson, type Context } from '@earendil-works/chord';
-import type { AssistantMessage, JsonValue } from '@earendil-works/pi-ai';
+import type { AssistantMessage, JsonValue } from '@earendil-works/pi-coding-agent';
 import {
   defineTask, type ConversationId, type NextTaskState, type PhaseHandler, type RunningTask,
   type Task, type TaskId, type TaskRuntime, type Tx, type ToolControl,

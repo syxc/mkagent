@@ -2,7 +2,7 @@ import { afterEach, expect, test } from 'bun:test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Agent, type AgentMessage } from '@earendil-works/pi-agent-core';
+import { Agent, type AgentMessage } from '@earendil-works/pi-coding-agent';
 import { createAssistantMessageEventStream, createModels, createProvider, InMemoryCredentialStore, type AssistantMessage, type Message, type Model } from '@earendil-works/pi-ai';
 import { BACKGROUND_CONTEXT as context } from '@earendil-works/chord/context';
 import { Harness, createRegistry, MemoryStorage } from '@earendil-works/pi-durable';

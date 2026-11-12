@@ -8,12 +8,17 @@
     {
       "path": "dist/index.js",
       "originalSha256": "4569157e6038be9840fa514db4b00a27fd0be9e3622cc7b49a281de6c027d7ff",
-      "sha256": "ec81edb1a49a4c9b4b7082d1e8133ce700bfb066bee0c856f95582e0d51803e1"
+      "sha256": "d6ae06237b4e6bf32e8b813a44c07ad77c4ea71a9b9ae2942962867083a94e86"
     },
     {
       "path": "dist/index.d.ts",
       "originalSha256": "44f8644712aba6b4316aa42854d8d2c1ae0fc183fe6f1966e999a47d537c4b22",
-      "sha256": "987eb3b8b67b74a5c1a338c8cb49c6b9ce756e5d7303b2da002b6ed04189163d"
+      "sha256": "0d8b06f43ed34e6dec898e1d75feb3da03d301e9a84b00e9c34d05829c53d063"
+    },
+    {
+      "path": "dist/core/extensions/pi-ai-extension-view.js",
+      "originalSha256": "dd44b3076d4ca95193e7c985b6f210c4170f22715e42ba8a4916e4fd5f8d0125",
+      "sha256": "80c1e435f30100dff121e43673c87dd1a744fa456fb51744f6b76e450ef4ffca"
     },
     {
       "path": "dist/extensions/mcp/resources.js",
@@ -63,12 +68,12 @@
     {
       "path": "dist/extensions/mcp/oauth.js",
       "originalSha256": "d5d0410f68510a4ef4929099dea95483b4ba500151903476ef652bdef6b44451",
-      "sha256": "15e1be93b00e517e7b17c476dd941195cdddf781df01241366bc3300ae575e8d"
+      "sha256": "627cd0032cbb44374869c4555ca6cec4a14c4d5a925adeb55353d245d7a4277b"
     },
     {
       "path": "dist/extensions/mcp/oauth.d.ts",
       "originalSha256": "bbcb6c296fb2f620c5c0dde4377342f43301307ffbe98ad2e152b2bea163cb34",
-      "sha256": "52efdb0649d4e3e84ad9a4475cab0c730f82e4f1cb4143ba237ece515cbe2b63"
+      "sha256": "953dfa5b5b21f255384c523e804022f805d584575c26beb73454597ea4eb2190"
     },
     {
       "path": "dist/core/system-prompt.js",
@@ -263,7 +268,7 @@
     {
       "path": "dist/core/extensions/loader.js",
       "originalSha256": "82ca38a32024bdb2fbbe96120b8cfcdd67de037f5764018d42cf8ca7172cf104",
-      "sha256": "92918204d402ae8e281d71298a959e8dcc0aaa2be027fa830bb2ed3d719fabd0"
+      "sha256": "ad11e65e98fc2bd8aeb79524beeb2d6a169991e78eba4d4cd859573365fe1e83"
     },
     {
       "path": "dist/core/model-runtime.js",
@@ -308,7 +313,7 @@
     {
       "path": "dist/core/extensions/loader.d.ts",
       "originalSha256": "85ebf448c25774878ab3c1e8bdd5ee9b3a47431e7ae9054c7d4174c0939622b4",
-      "sha256": "0e6c2eb76d4df1d806b544a50f0342faa3a2fa905011d160dafbe8c4e050b17f"
+      "sha256": "cf549e8c701d4aba36a51e8f66dc6421610684bb3ba677a5f32b1dfc0513a596"
     },
     {
       "path": "dist/core/model-runtime.d.ts",

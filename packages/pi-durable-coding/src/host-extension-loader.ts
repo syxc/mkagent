@@ -2,25 +2,19 @@
 import {
   clearExtensionCache, createExtensionRuntime, discoverAndLoadExtensions,
   loadExtensionFromFactory, loadExtensions, loadExtensionsCached,
-  type EventBus, type ExtensionLoaderOptions, type ExtensionRuntime,
+  type EventBus, type ExtensionLoaderOptions, type ExtensionModuleOverrides, type ExtensionRuntime,
 } from '@earendil-works/pi-coding-agent';
-import { createJiti } from 'jiti/static';
 import { preparePluginTranspiler } from './plugin-transpiler.ts';
 
 export function createHostExtensionLoader(
-  modules: () => Record<string, unknown> | Promise<Record<string, unknown>>,
+  modules: () => ExtensionModuleOverrides | Promise<ExtensionModuleOverrides>,
   projectConfigDir: string,
   getAgentDir: () => string,
 ) {
   const options: ExtensionLoaderOptions = {
     projectConfigDir,
-    async importModule(extensionPath) {
-      const jiti = createJiti(import.meta.url, {
-        moduleCache: false, virtualModules: await modules(), tryNative: false,
-      });
-      preparePluginTranspiler(jiti);
-      return jiti.import(extensionPath, { default: true });
-    },
+    modules,
+    prepareImporter: preparePluginTranspiler,
   };
   return {
     clearExtensionCache: () => clearExtensionCache(options),

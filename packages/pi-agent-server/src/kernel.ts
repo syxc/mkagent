@@ -61,7 +61,7 @@ import type { ExtensionUIHost } from './extension-ui.ts';
 import { nativeOwnerActions } from './native-owner-actions.ts';
 import type { PiNativeOwnerRequest } from '../../shared/src/agent/backend/pi/native-owner-protocol.ts';
 
-import type { ModelRuntimeCredentials, AgentSessionEvent as NativeAgentSessionEvent } from '@mkagent/pi-durable-coding/native';
+import type { ModelRuntimeCredentials, AgentSessionEvent as NativeAgentSessionEvent } from '@mkagent/coding-runtime/native';
 
 /**
  * Main-chat retry/stream policy, mirroring the old 1.1.0 main-chat settings

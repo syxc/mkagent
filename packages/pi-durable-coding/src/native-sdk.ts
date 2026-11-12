@@ -4,7 +4,7 @@ import {
   type CreateAgentSessionOptions as SDKOptions,
   type CreateAgentSessionResult as SDKResult,
 } from '@earendil-works/pi-coding-agent';
-import { streamSimple } from '@earendil-works/pi-ai/compat';
+import { streamSimple } from '@earendil-works/pi-coding-agent';
 import { Agent, setDefaultStreamFn } from './agent-runtime.ts';
 import type { DurableLoopBinding } from './durable-coding/engine.ts';
 import { AgentSession } from './native-agent-session.ts';

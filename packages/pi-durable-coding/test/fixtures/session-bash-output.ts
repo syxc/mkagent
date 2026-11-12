@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Agent } from '@earendil-works/pi-agent-core';
+import { Agent } from '@earendil-works/pi-coding-agent';
 import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import {
   AgentSession, DefaultResourceLoader, ModelRuntime, SessionManager, SettingsManager,

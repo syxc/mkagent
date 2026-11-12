@@ -1,7 +1,7 @@
 /** Bind request credentials at execution time; only model identities and summary text cross storage. */
 import { copyJson } from '@earendil-works/chord';
 import { randomUUID } from 'node:crypto';
-import { createAssistantMessageEventStream, type AssistantMessage } from '@earendil-works/pi-ai';
+import { createAssistantMessageEventStream, type AssistantMessage } from '@earendil-works/pi-coding-agent';
 import type { TaskId, Tx } from '@earendil-works/pi-durable';
 import type { StreamFn } from '../agent-runtime.ts';
 import type { LoopBackend } from './engine.ts';

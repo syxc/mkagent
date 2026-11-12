@@ -1,7 +1,7 @@
 /** Core lifecycle reuse must retain Native defaults, queues and recovery boundaries. */
 import assert from 'node:assert/strict';
 import { test } from 'bun:test';
-import { Agent as CoreAgent, type AgentMessage, type StreamFn } from '@earendil-works/pi-agent-core';
+import { Agent as CoreAgent, type AgentMessage, type StreamFn } from '@earendil-works/pi-coding-agent';
 import { Agent, type AgentOptions } from '../src/durable-agent.ts';
 import { DurableLoopBinding } from '../src/durable-coding/engine.ts';
 import { getDefaultStreamFn, setDefaultStreamFn } from '../src/stream-fn.ts';

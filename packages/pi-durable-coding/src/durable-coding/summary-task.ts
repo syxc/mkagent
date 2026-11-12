@@ -1,6 +1,6 @@
 /** Native summary requests use durable ownership without entering the conversation's model context. */
 import { copyJson } from '@earendil-works/chord';
-import type { AssistantMessage, SimpleStreamOptions, TranscriptContext } from '@earendil-works/pi-ai';
+import type { AssistantMessage, SimpleStreamOptions, TranscriptContext } from '@earendil-works/pi-coding-agent';
 import { defineTask, type ConversationId } from '@earendil-works/pi-durable';
 import type { StreamFn } from '../agent-runtime.ts';
 

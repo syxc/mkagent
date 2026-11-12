@@ -4,10 +4,10 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { StreamableHttpTransport } from '@earendil-works/pi-mcp';
-import type { ExtensionAPI, ExtensionCommandContext } from '@mkagent/pi-durable-coding/native';
+import type { ExtensionAPI, ExtensionCommandContext } from '@mkagent/coding-runtime/native';
 import {
   InMemoryAuthStorageBackend, McpOAuthCredentialStore, signInMcpServer,
-} from '@mkagent/pi-durable-coding/mcp-oauth';
+} from '@mkagent/coding-runtime/mcp-oauth';
 import { startOAuthMcpServer } from '../../../pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts';
 import { McpAuthorization } from './authorization.ts';
 import { McpServerConnection } from './runtime.ts';

@@ -1,5 +1,5 @@
 /** Keep native before hooks and local replacement callbacks in their original command coroutine. */
-import type { AgentSession, ExtensionCommandContextActions } from '@mkagent/pi-durable-coding/native';
+import type { AgentSession, ExtensionCommandContextActions } from '@mkagent/coding-runtime/native';
 import type { PiNativeOwnerRequest } from '../../shared/src/agent/backend/pi/native-owner-protocol.ts';
 import type { CodingHost } from './coding-host.ts';
 import { setupSessionManager } from './native-user-input.ts';

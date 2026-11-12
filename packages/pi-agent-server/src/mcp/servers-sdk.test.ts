@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import {
   LIST_MCP_RESOURCES_TOOL, LIST_MCP_RESOURCE_TEMPLATES_TOOL, READ_MCP_RESOURCE_TOOL,
   mcpNamespace, validateMcpServerConfig as sdkValidate,
-} from '@mkagent/pi-durable-coding/mcp-servers';
+} from '@mkagent/coding-runtime/mcp-servers';
 import * as host from './mcp-servers.ts';
 
 const invalidConfig = (config: unknown) => expect(typeof host.validateMcpServerConfig('fixture', config)).toBe('string');

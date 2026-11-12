@@ -66,10 +66,6 @@
       ]
     },
     {
-      "target": "src/upstream/core/extensions/pi-ai-extension-view.ts",
-      "implementation": "src/pi/core/extensions/pi-ai-extension-view.ts"
-    },
-    {
       "target": "src/upstream/utils/shell.ts",
       "implementation": "src/compat/shell.ts",
       "changes": [

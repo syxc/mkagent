@@ -1,7 +1,7 @@
 /** Persist native session metadata in the same durable history as model messages. */
 import { copyJson, type Context, type JsonValue } from '@earendil-works/chord';
 import { randomUUID } from 'node:crypto';
-import type { Message } from '@earendil-works/pi-ai';
+import type { Message } from '@earendil-works/pi-coding-agent';
 import {
   defineDoc, type ContextEdit, type Conversation, type Cursor, type EntryDraft, type EntryId, type EntryRecord, type Tx,
 } from '@earendil-works/pi-durable';

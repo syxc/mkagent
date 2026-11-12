@@ -6,9 +6,16 @@ export function codingExtensionPolicy(source: string, declarations: boolean): st
     body = body.replaceAll(before, after);
   };
   if (declarations) {
-    replace('export declare function clearExtensionCache(): void;', `export interface ExtensionLoaderOptions {
+    replace('export declare function clearExtensionCache(): void;', `export interface ExtensionModuleOverrides {
+    codingAgent?: unknown;
+    agentCore?: unknown;
+}
+export declare function getExtensionModules(overrides?: ExtensionModuleOverrides): Promise<Record<string, unknown>>;
+export interface ExtensionLoaderOptions {
     /** Stable importer identity isolates host factory caches. */
     importModule?: (extensionPath: string) => Promise<unknown>;
+    modules?: () => ExtensionModuleOverrides | Promise<ExtensionModuleOverrides>;
+    prepareImporter?: (importer: Pick<import("jiti").Jiti, "options">) => void;
     projectConfigDir?: string;
 }
 export declare function clearExtensionCache(options?: ExtensionLoaderOptions): void;`);
@@ -20,7 +27,7 @@ export declare function clearExtensionCache(options?: ExtensionLoaderOptions): v
   }
   replace('let extensionCacheCwd;\nlet extensionCacheGeneration = 0;\nconst extensionCache = new Map();', `const extensionCaches = new WeakMap();
 function getExtensionCache(options) {
-    const importer = options?.importModule ?? getCreateJiti;
+    const importer = options?.importModule ?? options?.modules ?? getCreateJiti;
     let cache = extensionCaches.get(importer);
     if (!cache) {
         cache = { factories: new Map(), generation: 0, cwd: undefined };
@@ -50,7 +57,14 @@ function getExtensionCache(options) {
   const start = body.indexOf('    const createJitiImpl = await getCreateJiti();');
   const end = body.indexOf('    const factory = module;', start);
   if (start < 0 || end < 0) throw new Error('Published Jiti import boundary changed');
-  const importing = body.slice(start, end).replace('    const module =', '    module =');
+  let importing = body.slice(start, end).replace('    const module =', '    module =');
+  const resolution = 'const resolutionOptions = usesEmbeddedModules';
+  if (importing.split(resolution).length !== 2) throw new Error('Published importer resolution changed');
+  importing = importing.replace(resolution, `const resolutionOptions = options?.modules
+        ? { virtualModules: await getExtensionModules(await options.modules()), tryNative: false }
+        : usesEmbeddedModules`);
+  importing = importing.replace('    module = await jiti.import(',
+    '    options?.prepareImporter?.(jiti);\n    module = await jiti.import(');
   body = body.slice(0, start) + `    let module;
     if (options?.importModule) {
         module = await options.importModule(extensionPath);
@@ -79,5 +93,36 @@ ${importing.split('\n').filter(Boolean).map(line => '    ' + line).join('\n')}
     'path.join(resolvedCwd, options?.projectConfigDir ?? CONFIG_DIR_NAME, "extensions")');
   replace('return loadExtensions(allPaths, resolvedCwd, eventBus);',
     'return loadExtensions(allPaths, resolvedCwd, eventBus, undefined, options);');
-  return body;
+  return body + `
+/** Keep SDK plugin modules and importer ownership while allowing a host execution backend. */
+export async function getExtensionModules(overrides = {}) {
+    const modules = { ...await getVirtualModules() };
+    for (const namespace of ["@earendil-works", "@mariozechner"]) {
+        if (overrides.codingAgent !== undefined) modules[namespace + "/pi-coding-agent"] = overrides.codingAgent;
+        if (overrides.agentCore !== undefined) modules[namespace + "/pi-agent-core"] = overrides.agentCore;
+    }
+    return new Proxy(modules, {
+        has(target, name) {
+            if (overrides.agentCore !== undefined && typeof name === "string" && !Reflect.has(target, name)
+                && /^@(earendil-works|mariozechner)\\/pi-(coding-agent|agent-core)\\//.test(name)) {
+                throw new Error("Unsupported legacy runtime subpath: " + name);
+            }
+            return Reflect.has(target, name);
+        },
+    });
+}
+`;
+}
+
+/** Reuse pi-ai's schema construction at the SDK-owned TypeBox plugin boundary. */
+export function codingExtensionViewPolicy(source: string): string {
+  const before = 'import { Type } from "typebox";';
+  const start = source.indexOf('    return Type.Unsafe({');
+  const end = source.indexOf('    });', start);
+  if (source.split(before).length !== 2 || start < 0 || end < 0) {
+    throw new Error('Published plugin StringEnum boundary changed');
+  }
+  source = source.slice(0, start) + '    return Type.Unsafe(publicStringEnum(values, options));'
+    + source.slice(end + '    });'.length);
+  return source.replace(before, 'import { StringEnum as publicStringEnum } from "@earendil-works/pi-ai/compat";\n' + before);
 }

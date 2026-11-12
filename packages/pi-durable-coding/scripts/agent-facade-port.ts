@@ -7,14 +7,14 @@ export function portAgentFacade(source: string): string {
     ts.isVariableStatement(node) && node.declarationList.declarations.some(declaration =>
       ts.isIdentifier(declaration.name) && ['EMPTY_USAGE', 'DEFAULT_MODEL'].includes(declaration.name.text)));
   if (policies.length !== 2) throw new Error('Pinned native Agent defaults changed');
-  return `import { Agent as CoreAgent, type AgentOptions as CoreAgentOptions } from "@earendil-works/pi-agent-core";
-import type { Model } from "@earendil-works/pi-ai";
+  return `import { Agent as CoreAgent, type AgentOptions as CoreAgentOptions, type QueueMode } from "@earendil-works/pi-coding-agent";
+import type { Model } from "@earendil-works/pi-coding-agent";
 import type { TaskId } from "@earendil-works/pi-durable";
 import { DurableLoopBinding } from "./durable-coding/engine.ts";
 import { runAgentLoop, runAgentLoopContinue } from "./durable-loop.ts";
 import { getDefaultStreamFn } from "./stream-fn.ts";
 import type { AgentMessage, AgentLoopConfig } from "./agent-runtime.ts";
-export type { AgentInitialState, QueueMode } from "@earendil-works/pi-agent-core";
+export type { AgentInitialState, QueueMode } from "@earendil-works/pi-coding-agent";
 export interface AgentOptions extends CoreAgentOptions { durable?: DurableLoopBinding; }
 
 // Keep mutable Native model and usage defaults separate from public core defaults.
@@ -60,7 +60,10 @@ export class Agent extends CoreAgent {
   }
 
   /** Snapshot all inputs independently of the next-turn drain modes. */
-  exportDurableQueues() {
+  exportDurableQueues(): {
+    steering: AgentMessage[]; followUp: AgentMessage[];
+    steeringMode: QueueMode; followUpMode: QueueMode;
+  } {
     return {
       steering: this.steeringQueue.snapshot(), followUp: this.followUpQueue.snapshot(),
       steeringMode: this.steeringMode, followUpMode: this.followUpMode,

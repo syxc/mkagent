@@ -27,7 +27,7 @@ import type {
 } from './custom-endpoint-models.ts';
 import { buildCustomEndpointModelDef, normalizeCustomEndpointModelEntry } from './custom-endpoint-models.ts';
 import type { PiCredential } from './adapt-credential.ts';
-import { ModelRuntime as CodingModelRuntime, type ModelRuntimeCredentials } from '@mkagent/pi-durable-coding/native';
+import { ModelRuntime as CodingModelRuntime, type ModelRuntimeCredentials } from '@mkagent/coding-runtime/native';
 
 /** Lazy API implementations keyed by `model.api`, shared by custom endpoints. */
 const CUSTOM_ENDPOINT_APIS: Record<CustomEndpointApi, () => ProviderStreams> = {

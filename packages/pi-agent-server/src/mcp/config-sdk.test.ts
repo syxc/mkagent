@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmdirSync, unlinkSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
-import * as sdk from '@mkagent/pi-durable-coding/mcp-config';
+import * as sdk from '@mkagent/coding-runtime/mcp-config';
 import { createDefaultTransport, McpServerConnection } from './runtime.ts';
 
 const variable = 'MKAGENT_CONFIG_SDK_FIXTURE';

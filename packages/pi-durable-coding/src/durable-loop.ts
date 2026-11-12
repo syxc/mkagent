@@ -1,10 +1,10 @@
 /** Public Pi loop APIs delegate scheduling to pi-durable tasks. */
-import { EventStream } from '@earendil-works/pi-ai';
+import { EventStream } from '@earendil-works/pi-coding-agent';
 import type {
   AgentContext, AgentEvent, AgentLoopConfig, AgentMessage, AgentTool, AgentToolCall,
   AgentToolCallOutcome, AgentToolResult, StreamFn,
 } from './agent-runtime.ts';
-import type { AssistantMessage } from '@earendil-works/pi-ai';
+import type { AssistantMessage } from '@earendil-works/pi-coding-agent';
 import { DurableLoopBinding, runDurableToolCall } from './durable-coding/engine.ts';
 import { getDefaultStreamFn } from './stream-fn.ts';
 import type { AgentEventSink } from './native-operations.ts';

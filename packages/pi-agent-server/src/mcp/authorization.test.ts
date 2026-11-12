@@ -6,10 +6,10 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { Readable } from 'node:stream';
 import { StreamableHttpTransport } from '@earendil-works/pi-mcp';
-import type { ExtensionAPI, ExtensionCommandContext } from '@mkagent/pi-durable-coding/native';
+import type { ExtensionAPI, ExtensionCommandContext } from '@mkagent/coding-runtime/native';
 import {
   FileAuthStorageBackend, McpOAuthCredentialStore, createMcpAuthProvider, signInMcpServer,
-} from '@mkagent/pi-durable-coding/mcp-oauth';
+} from '@mkagent/coding-runtime/mcp-oauth';
 import { startOAuthMcpServer } from '../../../pi-durable-coding/test/fixtures/upstream/mcp-oauth-server.ts';
 import { McpAuthorization } from './authorization.ts';
 import { McpServerConnection } from './runtime.ts';
@@ -254,7 +254,7 @@ test('logout in a separate process cannot be undone by another process refreshin
     });
     await visited.promise;
     const program = `
-      import { FileAuthStorageBackend, McpOAuthCredentialStore, createMcpAuthProvider } from '@mkagent/pi-durable-coding/mcp-oauth';
+      import { FileAuthStorageBackend, McpOAuthCredentialStore, createMcpAuthProvider } from '@mkagent/coding-runtime/mcp-oauth';
       import { McpAuthorization } from ${JSON.stringify(join(import.meta.dir, 'authorization.ts'))};
       import { McpServerConnection, createDefaultTransport } from ${JSON.stringify(join(import.meta.dir, 'runtime.ts'))};
       const { root, file, url, action } = JSON.parse(Bun.argv.at(-1));

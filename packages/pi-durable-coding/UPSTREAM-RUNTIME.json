@@ -4,21 +4,16 @@
   "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
   "policy": "Pi Coding SDK source with TypeScript declarations, excluding the upstream CLI launcher; execution binds to the local durable Agent boundary.",
   "dependencies": {
-    "@earendil-works/pi-ai": "1.5.0",
     "@earendil-works/pi-coding-agent": "1.5.0",
-    "@earendil-works/pi-durable": "1.5.0",
-    "@earendil-works/pi-tui": "1.5.0",
-    "typebox": "1.3.27"
+    "@earendil-works/pi-durable": "1.5.0"
   },
-  "coreImports": [
-    "*"
-  ],
+  "coreImports": [],
   "files": [
     {
       "source": "packages/agent/src/agent.ts",
       "target": "src/durable-agent.ts",
       "sha256": "6d0e56bf4443f0cfc5c6a82ce31a3b99f15ff816075bed36403dfa0c95a609c6",
-      "portSha256": "ee8ffa86172f5fd78edf51060e0b678bcbd08435f9908ad630d68f59ef9774d4",
+      "portSha256": "ed419eef24f0666e12d1cb3e7412c28faa3c4c145577f4b1261d20faea821cab",
       "changes": [
         "local-agent-protocol",
         "public-core-agent-facade",
@@ -30,7 +25,7 @@
       "source": "packages/agent/src/agent-loop.ts",
       "target": "src/native-operations.ts",
       "sha256": "9d7589b5071ea3b8b3e3c624f9cfc09a976ebf7436024a58213837de4645167d",
-      "portSha256": "7380c823e485933b08fc791eaab1fc8f88e5da85face6377e7d9540c1206dfec",
+      "portSha256": "95bc25cec996508da828c1a103af1f60c30ddbe5e05e156ba678101ea6290b18",
       "changes": [
         "public-core-operations-with-native-identity"
       ]
@@ -52,24 +47,6 @@
       "changes": [
         "public-coding-sdk",
         "host-extension-module-import"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/extensions/pi-ai-extension-view.ts",
-      "target": "src/pi/core/extensions/pi-ai-extension-view.ts",
-      "sha256": "119d56316bd9b344fea619f5441367c2a916de58d0ffc8aa665b5c9d44244455",
-      "portSha256": "35769c1446400219e554e31712e5bc8da0c90bbdf1c0f41df39c151abb5bc8d4",
-      "changes": [
-        "public-pi-ai-typebox-string-enum"
-      ]
-    },
-    {
-      "source": "packages/coding-agent/src/core/extensions/virtual-modules.ts",
-      "target": "src/pi/core/extensions/virtual-modules.ts",
-      "sha256": "adac2605d8f3e010a96a5a37bfd066e48eed8ddef024b354c21697da8d6dbf0d",
-      "portSha256": "ef6d49a54f2ed2b0f3486bfc3bf8aec7086c735304317bc86477c041c529ee2f",
-      "changes": [
-        "durable-agent-boundary"
       ]
     },
     {

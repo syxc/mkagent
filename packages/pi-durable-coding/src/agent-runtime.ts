@@ -1,5 +1,5 @@
 /** Reuse the public agent protocol while keeping execution owned by pi-durable. */
-import type { AgentLoopConfig as CoreAgentLoopConfig } from '@earendil-works/pi-agent-core';
+import type { AgentLoopConfig as CoreAgentLoopConfig } from '@earendil-works/pi-coding-agent';
 import type { DurableLoopBinding } from './durable-coding/engine.ts';
 
 export type {
@@ -8,7 +8,7 @@ export type {
   AgentToolParams, AgentToolResult, AgentToolUpdateCallback, AgentTurnContext, AgentTurnDecision,
   BeforeToolCallContext, BeforeToolCallResult, CustomAgentMessages, FinishTurn, PrepareNextTurnContext,
   PrepareRequest, PrepareRequestContext, QueueMode, StreamFn, ThinkingLevel, ToolExecutionMode,
-} from '@earendil-works/pi-agent-core';
+} from '@earendil-works/pi-coding-agent';
 
 export interface AgentLoopConfig extends CoreAgentLoopConfig {
   durable?: DurableLoopBinding;

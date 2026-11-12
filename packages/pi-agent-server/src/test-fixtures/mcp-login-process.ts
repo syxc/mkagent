@@ -1,8 +1,8 @@
 /** Run an explicit MCP login in another process while sharing only the temporary credential store. */
 import { createInterface } from 'node:readline';
 import { join } from 'node:path';
-import type { ExtensionAPI, ExtensionCommandContext } from '@mkagent/pi-durable-coding/native';
-import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/pi-durable-coding/mcp-oauth';
+import type { ExtensionAPI, ExtensionCommandContext } from '@mkagent/coding-runtime/native';
+import { FileAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/coding-runtime/mcp-oauth';
 import { McpAuthorization } from '../mcp/authorization.ts';
 import { McpServerConnection, createDefaultTransport } from '../mcp/runtime.ts';
 

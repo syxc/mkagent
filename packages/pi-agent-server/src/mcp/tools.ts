@@ -3,14 +3,14 @@ import type { Tool as McpTool } from '@earendil-works/pi-mcp';
 import type { ToolResultMessage } from '@earendil-works/pi-ai';
 import type { ToolExecutionApi, ToolExecutionResult, ToolRegistration } from '@earendil-works/pi-durable';
 import type { Context, JsonValue } from '@earendil-works/chord';
-import { convertMcpResult, createMcpResultSchema, toModelContent } from '@mkagent/pi-durable-coding/mcp-tools';
+import { convertMcpResult, createMcpResultSchema, toModelContent } from '@mkagent/coding-runtime/mcp-tools';
 import type { McpExposure } from './mcp-servers.ts';
 import type { McpServerConnection } from './runtime.ts';
 
 export {
   MCP_OUTPUT_MAX_BYTES, convertMcpResult, createMcpResultSchema, createMcpToolName,
   limitMcpContent, saveToTempFile, toModelContent,
-} from '@mkagent/pi-durable-coding/mcp-tools';
+} from '@mkagent/coding-runtime/mcp-tools';
 export type LlmBlock = Awaited<ReturnType<typeof toModelContent>>[number];
 export type McpResultConversion = Awaited<ReturnType<typeof convertMcpResult>>;
 

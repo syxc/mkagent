@@ -1,5 +1,5 @@
 /** Bind the source-ported Pi runner to one durable host, without an Agent loop. */
-import type { Api, ImageContent, Model, ModelThinkingLevel as ThinkingLevel, UserMessage } from '@earendil-works/pi-ai';
+import type { Api, ImageContent, Model, ModelThinkingLevel as ThinkingLevel, UserMessage } from '@earendil-works/pi-coding-agent';
 import { GenerationTask, ToolTask, defineExtension, hook, type Extension, type ToolRegistration, type TaskId, type GenerationHooks, type HookApi, type EntryDraft, type Cursor } from '@earendil-works/pi-durable';
 import type { Context } from '@earendil-works/chord';
 import { NativeToolExecutor } from './extension-tools.ts';

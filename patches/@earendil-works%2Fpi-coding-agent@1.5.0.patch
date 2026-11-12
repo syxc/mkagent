@@ -1,15 +1,19 @@
-# Content SHA-256: a4e975998b34173102e5f62ba1abbd8bc6686b3cad2b06f892304d935c12da48
+# Content SHA-256: d97659c2d9799c5a8ec94163db677817a80c20e5377ce8b4c9efe2d7213477d8
 diff --git a/dist/index.js b/dist/index.js
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -51,4 +51,70 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
+@@ -51,4 +51,75 @@ export { formatDimensionNote, resizeImage } from "./utils/image-resize.js";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.js";
  // Shell utilities
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.js";
++export { Agent, createErrorToolResult, createToolResultMessage, declareToolChanges, emitToolExecutionEnd, emitToolResultMessage, prepareToolCall, shouldTerminateToolBatch, streamAssistantResponse, streamProxy } from "@earendil-works/pi-agent-core";
++export { EventStream, PI_ATTRIBUTION, contentText, createAssistantMessageEventStream } from "@earendil-works/pi-ai";
++export { AssistantMessageEventStream } from "@earendil-works/pi-ai/utils/event-stream";
++export { streamSimple } from "@earendil-works/pi-ai/compat";
 +export * from "./core/agent-session.js";
 +export { initializeExtensionModels } from "./core/agent-session-services.js";
 +export { CacheWarmer } from "./core/cache-warmer.js";
-+export { FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.js";
++export { AuthStorage, FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.js";
 +export * from "./core/settings-manager.js";
 +export { getProjectTrustOptions } from "./core/trust-manager.js";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.js";
@@ -34,6 +38,7 @@ diff --git a/dist/index.js b/dist/index.js
 +export * from "./core/extensions/loader.js";
 +export * from "./core/extensions/runner.js";
 +export * from "./core/extensions/types.js";
++export { StringEnum, Type } from "./core/extensions/pi-ai-extension-view.js";
 +export * from "./core/exec.js";
 +export { allToolNames, createToolFactories, createToolDefinition, createTool, createCodingToolDefinitions, createReadOnlyToolDefinitions, createAllToolDefinitions, createAllTools } from "./core/tools/index.js";
 +export * from "./core/tools/tool-definition-wrapper.js";
@@ -86,14 +91,20 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
  export { createExtensionRuntime, defineTool, discoverAndLoadExtensions, ExtensionRunner, isBashToolResult, isEditToolResult, isFindToolResult, isGrepToolResult, isLsToolResult, isPowerShellToolResult, isReadToolResult, isToolCallEventType, isWriteToolResult, wrapRegisteredTool, wrapRegisteredTools, } from "./core/extensions/index.ts";
  export type { ReadonlyFooterDataProvider } from "./core/footer-data-provider.ts";
  export type { RegisteredMcpServer } from "./core/mcp-servers.ts";
-@@ -42,4 +42,73 @@ export { convertToPng } from "./utils/image-convert.ts";
+@@ -42,4 +42,80 @@ export { convertToPng } from "./utils/image-convert.ts";
  export { formatDimensionNote, type ResizedImage, resizeImage } from "./utils/image-resize.ts";
  export { detectSupportedImageMimeTypeFromFile } from "./utils/mime.ts";
  export { getPowerShellConfig, getShellConfig } from "./utils/shell.ts";
++export { Agent, createErrorToolResult, createToolResultMessage, declareToolChanges, emitToolExecutionEnd, emitToolResultMessage, prepareToolCall, shouldTerminateToolBatch, streamAssistantResponse, streamProxy } from "@earendil-works/pi-agent-core";
++export { EventStream, PI_ATTRIBUTION, contentText, createAssistantMessageEventStream } from "@earendil-works/pi-ai";
++export { AssistantMessageEventStream } from "@earendil-works/pi-ai/utils/event-stream";
++export { streamSimple } from "@earendil-works/pi-ai/compat";
++export type { AfterToolCallContext, AfterToolCallResult, AgentContext, AgentEvent, AgentEventSink, AgentInitialState, AgentLoopConfig, AgentLoopTurnUpdate, AgentMessage, AgentOptions, AgentRequestUpdate, AgentState, AgentTool, AgentToolCall, AgentToolCallOutcome, AgentToolParams, AgentTurnContext, AgentTurnDecision, BeforeToolCallContext, BeforeToolCallResult, CustomAgentMessages, FinishTurn, PrepareNextTurnContext, PrepareRequest, PrepareRequestContext, ProxyAssistantMessageEvent, ProxyStreamOptions, QueueMode, StreamFn, ThinkingLevel } from "@earendil-works/pi-agent-core";
++export type { Api, AssistantMessage, AssistantMessageEvent, AuthCheck, AuthContext, ImageContent, JsonValue, Message, Model, ModelThinkingLevel, Models, MutableModels, Provider, SimpleStreamOptions, TextContent, ToolResultMessage, TranscriptContext, Usage, UserMessage } from "@earendil-works/pi-ai";
 +export * from "./core/agent-session.ts";
 +export { initializeExtensionModels } from "./core/agent-session-services.ts";
 +export { CacheWarmer } from "./core/cache-warmer.ts";
-+export { type AuthStorageBackend, FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.ts";
++export { type AuthStorageBackend, AuthStorage, FileAuthStorageBackend, InMemoryAuthStorageBackend } from "./core/auth-storage.ts";
 +export * from "./core/settings-manager.ts";
 +export { getProjectTrustOptions } from "./core/trust-manager.ts";
 +export { SETTINGS_DEFAULTS } from "./core/settings-defaults.ts";
@@ -118,6 +129,7 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export * from "./core/extensions/loader.ts";
 +export * from "./core/extensions/runner.ts";
 +export * from "./core/extensions/types.ts";
++export { StringEnum, Type } from "./core/extensions/pi-ai-extension-view.ts";
 +export * from "./core/exec.ts";
 +export { allToolNames, createToolFactories, createToolDefinition, createTool, createCodingToolDefinitions, createReadOnlyToolDefinitions, createAllToolDefinitions, createAllTools, type Tool, type ToolDef, type ToolName, type ToolFactoryDependencies, type ToolFactories } from "./core/tools/index.ts";
 +export * from "./core/tools/tool-definition-wrapper.ts";
@@ -160,6 +172,31 @@ diff --git a/dist/index.d.ts b/dist/index.d.ts
 +export type { ShellDependencies } from "./core/tools/bash.ts";
 +export type { CreateAgentSessionDependencies } from "./core/sdk.ts";
  //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/core/extensions/pi-ai-extension-view.js b/dist/core/extensions/pi-ai-extension-view.js
+--- a/dist/core/extensions/pi-ai-extension-view.js
++++ b/dist/core/extensions/pi-ai-extension-view.js
+@@ -4,6 +4,7 @@
+  * extensions that use it inside `Type.Object` type-check and infer as before. The TypeBox is the coding agent's own,
+  * the same one extensions get for `typebox`.
+  */
++import { StringEnum as publicStringEnum } from "@earendil-works/pi-ai/compat";
+ import { Type } from "typebox";
+ export * from "@earendil-works/pi-ai/compat";
+ export { Type };
+@@ -12,11 +13,6 @@ export { Type };
+  * patterns: `{ type: "string", enum: [...] }`, typed for TypeBox's `Static`.
+  */
+ export function StringEnum(values, options) {
+-    return Type.Unsafe({
+-        type: "string",
+-        enum: values,
+-        ...(options?.description && { description: options.description }),
+-        ...(options?.default && { default: options.default }),
+-    });
++    return Type.Unsafe(publicStringEnum(values, options));
+ }
+ //# sourceMappingURL=pi-ai-extension-view.js.map
 \ No newline at end of file
 diff --git a/dist/extensions/mcp/resources.js b/dist/extensions/mcp/resources.js
 --- a/dist/extensions/mcp/resources.js
@@ -736,12 +773,13 @@ diff --git a/dist/extensions/mcp/runtime.d.ts b/dist/extensions/mcp/runtime.d.ts
 diff --git a/dist/extensions/mcp/oauth.js b/dist/extensions/mcp/oauth.js
 --- a/dist/extensions/mcp/oauth.js
 +++ b/dist/extensions/mcp/oauth.js
-@@ -1,3 +1,4 @@
+@@ -1,3 +1,5 @@
++export { McpOAuthAuthorizationRequiredError } from "@earendil-works/pi-mcp/oauth";
 +import { setTimeout as waitForRefreshLock } from "node:timers/promises";
  /**
   * OAuth sign-in for remote MCP servers.
   *
-@@ -103,31 +104,44 @@ export class McpOAuthCredentialStore {
+@@ -103,31 +105,44 @@ export class McpOAuthCredentialStore {
              save: (state) => this.write((states) => {
                  states[key] = state;
              }),
@@ -803,7 +841,13 @@ diff --git a/dist/extensions/mcp/oauth.js b/dist/extensions/mcp/oauth.js
 diff --git a/dist/extensions/mcp/oauth.d.ts b/dist/extensions/mcp/oauth.d.ts
 --- a/dist/extensions/mcp/oauth.d.ts
 +++ b/dist/extensions/mcp/oauth.d.ts
-@@ -30,7 +30,7 @@ export interface McpOAuthSettings {
+@@ -1,3 +1,5 @@
++export { McpOAuthAuthorizationRequiredError } from "@earendil-works/pi-mcp/oauth";
++export type { OAuthChallenge } from "@earendil-works/pi-mcp/oauth";
+ /**
+  * OAuth sign-in for remote MCP servers.
+  *
+@@ -30,7 +32,7 @@ export interface McpOAuthSettings {
  }
  export interface McpOAuthServerStore extends McpOAuthStateStore {
      /** Run `fn` while no other process refreshes the server's tokens. */
@@ -2791,7 +2835,7 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
 -    extensionCacheGeneration++;
 +const extensionCaches = new WeakMap();
 +function getExtensionCache(options) {
-+    const importer = options?.importModule ?? getCreateJiti;
++    const importer = options?.importModule ?? options?.modules ?? getCreateJiti;
 +    let cache = extensionCaches.get(importer);
 +    if (!cache) {
 +        cache = { factories: new Map(), generation: 0, cwd: undefined };
@@ -2821,7 +2865,7 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
  }
  /**
   * Create a runtime with throwing stubs for action methods.
-@@ -459,36 +468,41 @@ function createExtensionAPI(extension, runtime, cwd, eventBus) {
+@@ -459,36 +468,44 @@ function createExtensionAPI(extension, runtime, cwd, eventBus) {
  }
  function isCurrentCacheToken(cacheToken) {
      return (cacheToken !== undefined &&
@@ -2861,7 +2905,9 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
 +        // Compiled binaries and the bundled Node distribution use embedded modules.
 +        // Source TypeScript reuses host modules and root tsconfig paths. Unbundled
 +        // Node builds use dist aliases and do not need the bundled virtual modules.
-+        const resolutionOptions = usesEmbeddedModules
++        const resolutionOptions = options?.modules
++            ? { virtualModules: await getExtensionModules(await options.modules()), tryNative: false }
++            : usesEmbeddedModules
 +            ? { virtualModules: await getVirtualModules(), tryNative: false }
 +            : isTypeScriptSourceRuntime
 +                ? { virtualModules: await getVirtualModules(), tsconfigPaths: true }
@@ -2870,6 +2916,7 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
 +            moduleCache: false,
 +            ...resolutionOptions,
 +        });
++        options?.prepareImporter?.(jiti);
 +        module = await jiti.import(extensionPath, { default: true });
 +    }
      const factory = module;
@@ -2882,7 +2929,7 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
      }
      return factory;
  }
-@@ -525,10 +539,10 @@ async function initializeExtension(factory, extensionPath, resolvedPath, cwd, ev
+@@ -525,10 +542,10 @@ async function initializeExtension(factory, extensionPath, resolvedPath, cwd, ev
      time(`${extensionPath} factory`, "extensions");
      return extension;
  }
@@ -2895,7 +2942,7 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
          time(`${extensionPath} module import`, "extensions");
          if (!factory) {
              return { extension: null, error: `Extension does not export a valid factory function: ${extensionPath}` };
-@@ -551,16 +565,16 @@ export async function loadExtensionFromFactory(factory, cwd, eventBus, runtime,
+@@ -551,16 +568,16 @@ export async function loadExtensionFromFactory(factory, cwd, eventBus, runtime,
  /**
   * Load extensions from paths.
   */
@@ -2915,7 +2962,7 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
          if (error) {
              errors.push({ path: extPath, error });
              continue;
-@@ -576,11 +590,11 @@ async function loadExtensionsInternal(paths, cwd, eventBus, runtime, useCache =
+@@ -576,11 +593,11 @@ async function loadExtensionsInternal(paths, cwd, eventBus, runtime, useCache =
          runtime: resolvedRuntime,
      };
  }
@@ -2931,7 +2978,7 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
  }
  function isExtensionFile(name) {
      return name.endsWith(".ts") || name.endsWith(".js");
-@@ -664,7 +678,7 @@ function discoverExtensionsInDir(dir) {
+@@ -664,7 +681,7 @@ function discoverExtensionsInDir(dir) {
  /**
   * Discover and load extensions from standard locations.
   */
@@ -2940,7 +2987,7 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
      const resolvedCwd = resolvePath(cwd);
      const resolvedAgentDir = resolvePath(agentDir);
      const allPaths = [];
-@@ -679,7 +693,7 @@ export async function discoverAndLoadExtensions(configuredPaths, cwd, agentDir =
+@@ -679,7 +696,7 @@ export async function discoverAndLoadExtensions(configuredPaths, cwd, agentDir =
          }
      };
      // 1. Project-local extensions: cwd/${CONFIG_DIR_NAME}/extensions/
@@ -2949,14 +2996,32 @@ diff --git a/dist/core/extensions/loader.js b/dist/core/extensions/loader.js
      addPaths(discoverExtensionsInDir(localExtDir));
      // 2. Global extensions: agentDir/extensions/
      const globalExtDir = path.join(resolvedAgentDir, "extensions");
-@@ -700,6 +714,6 @@ export async function discoverAndLoadExtensions(configuredPaths, cwd, agentDir =
+@@ -700,6 +717,23 @@ export async function discoverAndLoadExtensions(configuredPaths, cwd, agentDir =
          }
          addPaths([resolved]);
      }
 -    return loadExtensions(allPaths, resolvedCwd, eventBus);
 +    return loadExtensions(allPaths, resolvedCwd, eventBus, undefined, options);
++}
++//# sourceMappingURL=loader.js.map
++/** Keep SDK plugin modules and importer ownership while allowing a host execution backend. */
++export async function getExtensionModules(overrides = {}) {
++    const modules = { ...await getVirtualModules() };
++    for (const namespace of ["@earendil-works", "@mariozechner"]) {
++        if (overrides.codingAgent !== undefined) modules[namespace + "/pi-coding-agent"] = overrides.codingAgent;
++        if (overrides.agentCore !== undefined) modules[namespace + "/pi-agent-core"] = overrides.agentCore;
++    }
++    return new Proxy(modules, {
++        has(target, name) {
++            if (overrides.agentCore !== undefined && typeof name === "string" && !Reflect.has(target, name)
++                && /^@(earendil-works|mariozechner)\/pi-(coding-agent|agent-core)\//.test(name)) {
++                throw new Error("Unsupported legacy runtime subpath: " + name);
++            }
++            return Reflect.has(target, name);
++        },
++    });
  }
- //# sourceMappingURL=loader.js.map
+-//# sourceMappingURL=loader.js.map
 \ No newline at end of file
 diff --git a/dist/core/model-runtime.js b/dist/core/model-runtime.js
 --- a/dist/core/model-runtime.js
@@ -4001,21 +4066,28 @@ diff --git a/dist/core/resource-loader.d.ts b/dist/core/resource-loader.d.ts
 diff --git a/dist/core/extensions/loader.d.ts b/dist/core/extensions/loader.d.ts
 --- a/dist/core/extensions/loader.d.ts
 +++ b/dist/core/extensions/loader.d.ts
-@@ -4,7 +4,12 @@
+@@ -4,7 +4,19 @@
   */
  import { type EventBus } from "../event-bus.ts";
  import type { Extension, ExtensionFactory, ExtensionRuntime, LoadExtensionsResult } from "./types.ts";
 -export declare function clearExtensionCache(): void;
++export interface ExtensionModuleOverrides {
++    codingAgent?: unknown;
++    agentCore?: unknown;
++}
++export declare function getExtensionModules(overrides?: ExtensionModuleOverrides): Promise<Record<string, unknown>>;
 +export interface ExtensionLoaderOptions {
 +    /** Stable importer identity isolates host factory caches. */
 +    importModule?: (extensionPath: string) => Promise<unknown>;
++    modules?: () => ExtensionModuleOverrides | Promise<ExtensionModuleOverrides>;
++    prepareImporter?: (importer: Pick<import("jiti").Jiti, "options">) => void;
 +    projectConfigDir?: string;
 +}
 +export declare function clearExtensionCache(options?: ExtensionLoaderOptions): void;
  /**
   * Create a runtime with throwing stubs for action methods.
   * Runner.bindCore() replaces these with real implementations.
-@@ -14,10 +19,10 @@ export declare function createExtensionRuntime(): ExtensionRuntime;
+@@ -14,10 +26,10 @@ export declare function createExtensionRuntime(): ExtensionRuntime;
   * Create an Extension from an inline factory function.
   */
  export declare function loadExtensionFromFactory(factory: ExtensionFactory, cwd: string, eventBus: EventBus, runtime: ExtensionRuntime, extensionPath?: string): Promise<Extension>;

@@ -4,7 +4,7 @@ import {
   type AgentSessionConfig as SDKAgentSessionConfig,
   type PromptOptions,
 } from '@earendil-works/pi-coding-agent';
-import { contentText,type AssistantMessage,type Model } from '@earendil-works/pi-ai';
+import { contentText,type AssistantMessage,type Model } from '@earendil-works/pi-coding-agent';
 import type { AgentActivityOutcome,NormalizedBuildSystemPromptOptions } from '@earendil-works/pi-coding-agent';
 import { runToolCall,type Agent,type AgentMessage } from './agent-runtime.ts';
 import { convertToLlm } from './native-messages.ts';

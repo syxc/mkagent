@@ -1,13 +1,14 @@
-import type { Jiti } from 'jiti';
+import type { ExtensionLoaderOptions } from '@earendil-works/pi-coding-agent';
+type Importer = Parameters<NonNullable<ExtensionLoaderOptions['prepareImporter']>>[0];
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { pluginImportMeta } from './plugin-import-meta.ts';
 
-const prepared = new WeakSet<NonNullable<Jiti['options']['transform']>>();
-const metadata = new WeakSet<Jiti['options']>();
+const prepared = new WeakSet<NonNullable<Importer['options']['transform']>>();
+const metadata = new WeakSet<Importer['options']>();
 
 /** Initialize Babel without replacing the embedding Bun runtime's stack formatter. */
-export function preparePluginTranspiler(jiti: Pick<Jiti, 'options'>): void {
+export function preparePluginTranspiler(jiti: Importer): void {
   if (metadata.has(jiti.options)) return;
   const transform = jiti.options.transform;
   if (!transform) throw new Error('Plugin transpiler has no embedded transform');
@@ -33,7 +34,7 @@ export function preparePluginTranspiler(jiti: Pick<Jiti, 'options'>): void {
   metadata.add(jiti.options);
 }
 
-function initializeBabel(transform: NonNullable<Jiti['options']['transform']>): void {
+function initializeBabel(transform: NonNullable<Importer['options']['transform']>): void {
   const previous = Object.getOwnPropertyDescriptor(Error, 'prepareStackTrace');
   const formatter = Error.prepareStackTrace;
   const stackLimit = Error.stackTraceLimit;

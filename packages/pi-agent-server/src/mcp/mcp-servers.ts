@@ -3,12 +3,12 @@ import {
   getMcpToolExposure as sdkToolExposure, validateMcpServerConfig as sdkValidate,
   type McpExposure, type McpHttpServerConfig, type McpServerConfig as SdkMcpServerConfig,
   type McpServerEntry as SdkMcpServerEntry, type McpStdioServerConfig,
-} from '@mkagent/pi-durable-coding/mcp-servers';
+} from '@mkagent/coding-runtime/mcp-servers';
 
 export {
   LIST_MCP_RESOURCES_TOOL, LIST_MCP_RESOURCE_TEMPLATES_TOOL, READ_MCP_RESOURCE_TOOL, mcpNamespace,
-} from '@mkagent/pi-durable-coding/mcp-servers';
-export type { McpExposure } from '@mkagent/pi-durable-coding/mcp-servers';
+} from '@mkagent/coding-runtime/mcp-servers';
+export type { McpExposure } from '@mkagent/coding-runtime/mcp-servers';
 
 /** Host overrides and transport dispatch allow partial entries of either SDK shape. */
 export type McpServerConfig = Partial<Omit<McpStdioServerConfig, 'type'> & Omit<McpHttpServerConfig, 'type'>> & {

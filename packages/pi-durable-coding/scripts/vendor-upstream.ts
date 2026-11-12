@@ -46,7 +46,6 @@ const legacyPolicies: Record<string, string> = {
 // These public helpers need one implementation, including when old entry points import them.
 const forwarded = [
   'core/skills.ts', 'core/prompt-templates.ts', 'core/system-prompt.ts',
-  'core/extensions/pi-ai-extension-view.ts',
   'utils/shell.ts',
   'core/package-manager.ts', 'core/messages.js', 'core/model-registry.js', 'core/settings-merge.js',
   'core/context-tokens.js', 'core/extensions/runner.js', 'core/session-manager.js',

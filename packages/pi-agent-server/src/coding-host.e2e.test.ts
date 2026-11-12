@@ -7,7 +7,7 @@ import { builtinModels } from '@earendil-works/pi-ai/providers/all';
 import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
 import { defineExtension } from '@earendil-works/pi-durable';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
-import type { NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
+import type { NativeSessionJournal } from '@mkagent/coding-runtime/durable';
 import { durableFixture, response } from '../../pi-durable-coding/test/fixtures/durable-harness.ts';
 import { DurableKernel } from './kernel.ts';
 import { BackgroundShells } from './background-shell.ts';

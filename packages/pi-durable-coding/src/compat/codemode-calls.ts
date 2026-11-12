@@ -1,5 +1,5 @@
-import type { AgentToolCallOutcome, AgentToolResult } from '@earendil-works/pi-agent-core';
-import type { Models, Usage } from '@earendil-works/pi-ai';
+import type { AgentToolCallOutcome, AgentToolResult } from '@earendil-works/pi-coding-agent';
+import type { Models, Usage } from '@earendil-works/pi-coding-agent';
 import { copyJson } from '@earendil-works/chord';
 import type { NestedToolExecutionResult, TaskId, ToolExecutionResult } from '@earendil-works/pi-durable';
 import { prepareCodemodeModelCall, type CodemodePreparedModelCall } from '@earendil-works/pi-durable/codemode';

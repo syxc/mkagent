@@ -9,7 +9,8 @@ export function codingMcpOAuthPolicy(source: string, declaration: boolean): stri
   if (declaration) {
     replace('withRefreshLock<T>(fn: () => Promise<T>): Promise<T>;',
       'withRefreshLock<T>(fn: () => Promise<T>, signal?: AbortSignal): Promise<T>;');
-    return source;
+    return 'export { McpOAuthAuthorizationRequiredError } from "@earendil-works/pi-mcp/oauth";\n'
+      + 'export type { OAuthChallenge } from "@earendil-works/pi-mcp/oauth";\n' + source;
   }
   source = 'import { setTimeout as waitForRefreshLock } from "node:timers/promises";\n' + source;
   replace('withRefreshLock: (fn) => this.withRefreshLock(key, fn),',
@@ -40,5 +41,5 @@ export function codingMcpOAuthPolicy(source: string, declaration: boolean): stri
             }
         }`);
   replace('try {\n            return await fn();', 'try {\n            signal?.throwIfAborted();\n            return await fn();');
-  return source;
+  return 'export { McpOAuthAuthorizationRequiredError } from "@earendil-works/pi-mcp/oauth";\n' + source;
 }

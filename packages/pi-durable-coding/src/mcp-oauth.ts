@@ -7,5 +7,5 @@ export type {
 } from '@earendil-works/pi-coding-agent';
 export { FileAuthStorageBackend, InMemoryAuthStorageBackend } from '@earendil-works/pi-coding-agent';
 export type { McpOAuthConfig } from '@earendil-works/pi-coding-agent';
-export { McpOAuthAuthorizationRequiredError } from '@earendil-works/pi-mcp/oauth';
-export type { OAuthChallenge } from '@earendil-works/pi-mcp/oauth';
+export { McpOAuthAuthorizationRequiredError } from '@earendil-works/pi-coding-agent';
+export type { OAuthChallenge } from '@earendil-works/pi-coding-agent';

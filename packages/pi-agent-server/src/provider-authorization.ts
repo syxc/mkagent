@@ -1,6 +1,6 @@
 /** Explicit native provider authentication through the owning model runtime and RPC UI. */
 import type { AuthEvent, AuthPrompt, AuthType, LoginOptions, Models } from '@earendil-works/pi-ai';
-import { ModelRuntime, type ExtensionCommandContext, type ExtensionFactory } from '@mkagent/pi-durable-coding/native';
+import { ModelRuntime, type ExtensionCommandContext, type ExtensionFactory } from '@mkagent/coding-runtime/native';
 
 interface Operation {
   controller: AbortController;

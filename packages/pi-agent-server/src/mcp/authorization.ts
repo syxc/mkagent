@@ -1,8 +1,8 @@
 /** Explicit MCP authorization commands and their owner-scoped cancellation. */
-import type { ExtensionCommandContext, ExtensionFactory } from '@mkagent/pi-durable-coding/native';
+import type { ExtensionCommandContext, ExtensionFactory } from '@mkagent/coding-runtime/native';
 import {
   McpSignInCancelledError, signInMcpServer, type McpOAuthCredentialStore,
-} from '@mkagent/pi-durable-coding/mcp-oauth';
+} from '@mkagent/coding-runtime/mcp-oauth';
 import type { McpServerConnection } from './runtime.ts';
 
 export interface McpAuthorizationOptions {

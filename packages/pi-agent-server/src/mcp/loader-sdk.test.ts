@@ -2,8 +2,8 @@ import { afterEach, beforeEach, expect, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { loadMcpConfig as loadSdkMcpConfig } from '@mkagent/pi-durable-coding/mcp-config';
-import { validateMcpServerConfig } from '@mkagent/pi-durable-coding/mcp-servers';
+import { loadMcpConfig as loadSdkMcpConfig } from '@mkagent/coding-runtime/mcp-config';
+import { validateMcpServerConfig } from '@mkagent/coding-runtime/mcp-servers';
 import { loadMcpConfig } from './config.ts';
 
 let root: string;

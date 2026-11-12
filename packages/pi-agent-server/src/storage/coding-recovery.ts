@@ -4,8 +4,8 @@ import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
 import type { AssistantMessage, ToolResultMessage, UserMessage } from '@earendil-works/pi-ai';
 import { defineDoc, type Conversation, type EntryId, type Harness, type SubmissionId, type Tx } from '@earendil-works/pi-durable';
-import type { CodingSessionCompletion, DurableLoopBinding, LoopInput, NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
-import { convertToLlm, type AgentSession } from '@mkagent/pi-durable-coding/native';
+import type { CodingSessionCompletion, DurableLoopBinding, LoopInput, NativeSessionJournal } from '@mkagent/coding-runtime/durable';
+import { convertToLlm, type AgentSession } from '@mkagent/coding-runtime/native';
 import { adoptLegacyCodingWork, type LegacyCodingRecovery } from './coding-migration.ts';
 
 type Admission = { id: SubmissionId; status: 'queued' | 'placed' | 'done'; entry?: EntryId; message?: UserMessage };

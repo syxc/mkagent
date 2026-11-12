@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { BACKGROUND_CONTEXT as context } from '@earendil-works/chord/context';
 import { createModels } from '@earendil-works/pi-ai';
 import { createRegistry, Harness, MemoryStorage } from '@earendil-works/pi-durable';
-import { NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
+import { NativeSessionJournal } from '@mkagent/coding-runtime/durable';
 import { NativeSessionProjection, nativeSessionPaths, readNativeSessionDescriptor } from './native-session-projection.ts';
 
 const cleanup: Array<() => Promise<unknown>> = [];

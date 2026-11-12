@@ -1,5 +1,5 @@
 /** Native extension UI contracts shared by the worker, product owner and clients. */
-import type { RpcExtensionUIRequest, RpcExtensionUIResponse } from '@mkagent/pi-durable-coding/rpc-ui';
+import type { RpcExtensionUIRequest, RpcExtensionUIResponse } from '@mkagent/coding-runtime/rpc-ui';
 
 export type ExtensionUIResponse = RpcExtensionUIResponse;
 export type ExtensionUIEvent =

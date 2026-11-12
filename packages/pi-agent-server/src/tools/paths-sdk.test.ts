@@ -7,7 +7,7 @@ import { BACKGROUND_CONTEXT } from '@earendil-works/chord/context';
 import type { ToolExecutionApi, ToolRegistration } from '@earendil-works/pi-durable';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import { obj, str, type Schema } from '@earendil-works/pi-schema';
-import { resolveReadPath, resolveToCwd } from '@mkagent/pi-durable-coding/compat';
+import { resolveReadPath, resolveToCwd } from '@mkagent/coding-runtime/compat';
 import { BackgroundShells } from '../background-shell.ts';
 import { wrapToolForKernel } from './wrap.ts';
 

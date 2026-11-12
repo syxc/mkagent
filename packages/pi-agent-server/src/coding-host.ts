@@ -8,13 +8,13 @@ import { InMemoryCredentialStore, type AssistantMessage, type Models, type Model
 import {
   AgentDoc, defineDoc, type Conversation, type Harness, type Registry, type ToolRegistration, type Tx,
 } from '@earendil-works/pi-durable';
-import { DurableLoopBinding, NativeSessionJournal } from '@mkagent/pi-durable-coding/durable';
-import type { AgentTool } from '@mkagent/pi-durable-coding/agent';
+import { DurableLoopBinding, NativeSessionJournal } from '@mkagent/coding-runtime/durable';
+import type { AgentTool } from '@mkagent/coding-runtime/agent';
 import {
   createAgentSession, prepareHostResources, initializeExtensionModels, initTheme, hostToolToAgent, wrapAgentTool, ModelRuntime, SessionManager,
   type AgentSession, type AgentSessionEvent, type ExtensionCommandContextActions, type HostResourceOptions,
   type ModelRuntimeCredentials, type PromptOptions, type SourceInfo, type SessionShutdownEvent,
-} from '@mkagent/pi-durable-coding/native';
+} from '@mkagent/coding-runtime/native';
 import { LegacyCodingAdoption } from './storage/coding-recovery.ts';
 import { NativeSessionProjection, nativeSessionPaths, type NativeSessionDescriptor } from './storage/native-session-projection.ts';
 import { ExtensionUIHost, type ExtensionUIBinding } from './extension-ui.ts';

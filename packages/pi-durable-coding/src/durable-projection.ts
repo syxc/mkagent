@@ -1,5 +1,5 @@
 /** Preserve durable context selection while Pi supplies synchronous entry previews. */
-import type { Message } from '@earendil-works/pi-ai';
+import type { Message } from '@earendil-works/pi-coding-agent';
 import { contribute, findBaseline, leadWithSystem, orderToolResults, type EntryRecord } from '@earendil-works/pi-durable';
 import type { CodingEntry } from './session-view.ts';
 import { convertToLlm } from './upstream/core/messages.js';

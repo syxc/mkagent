@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { AgentTool } from '@earendil-works/pi-agent-core';
+import type { AgentTool } from '@earendil-works/pi-coding-agent';
 import { createInMemoryTransportPair } from '@earendil-works/pi-mcp/testing';
 import type { ExtensionAPI, ExtensionContext, McpExtensionOptions, ToolDefinition } from '@earendil-works/pi-coding-agent';
 import { createMcpExtension } from '../src/native.ts';

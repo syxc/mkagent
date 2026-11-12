@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { InMemoryAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/pi-durable-coding/mcp-oauth';
+import { InMemoryAuthStorageBackend, McpOAuthCredentialStore } from '@mkagent/coding-runtime/mcp-oauth';
 import { loadMcpTools } from './extension.ts';
 import { McpServerConnection } from './runtime.ts';
 import { startProviderMcpServer } from '../test-fixtures/mcp-provider-server.ts';

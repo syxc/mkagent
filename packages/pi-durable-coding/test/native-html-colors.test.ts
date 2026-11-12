@@ -4,7 +4,6 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { applySharedHelperPort } from '../scripts/shared-helper-port.ts';
 import { ansiLinesToHtml, ansiToHtml, exportSessionToHtml, createToolHtmlRenderer } from '@earendil-works/pi-coding-agent';
 import { SessionManager } from '@earendil-works/pi-coding-agent';
 import { getThemeByName, getThemesDir, loadThemeFromPath, setRegisteredThemes } from '@earendil-works/pi-coding-agent';
@@ -21,14 +20,6 @@ test('ANSI HTML keeps the original palette, SGR, escaping and wide numeric behav
   assert.equal(digest(ansiLinesToHtml(samples)), '196baaa44af3e50fd449859ada4733a3bd583609f733216a2d301b7460b4c3b4');
   assert.equal(ansiToHtml('\x1b[38;5;256mwide'), '<span style="color:#f8f8f8">wide</span>');
 });
-
-for (const [path, changed] of [
-  ['core/extensions/pi-ai-extension-view.ts', 'import { type TUnsafe, Type } from "typebox";\nexport const StringEnum = (values: number): number => values;'],
-] as const) {
-  test(`declaration generation rejects variable replacements of guarded helpers in ${path}`, () => {
-    assert.throws(() => applySharedHelperPort(path, changed), /Shared declarations changed/);
-  });
-}
 
 test('session HTML export preserves custom tool call and result colors', async () => {
   const root = mkdtempSync(join(tmpdir(), 'mkagent-html-colors-'));
