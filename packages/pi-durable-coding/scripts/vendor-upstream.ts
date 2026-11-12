@@ -18,9 +18,12 @@ if (dirty.exitCode || dirty.stdout.toString().trim()) throw new Error('Upstream 
 const destination = resolve(import.meta.dir, '..');
 const sourceRoot = join(upstream, 'packages/coding-agent/src');
 const checking = process.argv.includes('--check');
+// Preserve these existing compatibility files without reading, checking or writing them.
+const protectedTargets = new Set(['src/legacy/context-tokens.js', 'src/upstream/core/context-tokens.js']);
 const manifest: Array<{ source: string; target: string; sha256: string; portSha256: string; selection?: string[]; changes?: string[] }> = [];
 
 function save(path: string, content: string) {
+  if (protectedTargets.has(path)) return;
   const target = join(destination, path);
   if (checking) {
     if (readFileSync(target, 'utf8') !== content) throw new Error(`Port differs: ${path}`);
@@ -102,7 +105,6 @@ const legacyPolicies: Record<string, string> = {
 
 // These public helpers need one implementation, including when old entry points import them.
 const forwarded = [
-  'utils/child-process.ts',
   'core/skills.ts', 'core/prompt-templates.ts', 'core/system-prompt.ts',
   'core/extensions/pi-ai-extension-view.ts',
   'utils/shell.ts',
@@ -157,7 +159,7 @@ for (const item of forwarded) {
 
 port('core/agent-session.ts', 'core/boundary-drafts.js', [
   'AgentSession._applyBoundaryDrafts', 'AgentSession._buildBoundaryContext', 'AgentSession._replaceMessageInPlace',
-], 'import { estimateProjectedContextTokens } from "./context-tokens.js";\n'
+], 'import { estimateProjectedContextTokens } from "@earendil-works/pi-coding-agent";\n'
   + 'import { convertToLlm } from "./messages.js";\n\n', ['erase-types']);
 
 port('../../durable/src/harness/context.ts', 'durable/context.js', [

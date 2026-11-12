@@ -11,7 +11,7 @@ import { SessionManager, sessionEntryToContextMessages } from './upstream/core/s
 import {
   COMPACTION_SUMMARY_PREFIX, COMPACTION_SUMMARY_SUFFIX, convertToLlm,
 } from './upstream/core/messages.js';
-import { estimateProjectedContextTokens } from './upstream/core/context-tokens.js';
+import { estimateProjectedContextTokens } from '@earendil-works/pi-coding-agent';
 
 const ENTRY_KIND = 'mkagent.coding.entry.v1';
 const EntryIndex = defineDoc({

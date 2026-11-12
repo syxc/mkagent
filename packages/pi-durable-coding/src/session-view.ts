@@ -5,7 +5,7 @@ import { copyJson } from '@earendil-works/chord';
 import type { EntryId } from '@earendil-works/pi-durable';
 import type { CodingEntryDraft } from './entry-batch.ts';
 import { _applyBoundaryDrafts } from './upstream/core/boundary-drafts.js';
-import { estimateProjectedContextTokens } from './upstream/core/context-tokens.js';
+import { estimateProjectedContextTokens } from '@earendil-works/pi-coding-agent';
 
 export interface CodingEntry {
   type: string;

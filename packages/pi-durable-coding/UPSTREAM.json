@@ -9,7 +9,7 @@
       "source": "packages/coding-agent/src/core/agent-session.ts",
       "target": "src/upstream/core/boundary-drafts.js",
       "sha256": "b7c24bf1c1366e931083100d921a80d390d66bacde4acf7472a7b57af1bb69aa",
-      "portSha256": "e47c7898af101e0434694dcd1fc14123059b26d504ecb698cdcd9572c4096694",
+      "portSha256": "f852d6dfe2ea7731afcff4a346d7d2b8f1be7afc9fbe73d7a3b1340443037ae5",
       "selection": [
         "AgentSession._applyBoundaryDrafts",
         "AgentSession._buildBoundaryContext",
@@ -78,10 +78,6 @@
     }
   ],
   "forwarded": [
-    {
-      "target": "src/upstream/utils/child-process.ts",
-      "implementation": "src/pi/utils/child-process.ts"
-    },
     {
       "target": "src/upstream/core/skills.ts",
       "implementation": "@earendil-works/pi-coding-agent",

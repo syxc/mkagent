@@ -2545,8 +2545,8 @@
       "reason": "Verify scoped path and option boundaries after the user withdrew the source filename restriction."
     },
     "packages/pi-durable-coding/test/shared-context-tokens.test.ts": {
-      "sha256": "f17f9df4085baac4983692c07bba8df4fa6b054441021940984cb19d67db099c",
-      "reason": "Verify shared implementation compatibility, structural consumer types and scoped reproduction boundaries."
+      "sha256": "ec7cef48464e9e82755c72f7f67dc64d884edde1984900dd785472eb4126f025",
+      "reason": "Verify existing partial JavaScript usage, image, system-section, edit and compaction estimates through public SDK functions."
     },
     "packages/pi-durable-coding/test/shared-models-messages.test.ts": {
       "sha256": "35feab71d5d2b9c431d2c3e4fe698c9bebfe7734aa1e134f07f840e9f385aa00",
@@ -2561,8 +2561,8 @@
       "reason": "Use SDK prompt builders directly after removing the redundant Native prompt wrapper."
     },
     "packages/pi-durable-coding/test/shared-compat-types.test.ts": {
-      "sha256": "c43d8ed86163d325fa64506d149cc12ec6ec4dcaec738f19e44314662a5aad2b",
-      "reason": "Verify published runner identity, isolated host presentation, SDK defaults, durable replay typing, plugin lifecycle and command execution contracts."
+      "sha256": "cb979eb5c8c19676003bd8f4eacd0765b5263824d7a48e39ad71da9f01ba5dce",
+      "reason": "Verify structural legacy consumers, public workspace SDK helpers and declaration emit with standard Bun and Node types and protected input guards."
     },
     "packages/pi-durable-coding/src/host-system-prompt.ts": {
       "sha256": "94cabef5555ccbeccacd354a0335e7439b281a9df32ff0940f1f4ef93b688296",
@@ -3669,8 +3669,8 @@
       "reason": "Preserve the upstream MIT license for Pi sources and fixtures."
     },
     "packages/pi-durable-coding/UPSTREAM.json": {
-      "sha256": "8e5cdd9e746fddb015b079b1dab81070faf8b487a48abdc978bdaf8df58eba17",
-      "reason": "Route three shared resource forwards to the public Coding SDK while retaining legacy directory and documentation policies."
+      "sha256": "2e2789ed20dac08dfcc176fbcd1fdedf28f8e054d160f98c65d11ece26adc2a0",
+      "reason": "Record the SDK estimator import and remove the stale child-process forwarding registration."
     },
     "packages/pi-durable-coding/package.json": {
       "sha256": "31f319b098e0bdfa381d726e3c647cb991c891e63e3a0976fc142cd9b4863814",
@@ -3685,8 +3685,8 @@
       "reason": "Generate and semantically type-check the historical boundary patch against pristine pinned inputs. Refuse existing patch replacement before Git, type analysis or writes, and create the patch exclusively before SDK outputs."
     },
     "packages/pi-durable-coding/scripts/vendor-upstream.ts": {
-      "sha256": "3e63de4915595d8cc63d9a65b8171b3453a3138abb4aa677f65aa12f242aef8d",
-      "reason": "Generate shared resource SDK forwards while retaining explicit legacy agentDir, .pi and fixed documentation URLs."
+      "sha256": "56c6816c7c952d9cf7ee8e1e7248e299ce9c8fa2368c1d7f8fcc78d9b59efdcc",
+      "reason": "Generate public SDK context estimator imports, preserve unread protected targets and retire the unused child-process forward."
     },
     "packages/pi-durable-coding/src/compat.ts": {
       "sha256": "d60c019530a2a7bd4e9ff72f5eeb914570991bc7a2da39844b16bb398d42cb7d",
@@ -3697,8 +3697,8 @@
       "reason": "Preserve durable heads, edits, provenance and tool-result ordering."
     },
     "packages/pi-durable-coding/src/durable-session-store.ts": {
-      "sha256": "69a87030a1f9511612074f3c390b95955f77f5eb0b85290a0493b3674137b227",
-      "reason": "Persist native metadata and pending messages with stable durable identities."
+      "sha256": "a8dbe4dcded620f3c5001ea4dfc4bc5353d6bc0dc9d0fbb9ecab9c41db22bceb",
+      "reason": "Use the public SDK context estimator while preserving durable identities, native metadata and pending messages."
     },
     "packages/pi-durable-coding/src/entry-batch.ts": {
       "sha256": "b1a9d61f692e00afdf7cfced555cec1ec718eb46095c592c43408dcf6ce3df31",
@@ -3745,16 +3745,16 @@
       "reason": "Use SDK resource helpers and the published LoadSkillsResult contract for isolated declarations."
     },
     "packages/pi-durable-coding/src/session-view.ts": {
-      "sha256": "f975b8a58655badf561eb24a76035a354213e5c27112cd904f9f608d03550b83",
-      "reason": "Supply synchronous session views and speculative durable boundary stages."
+      "sha256": "705f620579dce565f21bbdad65cd7360d580908e7ee8894207947735c5086309",
+      "reason": "Use the public SDK context estimator while preserving synchronous native session views and speculative boundary stages."
     },
     "packages/pi-durable-coding/src/upstream/config.ts": {
       "sha256": "e268fb531ffd27f3930ab066e5ad0d855899600801bef753027df56624fa630b",
       "reason": "Supply minimal host configuration and documentation paths for the source port."
     },
     "packages/pi-durable-coding/src/upstream/core/boundary-drafts.js": {
-      "sha256": "e47c7898af101e0434694dcd1fc14123059b26d504ecb698cdcd9572c4096694",
-      "reason": "Port Pi v1.5.0 packages/coding-agent/src/core/agent-session.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
+      "sha256": "f852d6dfe2ea7731afcff4a346d7d2b8f1be7afc9fbe73d7a3b1340443037ae5",
+      "reason": "Use the public SDK context estimator in the selected boundary methods; retain pinned source attribution and generation."
     },
     "packages/pi-durable-coding/src/upstream/core/context-tokens.js": {
       "sha256": "849b0b3f91caa22247216b030390f23772408e7eb6afaffba96533d362c5070c",
@@ -3808,10 +3808,6 @@
       "sha256": "dff86bd68e278d638477068ece35108701c7a64005458f4c8862fadebc373abe",
       "reason": "Port Pi v1.5.0 packages/durable/src/harness/context.ts; reproduce recorded transformations from UPSTREAM.json with MIT attribution."
     },
-    "packages/pi-durable-coding/src/upstream/utils/child-process.ts": {
-      "sha256": "4702f46dc0bcfc56aa19c41e9ce2aa899f1dbf3133a24ecbead15b7550627266",
-      "reason": "Forward legacy helper imports to the canonical native Pi implementation without another source copy."
-    },
     "packages/pi-durable-coding/src/upstream/utils/shell.ts": {
       "sha256": "178f46d09b62a3edf82e6cf05c2a2a53668173d89e312ea07c9889d0b368a51a",
       "reason": "Forward the existing compatibility contract to the active shell binding."
@@ -3853,8 +3849,8 @@
       "reason": "Verify synchronous state, previews, retryable writes and isolated stages."
     },
     "packages/pi-durable-coding/tsconfig.json": {
-      "sha256": "6a06903e94971dc4c6b1155e16b3172d891ada89bad3687b14d9a42c24ca2add",
-      "reason": "Include the standard DOM declarations required by the published GenAI, MCP and Photon types while retaining Bun and Node types."
+      "sha256": "6631bed5cdad7b0a6944983465d6c135a681ccfcdc116cb9c2293c6ae36dc6be",
+      "reason": "Retain DOM, Bun and Node types while excluding inactive protected token JavaScript roots from source and declaration checks."
     },
     "patches/@earendil-works%2Fpi-durable@1.5.0.patch": {
       "sha256": "13eb61c2e57b30cb2aa91b78725cf17a4942c4244a0c87f6ef30f03eb0372da3",

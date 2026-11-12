@@ -1,5 +1,5 @@
 // Ported from Pi v1.5.0 (f9a26365568127461c47a07a37dcb42c140a3ac5); MIT. See UPSTREAM.json and LICENSE.pi.
-import { estimateProjectedContextTokens } from "./context-tokens.js";
+import { estimateProjectedContextTokens } from "@earendil-works/pi-coding-agent";
 import { convertToLlm } from "./messages.js";
 export function _applyBoundaryDrafts(manager, drafts) {
     const appended = [];

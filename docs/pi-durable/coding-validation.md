@@ -26,6 +26,45 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Public context estimates after 0feadcc
+
+The session view, durable session store and boundary draft adapter now import
+`estimateProjectedContextTokens` from the public Coding SDK. Their arguments,
+projection, branch entries and token reads remain unchanged. The source generator
+uses the same import. It skips the two protected `context-tokens.js` targets
+before target reads, comparisons or writes. Both existing files remain untouched.
+
+The package compiler excludes those inactive JavaScript roots. The compatibility
+tests use the public SDK functions and its actual workspace dependency entry.
+The runtime cases keep the existing incomplete usage records, image estimates,
+system sections, trailing messages, edits and compaction assertions. They use
+`Reflect.apply` for the untyped JavaScript records. The typed consumer uses
+complete SDK records and retains host message metadata.
+
+Four runtime cases pass with ten assertions. The structural consumer and actual
+declaration emit pass with four assertions. Its first run fails because the
+isolated root does not expose an undeclared `bun-types` entry. The corrected
+fixture uses the package's standard `bun` and `node` types; it retains strict
+source checks and the existing `skipLibCheck` setting. Its read guard also rejects
+the protected token module and generated aliases. These checks do not establish
+full Native declarations or a complete installation.
+
+The package's full source check first reports one stale forwarding module whose
+runtime target was already deleted. No source or test imports that forwarding
+module. It and its generation registration are removed. The corrected source
+check covers 122 roots and 2,024 files with zero diagnostics and zero protected
+read requests. It uses the package's strict source configuration and
+`skipLibCheck=true`; it does not validate all dependency declarations.
+
+The two runs use Bun 1.3.14, a task-owned HOME, explicit environment and the
+sandbox with the user-approved legacy source exception. Other protected
+basenames remain denied. The sandbox blocks external network access and port
+9100; these cases make no provider network requests. Evidence is under
+`/private/tmp/mkagent-native-acceptance-ALoFEM/final-integration-ym34k041`:
+`tokens-public-entry/`, `compat-public-entry/` (the first failure),
+`compat-public-entry-standard-types/`, `source-types-before-sdk-projection/`
+and `source-types-no-stale-forward/`.
+
 ## Product flows and installation policy after 65088bf
 
 The current repository installation passes 20 existing product tests and 132

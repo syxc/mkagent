@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import ts from 'typescript';
 
-test('legacy shared classes keep existing structural consumers and declaration output', () => {
+test('legacy classes and SDK helpers keep structural consumers and declaration output', () => {
   const repo = resolve(import.meta.dir, '../../..');
   const coding = join(repo, 'packages/pi-durable-coding');
   const directory = mkdtempSync(join(tmpdir(), 'shared-compat-types-'));
@@ -14,7 +14,7 @@ test('legacy shared classes keep existing structural consumers and declaration o
   ts.sys.readFile = file => {
     let actual = file;
     try { actual = realpathSync(file); } catch {}
-    if ([file, actual].some(path => /[\\/]runtime-credentials\.ts$/i.test(path))) {
+    if ([file, actual].some(path => /[\\/]runtime-credentials\.ts$|[\\/]context-tokens\.(?:js|d\.ts|js\.map)$/i.test(path))) {
       throw new Error('Restricted source blocked before reading');
     }
     return originalRead(file);
@@ -26,8 +26,7 @@ import { resolveCodingPackages, type ResourceSettings } from "${coding}/src/pack
 import { mergeCodingSettings } from "${coding}/src/upstream/core/settings-merge.js";
 import { convertToLlm } from "${coding}/src/upstream/core/messages.js";
 import { SessionManager, buildSessionProjection } from "${coding}/src/upstream/core/session-manager.js";
-import { estimateTokens, calculateContextTokens } from "${coding}/src/upstream/core/context-tokens.js";
-import type { ToolDefinition } from "${repo}/node_modules/@earendil-works/pi-coding-agent";
+import { estimateTokens, calculateContextTokens, type ToolDefinition } from "${coding}/node_modules/@earendil-works/pi-coding-agent";
 import type { BeforeAgentStartTrigger, NewSessionHandler } from "${coding}/src/legacy/extension-runner.js";
 const safeReplay: ToolDefinition["replay"] = "safe";
 const neverReplay: ToolDefinition["replay"] = "never";
@@ -47,8 +46,12 @@ async function inspectList() {
   return (await SessionManager.list("/tmp/fixture", "/tmp/fixture/sessions")).map(info => info.id);
 }
 const hostId: string = convertToLlm([{ role: "user", content: "fixture", timestamp: 1, hostMessageId: "fixture" }])[0].hostMessageId;
-const tokens: number = estimateTokens({ role: "user", content: "fixture", hostMessageId: "fixture" });
-const usage: number = calculateContextTokens({ input: 1, output: 2, cacheRead: 3, cacheWrite: 4 });
+const hostMessage = { role: "user" as const, content: "fixture", timestamp: 1, hostMessageId: "fixture" };
+const tokens: number = estimateTokens(hostMessage);
+const usage: number = calculateContextTokens({
+  input: 1, output: 2, cacheRead: 3, cacheWrite: 4, totalTokens: 10,
+  cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+});
 const merged = mergeCodingSettings({ custom: { enabled: true } }, { custom: { count: 2 } });
 const count: number = merged.custom.count;
 const data: ResourceSettings = { packages: ["./fixture"], prompts: ["review.md"] };
@@ -66,7 +69,7 @@ resolveCodingPackages({ ...options, projectTrusted: true });
       strict: true, skipLibCheck: true, allowJs: true, checkJs: false,
       allowImportingTsExtensions: true, target: ts.ScriptTarget.ESNext,
       module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
-      types: ['bun-types'], typeRoots: [join(repo, 'node_modules/@types'), join(repo, 'node_modules')],
+      types: ['bun', 'node'], typeRoots: [join(repo, 'node_modules/@types'), join(repo, 'node_modules')],
       declaration: true, emitDeclarationOnly: true, outDir: join(directory, 'declarations'),
     });
     const diagnostics = ts.getPreEmitDiagnostics(program);
