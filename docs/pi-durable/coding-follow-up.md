@@ -162,7 +162,7 @@ pi-ai 的模型和请求、pi-agent-core 的协议和可复用状态操作、pi-
 
 `f0a3fae` 后的信任管理切片删除 254 行完整副本，存储、文件锁、路径继承与资源检测直接使用公开 Coding SDK；宿主审批和 `.mkagent/mcp.json` 检查保留。补丁只转出已有 getProjectTrustOptions，不改信任算法，不加包装。该信任管理切片时 runtime 为 14 份 TypeScript（src/pi 10、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个；补丁仍为 core 4、Coding 78、durable 33 共 115 份。完整生成与 check、两布局全部 78 项摘要及各 9 项信任测试通过；两布局根声明定向刷新，退役信任声明已移除，实际信任声明分支消费者为 0 诊断，使用 skipLibCheck。独立复核发现 1 项临时目录路径夹具问题；父线程以 realpathSync 修正后，两布局在逻辑 `/tmp` 路径下各 9 项通过，未做第二次独立复核，产品逻辑未改。来源更新 9 项、移除 1 项、无新增，固定 Craft 受限审计通过 2018 个允许文件。依赖、lock 和持久化版本未变，无重新安装；完整声明及整体验收仍开放，见[信任管理验证](coding-validation.md#public-sdk-project-trust-after-f0a3fae)。
 
-`e927004` 后的 MCP OAuth 切片删除 592 行完整实现和 65 行旧源码转换，公开门面直接转出 SDK 同一组类、函数与类型，不加运行时包装。SDK 继续负责凭据、迁移、PKCE、回调校验、刷新和跨进程锁；局部补丁只补已有根出口及可选 signal 锁等待，进入写入后仍保存已收到的轮换结果。旧 credentials Pick 声明补丁已撤除。当前 runtime 为 13 份 TypeScript（src/pi 9、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个；core 4、Coding 79、durable 33 共 116 份输出。完整生成与 check 通过，两现有布局各 27 项测试及实际门面声明严格消费者通过，消费者使用 skipLibCheck。独立复核未确认缺陷，21 项探针通过，父线程已核验 13 项源码、30 项 SDK 输入和报告产物。来源更新 9 项、退役 2 项、新增 2 项；固定 Craft 受限审计通过 2017 个允许文件，另排除受保护文件名，范围较前收窄。依赖、lock 和持久化版本未变，无重新安装；proper-lockfile 直接依赖尚未清理，受保护闭包未核验。完整声明、Native 入口及 F0 至 F6 继续开放，失败修正与范围见[OAuth SDK 验证](coding-validation.md#public-sdk-mcp-oauth-after-e927004)。
+`e927004` 后的 MCP OAuth 切片删除 592 行完整实现和 65 行旧源码转换，公开门面直接转出 SDK 同一组类、函数与类型，不加运行时包装。SDK 继续负责凭据、迁移、PKCE、回调校验、刷新和跨进程锁；局部补丁只补已有根出口及可选 signal 锁等待，进入写入后仍保存已收到的轮换结果。旧 credentials Pick 声明补丁已撤除。该 OAuth 切片时 runtime 为 13 份 TypeScript（src/pi 9、门面 4）、0 项资源，辅助来源 8 项、共享入口 13 个；core 4、Coding 79、durable 33 共 116 份输出。完整生成与 check 通过，两现有布局各 27 项测试及实际门面声明严格消费者通过，消费者使用 skipLibCheck。独立复核未确认缺陷，21 项探针通过，父线程已核验 13 项源码、30 项 SDK 输入和报告产物。来源更新 9 项、退役 2 项、新增 2 项；固定 Craft 受限审计通过 2017 个允许文件，另排除受保护文件名，范围较前收窄。依赖、lock 和持久化版本未变，无重新安装；proper-lockfile 直接依赖尚未清理，受保护闭包未核验。完整声明、Native 入口及 F0 至 F6 继续开放，失败修正与范围见[OAuth SDK 验证](coding-validation.md#public-sdk-mcp-oauth-after-e927004)。
 
 `6014226` 后的 server MCP tools 切片删除 180 行截断副本和 39 行输出文件副本，命名、结果与资源展示、截断、保存及 schema 交给 Coding SDK，server 只保留 durable 注册和宿主执行绑定。五行手写门面不计入仍为 13 份的生成清单。补丁增加两个根出口和一处 `$id` resource 引用修复，Coding 为 80 份输出，总数为 117 份。独立复核确认 1 项回归，四种 `$id` 测试修复前均失败；父线程修复后两布局各 32 项测试、实际门面声明和新测试的严格类型检查通过，使用 skipLibCheck，未再独立复核。来源更新 5 项、退役 2 项、新增 2 项，受限 Craft 审计覆盖 2017 个允许文件。其他 MCP 配置、运行时及资源职责继续按 SDK 覆盖核对，F0 至 F6 保持开放，见[MCP tools 验证](coding-validation.md#public-sdk-server-mcp-tools-after-6014226)。
 
@@ -265,6 +265,8 @@ SDK 入口已先排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源
 
 `fef5da1` 后补强现有 shell 绑定用例，在 macOS 的既有安装布局中通过真实父、子、孙三层进程检查。agent 与 definition 两类工厂的取消和超时均确认全部 PID 在两秒内退出，父与子 shell 的 wait 后命令均未执行；该文件 36 项测试、268 个断言通过，详见[进程树验证](coding-validation.md#sdk-shell-process-tree-after-fef5da1)。这不覆盖完整产品入口、其他平台或新的隔离安装；F4 和 F5 继续开放。
 
+`65088bf` 后补验当前仓库安装中的产品执行与恢复路径，三组共 20 项测试、132 个断言通过，覆盖普通 profile 隔离、会话与分支恢复、Coding 输入身份、插件命令、宿主模型替换、会话切换提交顺序、handoff、长输出和摘要。两项需要受保护设置文件的 Coding 资源用例未运行；这不是完整产品传输、UI 或隔离安装验收。环境、精确范围与失败探针见[产品流程验证](coding-validation.md#product-flows-and-installation-policy-after-65088bf)。
+
 ## F5 来源检查及历史边界
 
 来源清单证明选定源码可追溯和可复现。调整导出范围、源码或补丁时同步生成规则、依赖、许可、清单和受影响产物。完整生成结果与 `--check --file=...` 的局部结果分开记录。
@@ -276,6 +278,8 @@ SDK 入口已先排除原版 Pi CLI 的 `main`/`MainOptions` 及 24 份独占源
 历史 `731728a` 的全部 workspace manifest、锁文件及两份补丁已在新目录以全新缓存完成 `bun install --frozen-lockfile --ignore-scripts`。12 份 manifest、11 个 workspace 链接和 34 个补丁产物通过核对，锁文件及原项目输入未变。该结果不包含运行时源码、安装脚本、构建或新安装中的运行时导入；旧禁网安装失败记录保留各自范围。具体命令和证据见[验证记录](coding-validation.md#project-read-rule-and-workspace-install-after-731728a)。
 
 Craft 审计使用独立固定 `v0.15.6` 副本，不访问真实 Craft 目录。验证使用任务临时数据、本地确定性模型和随机端口，不访问真实 WebUI `127.0.0.1:9100`、账户或凭据。
+
+`65088bf` 后的只读元数据与策略查询确认，SDK 缓存含有 `schemas/settings.schema.json`，其 basename 命中安装 sandbox 的既有禁读规则，缓存位置也不在任务目录例外内。`sandbox_check` 对相邻 package manifest 返回允许、对该 schema 返回拒绝，不打开或读取受保护文件。这已构成当前策略下完整复制该缓存包的阻塞，但旧 EPERM 没有文件路径，仍不能认定唯一原因。未重复安装、修改权限或补建链接；隔离公开包入口仍断链，见[安装策略证据](coding-validation.md#product-flows-and-installation-policy-after-65088bf)。
 
 ## F6 架构与升级验收
 

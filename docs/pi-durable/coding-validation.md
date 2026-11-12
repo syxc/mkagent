@@ -26,6 +26,71 @@ make private implementation details, the full Native SDK or upstream CLI into
 requirements. Report confirmed missing functionality and missing evidence
 separately. Unverified combinations alone do not prove a functional defect.
 
+## Product flows and installation policy after 65088bf
+
+The current repository installation passes 20 existing product tests and 132
+assertions. No production code, test body, SDK patch or dependency changes in
+this slice. Bun 1.3.14 runs with a task-owned HOME, temporary directory and
+explicit environment. The existing sandbox denies network access, all legacy
+paths and protected basenames. Bun skips environment files and bunfig.toml
+at startup.
+
+The three non-overlapping runs cover these paths:
+
+| Run | Result | Scope |
+|---|---|---|
+| Selected kernel cases | 6 tests, 48 assertions | Ordinary prompt events, tool round, persisted session identity, Pi resource isolation, existing branch reopen and legacy-parent branching |
+| Five Coding product files | 10 tests, 64 assertions | Ordered handoff and reopen, input IDs and provider projection, owner-controlled session replacement, cancellation before owner commit, UTF-8 shell output and read after reopen, durable compaction and summaries |
+| Selected Coding host cases | 4 tests, 20 assertions | Commands and reload, provider registration after host model replacement, unsupported session option rejection, nextTurn queue persistence |
+
+The last run excludes the two cases that require protected settings files.
+The kernel selection covers ordinary-profile isolation. It does not prove
+Coding settings discovery or the full product transport and UI. These runs
+use deterministic in-memory providers and temporary session data. They do not
+make paid model calls or use real account state. The recorded test inputs
+remain unchanged after each run. These results apply to the current repository
+installation, not the broken isolated installation.
+
+A separate policy query identifies a concrete installation obstacle without
+opening or reading the protected file. The existing SDK cache contains the
+member name `schemas/settings.schema.json`. Its basename matches the existing
+settings-file deny rule, and its cache directory is outside that rule's
+task-directory exception. `sandbox_check` reports file-read-data allowed for
+the adjacent package manifest and denied for the schema under the original
+installation sandbox. Both paths allow metadata queries. The same data-policy
+queries return allowed outside that sandbox; neither query reads file contents.
+
+This establishes a denied member that prevents a complete copy of that cached
+package under the current policy. The earlier Bun EPERM error has no path,
+so this result does not establish its sole cause. No installation is repeated,
+permission changed, cache member read or copied, or package link repaired.
+The two isolated workspace SDK links still target a missing directory.
+An initial policy probe omitted the fixed C argument types and returned
+invalid minus-one results. Those results are excluded; the corrected probe
+checks the manifest as an allowed control and the schema as a denied control.
+
+Evidence is under
+`/private/tmp/mkagent-native-acceptance-ALoFEM/product-recovery-j6dit0nx`:
+
+- `kernel-product.log` and `kernel-product.json` record the six kernel cases.
+- `coding-product.log` and `coding-product.json` record the ten Coding cases.
+- `coding-resource-independent.log` and `coding-resource-independent.json`
+  record the four selected host cases.
+- `test-environment.json` records the explicit test environment.
+- `sdk-cache-policy.json` records the metadata and policy-query results.
+- `independent-inline-review.md` records the independent static review.
+
+The first test-runner command has a Python string syntax error before any
+fixture or test starts. Its corrected command produces the six-test result
+above. Full Native declarations, protected adapters, complete frozen
+installation, isolated public package loading, remaining product combinations
+and F0 through F6 remain open. A separate source-comparison child used a
+prohibited code index despite its exact-file restriction. That pass is
+excluded from independent acceptance; no index output supports this record.
+Independent static review of the supplied document excerpt, test logs and
+policy-query results finds no confirmed overstatement. The verifier uses no
+tools, reruns no tests and does not audit original-file provenance.
+
 ## SDK extension tool wrappers after 3058b9e
 
 The SDK already exports wrapRegisteredTool and wrapRegisteredTools with the same
