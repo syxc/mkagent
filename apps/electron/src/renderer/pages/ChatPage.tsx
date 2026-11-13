@@ -25,6 +25,7 @@ import { getSessionTitle } from '@/utils/session'
 import { usePrWatch } from '@/hooks/usePrWatch'
 // Model resolution: connection.defaultModel (no hardcoded defaults)
 import { resolveEffectiveConnectionSlug, isSessionConnectionUnavailable } from '@config/llm-connections'
+import type { ExtensionUIResponse } from '@mkagent/shared/protocol'
 
 export interface ChatPageProps {
   sessionId: string
@@ -46,6 +47,8 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     onOpenUrl,
     workspaces,
     onRespondToPermission,
+    extensionUI,
+    onRespondToExtensionUI,
     onMarkSessionRead,
     onMarkSessionUnread,
     onSetActiveViewingSession,
@@ -71,6 +74,9 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     onChatMatchInfoChange,
     isFocusedPanel,
   } = useAppShellContext()
+  const extensionSnapshot = extensionUI?.get(sessionId)
+  const respondToExtensionUI = React.useCallback((uiEpoch: string, response: ExtensionUIResponse) =>
+    onRespondToExtensionUI?.(sessionId, uiEpoch, response) ?? Promise.resolve(false), [sessionId, onRespondToExtensionUI])
 
   // Use the unified session options hook for clean access
   const {
@@ -207,6 +213,16 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     setInputValue(coerceInputText(getDraft(sessionId)))
   }, [getDraft, sessionId])
 
+  React.useEffect(() => {
+    const loaded = () => {
+      const text = coerceInputText(getDraft(sessionId))
+      setInputValue(text)
+      inputValueRef.current = text
+    }
+    window.addEventListener('craft:drafts-loaded', loaded)
+    return () => window.removeEventListener('craft:drafts-loaded', loaded)
+  }, [getDraft, sessionId])
+
   // Sync when draft is set externally (e.g., from notifications or shortcuts)
   // PERFORMANCE NOTE: This bounded polling (max 10 attempts × 50ms = 500ms)
   // handles external draft injection. Drafts use a ref for typing performance,
@@ -255,17 +271,26 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
   // `[]` is the safe default while hydration is in flight; FreeFormInput seeds its
   // local state from this prop and swaps in the restored list when ready.
   const [attachmentsValue, setAttachmentsValue] = React.useState<import('../../shared/types').FileAttachment[]>([])
+  const attachmentsRevision = React.useRef(0)
 
   React.useEffect(() => {
     let cancelled = false
+    let hydration = 0
+    const revision = ++attachmentsRevision.current
     setAttachmentsValue([])
-    hydrateDraftAttachments(sessionId).then((atts) => {
-      if (!cancelled) setAttachmentsValue(atts)
-    })
-    return () => { cancelled = true }
+    const restore = () => {
+      const attempt = ++hydration
+      void hydrateDraftAttachments(sessionId).then(atts => {
+        if (!cancelled && revision === attachmentsRevision.current && attempt === hydration) setAttachmentsValue(atts)
+      })
+    }
+    restore()
+    window.addEventListener('craft:drafts-loaded', restore)
+    return () => { cancelled = true; window.removeEventListener('craft:drafts-loaded', restore) }
   }, [sessionId, hydrateDraftAttachments])
 
   const handleAttachmentsChange = React.useCallback((attachments: import('../../shared/types').FileAttachment[]) => {
+    attachmentsRevision.current++
     setAttachmentsValue(attachments)
     onAttachmentsChange(sessionId, attachments)
   }, [sessionId, onAttachmentsChange])
@@ -398,7 +423,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
 
   // Get display title for header - use getSessionTitle for consistent fallback logic with SessionList
   // Priority: name > first user message > preview > "New chat"
-  const displayTitle = session ? getSessionTitle(session) : (sessionMeta ? getSessionTitle(sessionMeta) : t('chat.session'))
+  const displayTitle = extensionSnapshot?.title ?? (session ? getSessionTitle(session) : (sessionMeta ? getSessionTitle(sessionMeta) : t('chat.session')))
   // Use isAsyncOperationOngoing for shimmer effect (sharing, updating share, revoking, title regeneration)
   const isAsyncOperationOngoing = session?.isAsyncOperationOngoing || sessionMeta?.isAsyncOperationOngoing || false
 
@@ -525,6 +550,8 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
           onModelChange={handleModelChange}
           onConnectionChange={handleConnectionChange}
           pendingPermission={pendingPermission}
+          extensionUI={extensionSnapshot}
+          onRespondToExtensionUI={respondToExtensionUI}
           onRespondToPermission={onRespondToPermission}
 
 

@@ -1,0 +1,173 @@
+{
+  "sourceSha256": "02e77c6ff643f09ab5aa4b68af25c16f05835d0652da7bf085c7914374c226b8",
+  "results": [
+    {
+      "name": "within-png",
+      "expected": {
+        "mimeType": "image/png",
+        "dataSha256": "c4552d129af709aafc3a896496bb01d13ef20367de1211bd14607394ecc479c9"
+      }
+    },
+    {
+      "name": "within-jpeg",
+      "expected": {
+        "mimeType": "image/jpeg",
+        "dataSha256": "07b38bd7eaeb2c2870427af2c01c06928f3f9fc5575e383ae0dcdac756abd763"
+      }
+    },
+    {
+      "name": "exact-input-limit",
+      "expected": {
+        "mimeType": "image/png",
+        "dataSha256": "c4552d129af709aafc3a896496bb01d13ef20367de1211bd14607394ecc479c9"
+      }
+    },
+    {
+      "name": "above-input-limit",
+      "expected": {
+        "mimeType": "image/png",
+        "dataSha256": "c4552d129af709aafc3a896496bb01d13ef20367de1211bd14607394ecc479c9"
+      }
+    },
+    {
+      "name": "sequential-dimension-rounding",
+      "expected": {
+        "mimeType": "image/png",
+        "resized": {
+          "from": {
+            "width": 23,
+            "height": 17
+          },
+          "to": {
+            "width": 9,
+            "height": 7
+          }
+        },
+        "dataSha256": "242129aaf2e8ca9d575b8b2fc5cdae2c70adab9edeb4a4451dac25a63d2be65f"
+      }
+    },
+    {
+      "name": "custom-quality",
+      "expected": {
+        "mimeType": "image/png",
+        "resized": {
+          "from": {
+            "width": 23,
+            "height": 17
+          },
+          "to": {
+            "width": 11,
+            "height": 8
+          }
+        },
+        "dataSha256": "c706408bc172547559df000d180af49e1626e1919c3077b133c3a57026159da1"
+      }
+    },
+    {
+      "name": "quality-85-fallback",
+      "expected": {
+        "mimeType": "image/jpeg",
+        "convertedFrom": "image/png",
+        "dataSha256": "07b38bd7eaeb2c2870427af2c01c06928f3f9fc5575e383ae0dcdac756abd763"
+      }
+    },
+    {
+      "name": "quality-40-fallback",
+      "expected": {
+        "mimeType": "image/jpeg",
+        "convertedFrom": "image/png",
+        "dataSha256": "2454928a7916416b8794a089861f7d5c9046997357b9dba1b95bf7a2ac30a8cb"
+      }
+    },
+    {
+      "name": "exact-candidate-limit",
+      "expected": {
+        "mimeType": "image/jpeg",
+        "convertedFrom": "image/png",
+        "dataSha256": "2454928a7916416b8794a089861f7d5c9046997357b9dba1b95bf7a2ac30a8cb"
+      }
+    },
+    {
+      "name": "shrink",
+      "expected": {
+        "mimeType": "image/png",
+        "resized": {
+          "from": {
+            "width": 23,
+            "height": 17
+          },
+          "to": {
+            "width": 12,
+            "height": 9
+          }
+        },
+        "dataSha256": "050ef412ec466ee8c7060553c2e94123f6fbe2163fc6881726468755c3bbc583"
+      }
+    },
+    {
+      "name": "cannot-fit",
+      "expected": null
+    },
+    {
+      "name": "zero-width-after-rounding",
+      "expected": {
+        "mimeType": "image/png",
+        "resized": {
+          "from": {
+            "width": 1,
+            "height": 8
+          },
+          "to": {
+            "width": 1,
+            "height": 1
+          }
+        },
+        "dataSha256": "dd3e28a465c45bf1bd3e11cf41a6980b0fed6b5dc7e60ac1d3adc2984ba08625"
+      }
+    },
+    {
+      "name": "empty-mime",
+      "expected": {
+        "mimeType": "image/png",
+        "convertedFrom": "",
+        "dataSha256": "c4552d129af709aafc3a896496bb01d13ef20367de1211bd14607394ecc479c9"
+      }
+    },
+    {
+      "name": "other-mime",
+      "expected": {
+        "mimeType": "image/png",
+        "convertedFrom": "image/bmp",
+        "dataSha256": "c4552d129af709aafc3a896496bb01d13ef20367de1211bd14607394ecc479c9"
+      }
+    },
+    {
+      "name": "orientation-within",
+      "expected": {
+        "mimeType": "image/jpeg",
+        "dataSha256": "2de459c62a590fe875c27beb0ea8e88577d627955c16e08cd0c2cb3d1ee120ca"
+      }
+    },
+    {
+      "name": "orientation-resized",
+      "expected": {
+        "mimeType": "image/jpeg",
+        "resized": {
+          "from": {
+            "width": 17,
+            "height": 23
+          },
+          "to": {
+            "width": 5,
+            "height": 7
+          }
+        },
+        "dataSha256": "0dd6fd072f0adcba228f43111d060fe91e3758ca31c2ba2625acc8e804617f15"
+      }
+    },
+    {
+      "name": "invalid-bytes",
+      "expected": null
+    }
+  ]
+}

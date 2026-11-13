@@ -1,6 +1,6 @@
 # MkAgent Craft Lite 功能迁移执行记录
 
-> 历史记录：本文记录 2026-07-30 的迁移闭包与验证结果。它保留当时的数字和提交背景；当前状态请以 `docs/architecture.md`、`docs/connections.md`、`docs/testing.md` 和现行 CI 为准。
+> 历史记录：本文记录 2026-07-30 的迁移闭包与验证结果，保留当时的数字、提交和功能排除范围。后来恢复的 MCP 客户端、codemode 图片生成和现有能力不受旧删除清单约束。当前产品见[文档入口](../README.md)，内核按[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)执行：durable 内置优先，独立 Pi 官方 SDK 其次，必要兼容最后，保持 MkAgent 功能。Craft UI 闭包和旧源码一致性不构成移植完整 Pi Coding SDK 或 CLI 的要求。
 
 ## 2026-07-30：恢复两种 LLM 订阅，保持 Pi-only
 

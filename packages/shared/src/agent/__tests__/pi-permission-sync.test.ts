@@ -44,6 +44,31 @@ describe('Pi permission sync', () => {
     const { run } = makeAgent();
     expect(await run('rm /tmp/test')).toMatchObject({ action: 'block', reason: expect.stringContaining('no permission handler') });
   });
+
+  it('requires each PowerShell approval and blocks the named tool in Explore mode', async () => {
+    const { agent } = makeAgent();
+    const responses: any[] = [];
+    (agent as any).send = (message: any) => responses.push(message);
+    let prompts = 0;
+    agent.onPermissionRequest = request => {
+      prompts++;
+      expect(request.toolName).toBe('PowerShell');
+      expect(request.command).toBe('Get-Content fixture.txt');
+      expect(request.canAlwaysAllow).toBe(false);
+      agent.respondToPermission(request.requestId, prompts === 2);
+    };
+    const run = () => (agent as any).handlePreToolUseRequest({
+      requestId: `powershell-${responses.length}`, toolName: 'PowerShell', input: { command: 'Get-Content fixture.txt' },
+    });
+    await run();
+    expect(responses.at(-1).action).toBe('block');
+    await run();
+    expect(responses.at(-1).action).toBe('allow');
+    agent.setPermissionMode('safe');
+    await run();
+    expect(responses.at(-1).action).toBe('block');
+    expect(prompts).toBe(2);
+  });
 });
 
 describe('read-only Bash inspectors', () => {

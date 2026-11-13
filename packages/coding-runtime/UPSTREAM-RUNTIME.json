@@ -1,0 +1,92 @@
+{
+  "repository": "https://github.com/earendil-works/pi",
+  "version": "1.5.0",
+  "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
+  "policy": "Pi Coding SDK source with TypeScript declarations, excluding the upstream CLI launcher; execution binds to the local durable Agent boundary.",
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "1.5.0",
+    "@earendil-works/pi-durable": "1.5.0"
+  },
+  "coreImports": [],
+  "files": [
+    {
+      "source": "packages/agent/src/agent.ts",
+      "target": "src/durable-agent.ts",
+      "sha256": "6d0e56bf4443f0cfc5c6a82ce31a3b99f15ff816075bed36403dfa0c95a609c6",
+      "portSha256": "ed419eef24f0666e12d1cb3e7412c28faa3c4c145577f4b1261d20faea821cab",
+      "changes": [
+        "local-agent-protocol",
+        "public-core-agent-facade",
+        "durable-loop-backend",
+        "durable-state-recovery"
+      ]
+    },
+    {
+      "source": "packages/agent/src/agent-loop.ts",
+      "target": "src/native-operations.ts",
+      "sha256": "9d7589b5071ea3b8b3e3c624f9cfc09a976ebf7436024a58213837de4645167d",
+      "portSha256": "95bc25cec996508da828c1a103af1f60c30ddbe5e05e156ba678101ea6290b18",
+      "changes": [
+        "public-core-operations-with-native-identity"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/compaction/compaction.ts",
+      "target": "src/pi/core/compaction/compaction.ts",
+      "sha256": "32714966eb644da31cd84e8eb172965256160626b3d26ae9752c3894300f2b0b",
+      "portSha256": "7d6100d3769c3d5b294e172d7f7afe42c380ecf62d68917cf114c9c3213b98ef",
+      "changes": [
+        "legacy-context-token-sdk-forward"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/core/extensions/index.ts",
+      "target": "src/pi/core/extensions/index.ts",
+      "sha256": "510e8a71fe1b73d830c0184dfeb7187b8f7f0887f64c6b171a19956a43e64fea",
+      "portSha256": "ce113d5882c90806a813a23fae93fba96348d82f274a9a531e1d9198dc921f47",
+      "changes": [
+        "public-coding-sdk",
+        "host-extension-module-import"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/extensions/codemode/worker.ts",
+      "target": "src/pi/extensions/codemode/worker.ts",
+      "sha256": "eff1f57d225d054ec40aa6753631426a426528f2ef769c4e82020757cb055911",
+      "portSha256": "4542d37a9f75150b52fc393fcd757f08fb0d681d92bebee6a40171e09b4bec82",
+      "changes": [
+        "public-durable-codemode-worker"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/index.ts",
+      "target": "src/pi/index.ts",
+      "sha256": "ca9c1485664a24c6535635835a570e1cb3b90f828466f205460adf3c409e39e2",
+      "portSha256": "33d5368466be94ac983c7f95d32552d16ed598b03a7c5525fc0cefdf93d80352",
+      "changes": [
+        "exclude-upstream-cli-launcher",
+        "exclude-upstream-run-modes",
+        "public-coding-sdk",
+        "host-extension-module-import"
+      ]
+    },
+    {
+      "source": "packages/coding-agent/src/modes/rpc/rpc-types.ts",
+      "target": "src/rpc-ui.ts",
+      "sha256": "be06a1d53916e03e9274cce9e4833692b235494e4047f1f7139d7f0147daae1a",
+      "portSha256": "1df725f93cbb16919e2ab589fad59c6209b71d8746a3743e6d86bbdb5146f917",
+      "changes": [
+        "public-coding-sdk-wire-contracts"
+      ]
+    },
+    {
+      "source": "packages/agent/src/stream-fn.ts",
+      "target": "src/stream-fn.ts",
+      "sha256": "1f9dee101a5ce1052558458d9ce47e53e05187224e879217899059a80d90bc45",
+      "portSha256": "a6b2cce7515e43411f9b3469225d39712508542d86bc3e806a9f39b57808454f",
+      "changes": [
+        "local-agent-protocol"
+      ]
+    }
+  ]
+}

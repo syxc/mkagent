@@ -66,9 +66,10 @@ const piPackage = join(rootDir, 'packages', 'pi-agent-server')
 const piBuild = Bun.spawnSync([process.execPath, 'run', 'build'], { cwd: piPackage, stdout: 'inherit', stderr: 'inherit' })
 if (piBuild.exitCode !== 0) throw new Error('Unable to build Pi server')
 mkdirSync(join(destination, 'pi-agent-server'), { recursive: true })
-for (const name of ['index.js', 'codemode-worker.js', 'quickjs.wasm', 'photon_rs_bg.wasm']) {
+for (const name of ['index.js', 'codemode-worker.js', 'quickjs.wasm', 'photon_rs_bg.wasm', 'LICENSE.pi']) {
   copyFileSync(join(piPackage, 'dist', name), join(destination, 'pi-agent-server', name))
 }
+cpSync(join(piPackage, 'dist', 'coding-assets'), join(destination, 'pi-agent-server', 'coding-assets'), { recursive: true })
 
 const uvBinary = targetPlatform === 'win32' ? 'uv.exe' : 'uv'
 const preparedUv = join(source, 'bin', platformKey, uvBinary)

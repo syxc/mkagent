@@ -1,0 +1,259 @@
+/** Reproduce Pi Coding SDK sources without the upstream CLI launcher. */
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { isBuiltin } from 'node:module';
+import { dirname, extname, join, relative, resolve, sep } from 'node:path';
+import ts from 'typescript';
+import { codingHostImport, codingSDKImport } from './coding-sdk-imports.ts';
+import { portAgentFacade } from './agent-facade-port.ts';
+import { excludeRunModeEntries } from './shared-helper-port.ts';
+
+const revision = 'f9a26365568127461c47a07a37dcb42c140a3ac5';
+const checkout = process.argv[2];
+if (!checkout) throw new Error('Usage: bun vendor-coding-runtime.ts /absolute/pi-checkout [--inventory|--check]');
+const upstream = resolve(checkout);
+const source = join(upstream, 'packages/coding-agent/src');
+const destination = resolve(import.meta.dir, '..');
+const checking = process.argv.includes('--check');
+const inventory = process.argv.includes('--inventory');
+const options = process.argv.slice(3);
+const selected = options.filter(value => value.startsWith('--file=')).map(value => value.slice('--file='.length));
+for (const option of options) {
+  if (option !== '--check' && option !== '--inventory' && !option.startsWith('--file=')) throw new Error(`Unknown option: ${option}`);
+}
+if (selected.length && (!checking || inventory)) throw new Error('--file requires --check and cannot generate a partial inventory');
+for (const file of selected) {
+  if (!/^(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)*\.ts$/.test(file) || file.split('/').includes('..') || file.startsWith('/')) {
+    throw new Error(`Source is not permitted for a scoped check: ${file}`);
+  }
+}
+const scoped = selected.length > 0;
+const head = Bun.spawnSync(['git', '-C', upstream, 'rev-parse', 'HEAD']);
+const status = Bun.spawnSync(['git', '-C', upstream, 'status', '--porcelain', '--',
+  ...(scoped ? [...selected.map(file => 'packages/coding-agent/src/' + file), 'packages/coding-agent/package.json', 'LICENSE']
+    : ['packages/coding-agent/src', 'packages/coding-agent/package.json', 'packages/agent/src', 'LICENSE'])]);
+if (head.exitCode || head.stdout.toString().trim() !== revision || status.exitCode || status.stdout.toString().trim()) {
+  throw new Error('Expected clean pinned Pi v1.5.0 sources');
+}
+const packageInfo = JSON.parse(readFileSync(join(upstream, 'packages/coding-agent/package.json'), 'utf8'));
+const localDependencies = JSON.parse(readFileSync(join(destination, 'package.json'), 'utf8')).dependencies;
+// Retain the legacy token adapter as an explicit root.
+const queue = scoped ? [...new Set(selected)] : ['index.ts', 'core/compaction/compaction.ts', 'extensions/codemode/worker.ts'];
+const visited = new Set<string>();
+const dependencies = new Set<string>();
+const coreImports = new Set<string>();
+const records: Array<{ source: string; target: string; sha256: string; portSha256: string; changes: string[] }> = [];
+const hash = (body: string | Uint8Array) => createHash('sha256').update(body).digest('hex');
+const slash = (path: string) => path.split(sep).join('/');
+
+function save(path: string, body: string | Uint8Array) {
+  if (inventory) return;
+  const target = join(destination, path);
+  if (checking) {
+    if (hash(readFileSync(target)) !== hash(body)) throw new Error(`Source output differs: ${path}`);
+  } else {
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, body);
+  }
+}
+
+while (queue.length) {
+  const path = queue.shift()!;
+  if (visited.has(path)) continue;
+  visited.add(path);
+  const original = readFileSync(join(source, path), 'utf8');
+  let body = original;
+  const changes = new Set<string>();
+  if (path === 'core/compaction/compaction.ts') {
+    body = 'export { calculateContextTokens, estimateContextTokens, estimateProjectedContextTokens, estimateTokens } from "@earendil-works/pi-coding-agent";\n';
+    changes.add('legacy-context-token-sdk-forward');
+  }
+  if (path === 'index.ts') {
+    const launcher = '// Main entry point\nexport { type MainOptions, main } from "./main.ts";\n';
+    if (body.split(launcher).length !== 2) throw new Error('Pinned CLI launcher export changed');
+    // Remove the launcher before walking imports so its private closure is not copied.
+    body = body.replace(launcher, '');
+    changes.add('exclude-upstream-cli-launcher');
+  }
+  const modeEntry = excludeRunModeEntries(path, body);
+  if (modeEntry !== undefined) {
+    // Exclude transport hosts before walking either entry point's dependencies.
+    body = modeEntry;
+    changes.add('exclude-upstream-run-modes');
+  }
+  const parsed = ts.createSourceFile(path, body, ts.ScriptTarget.Latest, true);
+  const replacements: Array<{ start: number; end: number; body: string }> = [];
+  const inspect = (literal: ts.StringLiteralLike) => {
+    const specifier = literal.text;
+    const host = codingHostImport(path, specifier);
+    if (host) {
+      replacements.push({ start: literal.getStart(parsed), end: literal.end, body: JSON.stringify(host) });
+      changes.add('host-extension-module-import');
+      return;
+    }
+    const sdk = codingSDKImport(path, specifier);
+    if (sdk) {
+      replacements.push({ start: literal.getStart(parsed), end: literal.end, body: JSON.stringify(sdk) });
+      dependencies.add(sdk);
+      changes.add('public-coding-sdk');
+      return;
+    }
+    if (specifier === '@earendil-works/pi-codemode/worker') {
+      replacements.push({ start: literal.getStart(parsed), end: literal.end, body: '"@earendil-works/pi-durable/codemode/worker"' });
+      dependencies.add('@earendil-works/pi-durable');
+      changes.add('public-durable-codemode-worker');
+      return;
+    }
+    if (specifier === '@silvia-odwyer/photon-node') {
+      if (path !== 'utils/photon.ts' && path !== 'utils/exif-orientation.ts') {
+        throw new Error('Native Photon import needs an explicit shared adapter: ' + path);
+      }
+      dependencies.add('@silvia-odwyer/photon');
+      return;
+    }
+    if (specifier === '@earendil-works/pi-agent-core') {
+      // Public protocol types do not cross the execution boundary.
+      if (ts.isImportDeclaration(literal.parent) && literal.parent.importClause?.isTypeOnly) {
+        dependencies.add(specifier);
+        return;
+      }
+      let target = slash(relative(dirname(join(destination, 'src/pi', path)), join(destination, 'src/agent-runtime.ts')));
+      if (!target.startsWith('.')) target = './' + target;
+      replacements.push({ start: literal.getStart(parsed), end: literal.end, body: JSON.stringify(target) });
+      changes.add('durable-agent-boundary');
+      return;
+    }
+    if (specifier.startsWith('.')) {
+      if (scoped) return;
+      const candidate = resolve(dirname(join(source, path)), specifier);
+      if (!candidate.startsWith(source + sep)) throw new Error(`Relative import escapes coding sources: ${path}: ${specifier}`);
+      const selected = existsSync(candidate) && extname(candidate) ? candidate
+        : existsSync(candidate + '.ts') ? candidate + '.ts' : join(candidate, 'index.ts');
+      if (!existsSync(selected)) throw new Error(`Missing source import: ${path}: ${specifier}`);
+      queue.push(slash(relative(source, selected)));
+      return;
+    }
+    const name = specifier.startsWith('@') ? specifier.split('/').slice(0, 2).join('/') : specifier.split('/')[0]!;
+    // Bun treats undici as built in, but Node consumers still require the pinned package.
+    if (packageInfo.dependencies[name] || !isBuiltin(specifier)) dependencies.add(name);
+  };
+  const visit = (node: ts.Node) => {
+    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+      if (node.moduleSpecifier.text === '@earendil-works/pi-agent-core' && ts.isImportDeclaration(node)) {
+        const bindings = node.importClause?.namedBindings;
+        if (bindings && ts.isNamedImports(bindings)) for (const item of bindings.elements) coreImports.add((item.propertyName ?? item.name).text);
+        else coreImports.add('*');
+      }
+      inspect(node.moduleSpecifier);
+    } else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) && ts.isStringLiteral(node.argument.literal)) {
+      inspect(node.argument.literal);
+    } else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments[0] && ts.isStringLiteral(node.arguments[0])) {
+      inspect(node.arguments[0]);
+    } else if (ts.isModuleDeclaration(node) && ts.isStringLiteral(node.name)) {
+      // Message declaration merging belongs to the public protocol package.
+      if (node.name.text === '@earendil-works/pi-agent-core') dependencies.add(node.name.text);
+      else inspect(node.name);
+    } else if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'resolve' &&
+      node.arguments[0] && ts.isStringLiteral(node.arguments[0]) && !node.arguments[0].text.startsWith('.')) {
+      const name = node.arguments[0].text.split('/')[0]!;
+      if (packageInfo.dependencies[name]) inspect(node.arguments[0]);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(parsed);
+  for (const edit of replacements.sort((a, b) => b.start - a.start)) body = body.slice(0, edit.start) + edit.body + body.slice(edit.end);
+  const target = 'src/pi/' + path;
+  save(target, body);
+  records.push({ source: 'packages/coding-agent/src/' + path, target, sha256: hash(original), portSha256: hash(body), changes: [...changes] });
+}
+
+if (scoped) {
+  const manifest = JSON.parse(readFileSync(join(destination, 'UPSTREAM-RUNTIME.json'), 'utf8'));
+  for (const record of records) {
+    const expected = manifest.files.find((entry: { target: string }) => entry.target === record.target);
+    if (!expected || JSON.stringify(expected) !== JSON.stringify(record)) throw new Error(`Scoped source record differs: ${record.target}`);
+  }
+  console.log(JSON.stringify({ mode: 'scoped-check', sourceFiles: records.length, complete: false }));
+  process.exit(0);
+}
+
+// Reuse the public core state facade and protocol with a durable execution backend.
+// The native agent-loop implementation is deliberately outside this source closure.
+for (const [path, target] of [
+  ['agent.ts', 'src/durable-agent.ts'],
+  ['stream-fn.ts', 'src/stream-fn.ts'],
+] as const) {
+  const original = readFileSync(join(upstream, 'packages/agent/src', path), 'utf8');
+  let body = original.replaceAll('"./types.ts"', '"./agent-runtime.ts"');
+  const changes = ['local-agent-protocol'];
+  if (path === 'agent.ts') {
+    body = portAgentFacade(original);
+    changes.push('public-core-agent-facade', 'durable-loop-backend', 'durable-state-recovery');
+  }
+  save(target, body);
+  records.push({ source: 'packages/agent/src/' + path, target, sha256: hash(original), portSha256: hash(body), changes });
+}
+// These functions define request/message semantics, not scheduling. The durable task owns every transition.
+const helperSource = readFileSync(join(upstream, 'packages/agent/src/agent-loop.ts'), 'utf8');
+const helperAST = ts.createSourceFile('agent-loop.ts', helperSource, ts.ScriptTarget.Latest, true);
+const helperNames = new Set([
+  'declareToolChanges', 'streamAssistantResponse',
+  'prepareToolCall', 'createErrorToolResult', 'emitToolExecutionEnd', 'createToolResultMessage',
+  'emitToolResultMessage', 'shouldTerminateToolBatch',
+]);
+const functions = helperAST.statements.filter((node): node is ts.FunctionDeclaration =>
+  ts.isFunctionDeclaration(node) && !!node.name && helperNames.has(node.name.text));
+if (functions.length !== helperNames.size) throw new Error('Pinned agent operation helpers changed');
+const helperBody = [
+  '// Native Pi request and tool preparation operations; scheduling belongs to pi-durable tasks.',
+  'import { streamAssistantResponse as streamCoreResponse, type AgentEventSink } from "@earendil-works/pi-coding-agent";',
+  'import { PI_ATTRIBUTION, type AssistantMessage } from "@earendil-works/pi-coding-agent";',
+  'import type { AgentContext, AgentLoopConfig, StreamFn } from "./agent-runtime.ts";',
+  'export type { AgentEventSink } from "@earendil-works/pi-coding-agent";',
+  '// Keep Native defaults separate from the mutable public core identity.',
+  'export const DEFAULT_AGENT_IDENTITY: { attribution: typeof PI_ATTRIBUTION } = { attribution: PI_ATTRIBUTION };',
+  'export {',
+  ...functions.filter(node => node.name!.text !== 'streamAssistantResponse').map(node => '  ' + node.name!.text + ','),
+  '} from "@earendil-works/pi-coding-agent";',
+  'export function streamAssistantResponse(',
+  '  context: AgentContext, config: AgentLoopConfig, signal: AbortSignal | undefined,',
+  '  emit: AgentEventSink, streamFunction: StreamFn,',
+  '): Promise<AssistantMessage> {',
+  '  return streamCoreResponse(context, config, signal, emit, streamFunction, DEFAULT_AGENT_IDENTITY);',
+  '}',
+  '',
+].join('\n');
+save('src/native-operations.ts', helperBody);
+records.push({
+  source: 'packages/agent/src/agent-loop.ts', target: 'src/native-operations.ts',
+  sha256: hash(helperSource), portSha256: hash(helperBody), changes: ['public-core-operations-with-native-identity'],
+});
+// Keep the existing light type entry point on the public SDK contract.
+const rpcSource = readFileSync(join(source, 'modes/rpc/rpc-types.ts'), 'utf8');
+const uiBody = '// Generated from Pi v1.5.0 (MIT); see LICENSE.pi and UPSTREAM-RUNTIME.json.\n'
+  + 'export type { RpcExtensionUIRequest, RpcExtensionUIResponse } from "@earendil-works/pi-coding-agent";\n';
+save('src/rpc-ui.ts', uiBody);
+records.push({
+  source: 'packages/coding-agent/src/modes/rpc/rpc-types.ts', target: 'src/rpc-ui.ts',
+  sha256: hash(rpcSource), portSha256: hash(uiBody), changes: ['public-coding-sdk-wire-contracts'],
+});
+const externalDependencies = Object.fromEntries([...dependencies].sort().map(name => {
+  const version = packageInfo.dependencies[name] ?? localDependencies[name];
+  return [name, version ?? '<builtin or development type>'];
+}));
+records.sort((a, b) => a.target.localeCompare(b.target));
+if (checking) {
+  const outputs = new Set(records.map(record => record.target));
+  for (const path of readdirSync(join(destination, 'src/pi'), { recursive: true })) {
+    const target = 'src/pi/' + slash(path);
+    if (target.endsWith('.ts') && !outputs.has(target)) throw new Error(`Source outside generated closure: ${target}`);
+  }
+}
+const manifest = {
+  repository: 'https://github.com/earendil-works/pi', version: '1.5.0', revision,
+  policy: 'Pi Coding SDK source with TypeScript declarations, excluding the upstream CLI launcher; execution binds to the local durable Agent boundary.',
+  dependencies: externalDependencies, coreImports: [...coreImports].sort(), files: records,
+};
+save('UPSTREAM-RUNTIME.json', JSON.stringify(manifest, null, 2) + '\n');
+const sourceFiles = records.filter(record => record.target.endsWith('.ts')).length;
+console.log(JSON.stringify({ mode: inventory ? 'inventory' : checking ? 'check' : 'write', sourceFiles, assets: records.length - sourceFiles, dependencies: externalDependencies, coreImports: [...coreImports].sort() }, null, 2));

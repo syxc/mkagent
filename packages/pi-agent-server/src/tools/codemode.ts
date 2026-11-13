@@ -1,13 +1,13 @@
 /**
  * The codemode tool for the kernel: pi-durable's built-in code mode extension, bound to the Node
- * sandbox from `@earendil-works/pi-codemode`. Scripts call the conversation's callable tools as
+ * sandbox from `@earendil-works/pi-durable/codemode/node`. Scripts call the conversation's callable tools as
  * `tools.<name>(args)`; MCP servers reach them through the namespaces passed here.
  */
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { Extension } from '@earendil-works/pi-durable';
 import { createCodemodeExtension, type CodemodeNamespace } from '@earendil-works/pi-durable/codemode';
-import { CodemodeSandbox, loadQuickJSWasm } from '@earendil-works/pi-codemode';
+import { CodemodeSandbox, loadQuickJSWasm } from '@earendil-works/pi-durable/codemode/node';
 
 /** Create the codemode extension with the given tool namespaces (MCP servers, if any). */
 export function createCodemodeExtensionFor(

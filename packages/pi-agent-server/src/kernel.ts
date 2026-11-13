@@ -18,6 +18,7 @@ import {
   GenerationTask,
   Harness,
   LiveDoc,
+  ROOT_CONVERSATION_ID,
   ProviderDoc,
   createRegistry,
   defineExtension,
@@ -28,6 +29,7 @@ import {
   type Conversation,
   type ConversationId,
   type EntryId,
+  type EntryDraft,
   type EntryRecord,
   type Extension,
   type HarnessSettings,
@@ -37,9 +39,14 @@ import {
 } from '@earendil-works/pi-durable';
 import { watchEvents, type AgentEvent } from './events/watch.ts';
 import { openDurableStorage } from './storage/durable-storage.ts';
+import {
+  assertNativeForkStoreItem, readBranchConversationId, verifyNativeForkStore, type NativeForkSource,
+} from './storage/native-fork-source.ts';
+import { parseNativeSessionReference, type NativeSessionReference } from '../../shared/src/sessions/native-session-reference.ts';
 import { discardInheritedWork } from './storage/branch-storage.ts';
+import { migrateLegacyCodingWork } from './storage/coding-migration.ts';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
-import type { AssistantMessage, Models, ToolCall } from '@earendil-works/pi-ai';
+import type { AssistantMessage, Models, ModelThinkingLevel as ThinkingLevel, ToolCall, UserMessage } from '@earendil-works/pi-ai';
 import { calculateContextTokens, estimateMessageTokens } from '@earendil-works/pi-ai/utils/estimate';
 import { getCurrentTools } from '@earendil-works/pi-ai/utils/transcript';
 import type { AgentSessionEvent } from '@mkagent/shared/agent/pi-events';
@@ -49,6 +56,12 @@ import { compactionReserveFor } from './compaction-reserve.ts';
 import { CacheWarmer } from './cache-warmer.ts';
 import { copyReferencedSessionFiles, remapSessionFileReferences } from '@mkagent/shared/sessions';
 import { rewriteStoredModelHistory } from '@mkagent/shared/sessions/model-history-paths';
+import { CodingHost, type KernelCodingOptions, type NativeCodingFork } from './coding-host.ts';
+import type { ExtensionUIHost } from './extension-ui.ts';
+import { nativeOwnerActions } from './native-owner-actions.ts';
+import type { PiNativeOwnerRequest } from '../../shared/src/agent/backend/pi/native-owner-protocol.ts';
+
+import type { ModelRuntimeCredentials, AgentSessionEvent as NativeAgentSessionEvent } from '@mkagent/coding-runtime/native';
 
 /**
  * Main-chat retry/stream policy, mirroring the old 1.1.0 main-chat settings
@@ -71,6 +84,7 @@ export interface KernelModelRef {
 }
 
 export interface KernelHooks {
+  sessionIdentity?(sessionId: string): void;
   emitEvent(sessionEvent: AgentSessionEvent | Record<string, unknown>): void;
   sessionToolCompleted(toolName: string, args: Record<string, unknown>, isError: boolean): void;
   /** Speculative parallel prefetch for repeated proxy tool calls. */
@@ -88,19 +102,35 @@ export interface DurableKernelOptions {
   autoCompactWindow?: number;
   /** Current pi-ai `Models`; read at each use so re-init can swap it live. */
   modelsSource(): Models;
+  modelCredentialsSource?(): ModelRuntimeCredentials;
   hooks: KernelHooks;
   /** Tools extension installed on the registry (wrapped builtin + session + MCP tools). */
   toolsExtension: Extension;
   /** Extra extensions installed beside the tools extension (codemode, tool_search). */
   extensions?: readonly Extension[];
+  coding?: KernelCodingOptions;
+  codingUI?: ExtensionUIHost;
+  commitNativeHistory?(reference: NativeSessionReference, hasName: boolean): Promise<void>;
+  /** Apply the same approval and output policy used for the host's own tools. */
+  wrapCodingTool?(tool: ToolRegistration): ToolRegistration;
+  replaceNativeSession?(
+    request: PiNativeOwnerRequest,
+    runTarget: (target: DurableKernel, signal: AbortSignal) => Promise<void>,
+  ): Promise<void>;
 }
 
 export interface KernelOpenOptions {
+  /** Load the target without running startup hooks before the product commit. */
+  codingReplacement?: { reason: 'new' | 'fork' | 'resume' };
   model?: KernelModelRef;
   thinkingLevel?: string;
   branchFromSessionPath?: string;
   /** Old pi entry id of the branch anchor; translated through the id map. */
   branchFromSdkTurnId?: string;
+  /** Keep the entire native tree, then select this leaf instead of applying a durable cutoff. */
+  nativeFork?: NativeForkSource;
+  nativeResume?: NativeSessionReference;
+  nativeParent?: NativeSessionReference;
 }
 
 interface RetrySynthState {
@@ -111,6 +141,13 @@ interface RetrySynthState {
   attempt: number;
   errorMessage: string | undefined;
 }
+
+type CodingInputOptions = {
+  hostMessageId?: string;
+  source?: 'interactive' | 'extension' | 'rpc';
+  expandPromptTemplates?: boolean;
+  nativeInput?: { text: string; hostContextPrefix: string };
+};
 
 export class DurableKernel {
   /** Active model for context-window tracking and compaction reserves. */
@@ -166,11 +203,24 @@ export class DurableKernel {
   /** Retained output window per running tool call (append/trimStart semantics). */
   private toolOutputBuffers = new Map<string, string>();
   private pendingInputs = new Set<Promise<void>>();
+  private inputAdmission: Promise<boolean> = Promise.resolve(true);
+  private inputEpoch = 0;
   private acceptedInputs = new Set<number>();
   private startedInputs = new Set<number>();
+  private coding: CodingHost | undefined;
+  private codingResources: KernelCodingOptions['preparedResources'];
+  private codingReload: Promise<void> | undefined;
+  private closing: Promise<void> | undefined;
+  private nativeTools: ToolRegistration[] = [];
+  private hostTools: Extension;
+  private readonly extensions = new Map<string, Extension>();
+  private thinkingLevel: ThinkingLevel = 'off';
+  private runController = new AbortController();
 
   constructor(options: DurableKernelOptions) {
     this.options = options;
+    this.hostTools = options.toolsExtension;
+    for (const extension of options.extensions ?? []) this.extensions.set(extension.name, extension);
   }
 
   private get storeDir(): string {
@@ -182,8 +232,26 @@ export class DurableKernel {
    * before the store opens, and the legacy migration needs the open Harness.
    */
   async open(config: KernelOpenOptions): Promise<void> {
+    const resuming = existsSync(join(this.storeDir, 'session-id.txt'));
     const branchFrom = config.branchFromSessionPath;
+    if (config.nativeParent && (!this.options.coding || resuming || branchFrom || config.nativeFork || config.nativeResume
+      || !parseNativeSessionReference(config.nativeParent))) {
+      throw new Error('Pi native parent requires a fresh coding session and a trusted parent reference');
+    }
+    if (config.nativeResume && (!this.options.coding || !resuming || branchFrom || config.nativeFork
+      || !parseNativeSessionReference(config.nativeResume))) {
+      throw new Error('Pi native resume requires an existing coding store and a released target reference');
+    }
+    if (config.nativeFork && (!this.options.coding || !branchFrom
+      || !parseNativeSessionReference(config.nativeFork.source)
+      || (config.nativeFork.leaf !== null && (typeof config.nativeFork.leaf !== 'string' || !config.nativeFork.leaf)))) {
+      throw new Error('Pi native fork requires a coding profile, a parent session, a leaf and a closed native source reference');
+    }
+    if (config.nativeFork && existsSync(this.storeDir)) throw new Error('Pi native fork requires an empty target store');
+    if (config.nativeParent && existsSync(this.storeDir)) throw new Error('Pi native parent requires an empty target store');
     const legacyChild = findMostRecentSessionFile(join(this.options.sessionPath, '.pi-sessions'));
+    if (config.nativeFork && legacyChild) throw new Error('Pi native fork requires an empty target history');
+    if (config.nativeParent && legacyChild) throw new Error('Pi native parent requires an empty target history');
     const pendingBranch = join(this.options.sessionPath, '.durable-branch-pending');
     if (existsSync(pendingBranch)) {
       throw new Error('Pi branch preflight failed: an incomplete branch store requires recovery');
@@ -192,13 +260,21 @@ export class DurableKernel {
     let ownsPendingBranch = false;
     try {
       if (branchFrom && !existsSync(this.storeDir) && !legacyChild) {
-        if (!config.branchFromSdkTurnId) {
+        if (!config.branchFromSdkTurnId && !config.nativeFork) {
           throw new Error('Pi branch preflight failed: a branch turn anchor is required');
         }
         // A parent that has never opened under this kernel gets its legacy
         // transcript converted in place first, so the copy carries full context.
-        await migrateParentStore(branchFrom, this.options.hooks.debugLog);
+        if (!config.nativeFork) await migrateParentStore(branchFrom, this.options.hooks.debugLog);
         const parentStore = join(branchFrom, 'durable-store');
+        if (config.nativeFork) {
+          assertNativeForkStoreItem(branchFrom);
+          assertNativeForkStoreItem(parentStore);
+          for (const name of ['main.jsonl', 'store.db', 'store.db-wal', 'store.db-shm']) {
+            const path = join(parentStore, name);
+            if (existsSync(path)) assertNativeForkStoreItem(path);
+          }
+        }
         if (!existsSync(join(parentStore, 'store.db')) && !existsSync(join(parentStore, 'main.jsonl'))) {
           throw new Error(`Pi branch preflight failed: no parent session transcript found in ${branchFrom}`);
         }
@@ -213,7 +289,10 @@ export class DurableKernel {
         const mainBefore = existsSync(parentMain) ? readFileSync(parentMain) : undefined;
         cpSync(parentStore, this.storeDir, {
           recursive: true,
-          filter: source => !['store.db', 'store.db-wal', 'store.db-shm', 'session-id.txt'].includes(source.split(/[\\/]/).at(-1)!),
+          filter: source => {
+            if (config.nativeFork) assertNativeForkStoreItem(source);
+            return !['store.db', 'store.db-wal', 'store.db-shm', 'session-id.txt'].includes(source.split(/[\\/]/).at(-1)!);
+          },
         });
         if (mainBefore) {
           const mainCopied = readFileSync(join(this.storeDir, 'main.jsonl'));
@@ -240,6 +319,20 @@ export class DurableKernel {
         }
       }
 
+      if (config.nativeFork) {
+        if (!copiedParent) throw new Error('Pi fork closed native source was not copied');
+        await verifyNativeForkStore(this.storeDir, branchFrom!, config.nativeFork, BACKGROUND_CONTEXT);
+      }
+      if (config.nativeResume) {
+        assertNativeForkStoreItem(this.options.sessionPath);
+        assertNativeForkStoreItem(this.storeDir);
+        for (const name of ['main.jsonl', 'store.db', 'store.db-wal', 'store.db-shm', 'session-id.txt', 'conversation-id.txt']) {
+          const path = join(this.storeDir, name);
+          if (existsSync(path)) assertNativeForkStoreItem(path);
+        }
+        await verifyNativeForkStore(this.storeDir, this.options.sessionPath,
+          { leaf: config.nativeResume.leaf, source: config.nativeResume }, BACKGROUND_CONTEXT);
+      }
       if (copiedParent) {
         rewriteStoredModelHistory(this.options.sessionPath,
           value => remapSessionFileReferences(value, branchFrom!, this.options.sessionPath));
@@ -251,34 +344,41 @@ export class DurableKernel {
       const legacy = await migrateLegacySession(this.harness!, this.options.sessionPath, this.options.hooks.debugLog,
         copiedParent ? branchFrom : undefined);
 
-      // Branch cutoff: fork the copied conversation at the anchor entry, dropping
-      // everything after it. Missing and unresolvable cutoffs must not silently
-      // resume the parent's later context.
       if (copiedParent) {
-        const anchor = config.branchFromSdkTurnId ? this.resolveBranchAnchor(config.branchFromSdkTurnId) : undefined;
-        if (config.branchFromSdkTurnId && anchor === undefined) {
-          throw new Error(`Pi branch preflight failed: branch anchor not found: ${config.branchFromSdkTurnId}`);
-        }
-        if (anchor !== undefined && this.conversation) {
+        let source = this.conversation!;
+        let anchor: EntryId | undefined;
+        if (config.nativeFork) {
+          // The marker lives only in the copy. It includes document-only receipts
+          // after the last native entry and also gives an empty session a fork point.
+          const marker = await source.commit(tx => tx.appendEntry(source.id, {
+            kind: 'mkagent.coding.fork', data: { leaf: config.nativeFork!.leaf },
+          }), BACKGROUND_CONTEXT);
+          anchor = marker.id;
+        } else {
+          anchor = config.branchFromSdkTurnId ? this.resolveBranchAnchor(config.branchFromSdkTurnId) : undefined;
+          if (config.branchFromSdkTurnId && anchor === undefined) {
+            throw new Error(`Pi branch preflight failed: branch anchor not found: ${config.branchFromSdkTurnId}`);
+          }
           const branchConversation = config.branchFromSdkTurnId
             ? await readLegacyBranchConversation(this.harness!, config.branchFromSdkTurnId)
             : undefined;
-          let source = this.conversation;
           if (branchConversation !== undefined && !existsSync(join(branchFrom!, 'durable-store', 'conversation-id.txt'))) {
             const migrated = await this.harness!.conversation(branchConversation, BACKGROUND_CONTEXT);
             if (!migrated) throw new Error('Pi branch preflight failed: migrated conversation not found');
             source = migrated;
           }
+        }
+        if (anchor !== undefined && this.conversation) {
           const forked = await source.fork(anchor, { ownership: { kind: 'ownerless' } }, BACKGROUND_CONTEXT);
           this.conversation = forked;
           writeFileSync(join(this.storeDir, 'conversation-id.txt'), String(forked.id));
           this.detachWatch?.();
           await this.attachWatch(forked.id);
-          this.options.hooks.debugLog(`Applied branch cutoff at durable entry ${anchor}`);
+          this.options.hooks.debugLog(`Applied ${config.nativeFork ? 'native tree fork' : 'branch cutoff'} at durable entry ${anchor}`);
         }
       }
 
-      if (copiedParent && this.conversation) {
+      if (copiedParent && !config.nativeFork && this.conversation) {
         const view = await this.conversation.context(BACKGROUND_CONTEXT);
         const sourceReferences = remapSessionFileReferences(view.contributions.flat(), this.options.sessionPath, branchFrom!);
         copyReferencedSessionFiles(sourceReferences, branchFrom!, this.options.sessionPath);
@@ -297,8 +397,15 @@ export class DurableKernel {
           BACKGROUND_CONTEXT,
         );
       }
+      this.thinkingLevel = (await this.conversation!.agent(BACKGROUND_CONTEXT)).thinkingLevel as ThinkingLevel;
+      this.options.hooks.sessionIdentity?.(this.sessionId);
+      await this.openCoding(config.codingReplacement?.reason
+        ?? (copiedParent ? 'fork' : legacyChild || resuming ? 'resume' : 'startup'), !!config.codingReplacement,
+      copiedParent ? { sourceSessionPath: branchFrom!,
+        ...(config.nativeFork ? { leaf: config.nativeFork.leaf } : {}) } : undefined, config.nativeParent?.sessionFile);
+      if (!this.harness) return;
+      if (!config.codingReplacement) this.harness.resume();
       if (copiedParent) {
-        this.harness!.resume();
         unlinkSync(pendingBranch);
       }
     } catch (error) {
@@ -331,6 +438,7 @@ export class DurableKernel {
 
   /** Attach the event synthesizer to a conversation's watch stream. */
   private async attachWatch(conversationId: ConversationId): Promise<void> {
+    if (this.options.coding) return;
     const stream = await watchEvents(this.harness!, conversationId, BACKGROUND_CONTEXT);
     const pendingCompactions = new Map<number, { reason: 'manual' | 'threshold' | 'overflow'; tokensBefore: number }>();
     let delivery = Promise.resolve();
@@ -479,11 +587,25 @@ export class DurableKernel {
 
   private async openStore(copiedParent: boolean): Promise<void> {
     const storage = await openDurableStorage(this.storeDir, BACKGROUND_CONTEXT);
+    let selected: ConversationId | undefined;
+    try {
+      selected = readBranchConversationId(this.storeDir);
+    } catch (error) {
+      await storage.close(BACKGROUND_CONTEXT);
+      throw error;
+    }
     if (copiedParent) {
       try {
         // Clear inherited work before Harness.open can reconcile it; abort/wait APIs can schedule it.
         await discardInheritedWork(storage);
       } catch (error) {
+        await storage.close(BACKGROUND_CONTEXT).catch(() => {});
+        throw error;
+      }
+    }
+    if (!copiedParent && this.options.coding) {
+      try { await migrateLegacyCodingWork(storage, selected ?? ROOT_CONVERSATION_ID); }
+      catch (error) {
         await storage.close(BACKGROUND_CONTEXT).catch(() => {});
         throw error;
       }
@@ -496,31 +618,38 @@ export class DurableKernel {
     // verbatim, and no other extension contributes sections.
     registry.install(defineExtension({
       name: 'mkagent-system-prompt',
-      sections: [section('mkagent-system-prompt', () => this.systemPrompt, { tag: false })],
+      sections: [section('mkagent-system-prompt', () => this.coding?.systemPrompt ?? this.systemPrompt, { tag: false })],
+      hooks: [hook(GenerationTask, {
+        beforeRequest: request => {
+          const systemPrompt = this.coding?.systemPrompt ?? this.systemPrompt;
+          return systemPrompt === undefined ? undefined : {
+            messages: [
+              { role: 'system' as const, content: systemPrompt, toolsAdded: getCurrentTools(request.messages), timestamp: Date.now() },
+              ...request.messages.filter(message => message.role !== 'system'),
+            ],
+          };
+        },
+      })],
     }));
     registry.install(this.options.toolsExtension);
-    for (const extension of this.options.extensions ?? []) registry.install(extension);
+    for (const extension of this.extensions.values()) registry.install(extension);
     registry.install(defineExtension({
       name: 'mkagent-cache-warmer',
       hooks: [hook(GenerationTask, {
         beforeRequest: async (request, api, context) => {
-          const messages = this.systemPrompt !== undefined ? [
-            { role: 'system' as const, content: this.systemPrompt, toolsAdded: getCurrentTools(request.messages), timestamp: Date.now() },
-            ...request.messages.filter(message => message.role !== 'system'),
-          ] : request.messages;
           try {
-            await this.cacheWarmer.capture({ messages }, api, context);
+            await this.cacheWarmer.capture(request, api, context);
           } catch (error) {
             this.options.hooks.debugLog(`Could not schedule cache warming: ${error instanceof Error ? error.message : String(error)}`);
           }
-          return messages === request.messages ? undefined : { messages };
+          return undefined;
         },
         afterResponse: message => this.cacheWarmer.observe(message.usage),
       })],
     }));
 
     this.harness = await Harness.open(storage, {
-      models: () => this.options.modelsSource(),
+      models: () => this.currentModels(),
       registry,
       settings: () => this.buildSettings(),
       env: target => new NodeExecutionEnv({
@@ -531,16 +660,10 @@ export class DurableKernel {
         this.options.hooks.debugLog(`[kernel] ${kind}: ${error instanceof Error ? error.message : String(error)}`);
       },
     }, BACKGROUND_CONTEXT);
-    if (!copiedParent) this.harness.resume();
 
-    const marker = join(this.storeDir, 'conversation-id.txt');
-    if (existsSync(marker)) {
-      const rawId = readFileSync(marker, 'utf-8').trim();
-      const parsedId = Number(rawId);
-      if (!Number.isSafeInteger(parsedId) || String(parsedId) !== rawId) throw new Error('Invalid durable branch conversation id');
-      const conversationId = parsedId as ConversationId;
-      const existing = await this.harness.conversation(conversationId, BACKGROUND_CONTEXT);
-      if (!existing) throw new Error(`Durable branch conversation not found: ${conversationId}`);
+    if (selected !== undefined) {
+      const existing = await this.harness.conversation(selected, BACKGROUND_CONTEXT);
+      if (!existing) throw new Error(`Durable branch conversation not found: ${selected}`);
       this.conversation = existing;
     } else {
       this.conversation = await this.harness.root(BACKGROUND_CONTEXT, {
@@ -605,75 +728,293 @@ export class DurableKernel {
   // Conversation commands
   // ============================================================
 
-  async submitPrompt(message: string, images?: Array<{ data: string; mimeType: string }>): Promise<void> {
-    if (!this.conversation) throw new Error('Kernel not open');
-    this.requireModel(this.currentModel);
-    const content = images && images.length > 0
-      ? [{ type: 'text' as const, text: message }, ...images.map(img => ({ type: 'image' as const, data: img.data, mimeType: img.mimeType }))]
-      : message;
-    await this.submitInput({ type: 'input', content, whenBusy: 'followUp' });
+  private async openCoding(
+    reason: 'startup' | 'resume' | 'fork' | 'new' | 'reload', deferred = false, nativeFork?: NativeCodingFork,
+    nativeParent?: string,
+  ): Promise<void> {
+    const profile = this.options.coding;
+    if (!profile) return;
+    if (!this.options.wrapCodingTool) throw new Error('Coding extensions require the host tool approval wrapper');
+    this.nativeTools = [];
+    this.installTools();
+    const reloadResources = this.codingResources !== undefined;
+    this.codingResources ??= profile.preparedResources;
+    this.coding = await CodingHost.load({
+      harness: this.harness!, conversation: this.conversation!, registry: this.registry!,
+      cwd: this.options.cwd, sessionPath: this.options.sessionPath, id: this.sessionId,
+      profile: { ...profile, preparedResources: this.codingResources }, reloadResources,
+      nativeFork, nativeParent, deferProjection: deferred,
+      commitProjection: this.options.commitNativeHistory && (descriptor =>
+        this.options.commitNativeHistory!(parseNativeSessionReference(descriptor)!, descriptor.hasName)),
+      models: this.options.modelsSource, credentials: this.options.modelCredentialsSource?.(),
+      autoCompactWindow: this.options.autoCompactWindow, ui: this.options.codingUI,
+      model: async models => {
+        const selected = this.currentModel ?? (await this.conversation!.agent(BACKGROUND_CONTEXT)).model;
+        return selected && models.getModel(selected.provider, selected.modelId);
+      },
+      thinkingLevel: () => this.thinkingLevel,
+      selection: (model, thinkingLevel) => {
+        if (model) this.currentModel = { provider: model.provider, modelId: model.id, contextWindow: model.contextWindow };
+        this.thinkingLevel = thinkingLevel;
+      },
+      shutdown: () => { void this.abort().then(() => this.close()); },
+      activateExecution: deferred ? () => this.harness!.resume() : undefined,
+      getSystemPrompt: () => this.systemPrompt,
+      wrapTool: this.options.wrapCodingTool,
+      publishTools: tools => {
+        this.nativeTools = tools;
+        this.installTools();
+      },
+      event: event => this.nativeEvent(event),
+      error: error => this.options.hooks.debugLog(`[coding:${error.event}] ${error.extensionPath}: ${error.error}`),
+      commands: {
+        waitForIdle: () => this.waitForIdle(),
+        ...nativeOwnerActions({
+          source: () => {
+            if (!this.coding || this.closing) throw new Error('Native session is closing');
+            return this.coding;
+          },
+          replace: async (request, runTarget) => {
+            if (!this.options.replaceNativeSession) throw new Error('Native session replacement requires the MkAgent session owner');
+            await this.options.replaceNativeSession(request, async (target, signal) => {
+              if (!target.coding) throw new Error('Native replacement target has no coding runtime');
+              await runTarget(target.coding, signal);
+            });
+          },
+        }),
+        navigateTree: async (...args) => {
+          const source = this.coding;
+          if (!source || !this.options.commitNativeHistory) throw new Error('Native tree navigation requires the MkAgent session owner');
+          const result = await source.navigateTree(...args);
+          if (!result.cancelled) {
+            const descriptor = await source.projection.flush();
+            await this.options.commitNativeHistory(parseNativeSessionReference(descriptor)!, descriptor.hasName);
+          }
+          return result;
+        },
+        reload: () => this.reloadCodingSession(),
+      },
+    }, reason);
+    this.codingResources = this.coding.resources;
+    if (!deferred) await this.coding.start(reason);
   }
 
-  async steer(message: string): Promise<void> {
+  private reloadCodingSession(): Promise<void> {
+    if (this.closing) return Promise.reject(new Error('Cannot reload a coding session while closing'));
+    if (this.codingReload) return this.codingReload;
+    // Register before starting, including the interval without an active coding host.
+    const operation = Promise.resolve().then(async () => {
+      const resumeUI = this.options.codingUI?.suspend();
+      const source = this.coding;
+      try {
+        if (source) {
+          try { await this.waitForIdle(); }
+          finally {
+            try { await source.close(); }
+            finally { if (this.coding === source) this.coding = undefined; }
+          }
+        }
+      } finally {
+        resumeUI?.();
+      }
+      await this.openCoding('reload');
+    });
+    this.codingReload = operation;
+    return operation.finally(() => {
+      if (this.codingReload === operation) this.codingReload = undefined;
+    });
+  }
+
+  /** Native AgentSession supplies its own events; only add host metadata and accounting. */
+  private nativeEvent(event: NativeAgentSessionEvent | Record<string, unknown>): void {
+    const selected = this.coding?.session.model;
+    if (selected) this.currentModel = { provider: selected.provider, modelId: selected.id, contextWindow: selected.contextWindow };
+    if (event.type === 'agent_start') this.busy = true;
+    if (event.type === 'agent_settled') this.busy = false;
+    if (event.type === 'thinking_level_changed') this.thinkingLevel = event.level as ThinkingLevel;
+    if (event.type === 'message_end' && 'message' in event) {
+      const message = event.message as AssistantMessage;
+      if (message.role === 'assistant') {
+        this.lastAssistant = message;
+        this.lastUsage = message.usage;
+        const calls = message.content.filter((part): part is ToolCall => part.type === 'toolCall')
+          .filter(call => this.options.hooks.isPrefetchableTool(call.name));
+        if (calls.length >= 2) for (const call of calls) {
+          this.options.hooks.prefetchToolCall(call.id, call.name, call.arguments);
+        }
+      }
+    }
+    if (event.type === 'tool_execution_start') {
+      const name = String(event.toolName);
+      const sessionName = name.replace(/^(mcp__session__|session__)/, '');
+      if (name !== sessionName) this.pendingSessionTools.set(String(event.toolCallId), {
+        toolName: sessionName, args: event.args as Record<string, unknown>,
+      });
+    } else if (event.type === 'tool_execution_end') {
+      const call = this.pendingSessionTools.get(String(event.toolCallId));
+      if (call) {
+        this.pendingSessionTools.delete(String(event.toolCallId));
+        this.options.hooks.sessionToolCompleted(call.toolName, call.args, event.isError === true);
+      }
+    }
+    // Native custom messages and new lifecycle events extend the legacy wire union.
+    this.options.hooks.emitEvent(event as unknown as Record<string, unknown>);
+  }
+
+  async submitPrompt(message: string, images?: Array<{ data: string; mimeType: string }>,
+    nativeInput?: CodingInputOptions['nativeInput'], hostMessageId?: string): Promise<{ handled: boolean; completed: boolean }> {
+    const content = images?.length ? [{ type: 'text' as const, text: message },
+      ...images.map(image => ({ ...image, type: 'image' as const }))] : message;
+    const operation = this.enqueueCodingInput(content, 'followUp', { nativeInput, hostMessageId, source: nativeInput || hostMessageId ? 'rpc' : undefined });
+    let tail = this.inputAdmission;
+    const handled = await operation;
+    let completed = handled;
+    // Commands may enqueue native prompts before their own admission finishes.
+    while (completed && tail !== this.inputAdmission) {
+      tail = this.inputAdmission;
+      completed = await tail;
+    }
+    if (!this.closing) await this.coding?.flush();
+    // A preceding run can still be settling after agent_end. Its streaming
+    // flag must not suppress completion of this command's finished admission.
+    return { handled, completed };
+  }
+
+  async steer(message: string, hostMessageId?: string): Promise<void> {
+    await this.enqueueCodingInput(message, 'steer', { hostMessageId, source: hostMessageId ? 'rpc' : undefined });
+    if (!this.closing) await this.coding?.flush();
+  }
+
+  async setSessionName(name: string): Promise<void> {
+    if (!this.coding || this.closing || this.codingReload) throw new Error('Native session naming is unavailable');
+    await this.coding.setSessionName(name);
+  }
+
+  private enqueueCodingInput(content: UserMessage['content'], mode: 'steer' | 'followUp',
+    options: CodingInputOptions = {}): Promise<boolean> {
+    const coding = this.coding;
+    const epoch = this.inputEpoch;
+    const operation = this.inputAdmission.then(() => {
+      if (epoch !== this.inputEpoch || coding !== this.coding || this.closing) {
+        throw new Error('Input belongs to an inactive session runtime');
+      }
+      return this.processCodingInput(content, mode, options);
+    });
+    this.inputAdmission = operation.catch(() => true);
+    return operation;
+  }
+
+  private async processCodingInput(raw: UserMessage['content'], mode: 'steer' | 'followUp',
+    options: CodingInputOptions): Promise<boolean> {
     if (!this.conversation) throw new Error('Kernel not open');
+    if (this.options.coding && !this.coding) {
+      const epoch = this.inputEpoch;
+      await this.reloadCodingSession();
+      if (this.closing || epoch !== this.inputEpoch) throw new Error('Input belongs to an inactive session runtime');
+    }
+    if (this.coding) {
+      const text = typeof raw === 'string' ? raw : raw.filter(part => part.type === 'text').map(part => part.text).join('\n');
+      const images = typeof raw === 'string' ? undefined : raw.filter(part => part.type === 'image');
+      return this.coding.submit(options.nativeInput?.text ?? text, {
+        hostMessageId: options.hostMessageId,
+        images, source: options.source,
+        hostContextPrefix: options.nativeInput?.hostContextPrefix,
+        expandPromptTemplates: options.expandPromptTemplates ?? true,
+        streamingBehavior: mode,
+      });
+    }
     this.requireModel(this.currentModel);
-    await this.submitInput({ type: 'input', content: message, whenBusy: 'steer' });
+    await this.submitInput({ type: 'input', content: raw, whenBusy: mode });
+    return false;
   }
 
   private async submitInput(request: InputSubmissionDraft): Promise<void> {
-    const pending = this.conversation!.submit(request, BACKGROUND_CONTEXT).then(submission => {
+    const admitted = this.conversation!.submit(request, BACKGROUND_CONTEXT);
+    const pending = admitted.then(submission => {
       if (!this.startedInputs.delete(submission.id)) this.acceptedInputs.add(submission.id);
     });
     this.pendingInputs.add(pending);
-    try {
-      await pending;
-    } finally {
+    try { await pending; }
+    finally {
       this.pendingInputs.delete(pending);
       if (!this.pendingInputs.size) this.startedInputs.clear();
     }
   }
 
   async abort(): Promise<void> {
-    this.cacheWarmer.stop();
-    const conversation = this.conversation;
-    if (!conversation || !this.harness) return;
+    const resumeUI = this.options.codingUI?.suspend();
+    try {
+      this.runController.abort();
+      this.cacheWarmer.stop();
+      const conversation = this.conversation;
+      if (!conversation || !this.harness) return;
 
-    const compactions = [...this.manualCompactions];
-    for (const compaction of compactions) compaction.controller.abort();
-    await conversation.abort(BACKGROUND_CONTEXT);
-    await Promise.all(compactions.map(compaction => compaction.done));
+      const compactions = [...this.manualCompactions];
+      for (const compaction of compactions) compaction.controller.abort();
+      for (;;) {
+        const active = this.coding;
+        const reloading = this.codingReload;
+        if (active) await active.abort();
+        else await conversation.abort(BACKGROUND_CONTEXT);
+        if (reloading) {
+          await reloading;
+          // Startup can launch native work after the first abort.
+          continue;
+        }
+        if (active === this.coding) break;
+      }
+      await Promise.all(compactions.map(compaction => compaction.done));
+    } finally {
+      resumeUI?.();
+    }
+  }
+
+  /** Use the active native overlays for host authentication as well as model requests. */
+  currentModels(): Models {
+    return this.coding?.models ?? this.options.modelsSource();
   }
 
   private requireModel(model: KernelModelRef | undefined): void {
-    if (!model || !this.options.modelsSource().getModel(model.provider, model.modelId)) {
+    if (!model || !this.currentModels().getModel(model.provider, model.modelId)) {
       throw new Error(`Could not resolve model: ${model ? `${model.provider}/${model.modelId}` : '(unset)'}`);
     }
   }
 
   async waitForIdle(context = BACKGROUND_CONTEXT): Promise<void> {
-    await this.conversation?.waitForIdle(context);
+    if (this.coding) await this.coding.waitForIdle();
+    else await this.conversation?.waitForIdle(context);
   }
 
-  async setModel(model: KernelModelRef, models: Models = this.options.modelsSource(), context = BACKGROUND_CONTEXT): Promise<void> {
+  async setModel(model: KernelModelRef, models: Models = this.currentModels(), context = BACKGROUND_CONTEXT): Promise<void> {
     if (!models.getModel(model.provider, model.modelId)) {
       throw new Error(`Could not resolve model: ${model.provider}/${model.modelId}`);
     }
     this.cacheWarmer.stop();
     await this.conversation?.configure({ model: { provider: model.provider, modelId: model.modelId } }, context);
     this.currentModel = model;
+    if (this.coding) {
+      await this.coding.session.setModel(models.getModel(model.provider, model.modelId)!);
+      await this.coding.flush();
+    }
   }
 
   async setThinkingLevel(level: string): Promise<void> {
     this.cacheWarmer.stop();
     await this.conversation?.configure({ thinkingLevel: level as never }, BACKGROUND_CONTEXT);
+    this.thinkingLevel = level as ThinkingLevel;
+    if (this.coding) {
+      this.coding.session.setThinkingLevel(level as ThinkingLevel);
+      await this.coding.flush();
+    }
   }
 
   setAutoCompaction(enabled: boolean): void {
     this.autoCompactionEnabled = enabled;
+    this.coding?.session.setAutoCompactionEnabled(enabled);
   }
 
   getAutoCompactionEnabled(): boolean {
-    return this.autoCompactionEnabled;
+    return this.coding?.session.autoCompactionEnabled ?? this.autoCompactionEnabled;
   }
 
   /** Manual compaction in the host's PiCompactResult shape. */
@@ -683,6 +1024,16 @@ export class DurableKernel {
     tokensBefore: number;
     estimatedTokensAfter?: number;
   }> {
+    if (this.coding) {
+      const abort = () => this.coding?.session.abortCompaction();
+      signal?.addEventListener('abort', abort, { once: true });
+      try {
+        signal?.throwIfAborted();
+        const result = await this.coding.session.compact(customInstructions);
+        await this.coding.flush();
+        return result;
+      } finally { signal?.removeEventListener('abort', abort); }
+    }
     const conversation = this.conversation;
     const harness = this.harness;
     if (!conversation || !harness) throw new Error('Kernel not open');
@@ -774,24 +1125,69 @@ export class DurableKernel {
     return page.items[0];
   }
 
-  /** Publish a new tool set for subsequent requests without closing the conversation. */
+  /** Publish a new host catalog and rebuild the native declarations without reloading extensions. */
   updateTools(extension: Extension): void {
-    this.registry?.install(extension);
+    this.hostTools = extension;
+    this.installTools();
+    this.coding?.updateTools();
   }
 
-  async close(): Promise<void> {
+  /** Keep auxiliary host extensions and native declarations aligned with reloaded configuration. */
+  updateExtension(extension: Extension, enabled: boolean): void {
+    if (enabled) {
+      this.extensions.set(extension.name, extension);
+      this.registry?.install(extension);
+    } else {
+      this.extensions.delete(extension.name);
+      this.registry?.uninstall(extension);
+    }
+    this.updateTools(this.hostTools);
+  }
+
+  private installTools(): void {
+    const extension = this.hostTools;
+    const names = new Set(this.nativeTools.map(tool => tool.name));
+    this.registry?.install(defineExtension({
+      ...extension, tools: [...(extension.tools ?? []).filter(tool => !names.has(tool.name)), ...this.nativeTools],
+    }));
+  }
+
+  close(reason: Parameters<CodingHost['close']>[0] = 'quit'): Promise<void> {
+    if (this.closing) return this.closing;
+    this.inputEpoch++;
+    const completion = Promise.withResolvers<void>();
+    this.closing = completion.promise;
+    const resumeUI = this.options.codingUI?.suspend();
+    // Cancellation is synchronous; draining returned usage can outlive this call.
     const warming = this.cacheWarmer.close();
     const compactions = [...this.manualCompactions];
     for (const compaction of compactions) compaction.controller.abort();
-    await Promise.all([warming, ...compactions.map(compaction => compaction.done)]);
-    this.registry = null;
-    this.detachWatch?.();
-    this.detachWatch = null;
-    if (this.harness) {
-      await this.harness.close(BACKGROUND_CONTEXT);
-      this.harness = null;
-    }
-    this.conversation = null;
+    void (async () => {
+      try {
+        // The command reports reload errors; teardown must still release its kernel.
+        await this.codingReload?.catch(() => undefined);
+        await Promise.all([warming, ...compactions.map(compaction => compaction.done)]);
+      } finally {
+        try { await this.coding?.close(reason); }
+        finally {
+          this.coding = undefined;
+          this.registry = null;
+          try {
+            this.detachWatch?.();
+            this.detachWatch = null;
+          } finally {
+            try { await this.harness?.close(BACKGROUND_CONTEXT); }
+            finally {
+              this.harness = null;
+              this.conversation = null;
+              resumeUI?.();
+              this.closing = undefined;
+            }
+          }
+        }
+      }
+    })().then(completion.resolve, completion.reject);
+    return completion.promise;
   }
 
   // ============================================================
@@ -803,6 +1199,7 @@ export class DurableKernel {
     contextUsage?: { tokens: number | null; contextWindow: number; percent: number | null };
     compactionSettings: { enabled: boolean; reserveTokens: number };
   }> {
+    if (this.coding) return this.coding.contextUsagePayload();
     const compactionSettings = {
       enabled: this.autoCompactionEnabled,
       reserveTokens: compactionReserveFor(
@@ -1064,6 +1461,7 @@ export class DurableKernel {
         } else {
           // Faulted or orphaned call: its slot left the live view unfinished.
           result = { content: [{ type: 'text', text: '' }] };
+          isError = true;
         }
         this.toolOutputBuffers.delete(event.toolCallId);
 

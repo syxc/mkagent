@@ -3,17 +3,46 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
+import type { ExtensionUIDialog, ExtensionUIUpdate } from '@mkagent/shared/protocol'
 
 it('runs Coding, defaults, frozen settings, forks, background handoffs and restarts through the actual Pi subprocess', async () => {
+  const appRoot = resolve(import.meta.dir, '../../../..')
+  const build = Bun.spawnSync([process.execPath, 'run', 'server:build:subprocess'], { cwd: appRoot, stdout: 'pipe', stderr: 'pipe' })
+  if (build.exitCode !== 0) throw new Error(`Pi subprocess build failed: ${build.stderr.toString()}`)
   const root = mkdtempSync(join(tmpdir(), 'mkagent-coding-runtime-'))
   const previous = process.env.CONFIG_DIR
+  const previousHome = process.env.HOME
+  const previousAgentDir = process.env.PI_CODING_AGENT_DIR
   process.env.CONFIG_DIR = root
+  process.env.HOME = join(root, 'home')
+  process.env.PI_CODING_AGENT_DIR = join(root, 'home', '.pi', 'agent')
   const wsRoot = join(root, 'workspace')
   const repo = join(root, 'repo with spaces')
   mkdirSync(wsRoot); mkdirSync(repo)
   execFileSync('git', ['init', '-b', 'main', repo], { stdio: 'pipe' })
   writeFileSync(join(repo, 'AGENTS.md'), 'Fixture convention: preserve fixture rules.')
   writeFileSync(join(repo, 'CLAUDE.md'), 'Additional fixture context.')
+  // Project trust is covered separately; discover this explicit user extension in an isolated HOME.
+  const nativeExtensions = join(root, 'home', '.pi', 'agent', 'extensions')
+  const nativeUIResult = join(root, 'native-ui.json')
+  mkdirSync(nativeExtensions, { recursive: true })
+  writeFileSync(join(nativeExtensions, '..', 'settings.json'), '{"cacheWarming":"off"}')
+  writeFileSync(join(nativeExtensions, 'owner-ui.ts'), `
+    import { writeFileSync } from 'node:fs';
+    export default function(pi) {
+      let startup;
+      pi.on('session_start', async (_, ctx) => {
+        if (!ctx.hasUI) return;
+        startup = { answer: await ctx.ui.input('Factory startup'), hasUI: ctx.hasUI,
+          hostTools: pi.getAllTools().some(tool => tool.name === 'mcp__session__SubmitPlan') };
+      });
+      pi.registerCommand('factory-ui', { handler: async (_, ctx) => {
+        const confirmed = await ctx.ui.confirm('Factory command', 'Confirm through the product owner');
+        ctx.ui.setStatus('factory', 'ready');
+        writeFileSync(${JSON.stringify(nativeUIResult)}, JSON.stringify({ startup, confirmed }));
+      } });
+    }
+  `)
   const workspace = { id: 'ws-coding', name: 'Coding', slug: 'coding', rootPath: wsRoot, createdAt: 1 }
   const requests: any[] = []
   const endpoint = Bun.serve({ hostname: '127.0.0.1', port: 0, async fetch(request) {
@@ -36,14 +65,50 @@ it('runs Coding, defaults, frozen settings, forks, background handoffs and resta
   const { loadSession } = await import('@mkagent/shared/sessions')
   const { registerSettingsHandlers } = await import('../handlers/rpc/settings')
   const { RPC_CHANNELS } = await import('@mkagent/shared/protocol')
-  const platform = createHeadlessPlatform(); platform.appRootPath = resolve(import.meta.dir, '../../../..'); setSessionPlatform(platform)
+  const platform = createHeadlessPlatform(); platform.appRootPath = appRoot; setSessionPlatform(platform)
   let manager = new SessionManager()
   const events: any[] = []
+  const startupUI = Promise.withResolvers<ExtensionUIDialog>()
+  const commandUI = Promise.withResolvers<ExtensionUIDialog>()
+  const waitForUI = async (pending: Promise<ExtensionUIDialog>) => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      return await Promise.race([pending, new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Product backend UI timeout')), 10_000)
+      })])
+    } finally {
+      clearTimeout(timer)
+    }
+  }
   try {
     await manager.initialize()
-    manager.setEventSink((_channel, _target, event) => events.push(event))
+    manager.setEventSink((channel, _target, event) => {
+      events.push(event)
+      if (channel !== RPC_CHANNELS.sessions.EXTENSION_UI_UPDATED) return
+      for (const request of (event as ExtensionUIUpdate).snapshot.requests) {
+        if (request.title === 'Factory startup') startupUI.resolve(request)
+        if (request.title === 'Factory command') commandUI.resolve(request)
+      }
+    })
     const handlers = new Map<string, any>()
     registerSettingsHandlers({ handle: (channel: string, handler: any) => handlers.set(channel, handler) } as any, { platform, sessionManager: manager } as any)
+    const uiSession = await manager.createSession(workspace.id, { name: 'Factory UI fixture' })
+    await manager.attachExtensionUI(uiSession.id, workspace.id, 'factory-client', 'factory-lease')
+    const uiRun = manager.sendMessage(uiSession.id, '/factory-ui')
+    void uiRun.catch(() => {})
+    const startupRequest = await waitForUI(startupUI.promise)
+    expect(await manager.respondToExtensionUI(uiSession.id, workspace.id, 'factory-client', 'factory-lease',
+      startupRequest.uiEpoch, { type: 'extension_ui_response', id: startupRequest.id, value: '' })).toBe(true)
+    const commandRequest = await waitForUI(commandUI.promise)
+    expect(await manager.respondToExtensionUI(uiSession.id, workspace.id, 'factory-client', 'factory-lease',
+      commandRequest.uiEpoch, { type: 'extension_ui_response', id: commandRequest.id, confirmed: false })).toBe(true)
+    await uiRun
+    expect(JSON.parse(readFileSync(nativeUIResult, 'utf8'))).toEqual({
+      startup: { answer: '', hasUI: true, hostTools: true }, confirmed: false,
+    })
+    expect((await manager.getSession(uiSession.id))?.isProcessing).toBe(false)
+    expect(requests).toHaveLength(0)
+    manager.detachExtensionUI(uiSession.id, 'factory-client', 'factory-lease')
     const session = await manager.createSession(workspace.id)
     expect(session.codingMode).toBe(true)
     expect((await manager.createSession(workspace.id, { codingMode: false })).codingMode).toBeUndefined()
@@ -112,6 +177,8 @@ it('runs Coding, defaults, frozen settings, forks, background handoffs and resta
   } finally {
     await manager.flushAllSessions(); manager.cleanup(); endpoint.stop()
     if (previous === undefined) delete process.env.CONFIG_DIR; else process.env.CONFIG_DIR = previous
+    if (previousHome === undefined) delete process.env.HOME; else process.env.HOME = previousHome
+    if (previousAgentDir === undefined) delete process.env.PI_CODING_AGENT_DIR; else process.env.PI_CODING_AGENT_DIR = previousAgentDir
     rmSync(root, { recursive: true, force: true })
   }
 }, 120_000)

@@ -5,7 +5,7 @@
  * Extracted here to avoid circular imports between pi-agent.ts and event-adapter.ts.
  */
 
-import type { ThinkingLevel as PiThinkingLevel } from '@earendil-works/pi-agent-core';
+import type { ModelThinkingLevel as PiThinkingLevel } from '@earendil-works/pi-ai';
 import type { ThinkingLevel } from '../../thinking-levels.ts';
 
 /**
@@ -33,6 +33,7 @@ export const THINKING_TO_PI: Record<ThinkingLevel, PiThinkingLevel> = {
  */
 export const PI_TOOL_NAME_MAP: Record<string, string> = {
   bash: 'Bash',
+  powershell: 'PowerShell',
   read: 'Read',
   write: 'Write',
   edit: 'Edit',

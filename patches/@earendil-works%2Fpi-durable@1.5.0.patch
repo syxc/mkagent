@@ -1,0 +1,1941 @@
+# Content SHA-256: 2dffe4b923a4b21f1ca90624d01a2b676a9fe2d569a220714191071b3b7094b2
+diff --git a/dist/codemode/codemode.d.ts b/dist/codemode/codemode.d.ts
+index 429bfd1e491008edca6b9ff146ab25a50baa1d9e..0eafbde8d023471210a1e91abb86b0c4ac7c43b5 100644
+--- a/dist/codemode/codemode.d.ts
++++ b/dist/codemode/codemode.d.ts
+@@ -35,16 +35,17 @@
+  * call with an error result.
+  */
+ import { type Context, type JsonValue } from "@earendil-works/chord";
+-import type { CodemodeSandboxBase } from "@earendil-works/pi-codemode/portable";
++import type { CodemodeResult, CodemodeSandboxBase } from "@earendil-works/pi-codemode/portable";
+ import { type Static } from "@earendil-works/pi-schema";
+-import type { Extension, ToolExecutionApi, ToolRegistration } from "../harness/types.ts";
+-import type { JsonObject } from "../types.ts";
++import type { Extension, ToolExecutionApi, ToolExecutionResult, ToolRegistration } from "../harness/types.ts";
++import type { JsonObject, Tx } from "../types.ts";
+ import { type CodemodeNamespace } from "./describe.ts";
++import type { CodemodeFormatOptions } from "./output.js";
+ /**
+  * Version of everything in this module that turns stored results into what a script sees: result mapping, globals,
+  * start data. Bump it when that changes, so a call started before an upgrade is not replayed by different code.
+  */
+-export declare const CODEMODE_MODULE_VERSION = 2;
++export declare const CODEMODE_MODULE_VERSION = 3;
+ export declare const CODEMODE_TOOL_NAME = "codemode";
+ /** One tool as the script sees it: `tools.<jsName>`. */
+ /**
+@@ -54,6 +55,7 @@ export declare const CODEMODE_TOOL_NAME = "codemode";
+  */
+ type DeclaredTool = {
+     name: string;
++    alias?: string;
+     jsName: string;
+     description: string;
+     structured?: true;
+@@ -99,6 +101,8 @@ type JournalEntry = {
+     at: number;
+     /** Calls the VM had issued after processing this result; absent until acknowledged. */
+     issuedAfter?: number;
++    /** A preparation refusal has no nested task; retain its identity and error for replay. */
++    rejected?: { name: string; args?: JsonValue; message: string };
+     /** A global's call and outcome; a tool's result is its nested call's. */
+     global?: {
+         name: string;
+@@ -151,9 +155,41 @@ declare const codemodeSchema: import("@earendil-works/pi-schema").Schema<{
+     code: string;
+ }>;
+ export type CodemodeToolInput = Static<typeof codemodeSchema>;
++/** A host-owned store, prepared in the same transaction as the start or result. */
++export interface CodemodeStoreAdapter {
++    read(tx: Tx, api: ToolExecutionApi, context: Context): Record<string, JsonValue> | Promise<Record<string, JsonValue>>;
++    /** Receives the script's original writes, including same-value sets and missing-key deletes. */
++    write(tx: Tx, writes: { set: Record<string, JsonValue>; delete: string[] }, api: ToolExecutionApi, context: Context): void | Promise<void>;
++}
++/** A sandbox reserved for one attempt; released on success, failure or cancellation. */
++export interface CodemodeSandboxLease {
++    readonly sandbox: CodemodeSandboxBase;
++    release(): void | Promise<void>;
++}
++/** Result metadata for host projection; queued calls are included. */
++export interface CodemodeResultInfo {
++    readonly calls: readonly CodemodeNestedCall[];
++    readonly generatedImages: number;
++    readonly maxOutputTokens: number;
++    readonly wallMs: number;
++}
+ export type CodemodeToolOptions = {
+     /** Runs the scripts: `CodemodeSandbox` on Node, `RemoteCodemodeSandbox` on Cloudflare. */
+-    readonly sandbox: CodemodeSandboxBase;
++    readonly sandbox: CodemodeSandboxBase | ((api: ToolExecutionApi, context: Context, deadline?: number) => Promise<CodemodeSandboxLease>);
++    /** Replaces the conversation store; completed invocations do not read or write again. */
++    readonly store?: CodemodeStoreAdapter;
++    /** Overrides formatting policy while retaining the script's token budget. */
++    readonly output?: Partial<Pick<CodemodeFormatOptions, "limits" | "write" | "imageSize" | "wallMs">>;
++    /** Prepare before rows or admission. A refusal is journaled; replay of it does not prepare again. */
++    readonly prepareCall?: (call: { readonly id: number; readonly name: string; readonly args: unknown }) => void | Promise<void>;
++    /** Script-facing tool names, keyed by registered name; internal registration names stay private. */
++    readonly aliases?: Readonly<Record<string, string>>;
++    /** Observe issued calls by registered name before admission or model-slot waiting; also called during replay. */
++    readonly onCallStart?: (call: { readonly id: number; readonly name: string; readonly args: unknown }) => void;
++    /** Replace the complete tool result before its atomic publication; completed results reuse that projection. */
++    readonly formatResult?: (result: CodemodeResult, info: CodemodeResultInfo) => ToolExecutionResult | Promise<ToolExecutionResult>;
++    /** On caller cancellation after VM start, return partial output without storing an outcome or writes. Default throw. */
++    readonly cancellation?: "throw" | "result";
+     /** Groups of tools by name prefix, such as MCP servers, for the `codemode` section and tool search. */
+     readonly namespaces?: readonly CodemodeNamespace[];
+     /** Estimated tokens the tool declarations in the `codemode` section may use. Default 3000. */
+diff --git a/dist/codemode/codemode.js b/dist/codemode/codemode.js
+index 9ef1da0d2b59fd84ee03aae503c308cf73f6d641..72fbdd3cc71b0dcf8e74fc29e5a19c2aa4a00f69 100644
+--- a/dist/codemode/codemode.js
++++ b/dist/codemode/codemode.js
+@@ -51,7 +51,7 @@ import { DEFAULT_MAX_OUTPUT_TOKENS, formatResult } from "./output.js";
+  * Version of everything in this module that turns stored results into what a script sees: result mapping, globals,
+  * start data. Bump it when that changes, so a call started before an upgrade is not replayed by different code.
+  */
+-export const CODEMODE_MODULE_VERSION = 2;
++export const CODEMODE_MODULE_VERSION = 3;
+ export const CODEMODE_TOOL_NAME = "codemode";
+ export const CodemodeRunDoc = defineDoc({
+     kind: "pi.codemode.run",
+@@ -88,6 +88,9 @@ function cut(text, max) {
+     // A copy: the row outlives the arguments or error text it previews.
+     return text.length > max ? `${ownedSlice(text, 0, max - 3)}...` : text;
+ }
++function scriptName(name, aliases) {
++    return aliases && Object.hasOwn(aliases, name) ? aliases[name] : name;
++}
+ const codemodeSchema = obj({ code: str({ description: "Raw JavaScript source." }) }, { open: true });
+ /** Outputs bounded by the script's own token budget; the Harness's limits only stop a runaway. */
+ const OUTPUT_LIMITS = { maxBytes: 4 * 1024 * 1024, maxLines: 100_000 };
+@@ -100,7 +103,9 @@ export function createCodemodeTool(options) {
+         name: CODEMODE_TOOL_NAME,
+         description: codemodeDescription(options.models !== false),
+         parameters: codemodeSchema,
+-        outputLimits: OUTPUT_LIMITS,
++        outputLimits: options.output?.limits === false
++            ? { maxBytes: Number.MAX_SAFE_INTEGER, maxLines: Number.MAX_SAFE_INTEGER }
++            : options.output?.limits ?? OUTPUT_LIMITS,
+         // Capable models write the script as raw text instead of a JSON-escaped string; pi-ai applies it only for them.
+         constrainedSampling: { type: "grammar", variants: { openai_lark: CODEMODE_SOURCE_GRAMMAR } },
+         callers: ["model"],
+@@ -118,7 +123,9 @@ export function createCodemodeExtension(options) {
+         sections: [
+             section("codemode", (input) => codemodeSection(
+             // Deferred tools are found with `searchTools()`, as the coding agent leaves them out too.
+-            input.agent.callable.filter((tool) => !tool.name.startsWith(CODEMODE_INTERNAL_PREFIX) && tool.deferred !== true), options.namespaces ?? [], options.inlineBudget ?? DEFAULT_CODEMODE_INLINE_BUDGET)),
++            input.agent.callable.filter((tool) => !tool.name.startsWith(CODEMODE_INTERNAL_PREFIX) && tool.deferred !== true)
++                .map((tool) => ({ ...tool, name: scriptName(tool.name, options.aliases) })),
++            options.namespaces ?? [], options.inlineBudget ?? DEFAULT_CODEMODE_INLINE_BUDGET)),
+         ],
+     });
+ }
+@@ -205,6 +212,9 @@ class CodemodeCall {
+     generatedImages = 0;
+     /** The script's tool calls for `details`, by VM call ID. */
+     rows = new Map();
++    /** Preparation failures reject in the VM before any task or live row is admitted. */
++    preparationErrors = new Map();
++    preparations = new Map();
+     /** Resolves once the VM's fingerprint is checked or recorded; nothing is delivered or admitted before. */
+     gate;
+     openGate;
+@@ -220,23 +230,28 @@ class CodemodeCall {
+         const { code, options: sourceOptions } = parseCodemodeSource(source);
+         const { api, context } = this;
+         const agent = await api.agent(context);
+-        const tools = agent.callable.map((tool) => ({
+-            name: tool.name,
+-            jsName: toCodemodeIdentifier(tool.name),
+-            description: sampleOf(tool),
+-            ...(tool.structuredOutputSchema === undefined ? {} : { structured: true }),
+-            ...(tool.name.startsWith(CODEMODE_INTERNAL_PREFIX) ? { hidden: true } : {}),
+-        }));
++        const tools = agent.callable.map((tool) => {
++            const alias = scriptName(tool.name, this.options.aliases);
++            return {
++                name: tool.name,
++                ...(alias === tool.name ? {} : { alias }),
++                jsName: toCodemodeIdentifier(alias),
++                description: sampleOf({ ...tool, name: alias }),
++                ...(tool.structuredOutputSchema === undefined ? {} : { structured: true }),
++                ...(tool.name.startsWith(CODEMODE_INTERNAL_PREFIX) ? { hidden: true } : {}),
++            };
++        });
+         const callable = agent.callable.filter((tool) => !tool.name.startsWith(CODEMODE_INTERNAL_PREFIX));
+         const models = this.options.models === false ? [] : [...CATALOG_GLOBALS, ...Object.keys(MODEL_CALLS)];
+         const globals = [
+-            ...DISCOVERY_GLOBALS.map((name) => ({ name, spread: true })),
++            ...DISCOVERY_GLOBALS.filter((name) => !this.options.globals?.some((global) => global.name === name))
++                .map((name) => ({ name, spread: true })),
+             ...models.map((name) => ({ name, spread: true })),
+             ...(this.options.globals ?? []).map((global) => ({ name: global.name, spread: global.spread === true })),
+         ];
+         const namespaces = [];
+         for (const tool of callable) {
+-            const namespace = namespaceOf(tool.name, this.options.namespaces ?? []);
++            const namespace = namespaceOf(scriptName(tool.name, this.options.aliases), this.options.namespaces ?? []);
+             if (namespace === undefined)
+                 continue;
+             let entry = namespaces.find((candidate) => candidate.name === namespace.name);
+@@ -259,7 +274,9 @@ class CodemodeCall {
+                 return { done: copyJson(run.result) };
+             const rerun = run.start !== undefined;
+             if (run.start === undefined) {
+-                const store = await tx.doc(CodemodeStoreDoc, api.conversationId);
++                const values = this.options.store === undefined
++                    ? (await tx.doc(CodemodeStoreDoc, api.conversationId)).values
++                    : await this.options.store.read(tx, api, context);
+                 const timeout = sourceOptions.timeoutMs;
+                 run.start = {
+                     version: CODEMODE_MODULE_VERSION,
+@@ -270,7 +287,7 @@ class CodemodeCall {
+                     namespaces,
+                     globals,
+                     maxOutputTokens: sourceOptions.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
+-                    store: copyJson(store.values),
++                    store: copyJson(values),
+                 };
+             }
+             const journal = await tx.doc(CodemodeJournalDoc, api.taskId);
+@@ -303,24 +320,51 @@ class CodemodeCall {
+         context.abortSignal?.addEventListener("abort", onAbort, { once: true });
+         if (context.abortSignal?.aborted)
+             onAbort();
++        let lease;
++        let executionFailure;
+         try {
+-            this.run = this.options.sandbox.start(code, {
++            const sandbox = typeof this.options.sandbox === "function"
++                ? (lease = await this.options.sandbox(api, context, this.start.deadline)).sandbox
++                : this.options.sandbox;
++            context.abortSignal?.throwIfAborted();
++            const remainingAtStart = this.start.deadline === undefined ? undefined : this.start.deadline - api.now();
++            if (remainingAtStart !== undefined && remainingAtStart <= 0) {
++                return await this.decide(errorResult(`Script timed out: its deadline passed while waiting for a sandbox.`));
++            }
++            this.run = sandbox.start(code, {
+                 startedAt: this.start.startedAt,
+                 seed: this.start.seed,
+                 tools: this.start.tools.filter((tool) => tool.hidden !== true),
+                 globals: this.start.globals,
+                 store: this.start.store,
+                 signal: this.controller.signal,
+-                ...(remaining === undefined ? {} : { timeoutMs: remaining }),
++                ...(remainingAtStart === undefined ? {} : { timeoutMs: remainingAtStart }),
+                 onStarted: (fingerprint) => void this.checkFingerprint(fingerprint),
+                 onCall: (call) => this.onCall(call),
+                 onIdle: (seq, issued) => this.onIdle(seq, issued),
+             });
+             const result = await this.run.result;
+             if (this.failure !== undefined)
+-                throw this.failure;
++                throw this.failure.error;
++            if (lease !== undefined) {
++                const acquired = lease;
++                lease = undefined;
++                await acquired.release();
++            }
++            if (this.failure !== undefined)
++                throw this.failure.error;
+             if (this.ended !== undefined)
+                 return this.ended;
++            if (context.abortSignal?.aborted && this.options.cancellation === "result") {
++                const cancelled = result.ok ? {
++                    ok: false,
++                    error: { kind: "aborted", message: errorMessage(context.abortSignal.reason) },
++                    output: result.output,
++                    calls: result.calls,
++                    ...(result.during === undefined ? {} : { during: result.during }),
++                } : result;
++                return await this.format(cancelled);
++            }
+             context.abortSignal?.throwIfAborted();
+             // Aborted, but not by this call: the host closed the sandbox, for example while shutting down before closing the
+             // Harness. That decides nothing about the script: store nothing and end with this invocation, so a later attempt
+@@ -346,13 +390,25 @@ class CodemodeCall {
+                     : this.replayed[during.seq - 1]?.issuedAfter !== undefined) ||
+                     this.replayed.slice(during.seq).some((entry) => entry.id > during.issued);
+                 if (continued) {
+-                    return this.decide(errorResult(`The script took a different path when resumed after a restart: it ended after result ${during.seq}, where it went on before.`));
++                    return await this.decide(errorResult(`The script took a different path when resumed after a restart: it ended after result ${during.seq}, where it went on before.`));
+                 }
+             }
+-            return this.complete(result);
++            return await this.complete(result);
++        }
++        catch (error) {
++            executionFailure = { error };
++            throw error;
+         }
+         finally {
+             context.abortSignal?.removeEventListener("abort", onAbort);
++            try {
++                await lease?.release();
++            }
++            catch (error) {
++                if (executionFailure !== undefined && !Object.is(executionFailure.error, error))
++                    throw new AggregateError([executionFailure.error, error], "Codemode execution and cleanup failed");
++                throw error;
++            }
+         }
+     }
+     /** Store an outcome the call decided, and end the VM if it runs; returns the outcome. */
+@@ -377,23 +433,35 @@ class CodemodeCall {
+         return this.ended !== undefined || this.failure !== undefined || this.run?.finished === true;
+     }
+     fail(error) {
++        if (this.options.cancellation === "result" && this.context.abortSignal?.aborted &&
++            Object.is(error, this.context.abortSignal.reason))
++            return;
+         if (this.failure !== undefined)
+             return;
+-        this.failure = error;
++        this.failure = { error };
+         this.controller.abort(error);
+     }
+-    /** The script's own outcome, stored with its store writes in one transaction. */
+-    async complete(result) {
++    /** Host projection runs after the sandbox lease has been released. */
++    async format(result) {
+         const details = this.details();
++        if (this.options.formatResult !== undefined) {
++            return this.options.formatResult(result, {
++                calls: details.calls,
++                generatedImages: this.generatedImages,
++                maxOutputTokens: this.start.maxOutputTokens,
++                wallMs: this.api.now() - this.start.startedAt,
++            });
++        }
+         const formatted = await formatResult(result, {
++            ...this.options.output,
+             generatedImages: this.generatedImages,
+-            wallMs: this.api.now() - this.start.startedAt,
++            wallMs: this.options.output?.wallMs ?? this.api.now() - this.start.startedAt,
+             maxOutputTokens: this.start.maxOutputTokens,
+             calls: details.calls,
+-            limits: OUTPUT_LIMITS,
+-            write: this.outputFiles(),
++            limits: this.options.output?.limits ?? OUTPUT_LIMITS,
++            write: this.options.output?.write ?? this.outputFiles(),
+         });
+-        const tool = {
++        return {
+             output: formatted.content,
+             isError: !result.ok,
+             details: {
+@@ -401,6 +469,13 @@ class CodemodeCall {
+                 ...(formatted.fullOutputPath === undefined ? {} : { fullOutputPath: formatted.fullOutputPath }),
+             },
+         };
++    }
++    /** The script's own outcome, stored with its store writes in one transaction. */
++    async complete(result) {
++        const tool = await this.format(result);
++        if (this.context.abortSignal?.aborted && this.options.cancellation === "result")
++            return { ...tool, isError: true };
++        this.context.abortSignal?.throwIfAborted();
+         const writes = result.ok ? result.storeWrites : undefined;
+         return this.api.commit(async (tx) => {
+             const run = await tx.doc(CodemodeRunDoc, this.api.taskId);
+@@ -408,11 +483,16 @@ class CodemodeCall {
+                 return run.result;
+             run.result = copyJson(tool, { omitUndefinedProperties: true });
+             if (writes !== undefined && (Object.keys(writes.set).length > 0 || writes.delete.length > 0)) {
+-                const store = await tx.doc(CodemodeStoreDoc, this.api.conversationId);
+-                for (const key of writes.delete)
+-                    delete store.values[key];
+-                for (const [key, value] of Object.entries(writes.set))
+-                    store.values[key] = value;
++                if (this.options.store !== undefined) {
++                    await this.options.store.write(tx, writes, this.api, this.context);
++                }
++                else {
++                    const store = await tx.doc(CodemodeStoreDoc, this.api.conversationId);
++                    for (const key of writes.delete)
++                        delete store.values[key];
++                    for (const [key, value] of Object.entries(writes.set))
++                        store.values[key] = value;
++                }
+             }
+             return tool;
+         }, this.context);
+@@ -484,10 +564,37 @@ class CodemodeCall {
+         if (this.stopped)
+             return;
+         const call = asToolCall(made);
+-        if (call.target === "tool")
+-            this.started(call);
+-        this.issued = Math.max(this.issued, call.id);
+         const index = this.replaying ? (this.replayIndex.get(call.id) ?? -1) : -1;
++        const rejected = index === -1 ? undefined : this.replayed[index].rejected;
++        if (rejected !== undefined && (call.target !== "tool" || call.name !== rejected.name ||
++            !sameJson(call.args, rejected.args))) {
++            this.diverge(`call ${call.id} is ${describe(call)}, but was a rejected call to ${rejected.name}`);
++            return;
++        }
++        if (call.target === "tool") {
++            if (rejected !== undefined)
++                this.preparationErrors.set(call.id, rejected.message);
++            else {
++                const started = () => {
++                    if (this.stopped || this.preparationErrors.has(call.id))
++                        return;
++                    try { this.started(call); }
++                    catch (error) { this.fail(error); }
++                };
++                try {
++                    const prepared = this.options.prepareCall?.({ id: call.id, name: call.name, args: call.args });
++                    if (prepared !== undefined) {
++                        this.preparations.set(call.id, Promise.resolve(prepared).then(started,
++                            error => { this.preparationErrors.set(call.id, errorMessage(error)); }));
++                    }
++                    else started();
++                }
++                catch (error) {
++                    this.preparationErrors.set(call.id, errorMessage(error));
++                }
++            }
++        }
++        this.issued = Math.max(this.issued, call.id);
+         if (index === -1) {
+             if (this.released) {
+                 this.waiting.push(call);
+@@ -642,7 +749,13 @@ class CodemodeCall {
+         if (this.stopped)
+             return;
+         const running = call.target === "tool"
+-            ? this.callTool(call).then((outcome) => ({ outcome }))
++            ? this.callTool(call).then((outcome) => ({
++                outcome,
++                ...(this.preparationErrors.has(call.id) ? { rejected: {
++                    name: call.name, ...(call.args === undefined ? {} : { args: call.args }),
++                    message: this.preparationErrors.get(call.id),
++                } } : {}),
++            }))
+             : this.callGlobal(call).then((outcome) => ({
+                 outcome,
+                 global: {
+@@ -669,6 +782,11 @@ class CodemodeCall {
+         });
+     }
+     async callTool(call) {
++        await this.preparations.get(call.id);
++        if (this.stopped)
++            throw new Error("The script has ended");
++        if (this.preparationErrors.has(call.id))
++            return { ok: false, message: this.preparationErrors.get(call.id) };
+         // Passed as the script gave them; validation reports arguments that are not an object.
+         const args = (call.args ?? {});
+         const model = call.name.startsWith(CODEMODE_INTERNAL_PREFIX);
+@@ -704,6 +822,7 @@ class CodemodeCall {
+             ? call.name.slice(CODEMODE_INTERNAL_PREFIX.length)
+             : call.name;
+         this.rows.set(call.id, { id: call.id, name, args: cut(args, ARGS_PREVIEW_CHARS), status: "running" });
++        this.options.onCallStart?.({ id: call.id, name: call.name, args: call.args });
+     }
+     /** A tool call ended: its row gets its status, duration, and error. */
+     /** The call ended: an error result is an error row, also when the script got its value (bash's nonzero exit). */
+@@ -727,18 +846,18 @@ class CodemodeCall {
+         return { calls };
+     }
+     async callGlobal(call) {
+-        const discovery = DISCOVERY_GLOBALS.includes(call.name);
++        const global = this.options.globals?.find((candidate) => candidate.name === call.name);
++        const discovery = global === undefined && DISCOVERY_GLOBALS.includes(call.name);
+         const catalog = CATALOG_GLOBALS.includes(call.name);
+-        const global = discovery || catalog ? undefined : this.options.globals?.find((candidate) => candidate.name === call.name);
+         if (!discovery && !catalog && global === undefined)
+             return { ok: false, message: `Unknown global ${call.name}` };
+         try {
+             // `undefined` stays undefined: the journal omits the value, and a replay resolves with undefined again.
+-            const value = discovery
+-                ? this.discover(call)
+-                : catalog
+-                    ? await catalogCall(call.name, call.args, this.api.models, this.context)
+-                    : await global.execute(call.args, this.api, this.context);
++            const value = global !== undefined
++                ? await global.execute(call.args, this.api, this.context)
++                : discovery
++                    ? this.discover(call)
++                    : await catalogCall(call.name, call.args, this.api.models, this.context);
+             return { ok: true, value };
+         }
+         catch (error) {
+@@ -768,7 +887,7 @@ class CodemodeCall {
+             const [name] = args;
+             if (typeof name !== "string")
+                 throw new Error("describeTool() expects a tool name");
+-            return tools.find((tool) => tool.name === name || tool.jsName === name)?.description;
++            return tools.find((tool) => tool.name === name || tool.alias === name || tool.jsName === name)?.description;
+         }
+         if (call.name === "describeNamespace") {
+             const [name] = args;
+@@ -781,7 +900,7 @@ class CodemodeCall {
+                 name: namespace.name,
+                 ...(namespace.description === undefined ? {} : { description: namespace.description }),
+                 ...(namespace.instructions === undefined ? {} : { instructions: namespace.instructions }),
+-                tools: namespace.tools.map((tool) => toCodemodeIdentifier(tool)),
++                tools: namespace.tools.map((name) => tools.find((tool) => tool.name === name)?.jsName ?? toCodemodeIdentifier(name)),
+             };
+         }
+         const [query, options] = args;
+@@ -838,6 +957,7 @@ class CodemodeCall {
+                         id: item.id,
+                         at: item.at,
+                         ...(item.global === undefined ? {} : { global: item.global }),
++                        ...(item.rejected === undefined ? {} : { rejected: item.rejected }),
+                     };
+                     journal.entries.push(copyJson(entry, { omitUndefinedProperties: true }));
+                 }
+diff --git a/dist/codemode/index.d.ts b/dist/codemode/index.d.ts
+--- a/dist/codemode/index.d.ts
++++ b/dist/codemode/index.d.ts
+@@ -1,3 +1,8 @@
+-export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
++export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, type CodemodeGlobal, type CodemodeNestedCall, type CodemodeResultInfo, type CodemodeSandboxLease, type CodemodeStoreAdapter, CodemodeStoreDoc, type CodemodeToolDetails, type CodemodeToolInput, type CodemodeToolOptions, createCodemodeExtension, createCodemodeTool, } from "./codemode.ts";
+ export { type CodemodeNamespace, DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.ts";
+-//# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=index.d.ts.map
++export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult, type CodemodeFormatOptions, type OutputFile } from "./output.js";
++export { type CodemodeModelSource, type CodemodePreparedModelCall, createModelTools, prepareCodemodeModelCall } from "./models.js";
++export { parseCodemodeSource } from "@earendil-works/pi-codemode/source";
++export { renderToolSample, toCodemodeIdentifier } from "@earendil-works/pi-codemode/declarations";
++export type { CodemodeResult, CodemodeTool } from "@earendil-works/pi-codemode/portable";
+diff --git a/dist/codemode/index.js b/dist/codemode/index.js
+--- a/dist/codemode/index.js
++++ b/dist/codemode/index.js
+@@ -1,3 +1,7 @@
+ export { CODEMODE_MODULE_VERSION, CODEMODE_TOOL_NAME, CodemodeStoreDoc, createCodemodeExtension, createCodemodeTool, } from "./codemode.js";
+ export { DEFAULT_CODEMODE_INLINE_BUDGET } from "./describe.js";
+-//# sourceMappingURL=index.js.map
+\ No newline at end of file
++//# sourceMappingURL=index.js.map
++export { DEFAULT_MAX_OUTPUT_TOKENS, formatResult as formatCodemodeResult } from "./output.js";
++export { createModelTools, prepareCodemodeModelCall } from "./models.js";
++export { parseCodemodeSource } from "@earendil-works/pi-codemode/source";
++export { renderToolSample, toCodemodeIdentifier } from "@earendil-works/pi-codemode/declarations";
+diff --git a/dist/codemode/models.d.ts b/dist/codemode/models.d.ts
+index fa6aed962716c514ae9de778ca33960fc707087a..6d11686fb4db10c945f228fe9b262f49924d165a 100644
+--- a/dist/codemode/models.d.ts
++++ b/dist/codemode/models.d.ts
+@@ -8,8 +8,8 @@
+  * code mode tool turns a script's call of the global into a call of that tool.
+  */
+ import type { Context, JsonValue } from "@earendil-works/chord";
+-import type { Models } from "@earendil-works/pi-ai";
+-import type { ToolRegistration } from "../harness/types.ts";
++import type { AnyModel, AssistantImages, ClassifierResult, Models } from "@earendil-works/pi-ai";
++import type { ToolExecutionResult, ToolRegistration } from "../harness/types.ts";
+ /** Reserved names of code mode's internal tools; they are never listed to scripts or the model. */
+ export declare const CODEMODE_INTERNAL_PREFIX = "pi.codemode.";
+ export declare const CLASSIFY_TOOL = "pi.codemode.models.classify";
+@@ -23,6 +23,19 @@ export declare const MAX_CONCURRENT_MODEL_CALLS = 4;
+ export declare const MODELS_DESCRIPTION: string;
+ /** The catalog functions: what a script's call of `name` with `args` (the argument list) resolves to. */
+ export declare function catalogCall(name: string, args: unknown, models: Models, context: Context): Promise<JsonValue | undefined>;
++/** The model methods needed to validate and execute a code mode helper. */
++export type CodemodeModelSource = Pick<Models, "getModelOfType" | "classify" | "generateImages">;
++export interface CodemodePreparedModelCall {
++    readonly model: AnyModel;
++    execute(context: Context): Promise<ToolExecutionResult & { readonly structuredOutput: JsonValue & (ClassifierResult | AssistantImages) }>;
++}
++/** Validate before admission; script-supplied endpoints and headers are never used. */
++export declare function prepareCodemodeModelCall(
++    name: "models.classify" | "models.generateImages",
++    args: { readonly model: unknown; readonly context: unknown },
++    models: CodemodeModelSource,
++    options?: { readonly docsPath?: string },
++): CodemodePreparedModelCall;
+ /** The internal tools behind `models.classify()` and `models.generateImages()`. */
+ export declare function createModelTools(): ToolRegistration[];
+ //# sourceMappingURL=models.d.ts.map
+\ No newline at end of file
+diff --git a/dist/codemode/models.js b/dist/codemode/models.js
+index 65fca86484dda7e40d9992a9f8c2ec0b72c8489b..edcd9f07d894f1e4193b027f2f872f550384b600 100644
+--- a/dist/codemode/models.js
++++ b/dist/codemode/models.js
+@@ -84,8 +84,8 @@ export async function catalogCall(name, args, models, context) {
+ }
+ const CLASSIFIER_CONTEXT_SHAPE = '{ state: { ... }, images?: [{ type: "image", data: <base64>, mimeType }], questions: { <id>: { type: "choice", instructions, criteria: { <label>: <meaning> } } | { type: "score", instructions, criteria: [<lowest level>, ..., <highest level>] } | { type: "bool", instructions, criteria: { true: <meaning>, false: <meaning> } } } }';
+ /** Check a script's classifier context, so mistakes fail with the expected shape instead of a provider error. */
+-function checkClassifierContext(context) {
+-    const fail = (problem) => new Error(`models.classify() ${problem}. Expected context: ${CLASSIFIER_CONTEXT_SHAPE}.`);
++function checkClassifierContext(context, docsPath) {
++    const fail = (problem) => new Error(`models.classify() ${problem}. Expected context: ${CLASSIFIER_CONTEXT_SHAPE}.${docsPath === undefined ? "" : ` See "Classify" in ${docsPath}.`}`);
+     if (!isRecord(context))
+         throw fail(`expects a context object as its second argument, got ${describeValue(context)}`);
+     if (!isRecord(context.state))
+@@ -137,8 +137,8 @@ function checkClassifierContext(context) {
+     return context;
+ }
+ /** Check a script's image context, so mistakes such as `{ prompt }` fail with the expected shape. */
+-function checkImagesContext(context) {
+-    const fail = (problem) => new Error(`models.generateImages() ${problem}. Expected context: { input: [{ type: "text", text: <prompt> }, ...optional { type: "image", data: <base64>, mimeType } references] }.`);
++function checkImagesContext(context, docsPath) {
++    const fail = (problem) => new Error(`models.generateImages() ${problem}. Expected context: { input: [{ type: "text", text: <prompt> }, ...optional { type: "image", data: <base64>, mimeType } references] }.${docsPath === undefined ? "" : ` See "Generate images" in ${docsPath}.`}`);
+     if (!isRecord(context))
+         throw fail(`expects a context object as its second argument, got ${describeValue(context)}`);
+     const { input } = context;
+@@ -194,6 +194,30 @@ function modelResult(label, result, value) {
+         ...(result.usage === undefined ? {} : { usage: result.usage }),
+     };
+ }
++/** Validate once before admission, resolving only the host's configured model. */
++export function prepareCodemodeModelCall(name, args, models, options = {}) {
++    if (name !== "models.classify" && name !== "models.generateImages")
++        throw new Error(`Unknown code mode model call ${name}`);
++    const classifier = name === "models.classify";
++    const type = classifier ? "classifier" : "image";
++    const model = resolveModel(name, type, args.model, models);
++    const checked = classifier
++        ? checkClassifierContext(args.context, options.docsPath)
++        : checkImagesContext(args.context, options.docsPath);
++    return {
++        model,
++        async execute(context) {
++            const request = {
++                telemetry: context.telemetry,
++                ...(context.abortSignal === undefined ? {} : { signal: context.abortSignal }),
++            };
++            const result = classifier
++                ? await models.classify(model, checked, request)
++                : await models.generateImages(model, checked, request);
++            return modelResult(`${classifier ? "classify" : "generateImages"} ${model.provider}/${model.id}`, result, result);
++        },
++    };
++}
+ /** The internal tools behind `models.classify()` and `models.generateImages()`. */
+ export function createModelTools() {
+     const classify = defineTool({
+@@ -202,15 +226,7 @@ export function createModelTools() {
+         parameters: ModelCallParameters,
+         structuredOutputSchema: unknown(),
+         callers: ["tools"],
+-        execute: async (args, api, context) => {
+-            const model = resolveModel("models.classify", "classifier", args.model, api.models);
+-            const checked = checkClassifierContext(args.context);
+-            const result = await api.models.classify(model, checked, {
+-                telemetry: context.telemetry,
+-                ...(context.abortSignal === undefined ? {} : { signal: context.abortSignal }),
+-            });
+-            return modelResult(`classify ${model.provider}/${model.id}`, result, result);
+-        },
++        execute: async (args, api, context) => prepareCodemodeModelCall("models.classify", args, api.models).execute(context),
+     });
+     const generateImages = defineTool({
+         name: GENERATE_IMAGES_TOOL,
+@@ -218,15 +234,7 @@ export function createModelTools() {
+         parameters: ModelCallParameters,
+         structuredOutputSchema: unknown(),
+         callers: ["tools"],
+-        execute: async (args, api, context) => {
+-            const model = resolveModel("models.generateImages", "image", args.model, api.models);
+-            const checked = checkImagesContext(args.context);
+-            const result = await api.models.generateImages(model, checked, {
+-                telemetry: context.telemetry,
+-                ...(context.abortSignal === undefined ? {} : { signal: context.abortSignal }),
+-            });
+-            return modelResult(`generateImages ${model.provider}/${model.id}`, result, result);
+-        },
++        execute: async (args, api, context) => prepareCodemodeModelCall("models.generateImages", args, api.models).execute(context),
+     });
+     return [classify, generateImages];
+ }
+diff --git a/dist/codemode/output.d.ts b/dist/codemode/output.d.ts
+index b9163a19d958e428ef19d0b28afa37548027e590..253dd95a7e1258b0abfe6b8653d155fddc4b9b51 100644
+--- a/dist/codemode/output.d.ts
++++ b/dist/codemode/output.d.ts
+@@ -21,19 +21,23 @@ type Limits = {
+ };
+ /** Default token budget for script output. */
+ export declare const DEFAULT_MAX_OUTPUT_TOKENS = 10000;
+-/** The tool result's content for a script's result, and the path of the complete text when it was cut. */
+-export declare function formatResult(result: CodemodeResult, options: {
++/** Formatting and file policy shared by the built-in and coding tool adapters. */
++export interface CodemodeFormatOptions {
+     /** Images `models.generateImages()` returned; when the script showed none, the result says so. */
+     readonly generatedImages: number;
+-    readonly wallMs: number;
++    readonly wallMs: number | (() => number);
+     readonly maxOutputTokens: number;
+     readonly calls: readonly {
+         name: string;
+         status: string;
+     }[];
+-    readonly limits: Limits;
++    /** False retains the script's token budget without extra byte or line limits. */
++    readonly limits: Limits | false;
+     readonly write: OutputFile;
+-}): Promise<{
++    readonly imageSize?: (bytes: number) => string;
++}
++/** The tool result's content for a script's result, and the path of the complete text when it was cut. */
++export declare function formatResult(result: CodemodeResult, options: CodemodeFormatOptions): Promise<{
+     content: Item[];
+     fullOutputPath?: string;
+ }>;
+diff --git a/dist/codemode/output.js b/dist/codemode/output.js
+index d28306e526198175420d555b8058eb2f1976793a..d8590da0832c2863a28a21e1ea3090c45c844a17 100644
+--- a/dist/codemode/output.js
++++ b/dist/codemode/output.js
+@@ -81,8 +81,8 @@ async function truncate(items, maxTokens, limits, write) {
+     const texts = items.filter((item) => item.type === "text").map((item) => item.text);
+     const combined = texts.join("\n");
+     // Within the limits too: a UTF-16 unit is at most 3 UTF-8 bytes, and the rest of the result is a few short lines.
+-    const budget = Math.min(maxTokens * CHARS_PER_TOKEN, Math.floor(limits.maxBytes / 4));
+-    const lineBudget = Math.floor((limits.maxLines - LINE_MARGIN) / 2);
++    const budget = limits === false ? maxTokens * CHARS_PER_TOKEN : Math.min(maxTokens * CHARS_PER_TOKEN, Math.floor(limits.maxBytes / 4));
++    const lineBudget = limits === false ? Number.POSITIVE_INFINITY : Math.floor((limits.maxLines - LINE_MARGIN) / 2);
+     const lines = combined.split("\n").length;
+     if (texts.length === 0 || (combined.length <= budget && lines <= 2 * lineBudget))
+         return { items: [...items] };
+@@ -103,11 +103,11 @@ async function truncate(items, maxTokens, limits, write) {
+     };
+ }
+ /** Save each image to a file and put a text item with its path before it; an image shown twice is saved once. */
+-async function saveImages(items, write) {
++async function saveImages(items, write, imageSize = (bytes) => `${bytes} bytes`) {
+     const labels = new Map();
+     const label = async ({ data, mimeType }, index) => {
+         const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
+-        const kind = `${mimeType}, ${bytes.length} bytes`;
++        const kind = `${mimeType}, ${imageSize(bytes.length)}`;
+         // A failed write must not discard the result of a script whose calls already ran: it becomes part of the label.
+         const saved = await write(`image-${index}${IMAGE_EXTENSIONS[mimeType] ?? ".bin"}`, bytes);
+         return "path" in saved
+@@ -157,8 +157,9 @@ export async function formatResult(result, options) {
+     }
+     const truncated = await truncate(joinAdjacentText(items), options.maxOutputTokens, options.limits, options.write);
+     // After truncation, which joins the text items and moves images after them, so each path stays next to its image.
+-    const content = joinAdjacentText(await saveImages(truncated.items, options.write));
+-    const header = `${result.ok ? "Script completed" : "Script failed"}\nWall time ${(options.wallMs / 1000).toFixed(1)} seconds\nOutput:\n`;
++    const content = joinAdjacentText(await saveImages(truncated.items, options.write, options.imageSize));
++    const wallMs = typeof options.wallMs === "function" ? options.wallMs() : options.wallMs;
++    const header = `${result.ok ? "Script completed" : "Script failed"}\nWall time ${(wallMs / 1000).toFixed(1)} seconds\nOutput:\n`;
+     return {
+         content: [{ type: "text", text: header }, ...content],
+         ...(truncated.fullOutputPath === undefined ? {} : { fullOutputPath: truncated.fullOutputPath }),
+diff --git a/dist/env/node.d.ts b/dist/env/node.d.ts
+index 4be2ceeeeb00b6edc5b85caaa7bc8322e8047b8d..494357528e165da05690b3c4f43014310f844bbf 100644
+--- a/dist/env/node.d.ts
++++ b/dist/env/node.d.ts
+@@ -1,6 +1,20 @@
+ import type { Context } from "@earendil-works/chord";
++import type { ChildProcess } from "node:child_process";
+ import { type BinaryReader, type DirReader, type ExecutionEnv, ExecutionError, type FileChange, FileError, type FileInfo, type FileWatcher, type Result, type ShellExecOptions, type ShellExecResult, type TextLineReader, type WatchTarget } from "./index.ts";
+ import { type NodeWatchOptions } from "./node-watch.ts";
++/** Select argv or stdin for an explicitly resolved Bash path. */
++export declare function getBashShellConfig(shell: string): {
++    shell: string;
++    args: string[];
++    commandTransport?: "argv" | "stdin";
++};
++/** Kill a process tree or Unix process group, falling back to the child on Unix. */
++export declare function killProcessTree(pid: number): void;
++/** Wait for child output to finish, allowing a draining output spill to delay the idle deadline. */
++export declare function waitForChildProcess(child: ChildProcess, spillIsDraining: () => boolean): Promise<{
++    code: number | null;
++    signal: NodeJS.Signals | null;
++}>;
+ export declare class NodeExecutionEnv implements ExecutionEnv {
+     /** Every local environment sees the same files. */
+     readonly id: string;
+diff --git a/dist/env/node.js b/dist/env/node.js
+index 120ff2015d81eb795a090eae897910a58768373f..1bc0e58a3fe28b0722f4efd530e2f2c09713735d 100644
+--- a/dist/env/node.js
++++ b/dist/env/node.js
+@@ -160,7 +160,7 @@ function isLegacyWslBashPath(path) {
+     // Fall back to conventional launcher paths only when the Windows directory is unknown.
+     return /^[a-z]:\\windows\\(?:system32|sysnative)\\bash\.exe$/.test(normalized);
+ }
+-function getBashShellConfig(shell) {
++export function getBashShellConfig(shell) {
+     return isLegacyWslBashPath(shell) ? { shell, args: ["-s"], commandTransport: "stdin" } : { shell, args: ["-c"] };
+ }
+ async function getShellConfig(customShellPath) {
+@@ -211,7 +211,7 @@ function getShellEnv(baseEnv, extraEnv, inheritEnv = true) {
+         ...extraEnv,
+     };
+ }
+-function killProcessTree(pid) {
++export function killProcessTree(pid) {
+     if (process.platform === "win32") {
+         try {
+             const child = spawn(join(process.env.SystemRoot || "C:\\Windows", "System32", "taskkill.exe"), ["/F", "/T", "/PID", String(pid)], {
+@@ -239,7 +239,7 @@ function killProcessTree(pid) {
+         }
+     }
+ }
+-function waitForChildProcess(child, spillIsDraining) {
++export function waitForChildProcess(child, spillIsDraining) {
+     return new Promise((resolvePromise, reject) => {
+         let settled = false;
+         let exited = false;
+diff --git a/dist/harness/generation.d.ts b/dist/harness/generation.d.ts
+--- a/dist/harness/generation.d.ts
++++ b/dist/harness/generation.d.ts
+@@ -1,12 +1,15 @@
+ import { type Draft } from "@earendil-works/chord";
+-import type { DeferredHandle, ModelThinkingLevel } from "@earendil-works/pi-ai";
+-import type { ConversationId, EntryId, SubmissionId, Task, TaskId, Tx } from "../types.ts";
++import type { AssistantMessage, DeferredHandle, Message, ModelThinkingLevel } from "@earendil-works/pi-ai";
++import type { ConversationId, EntryId, EntryDraft, SubmissionId, Task, TaskId, Tx } from "../types.ts";
+ import { type LiveState } from "./live.ts";
+ import { type ToolTaskResult } from "./tool.ts";
+-import type { CompactionResult, ConversationStreamOptions, GenerationHooks, ModelRef, RunSummary } from "./types.ts";
+-export type GenerationInput = Record<string, never>;
++import type { CompactionResult, ConversationStreamOptions, GenerationHooks, ModelRef, RunSummary, UserInput } from "./types.ts";
++export type GenerationInput = {
++    codingRequest?: true;
++};
+ export type GenerationCheckpoint = {
+     phase: "prepare";
++    codingPrepared?: true;
+     attempt: number;
+     /** The blocking compaction this generation waited for; it starts no other compaction (spec §8.3). */
+     compacted?: TaskId<CompactionResult>;
+@@ -70,10 +73,61 @@ export type GenerationCheckpoint = {
+     phase: "drain";
+     answer: EntryId;
+     tasks: TaskId[];
++} | CodingCheckpoint | CodingPrepareCheckpoint;
++type CodingPlan = {
++    kind: "answer";
++    continuation?: UserInput;
++} | {
++    kind: "tools";
++    tools: TaskId<ToolTaskResult>[];
++} | {
++    kind: "terminate";
++    last: EntryId;
++} | {
++    kind: "failure";
++    request: Request;
++};
++type CodingState = {
++    assistant: EntryId;
++    results: EntryId[];
++    turnIndex: number;
++    outcome: "completed" | "error" | "aborted";
++    plan: CodingPlan;
++    continued?: boolean;
++    appliedWrite?: SubmissionId;
++};
++type CodingCheckpoint = CodingState & ({
++    phase: "codingBoundary";
++} | {
++    phase: "codingSettle";
++    step: "route" | "before" | "finalize";
++});
++type CodingPrepareCheckpoint = {
++    phase: "codingPrepare";
++    prepare: {
++        phase: "prepare";
++        attempt: number;
++        codingPrepared?: true;
++        compacted?: TaskId<CompactionResult>;
++        overflow?: string;
++        threshold?: true;
++    };
+ };
+ export type GenerationResult = {
+     entryId: EntryId;
+ };
++/** What classification needs from the request that produced a message. */
++type Request = {
++    readonly attempt: number;
++    readonly compacted: TaskId<CompactionResult> | undefined;
++    readonly model: ModelRef;
++    readonly thinkingLevel: ModelThinkingLevel | undefined;
++    readonly cutoff: EntryId;
++    /** Committed model context through `cutoff`, when the phase already derived it. */
++    readonly messages?: readonly Message[];
++    /** Set when the message came from polling, so a still deferred result polls strictly later. */
++    readonly pollAt?: number;
++};
+ /**
+  * Built-in generation task: prepares the positional system prompt and tool loadout, requests or polls the model,
+  * retries, and classifies the response. The run's inputs live in `pi.live.run`.
+@@ -97,4 +151,28 @@ export declare function startRun(tx: Tx, conversationId: ConversationId, live: D
+ }): Promise<void>;
+ /** Hand run control from `from` to `to`; the run's inputs move with it. */
+ export declare function handOver(live: Draft<LiveState>, from: TaskId, to: TaskId): void;
+-//# sourceMappingURL=generation.d.ts.map
+\ No newline at end of file
++export interface CodingEntryDraft extends EntryDraft {
++    references?: {
++        head?: number;
++        edits?: Record<number, number>;
++    };
++}
++/** Append in order, resolving every local reference before passing it to durable. */
++export declare function appendCodingEntries(tx: Tx, conversation: ConversationId, entries: readonly CodingEntryDraft[]): Promise<EntryId[]>;
++/** A prepared request. Credentials and callbacks belong to the runtime's Models binding. */
++export type GenerationResponseInput = {
++    model: ModelRef;
++    messages: Message[];
++    thinkingLevel?: ModelThinkingLevel;
++    streamOptions?: ConversationStreamOptions;
++};
++export type GenerationResponseCheckpoint = {
++    phase: "request";
++    started?: true;
++};
++export type GenerationResponseResult = {
++    message: AssistantMessage;
++};
++/** Reuse the generation stream and progress writer without classifying or appending its response. */
++export declare const GenerationResponseTask: Task<GenerationResponseInput, GenerationResponseCheckpoint, GenerationResponseResult, GenerationHooks>;
++export {};
+diff --git a/dist/harness/generation.js b/dist/harness/generation.js
+--- a/dist/harness/generation.js
++++ b/dist/harness/generation.js
+@@ -22,7 +22,7 @@ const DEFAULT_POLL_AFTER_MS = 5000;
+  */
+ export const GenerationTask = defineTask({
+     name: "pi.generation",
+-    version: 2,
++    version: 4,
+     initial: () => ({ phase: "prepare", attempt: 1 }),
+     // Version 2 leaves calls to tools not offered in a sequential round's `pending`, flagged `unoffered` in their slots.
+     // A version 1 Harness would start their tool tasks unflagged, resolving the name, so it leaves version 2 blocked
+@@ -43,6 +43,13 @@ export const GenerationTask = defineTask({
+                 return endCutOff(runtime, task, context);
+             const { conversationId } = runtime;
+             const agent = await runtime.agent(context);
++            if (!task.state.checkpoint.codingPrepared && agentHooks(agent, GenerationTask.definition.name)
++                .some(({ handlers }) => typeof handlers.codingPrepare === "function")) {
++                await runtime.commit(async () => ({
++                    status: "running", checkpoint: { phase: "codingPrepare", prepare: task.state.checkpoint },
++                }), context);
++                return;
++            }
+             const settings = runtime.settings;
+             const { model, thinkingLevel } = agent;
+             const resolved = model === undefined ? undefined : runtime.models.getModel(model.provider, model.modelId);
+@@ -68,7 +75,7 @@ export const GenerationTask = defineTask({
+             // nothing it answers. Otherwise, as for a continue after an answer or in an empty conversation, end the run
+             // before any request.
+             const last = view.messages.findLast((message) => message.role !== "system");
+-            if (last?.role !== "user" && last?.role !== "toolResult")
++            if (!task.input.codingRequest && last?.role !== "user" && last?.role !== "toolResult")
+                 return failNothingToAnswer(runtime, context);
+             const shown = replaySections(view.messages);
+             let env;
+@@ -206,8 +213,11 @@ export const GenerationTask = defineTask({
+                 return endCutOff(runtime, task, context);
+             const { assistant, tools, pending } = task.state.checkpoint;
+             const [next, ...rest] = pending;
+-            if (next === undefined)
++            if (next === undefined) {
++                if (await codingEnabled(runtime, context))
++                    return stageCodingTools(runtime, assistant, tools, context);
+                 return finishToolRound(runtime, assistant, tools, context);
++            }
+             // Sequential round: start the next call and wait for it.
+             await runtime.commit(async (tx) => {
+                 const live = await tx.doc(LiveDoc, runtime.conversationId);
+@@ -228,6 +238,35 @@ export const GenerationTask = defineTask({
+          * Ask the `afterRun` hooks for tasks and create them, as the generation's children, in the commit that moves to
+          * `drain`; without any, end the run now.
+          */
++        codingPrepare: async (task, runtime, context) => {
++            if (cutOffTooOften(task, runtime))
++                return endCutOff(runtime, task, context);
++            return prepareCodingEvents(runtime, task.state.checkpoint.prepare, context);
++        },
++        codingBoundary: async (task, runtime, context) => {
++            if (cutOffTooOften(task, runtime))
++                return endCutOff(runtime, task, context);
++            return commitCodingDecision(runtime, task.state.checkpoint, "turn_end", context);
++        },
++        codingSettle: async (task, runtime, context) => {
++            if (cutOffTooOften(task, runtime))
++                return endCutOff(runtime, task, context);
++            const state = task.state.checkpoint;
++            if (state.step === "before")
++                return commitCodingDecision(runtime, state, "agent_before_settle", context);
++            if (state.plan.kind === "tools") {
++                const continued = state.continued === true && await codingCanAnswer(runtime, context);
++                return finishToolRound(runtime, state.assistant, state.plan.tools, context, { ...state, continued });
++            }
++            if (state.plan.kind === "failure") {
++                if (state.continued && await codingCanAnswer(runtime, context)) {
++                    return routeCodingAnswer(runtime, state, context);
++                }
++                const message = (await runtime.entry(AssistantEntry, state.assistant, context)).model[0];
++                return recoverFailure(runtime, state.plan.request, message, context, state);
++            }
++            return routeCodingAnswer(runtime, state, context);
++        },
+         finish: async (task, runtime, context) => {
+             const { run } = task.state.checkpoint;
+             if (cutOffTooOften(task, runtime))
+@@ -503,7 +542,7 @@ async function providerPayload(runtime, model, payload, context) {
+  * thinking grew by and applies the argument changes since the last one (`PartialChanges`), so its cost follows the new
+  * text, not the strings' length.
+  */
+-async function streamResponse(runtime, model, messages, options, attempt, context) {
++async function streamResponse(runtime, model, messages, options, attempt, context, observe) {
+     const interval = runtime.settings.progress.partialIntervalMs;
+     let pending;
+     let timer;
+@@ -545,9 +584,15 @@ async function streamResponse(runtime, model, messages, options, attempt, contex
+                 timer = runtime.setTimer(flush, interval);
+         });
+     };
++    const observeCoding = observe ?? agentHooks(await runtime.agent(context), GenerationTask.definition.name)
++        .some(({ handlers }) => typeof handlers.codingStream === "function");
+     try {
+         const events = runtime.models.streamSimple(model, { messages: [...messages] }, options);
+         for await (const event of events) {
++            if (observeCoding) {
++                const copied = copyJson(event, { omitUndefinedProperties: true });
++                await runtime.hooks.each("codingStream", handler => handler({ type: "event", event: copied }, runtime, context));
++            }
+             // A partial without content, such as pi-ai's opening `start` event, shows nothing; a deferred response
+             // never gets past it, so it never leaves a partial.
+             if (event.type === "done" || event.type === "error" || event.partial.content.length === 0)
+@@ -563,6 +608,8 @@ async function streamResponse(runtime, model, messages, options, attempt, contex
+         stopped = true;
+         timer?.();
+         await inFlight;
++        if (observeCoding)
++            await runtime.hooks.each("codingStream", handler => handler({ type: "closed", aborted: runtime.signal.aborted }, runtime, context));
+     }
+ }
+ /** Classify a terminal provider message in one commit that also clears the partial. */
+@@ -601,6 +648,15 @@ async function classify(runtime, request, message, context) {
+     if (message.stopReason === "stop" || message.stopReason === "length" || message.stopReason === "toolUse") {
+         return answer(runtime, message, context);
+     }
++    if (await codingEnabled(runtime, context)) {
++        const { messages: _messages, ...kept } = request;
++        return stageCodingTurn(runtime, message, { kind: "failure", request: kept }, context);
++    }
++    return recoverFailure(runtime, request, message, context);
++}
++async function recoverFailure(runtime, request, message, context, coding) {
++    const conversationId = runtime.conversationId;
++    const { attempt, compacted, model: ref, cutoff } = request;
+     // The retry and compaction policies govern the next attempt, so they are read now rather than pinned at preparation.
+     const settings = runtime.settings;
+     const overflow = message.stopReason === "error" && isContextOverflow(message);
+@@ -611,7 +667,8 @@ async function classify(runtime, request, message, context) {
+             const text = message.errorMessage ?? "Context overflow";
+             await runtime.commit(async (tx) => {
+                 const live = await tx.doc(LiveDoc, conversationId);
+-                await appendAssistant(tx, conversationId, message);
++                if (coding === undefined)
++                    await appendAssistant(tx, conversationId, message);
+                 delete live.generation;
+                 const child = await createCompaction(tx, conversationId, { reason: "overflow" }, runtime.taskId);
+                 const checkpoint = { phase: "prepare", attempt, compacted: child, overflow: text };
+@@ -628,11 +685,18 @@ async function classify(runtime, request, message, context) {
+         policy.enabled &&
+         attempt <= policy.maxRetries;
+     const until = retry ? runtime.now() + retryDelayMs(policy, attempt) : 0;
++    if (!retry && coding?.step === "route") {
++        await runtime.commit(async () => ({
++            status: "running", checkpoint: { ...coding, step: "before" },
++        }), context);
++        return;
++    }
+     await runtime.commit(async (tx) => {
+         // Read before the first table write; only a failure uses it.
+         const failure = retry ? undefined : await prepareFailure(tx, runtime);
+         const live = await tx.doc(LiveDoc, conversationId);
+-        await appendAssistant(tx, conversationId, message);
++        if (coding === undefined)
++            await appendAssistant(tx, conversationId, message);
+         if (failure === undefined) {
+             live.generation = { attempt, retry: { at: until, error: message.errorMessage ?? "" } };
+             const checkpoint = {
+@@ -664,6 +728,9 @@ async function answer(runtime, message, context) {
+             return;
+         continuation = (await hook(message, runtime, context))?.continue;
+     });
++    if (await codingEnabled(runtime, context)) {
++        return stageCodingTurn(runtime, message, { kind: "answer", ...(continuation === undefined ? {} : { continuation }) }, context);
++    }
+     const afterRun = await asksAfterRun(runtime, context);
+     const conversationId = runtime.conversationId;
+     await runtime.commit(async (tx) => {
+@@ -845,7 +912,7 @@ async function startToolRound(runtime, request, message, calls, context) {
+  * reset, or hand it to the next generation at the `postTools` boundary, in the handoff's new context when there is one
+  * (spec §8.5).
+  */
+-async function finishToolRound(runtime, assistant, tools, context) {
++async function finishToolRound(runtime, assistant, tools, context, coding) {
+     const conversationId = runtime.conversationId;
+     const controls = new Map();
+     const outcomes = await runtime.outcomes(tools, context);
+@@ -856,11 +923,12 @@ async function finishToolRound(runtime, assistant, tools, context) {
+     });
+     const slots = (await runtime.snapshot(LiveDoc, conversationId, context))?.tools ?? [];
+     const results = slots.flatMap((slot) => (slot.entry === undefined ? [] : [slot.entry]));
+-    await runtime.hooks.each("afterTools", (hook) => hook(assistant, results, runtime, context));
++    if (coding === undefined)
++        await runtime.hooks.each("afterTools", (hook) => hook(assistant, results, runtime, context));
+     // In call order, the slots' order; a slot without a task (faulted or orphaned before it got one) has no control.
+     const ordered = slots.map((slot) => (slot.taskId === undefined ? undefined : controls.get(slot.taskId)));
+     // Every call of the round must ask to terminate.
+-    const terminate = slots.length > 0 && ordered.every((control) => control?.terminate === true);
++    const terminate = coding?.continued !== true && slots.length > 0 && ordered.every((control) => control?.terminate === true);
+     const added = ordered.flatMap((control) => control?.addTools ?? []);
+     // The last handoff in call order wins.
+     const handoff = ordered.findLast((control) => control?.handoff !== undefined)?.handoff;
+@@ -869,9 +937,22 @@ async function finishToolRound(runtime, assistant, tools, context) {
+     const afterRun = terminate && (await asksAfterRun(runtime, context));
+     await runtime.commit(async (tx) => {
+         const boundary = await prepareBoundary(tx, conversationId, runtime.settings);
++        const live = await tx.doc(LiveDoc, conversationId);
++        const turns = live.run?.taskId === runtime.taskId ? live.run.turns : 0;
++        const limited = maxTurns !== undefined && turns >= maxTurns;
++        const resetQueued = hasQueuedReset(boundary.inbox.items);
++        if (coding !== undefined && (terminate || limited || resetQueued)
++            && !("step" in coding && coding.step === "finalize")) {
++            return {
++                status: "running", checkpoint: {
++                    ...coding, phase: "codingSettle", step: "before", continued: false,
++                    outcome: terminate ? "completed" : limited ? "error" : "aborted",
++                    plan: { kind: "tools", tools: [...tools] },
++                },
++            };
++        }
+         if (added.length > 0)
+             await addTools(tx, conversationId, added);
+-        const live = await tx.doc(LiveDoc, conversationId);
+         const now = runtime.now();
+         // The run's last entry so far: the newest result, or the assistant when no result has an entry.
+         let last = results.reduce((newest, id) => (id > newest ? id : newest), assistant);
+@@ -882,7 +963,6 @@ async function finishToolRound(runtime, assistant, tools, context) {
+             boundary.head = entry.id;
+             last = entry.id;
+         }
+-        const turns = live.run?.taskId === runtime.taskId ? live.run.turns : 0;
+         const held = afterRun ? holdRun(tx, live, runtime, { reason: "terminate", answer: assistant, last }) : undefined;
+         if (held !== undefined)
+             return held;
+@@ -917,7 +997,7 @@ async function finishToolRound(runtime, assistant, tools, context) {
+                 delete live.nestedTools;
+                 if (live.run?.taskId === runtime.taskId)
+                     live.run.inputs.push(...users);
+-                handOver(live, runtime.taskId, await createGeneration(tx, conversationId));
++                handOver(live, runtime.taskId, await createGeneration(tx, conversationId, {}, coding === undefined ? {} : { codingRequest: true }));
+             }
+         }
+         return { status: "terminal", outcome: { status: "completed", result: { entryId: assistant } } };
+@@ -944,12 +1024,251 @@ export async function startRun(tx, conversationId, live, run, options) {
+         delete live.runFailure;
+ }
+ /** A generation owned by its conversation. */
+-function createGeneration(tx, conversationId, telemetry = {}) {
+-    return tx.createTask(GenerationTask, {}, { ownership: { kind: "conversation" }, conversationId, ...telemetry });
++function createGeneration(tx, conversationId, telemetry = {}, input = {}) {
++    return tx.createTask(GenerationTask, input, { ownership: { kind: "conversation" }, conversationId, ...telemetry });
+ }
+ /** Hand run control from `from` to `to`; the run's inputs move with it. */
+ export function handOver(live, from, to) {
+     if (live.run?.taskId === from)
+         live.run.taskId = to;
+ }
+-//# sourceMappingURL=generation.js.map
+\ No newline at end of file
++/** One preparation per request attempt, including a prompt preparation resumed after compaction. */
++async function prepareCodingEvents(runtime, checkpoint, context) {
++    const { attempt } = checkpoint;
++    const key = "mkagent.coding." + "prepare.v1:" + attempt;
++    let prepared = await runtime.memo(key, context);
++    if (prepared === undefined) {
++        const run = (await runtime.snapshot(LiveDoc, runtime.conversationId, context))?.run;
++        const latest = (await runtime.entries({}, 1, undefined, context)).items[0]?.id;
++        const batches = [];
++        await runtime.hooks.each("codingPrepare", async (handler) => {
++            const result = await handler({
++                agentStart: run?.codingStarted !== true, turnIndex: run?.codingTurn ?? 0,
++                ...(run?.first === undefined ? {} : { first: run.first }),
++                ...(run?.codingLastMessage === undefined ? {} : { after: run.codingLastMessage }),
++            }, runtime, context);
++            if (result?.entries)
++                batches.push(copyJson(result.entries, { omitUndefinedProperties: true }));
++        });
++        prepared = await runtime.memo(key, copyJson({ batches, latest }, { omitUndefinedProperties: true }), context);
++    }
++    const value = prepared;
++    await runtime.commit(async (tx) => {
++        const next = { status: "running", checkpoint: { ...checkpoint, codingPrepared: true } };
++        const live = await tx.doc(LiveDoc, runtime.conversationId);
++        if (live.run?.taskId !== runtime.taskId)
++            return next;
++        // The same memo can be revisited after blocking compaction; the commit marker also covers empty hook batches.
++        if (live.run.codingPreparation?.taskId === runtime.taskId && live.run.codingPreparation.attempt === attempt)
++            return next;
++        for (const batch of value.batches)
++            await appendCodingEntries(tx, runtime.conversationId, batch);
++        live.run.codingStarted = true;
++        live.run.codingPreparation = { taskId: runtime.taskId, attempt };
++        if (value.latest !== undefined)
++            live.run.codingLastMessage = value.latest;
++        return next;
++    }, context);
++}
++/** Native boundaries are opt-in; all ordinary durable runs keep their original path. */
++async function codingEnabled(runtime, context) {
++    return agentHooks(await runtime.agent(context), GenerationTask.definition.name)
++        .some(({ handlers }) => typeof handlers.codingBoundary === "function");
++}
++async function codingCanAnswer(runtime, context) {
++    const view = await runtime.context(runtime.conversationId, context);
++    const last = view.messages.findLast(message => message.role !== "system");
++    return last?.role === "user" || last?.role === "toolResult";
++}
++async function stageCodingTurn(runtime, message, plan, context) {
++    await runtime.commit(async (tx) => {
++        const live = await tx.doc(LiveDoc, runtime.conversationId);
++        const entry = await appendAssistant(tx, runtime.conversationId, message);
++        delete live.generation;
++        const state = {
++            phase: "codingBoundary", assistant: entry.id, results: [], plan,
++            turnIndex: live.run?.codingTurn ?? 0,
++            outcome: message.stopReason === "aborted" ? "aborted" : message.stopReason === "error" ? "error" : "completed",
++        };
++        return { status: "running", checkpoint: state };
++    }, context);
++}
++async function stageCodingTools(runtime, assistant, tools, context) {
++    const live = await runtime.snapshot(LiveDoc, runtime.conversationId, context);
++    const results = live?.tools?.flatMap(slot => slot.entry === undefined ? [] : [slot.entry]) ?? [];
++    await runtime.hooks.each("afterTools", handler => handler(assistant, results, runtime, context));
++    await runtime.commit(async () => ({
++        status: "running",
++        checkpoint: {
++            phase: "codingBoundary", assistant, results, plan: { kind: "tools", tools },
++            turnIndex: live?.run?.codingTurn ?? 0, outcome: "completed",
++        },
++    }), context);
++}
++async function commitCodingDecision(runtime, state, type, context) {
++    const key = "mkagent.coding." + type + ".v1:" + state.turnIndex;
++    let decision = await runtime.memo(key, context);
++    if (decision === undefined) {
++        const prepared = { entries: [], continue: false };
++        await runtime.hooks.each("codingBoundary", async (handler) => {
++            const asked = await handler({
++                type, assistant: state.assistant, results: state.results,
++                turnIndex: state.turnIndex, outcome: state.outcome,
++            }, runtime, context);
++            if (asked === undefined)
++                return;
++            // Validate the hook's JSON inside its reporting scope, before merging it.
++            const checked = copyJson(asked, { omitUndefinedProperties: true });
++            if (checked.entries) {
++                const offset = prepared.entries.length;
++                for (const entry of checked.entries) {
++                    const refs = entry.references;
++                    prepared.entries.push(refs === undefined ? entry : {
++                        ...entry, references: {
++                            ...(refs.head === undefined ? {} : { head: refs.head + offset }),
++                            ...(refs.edits === undefined ? {} : { edits: Object.fromEntries(Object.entries(refs.edits).map(([index, target]) => [index, target + offset])) }),
++                        },
++                    });
++                }
++            }
++            if (checked.continue !== undefined)
++                prepared.continue = checked.continue;
++        });
++        decision = await runtime.memo(key, copyJson(prepared, { omitUndefinedProperties: true }), context);
++    }
++    // The memo stores precisely this host decision, with JSON-checked drafts.
++    const prepared = decision;
++    await runtime.commit(async (tx) => {
++        await appendCodingEntries(tx, runtime.conversationId, prepared.entries);
++        const live = await tx.doc(LiveDoc, runtime.conversationId);
++        if (type === "turn_end" && live.run?.taskId === runtime.taskId)
++            live.run.codingTurn = state.turnIndex + 1;
++        return {
++            status: "running", checkpoint: {
++                ...state, phase: "codingSettle", step: type === "turn_end" ? "route" : "finalize",
++                continued: prepared.continue,
++            },
++        };
++    }, context);
++}
++/** Apply inbox writes before deciding whether this activity can settle. */
++async function routeCodingAnswer(runtime, state, context) {
++    const canAnswer = await codingCanAnswer(runtime, context);
++    const wants = state.continued === true && canAnswer;
++    const afterRun = state.step === "finalize" && await asksAfterRun(runtime, context);
++    const conversationId = runtime.conversationId;
++    await runtime.commit(async (tx) => {
++        const boundary = await prepareBoundary(tx, conversationId, runtime.settings);
++        const last = await tx.latestEntryId(conversationId) ?? state.assistant;
++        const live = await tx.doc(LiveDoc, conversationId);
++        const hasReset = hasQueuedReset(boundary.inbox.items);
++        if (hasReset && state.step === "route") {
++            return { status: "running", checkpoint: { ...state, step: "before", continued: false } };
++        }
++        const continuation = state.plan.kind === "answer" ? state.plan.continuation : undefined;
++        const yielding = takesContinuation(continuation, boundary) ? continuation : undefined;
++        const queuedUser = boundary.inbox.items.some(item => item.mode === "steer" || item.mode === "followUp");
++        const queuedWrite = boundary.inbox.items.findLast(item => item.mode === "write");
++        const queuedWrites = queuedWrite !== undefined;
++        if (state.continued && !canAnswer && !queuedUser && !queuedWrites && !hasReset && yielding === undefined) {
++            runtime.report(new Error("Coding continuation has no answerable context"), { kind: "extension" });
++        }
++        // afterRun owns the final boundary. In particular, reset inputs cannot be placed into the old run.
++        if (afterRun && (hasReset || (!wants && !queuedUser && yielding === undefined && !(state.continued && queuedWrites)))) {
++            const held = holdRun(tx, live, runtime, {
++                reason: state.plan.kind === "terminate" ? "terminate" : "answer", answer: state.assistant, last,
++            });
++            if (held !== undefined)
++                return held;
++        }
++        // A before-settle continuation on new context precedes queued follow-ups.
++        const at = state.step === "finalize" && state.continued && (canAnswer || queuedWrites) ? "postTools" : "final";
++        const { users, first, reset } = await applyBoundary(tx, boundary, at, runtime.now());
++        const completed = {
++            status: "terminal", outcome: { status: "completed", result: { entryId: state.assistant } },
++        };
++        if (!hasReset && (wants || users.length > 0 || yielding !== undefined)) {
++            if (yielding !== undefined) {
++                await tx.appendEntry(UserEntry, conversationId, { model: [{ role: "user", content: yielding, timestamp: runtime.now() }] });
++            }
++            if (live.run?.taskId === runtime.taskId) {
++                live.run.inputs.push(...users);
++                if (yielding !== undefined)
++                    live.run.turns = 0;
++            }
++            handOver(live, runtime.taskId, await createGeneration(tx, conversationId, {}, { codingRequest: true }));
++            delete live.generation;
++            return completed;
++        }
++        if (!reset && state.continued && !canAnswer && queuedWrites) {
++            // Context queries see committed history. Re-evaluate the same decision after the writes land.
++            return { status: "running", checkpoint: { ...state, appliedWrite: queuedWrite.id } };
++        }
++        if (state.step === "route" && !reset) {
++            return { status: "running", checkpoint: { ...state, step: "before", continued: false } };
++        }
++        endRun(tx, live, runtime.taskId, { status: "done", answer: state.assistant });
++        if (users.length > 0)
++            await startRun(tx, conversationId, live, { inputs: users, first });
++        return completed;
++    }, context);
++}
++/** Append in order, resolving every local reference before passing it to durable. */
++export async function appendCodingEntries(tx, conversation, entries) {
++    const ids = [];
++    const resolve = (position) => {
++        const id = ids[position];
++        if (id === undefined)
++            throw new Error('Coding entry references must point to an earlier draft');
++        return id;
++    };
++    for (const { references, ...entry } of entries) {
++        if (references?.head !== undefined)
++            entry.head = resolve(references.head);
++        if (references?.edits)
++            entry.edits = entry.edits?.map((edit, index) => {
++                const target = references.edits[index];
++                return target === undefined ? edit : { ...edit, target: resolve(target) };
++            });
++        ids.push((await tx.appendEntry(conversation, entry)).id);
++    }
++    return ids;
++}
++/** Reuse the generation stream and progress writer without classifying or appending its response. */
++export const GenerationResponseTask = defineTask({
++    name: "pi.generation-response",
++    version: 1,
++    initial: () => ({ phase: "request" }),
++    phases: {
++        request: async (task, runtime, context) => {
++            if (task.state.checkpoint.started) {
++                return endResponse(runtime, { status: "failed", error: { message: "Prepared generation was interrupted; the request was not repeated" } }, context);
++            }
++            const model = runtime.models.getModel(task.input.model.provider, task.input.model.modelId);
++            if (!model)
++                return endResponse(runtime, { status: "failed", error: { message: "Prepared generation model is unavailable" } }, context);
++            await runtime.commit(async (tx) => {
++                (await tx.doc(LiveDoc, runtime.conversationId)).generation = { attempt: 1 };
++                return { status: "running", checkpoint: { phase: "request", started: true } };
++            }, context);
++            let message;
++            try {
++                message = await streamResponse(runtime, model, task.input.messages, {
++                    ...task.input.streamOptions, signal: runtime.signal, reasoning: task.input.thinkingLevel === "off" ? undefined : task.input.thinkingLevel,
++                }, 1, context, true);
++            }
++            catch (error) {
++                runtime.signal.throwIfAborted();
++                return endResponse(runtime, { status: "failed", error: { message: error instanceof Error ? error.message : String(error) } }, context);
++            }
++            return endResponse(runtime, { status: "completed", result: { message } }, context);
++        },
++    },
++    abort: async (_task, runtime, context) => endResponse(runtime, { status: "aborted" }, context),
++});
++async function endResponse(runtime, outcome, context) {
++    await runtime.commit(async (tx) => {
++        delete (await tx.doc(LiveDoc, runtime.conversationId)).generation;
++        return { status: "terminal", outcome };
++    }, context);
++}
+diff --git a/dist/harness/live.d.ts b/dist/harness/live.d.ts
+index a70aedb657b3f7b6e108828e77e8699b14817d44..7437b5d55497ba3ff5ae14aadc10770188a74807 100644
+--- a/dist/harness/live.d.ts
++++ b/dist/harness/live.d.ts
+@@ -109,6 +109,11 @@ export type RunFailure = {
+ };
+ /** Run control (spec §8.2). */
+ export type LiveRun = {
++    /** Native coding turn index, independent of the durable tool-round limit. */
++    codingTurn?: number;
++    codingStarted?: boolean;
++    codingLastMessage?: EntryId;
++    codingPreparation?: { taskId: TaskId; attempt: number };
+     /** The task that settles the run's inputs: its generation, handed from one to the next. */
+     taskId: TaskId;
+     /** The run's placed inputs, settled when it ends; `[]` once it answered and runs only its `afterRun` tasks. */
+@@ -259,4 +264,3 @@ export declare function clearProgress(slot: Draft<SlotProgress>): void;
+  */
+ export declare function settleSchedulerOutcome(tx: Transaction, record: TaskRecord<JsonValue, JsonValue, JsonValue>, outcome: SchedulerOutcome): Promise<void>;
+ export {};
+-//# sourceMappingURL=live.d.ts.map
+\ No newline at end of file
+diff --git a/dist/harness/types.d.ts b/dist/harness/types.d.ts
+index eb64e474162b158a43563e6c68d8ffea8c18b74a..caffdbee4d785abc036f1b2a377e9903bf83c979 100644
+--- a/dist/harness/types.d.ts
++++ b/dist/harness/types.d.ts
+@@ -1,5 +1,5 @@
+ import type { Context, JsonValue, WatchHandle } from "@earendil-works/chord";
+-import type { Api, AssistantMessage, CacheRetention, ClientIdentity, Message, Model, Models, ModelThinkingLevel, Tool, ToolCall, ToolResultMessage, Transport, Usage, UserMessage } from "@earendil-works/pi-ai";
++import type { Api, AssistantMessage, AssistantMessageEvent, CacheRetention, ClientIdentity, Message, Model, Models, ModelThinkingLevel, Tool, ToolCall, ToolResultMessage, Transport, Usage, UserMessage } from "@earendil-works/pi-ai";
+ import type { Static } from "@earendil-works/pi-schema";
+ import type { TelemetryContext } from "@earendil-works/pi-telemetry";
+ import type { ExecutionEnv, ShellOutputSkip, ShellOutputWindow } from "../env/index.ts";
+@@ -888,6 +888,35 @@ export interface HookApi extends DocumentReader {
+ export type HookResult<T> = T | undefined | Promise<T | undefined>;
+ /** Hooks of the built-in generation task. */
+ export interface GenerationHooks {
++  /** Await native run/turn and input-message handlers before rendering this request's agent and prompt. */
++  codingPrepare(
++    event: { readonly agentStart: boolean; readonly turnIndex: number; readonly first?: EntryId; readonly after?: EntryId },
++    api: HookApi, context: Context,
++  ): HookResult<{ readonly entries?: readonly (EntryDraft & { references?: { head?: number; edits?: Record<number, number> } })[] }>;
++
++  /** Await native stream handlers before consuming the next provider event. Closing drains plugin writes. */
++  codingStream(
++    frame: { readonly type: "event"; readonly event: AssistantMessageEvent }
++      | { readonly type: "closed"; readonly aborted: boolean },
++    api: HookApi, context: Context,
++  ): HookResult<void>;
++
++  /**
++   * A committed native coding boundary. The host returns validated entry drafts.
++   * Decisions are memoized per task, event and turn; drafts and the next phase
++   * commit together. Side effects before the memo commits may repeat on restart.
++   */
++  codingBoundary(
++    boundary: {
++      readonly type: "turn_end" | "agent_before_settle";
++      readonly assistant: EntryId;
++      readonly results: readonly EntryId[];
++      readonly turnIndex: number;
++      readonly outcome: "completed" | "error" | "aborted";
++    },
++    api: HookApi, context: Context,
++  ): HookResult<{ readonly entries?: readonly (EntryDraft & { references?: { head?: number; edits?: Record<number, number> } })[]; readonly continue?: boolean }>;
++
+     /** Before every request attempt, including recovery; the result is used for that request only. */
+     beforeRequest(request: {
+         readonly messages: readonly Message[];
+@@ -991,4 +1020,3 @@ export interface CompactionHooks {
+     }>;
+ }
+ export {};
+-//# sourceMappingURL=types.d.ts.map
+\ No newline at end of file
+diff --git a/dist/images/exif.d.ts b/dist/images/exif.d.ts
+index 718b1de37aa22c129900c149517ab8e9552a0bb6..d3dbf6c212389e9b9c82ac5946014001cdf773d1 100644
+--- a/dist/images/exif.d.ts
++++ b/dist/images/exif.d.ts
+@@ -1,3 +1,4 @@
+-/** The EXIF orientation of a JPEG or WebP, 1 to 8; 1 when absent or unreadable. */
+-export declare function exifOrientation(bytes: Uint8Array): number;
++/** The EXIF orientation of a JPEG or WebP, 1 to 8; 1 when absent or unreadable.
++ * Native compatibility retains legacy signed offsets, chunk sizes and prefix checks. */
++export declare function exifOrientation(bytes: Uint8Array, nativeCompatibility?: boolean): number;
+ //# sourceMappingURL=exif.d.ts.map
+\ No newline at end of file
+diff --git a/dist/images/exif.js b/dist/images/exif.js
+index 2b8def67ba27970f6a5bf9b0aca9a2e701fe05b9..f9aee0d6d9b48d5d38d5bcc22da118480a771b1b 100644
+--- a/dist/images/exif.js
++++ b/dist/images/exif.js
+@@ -1,7 +1,8 @@
+ // EXIF orientation of JPEG and WebP files, read from the bytes without decoding the image.
+-/** The EXIF orientation of a JPEG or WebP, 1 to 8; 1 when absent or unreadable. */
+-export function exifOrientation(bytes) {
+-    const tiff = tiffStart(bytes);
++/** The EXIF orientation of a JPEG or WebP, 1 to 8; 1 when absent or unreadable.
++ * Native compatibility retains legacy signed offsets, chunk sizes and prefix checks. */
++export function exifOrientation(bytes, nativeCompatibility = false) {
++    const tiff = tiffStart(bytes, nativeCompatibility);
+     if (tiff < 0 || tiff + 8 > bytes.length)
+         return 1;
+     const little = bytes[tiff] === 0x49 && bytes[tiff + 1] === 0x49;
+@@ -9,7 +10,8 @@ export function exifOrientation(bytes) {
+     const u32 = (at) => little
+         ? (bytes[at] | (bytes[at + 1] << 8) | (bytes[at + 2] << 16) | (bytes[at + 3] << 24)) >>> 0
+         : ((bytes[at] << 24) | (bytes[at + 1] << 16) | (bytes[at + 2] << 8) | bytes[at + 3]) >>> 0;
+-    const directory = tiff + u32(tiff + 4);
++    const ifdOffset = u32(tiff + 4);
++    const directory = tiff + (nativeCompatibility && little ? ifdOffset | 0 : ifdOffset);
+     if (directory + 2 > bytes.length)
+         return 1;
+     const entries = u16(directory);
+@@ -26,7 +28,7 @@ export function exifOrientation(bytes) {
+     return 1;
+ }
+ /** Where the TIFF header of a JPEG's APP1 or a WebP's EXIF chunk starts; -1 when there is none. */
+-function tiffStart(bytes) {
++function tiffStart(bytes, nativeCompatibility) {
+     if (bytes[0] === 0xff && bytes[1] === 0xd8) {
+         for (let offset = 2; offset + 4 <= bytes.length;) {
+             if (bytes[offset] !== 0xff)
+@@ -44,14 +46,18 @@ function tiffStart(bytes) {
+     }
+     if (ascii(bytes, 0, "RIFF") && ascii(bytes, 8, "WEBP")) {
+         for (let offset = 12; offset + 8 <= bytes.length;) {
+-            const size = (bytes[offset + 4] |
++            const rawSize = (bytes[offset + 4] |
+                 (bytes[offset + 5] << 8) |
+                 (bytes[offset + 6] << 16) |
+-                (bytes[offset + 7] << 24)) >>>
+-                0;
++                (bytes[offset + 7] << 24));
++            const size = nativeCompatibility ? rawSize : rawSize >>> 0;
+             // Some WebP files prefix the TIFF header with "Exif\0\0".
+-            if (ascii(bytes, offset, "EXIF"))
+-                return isExifHeader(bytes, offset + 8) ? offset + 14 : offset + 8;
++            if (ascii(bytes, offset, "EXIF")) {
++                // Native's original reader checks the signed declared chunk size before reading its TIFF header.
++                if (nativeCompatibility && offset + 8 + size > bytes.length)
++                    return -1;
++                return (!nativeCompatibility || size >= 6) && isExifHeader(bytes, offset + 8) ? offset + 14 : offset + 8;
++            }
+             // RIFF chunks are padded to an even size.
+             offset += 8 + size + (size % 2);
+         }
+diff --git a/dist/images/index.d.ts b/dist/images/index.d.ts
+index 72d700bcf94cc96f21d689ad85f82468cc226caf..19f61bc1e148aa8ac583098b82c9840182bd4d15 100644
+--- a/dist/images/index.d.ts
++++ b/dist/images/index.d.ts
+@@ -1,5 +1,27 @@
+-import { type SyncInitInput } from "@silvia-odwyer/photon/photon_rs.js";
++import { type PhotonImage, type SyncInitInput } from "@silvia-odwyer/photon/photon_rs.js";
+ import type { ImageProcessor } from "../tools/image-processor.ts";
++export { exifOrientation } from "./exif.js";
++export { detectSupportedImageMimeType } from "../tools/image.js";
++/** Move RGBA pixels for orientations 5 to 8 without allocating in a particular Photon runtime. */
++export declare function transposeExifPixels(image: Pick<PhotonImage, "get_width" | "get_height" | "get_raw_pixels">, orientation: number): {
++    pixels: Uint8Array;
++    width: number;
++    height: number;
++};
++type EncodingImage = Pick<PhotonImage, "get_width" | "get_height" | "get_bytes" | "get_bytes_jpeg" | "free">;
++/**
++ * Encode and shrink an already decoded image through the caller's Photon runtime.
++ * The caller owns `image`; temporary images returned by `resizeImage` are freed.
++ * Native policy preserves eager quality selection, strict limits and resizing at the original size.
++ */
++export declare function encodePhotonImageWithin(image: EncodingImage, size: { width: number; height: number }, maxBytes: number,
++    resizeImage: (width: number, height: number) => EncodingImage,
++    options?: { jpegFirst?: boolean; native?: { jpegQuality: number } }): {
++    data: string;
++    mimeType: string;
++    width: number;
++    height: number;
++} | undefined;
+ /**
+  * An `ImageProcessor` on Photon (Rust compiled to WebAssembly), for `createCodingTools({ images })`. `wasm` is
+  * Photon's `photon_rs_bg.wasm` as bytes or as a compiled module: `@earendil-works/pi-durable/images/node` reads it from
+diff --git a/dist/images/index.js b/dist/images/index.js
+index 10964639c9ac7e6c74b4023185a6deb9846a50b4..105d0a655ee4cc068472952eb292381e1c39a5bf 100644
+--- a/dist/images/index.js
++++ b/dist/images/index.js
+@@ -2,6 +2,8 @@
+ import { fliph, flipv, initSync, PhotonImage, resize, SamplingFilter, } from "@silvia-odwyer/photon/photon_rs.js";
+ import { base64Length, INLINE_IMAGE_TYPES, toBase64 } from "../tools/image-processor.js";
+ import { exifOrientation } from "./exif.js";
++export { exifOrientation, transposed as transposeExifPixels };
++export { detectSupportedImageMimeType } from "../tools/image.js";
+ /** JPEG qualities tried in order. */
+ const JPEG_QUALITIES = [80, 70, 55, 40];
+ /**
+@@ -52,23 +54,17 @@ function prepare(bytes, mimeType, limits) {
+         const width = image.get_width();
+         const height = image.get_height();
+         const scale = Math.min(1, limits.maxWidth / width, limits.maxHeight / height);
+-        let target = { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
+-        for (;;) {
+-            const encoded = encodeWithin(image, target, limits.maxBytes, mimeType === "image/jpeg");
+-            if (encoded !== undefined) {
+-                const resized = target.width === width && target.height === height
+-                    ? {}
+-                    : { resized: { from: { width, height }, to: target } };
+-                const converted = encoded.mimeType === mimeType ? {} : { convertedFrom: mimeType };
+-                return { ...encoded, ...converted, ...resized };
+-            }
+-            if (target.width === 1 && target.height === 1)
+-                return undefined;
+-            target = {
+-                width: Math.max(1, Math.floor(target.width * 0.75)),
+-                height: Math.max(1, Math.floor(target.height * 0.75)),
+-            };
+-        }
++        const target = { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
++        const encoded = encodePhotonImageWithin(image, target, limits.maxBytes,
++            (w, h) => resize(image, w, h, SamplingFilter.Lanczos3), { jpegFirst: mimeType === "image/jpeg" });
++        if (encoded === undefined)
++            return undefined;
++        const to = { width: encoded.width, height: encoded.height };
++        const resized = to.width === width && to.height === height
++            ? {}
++            : { resized: { from: { width, height }, to } };
++        const converted = encoded.mimeType === mimeType ? {} : { convertedFrom: mimeType };
++        return { data: encoded.data, mimeType: encoded.mimeType, ...converted, ...resized };
+     }
+     catch {
+         // Photon throws for bytes it cannot decode.
+@@ -79,27 +75,56 @@ function prepare(bytes, mimeType, limits) {
+     }
+ }
+ /**
+- * `image` at `size` in the first encoding whose base64 fits `maxBytes`: PNG, then JPEG at falling qualities, or the
+- * JPEG qualities first when `jpegFirst`; `undefined` if none fits.
++ * Encode and shrink through the caller's Photon runtime. The caller keeps ownership of `image`.
++ * Native policy preserves eager quality selection, strict limits and resizing at the original size.
+  */
+-function encodeWithin(image, size, maxBytes, jpegFirst) {
+-    const same = size.width === image.get_width() && size.height === image.get_height();
+-    const scaled = same ? image : resize(image, size.width, size.height, SamplingFilter.Lanczos3);
++export function encodePhotonImageWithin(image, size, maxBytes, resizeImage, options = {}) {
++    let target = size;
++    for (;;) {
++        const encoded = encodeWithin(image, target, maxBytes, resizeImage, options);
++        if (encoded !== undefined)
++            return { ...encoded, width: target.width, height: target.height };
++        if (target.width === 1 && target.height === 1)
++            return undefined;
++        const next = {
++            width: Math.max(1, Math.floor(target.width * 0.75)),
++            height: Math.max(1, Math.floor(target.height * 0.75)),
++        };
++        if (next.width === target.width && next.height === target.height)
++            return undefined;
++        target = next;
++    }
++}
++function encodeWithin(image, size, maxBytes, resizeImage, options) {
++    const native = options.native;
++    const same = !native && size.width === image.get_width() && size.height === image.get_height();
++    const scaled = same ? image : resizeImage(size.width, size.height);
+     try {
+         const png = { mimeType: "image/png", encode: () => scaled.get_bytes() };
+-        const jpegs = JPEG_QUALITIES.map((quality) => ({
++        const qualities = native ? [...new Set([native.jpegQuality, 85, 70, 55, 40])] : JPEG_QUALITIES;
++        const jpegs = qualities.map((quality) => ({
+             mimeType: "image/jpeg",
+             encode: () => scaled.get_bytes_jpeg(quality),
+         }));
+-        for (const candidate of jpegFirst ? [...jpegs, png] : [png, ...jpegs]) {
++        let candidates = options.jpegFirst ? [...jpegs, png] : [png, ...jpegs];
++        if (native) {
++            // Native eagerly encodes every quality before comparing its first PNG and JPEG.
++            const encoded = [png, ...jpegs].map(candidate => ({ mimeType: candidate.mimeType, bytes: new Uint8Array(candidate.encode()) }));
++            const [firstPng, firstJpeg, ...rest] = encoded;
++            const preferred = base64Length(firstJpeg.bytes.length) < base64Length(firstPng.bytes.length)
++                ? [firstJpeg, firstPng] : [firstPng, firstJpeg];
++            candidates = [...preferred, ...rest].map(candidate => ({ mimeType: candidate.mimeType, encode: () => candidate.bytes }));
++        }
++        for (const candidate of candidates) {
+             const bytes = candidate.encode();
+-            if (base64Length(bytes.byteLength) <= maxBytes)
++            const length = base64Length(bytes.byteLength);
++            if (native ? length < maxBytes : length <= maxBytes)
+                 return { data: toBase64(bytes), mimeType: candidate.mimeType };
+         }
+         return undefined;
+     }
+     finally {
+-        if (!same)
++        if (scaled !== image)
+             scaled.free();
+     }
+ }
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -4,8 +4,9 @@
+ export { ConversationBusy, ConversationIdle, ReadAfterWrite, ReadOnlySession, SessionFailed, StorageRequestError, } from "./errors.ts";
+ export { AgentDoc, configure, DEFAULT_COMPACTION_POLICY, DEFAULT_PROGRESS_POLICY, DEFAULT_RESTART_LIMIT, DEFAULT_RETRY_POLICY, } from "./harness/agent.ts";
+ export { type CompactionCheckpoint, type CompactionInput, CompactionTask, type SummaryRequest, } from "./harness/compaction.ts";
++export { findBaseline, leadWithSystem, contribute, orderToolResults } from "./harness/context.ts";
+ export { defineExtension, defineTool, hook, runEndTask, section, wrapSection, wrapTool } from "./harness/define.ts";
+-export { type GenerationCheckpoint, type GenerationInput, type GenerationResult, GenerationTask, } from "./harness/generation.ts";
++export { type GenerationCheckpoint, type GenerationInput, type GenerationResult, GenerationTask, type GenerationResponseInput, type GenerationResponseCheckpoint, type GenerationResponseResult, GenerationResponseTask, } from "./harness/generation.ts";
+ export { DEFAULT_HARNESS_IDENTITY, Harness } from "./harness/harness.ts";
+ export { InboxDoc, type InboxItem, type InboxState } from "./harness/inbox.ts";
+ export { type CompactionFailure, type CompactionStatus, LiveDoc, type LiveRun, type LiveState, type NestedToolSlot, type NestedToolSummary, type RunFailure, type RunFailureReason, type ToolSlot, } from "./harness/live.ts";
+diff --git a/dist/index.js b/dist/index.js
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -3,8 +3,9 @@
+ export { ConversationBusy, ConversationIdle, ReadAfterWrite, ReadOnlySession, SessionFailed, StorageRequestError, } from "./errors.js";
+ export { AgentDoc, configure, DEFAULT_COMPACTION_POLICY, DEFAULT_PROGRESS_POLICY, DEFAULT_RESTART_LIMIT, DEFAULT_RETRY_POLICY, } from "./harness/agent.js";
+ export { CompactionTask, } from "./harness/compaction.js";
++export { findBaseline, leadWithSystem, contribute, orderToolResults } from "./harness/context.js";
+ export { defineExtension, defineTool, hook, runEndTask, section, wrapSection, wrapTool } from "./harness/define.js";
+-export { GenerationTask, } from "./harness/generation.js";
++export { GenerationTask, GenerationResponseTask, } from "./harness/generation.js";
+ export { DEFAULT_HARNESS_IDENTITY, Harness } from "./harness/harness.js";
+ export { InboxDoc } from "./harness/inbox.js";
+ export { LiveDoc, } from "./harness/live.js";
+diff --git a/dist/search.d.ts b/dist/search.d.ts
+index 0cedcf1631d9b2c31824dd2bed86cc685604cecf..f13098012c7d9761613570910ead1df644accff2 100644
+--- a/dist/search.d.ts
++++ b/dist/search.d.ts
+@@ -24,6 +24,11 @@ export type SearchDocument = {
+  * Only `text` is length-normalized, so a long name or long namespace instructions do not lower a tool's score.
+  */
+ export declare function rankDocuments(query: string, documents: readonly SearchDocument[], limit: number): string[];
++/** Compatibility seam for SDK consumers that also need scores and configurable BM25 parameters. */
++export declare function rankToolSearchDocuments(query: string, documents: readonly SearchDocument[], limit: number, options?: {
++    k1?: number;
++    b?: number;
++}): { name: string; score: number }[];
+ /** Unicode word segmentation with identifier boundaries and English stop words/singular forms. */
+ export declare function tokenize(text: string): string[];
+ //# sourceMappingURL=search.d.ts.map
+\ No newline at end of file
+diff --git a/dist/search.js b/dist/search.js
+index 7b05ef0be2e825d0428d6a3867afb098a46c8317..e8ccd6b4885bccb31fb392ea9bc25240fb8e6ea1 100644
+--- a/dist/search.js
++++ b/dist/search.js
+@@ -16,6 +16,12 @@
+  * Only `text` is length-normalized, so a long name or long namespace instructions do not lower a tool's score.
+  */
+ export function rankDocuments(query, documents, limit) {
++    return rankToolSearchDocuments(query, documents, limit).map((match) => match.name);
++}
++/** Compatibility seam for SDK consumers that also need scores and configurable BM25 parameters. */
++export function rankToolSearchDocuments(query, documents, limit, options = {}) {
++    const k1 = options.k1 ?? K1;
++    const b = options.b ?? B;
+     const queryTerms = new Set(tokenize(query));
+     if (queryTerms.size === 0 || documents.length === 0 || limit <= 0)
+         return [];
+@@ -29,14 +35,14 @@ export function rankDocuments(query, documents, limit) {
+     const exactQuery = normalizeName(query);
+     const matches = [];
+     for (const document of indexed) {
+-        const norm = K1 * (1 - B + (B * document.textLength) / averageLength);
++        const norm = k1 * (1 - b + (b * document.textLength) / averageLength);
+         let score = 0;
+         let covered = 0;
+         for (const term of queryTerms) {
+             const count = document.textCounts.get(term) ?? 0;
+             const weight = (document.nameTerms.has(term) ? NAME_WEIGHT : 0) +
+                 (document.namespaceTerms.has(term) ? NAMESPACE_WEIGHT : 0) +
+-                (count * (K1 + 1)) / (count + norm);
++                (count * (k1 + 1)) / (count + norm);
+             if (weight > 0)
+                 covered++;
+             score += idf.get(term) * weight;
+@@ -51,7 +57,7 @@ export function rankDocuments(query, documents, limit) {
+     return matches
+         .sort((left, right) => Number(right.exact) - Number(left.exact) || right.covered - left.covered || right.score - left.score)
+         .slice(0, limit)
+-        .map((match) => match.name);
++        .map(({ name, score }) => ({ name, score }));
+ }
+ const K1 = 1.2;
+ const B = 0.75;
+diff --git a/dist/tool-search/index.d.ts b/dist/tool-search/index.d.ts
+index ad6acf3e2c679863be80bd4059eaf6597c03fa06..5fa16eb8c6b324c40382fee4ffe2ffc415f4961c 100644
+--- a/dist/tool-search/index.d.ts
++++ b/dist/tool-search/index.d.ts
+@@ -1,2 +1,4 @@
+ export { createToolSearchExtension, createToolSearchTool, DEFAULT_TOOL_SEARCH_LIMIT, TOOL_SEARCH_TOOL_NAME, type ToolSearchToolDetails, } from "./tool-search.ts";
++export { rankToolSearchDocuments, tokenize as tokenizeToolSearch } from "../search.js";
++export { searchText as createToolSearchText } from "./tool-search.ts";
+ //# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/tool-search/index.js b/dist/tool-search/index.js
+index 80307813567e13fa181161101ef693d1c2657c01..6081dd45aaf06aaf1006b9079937eba35c95b1f9 100644
+--- a/dist/tool-search/index.js
++++ b/dist/tool-search/index.js
+@@ -1,2 +1,4 @@
+ export { createToolSearchExtension, createToolSearchTool, DEFAULT_TOOL_SEARCH_LIMIT, TOOL_SEARCH_TOOL_NAME, } from "./tool-search.js";
++export { rankToolSearchDocuments, tokenize as tokenizeToolSearch } from "../search.js";
++export { searchText as createToolSearchText } from "./tool-search.js";
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/dist/tool-search/tool-search.d.ts b/dist/tool-search/tool-search.d.ts
+index fde23df685ba39f1da3baf55d8dc86eba8255553..262643aa1757045822e07e201c207e18db73fa4d 100644
+--- a/dist/tool-search/tool-search.d.ts
++++ b/dist/tool-search/tool-search.d.ts
+@@ -5,6 +5,8 @@ export declare const DEFAULT_TOOL_SEARCH_LIMIT = 8;
+ export type ToolSearchToolDetails = {
+     loaded: string[];
+ };
++/** Search text of a tool's description and parameter metadata. */
++export declare function searchText(tool: { description: string; parameters: unknown }): string;
+ export declare function createToolSearchTool(): ToolRegistration<import("@earendil-works/pi-schema").Schema<{
+     query: string;
+     limit?: number | undefined;
+diff --git a/dist/tool-search/tool-search.js b/dist/tool-search/tool-search.js
+index 1c5c127ea6b007eb4033486fcbde0d5e6b20cc16..802d2381bcde340b7da8f9b6a54ebe3239296ecd 100644
+--- a/dist/tool-search/tool-search.js
++++ b/dist/tool-search/tool-search.js
+@@ -38,7 +38,7 @@ function schemaText(schema, parts) {
+     }
+ }
+ /** Search text of a tool: its description and its parameters' names and descriptions; the ranker reads the name. */
+-function searchText(tool) {
++export function searchText(tool) {
+     const parts = [tool.description];
+     schemaText(tool.parameters, parts);
+     return parts.filter((part) => part.trim() !== "").join(" ");
+diff --git a/dist/tools/index.d.ts b/dist/tools/index.d.ts
+--- a/dist/tools/index.d.ts
++++ b/dist/tools/index.d.ts
+@@ -1,3 +1,4 @@
++export { generateUnifiedPatch, generateDiffString } from "./edit-diff.js";
+ import { type ReadToolOptions } from "./read.ts";
+ export { type BashExecution, type BashPrepare, type BashToolInput, type BashToolOptions, createBashTool, createPowerShellTool, type PowerShellToolInput, type PowerShellToolOptions, } from "./bash.ts";
+ export { createEditTool, type EditToolDetails, type EditToolInput } from "./edit.ts";
+diff --git a/dist/tools/index.js b/dist/tools/index.js
+--- a/dist/tools/index.js
++++ b/dist/tools/index.js
+@@ -1,3 +1,4 @@
++export { generateUnifiedPatch, generateDiffString } from "./edit-diff.js";
+ import { defineExtension } from "../harness/define.js";
+ import { createBashTool } from "./bash.js";
+ import { createEditTool } from "./edit.js";
+diff --git a/package.json b/package.json
+--- a/package.json
++++ b/package.json
+@@ -114,9 +114,21 @@
+ 			"import": "./dist/testing/index.js",
+ 			"default": "./dist/testing/index.js"
+ 		},
+-		"./package.json": "./package.json"
++		"./package.json": "./package.json",
++		"./codemode/node": {
++			"types": "./codemode-node.d.ts",
++			"import": "./codemode-node.js",
++			"default": "./codemode-node.js"
++		},
++		"./codemode/worker": {
++			"types": "./codemode-worker.d.ts",
++			"import": "./codemode-worker.js",
++			"default": "./codemode-worker.js"
++		}
+ 	},
+-	"sideEffects": false,
++	"sideEffects": [
++		"./codemode-worker.js"
++	],
+ 	"files": [
+ 		"dist",
+ 		"README.md",
+diff --git a/codemode-node.js b/codemode-node.js
+new file mode 100644
+index 0000000..ee94e3f
+--- /dev/null
++++ b/codemode-node.js
+@@ -0,0 +1,5 @@
++import { createRequire } from "node:module";
++export { CodemodeSandbox, loadQuickJSWasm } from "@earendil-works/pi-codemode";
++export function getQuickJSWasmPath() {
++    return createRequire(import.meta.resolve("@earendil-works/pi-codemode")).resolve("quickjs-wasi/quickjs.wasm");
++}
+diff --git a/codemode-node.d.ts b/codemode-node.d.ts
+new file mode 100644
+index 0000000..deb18fd
+--- /dev/null
++++ b/codemode-node.d.ts
+@@ -0,0 +1,2 @@
++export { CodemodeSandbox, loadQuickJSWasm } from "@earendil-works/pi-codemode";
++export declare function getQuickJSWasmPath(): string;
+diff --git a/codemode-worker.js b/codemode-worker.js
+new file mode 100644
+index 0000000..99aab52
+--- /dev/null
++++ b/codemode-worker.js
+@@ -0,0 +1 @@
++import "@earendil-works/pi-codemode/worker";
+diff --git a/codemode-worker.d.ts b/codemode-worker.d.ts
+new file mode 100644
+index 0000000..cb0ff5c
+--- /dev/null
++++ b/codemode-worker.d.ts
+@@ -0,0 +1 @@
++export {};
+diff --git a/dist/harness/context.js b/dist/harness/context.js
+--- a/dist/harness/context.js
++++ b/dist/harness/context.js
+@@ -172,7 +172,7 @@
+  * message before, which holds unless an earlier entry carries one, even if an edit omits it later. An edit that targets
+  * the baseline contributes other messages, or none, so none leads; a later entry does not take its place.
+  */
+-function findBaseline(head, entries) {
++export function findBaseline(head, entries) {
+     for (const entry of entries) {
+         if (head !== undefined && entry.id <= head.id)
+             continue;
+@@ -198,7 +198,7 @@
+  * system messages in order gives the same sections and tools. Any other system message, before an assistant message,
+  * stays where it was committed: moving it would change what it means to the model.
+  */
+-function leadWithSystem(messages, baseline) {
++export function leadWithSystem(messages, baseline) {
+     const index = messages.findIndex((message) => message.role === "system");
+     if (index <= 0)
+         return messages;
+@@ -209,7 +209,7 @@
+     return [system, ...messages.slice(0, index), ...messages.slice(index + 1)];
+ }
+ /** One active entry's model messages after its edit and excluded stop reasons, before tool result ordering. */
+-function contribute(entry, edit) {
++export function contribute(entry, edit) {
+     if (edit?.action === "omit")
+         return Object.freeze([]);
+     const contributed = edit?.action === "replace" ? edit.messages : (entry.model ?? []);
+diff --git a/dist/harness/context.d.ts b/dist/harness/context.d.ts
+--- a/dist/harness/context.d.ts
++++ b/dist/harness/context.d.ts
+@@ -1,7 +1,7 @@
+ import type { Context } from "@earendil-works/chord";
+ import type { Message } from "@earendil-works/pi-ai";
+ import type { SessionImpl } from "../session/session.ts";
+-import type { ConversationId, EntryId, EntryRecord, Storage } from "../types.ts";
++import type { ContextEdit, ConversationId, EntryId, EntryRecord, Storage } from "../types.ts";
+ import type { ContextView } from "./types.ts";
+ /** Head marker and newest visible entry that fix one committed context range. */
+ export type ContextBounds = {
+@@ -80,5 +80,8 @@
+  * the next assistant; a missing result is synthesized and unmatched results are dropped.
+  */
+ export declare function orderToolResults(messages: readonly Message[]): Message[];
++export declare function findBaseline(head: Pick<NonNullable<ContextBounds["head"]>, "id"> | undefined, entries: readonly EntryRecord[]): Baseline;
++export declare function leadWithSystem(messages: Message[], baseline: Baseline): Message[];
++export declare function contribute(entry: Pick<EntryRecord, "model">, edit: ContextEdit | undefined): readonly Message[];
+ export {};
+ //# sourceMappingURL=context.d.ts.map
+\ No newline at end of file

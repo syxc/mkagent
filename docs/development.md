@@ -38,7 +38,8 @@ packages/
   ui/                  # React primitives, markdown/code/doc renderers
   server-core/         # Transport, RPC, SessionManager, runtime
   server/              # Headless MKAGENT_SERVER_TOKEN server
-  pi-agent-server/     # Pi SDK subprocess (Bun, JSONL on stdio)
+  pi-agent-server/     # Pi-durable subprocess (Bun, JSONL on stdio)
+  coding-runtime/   # Coding capabilities and Pi plugin compatibility
   session-tools-core/  # Plan / Skill / mini LLM / browser / session info / list
 docs/                  # English-language documentation
 docs/zh/               # Chinese translation
@@ -47,6 +48,8 @@ docs/migration/        # Migration plan, audit, UI history
 ```
 
 `apps/online-docs` is intentionally outside the workspace globs.
+
+For kernel changes, follow the [Coding capability specification](./pi-durable/coding-capabilities-spec.md) and [implementation plan](./pi-durable/durable-coding-agent-plan.md). Keep the Pi Coding layer used by MkAgent and attempt to replace its execution base with durable. Prefer reusable SDKs to reduce source-by-source upgrade work. Reuse durable built-ins, then independent official Pi SDK public APIs, before adding compatibility code. The root, shared and server-core packages declare `pi-ai 1.1.0`; the coding and agent-server packages use Pi `1.5.0`. Check repository patches separately from published APIs. Craft UI source rules do not require a complete Pi coding runtime or CLI source port.
 
 ## Common commands
 

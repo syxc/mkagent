@@ -8,6 +8,7 @@ import type {
 } from '@mkagent/core/types';
 import type { PermissionMode } from '../agent/mode-manager.ts';
 import type { ThinkingLevel } from '../agent/thinking-levels.ts';
+import type { NativeSessionReference } from './native-session-reference.ts';
 
 export const SESSION_PERSISTENT_FIELDS = [
   'id', 'workspaceRootPath', 'sdkSessionId', 'sdkCwd',
@@ -16,7 +17,7 @@ export const SESSION_PERSISTENT_FIELDS = [
   'lastReadMessageId', 'hasUnread',
   'permissionMode', 'previousPermissionMode', 'workingDirectory',
   'model', 'llmConnection', 'connectionLocked', 'thinkingLevel',
-  'pendingPlanExecution',
+  'pendingPlanExecution', 'nativeSessionOwner', 'nativeSessionProjection',
   'isArchived', 'archivedAt',
   'branchFromMessageId', 'branchFromSdkSessionId', 'branchFromSessionPath',
   'branchFromSdkCwd', 'branchFromSdkTurnId',
@@ -44,6 +45,32 @@ export interface PendingPlanExecution {
   draftInputSnapshot?: string;
   awaitingCompaction: boolean;
   executionDispatched?: boolean;
+}
+
+/** Recovery evidence only. Live workers, callers and callbacks never enter this record. */
+export interface NativeSessionOwnerRecord {
+  transactionId: string;
+  role: 'source' | 'target';
+  sourceSessionId: string;
+  targetSessionId?: string;
+  sourceNativeSessionId: string;
+  targetNativeSessionId?: string;
+  operation: 'new' | 'fork' | 'switch';
+  targetReference?: NativeSessionReference;
+  parent?: NativeSessionReference;
+  fork?: {
+    entryId: string;
+    position: 'before' | 'at';
+    nativeLeafId: string | null;
+    durableEntryId: number | null;
+    source: NativeSessionReference;
+    inputId?: string;
+  };
+  phase: 'preparing' | 'prepared' | 'source_closed' | 'activating' | 'target_bound' | 'committed' | 'finished' | 'aborted' | 'failed';
+  committed: boolean;
+  callbacks: 'blocked' | 'authorized' | 'finished' | 'interrupted';
+  unpublished?: boolean;
+  error?: string;
 }
 
 export interface SessionConfig {
@@ -80,10 +107,14 @@ export interface SessionConfig {
   branchFromSdkCwd?: string;
   branchFromSdkTurnId?: string;
   parentSessionId?: string;
+  nativeSessionOwner?: NativeSessionOwnerRecord;
+  nativeSessionProjection?: NativeSessionReference;
 }
 
 export interface StoredSession extends SessionConfig {
   messages: StoredMessage[];
+  /** Inactive product rows stay outside header metadata and the active transcript. */
+  nativeArchivedMessages?: StoredMessage[];
   tokenUsage: SessionTokenUsage;
 }
 

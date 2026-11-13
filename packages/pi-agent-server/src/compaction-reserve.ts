@@ -5,14 +5,4 @@
  * reserve. Never below Pi's own reserve: a window at or beyond the model's limit
  * keeps Pi's default trigger.
  */
-const isPositiveInt = (value: unknown): value is number =>
-  Number.isSafeInteger(value) && (value as number) > 0;
-
-export function compactionReserveFor(
-  contextWindow: unknown,
-  baseReserve: number,
-  autoCompactWindow: number | undefined,
-): number {
-  if (!isPositiveInt(contextWindow) || !isPositiveInt(autoCompactWindow)) return baseReserve;
-  return Math.max(baseReserve, contextWindow - autoCompactWindow);
-}
+export { compactionReserveFor } from '@mkagent/coding-runtime/native';

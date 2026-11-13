@@ -1,4 +1,4 @@
-import type { BackgroundTaskOutput } from '@mkagent/shared/protocol'
+import type { BackgroundTaskOutput, ExtensionUIResponse, ExtensionUISnapshot } from '@mkagent/shared/protocol'
 import * as React from 'react'
 import { useSetAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +12,8 @@ import { InputContainer } from './InputContainer'
 import { InputErrorBoundary } from './InputErrorBoundary'
 import { ComposerHintLine } from './ComposerHintLine'
 import { COMPOSER_META_CHIP } from './composer-styles'
+import { ExtensionUIDialogCard, ExtensionUIStatus, ExtensionUIWidgets } from './ExtensionUI'
+import { useOptionalAppShellContext } from '@/context/AppShellContext'
 
 /**
  * Offer to run a pasted console snippet as a background command. Running sends the run request
@@ -57,6 +59,8 @@ interface ChatInputZoneProps {
   /** Run a shell command as a background task (a pasted console snippet's "Run in background") */
   onRunCommand?: (command: string) => void
   className?: string
+  extensionUI?: ExtensionUISnapshot
+  onRespondToExtensionUI?: (uiEpoch: string, response: ExtensionUIResponse) => Promise<boolean>
   inputProps: React.ComponentProps<typeof InputContainer>
 }
 
@@ -73,8 +77,13 @@ export function ChatInputZone({
   onOpenTaskOutput,
   onRunCommand,
   className,
+  extensionUI,
+  onRespondToExtensionUI,
   inputProps,
 }: ChatInputZoneProps) {
+  const focused = useOptionalAppShellContext()?.isFocusedPanel ?? true
+  const request = extensionUI?.available ? extensionUI.requests[0] : undefined
+  const hasExtensionDialog = !!request && !!onRespondToExtensionUI
   const shouldShowOptionBadges = showOptionBadges ?? !compactMode
   const inputResetKey = `${sessionId}::${inputProps.structuredInput?.type ?? 'freeform'}`
 
@@ -118,7 +127,7 @@ export function ChatInputZone({
         <ActiveOptionBadges
           // The permission-mode chip lives in the composer toolbar next to the model (spec §7.5).
           // A decision prompt replaces that toolbar, so the chip moves up here while one is shown.
-          showPermissionMode={!!inputProps.structuredInput}
+          showPermissionMode={!!inputProps.structuredInput || hasExtensionDialog}
           permissionMode={permissionMode}
           onPermissionModeChange={onPermissionModeChange}
           tasks={tasks}
@@ -133,6 +142,19 @@ export function ChatInputZone({
         <PastedCommandChip command={pastedSnippet.command} onRun={handleRunPasted} onDismiss={() => setPastedSnippet(null)} />
       )}
 
+      <ExtensionUIStatus snapshot={extensionUI} />
+      <ExtensionUIWidgets snapshot={extensionUI} placement="aboveEditor" />
+      {request && onRespondToExtensionUI && (
+        <ExtensionUIDialogCard
+          key={`${request.uiEpoch}:${request.id}`}
+          request={request}
+          blocked={!!inputProps.structuredInput}
+          focused={focused}
+          respond={response => onRespondToExtensionUI(request.uiEpoch, response)}
+          onStop={inputProps.isProcessing ? inputProps.onStop : undefined}
+        />
+      )}
+      <div hidden={hasExtensionDialog && !inputProps.structuredInput}>
       <InputErrorBoundary
         sessionId={sessionId}
         resetKey={inputResetKey}
@@ -149,9 +171,11 @@ export function ChatInputZone({
           sessionId={sessionId}
         />
       </InputErrorBoundary>
+      </div>
+      <ExtensionUIWidgets snapshot={extensionUI} placement="belowEditor" />
 
       {/* Desktop shortcut hints: reserved height, shown while the composer has focus */}
-      {!compactMode && <ComposerHintLine empty={!!inputProps.structuredInput} />}
+      {!compactMode && <ComposerHintLine empty={!!inputProps.structuredInput || hasExtensionDialog} />}
     </div>
   )
 }

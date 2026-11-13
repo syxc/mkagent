@@ -5,9 +5,7 @@ import { join } from 'node:path';
 import {
   ensureFd,
   ensureRipgrep,
-  fdAssetName,
   getFdBinDir,
-  isOfflineModeEnabled,
   type CommandResult,
   type FdManagerDeps,
   type FdStatus,
@@ -272,11 +270,12 @@ describe('ensureFd', () => {
 
   it('fails without downloading on unsupported platforms', async () => {
     const statuses: FdStatus[] = [];
-    const { fetch } = fakeDownloadFetch('10.2.0');
+    const { fetch, requests } = fakeDownloadFetch('10.2.0');
     const deps = createDeps({ platform: 'freebsd', fetch });
 
     expect(await ensureFd(status => statuses.push(status), deps)).toBeUndefined();
-    expect(statuses.at(-1)!.message).toContain('Unsupported platform: freebsd/x64');
+    expect(statuses.at(-1)!.message).toContain('Automatic download is not supported on freebsd/x64');
+    expect(requests).toEqual([]);
   });
 
   it('uses a separate archive per attempt when calls share a binDir', async () => {
@@ -346,27 +345,46 @@ describe('getFdBinDir', () => {
   });
 });
 
-describe('isOfflineModeEnabled', () => {
-  it('accepts the upstream truthy spellings', () => {
-    for (const value of ['1', 'true', 'TRUE', 'yes', 'Yes']) {
-      expect(isOfflineModeEnabled({ PI_OFFLINE: value })).toBe(true);
-    }
-  });
-
-  it('treats everything else as online', () => {
-    for (const value of [undefined, '', '0', 'false', 'no']) {
-      expect(isOfflineModeEnabled(value === undefined ? {} : { PI_OFFLINE: value })).toBe(false);
+describe('SDK offline policy', () => {
+  it('uses the published environment spellings when the host does not override offline mode', async () => {
+    const original = process.env.PI_OFFLINE;
+    try {
+      for (const value of ['1', 'true', 'TRUE', 'yes', 'Yes', undefined, '', '0', 'false', 'no']) {
+        if (value === undefined) delete process.env.PI_OFFLINE;
+        else process.env.PI_OFFLINE = value;
+        const statuses: FdStatus[] = [];
+        await ensureFd(status => statuses.push(status), createDeps({ offline: undefined, platform: 'android' }));
+        expect(statuses.at(-1)?.message).toContain(['1', 'true', 'TRUE', 'yes', 'Yes'].includes(value!)
+          ? 'Offline mode enabled' : 'pkg install fd');
+      }
+    } finally {
+      if (original === undefined) delete process.env.PI_OFFLINE;
+      else process.env.PI_OFFLINE = original;
     }
   });
 });
 
-describe('fdAssetName', () => {
-  it('maps supported platforms and architectures', () => {
-    expect(fdAssetName('1.2.3', 'darwin', 'arm64')).toBe('fd-v1.2.3-aarch64-apple-darwin.tar.gz');
-    expect(fdAssetName('1.2.3', 'darwin', 'x64')).toBe('fd-v1.2.3-x86_64-apple-darwin.tar.gz');
-    expect(fdAssetName('1.2.3', 'linux', 'arm64')).toBe('fd-v1.2.3-aarch64-unknown-linux-musl.tar.gz');
-    expect(fdAssetName('1.2.3', 'linux', 'x64')).toBe('fd-v1.2.3-x86_64-unknown-linux-musl.tar.gz');
-    expect(fdAssetName('1.2.3', 'win32', 'arm64')).toBe('fd-v1.2.3-aarch64-pc-windows-msvc.zip');
-    expect(fdAssetName('1.2.3', 'freebsd', 'x64')).toBeNull();
+for (const [platform, arch, target] of [
+  ['darwin', 'arm64', 'aarch64-apple-darwin.tar.gz'],
+  ['linux', 'arm64', 'aarch64-unknown-linux-musl.tar.gz'],
+  ['linux', 'x64', 'x86_64-unknown-linux-musl.tar.gz'],
+  ['win32', 'arm64', 'aarch64-pc-windows-msvc.zip'],
+] as const) {
+  it(`uses SDK release selection for ${platform}/${arch}`, async () => {
+    const { fetch, requests } = fakeDownloadFetch('1.2.3');
+    const deps = createDeps({ platform, arch, fetch, runCommand: (_command, args) => {
+      writeFileSync(join(args[args.indexOf('-C') + 1]!, platform === 'win32' ? 'fd.exe' : 'fd'), 'fixture');
+      return { status: 0 };
+    } });
+    expect(await ensureFd(undefined, deps)).toBe(join(deps.binDir, platform === 'win32' ? 'fd.exe' : 'fd'));
+    expect(requests.at(-1)).toBe(`https://github.com/sharkdp/fd/releases/download/v1.2.3/fd-v1.2.3-${target}`);
   });
+}
+
+it('never downloads an x64 binary for an unsupported architecture', async () => {
+  const { fetch, requests } = fakeDownloadFetch('1.2.3');
+  const statuses: FdStatus[] = [];
+  expect(await ensureFd(status => statuses.push(status), createDeps({ arch: 'arm', fetch }))).toBeUndefined();
+  expect(requests).toEqual([]);
+  expect(statuses.at(-1)?.message).toContain('not supported on linux/arm');
 });

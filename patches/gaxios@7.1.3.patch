@@ -1,0 +1,24 @@
+diff --git a/build/cjs/src/gaxios.d.ts b/build/cjs/src/gaxios.d.ts
+--- a/build/cjs/src/gaxios.d.ts
++++ b/build/cjs/src/gaxios.d.ts
+@@ -10,7 +10,7 @@
+  * compatible with the `fetch` API.
+  */
+ interface FetchCompliance {
+-    fetch: typeof fetch;
++    fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch>;
+ }
+ export declare class Gaxios implements FetchCompliance {
+     #private;
+diff --git a/build/esm/src/gaxios.d.ts b/build/esm/src/gaxios.d.ts
+--- a/build/esm/src/gaxios.d.ts
++++ b/build/esm/src/gaxios.d.ts
+@@ -10,7 +10,7 @@
+  * compatible with the `fetch` API.
+  */
+ interface FetchCompliance {
+-    fetch: typeof fetch;
++    fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch>;
+ }
+ export declare class Gaxios implements FetchCompliance {
+     #private;

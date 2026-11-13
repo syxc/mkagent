@@ -260,6 +260,8 @@ export interface Message {
   // Set to true when text_delta creates message, false when text_complete arrives
   // Also used for optimistic user messages before backend confirmation
   isPending?: boolean;
+  /** Product display history only; native execution and queued inputs do not come from this metadata. */
+  nativeHistory?: NativeMessageHistory;
   // Queued: user message that is waiting to be processed (sent during ongoing response)
   isQueued?: boolean;
   // Intermediate text (commentary between tool calls, not final response)
@@ -292,11 +294,18 @@ export interface Message {
   planPath?: string;  // Path to the plan markdown file
 }
 
+export interface NativeMessageHistory {
+  order: number;
+  anchor?: string | null;
+  sourceSessionId?: string;
+}
+
 /**
  * Stored message format (persistence)
  * Excludes transient runtime-only fields (isStreaming, isPending)
  */
 export interface StoredMessage {
+  nativeHistory?: NativeMessageHistory;
   /** App-generated notices stay hidden after persistence and restart. */
   hidden?: boolean;
   id: string;

@@ -6,8 +6,7 @@ import { join } from 'node:path';
 import { BACKGROUND_CONTEXT, withAbortSignal } from '@earendil-works/chord/context';
 import * as binaries from './tool-binaries.ts';
 import type { FdManagerDeps, FdStatus } from './tool-binaries.ts';
-import { createGrepTool } from './grep.ts';
-import { createFindTool } from './find.ts';
+import { createSearchTools } from '../search.ts';
 
 type Tool = 'fd' | 'rg';
 type Stage = 'version' | 'download' | 'body';
@@ -115,6 +114,29 @@ function cleanBin(deps: FdManagerDeps) {
 
 for (const tool of ['fd', 'rg'] as const) {
   describe(`${tool} binary cancellation`, () => {
+    it('keeps resolver signals separate for concurrent calls to one registration', async () => {
+      const gates = [Promise.withResolvers<string | undefined>(), Promise.withResolvers<string | undefined>()];
+      const signals: Array<AbortSignal | undefined> = [];
+      const resolve = (signal?: AbortSignal) => {
+        const gate = gates[signals.length]!;
+        signals.push(signal);
+        return gate.promise;
+      };
+      if (tool === 'fd') spyOn(binaries, 'resolveFd').mockImplementation((_status, signal) => resolve(signal));
+      else spyOn(binaries, 'resolveRipgrep').mockImplementation(signal => resolve(signal));
+      const registration = createSearchTools(scratch).find(registration => registration.name === (tool === 'fd' ? 'find' : 'grep'))!;
+      const controllers = [new AbortController(), new AbortController()];
+      const pending = controllers.map(controller => outcome(registration.execute({ pattern: 'fixture' }, {} as never,
+        withAbortSignal(controller.signal, BACKGROUND_CONTEXT))));
+      expect(signals).toEqual(controllers.map(controller => controller.signal));
+      controllers[0]!.abort();
+      gates[0]!.resolve(undefined);
+      expect(await pending[0]!).toMatchObject({ kind: 'error' });
+      expect(signals[1]!.aborted).toBe(false);
+      gates[1]!.resolve(undefined);
+      expect(await pending[1]!).toMatchObject({ kind: 'error', error: { message: expect.stringContaining('not available') } });
+    });
+
     for (const stage of ['version', 'download'] as const) {
       it(`aborts the manager's ${stage} fetch without retries or unavailable fallback`, async () => {
         const f = fixture(tool, stage);
@@ -142,9 +164,8 @@ for (const tool of ['fd', 'rg'] as const) {
         if (tool === 'fd') spyOn(binaries, 'resolveFd').mockImplementation((_status, signal) => (resolving = ensure(tool, f.deps, signal)));
         else spyOn(binaries, 'resolveRipgrep').mockImplementation(signal => (resolving = ensure(tool, f.deps, signal)));
         const context = withAbortSignal(f.controller.signal, BACKGROUND_CONTEXT);
-        const pending = outcome(tool === 'fd'
-          ? createFindTool(scratch).execute({ pattern: '*' }, {} as never, context)
-          : createGrepTool(scratch).execute({ pattern: 'fixture' }, {} as never, context));
+        const registration = createSearchTools(scratch).find(registration => registration.name === (tool === 'fd' ? 'find' : 'grep'))!;
+        const pending = outcome(registration.execute({ pattern: 'fixture' }, {} as never, context));
         await f.reached.promise;
         f.controller.abort(new Error('fixture caller aborted'));
         let early: unknown;

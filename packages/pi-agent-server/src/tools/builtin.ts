@@ -2,18 +2,15 @@
  * Builtin tool set for the durable kernel.
  *
  * `read`/`write`/`edit`/`bash` come from durable's `coding-tools` extension
- * (env-backed, abort-aware, output windows). `grep`/`find`/`ls` have no
- * durable equivalent: their pi-coding-agent 1.1.0 implementations are adapted
- * under `local/` and exported as durable tools here.
+ * (env-backed, abort-aware, output windows). `grep`/`find`/`ls` use the
+ * public Coding SDK with the host's binary policy and durable tool bridge.
  */
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import type { ToolRegistration } from '@earendil-works/pi-durable';
 import { createPhotonImages } from '@earendil-works/pi-durable/images';
-import { createCodingTools, type ImageProcessor } from '@earendil-works/pi-durable/tools';
-import { createFindTool } from './local/find.ts';
-import { createGrepTool } from './local/grep.ts';
-import { createLsTool } from './local/ls.ts';
+import { createCodingTools, createPowerShellTool, type ImageProcessor } from '@earendil-works/pi-durable/tools';
+import { createSearchTools } from './search.ts';
 
 /**
  * The wasm sits beside the bundle in dev and packaged builds; source mode falls
@@ -42,11 +39,11 @@ function createLazyImageProcessor(): ImageProcessor {
  * All builtin coding tools, unwrapped. The caller wraps them with permission
  * hooks and registers them on the kernel extension.
  */
-export function createBuiltinTools(cwd: string): ToolRegistration[] {
+export function createBuiltinTools(cwd: string, options?: { powerShell?: boolean }): ToolRegistration[] {
   return [
     ...(createCodingTools({ images: createLazyImageProcessor() }).tools ?? []),
-    createGrepTool(cwd),
-    createFindTool(cwd),
-    createLsTool(cwd),
+    // Native Pi also keeps PowerShell outside its default active coding tools.
+    ...(options?.powerShell ? [{ ...createPowerShellTool(), deferred: true as const }] : []),
+    ...createSearchTools(cwd),
   ];
 }

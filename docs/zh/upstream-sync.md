@@ -2,6 +2,8 @@
 
 MkAgent 的架构、UI 与运行时继承自 [Craft Agents OSS](https://github.com/craft-ai-agents/craft-agents-oss)。本文定义在 Lite 边界内吸收新 Craft 变更的工作流。
 
+Craft 同步与当前内核迁移分别确定范围。内核按 [Coding 能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)执行：先 durable 内置，再独立 Pi 官方 SDK 公开 API，必要兼容最后，保持 MkAgent 功能。Craft 来源与 UI 复用规则不要求移植完整 Pi coding 运行时或 CLI。根目录、shared 和 server-core 声明 `pi-ai 1.1.0`，coding 和 agent-server 使用 Pi `1.5.0`。`sync/` 验证文件保留各发布版本的输入和结果，不冻结当前内核依赖，也不授权删除现有能力。
+
 ## 当前基线
 
 | 项 | 值 |
@@ -26,7 +28,7 @@ Coding 会话新增 `pr_status`、`pr_bind`、`pr_unbind`、`pr_set_auto_merge`�
 
 本机仓库递归四层搜索，跳过 node_modules、Library、隐藏目录及工作区数据，遇仓库停止、避免 symlink 循环，合并 worktree/bare 仓库；两秒总预算覆盖遍历与 Git 查询，支持 ~ 路径。已开始会话切换 Coding mode 立即创建新会话，后台总结，首条消息最多等待 30 秒，顺序队列、取消、失败、超时、删除与迟到总结均隔离。
 
-保留 MkAgent 品牌、本地配置、Pi 1.1.0，以及 v0.15.4/0.15.5 和此前全部已同步能力。Claude 配置转发修复按段评估：Pi 已整包传递配置、使用 SDK 图片缩放和既有 compaction/context 计量，新增回归验证，不恢复 Claude SDK。Sources/MCP OAuth relay、Pages、Projects/conductor、Automations 产品、公开分享、labels/custom statuses、messaging 仍排除；Decision/Guarded 继续暂缓。PR Auto review fix 属于本次明确接入的 Coding 功能。
+2026-10-26 的同步保留了 MkAgent 品牌、本地配置、Pi 1.1.0，以及 v0.15.4/0.15.5 和此前全部已同步能力。Claude 配置转发修复当时按段评估：Pi 已整包传递配置、使用 SDK 图片缩放和既有 compaction/context 计量，并新增回归验证，未恢复 Claude SDK。该批仍排除 Sources/MCP OAuth relay、Pages、Projects/conductor、Automations 产品、公开分享、labels/custom statuses 和 messaging，Decision/Guarded 继续暂缓；PR Auto review fix 属于该批明确接入的 Coding 功能。这些是当次发布事实，不要求当前全部 Pi 依赖维持 1.1.0。
 
 ```bash
 # 仅操作独立的临时参考副本，已有参考目录保持只读。
@@ -122,14 +124,14 @@ MkAgent 工作期间,参考 checkout(`../craft-agents-oss`、`../echo`、`../xag
 - Claude Agent SDK backend 与 `claude-agent-sdk*` 包；保留的 Claude OAuth 必须继续通过 Pi
 - GitHub Copilot、通用 / Sources OAuth 及其 SDK
 - 外部 messaging gateway 与 worker
-- Sources、MCP server、bridge MCP server、相关 UI
-- 图片生成模型与 `gen_image`
+- Craft Sources 产品界面、独立 MCP server 与 bridge server workspace；保留 durable MCP 客户端及所需的 Coding 项目 MCP 接入
+- Craft 的 `gen_image` 工具和独立图片生成 UI；保留在配置兼容图片模型与凭据后通过 codemode 调用 `models.generateImages()` 的能力
 - 公开分享、Viewer app
 - 产品 Automations 与 scheduler UI
 - Sources API / Settings UI、会话 labels、用户自定义 status
 - WhatsApp worker
 
-以上都登记在 Lite 边界删除项中,详见 [`comparison-with-craft.md`](./comparison-with-craft.md) 与 [`migration/`](../migration/README.md)。
+排除范围限于这些 Craft 产品功能，不禁止 Pi 插件模型 provider 授权、Coding MCP OAuth 或其他必需内核能力。当前范围见[差异对比](./comparison-with-craft.md)和 [Coding 能力规格](../pi-durable/coding-capabilities-spec.md)；[迁移归档](../migration/README.md)保留早期删除决定。
 
 ## 故障排查
 

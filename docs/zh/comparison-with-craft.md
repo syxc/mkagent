@@ -1,6 +1,6 @@
 # MkAgent vs Craft Agents 当前差异对比
 
-当前同步：MkAgent 0.2.0 采用适配后的 [Craft v0.15.0 基线](upstream-sync.md)。下方规模和安装包测量为历史快照；本版本以[逐路径清单](../sync/0.15.0-inventory.json)及[验证报告](../sync/0.15.0-validation.md)为准。
+历史同步记录：MkAgent 0.2.0 当时采用适配后的 Craft v0.15.0 基线。[逐路径清单](../sync/0.15.0-inventory.json)、[验证报告](../sync/0.15.0-validation.md)及下方测量均为历史快照。当前同步基线见[上游同步说明](upstream-sync.md)和[文档 README](README.md)。
 
 > 快照刷新时间：**2026-09-01**。
 > 对比基线：基于 `242306a` 的 MkAgent 同步工作区，以及上游 tag [`craft-ai-agents/craft-agents-oss` `v0.12.1` / `d7592c481216`](https://github.com/craft-ai-agents/craft-agents-oss)。数字是仓库快照，不是实时发布指标；安装包大小仍采用上一次实测构件。
@@ -47,12 +47,18 @@
 
 ## 3. Backend / 运行时边界
 
+本节和 §4.1 的 MkAgent 内核说明依据 2026-11-08 核对的代码。源码规模、审计数量、工具数量与安装包测量仍保留各自快照时点，不能作为当前迁移已完成的证明。
+
+第一次直接改用 `pi-durable` 后出现了 Coding 与 Pi 插件缺口。本次保留 MkAgent 所用的 Pi coding agent 层，尝试将其执行基座换成 durable。以原始 MkAgent/Coding 接入为行为参照，保留后续有效功能与已有数据。优先复用官方 SDK，减少以后 Coding 和 durable 更新时逐文件维护源码的责任。先采用 durable 内置能力，再用独立 Pi 官方 SDK 的公开 API；只有具体缺口得到论证后才保留薄适配或必要源码。允许按需引用 `pi-agent-core` 和 `pi-coding-agent` 的公开 SDK，不启动原版 CLI；SDK 覆盖后删除对应源码和多余直接依赖，只保留有具体缺口依据的适配。第三方资源替换、删行数和复制原版 CLI 的完整源码闭包均不是迁移目标。[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)取代早期迁移限制，历史删除清单不构成新增功能删减的授权。
+
+当前普通 profile 使用 `GenerationTask`。coding profile 的执行链为 `CodingHost → AgentSession → DurableLoopBinding → pi.coding.*`。这是当前实现，不是固定目标；自有任务桥仍须按实际 Coding 能力和公开插件契约重新审查。
+
 | 维度 | MkAgent | Craft Agents |
 |---|---|---|
 | 已注册的 `AgentBackend` | 仅 `pi` | `pi`、`claude-agent-sdk`，外加可选的 **Copilot / gateway** 订阅 |
 | 鉴权模型 | API key + 自定义端点 + Ollama + **ChatGPT/Claude 订阅 OAuth**，全部通过 Pi | API key + 自定义 + **OAuth（Anthropic、OpenAI、GitHub Copilot、Google Workspace、Slack、Microsoft）** + 订阅流程 + gateway |
 | 子进程模型 | `packages/pi-agent-server` 作为 Bun 子进程运行；通过 JSONL on stdio 通信 | Pi 子进程（同）**外加** SDK 子进程（`@anthropic-ai/claude-agent-sdk-binary`，每个平台架构约 217 MB 的 native `claude` 二进制）**外加** bridge/session MCP server **外加** WhatsApp worker 子进程 |
-| 内置传输 | OpenAI-兼容、Anthropic-兼容、Ollama（Pi `0.81.1`） | 同上，外加 Anthropic SDK 直连模式与 Copilot SDK 模式 |
+| 内置传输 | OpenAI 兼容、Anthropic 兼容、Ollama。根目录与 shared 使用 `pi-ai 1.1.0`，coding/server 使用 Pi `1.5.0`。 | 同上，外加 Anthropic SDK 直连模式与 Copilot SDK 模式 |
 | 图片生成 | 配置图片模型后可通过 codemode 调用；也支持图片附件 | 对照资料对 `gen_image` 的描述相互矛盾，尚未重新核实 |
 
 这里的“图片生成”指 Agent 可调用的产品能力。MkAgent 当前通过 codemode 的 `models.generateImages()` 暴露图片生成，能否执行取决于可用的图片模型与凭据。`supportsImages` 表示对话模型能否接收图片附件，属于图片输入能力。
@@ -63,7 +69,7 @@
 
 ### 4.1 Pi 内置工具
 
-MkAgent 使用 pi-durable 的 read/edit/write/bash，并从 pi-coding-agent 1.1.0 适配 grep/find/ls；Craft 使用 pi-coding-agent。两边提供以下工具：
+MkAgent 通过 durable 的 tools API 创建 read/edit/write/bash 及可选 PowerShell，通过 images API 处理图片，并安装其 codemode 和 tool-search 扩展。本地 grep/find/ls 仍从 pi-coding-agent 1.1.0 适配，也须按上述迁移原则重新审查。Craft 使用 pi-coding-agent。以下七项是共同的基础工具；PowerShell 为可选工具，不改写下文的历史计数：
 
 | Tool | 用途 |
 |---|---|

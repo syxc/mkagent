@@ -90,7 +90,7 @@ function probe(mode: 'branch' | 'import' | 'legacy-import' | 'fail-copy' | 'fail
       console.log(JSON.stringify({ error, before, after, details, sourcePath }));
     `
     const child = Bun.spawnSync([process.execPath, '--eval', script], {
-      cwd: join(import.meta.dir, '..', '..', '..'),
+      cwd: join(import.meta.dir, '..', '..'),
       env: { ...process.env, CONFIG_DIR: root }, stdout: 'pipe', stderr: 'pipe',
     })
     expect(child.exitCode, child.stderr.toString()).toBe(0)

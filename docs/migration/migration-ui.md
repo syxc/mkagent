@@ -1,6 +1,8 @@
 # MkAgent UI 对齐复盘与后续实施规范
 
-> 2026-07-30 补充：订阅入口边界已调整为仅恢复 Craft 的 Claude Pro/Max 与 ChatGPT Plus 卡片、凭证步骤和状态交互；不恢复 Copilot 或 Sources UI。仍遵循本文的“直接复用完整保留闭包，外围只做最小 Pi-only 适配”原则。
+> 适用范围（2026-11-08 核对）：本文记录早期 Craft UI 对齐，源码复用和闭包规则限于经确认保留的 Craft 产品界面，不要求复制完整 Pi Coding SDK、CLI 或旧执行器。下文 OAuth、MCP 和图片生成排除清单保留历史时点，不授权裁剪后来恢复的能力。当前内核迁移以[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)为准，先复用 durable 内置实现，再用独立 Pi 官方 SDK，必要兼容须有具体缺口依据，保持 MkAgent 功能。
+
+> 2026-07-30 历史补充：订阅入口边界当时调整为仅恢复 Craft 的 Claude Pro/Max 与 ChatGPT Plus 卡片、凭证步骤和状态交互；不恢复 Copilot 或 Sources UI。该阶段遵循本文的“直接复用完整保留闭包，外围只做最小 Pi-only 适配”原则。
 
 ## 1. 文档目的
 

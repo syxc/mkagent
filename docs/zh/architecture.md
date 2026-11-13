@@ -1,6 +1,16 @@
 # 架构
 
-MkAgent 是一个 Bun monorepo，三种客户端共用同一套经过鉴权的 WebSocket RPC 协议。唯一注册的 backend 是 `pi`。直接集成的是 `@earendil-works/pi-durable`，agent 内核（编码工具、codemode、MCP）运行在其子进程中；`pi-ai` 与 `chord` 是更底层的依赖，不是应用层会话 API。
+MkAgent 是一个 Bun monorepo，三种客户端共用同一套经过鉴权的 WebSocket RPC 协议。唯一注册的 backend 是 `pi`。agent 内核基于 `@earendil-works/pi-durable`，运行在独立 Bun 子进程中。`pi-ai` 与 `chord` 提供更底层的 API。
+
+## 内核迁移
+
+第一次直接改用 `pi-durable` 后出现了 Coding 与 Pi 插件缺口。本次保留 MkAgent 所用的 Pi coding agent 层，尝试将其执行基座换成 durable。以原始 MkAgent/Coding 接入为行为参照，保留后续有效功能与已有数据。优先复用官方 SDK，减少以后 Coding 和 durable 更新时逐文件维护源码的责任。先采用 durable 内置能力，再用独立 Pi 官方 SDK 的公开 API；只有具体缺口得到论证后才保留薄适配或必要源码。允许按需引用 `pi-agent-core` 和 `pi-coding-agent` 的公开 SDK，不启动原版 CLI；SDK 覆盖后删除对应源码和多余直接依赖，只保留有具体缺口依据的适配。第三方资源替换、删行数和复制原版 CLI 的完整源码闭包均不是迁移目标。当前目标以[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)为准；仅替代与之冲突的内核依赖和接入条款。MkAgent 既有分层、进程边界和宿主职责继续保留，宿主侧只做内核与插件接入所需的最小适配。
+
+当前普通 profile 使用 durable 的 `GenerationTask`。coding profile 的执行链为 `CodingHost → AgentSession → DurableLoopBinding → pi.coding.*`。这是当前实现，各个自有任务桥仍须按实际 Coding 能力和公开插件契约重新审查，不是固定的目标架构。
+
+Pi 已发布公开 API 与仓内 SDK 扩展须分开记账。`pi-agent-core` 的八个操作导出和 Agent 执行注入来自四文件仓内补丁，durable 的 `codingPrepare`、`codingStream`、`codingBoundary` 也来自仓内补丁。这些接点不能记为 Pi 已发布公开 API，必要性和升级成本仍须审查。独立测试可使用固定版本的原版 `pi-coding-agent` 包作为行为 oracle。
+
+根目录和 `packages/shared` 使用 `pi-ai 1.1.0`。`packages/coding-runtime` 与 `packages/pi-agent-server` 中的 Pi 依赖使用 `1.5.0`。这些是不同的依赖边界。
 
 ## 分层拓扑
 
@@ -62,7 +72,7 @@ MkAgent 是一个 Bun monorepo，三种客户端共用同一套经过鉴权的 W
 
 - `packages/server-core` 负责 transport、handler、`SessionManager` 与跨平台服务,内含子目录: `bootstrap/`、`domain/`、`handlers/`、`model-fetchers/`、`runtime/`、`services/`、`sessions/`、`transport/`、`utils/`、`webui/`。
 - `packages/shared` 负责协议 DTO(`@mkagent/shared/protocol`)、配置、凭证、Skills、提示词、backend registry、workspace 存储与 Pi 客户端。
-- `packages/pi-agent-server` 在独立 Bun 子进程(`packages/pi-agent-server/dist/index.js`)中运行基于 `@earendil-works/pi-durable` 的 agent 内核,通过 JSONL 通信。内核使用官方 pi-mcp 客户端（通过 agent 目录中的 `mcp.json` 配置 MCP 服务器）、pi-codemode 沙箱（codemode），以及从 pi-coding-agent 1.1.0 适配的 grep/find/ls。开发与打包产物共用同一 SDK 边界;`bun run server:build:subprocess` 负责打包。
+- `packages/pi-agent-server` 在独立 Bun 子进程（`packages/pi-agent-server/dist/index.js`）中运行基于 `@earendil-works/pi-durable` 的 agent 内核，通过 JSONL 通信。生产已通过 durable 的 tools 和 images API 创建 read/write/edit/bash 及可选 PowerShell，并安装其 codemode 和 tool-search 扩展。官方 pi-mcp 客户端读取 agent 目录中的 `mcp.json`，pi-codemode 提供沙箱。本地 grep/find/ls 仍从 pi-coding-agent 1.1.0 适配，须按上述迁移原则重新审查。开发与打包产物共用同一 SDK 边界；`bun run server:build:subprocess` 负责打包。
 - `packages/ui` 与 `packages/session-tools-core` 提供共享渲染与会话级工具。Electron、WebUI、CLI 都复用它们,和平台无关。
 
 ## Backend registry

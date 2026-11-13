@@ -126,7 +126,7 @@ export function readSessionJsonl(sessionFile: string): StoredSession | null {
     // rather than losing the entire session's messages.
     // Expand session path tokens before parsing so embedded paths resolve correctly.
     const expandedMessageLines = lines.slice(1).map(line => expandSessionPath(line, sessionDir));
-    const messages = parseMessagesResilient(expandedMessageLines);
+    const body = parseMessagesResilient(expandedMessageLines);
 
     // Migration: For sessions created before sdkCwd was added, use workingDirectory as fallback.
     // This is correct because the old code used workingDirectory for SDK's cwd parameter.
@@ -140,7 +140,7 @@ export function readSessionJsonl(sessionFile: string): StoredSession | null {
       workingDirectory: workingDir,
       sdkCwd,
       // Runtime fields
-      messages,
+      ...body,
       tokenUsage: header.tokenUsage,
     } as StoredSession;
   } catch (error) {
@@ -163,7 +163,7 @@ export function writeSessionJsonl(sessionFile: string, session: StoredSession): 
 
   const lines = [
     makeSessionPathPortable(JSON.stringify(header), sessionDir),
-    ...session.messages.map(m => makeSessionPathPortable(JSON.stringify(m), sessionDir)),
+    ...serializeSessionMessages(session, sessionDir),
   ];
 
   const tmpFile = sessionFile + '.tmp';
@@ -280,7 +280,7 @@ export async function readSessionHeaderAsync(sessionFile: string): Promise<Sessi
 }
 
 /**
- * Read only messages from a JSONL file (skips header).
+ * Read active messages from a JSONL file (skips header and archived rows).
  * Used for lazy loading when session is selected.
  * Resilient to corrupted/truncated lines (skips them instead of failing entirely).
  */
@@ -291,7 +291,7 @@ export function readSessionMessages(sessionFile: string): StoredMessage[] {
     // Skip first line (header), expand session path tokens, parse rest as messages resiliently
     const sessionDir = dirname(sessionFile);
     const expandedLines = lines.slice(1).map(line => expandSessionPath(line, sessionDir));
-    return parseMessagesResilient(expandedLines);
+    return parseMessagesResilient(expandedLines).messages;
   } catch (error) {
     debug('[jsonl] Failed to read session messages:', sessionFile, error);
     return [];
@@ -302,16 +302,32 @@ export function readSessionMessages(sessionFile: string): StoredMessage[] {
  * Parse message lines resiliently: skip lines that fail JSON.parse
  * (e.g. truncated by a crash mid-write) rather than losing all messages.
  */
-function parseMessagesResilient(lines: string[]): StoredMessage[] {
+export function serializeSessionMessages(session: Pick<StoredSession, 'messages' | 'nativeArchivedMessages'>, sessionDir: string): string[] {
+  const encode = (message: StoredMessage, archived: boolean): string => {
+    const { nativeArchived: _marker, ...body } = message as StoredMessage & { nativeArchived?: unknown };
+    return makeSessionPathPortable(JSON.stringify(archived ? { ...body, nativeArchived: true } : body), sessionDir);
+  };
+  return [
+    ...session.messages.map(message => encode(message, false)),
+    ...(session.nativeArchivedMessages ?? []).map(message => encode(message, true)),
+  ];
+}
+
+function parseMessagesResilient(lines: string[]): Pick<StoredSession, 'messages' | 'nativeArchivedMessages'> {
   const messages: StoredMessage[] = [];
+  const nativeArchivedMessages: StoredMessage[] = [];
   for (const line of lines) {
     try {
-      messages.push(JSON.parse(line) as StoredMessage);
+      const parsed = JSON.parse(line) as StoredMessage & { nativeArchived?: boolean };
+      if (parsed && typeof parsed === 'object' && 'nativeArchived' in parsed) {
+        const { nativeArchived, ...message } = parsed;
+        (nativeArchived === true ? nativeArchivedMessages : messages).push(message);
+      } else messages.push(parsed);
     } catch {
       // Corrupted/truncated line (likely from a crash during write).
       // Skip it and continue — losing one message is better than losing all.
-      debug('[jsonl] Skipping corrupted message line (truncated?):', line.substring(0, 100));
+      debug('[jsonl] Skipping corrupted message line');
     }
   }
-  return messages;
+  return { messages, ...(nativeArchivedMessages.length ? { nativeArchivedMessages } : {}) };
 }

@@ -20,7 +20,7 @@
 <main class="content">
   <header class="hero" id="overview">
     <h1>MkAgent Craft Lite 源码复用与裁剪审计</h1>
-    <div class="risk"><strong>历史快照：</strong>本文统计对应 2026-07-29 边界。2026-07-30 起已在保持 Pi-only 的前提下恢复 ChatGPT Plus 与 Claude Pro/Max 两种 LLM OAuth；Claude Agent SDK、GitHub Copilot 与 Sources/MCP 仍不恢复。</div>
+    <div class="risk">历史快照（2026-11-08 核对）：本文统计和裁剪结论对应 2026-07-29；2026-07-30 的补记只记录当时恢复 ChatGPT Plus 与 Claude Pro/Max LLM OAuth 的边界。下文旧 Pi 版本、MCP/图片生成排除和源码一致性数量均为历史事实，不是当前依赖或功能要求。当前产品见<a href="../README.md">文档入口</a>，Craft 基线见<a href="../upstream-sync.md">上游同步</a>。当前内核按<a href="../pi-durable/coding-capabilities-spec.md">能力规格</a>和<a href="../pi-durable/durable-coding-agent-plan.md">实施计划</a>执行：先 durable 内置，再独立 Pi 官方 SDK，必要兼容最后，保持 MkAgent 功能。Craft UI 复用规则不要求移植完整 Pi Coding SDK 或 CLI；原报告和测量保留原时点。</div>
     <p>MkAgent 是 Craft Agents OSS 的 Pi-only Lite 版本，不是独立重写。此前 UI 对齐确实大规模复用了 Craft，但把许多排除功能留在代码中并仅隐藏；本轮已把它们从文件、状态、路由、协议、事件、设置和文案层物理删除。</p>
     <div class="meta"><span>基线 5c8308b</span><span>Craft a60ebc1 / v0.11.2</span><span>TypeScript / React</span><span>Apache-2.0</span></div>
   </header>

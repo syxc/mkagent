@@ -19,6 +19,12 @@ describe('PrerequisiteManager', () => {
   let manager: PrerequisiteManager;
   let debugMessages: string[];
 
+  function successfulBashRead(command: string) {
+    const result = manager.checkBashPrerequisites(command);
+    if (result.allowed) manager.trackSuccessfulBashRead(command);
+    return result;
+  }
+
   beforeEach(() => {
     debugMessages = [];
     mockExistsPaths = new Set();
@@ -69,26 +75,36 @@ describe('PrerequisiteManager', () => {
   });
 
   describe('checkBashPrerequisites', () => {
+    it('admits a reading attempt without recording it before completion', () => {
+      const file = '/test/docs/guide.md';
+      manager.registerSkillPrerequisites([file]);
+      expect(manager.checkBashPrerequisites(`cat ${file}`).allowed).toBe(true);
+      expect(manager.hasRead(file)).toBe(false);
+      expect(manager.checkPrerequisites('Write').allowed).toBe(false);
+      manager.trackSuccessfulBashRead(`cat ${file}`);
+      expect(manager.hasRead(file)).toBe(true);
+      expect(manager.checkPrerequisites('Write').allowed).toBe(true);
+    });
     describe('guide reads', () => {
       it('counts cat of the browser guide via ~ for the strict browser rule', () => {
         const docsPath = BROWSER_DOC_PATH;
         mockExistsPaths.add(docsPath);
         expect(manager.checkPrerequisites('browser_tool').allowed).toBe(false);
 
-        expect(manager.checkBashPrerequisites(`cat ${homeSpelled(docsPath, '~')}`).allowed).toBe(true);
+        expect(successfulBashRead(`cat ${homeSpelled(docsPath, '~')}`).allowed).toBe(true);
         expect(manager.checkPrerequisites('browser_tool').allowed).toBe(true);
       });
 
-      it('counts a quoted $HOME path piped into head', () => {
+      it('counts a quoted $HOME path read directly with head', () => {
         const docsPath = BROWSER_DOC_PATH;
         mockExistsPaths.add(docsPath);
 
-        manager.checkBashPrerequisites(`cat "${homeSpelled(docsPath, '$HOME')}" | head -50`);
+        successfulBashRead(`head -n 50 "${homeSpelled(docsPath, '$HOME')}"`);
         expect(manager.checkPrerequisites('browser_tool').allowed).toBe(true);
       });
 
       it('counts a ${HOME} path', () => {
-        manager.checkBashPrerequisites(`cat "${homeSpelled(BROWSER_DOC_PATH, '${HOME}')}"`);
+        successfulBashRead(`cat "${homeSpelled(BROWSER_DOC_PATH, '${HOME}')}"`);
         expect(manager.hasRead(BROWSER_DOC_PATH)).toBe(true);
       });
 
@@ -96,7 +112,7 @@ describe('PrerequisiteManager', () => {
         const docsPath = BROWSER_DOC_PATH;
         mockExistsPaths.add(docsPath);
 
-        manager.checkBashPrerequisites(`sed -n '1,200p' ${docsPath}`);
+        successfulBashRead(`sed -n '1,200p' ${docsPath}`);
         expect(manager.checkPrerequisites('browser_tool').allowed).toBe(true);
       });
 
@@ -111,27 +127,20 @@ describe('PrerequisiteManager', () => {
         [`command cat ${file}`],
         [`cat -n -- ${file}`],
         [`cat < ${file}`],
+        [`cat 0< ${file}`],
         [`/usr/bin/sed -n 1,50p ${file}`],
         [`sed '1,200p' ${file}`],
         [`sed -n -e '1,20p' ${file}`],
         [`bat --paging=never ${file}`],
-        [`less ${file}`],
-        [`more ${file}`],
         [`nl -ba ${file}`],
         [`tail -n +1 ${file}`],
-        [`cat ${file} | head -50 | tail -10`],
-        [`cat ${file} 2>/dev/null || echo missing`],
-        [`ls /test/docs && cat ${file}`],
-        [`echo start; cat ${file}`],
-        [`pwd\ncat ${file}`],
-        [`(cat ${file})`],
       ])('%s', (command) => {
-        expect(manager.checkBashPrerequisites(command).allowed).toBe(true);
+        expect(successfulBashRead(command).allowed).toBe(true);
         expect(manager.hasRead(file)).toBe(true);
       });
 
       it('reads a quoted path with spaces', () => {
-        manager.checkBashPrerequisites(`cat "/test/my docs/guide.md"`);
+        successfulBashRead(`cat "/test/my docs/guide.md"`);
         expect(manager.hasRead('/test/my docs/guide.md')).toBe(true);
       });
     });
@@ -147,6 +156,19 @@ describe('PrerequisiteManager', () => {
         [`wc -l ${file}`],
         [`cat ${file} | grep foo`],
         [`cat ${file} | wc -l`],
+        [`cat ${file} | head -50 | tail -10`],
+        [`cat ${file} 2>/dev/null || echo missing`],
+        [`ls /test/docs && cat ${file}`],
+        [`echo start; cat ${file}`],
+        [`pwd\ncat ${file}`],
+        [`(cat ${file})`],
+        [`less ${file}`],
+        [`more ${file}`],
+        [`cat --help ${file}`],
+        [`sed -n q ${file}`],
+        [`head -n 0 ${file}`],
+        [`cat 3< ${file}`],
+        [`cat < ${file} < /test/other.md`],
         [`cat ${file} > /tmp/copy.md`],
         [`cat ${file} | head -5 >> /tmp/copy.md`],
         [`sed -i '' 's/a/b/' ${file}`],
@@ -157,13 +179,13 @@ describe('PrerequisiteManager', () => {
         [`cat "unterminated ${file}`],
         ['cat $GUIDE_DIR/guide.md'],
       ])('%s', (command) => {
-        expect(manager.checkBashPrerequisites(command).allowed).toBe(true);
+        expect(successfulBashRead(command).allowed).toBe(true);
         expect(manager.hasRead(file)).toBe(false);
         expect(debugMessages.some((m) => m.includes('tracked read'))).toBe(false);
       });
 
       it('skips relative paths: the shell cwd is not known', () => {
-        manager.checkBashPrerequisites('cat sources/linear/guide.md');
+        successfulBashRead('cat sources/linear/guide.md');
         expect(debugMessages.some((m) => m.includes('tracked read'))).toBe(false);
       });
     });
@@ -174,7 +196,7 @@ describe('PrerequisiteManager', () => {
       it('clears a skill read with cat, so other tools run again', () => {
         manager.registerSkillPrerequisites([skillPath]);
 
-        expect(manager.checkBashPrerequisites(`cat ${skillPath}`).allowed).toBe(true);
+        expect(successfulBashRead(`cat ${skillPath}`).allowed).toBe(true);
         expect(manager.hasRead(skillPath)).toBe(true);
         expect(manager.checkPrerequisites('WebSearch').allowed).toBe(true);
       });
@@ -183,16 +205,17 @@ describe('PrerequisiteManager', () => {
         const homeSkill = join(homedir(), '.agents', 'skills', 'my-skill', 'SKILL.md');
         manager.registerSkillPrerequisites([homeSkill]);
 
-        manager.checkBashPrerequisites(`cat ${homeSpelled(homeSkill, '~')}`);
+        successfulBashRead(`cat ${homeSpelled(homeSkill, '~')}`);
         expect(manager.checkPrerequisites('WebSearch').allowed).toBe(true);
       });
 
-      it('clears every skill a command reads', () => {
+      it('clears each skill after its separate successful read', () => {
         const alpha = '/test/workspace/skills/alpha/SKILL.md';
         const beta = '/test/workspace/skills/beta/SKILL.md';
         manager.registerSkillPrerequisites([alpha, beta]);
 
-        manager.checkBashPrerequisites(`cat ${alpha} && cat ${beta}`);
+        successfulBashRead(`cat ${alpha}`);
+        successfulBashRead(`cat ${beta}`);
         expect(manager.checkPrerequisites('WebSearch').allowed).toBe(true);
       });
 
@@ -201,7 +224,7 @@ describe('PrerequisiteManager', () => {
         const beta = '/test/workspace/skills/beta/SKILL.md';
         manager.registerSkillPrerequisites([alpha, beta]);
 
-        expect(manager.checkBashPrerequisites(`cat ${alpha}`).allowed).toBe(true);
+        expect(successfulBashRead(`cat ${alpha}`).allowed).toBe(true);
         expect(manager.checkPrerequisites('WebSearch').allowed).toBe(false);
       });
 
@@ -209,13 +232,13 @@ describe('PrerequisiteManager', () => {
         const docsPath = BROWSER_DOC_PATH;
         manager.registerSkillPrerequisites([skillPath]);
 
-        const held = manager.checkBashPrerequisites(`cat ${docsPath}`);
+        const held = successfulBashRead(`cat ${docsPath}`);
         expect(held.allowed).toBe(false);
         expect(held.blockReason).toContain(skillPath);
         expect(manager.hasRead(docsPath)).toBe(false);
 
         // The gate gives way on the next call, which runs and counts
-        expect(manager.checkBashPrerequisites(`cat ${docsPath}`).allowed).toBe(true);
+        expect(successfulBashRead(`cat ${docsPath}`).allowed).toBe(true);
         expect(manager.hasRead(docsPath)).toBe(true);
       });
 
@@ -227,7 +250,7 @@ describe('PrerequisiteManager', () => {
       it('logs when a Bash read clears a skill prerequisite', () => {
         manager.registerSkillPrerequisites([skillPath]);
 
-        manager.checkBashPrerequisites(`cat ${skillPath}`);
+        successfulBashRead(`cat ${skillPath}`);
         expect(debugMessages.some((m) => m.includes('cleared skill prerequisite via Bash'))).toBe(true);
       });
     });
@@ -250,7 +273,7 @@ describe('PrerequisiteManager', () => {
 
     it('clears Skill prerequisites read through Bash', () => {
       manager.registerSkillPrerequisites([skillPath]);
-      expect(manager.checkBashPrerequisites(`cat ${skillPath}`).allowed).toBe(true);
+      expect(successfulBashRead(`cat ${skillPath}`).allowed).toBe(true);
       expect(manager.checkPrerequisites('WebSearch').allowed).toBe(true);
     });
 

@@ -1,0 +1,125 @@
+{
+  "repository": "https://github.com/earendil-works/pi",
+  "version": "1.5.0",
+  "revision": "f9a26365568127461c47a07a37dcb42c140a3ac5",
+  "policy": "Pinned official fixtures and host compatibility forwards. Production algorithms use public Pi SDK APIs. Reproduced by scripts/vendor-upstream.ts.",
+  "typescript": "5.9.3",
+  "files": [
+    {
+      "source": "packages/coding-agent/examples/extensions/hello.ts",
+      "target": "test/fixtures/upstream/hello.ts",
+      "sha256": "0aa4e9800c2526914d4c1edb00b2cfa9bd9dd6da5218289994cccd5f5bfa4934",
+      "portSha256": "0aa4e9800c2526914d4c1edb00b2cfa9bd9dd6da5218289994cccd5f5bfa4934"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/input-transform.ts",
+      "target": "test/fixtures/upstream/input-transform.ts",
+      "sha256": "cf0f65d610631ca75d18aae1c8f1408139702f674cb2835f8c009b943776474b",
+      "portSha256": "cf0f65d610631ca75d18aae1c8f1408139702f674cb2835f8c009b943776474b"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/rpc-demo.ts",
+      "target": "test/fixtures/upstream/rpc-demo.ts",
+      "sha256": "3d54a396eee12eb04ea12d0ea03716a6edd3e8743502b6a529e3b8d429ae640d",
+      "portSha256": "3d54a396eee12eb04ea12d0ea03716a6edd3e8743502b6a529e3b8d429ae640d"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/confirm-destructive.ts",
+      "target": "test/fixtures/upstream/confirm-destructive.ts",
+      "sha256": "55502f82109df07e922ef3ec41af1b1a5ed33d4d6d56076654ab2bc88e2e0888",
+      "portSha256": "55502f82109df07e922ef3ec41af1b1a5ed33d4d6d56076654ab2bc88e2e0888"
+    },
+    {
+      "source": "packages/coding-agent/examples/extensions/session-name.ts",
+      "target": "test/fixtures/upstream/session-name.ts",
+      "sha256": "a0b9fd94e2cc827931150cc409238b473da635ab1a1cddce633cae5937a3ae24",
+      "portSha256": "a0b9fd94e2cc827931150cc409238b473da635ab1a1cddce633cae5937a3ae24"
+    },
+    {
+      "source": "packages/coding-agent/test/suite/mcp-oauth-server.ts",
+      "target": "test/fixtures/upstream/mcp-oauth-server.ts",
+      "sha256": "c92e904082949668fcc63de3ecec5a0a82499cff35e4e27514a68015d5596bed",
+      "portSha256": "c92e904082949668fcc63de3ecec5a0a82499cff35e4e27514a68015d5596bed"
+    }
+  ],
+  "forwarded": [
+    {
+      "target": "src/upstream/core/skills.ts",
+      "implementation": "@earendil-works/pi-coding-agent",
+      "changes": [
+        "explicit-host-agent-directory",
+        "explicit-host-project-resource-directory"
+      ]
+    },
+    {
+      "target": "src/upstream/core/prompt-templates.ts",
+      "implementation": "@earendil-works/pi-coding-agent",
+      "changes": [
+        "explicit-host-project-resource-directory"
+      ]
+    },
+    {
+      "target": "src/upstream/core/system-prompt.ts",
+      "implementation": "@earendil-works/pi-coding-agent",
+      "changes": [
+        "host-documentation-paths"
+      ]
+    },
+    {
+      "target": "src/upstream/utils/shell.ts",
+      "implementation": "src/compat/shell.ts",
+      "changes": [
+        "selected-public-shell-api"
+      ]
+    },
+    {
+      "target": "src/upstream/core/package-manager.ts",
+      "implementation": "src/legacy/package-manager.ts",
+      "changes": [
+        "legacy-project-directory-and-offline-policy"
+      ]
+    },
+    {
+      "target": "src/upstream/core/messages.js",
+      "implementation": "src/legacy/messages.js",
+      "changes": [
+        "legacy-message-metadata-and-identity"
+      ]
+    },
+    {
+      "target": "src/upstream/core/model-registry.js",
+      "implementation": "src/legacy/model-registry.js",
+      "changes": [
+        "structural-model-runtime-constructor"
+      ]
+    },
+    {
+      "target": "src/upstream/core/settings-merge.js",
+      "implementation": "src/legacy/settings-merge.js",
+      "changes": [
+        "legacy-open-settings-shape"
+      ]
+    },
+    {
+      "target": "src/upstream/core/context-tokens.js",
+      "implementation": "src/legacy/context-tokens.js",
+      "changes": [
+        "legacy-open-token-inputs"
+      ]
+    },
+    {
+      "target": "src/upstream/core/extensions/runner.js",
+      "implementation": "src/legacy/extension-runner.js",
+      "changes": [
+        "legacy-headless-theme-and-system-prompt"
+      ]
+    },
+    {
+      "target": "src/upstream/core/session-manager.js",
+      "implementation": "src/legacy/session-manager.js",
+      "changes": [
+        "legacy-durable-projection-and-storage-factories"
+      ]
+    }
+  ]
+}

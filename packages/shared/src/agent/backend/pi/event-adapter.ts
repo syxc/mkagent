@@ -14,8 +14,6 @@ import { contextAfterCompaction, contextFromPi } from '../../context-usage.ts';
 import type { PiContextUsagePayload } from './protocol.ts';
 import type {
   AgentEvent as PiAgentEvent,
-} from '@earendil-works/pi-agent-core';
-import type {
   AgentSessionEvent,
 } from './agent-session-events.ts';
 import type { AssistantMessage, AssistantMessageEvent } from '@earendil-works/pi-ai';

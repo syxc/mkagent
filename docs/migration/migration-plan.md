@@ -1,6 +1,8 @@
 # MkAgent MVP 标准实施计划
 
-> 2026-07-30 边界修订：本文主体记录原始 Lite 迁移计划。当前仅恢复 ChatGPT Plus 与 Claude Pro/Max 的 Craft OAuth 闭包，两者均由 Pi 执行；Claude Agent SDK、GitHub Copilot、Sources/MCP 不恢复。实施记录见 [`migration-features.md`](./migration-features.md)。
+> 历史范围（2026-11-08 核对）：本文保留早期建仓、Lite 裁剪和验证计划，不是当前实施授权。下文 MCP、OAuth 和图片生成删除要求、Pi 旧底座和“从零建仓”步骤均限于当时阶段。现有 MCP 客户端、codemode 图片生成及已恢复的 LLM OAuth 不按旧清单裁剪。当前内核按[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)执行：durable 内置优先，独立 Pi 官方 SDK 其次，只对确认缺口做必要兼容，保持 MkAgent 功能。Craft 产品来源规则不要求移植完整 Pi Coding 或 CLI 闭包。
+
+> 2026-07-30 历史边界修订：本文主体记录原始 Lite 迁移计划。当时仅恢复 ChatGPT Plus 与 Claude Pro/Max 的 Craft OAuth 闭包，两者均由 Pi 执行；Claude Agent SDK、GitHub Copilot、Sources/MCP 当时不恢复。实施记录见 [`migration-features.md`](./migration-features.md)。
 
 ## 1. 总体方案
 

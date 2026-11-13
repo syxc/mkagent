@@ -341,10 +341,12 @@ export abstract class BaseAgent implements AgentBackend {
       return;
     }
     const branchContext = this.buildBranchSeedContext(this.config.getBranchSeedMessages?.());
-    if (branchContext) this.config.markBranchSeedApplied?.();
     const summary = this.config.getTransferredSessionSummary?.();
     const handoffContext = summary ? buildTransferredSessionContext(summary) : null;
-    if (handoffContext) this.config.markTransferredSessionSummaryApplied?.();
+    if (branchContext || handoffContext) this.prepareTurnContext(() => {
+      if (branchContext) this.config.markBranchSeedApplied?.();
+      if (handoffContext) this.config.markTransferredSessionSummaryApplied?.();
+    });
     const effectiveMessage = [branchContext, handoffContext, this.formatSkillDirective(skillPaths), cleanMessage]
       .filter(Boolean)
       .join('\n\n');
@@ -355,6 +357,9 @@ export abstract class BaseAgent implements AgentBackend {
       this._currentTurnUserMessage = null;
     }
   }
+
+  /** Backends with input receipts can consume host context after local commands have been ruled out. */
+  protected prepareTurnContext(consume: () => void): void { consume(); }
 
   protected abstract chatImpl(
     message: string,

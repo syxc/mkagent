@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import { spawn, spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -134,8 +134,81 @@ function driveBundle(
 }
 
 describe('pi-agent-server bundle', () => {
+  it('never executes a project-relative image worker while preparing a native prompt', () => {
+    const project = join(scratchDir, 'untrusted-image-project');
+    const worker = join(project, 'src', 'utils');
+    const canary = join(project, 'worker-executed');
+    mkdirSync(worker, { recursive: true });
+    writeFileSync(join(worker, 'image-resize-worker.ts'),
+      `import { writeFileSync } from 'node:fs'; writeFileSync(${JSON.stringify(canary)}, 'executed'); process.exit(0);`);
+    const proc = spawnSync(process.execPath, [join(import.meta.dir, 'test-fixtures', 'native-image.ts')], {
+      cwd: project, env: createOfflineEnvironment(), encoding: 'utf8', timeout: RUN_TIMEOUT_MS,
+    });
+    expect(proc.status).toBe(0);
+    expect(proc.stdout).toContain('"images":1');
+    expect(proc.stdout).toContain('"readImages":1');
+    expect(existsSync(canary)).toBe(false);
+  });
+
+  it('prepares a native image beside the relocated shared Photon module', () => {
+    const artifact = join(scratchDir, 'native-image-artifact');
+    const project = join(scratchDir, 'native-image-cwd');
+    mkdirSync(artifact);
+    mkdirSync(project);
+    const output = join(artifact, 'native-image.js');
+    const build = spawnSync(process.execPath, [
+      'build', join(import.meta.dir, 'test-fixtures', 'native-image.ts'), '--outfile', output,
+      '--target=bun', '--format=esm', '--external=koffi',
+    ], { cwd: packageDir, encoding: 'utf8', timeout: 120_000 });
+    expect(build.status).toBe(0);
+    copyFileSync(join(packageDir, 'dist', 'photon_rs_bg.wasm'), join(artifact, 'photon_rs_bg.wasm'));
+    // Absolute build-time paths must not mask missing release image bindings.
+    const preload = join(artifact, 'missing-build-photon.cjs');
+    writeFileSync(preload, `
+      const fs = require('node:fs');
+      const readFileSync = fs.readFileSync;
+      fs.readFileSync = (file, ...args) => {
+        const name = String(file);
+        if (name.includes('node_modules') && name.includes('@silvia-odwyer') && name.endsWith('photon_rs_bg.wasm')) {
+          throw Object.assign(new Error('Build-time Photon is unavailable'), { code: 'ENOENT' });
+        }
+        return readFileSync(file, ...args);
+      };
+    `);
+    const proc = spawnSync(process.execPath, ['--preload', blockNetworkPreloadPath, '--preload', preload, output], {
+      cwd: project, env: createOfflineEnvironment(), encoding: 'utf8', timeout: RUN_TIMEOUT_MS,
+    });
+    expect(proc.status).toBe(0);
+    expect(proc.stdout).toContain('"images":1');
+    expect(proc.stdout).toContain('"readImages":1');
+  });
+
   it('ships the Photon image module next to the bundle', () => {
     expect(existsSync(join(packageDir, 'dist', 'photon_rs_bg.wasm'))).toBe(true);
+    expect(existsSync(join(packageDir, 'dist', 'coding_photon_rs_bg.wasm'))).toBe(false);
+    expect(readFileSync(join(packageDir, 'dist', 'LICENSE.pi'), 'utf8')).toContain('Copyright (c) 2025 Mario Zechner');
+  });
+
+  it('exports HTML with the native templates and themes beside a relocated bundle', () => {
+    const artifact = join(scratchDir, 'native-export-artifact');
+    const project = join(scratchDir, 'native-export-project');
+    mkdirSync(artifact);
+    mkdirSync(project);
+    const output = join(artifact, 'native-export.js');
+    const build = spawnSync(process.execPath, [
+      'build', join(import.meta.dir, 'test-fixtures', 'native-image.ts'), '--outfile', output,
+      '--target=bun', '--format=esm', '--external=koffi',
+    ], { cwd: packageDir, encoding: 'utf8', timeout: 120_000 });
+    expect(build.status).toBe(0);
+    const assets = join(packageDir, 'dist', 'coding-assets');
+    if (existsSync(assets)) cpSync(assets, join(artifact, 'coding-assets'), { recursive: true });
+    copyFileSync(join(packageDir, 'dist', 'photon_rs_bg.wasm'), join(artifact, 'photon_rs_bg.wasm'));
+    const proc = spawnSync(process.execPath, [output, '--export'], {
+      cwd: project, env: createOfflineEnvironment(), encoding: 'utf8', timeout: RUN_TIMEOUT_MS,
+    });
+    if (proc.status !== 0) throw new Error(proc.stderr || proc.stdout);
+    expect(proc.status).toBe(0);
+    expect(proc.stdout).toContain('"exported":true');
   });
 
   it('reads a BMP through the bundled read tool using the adjacent Photon module', () => {
@@ -280,7 +353,8 @@ describe('pi-agent-server bundle', () => {
       },
       { type: 'ensure_session_ready', id: 'open-1' },
       { type: 'ensure_session_ready', id: 'open-2' },
-    ], out => out.includes('"id":"open-1"') && out.includes('"id":"open-2"'));
+    ], out => out.includes('Created durable kernel session:')
+      && out.includes('"id":"open-1"') && out.includes('"id":"open-2"'));
     const results = output.split('\n').flatMap(line => {
       try { return [JSON.parse(line)]; } catch { return []; }
     }).filter(message => message.type === 'ensure_session_ready_result');
@@ -459,7 +533,7 @@ describe('pi-agent-server bundle', () => {
   it('cannot publish an older candidate after a newer runtime update succeeds', async () => {
     const fixtureBundle = join(scratchDir, 'runtime-candidate-race.js');
     const source = readFileSync(bundlePath, 'utf8');
-    const buildAnchor = '    const candidate = await createModelRuntime(candidateConfig, () => {}, previous.credentials);';
+    const buildAnchor = '    const candidate = await createModelRuntime(candidateConfig, () => {}, previous.credentials, previous.codingCredentials);';
     const releaseAnchor = 'function handleRegisterTools(msg) {';
     expect(source.split(buildAnchor)).toHaveLength(2);
     expect(source.split(releaseAnchor)).toHaveLength(2);
@@ -582,10 +656,16 @@ describe('pi-agent-server bundle', () => {
     } }));
     const fixtureBundle = join(scratchDir, 'abort-wait.js');
     const bundle = readFileSync(bundlePath, 'utf8');
-    const anchor = '      await kernel.abort();';
-    expect(bundle.split(anchor)).toHaveLength(2);
-    writeFileSync(fixtureBundle, bundle.replace(anchor,
-      `${anchor}\n      process.stderr.write("TEST_ABORT_FINISHED\\n");`));
+    // The kernel also awaits active.abort(); instrument only the stdin handler.
+    const start = bundle.indexOf('async function handleAbort(');
+    const end = bundle.indexOf('async function handleMiniCompletion(', start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const handler = bundle.slice(start, end);
+    const anchor = 'await active.abort();';
+    expect(handler.split(anchor)).toHaveLength(2);
+    const instrumented = handler.replace(anchor, `${anchor}\nprocess.stderr.write("TEST_ABORT_FINISHED\\n");`);
+    writeFileSync(fixtureBundle, bundle.slice(0, start) + instrumented + bundle.slice(end));
     for (const name of ['codemode-worker.js', 'quickjs.wasm']) {
       copyFileSync(join(packageDir, 'dist', name), join(scratchDir, name));
     }

@@ -17,9 +17,12 @@ export type {
   SessionMetadata,
   SessionHeader,
   SessionPersistentField,
+  NativeSessionOwnerRecord,
 } from './types.ts';
 
 // Field constants
+export type { NativeSessionReference } from './native-session-reference.ts';
+export { parseNativeSessionReference } from './native-session-reference.ts';
 export { SESSION_PERSISTENT_FIELDS } from './types.ts';
 
 // Storage functions
@@ -88,7 +91,7 @@ export {
 
 // Field utilities
 export { pickSessionFields } from './utils.ts';
-export { copyReferencedSessionFiles, importSessionMessages, restoreSessionBundleFiles, remapSessionFileReferences } from './session-files.ts';
+export { copyReferencedSessionFiles, importSessionMessages, importNativeArchivedMessages, restoreSessionBundleFiles, remapSessionFileReferences } from './session-files.ts';
 
 // Slug generator utilities
 export {

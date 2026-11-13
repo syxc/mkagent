@@ -24,7 +24,7 @@
     "test": "bun run scripts/run-tests.ts",
     "typecheck": "bun run typecheck:shared",
     "typecheck:shared": "cd packages/shared && bun run tsc --noEmit",
-    "typecheck:all": "cd packages/core && bun run tsc --noEmit && cd ../shared && bun run tsc --noEmit && cd ../server-core && bun run tsc --noEmit && cd ../server && bun run tsc --noEmit && cd ../session-tools-core && bun run tsc --noEmit && cd ../pi-agent-server && bun run typecheck && cd ../../apps/electron && bun run typecheck && cd ../webui && bun run typecheck && cd ../cli && bun run typecheck && cd ../../packages/ui && bun run tsc --noEmit",
+    "typecheck:all": "cd packages/core && bun run tsc --noEmit && cd ../shared && bun run tsc --noEmit && cd ../server-core && bun run tsc --noEmit && cd ../server && bun run tsc --noEmit && cd ../session-tools-core && bun run tsc --noEmit && cd ../coding-runtime && bun run typecheck && cd ../pi-agent-server && bun run typecheck && cd ../../apps/electron && bun run typecheck && cd ../webui && bun run typecheck && cd ../cli && bun run typecheck && cd ../../packages/ui && bun run tsc --noEmit",
     "server:start": "bun run packages/server/src/index.ts",
     "server:dev": "bun run server:build:subprocess && bun run server:dev:start",
     "server:dev:start": "MKAGENT_SERVER_TOKEN=${MKAGENT_SERVER_TOKEN:-mkagent-local-dev-token} MKAGENT_DEBUG=true MKAGENT_BUNDLED_ASSETS_ROOT=$PWD/apps/electron bun run packages/server/src/index.ts",
@@ -89,6 +89,7 @@
   },
   "devDependencies": {
     "@electron/packager": "^19.0.1",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@rollup/rollup-win32-arm64-msvc": "^4.55.1",
     "@sentry/vite-plugin": "^4.8.0",
     "@tailwindcss/vite": "^4.1.18",
@@ -123,7 +124,7 @@
     "vite": "^6.2.4"
   },
   "dependencies": {
-    "@earendil-works/pi-ai": "1.1.0",
+    "@earendil-works/pi-ai": "1.5.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -187,5 +188,12 @@
     "@img/sharp-libvips-darwin-x64": "1.2.4",
     "@img/sharp-libvips-linux-arm64": "1.2.4",
     "@img/sharp-libvips-linux-x64": "1.2.4"
+  },
+  "patchedDependencies": {
+    "@earendil-works/pi-agent-core@1.5.0": "patches/@earendil-works%2Fpi-agent-core@1.5.0.patch",
+    "@earendil-works/pi-coding-agent@1.5.0": "patches/@earendil-works%2Fpi-coding-agent@1.5.0.patch",
+    "@earendil-works/pi-durable@1.5.0": "patches/@earendil-works%2Fpi-durable@1.5.0.patch",
+    "@silvia-odwyer/photon@0.3.3": "patches/@silvia-odwyer%2Fphoton@0.3.3.patch",
+    "gaxios@7.1.3": "patches/gaxios@7.1.3.patch"
   }
 }

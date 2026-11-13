@@ -1,1 +1,1 @@
-import '@earendil-works/pi-codemode/worker';
+import '@earendil-works/pi-durable/codemode/worker';

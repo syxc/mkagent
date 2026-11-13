@@ -1,5 +1,7 @@
 # MkAgent 对齐审核流程与历史经验
 
+> 历史范围（2026-11-08 核对）：本文保留早期 Craft 来源审计流程、统计和验证证据。下文“当前”“本轮”“必须”和功能删除范围均适用于原审计；旧 OAuth、MCP 或图片生成排除不构成当前删减授权。逐文件血缘和 Craft UI 完整闭包规则不能推导完整 Pi Coding 源码、CLI 或私有执行布局必须保留。当前内核按[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)执行，先 durable 内置，再独立 Pi 官方 SDK，必要兼容须有具体缺口依据，保持 MkAgent 功能。当前 Craft 基线见[上游同步](../upstream-sync.md)，历史路径不指定本次参考目录或访问权限。
+
 ## 1. 文档目的
 
 本文定义 MkAgent 对 Craft Agent 进行完整代码审核、修复和验收时必须遵循的流程，并记录历次迁移与本轮复审暴露的问题。

@@ -27,6 +27,7 @@ import type {
 } from './custom-endpoint-models.ts';
 import { buildCustomEndpointModelDef, normalizeCustomEndpointModelEntry } from './custom-endpoint-models.ts';
 import type { PiCredential } from './adapt-credential.ts';
+import { ModelRuntime as CodingModelRuntime, type ModelRuntimeCredentials } from '@mkagent/coding-runtime/native';
 
 /** Lazy API implementations keyed by `model.api`, shared by custom endpoints. */
 const CUSTOM_ENDPOINT_APIS: Record<CustomEndpointApi, () => ProviderStreams> = {
@@ -181,6 +182,7 @@ export function withModelRequestCompatibility(provider: Provider): Provider {
 export interface ModelRuntime {
   models: MutableModels;
   credentials: OAuthSyncCredentialStore;
+  codingCredentials: ModelRuntimeCredentials;
 }
 
 /**
@@ -192,8 +194,9 @@ export async function createModelRuntime(
   config: ModelRuntimeConfig,
   onOAuthUpdate: OAuthUpdateHandler,
   credentials = new OAuthSyncCredentialStore(onOAuthUpdate),
+  codingCredentials = CodingModelRuntime.createCredentials(credentials),
 ): Promise<ModelRuntime> {
-  const models = builtinModels({ credentials });
+  const models = builtinModels({ credentials: codingCredentials });
   const minimax = models.getProvider('minimax-cn');
   if (minimax) models.setProvider(withModelRequestCompatibility(minimax));
 
@@ -216,7 +219,7 @@ export async function createModelRuntime(
     });
   }
 
-  return { models, credentials };
+  return { models, credentials, codingCredentials };
 }
 
 export { CUSTOM_ENDPOINT_APIS };

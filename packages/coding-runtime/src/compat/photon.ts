@@ -1,0 +1,38 @@
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+export type { PhotonImage as PhotonImageType } from '@silvia-odwyer/photon/photon_rs.js';
+type Photon = typeof import('@silvia-odwyer/photon/photon_rs.js');
+let loading: Promise<Photon | null> | undefined;
+
+/** Native policy and durable's image processor share one public Photon instance. */
+export async function loadPhoton(): Promise<Photon | null> {
+  return loading ??= (async () => {
+    const photon = await import('@silvia-odwyer/photon/photon_rs.js');
+    const standalone = ['$bunfs', '~BUN', '%7EBUN'].some(marker => import.meta.url.includes(marker));
+    let wasmPath: string | undefined;
+    if (!standalone) {
+      try {
+        const candidate = createRequire(import.meta.url).resolve('@silvia-odwyer/photon/photon_rs_bg.wasm');
+        // NODE_PATH can resolve build-machine packages outside the bundle's ancestors.
+        for (let directory = dirname(fileURLToPath(import.meta.url)); ; directory = dirname(directory)) {
+          const local = relative(join(directory, 'node_modules'), candidate);
+          if (!isAbsolute(local) && local !== '..' && !local.startsWith('..' + sep)) {
+            wasmPath = candidate;
+            break;
+          }
+          if (directory === dirname(directory)) break;
+        }
+      } catch (error) {
+        // Bun's ResolveMessage carries a code without extending Error.
+        if (typeof error !== 'object' || error === null || !('code' in error) || error.code !== 'MODULE_NOT_FOUND') throw error;
+      }
+    }
+    // Installed assets and relocated bundles never search the caller's project.
+    wasmPath ??= join(standalone ? dirname(process.execPath) : dirname(fileURLToPath(import.meta.url)), 'photon_rs_bg.wasm');
+    photon.initSync({ module: await readFile(wasmPath) });
+    return photon;
+  })().catch(() => null);
+}

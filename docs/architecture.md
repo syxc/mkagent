@@ -1,6 +1,16 @@
 # Architecture
 
-MkAgent is a Bun monorepo with three clients sharing one authenticated WebSocket RPC protocol. Only the `pi` agent backend is registered. The direct Pi integration is `@earendil-works/pi-durable`, which runs the agent kernel (coding tools, code mode, MCP) in its subprocess; `pi-ai` and `chord` are lower-level dependencies, not the application-facing session API.
+MkAgent is a Bun monorepo with three clients sharing one authenticated WebSocket RPC protocol. Only the `pi` agent backend is registered. The agent kernel runs on `@earendil-works/pi-durable` in a dedicated Bun subprocess. `pi-ai` and `chord` provide lower-level APIs.
+
+## Kernel migration
+
+The first direct switch to `pi-durable` exposed Coding and Pi plugin gaps. The correction keeps the Pi coding agent layer used by MkAgent and attempts to replace its execution base with durable. Use the original MkAgent/Coding integration as the behavior reference, while preserving later confirmed features and existing data. Prefer reusable official SDKs to reduce source-by-source maintenance on future Coding and durable releases. Use durable built-ins first, then public APIs from separate official Pi SDK packages. Add a thin adapter or retain source only for a demonstrated gap. `pi-agent-core` and the public `pi-coding-agent` SDK are allowed in production; do not start the original CLI. Delete source copies that the SDK covers and redundant direct dependencies; retain only adapters for confirmed gaps. Replacing third-party assets, reducing line counts, and copying all source reachable from the original CLI are not migration goals. The [capability spec](pi-durable/coding-capabilities-spec.md) and [implementation plan](pi-durable/durable-coding-agent-plan.md) define current goals. They replace only conflicting kernel dependency and integration rules. MkAgent's existing layers, process boundaries and host responsibilities remain in place. Host changes are limited to necessary kernel and plugin integration.
+
+The current normal profile uses durable's `GenerationTask`. The coding profile follows `CodingHost → AgentSession → DurableLoopBinding → pi.coding.*`. This describes the current implementation. Each custom task bridge still needs review against actual Coding and public plugin contracts; this chain is not a fixed target architecture.
+
+Published Pi APIs and local SDK extensions must be tracked separately. `pi-agent-core` uses a four-file repository patch for eight operation exports and Agent execution injection. The durable `codingPrepare`, `codingStream`, and `codingBoundary` hooks also come from repository patches. These interfaces are not published Pi APIs. Their need and upgrade cost still require review. Independent tests can use a fixed original `pi-coding-agent` package as a behavior oracle.
+
+The root and `packages/shared` use `pi-ai 1.1.0`. The Pi dependencies in `packages/coding-runtime` and `packages/pi-agent-server` use `1.5.0`. These are separate dependency boundaries.
 
 ## Layered topology
 
@@ -62,7 +72,7 @@ All three clients operate the same workspace and JSONL sessions; there is no cli
 
 - `packages/server-core` owns transport, handlers, `SessionManager`, and platform-neutral services. Subpackages: `bootstrap/`, `domain/`, `handlers/`, `model-fetchers/`, `runtime/`, `services/`, `sessions/`, `transport/`, `utils/`, `webui/`.
 - `packages/shared` owns protocol DTOs (`@mkagent/shared/protocol`), config, credentials, Skills, prompts, the backend registry, workspace storage, and the Pi client.
-- `packages/pi-agent-server` runs the agent kernel on `@earendil-works/pi-durable` in a separate Bun subprocess (`packages/pi-agent-server/dist/index.js`) and communicates through JSONL. The kernel uses the official pi-mcp client (configured by `mcp.json` in the agent directory), the pi-codemode sandbox (code mode), and grep/find/ls adapted from pi-coding-agent 1.1.0. The same SDK boundary is used in development and packaged builds; `bun run server:build:subprocess` produces the bundle.
+- `packages/pi-agent-server` runs the agent kernel on `@earendil-works/pi-durable` in a separate Bun subprocess (`packages/pi-agent-server/dist/index.js`) and communicates through JSONL. Production uses durable's tools and images APIs for read/write/edit/bash and optional PowerShell, plus its codemode and tool-search extensions. The official pi-mcp client reads `mcp.json` in the agent directory; pi-codemode supplies the sandbox. Local grep/find/ls remain adapted from pi-coding-agent 1.1.0 and require review under the migration policy above. The same SDK boundary is used in development and packaged builds; `bun run server:build:subprocess` produces the bundle.
 - `packages/ui` and `packages/session-tools-core` provide shared rendering and session-level tools. They are platform-neutral: Electron, WebUI, and CLI reuse them.
 
 ## Backend registry

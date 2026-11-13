@@ -4,6 +4,8 @@
 
 ## 文档导航
 
+第一次直接改用 `pi-durable` 后出现了 Coding 与 Pi 插件缺口。本次保留 MkAgent 所用的 Pi coding agent 层，尝试将其执行基座换成 durable。以原始 MkAgent/Coding 接入为行为参照，保留后续有效功能与已有数据。优先复用官方 SDK，减少以后 Coding 和 durable 更新时逐文件维护源码的责任。先采用 durable 内置能力，再用独立 Pi 官方 SDK 的公开 API；只有具体缺口得到论证后才保留薄适配或必要源码。允许按需引用 `pi-agent-core` 和 `pi-coding-agent` 的公开 SDK，不启动原版 CLI；SDK 覆盖后删除对应源码和多余直接依赖，只保留有具体缺口依据的适配。第三方资源替换、删行数和复制原版 CLI 的完整源码闭包均不是迁移目标。当前工作以[能力规格](../pi-durable/coding-capabilities-spec.md)和[实施计划](../pi-durable/durable-coding-agent-plan.md)为准，取代早期迁移限制。
+
 | 主题 | 文档 |
 | --- | --- |
 | 整体架构 | [architecture.md](./architecture.md) |

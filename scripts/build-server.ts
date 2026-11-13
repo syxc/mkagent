@@ -52,6 +52,8 @@ run([
 
 cpSync(join(electron, 'dist', 'resources'), join(output, 'resources'), { recursive: true })
 cpSync(join(root, 'apps', 'webui', 'dist'), join(output, 'webui'), { recursive: true })
+for (const name of ['LICENSE', 'NOTICE']) copyFileSync(join(root, name), join(output, name))
+copyFileSync(join(root, 'packages', 'coding-runtime', 'LICENSE.pi'), join(output, 'LICENSE.pi'))
 
 const runtimeName = process.platform === 'win32' ? 'bun.exe' : 'bun'
 const runtime = join(output, 'vendor', 'bun', runtimeName)
@@ -114,6 +116,12 @@ for (const path of [
   join(output, 'resources', 'pi-agent-server', 'codemode-worker.js'),
   join(output, 'resources', 'pi-agent-server', 'quickjs.wasm'),
   join(output, 'resources', 'pi-agent-server', 'photon_rs_bg.wasm'),
+  join(output, 'resources', 'pi-agent-server', 'LICENSE.pi'),
+  join(output, 'resources', 'pi-agent-server', 'coding-assets', 'theme', 'dark.json'),
+  join(output, 'resources', 'pi-agent-server', 'coding-assets', 'export-html', 'template.html'),
+  join(output, 'LICENSE'),
+  join(output, 'NOTICE'),
+  join(output, 'LICENSE.pi'),
   runtime,
   rgDestination,
   join(output, 'webui', 'index.html'),

@@ -10,6 +10,7 @@ import {
   clampSpawnPermissionMode,
 } from './SessionManager.ts'
 import { buildBackendRuntimeSignature, buildRestartRequiredSignature } from './runtime-config.ts'
+import type { InputOrigins } from './input-origins.ts'
 
 describe('mid-stream queue runtime invariants', () => {
   let tmpRoot: string
@@ -162,12 +163,18 @@ describe('mid-stream queue runtime invariants', () => {
     let markFirstTurnStarted!: () => void
     const firstTurnStarted = new Promise<void>(resolve => { markFirstTurnStarted = resolve })
     let turn = 0
+    const inputs: Array<{ message: string; messageId?: string }> = []
+    const redirects: Array<{ message: string; metadata?: { messageId?: string } }> = []
 
     managed.agent = {
       isProcessing: () => false,
       updateRuntimeConfig: async () => true,
-      redirect: () => false,
-      chat: async function* () {
+      redirect: (message: string, metadata?: { messageId?: string }) => {
+        redirects.push({ message, metadata })
+        return false
+      },
+      chat: async function* (message: string, _attachments: unknown, options?: { messageId?: string }) {
+        inputs.push({ message, messageId: options?.messageId })
         turn += 1
         if (turn === 1) {
           markFirstTurnStarted()
@@ -198,14 +205,42 @@ describe('mid-stream queue runtime invariants', () => {
       if (++completedTurns === 2) resolveBothTurns()
     })
 
-    const firstSend = sm.sendMessage(sessionId, 'first question')
+    const origins = (sm as unknown as {
+      inputClients: InputOrigins
+    }).inputClients
+    const firstSend = sm.sendMessage(sessionId, 'first question', undefined, undefined, undefined, undefined, undefined, undefined, { callerClientId: 'client-A' })
     await firstTurnStarted
-    await sm.sendMessage(sessionId, 'follow up')
+    const firstId = managed.messages[0]!.id
+    const firstOrigin = origins.claim(sessionId, firstId)!
+    expect(firstOrigin.clientId).toBe('client-A')
+    expect(firstOrigin.isCurrent()).toBe(true)
+    const ownerTransaction = origins.claim(sessionId, firstId)!
+    firstOrigin.release()
+    await sm.sendMessage(sessionId, 'follow up', undefined, undefined, undefined, undefined, undefined, undefined, { callerClientId: 'client-B' })
+    const queuedId = managed.messages.find(message => message.content === 'follow up')!.id
+    const queuedOrigin = origins.claim(sessionId, queuedId)!
+    expect(queuedOrigin.clientId).toBe('client-B')
+    expect(queuedOrigin.isCurrent()).toBe(true)
+    sm.onClientDisconnected('client-B')
     releaseFirstTurn()
     await firstSend
     await bothTurnsCompleted
 
     const session = await sm.getSession(sessionId)
     expect(session?.messages.filter(message => message.role === 'user' && message.content === 'follow up')).toHaveLength(1)
+    const userMessages = session!.messages.filter(message => message.role === 'user')
+    expect(inputs).toEqual(userMessages.map(message => ({ message: message.content, messageId: message.id })))
+    expect(redirects).toEqual([{ message: 'follow up', metadata: { messageId: userMessages[1]!.id } }])
+    expect(origins.claim(sessionId, firstId)).toBeUndefined()
+    expect(ownerTransaction.isCurrent()).toBe(true)
+    expect(managed.isProcessing).toBe(false)
+    await sm.cancelProcessing(sessionId)
+    expect(ownerTransaction.isCurrent()).toBe(false)
+    ownerTransaction.release()
+    expect(origins.claim(sessionId, queuedId)).toBeUndefined()
+    expect(queuedOrigin.isCurrent()).toBe(false)
+    queuedOrigin.release()
+    sm.onClientWorkspaceChanged('client-A')
+    expect(firstOrigin.isCurrent()).toBe(false)
   })
 })

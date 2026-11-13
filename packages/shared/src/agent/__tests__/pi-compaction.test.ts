@@ -1,4 +1,7 @@
 import { EventEmitter } from 'node:events';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it, spyOn } from 'bun:test';
 import { PiAgent } from '../pi-agent.ts';
 import { AbortReason } from '../backend/types.ts';
@@ -480,10 +483,15 @@ describe('Pi manual compaction RPC', () => {
   it('shares a real startup until session tools are registered', async () => {
     const agent = makeAgent();
     delete agent.ensureSubprocess;
+    const root = mkdtempSync(join(tmpdir(), 'pi-startup-wire-'));
+    const receivedPath = join(root, 'received.json');
     const script = `
       const readline = require('node:readline').createInterface({ input: process.stdin });
+      const received = [];
       readline.on('line', (line) => {
         const message = JSON.parse(line);
+        received.push(message.type);
+        require('node:fs').writeFileSync(${JSON.stringify(receivedPath)}, JSON.stringify(received));
         if (message.type === 'init') console.log(JSON.stringify({ type: 'ready' }));
         if (message.type === 'set_auto_compaction') console.log(JSON.stringify({ type: 'set_auto_compaction_result', id: message.id, success: true, enabled: true }));
         if (message.type === 'shutdown') process.exit(0);
@@ -495,9 +503,6 @@ describe('Pi manual compaction RPC', () => {
     let lookups = 0;
     agent.getPiAuth = () => { lookups++; return new Promise((resolve) => { release = () => resolve(null); }); };
     agent.getApiKey = async () => null;
-    const messages: string[] = [];
-    const send = agent.send.bind(agent);
-    agent.send = (message: any) => { messages.push(message.type); send(message); };
     const first = agent.ensureSubprocess();
     const second = agent.ensureSubprocess();
     expect(lookups).toBe(1);
@@ -505,10 +510,12 @@ describe('Pi manual compaction RPC', () => {
     try {
       release();
       await Promise.all([first, second]);
-      expect(messages).toEqual(['init', 'set_auto_compaction', 'register_tools']);
+      // Scoped startup controls use their captured lease; inspect the actual wire.
+      expect(JSON.parse(readFileSync(receivedPath, 'utf8'))).toEqual(['init', 'register_tools', 'set_auto_compaction']);
     } finally {
       browserEnabled.mockRestore();
       await agent.disposeForRestart();
+      rmSync(root, { recursive: true, force: true });
     }
     expect(agent.subprocessStopping).toBeNull();
   });
