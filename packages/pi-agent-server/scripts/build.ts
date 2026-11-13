@@ -15,6 +15,8 @@ const build = await Bun.build({
   naming: '[name].[ext]',
   target: 'bun',
   format: 'esm',
+  // Select the SDK's bundled loader so Jiti embeds its Babel transform.
+  define: { PI_BUNDLED_NODE: 'true' },
   external: ['koffi'],
 });
 if (!build.success) {

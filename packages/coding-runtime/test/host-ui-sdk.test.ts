@@ -10,6 +10,7 @@ import * as compat from '../src/compat.ts';
 import * as ui from '../src/native-ui.ts';
 import * as agentCore from '../src/agent-runtime.ts';
 import { codingHostImport, codingSDKImport } from '../scripts/coding-sdk-imports.ts';
+import { trashFixture } from './fixtures/trash-fixture.ts';
 
 test('public UI uses SDK components and keeps host-only entry points private', async () => {
   const VIRTUAL_MODULES = await sdk.getExtensionModules({ codingAgent: native, agentCore });
@@ -121,7 +122,7 @@ for (const mode of ['native', 'sdk'] as const) {
       expect({ code: run.exitCode, error: run.stderr.toString() }).toEqual({ code: 0, error: '' });
       expect(JSON.parse(run.stdout.toString())).toEqual({ mode, png: true, cache: true, visibility: true });
     } finally {
-      if (Bun.spawnSync(['trash', directory]).exitCode !== 0) console.warn(`Temporary fixture retained: ${directory}`);
+      trashFixture(directory);
     }
   });
 }
@@ -159,6 +160,6 @@ test('relocated renderer uses the adjacent shared Photon without project depende
     expect({ code: run.exitCode, error: run.stderr.toString() }).toEqual({ code: 0, error: '' });
     expect(JSON.parse(run.stdout.toString())).toEqual({ mode: 'native', png: true, cache: true, visibility: true });
   } finally {
-    if (Bun.spawnSync(['trash', directory]).exitCode !== 0) console.warn(`Temporary fixture retained: ${directory}`);
+    trashFixture(directory);
   }
 });

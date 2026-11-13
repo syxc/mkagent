@@ -56,6 +56,55 @@ are retained as probe failures; the final checks use the canonical entry.
 Production code, dependency declarations and the lock remain unchanged.
 The full GitHub suite must pass before merge.
 
+## Pull request full-suite follow-up
+
+Run `43328813751` at `166cab2` passed installation, lint, source lineage and
+validate:ci, then reported 6,946 passes and 47 failures in the full suite.
+The full safe failure list, beyond the first ten annotations, identifies
+38 truncation oracles, four remaining cleanup calls, three receipt outputs
+and two bundle asset paths. All 47 now have targeted local checks.
+
+- Truncation selects one existing pinned digest by the observed Buffer
+  byteLength behavior. The original test fails the same 38 cases when real
+  Node Buffer is used with a Bun brand marker. The correction passes those
+  cases; neither baseline values nor the case list changes. The actual SDK
+  public entry passes all 886 tests and 1,803 assertions in each formal Bun
+  layout. Direct local Linux Bun execution remains unverified.
+- Two remaining files use the existing cleanup helper. Both layouts pass
+  nine cases and 227 assertions, including the three image renderers.
+- The actual recovery worker reproduces a 65,536-byte short stdout write
+  under OS pipe backpressure after process.stdout initialization. Waiting
+  for the stream write callback restores the identical roughly 283 KB
+  payload at removed, plain-legacy and abort-completed boundaries. All full
+  text, image and single-effect checks remain. Both layouts pass the full
+  29-case file with 223 assertions; repository test timeouts are unchanged.
+- A NODE_PATH pointing to the installed Photon package reproduces the
+  relocated missing-WASM failure. The loader now accepts package assets
+  only from its own module ancestors, then uses the adjacent bundle asset.
+  Each layout passes the three Photon tests, including source identity,
+  Node, Bun script and compiled relocation with valid NODE_PATH but missing
+  adjacent WASM. Eight Windows path boundaries pass through Windows path
+  APIs; this is not native Windows runtime acceptance.
+- The SDK's existing `PI_BUNDLED_NODE` define selects `jiti/static`. Removing
+  the define reproduces the missing `../dist/babel.cjs` path. The fixed
+  relocated bundle passes unchanged hello loading and the approval loop
+  with six assertions. Source importer checks pass ten cases and 42
+  assertions. The real production build publishes 13 hashed files and its
+  relocated output passes the same loop. The fixture uses normal extension
+  auto-discovery and no longer writes a settings file.
+
+Strict source checking covers 117 roots and 1,984 files with zero
+diagnostics and no protected read requests. An initial 45-second check
+ timeout is retained; the supervised follow-up completes in 14.2 seconds.
+Seven files pass independent review; the receipt fixture has a separate
+review. No dependency declaration, lock or SDK patch output changes.
+
+Evidence is under `ship-master-f9qk4tqg`: `new-native-truncate`,
+`receipt-output-fix/sdk-worker`, `bundle-jiti-fix` and the formal layout
+receipts `native-truncate-public-sdk`, `remaining-cleanup-fixed` and
+`photon-local-resolve`. Full CI and three-platform packaging must pass for
+the new commit before merge.
+
 ## Workspace directory rename
 
 Commit `7a59bca` saves the accepted SDK ownership change. The next change

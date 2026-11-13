@@ -6,6 +6,9 @@ import { digest, evaluate, truncateCases } from './fixtures/native-truncate-case
 const baseline: { sourceSha256: string; cases: { name: string; digest: string; nodeDigest?: string; error: boolean }[] } =
   JSON.parse(readFileSync(new URL('./fixtures/native-truncate-1.5.0.json', import.meta.url), 'utf8'));
 
+// Bun's unpaired-surrogate byte counts vary by platform; select the pinned profile by behavior.
+const usesReplacementByteLength = Buffer.byteLength('\ud800\n\udc00', 'utf-8') === 7;
+
 test('Native truncation retains the pinned source baseline', () => {
   expect(baseline.sourceSha256).toBe('8e4507c3ed7ca7548cf7c2d7f77d07f2ae63a38b756789cbb44e9062db6c8762');
   expect(baseline.cases.length).toBe(truncateCases.length);
@@ -16,7 +19,7 @@ for (const [index, row] of truncateCases.entries()) {
     expect(baseline.cases[index]!.name).toBe(row.name);
     const outcome = evaluate(row, native);
     const recorded = baseline.cases[index]!;
-    expect(digest(outcome)).toBe(process.versions.bun ? recorded.digest : recorded.nodeDigest ?? recorded.digest);
+    expect(digest(outcome)).toBe(usesReplacementByteLength ? recorded.nodeDigest ?? recorded.digest : recorded.digest);
     if (baseline.cases[index]!.error) {
       let expected: Error | undefined;
       try { Reflect.apply(Buffer.byteLength, Buffer, [undefined, 'utf-8']); }

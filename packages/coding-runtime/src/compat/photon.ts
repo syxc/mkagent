@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export type { PhotonImage as PhotonImageType } from '@silvia-odwyer/photon/photon_rs.js';
@@ -15,7 +15,16 @@ export async function loadPhoton(): Promise<Photon | null> {
     let wasmPath: string | undefined;
     if (!standalone) {
       try {
-        wasmPath = createRequire(import.meta.url).resolve('@silvia-odwyer/photon/photon_rs_bg.wasm');
+        const candidate = createRequire(import.meta.url).resolve('@silvia-odwyer/photon/photon_rs_bg.wasm');
+        // NODE_PATH can resolve build-machine packages outside the bundle's ancestors.
+        for (let directory = dirname(fileURLToPath(import.meta.url)); ; directory = dirname(directory)) {
+          const local = relative(join(directory, 'node_modules'), candidate);
+          if (!isAbsolute(local) && local !== '..' && !local.startsWith('..' + sep)) {
+            wasmPath = candidate;
+            break;
+          }
+          if (directory === dirname(directory)) break;
+        }
       } catch (error) {
         // Bun's ResolveMessage carries a code without extending Error.
         if (typeof error !== 'object' || error === null || !('code' in error) || error.code !== 'MODULE_NOT_FOUND') throw error;

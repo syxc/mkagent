@@ -146,9 +146,13 @@ try {
   const resumed = await agent.resumeDurable(() => backend.harness.resume());
   const children = failed ? await Promise.all((JSON.parse(readFileSync(join(directory, 'children.txt'), 'utf8')) as TaskId[])
     .map(id => backend.harness.getTask(id, backend.context))) : [];
-  console.log(JSON.stringify({ resumed, checkpoint, execution, children,
+  const output = JSON.stringify({ resumed, checkpoint, execution, children,
     owner: await backend.harness.getTask(id, backend.context),
-    messages: agent.state.messages, events, reports: backend.reports }));
+    messages: agent.state.messages, events, reports: backend.reports });
+  // Await the stream write so the full receipt survives pipe backpressure before shutdown.
+  await new Promise<void>((resolve, reject) => {
+    process.stdout.write(`${output}\n`, error => { if (error) reject(error); else resolve(); });
+  });
 } finally {
   await agent.durable.close();
 }

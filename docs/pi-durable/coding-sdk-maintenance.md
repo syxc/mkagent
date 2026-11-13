@@ -95,6 +95,10 @@ Server 二进制管理器从 449 行缩为 126 行，删除 75 行重试副本�
 
 未修改 Coding SDK 1.5.0 没有默认模块表与宿主执行覆盖的公开接点。本轮在既有 loader 补丁中增加 `getExtensionModules`、modules 与 prepareImporter，由 SDK 复用自己的默认模块表并创建 Jiti，宿主不再重复装配 AI/TUI/TypeBox。新接口属于仓内扩展，不能当作未修改发布 API；上游提供相同接点后撤除。CoreAgent 的队列身份及恢复适配仍需既有执行注入契约；pi-ai 的请求、summary 事件桥仍需背压、失败和取消语义。这些操作现通过 SDK 的具名窄协议出口使用 SDK 自己解析到的实现，本包不再直接依赖 Core/AI 生产包。仍保留的 Core 四文件补丁属于执行接点维护责任，不应因依赖声明减少就记作上游原生能力。
 
+生产 Server bundle 在 `Bun.build` 中定义 SDK 既有的 `PI_BUNDLED_NODE=true`，使 SDK 选择 `jiti/static` 并将 Babel 纳入产物。源码模式继续由 SDK 默认 loader 装配；没有复制 Jiti、Babel 或 importer 算法。搬迁后的 unchanged hello 插件、审批改参和第二轮 provider 请求必须通过验收。
+
+Photon 的安装资源仅接受模块自身祖先目录内 `node_modules` 的解析结果，随后使用产物相邻 WASM。`NODE_PATH` 指向的构建机包不能补齐搬迁产物缺失的资源；Node、Bun script 和 Bun compiled 三种模式均检查该条件，源模式仍复用同一个公开 Photon 实例。
+
 ## 本地 SDK 补丁
 
 根 `patchedDependencies` 登记 core、Coding 和 durable 三份 Pi 补丁，以及 Gaxios 两份、Photon 一份声明补丁。当前 Pi 物理输出为 core 4 个、Coding 95 个、durable 35 个，共 134 个；加上第三方三份声明，共 137 个。JS 与声明分别计数。OSC 切片新增 ansi.js 并改既有 bash-executor.js，其余 92 份 Coding 摘要保持；本切片核验全部 Coding 输出，未重验 core/durable。MCP runtime 切片新增 runtime 两份输出，改变两个共用根入口，其余 86 份摘要保持。后续配置切片只改变两个共用根输出，其他 88 份摘要保持；工具聚合切片新增工具 index 的 JS 与声明两份输出并改变两个共用根入口，其他 88 份摘要保持，runtime 生成清单降为 11 份；手写配置、工具绑定、writer 和 MCP runtime 门面另计。逻辑职责可能共用文件，不能将逻辑组重复相加。

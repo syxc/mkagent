@@ -2345,7 +2345,7 @@
       "reason": "Use the Coding SDK host protocol and renamed runtime while preserving durable execution and plugin contracts."
     },
     "packages/coding-runtime/test/sdk-extension-boundary.test.ts": {
-      "sha256": "f7b17c6a994963932dce692dd565ce61cae1a925e355947bc36ce4b5ede40923",
+      "sha256": "da021427c6f1ae6b319a06f984e59e97a5cd903def088ca8b90f3d4a9c5db446",
       "reason": "Use the Coding SDK host protocol and renamed runtime while preserving durable execution and plugin contracts."
     },
     ".claude/settings.json": {
@@ -2353,7 +2353,7 @@
       "reason": "Allow Read for the specific theme color source in project settings; higher-priority deny rules remain effective."
     },
     "packages/coding-runtime/src/compat/photon.ts": {
-      "sha256": "faaaabcc0f49e06072e0c3a4673415fd4f1c274c7bb97a9cb2dd97339af3bf5d",
+      "sha256": "fa21044ffb43bb49dbcd5d705ee46762ce13ffd785c2c5d5c27aa23ada365f7b",
       "reason": "Initialize the shared public Photon module from installed or adjacent assets; recognize Bun ResolveMessage without relying on Error inheritance and never search the caller's project."
     },
     "packages/coding-runtime/test/shared-photon.test.ts": {
@@ -2361,7 +2361,7 @@
       "reason": "Verify shared Photon conversion without the retired generated Photon forward."
     },
     "packages/coding-runtime/test/shared-photon-bundle.test.ts": {
-      "sha256": "aba572d7e4e1c47458baf47bc03aca185ef87030bdb4326d2a1adb2e61f471e6",
+      "sha256": "1315d7a22ea7713f69d31e84a0777c9933d31e9dc938bf298d683dc9065ecff1",
       "reason": "Exercise relocated Node ESM, Bun ESM and Bun compiled image entry points with one WASM, invalid project assets and missing adjacent resources."
     },
     "packages/coding-runtime/test/fixtures/shared-photon-probe.ts": {
@@ -3321,8 +3321,8 @@
       "reason": "Cross-platform bounded retry runner hardens dependency installation and Electron packaging downloads"
     },
     "packages/pi-agent-server/scripts/build.ts": {
-      "sha256": "2c2ece2e436d040f2076dab94e8e54948c4a3951ec3ac8a992e3910eef6a78d4",
-      "reason": "Resolve the existing QuickJS WASM through the public durable Node entry point for worker publication."
+      "sha256": "a7cf64661614debd3b44899bb2dd04eb147e54442e1cc795334c6d3316af5c83",
+      "reason": "Select the public SDK bundled loader for static Jiti/Babel, and publish QuickJS, Photon and Coding assets through their existing package entries."
     },
     "packages/pi-agent-server/src/cache-warmer.ts": {
       "sha256": "7d1ca54d32dc242776a6fe34cce44810554fe5d4243ee0d42f135619f048d8af",
@@ -3673,7 +3673,7 @@
       "reason": "Adapt native resources and actions to durable boundaries, share host input capture and commit setup projections before deferred target activation. Exclude internal pi.coding dispatch and Native-owned registrations from host declarations at initial load, update and reload."
     },
     "packages/pi-agent-server/test/coding-bundle.e2e.test.ts": {
-      "sha256": "f3907bae4eeec2324d179cb797fcf5bbb44d647d3e47e9e74fb2adfefb722d6d",
+      "sha256": "c713697a44639f8137c692f5d7b9667c6b05ac85cea8dceda23e4ec4b472e720",
       "reason": "Run the standalone bundle outside the source tree with an unchanged Pi plugin and modified host approval."
     },
     "packages/coding-runtime/DURABLE-PATCH.json": {
@@ -4097,7 +4097,7 @@
       "reason": "Verify published model runtime identity, host model replacement, isolated overlays, shared runtime credentials, refresh ownership and SDK model storage behavior."
     },
     "packages/coding-runtime/test/fixtures/host-tool-recovery-process.ts": {
-      "sha256": "b73c92deb251153116116b95f719c97b384890514242acb56b8da83e8836e677",
+      "sha256": "d7edc5b1947c9b0acdc929818c2b8599ca7904d210e17aadb78a1ab71be335fa",
       "reason": "Run isolated JSONL SIGKILL recovery and cold cancellation for plain and bridged tools; preserve completed output, final arguments, control, usage and old receipt fallback."
     },
     "packages/coding-runtime/test/host-tool-sdk.test.ts": {
@@ -4257,7 +4257,7 @@
       "reason": "Verify both public read factories open real path variants and retain missing file and malformed URL errors without private helper mocks."
     },
     "packages/coding-runtime/test/native-truncate.test.ts": {
-      "sha256": "08bf5dd9b188ecc2be54147de35a5129da20638587aee39dd0a2e6865b8e64fd",
+      "sha256": "e446b922c0aae01e78a54f78c7a32e305097be14da638bdb4f98bbc1999419a5",
       "reason": "Preserve the pinned truncation baseline and edge-case checks through public SDK imports."
     },
     "packages/coding-runtime/test/fixtures/native-truncate-cases.ts": {
@@ -4473,7 +4473,7 @@
       "reason": "Use the shared SDK image converter instance for protected PNG registration."
     },
     "packages/coding-runtime/test/host-ui-sdk.test.ts": {
-      "sha256": "990d651ecb531393bd2696e896e11129f017f366f238606aa18594c090aef902",
+      "sha256": "c8f772a3f3234631f644fd1084d3c015fcf61d88679a48f9da0ace09d123a5ea",
       "reason": "Verify public component identities, renderer lifecycle, argument batching, fallback, image caching and a relocated shared-WASM bundle."
     },
     "packages/coding-runtime/test/fixtures/ui-image.ts": {

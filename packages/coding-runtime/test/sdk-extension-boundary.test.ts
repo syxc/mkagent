@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import * as sdk from '@earendil-works/pi-coding-agent';
 import * as tui from '@earendil-works/pi-tui';
 import { createHostExtensionLoader } from '../src/host-extension-loader.ts';
+import { trashFixture } from './fixtures/trash-fixture.ts';
 
 test('SDK owns default plugin modules and isolates durable runtime overrides', async () => {
   const baseline = await sdk.getExtensionModules();
@@ -53,7 +54,6 @@ export default function (api) {
     const untouched = await loaders[1]!.loadExtensionsCached([path], directory);
     expect(untouched.extensions[0]!.commands.get('marker')!.description).toBe('second');
   } finally {
-    // Some test sandboxes cannot access the system Trash; fixture cleanup must not hide assertions.
-    if (Bun.spawnSync(['trash', directory]).exitCode) console.warn(`Temporary fixture retained: ${directory}`);
+    trashFixture(directory);
   }
 });

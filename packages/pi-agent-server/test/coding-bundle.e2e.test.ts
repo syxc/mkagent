@@ -1,22 +1,25 @@
 import { expect, test } from 'bun:test';
 import { spawn } from 'node:child_process';
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 test('runs a standalone bundled coding subprocess with an unchanged Pi extension and host approval', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'coding-bundle-'));
   const agentDir = join(directory, 'agent');
-  mkdirSync(agentDir);
-  copyFileSync(resolve(import.meta.dir, '../../coding-runtime/test/fixtures/upstream/hello.ts'), join(agentDir, 'hello.ts'));
-  writeFileSync(join(agentDir, 'settings.json'), JSON.stringify({ extensions: ['./hello.ts'] }));
+  const extensionsDir = join(agentDir, 'extensions');
+  mkdirSync(extensionsDir, { recursive: true });
+  copyFileSync(resolve(import.meta.dir, '../../coding-runtime/test/fixtures/upstream/hello.ts'), join(extensionsDir, 'hello.ts'));
   writeFileSync(join(agentDir, 'mcp.json'), '{}');
+  const buildDir = join(directory, 'build');
   const artifact = join(directory, 'artifact');
   const build = await Bun.build({
     entrypoints: [resolve(import.meta.dir, '../src/index.ts'), resolve(import.meta.dir, '../src/tools/codemode-worker.ts')],
-    outdir: artifact, naming: '[name].[ext]', target: 'bun', format: 'esm', external: ['koffi'],
+    outdir: buildDir, naming: '[name].[ext]', target: 'bun', format: 'esm',
+    define: { PI_BUNDLED_NODE: 'true' }, external: ['koffi'],
   });
   expect(build.success).toBe(true);
+  renameSync(buildDir, artifact);
   const requests: Array<Record<string, unknown>> = [];
   const provider = Bun.serve({
     hostname: '127.0.0.1', port: 0,
@@ -38,7 +41,7 @@ test('runs a standalone bundled coding subprocess with an unchanged Pi extension
     PI_OFFLINE: '1', MKAGENT_TELEMETRY_DISABLED: '1',
   };
   if (process.env.PATH) env.PATH = process.env.PATH;
-  const child = spawn(process.execPath, [join(artifact, 'index.js')], {
+  const child = spawn(process.execPath, ['--no-env-file', '--config=/dev/null', join(artifact, 'index.js')], {
     cwd: directory, env, stdio: ['pipe', 'pipe', 'pipe'],
   });
   const messages: Array<Record<string, any>> = [];
