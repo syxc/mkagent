@@ -105,6 +105,56 @@ receipts `native-truncate-public-sdk`, `remaining-cleanup-fixed` and
 `photon-local-resolve`. Full CI and three-platform packaging must pass for
 the new commit before merge.
 
+## Pull request isolated recovery follow-up
+
+Run `43335310617` at `22a3b15` passes installation, lint, source lineage,
+validate:ci and the ordinary group: 6,993 passes and zero failures across
+523 files. This confirms that the preceding 47 ordinary failures are fixed
+on Linux CI. The runner then reaches isolated suites and fails the native
+fork/runtime case at its committed-name recovery assertion.
+
+The case injects a product session-header rename failure. The native
+metadata already contains `Recovered committed name`, while the product
+header keeps its previous name. After worker release and cold continuation,
+the product header contains an empty name. This is a separate recovery
+boundary from the earlier fixture stdout and asset changes.
+
+The focused reproduction confirms that cold recovery and its strict receipt
+restore the committed name first. A header read by the watcher before that
+receipt remains queued in `pendingExternalHeader`; `finalizeTurn()` applies
+it and saves the older name again. The watcher reads the file and invokes
+its callback synchronously, using `openSync/readSync/closeSync`.
+
+The correction updates the pending header name only when a native receipt
+changes the managed name and strict product persistence succeeds. Other
+pending metadata stays intact. Same-name, same-revision receipts retain
+their original no-op behavior, so a real external rename or empty name is
+preserved. Later watcher events keep their normal behavior.
+
+The final test uses real Kernel, journal, product writer, watcher handler
+and SessionManager callbacks with in-memory SDK settings. It verifies both
+stores and two external names. The unmodified implementation fails all
+four cold-recovery cases. A broader candidate fails all four external-name
+controls and is rejected; it is not the final patch. The narrowed version
+passes four cases and 120 assertions. Ten related files pass 110 cases and
+558 assertions; the registration suite passes nine cases and 48 assertions.
+Independent final review passes the four cases and reuses the actual queue
+external-name and empty-name controls, both of which now pass. Source and
+test hashes match the frozen formal tree before and after those checks.
+The original fork/worker/plugin fixture and its settings file are unchanged.
+
+A guarded server-core type probe covers 171 roots and 2,714 files. The
+filtered formal tree reports 28 diagnostics, byte-identical to a control
+using the exact prior SessionManager source. No protected reads occur and
+no dependency or declaration repair is added. This is an unchanged local
+diagnostic baseline, not a full type-check pass; complete-environment
+validation and the original fork E2E remain CI gates.
+
+Evidence is under `native-name-recovery-fix` in the shipping Task, including
+`handoff.md`, `review-final-original-red.log`, `review-final-bf-red.log`,
+`review-final-green.log` and the final source hashes. The shipping Task also
+contains `name-typecheck-narrow-comparison.json` for the type probe.
+
 ## Workspace directory rename
 
 Commit `7a59bca` saves the accepted SDK ownership change. The next change

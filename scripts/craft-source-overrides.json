@@ -1255,7 +1255,7 @@
       "reason": "Craft server module reduced to retained local workspace, session, and WebUI behavior; v0.15.1: Apply v0.15.0 to v0.15.1 delta with existing MkAgent/Lite seams retained."
     },
     "packages/server-core/src/sessions/SessionManager.ts": {
-      "sha256": "8a83bc125e1bfa45264d666d0e7eb5d3b1a3b528dbdf5de52682cf7d841ebb93",
+      "sha256": "a66d227aba9157b8a6c91379773543cd3286ec6c0aa86f811563cf42cbfd5cb4",
       "reason": "Retain the Craft-derived Pi/Lite lifecycle, permissions, persistence, imported sdkSessionId and PR handoffs. Require a strict final creation receipt with rollback. Preserve product input identity and caller provenance; settle completed inputs, retain the product queue and retire invalid client or session context. Serialize native projection registration and owner metadata behind strict receipts. Preserve inactive native product rows through lazy loading, metadata saves and import; omit source display caches on ordinary cutoff copies. Register branch owners before native initialization and drain strict writes before rollback."
     },
     "packages/server-core/src/sessions/background-task-stop.test.ts": {
@@ -2795,6 +2795,10 @@
     "packages/pi-agent-server/src/storage/native-session-projection.ts": {
       "sha256": "73aa141b23c507b92b0fd9651e2dcadb58d3e77a1632c49623856d9f475cf7f7",
       "reason": "Share native JSONL and manifest encoding between committed projection and closed fork source verification."
+    },
+    "packages/pi-agent-server/src/native-name-recovery.test.ts": {
+      "sha256": "d70145137af38fab3bb6ab91445071a1c996cd6bf0363874e008d57000ea8642",
+      "reason": "Test committed native name recovery and watcher metadata precedence with real SQLite/JSONL kernels and strict product receipts."
     },
     "packages/pi-agent-server/src/native-owner-actions.e2e.test.ts": {
       "sha256": "7089a510fa4beb79a445d39d3bb3bd2a9aaa8851f1ee69e9c4a6ea964e05e4e5",

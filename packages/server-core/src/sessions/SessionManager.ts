@@ -1211,7 +1211,11 @@ export class SessionManager implements ISessionManager {
       if (nameChanged) snapshot.name = name
       return () => {
         managed.nativeSessionProjection = reference
-        if (nameChanged) managed.name = name
+        if (nameChanged) {
+          managed.name = name
+          // This receipt supersedes a name read by the watcher before strict IO completed.
+          if (managed.pendingExternalHeader) managed.pendingExternalHeader = { ...managed.pendingExternalHeader, name }
+        }
         if (history && rowsChanged) {
           this.applyNativeProductHistory(managed, history)
           this.emit(managed.workspace.id, {
